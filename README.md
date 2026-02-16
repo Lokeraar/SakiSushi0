@@ -2,3 +2,4 @@
 Página web de saki sushi, probando SupaBase
 
 
+Cajero/index.html
