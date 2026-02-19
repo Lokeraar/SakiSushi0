@@ -789,10 +789,10 @@
                 </div>
             </div>
             <div class="header-right">
-                <a href="cliente.html" target="_blank" class="nav-button">
+                <a href="../Cliente/index.html" target="_blank" class="nav-button">
                     <i class="fas fa-utensils"></i> Menú Cliente
                 </a>
-                <a href="admin.html" target="_blank" class="nav-button">
+                <a href="../admin/index.html" target="_blank" class="nav-button">
                     <i class="fas fa-cog"></i> Admin
                 </a>
                 <button class="logout-button" id="logoutButton">
@@ -972,15 +972,14 @@
         </div>
     </div>
 
-	<!-- Primero Supabase (CDN) -->
-	<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-	<!-- Luego tu configuración -->
-	<script src="../supabase-config.js"></script>
-	<script>
-	
-		// ✅ Usar el cliente global (ESTA LÍNEA ES LA CLAVE)
-		const supabase = window.supabaseClient;
-	
+    <!-- Primero Supabase (CDN) -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Luego tu configuración -->
+    <script src="../supabase-config.js"></script>
+    <script>
+        // ✅ Usar el cliente global (UNA SOLA VEZ)
+        const supabase = window.supabaseClient;
+    
         // Variables globales
         let currentUser = null;
         let pedidos = [];
@@ -1033,10 +1032,10 @@
 
         // Actualizar UI de tasa
         function actualizarTasaUI() {
-            document.getElementById('tasaBase').textContent = configGlobal.tasa_cambio.toFixed(2);
-            document.getElementById('aumentoDiario').textContent = configGlobal.aumento_diario + '%';
+            document.getElementById('tasaBase').textContent = (configGlobal.tasa_cambio || 400).toFixed(2);
+            document.getElementById('aumentoDiario').textContent = (configGlobal.aumento_diario || 0) + '%';
             document.getElementById('aumentoActivo').textContent = configGlobal.aumento_activo ? 'Sí' : 'No';
-            document.getElementById('tasaEfectiva').textContent = configGlobal.tasa_efectiva.toFixed(2);
+            document.getElementById('tasaEfectiva').textContent = (configGlobal.tasa_efectiva || 400).toFixed(2);
         }
 
         // Cargar pedidos
@@ -1090,7 +1089,7 @@
                             <span class="${item.disponible ? 'menu-card-disponible' : 'menu-card-no-disponible'}"></span>
                         </div>
                         <div class="menu-card-precio">
-                            ${formatUSD(item.precio)} / ${formatBs(usdToBs(item.precio))}
+                            ${formatUSD(item.precio || 0)} / ${formatBs(usdToBs(item.precio || 0))}
                         </div>
                         <div class="menu-card-stock">Stock: ${item.stock || 0}</div>
                     </div>
@@ -1134,7 +1133,7 @@
             container.innerHTML = '';
             
             pedidosLista.forEach(pedido => {
-                const card = crearTarjetaPedido(pendiente, pedido);
+                const card = crearTarjetaPedido('pendiente', pedido);
                 container.appendChild(card);
             });
             
@@ -1181,9 +1180,9 @@
                 }
             }
             
-            const itemsHtml = pedido.items.map(item => 
-                `<div>${item.cantidad}x ${item.nombre} ${item.personalizacion?.length ? '(Personalizado)' : ''}</div>`
-            ).join('');
+            const itemsHtml = pedido.items ? pedido.items.map(item => 
+                `<div>${item.cantidad || 0}x ${item.nombre || ''} ${item.personalizacion?.length ? '(Personalizado)' : ''}</div>`
+            ).join('') : '';
             
             const botones = [];
             
@@ -1215,7 +1214,7 @@
             card.innerHTML = `
                 <div class="pedido-card-header">
                     <span class="pedido-hora">${hora}</span>
-                    <span class="pedido-tipo-badge tipo-${pedido.tipo}">${pedido.tipo.toUpperCase()}</span>
+                    <span class="pedido-tipo-badge tipo-${pedido.tipo}">${pedido.tipo ? pedido.tipo.toUpperCase() : 'N/A'}</span>
                 </div>
                 <div class="pedido-cliente">
                     ${pedido.cliente_nombre || (pedido.tipo === 'mesa' ? `Mesa ${pedido.mesa || 'N/A'}` : 'Cliente')}
@@ -1224,7 +1223,7 @@
                     ${itemsHtml}
                 </div>
                 <div class="pedido-total">
-                    Total: ${formatBs(usdToBs(pedido.total))}
+                    Total: ${formatBs(usdToBs(pedido.total || 0))}
                 </div>
                 ${temporizador}
                 <div class="pedido-actions">
@@ -1259,7 +1258,7 @@
                 const cobradosHoy = pedidosHoy?.length || 0;
                 const ventasHoy = pedidosHoy?.reduce((sum, p) => sum + (p.total || 0), 0) || 0;
                 const platillosHoy = pedidosHoy?.reduce((sum, p) => {
-                    return sum + (p.items?.reduce((s, i) => s + i.cantidad, 0) || 0);
+                    return sum + (p.items?.reduce((s, i) => s + (i.cantidad || 0), 0) || 0);
                 }, 0) || 0;
                 
                 document.getElementById('statsPreparacion').textContent = enPreparacion;
@@ -1278,7 +1277,7 @@
             
             pedidoActual = pedido;
             pagosMixtos = [];
-            totalAPagar = usdToBs(pedido.total);
+            totalAPagar = usdToBs(pedido.total || 0);
             totalRecibido = 0;
             vuelto = 0;
             condonado = 0;
@@ -1297,15 +1296,20 @@
             const pendiente = Math.max(0, totalAPagar - totalRecibido);
             const sobrante = Math.max(0, totalRecibido - totalAPagar);
             
+            let itemsHtml = '';
+            if (pedidoActual.items && Array.isArray(pedidoActual.items)) {
+                itemsHtml = pedidoActual.items.map(item => `
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.25rem;">
+                        <span>${item.cantidad || 0}x ${item.nombre || ''}</span>
+                        <span>${formatBs(usdToBs((item.precioUnitarioUSD || 0) * (item.cantidad || 0)))}</span>
+                    </div>
+                `).join('');
+            }
+            
             body.innerHTML = `
                 <div style="margin-bottom: 1rem;">
                     <h4>Resumen del Pedido</h4>
-                    ${pedidoActual.items.map(item => `
-                        <div style="display: flex; justify-content: space-between; margin-bottom: 0.25rem;">
-                            <span>${item.cantidad}x ${item.nombre}</span>
-                            <span>${formatBs(usdToBs(item.precioUnitarioUSD * item.cantidad))}</span>
-                        </div>
-                    `).join('')}
+                    ${itemsHtml}
                     ${pedidoActual.costo_delivery ? `
                         <div style="display: flex; justify-content: space-between; margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid var(--gray-200);">
                             <span>Costo delivery:</span>
@@ -1342,7 +1346,7 @@
                                     <option value="punto_venta" ${pago.metodo === 'punto_venta' ? 'selected' : ''}>Punto de Venta</option>
                                 </select>
                                 <input type="number" step="0.01" placeholder="Monto ${pago.metodo === 'efectivo_usd' ? 'en USD' : 'en Bs'}" 
-                                       value="${pago.monto}" onchange="actualizarPago(${index}, 'monto', this.value)">
+                                       value="${pago.monto || 0}" onchange="actualizarPago(${index}, 'monto', this.value)">
                                 ${pago.metodo === 'pago_movil' ? `
                                     <input type="text" maxlength="6" placeholder="Referencia (6 dígitos)" 
                                            value="${pago.referencia || ''}" onchange="actualizarPago(${index}, 'referencia', this.value)">
@@ -1471,9 +1475,9 @@
         function recalcularTotales() {
             totalRecibido = pagosMixtos.reduce((sum, pago) => {
                 if (pago.metodo === 'efectivo_usd') {
-                    return sum + usdToBs(pago.monto);
+                    return sum + usdToBs(pago.monto || 0);
                 }
-                return sum + pago.monto;
+                return sum + (pago.monto || 0);
             }, 0);
         }
 
@@ -1505,7 +1509,7 @@
                 const { error } = await supabase.rpc('procesar_cobro', {
                     p_pedido_id: pedidoActual.id,
                     p_pagos_mixtos: pagosMixtos,
-                    p_cajero: currentUser.nombre,
+                    p_cajero: currentUser ? currentUser.nombre : 'Cajero',
                     p_condonacion: condonado,
                     p_a_favor_caja: aFavorCaja,
                     p_vuelto_entregado: vuelto
@@ -1635,25 +1639,25 @@
                     );
                     body.innerHTML = preparacion.map(p => `
                         <div style="border-bottom: 1px solid var(--gray-200); padding: 1rem 0;">
-                            <strong>${p.tipo.toUpperCase()}</strong> - ${new Date(p.timestamp).toLocaleString()}<br>
-                            Total: ${formatBs(usdToBs(p.total))}
+                            <strong>${p.tipo ? p.tipo.toUpperCase() : 'N/A'}</strong> - ${new Date(p.timestamp).toLocaleString()}<br>
+                            Total: ${formatBs(usdToBs(p.total || 0))}
                         </div>
                     `).join('') || '<p>No hay pedidos en preparación</p>';
                     break;
                     
                 case 'cobrados':
                     title.textContent = 'Pedidos Cobrados Hoy';
-                    // Similar al anterior
+                    body.innerHTML = '<p>Función en desarrollo</p>';
                     break;
                     
                 case 'ventas':
                     title.textContent = 'Detalle de Ventas';
-                    // Similar
+                    body.innerHTML = '<p>Función en desarrollo</p>';
                     break;
                     
                 case 'platillos':
                     title.textContent = 'Platillos Vendidos Hoy';
-                    // Similar
+                    body.innerHTML = '<p>Función en desarrollo</p>';
                     break;
             }
             
@@ -1663,46 +1667,46 @@
         // Configurar event listeners
         function setupEventListeners() {
             // Login - VERSIÓN CORREGIDA
-			document.getElementById('loginForm').addEventListener('submit', async (e) => {
-				e.preventDefault();
-				
-				const username = document.getElementById('username').value;
-				const password = document.getElementById('password').value;
-				
-				console.log('Intentando login cajero:', username); // Para depurar
-				
-				try {
-					const { data, error } = await supabase
-						.from('usuarios')
-						.select('*')
-						.eq('username', username)
-						.eq('password', password)
-						.eq('activo', true)
-						.maybeSingle(); // Cambiado de single() a maybeSingle()
-					
-					console.log('Respuesta de Supabase:', { data, error }); // Para depurar
-					
-					if (error) {
-						console.error('Error de Supabase:', error);
-						alert('Error al conectar con la base de datos: ' + error.message);
-						return;
-					}
-					
-					if (!data) {
-						alert('Credenciales inválidas o usuario inactivo');
-						return;
-					}
-					
-					// Login exitoso
-					currentUser = data;
-					sessionStorage.setItem('cajero_user', JSON.stringify(data));
-					mostrarPanel();
-					
-				} catch (error) {
-					console.error('Error en login:', error);
-					alert('Error al iniciar sesión: ' + error.message);
-				}
-			});
+            document.getElementById('loginForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const username = document.getElementById('username').value;
+                const password = document.getElementById('password').value;
+                
+                console.log('Intentando login cajero:', username);
+                
+                try {
+                    const { data, error } = await supabase
+                        .from('usuarios')
+                        .select('*')
+                        .eq('username', username)
+                        .eq('password', password)
+                        .eq('activo', true)
+                        .maybeSingle();
+                    
+                    console.log('Respuesta de Supabase:', { data, error });
+                    
+                    if (error) {
+                        console.error('Error de Supabase:', error);
+                        alert('Error al conectar con la base de datos: ' + error.message);
+                        return;
+                    }
+                    
+                    if (!data) {
+                        alert('Credenciales inválidas o usuario inactivo');
+                        return;
+                    }
+                    
+                    // Login exitoso
+                    currentUser = data;
+                    sessionStorage.setItem('cajero_user', JSON.stringify(data));
+                    mostrarPanel();
+                    
+                } catch (error) {
+                    console.error('Error en login:', error);
+                    alert('Error al iniciar sesión: ' + error.message);
+                }
+            });
             
             // Logout
             document.getElementById('logoutButton').addEventListener('click', () => {
