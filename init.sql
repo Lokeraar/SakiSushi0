@@ -1,11 +1,12 @@
--- SCRIPT DE INICIALIZACIÓN PARA SUPABASE
+-- SCRIPT DE INICIALIZACIÓN PARA SUPABASE - VERSIÓN CORREGIDA
 -- Ejecutar esto en la consola SQL de Supabase
 
 -- Habilitar pg_cron (si está disponible)
 CREATE EXTENSION IF NOT EXISTS pg_cron;
 
--- Crear bucket de almacenamiento (ejecutar en Storage)
--- INSERT INTO storage.buckets (id, name, public) VALUES ('comprobantes', 'comprobantes', true);
+-- NOTA: Los buckets se crean desde la interfaz de Storage:
+-- 1. 'comprobantes' (público) - Para comprobantes de pago
+-- 2. 'imagenes-platillos' (público) - Para imágenes del menú
 
 -- Tabla config
 CREATE TABLE IF NOT EXISTS public.config (
@@ -26,7 +27,7 @@ CREATE TABLE IF NOT EXISTS public.config (
 -- Insertar configuración inicial
 INSERT INTO public.config (id) VALUES (1) ON CONFLICT (id) DO NOTHING;
 
--- Tabla inventario
+-- Tabla inventario (SIN columnas generadas problemáticas)
 CREATE TABLE IF NOT EXISTS public.inventario (
     id text PRIMARY KEY,
     nombre text NOT NULL,
@@ -34,9 +35,8 @@ CREATE TABLE IF NOT EXISTS public.inventario (
     unidad_base text DEFAULT 'unidades',
     minimo numeric DEFAULT 0,
     precio_costo numeric DEFAULT 0,
-    precio_unitario numeric DEFAULT 0,
-    costo_bs numeric GENERATED ALWAYS AS (precio_costo * (SELECT tasa_efectiva FROM public.config WHERE id = 1)) STORED,
-    precio_venta_bs numeric GENERATED ALWAYS AS (precio_unitario * (SELECT tasa_efectiva FROM public.config WHERE id = 1)) STORED
+    precio_unitario numeric DEFAULT 0
+    -- costo_bs y precio_venta_bs se calculan en la aplicación
 );
 
 -- Tabla menu
@@ -125,7 +125,7 @@ CREATE TABLE IF NOT EXISTS public.ventas (
     tipo text
 );
 
--- Función RPC: procesar_cobro
+-- Función RPC: procesar_cobro (CORREGIDA)
 CREATE OR REPLACE FUNCTION public.procesar_cobro(
     p_pedido_id text,
     p_pagos_mixtos jsonb,
@@ -141,9 +141,10 @@ AS $$
 DECLARE
     v_pedido record;
     v_item jsonb;
-    v_ingrediente record;
     v_cantidad_necesaria numeric;
     v_metodo_principal text;
+    v_ingredientes jsonb;
+    v_ing_record record;
 BEGIN
     -- Bloquear el pedido
     SELECT * INTO v_pedido FROM public.pedidos WHERE id = p_pedido_id FOR UPDATE;
@@ -160,30 +161,25 @@ BEGIN
     FOR v_item IN SELECT * FROM jsonb_array_elements(v_pedido.items)
     LOOP
         -- Obtener ingredientes del platillo
-        DECLARE
-            v_ingredientes jsonb;
-            v_ing_record record;
-        BEGIN
-            SELECT ingredientes INTO v_ingredientes 
-            FROM public.menu 
-            WHERE id = (v_item->>'platilloId');
-            
-            -- Recorrer ingredientes
-            FOR v_ing_record IN 
-                SELECT key, value 
-                FROM jsonb_each(v_ingredientes)
-            LOOP
-                -- Verificar si el ingrediente fue quitado en personalización
-                IF NOT (v_item->'personalizacion' ? v_ing_record.key) THEN
-                    v_cantidad_necesaria = (v_ing_record.value->>'cantidad')::numeric * (v_item->>'cantidad')::numeric;
-                    
-                    -- Actualizar inventario
-                    UPDATE public.inventario 
-                    SET stock = stock - v_cantidad_necesaria
-                    WHERE id = v_ing_record.key;
-                END IF;
-            END LOOP;
-        END;
+        SELECT ingredientes INTO v_ingredientes 
+        FROM public.menu 
+        WHERE id = (v_item->>'platilloId');
+        
+        -- Recorrer ingredientes
+        FOR v_ing_record IN 
+            SELECT key, value 
+            FROM jsonb_each(v_ingredientes)
+        LOOP
+            -- Verificar si el ingrediente fue quitado en personalización
+            IF NOT (v_item->'personalizacion' ? v_ing_record.key) THEN
+                v_cantidad_necesaria = (v_ing_record.value->>'cantidad')::numeric * (v_item->>'cantidad')::numeric;
+                
+                -- Actualizar inventario
+                UPDATE public.inventario 
+                SET stock = stock - v_cantidad_necesaria
+                WHERE id = v_ing_record.key;
+            END IF;
+        END LOOP;
     END LOOP;
     
     -- Determinar método principal
@@ -270,32 +266,12 @@ $$;
 --    'SELECT public.cancelar_pedidos_timeout()'
 -- );
 
--- Políticas RLS (ejecutar después de habilitar RLS)
--- ALTER TABLE public.menu ENABLE ROW LEVEL SECURITY;
--- ALTER TABLE public.inventario ENABLE ROW LEVEL SECURITY;
--- ALTER TABLE public.pedidos ENABLE ROW LEVEL SECURITY;
--- ALTER TABLE public.notificaciones ENABLE ROW LEVEL SECURITY;
--- ALTER TABLE public.usuarios ENABLE ROW LEVEL SECURITY;
--- ALTER TABLE public.codigos_qr ENABLE ROW LEVEL SECURITY;
--- ALTER TABLE public.config ENABLE ROW LEVEL SECURITY;
-
--- Políticas de lectura pública para menú e inventario
--- CREATE POLICY "Lectura pública menú" ON public.menu FOR SELECT USING (true);
--- CREATE POLICY "Lectura pública inventario" ON public.inventario FOR SELECT USING (true);
--- CREATE POLICY "Lectura pública config (tasa)" ON public.config FOR SELECT USING (true);
-
--- Políticas para pedidos (clientes pueden insertar)
--- CREATE POLICY "Clientes pueden insertar pedidos" ON public.pedidos FOR INSERT WITH CHECK (true);
-
--- Políticas para notificaciones (lectura basada en pedido_id)
--- CREATE POLICY "Lectura notificaciones" ON public.notificaciones FOR SELECT USING (true);
-
--- Políticas para usuarios (solo admin/cajeros autenticados)
--- CREATE POLICY "Acceso usuarios autenticados" ON public.usuarios FOR ALL USING (auth.role() = 'authenticated');
-
 -- Insertar usuario cajero de ejemplo
 INSERT INTO public.usuarios (id, nombre, username, password, rol, activo)
 VALUES 
     ('user_ejemplo1', 'Cajero Principal', 'cajero1', '123456', 'cajero', true),
     ('user_ejemplo2', 'Cajero Secundario', 'cajero2', '123456', 'cajero', true)
 ON CONFLICT (username) DO NOTHING;
+
+-- Mensaje de confirmación
+SELECT 'Base de datos inicializada correctamente' as mensaje;
