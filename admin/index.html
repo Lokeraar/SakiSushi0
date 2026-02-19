@@ -1478,7 +1478,11 @@
         </div>
     </div>
 
-    <script src="../supabase-config.js"></script>
+    <!-- Primero Supabase (CDN) -->
+	<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+	<!-- Luego tu configuración -->
+	<script src="../supabase-config.js"></script>
     <script>
         // Variables globales
         let isAdminAuthenticated = false;
@@ -1805,32 +1809,50 @@
 
         // Configurar event listeners
         function setupEventListeners() {
-            // Login
-            document.getElementById('loginForm').addEventListener('submit', async (e) => {
-                e.preventDefault();
-                
-                const password = document.getElementById('adminPassword').value;
-                
-                try {
-                    const { data, error } = await supabase
-                        .from('config')
-                        .select('admin_password')
-                        .eq('id', 1)
-                        .single();
-                    
-                    if (error || data.admin_password !== password) {
-                        alert('Contraseña incorrecta');
-                        return;
-                    }
-                    
-                    isAdminAuthenticated = true;
-                    sessionStorage.setItem('admin_authenticated', 'true');
-                    mostrarPanel();
-                } catch (error) {
-                    console.error('Error en login:', error);
-                    alert('Error al iniciar sesión');
-                }
-            });
+		
+		// Login - VERSIÓN CORREGIDA
+		document.getElementById('loginForm').addEventListener('submit', async (e) => {
+			e.preventDefault();
+			
+			const password = document.getElementById('adminPassword').value;
+			console.log('Intentando login con:', password); // Para depurar
+			
+			try {
+				// Primero verificar si la tabla config existe y tiene datos
+				const { data, error } = await supabase
+					.from('config')
+					.select('admin_password')
+					.eq('id', 1)
+					.maybeSingle(); // Cambiado de single() a maybeSingle()
+				
+				console.log('Respuesta de Supabase:', { data, error }); // Para depurar
+				
+				if (error) {
+					console.error('Error de Supabase:', error);
+					alert('Error al conectar con la base de datos: ' + error.message);
+					return;
+				}
+				
+				if (!data) {
+					alert('No se encontró configuración en la base de datos. Ejecuta el script init.sql primero.');
+					return;
+				}
+				
+				if (data.admin_password !== password) {
+					alert('Contraseña incorrecta');
+					return;
+				}
+				
+				// Login exitoso
+				isAdminAuthenticated = true;
+				sessionStorage.setItem('admin_authenticated', 'true');
+				mostrarPanel();
+				
+			} catch (error) {
+				console.error('Error en login:', error);
+				alert('Error al iniciar sesión: ' + error.message);
+			}
+		});
 
             // Recuperación de contraseña
             document.getElementById('recoveryLink').addEventListener('click', async (e) => {
