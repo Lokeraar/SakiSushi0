@@ -1,13 +1,15 @@
 // supabase-config.js
-// Configuración compartida para todos los paneles - VERSIÓN FINAL CON VARIABLES GLOBALES
+// Configuración compartida para todos los paneles - VERSIÓN CORREGIDA
 
 // Hacer las variables globales (window)
 window.SUPABASE_URL = 'https://iqwwoihiiyrtypyqzhgy.supabase.co';
 window.SUPABASE_ANON_KEY = 'sb_publishable_m4WcF4gmkj1olAj95HMLlA_4yKqPFXm';
 
-// Crear cliente de Supabase (solo si no existe)
-if (!window.supabase) {
-    window.supabase = window.supabaseLib.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
+// Crear cliente de Supabase (CORREGIDO)
+if (!window.supabaseClient) {
+    // window.supabase viene del CDN: https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2
+    window.supabaseClient = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
+    console.log('✅ Cliente Supabase inicializado');
 }
 
 // Variables globales de configuración
@@ -27,7 +29,7 @@ window.configGlobal = {
 // Función para cargar configuración global
 window.cargarConfiguracion = async function() {
     try {
-        const { data, error } = await window.supabase
+        const { data, error } = await window.supabaseClient
             .from('config')
             .select('*')
             .eq('id', 1)
@@ -76,7 +78,7 @@ window.subirImagenPlatillo = async function(archivoImagen, carpetaAdicional = ''
         
         const ruta = carpetaAdicional ? `${carpetaAdicional}/${nombreArchivo}` : nombreArchivo;
         
-        const { data, error } = await window.supabase.storage
+        const { data, error } = await window.supabaseClient.storage
             .from('imagenes-platillos')
             .upload(ruta, archivoImagen, {
                 cacheControl: '3600',
@@ -85,7 +87,7 @@ window.subirImagenPlatillo = async function(archivoImagen, carpetaAdicional = ''
         
         if (error) throw error;
         
-        const { data: urlData } = window.supabase.storage
+        const { data: urlData } = window.supabaseClient.storage
             .from('imagenes-platillos')
             .getPublicUrl(ruta);
         
@@ -114,7 +116,7 @@ window.eliminarImagenPlatillo = async function(urlImagen) {
         
         if (!rutaRelativa) return { success: true };
         
-        const { error } = await window.supabase.storage
+        const { error } = await window.supabaseClient.storage
             .from(bucketName)
             .remove([rutaRelativa]);
         
@@ -201,3 +203,4 @@ window.categoriasMenu = {
 
 console.log('✅ supabase-config.js cargado correctamente');
 console.log('📌 URL:', window.SUPABASE_URL);
+console.log('📌 Cliente:', window.supabaseClient ? '✅ OK' : '❌ Error');
