@@ -972,6 +972,8 @@
         </div>
     </div>
 
+	<!-- Primero Supabase (CDN) -->
+	<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="../supabase-config.js"></script>
     <script>
         // Variables globales
@@ -1655,35 +1657,47 @@
 
         // Configurar event listeners
         function setupEventListeners() {
-            // Login
-            document.getElementById('loginForm').addEventListener('submit', async (e) => {
-                e.preventDefault();
-                
-                const username = document.getElementById('username').value;
-                const password = document.getElementById('password').value;
-                
-                try {
-                    const { data, error } = await supabase
-                        .from('usuarios')
-                        .select('*')
-                        .eq('username', username)
-                        .eq('password', password)
-                        .eq('activo', true)
-                        .single();
-                    
-                    if (error || !data) {
-                        alert('Credenciales inválidas');
-                        return;
-                    }
-                    
-                    currentUser = data;
-                    sessionStorage.setItem('cajero_user', JSON.stringify(data));
-                    mostrarPanel();
-                } catch (error) {
-                    console.error('Error en login:', error);
-                    alert('Error al iniciar sesión');
-                }
-            });
+            // Login - VERSIÓN CORREGIDA
+			document.getElementById('loginForm').addEventListener('submit', async (e) => {
+				e.preventDefault();
+				
+				const username = document.getElementById('username').value;
+				const password = document.getElementById('password').value;
+				
+				console.log('Intentando login cajero:', username); // Para depurar
+				
+				try {
+					const { data, error } = await supabase
+						.from('usuarios')
+						.select('*')
+						.eq('username', username)
+						.eq('password', password)
+						.eq('activo', true)
+						.maybeSingle(); // Cambiado de single() a maybeSingle()
+					
+					console.log('Respuesta de Supabase:', { data, error }); // Para depurar
+					
+					if (error) {
+						console.error('Error de Supabase:', error);
+						alert('Error al conectar con la base de datos: ' + error.message);
+						return;
+					}
+					
+					if (!data) {
+						alert('Credenciales inválidas o usuario inactivo');
+						return;
+					}
+					
+					// Login exitoso
+					currentUser = data;
+					sessionStorage.setItem('cajero_user', JSON.stringify(data));
+					mostrarPanel();
+					
+				} catch (error) {
+					console.error('Error en login:', error);
+					alert('Error al iniciar sesión: ' + error.message);
+				}
+			});
             
             // Logout
             document.getElementById('logoutButton').addEventListener('click', () => {
