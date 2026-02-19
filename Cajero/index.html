@@ -767,8 +767,8 @@
         <div class="login-box">
             <h2><i class="fas fa-user"></i> Cajero Saki Sushi</h2>
             <form class="login-form" id="loginForm">
-                <input type="text" id="username" placeholder="Usuario" required>
-                <input type="password" id="password" placeholder="Contraseña" required>
+                <input type="text" id="username" placeholder="Usuario" required autocomplete="username">
+                <input type="password" id="password" placeholder="Contraseña" required autocomplete="current-password">
                 <button type="submit">Iniciar Sesión</button>
             </form>
         </div>
@@ -975,424 +975,433 @@
     <!-- Primero Supabase (CDN) -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Luego tu configuración -->
-<script src="../supabase-config.js"></script>
-<script>
-    // ✅ NO USAMOS 'const supabase' - USAMOS DIRECTAMENTE window.supabaseClient
-    
-    // Variables globales
-    let currentUser = null;
-    let pedidos = [];
-    let pedidoActual = null;
-    let pagosMixtos = [];
-    let totalAPagar = 0;
-    let totalRecibido = 0;
-    let vuelto = 0;
-    let condonado = 0;
-    let aFavorCaja = 0;
-    let invitacionActiva = false;
+    <script src="../supabase-config.js"></script>
+    <script>
+        // Variables globales
+        let currentUser = null;
+        let pedidos = [];
+        let pedidoActual = null;
+        let pagosMixtos = [];
+        let totalAPagar = 0;
+        let totalRecibido = 0;
+        let vuelto = 0;
+        let condonado = 0;
+        let aFavorCaja = 0;
+        let invitacionActiva = false;
 
-    // Verificar sesión al cargar
-    document.addEventListener('DOMContentLoaded', () => {
-        const savedUser = sessionStorage.getItem('cajero_user');
-        if (savedUser) {
-            try {
-                currentUser = JSON.parse(savedUser);
-                mostrarPanel();
-            } catch {
+        // Verificar sesión al cargar
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('🔍 Verificando sesión guardada...');
+            const savedUser = sessionStorage.getItem('cajero_user');
+            if (savedUser) {
+                try {
+                    currentUser = JSON.parse(savedUser);
+                    console.log('👤 Usuario encontrado en sesión:', currentUser.nombre);
+                    mostrarPanel();
+                } catch {
+                    console.log('❌ Error al parsear usuario guardado');
+                    mostrarLogin();
+                }
+            } else {
+                console.log('👤 No hay sesión guardada');
                 mostrarLogin();
             }
-        } else {
-            mostrarLogin();
+        });
+
+        // Mostrar login
+        function mostrarLogin() {
+            console.log('🔐 Mostrando pantalla de login');
+            document.getElementById('loginContainer').style.display = 'flex';
+            document.getElementById('panelContainer').classList.remove('active');
         }
-    });
 
-    // Mostrar login
-    function mostrarLogin() {
-        document.getElementById('loginContainer').style.display = 'flex';
-        document.getElementById('panelContainer').classList.remove('active');
-    }
-
-    // Mostrar panel
-    function mostrarPanel() {
-        document.getElementById('loginContainer').style.display = 'none';
-        document.getElementById('panelContainer').classList.add('active');
-        cargarConfiguracionInicial();
-        cargarPedidos();
-        cargarMenu();
-        setupRealtimeSubscriptions();
-        setupEventListeners();
-    }
-
-    // Configuración inicial
-    async function cargarConfiguracionInicial() {
-        await cargarConfiguracion();
-        actualizarTasaUI();
-    }
-
-    // Actualizar UI de tasa
-    function actualizarTasaUI() {
-        document.getElementById('tasaBase').textContent = (configGlobal.tasa_cambio || 400).toFixed(2);
-        document.getElementById('aumentoDiario').textContent = (configGlobal.aumento_diario || 0) + '%';
-        document.getElementById('aumentoActivo').textContent = configGlobal.aumento_activo ? 'Sí' : 'No';
-        document.getElementById('tasaEfectiva').textContent = (configGlobal.tasa_efectiva || 400).toFixed(2);
-    }
-
-    // Cargar pedidos - AHORA USA window.supabaseClient
-    async function cargarPedidos() {
-        try {
-            const hoy = new Date();
-            hoy.setHours(0, 0, 0, 0);
-            
-            const { data, error } = await window.supabaseClient
-                .from('pedidos')
-                .select('*')
-                .in('estado', ['pendiente', 'en_cocina', 'en_camino', 'reserva_pendiente', 'reserva_atendida'])
-                .order('timestamp', { ascending: false });
-            
-            if (error) throw error;
-            pedidos = data || [];
-            actualizarVistaPedidos();
-            actualizarEstadisticas();
-        } catch (error) {
-            console.error('Error cargando pedidos:', error);
+        // Mostrar panel
+        function mostrarPanel() {
+            console.log('📊 Mostrando panel principal');
+            document.getElementById('loginContainer').style.display = 'none';
+            document.getElementById('panelContainer').classList.add('active');
+            cargarConfiguracionInicial();
+            cargarPedidos();
+            cargarMenu();
+            setupRealtimeSubscriptions();
         }
-    }
 
-    // Cargar menú - AHORA USA window.supabaseClient
-    async function cargarMenu() {
-        try {
-            const { data, error } = await window.supabaseClient
-                .from('menu')
-                .select('*');
-            
-            if (error) throw error;
-            renderizarMenu(data || []);
-        } catch (error) {
-            console.error('Error cargando menú:', error);
+        // Configuración inicial
+        async function cargarConfiguracionInicial() {
+            console.log('⚙️ Cargando configuración inicial...');
+            await cargarConfiguracion();
+            actualizarTasaUI();
+            console.log('✅ Configuración cargada');
         }
-    }
 
-    // Renderizar menú
-    function renderizarMenu(menu) {
-        const grid = document.getElementById('menuGrid');
-        grid.innerHTML = '';
-        
-        menu.forEach(item => {
+        // Actualizar UI de tasa
+        function actualizarTasaUI() {
+            document.getElementById('tasaBase').textContent = (configGlobal.tasa_cambio || 400).toFixed(2);
+            document.getElementById('aumentoDiario').textContent = (configGlobal.aumento_diario || 0) + '%';
+            document.getElementById('aumentoActivo').textContent = configGlobal.aumento_activo ? 'Sí' : 'No';
+            document.getElementById('tasaEfectiva').textContent = (configGlobal.tasa_efectiva || 400).toFixed(2);
+        }
+
+        // Cargar pedidos
+        async function cargarPedidos() {
+            console.log('📦 Cargando pedidos...');
+            try {
+                const hoy = new Date();
+                hoy.setHours(0, 0, 0, 0);
+                
+                const { data, error } = await window.supabaseClient
+                    .from('pedidos')
+                    .select('*')
+                    .in('estado', ['pendiente', 'en_cocina', 'en_camino', 'reserva_pendiente', 'reserva_atendida'])
+                    .order('timestamp', { ascending: false });
+                
+                if (error) throw error;
+                pedidos = data || [];
+                console.log(`📦 ${pedidos.length} pedidos cargados`);
+                actualizarVistaPedidos();
+                actualizarEstadisticas();
+            } catch (error) {
+                console.error('Error cargando pedidos:', error);
+            }
+        }
+
+        // Cargar menú
+        async function cargarMenu() {
+            console.log('🍣 Cargando menú...');
+            try {
+                const { data, error } = await window.supabaseClient
+                    .from('menu')
+                    .select('*');
+                
+                if (error) throw error;
+                console.log(`🍣 ${data?.length || 0} platillos cargados`);
+                renderizarMenu(data || []);
+            } catch (error) {
+                console.error('Error cargando menú:', error);
+            }
+        }
+
+        // Renderizar menú
+        function renderizarMenu(menu) {
+            const grid = document.getElementById('menuGrid');
+            grid.innerHTML = '';
+            
+            menu.forEach(item => {
+                const card = document.createElement('div');
+                card.className = 'menu-card';
+                card.innerHTML = `
+                    <div class="menu-card-image" style="background-image: url('${item.imagen || 'https://via.placeholder.com/250x120'}')"></div>
+                    <div class="menu-card-content">
+                        <div class="menu-card-header">
+                            <span class="menu-card-title">${item.nombre}</span>
+                            <span class="${item.disponible ? 'menu-card-disponible' : 'menu-card-no-disponible'}"></span>
+                        </div>
+                        <div class="menu-card-precio">
+                            ${formatUSD(item.precio || 0)} / ${formatBs(usdToBs(item.precio || 0))}
+                        </div>
+                        <div class="menu-card-stock">Stock: ${item.stock || 0}</div>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        // Actualizar vista de pedidos
+        function actualizarVistaPedidos() {
+            // Pendientes por tipo
+            const mesaPendientes = pedidos.filter(p => p.tipo === 'mesa' && p.estado === 'pendiente');
+            const deliveryPendientes = pedidos.filter(p => p.tipo === 'delivery' && p.estado === 'pendiente');
+            const reservasPendientes = pedidos.filter(p => p.tipo === 'reserva' && p.estado === 'pendiente');
+            
+            // En preparación
+            const mesaCocina = pedidos.filter(p => p.tipo === 'mesa' && p.estado === 'en_cocina');
+            const deliveryCamino = pedidos.filter(p => p.tipo === 'delivery' && p.estado === 'en_camino');
+            const reservasProceso = pedidos.filter(p => p.tipo === 'reserva' && (p.estado === 'reserva_pendiente' || p.estado === 'reserva_atendida'));
+            
+            // Actualizar contadores
+            document.getElementById('mesaPendientesCount').textContent = mesaPendientes.length;
+            document.getElementById('deliveryPendientesCount').textContent = deliveryPendientes.length;
+            document.getElementById('reservasPendientesCount').textContent = reservasPendientes.length;
+            document.getElementById('mesaCocinaCount').textContent = mesaCocina.length;
+            document.getElementById('deliveryCaminoCount').textContent = deliveryCamino.length;
+            document.getElementById('reservasPendientesProcesoCount').textContent = reservasProceso.length;
+            
+            // Renderizar columnas
+            renderizarColumnaPendientes('mesaPendientes', mesaPendientes);
+            renderizarColumnaPendientes('deliveryPendientes', deliveryPendientes);
+            renderizarColumnaPendientes('reservasPendientes', reservasPendientes);
+            renderizarColumnaPreparacion('mesaCocina', mesaCocina);
+            renderizarColumnaPreparacion('deliveryCamino', deliveryCamino);
+            renderizarColumnaPreparacion('reservasPendientesProceso', reservasProceso);
+        }
+
+        // Renderizar columna de pendientes
+        function renderizarColumnaPendientes(elementId, pedidosLista) {
+            const container = document.getElementById(elementId);
+            container.innerHTML = '';
+            
+            pedidosLista.forEach(pedido => {
+                const card = crearTarjetaPedido('pendiente', pedido);
+                container.appendChild(card);
+            });
+            
+            if (pedidosLista.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: var(--gray-500); padding: 1rem;">No hay pedidos pendientes</p>';
+            }
+        }
+
+        // Renderizar columna de preparación
+        function renderizarColumnaPreparacion(elementId, pedidosLista) {
+            const container = document.getElementById(elementId);
+            container.innerHTML = '';
+            
+            pedidosLista.forEach(pedido => {
+                const card = crearTarjetaPedido('preparacion', pedido);
+                container.appendChild(card);
+            });
+            
+            if (pedidosLista.length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: var(--gray-500); padding: 1rem;">No hay pedidos en esta sección</p>';
+            }
+        }
+
+        // Crear tarjeta de pedido
+        function crearTarjetaPedido(tipo, pedido) {
             const card = document.createElement('div');
-            card.className = 'menu-card';
+            card.className = `pedido-card ${tipo}`;
+            
+            const fecha = new Date(pedido.timestamp);
+            const hora = fecha.toLocaleTimeString();
+            
+            // Calcular tiempo restante para delivery/reserva
+            let temporizador = '';
+            if (pedido.tipo === 'delivery' || pedido.tipo === 'reserva') {
+                const creado = new Date(pedido.timestamp).getTime();
+                const ahora = Date.now();
+                const transcurrido = Math.floor((ahora - creado) / 1000 / 60);
+                const restante = 20 - transcurrido;
+                
+                if (restante > 0 && pedido.estado === 'pendiente') {
+                    temporizador = `<div class="pedido-temporizador"><i class="fas fa-clock"></i> ${restante} min restantes</div>`;
+                } else if (restante <= 0 && pedido.estado === 'pendiente') {
+                    temporizador = `<div class="pedido-temporizador" style="color: var(--danger);"><i class="fas fa-exclamation-triangle"></i> Tiempo agotado</div>`;
+                }
+            }
+            
+            const itemsHtml = pedido.items ? pedido.items.map(item => 
+                `<div>${item.cantidad || 0}x ${item.nombre || ''} ${item.personalizacion?.length ? '(Personalizado)' : ''}</div>`
+            ).join('') : '';
+            
+            const botones = [];
+            
+            if (tipo === 'pendiente') {
+                botones.push(`<button class="btn-small btn-cobrar" onclick="abrirCobro('${pedido.id}')"><i class="fas fa-cash-register"></i> Cobrar</button>`);
+                
+                if (pedido.tipo === 'delivery' || pedido.tipo === 'reserva') {
+                    botones.push(`<button class="btn-small btn-rechazar" onclick="rechazarPedido('${pedido.id}')"><i class="fas fa-times"></i> Rechazar</button>`);
+                    
+                    if (pedido.comprobante_url) {
+                        botones.push(`<button class="btn-small btn-ver" onclick="verComprobante('${pedido.comprobante_url}')"><i class="fas fa-image"></i> Ver</button>`);
+                    }
+                }
+            } else {
+                // Botones para avanzar estado
+                if (pedido.tipo === 'mesa' && pedido.estado === 'en_cocina') {
+                    botones.push(`<button class="btn-small btn-avanzar" onclick="avanzarEstado('${pedido.id}', 'entregado')"><i class="fas fa-check"></i> Pedido Entregado</button>`);
+                } else if (pedido.tipo === 'delivery' && pedido.estado === 'en_camino') {
+                    botones.push(`<button class="btn-small btn-avanzar" onclick="avanzarEstado('${pedido.id}', 'enviado')"><i class="fas fa-check"></i> Pedido Enviado</button>`);
+                } else if (pedido.tipo === 'reserva') {
+                    if (pedido.estado === 'reserva_pendiente') {
+                        botones.push(`<button class="btn-small btn-avanzar" onclick="avanzarEstado('${pedido.id}', 'reserva_atendida')"><i class="fas fa-user-check"></i> Cliente Confirmado</button>`);
+                    } else if (pedido.estado === 'reserva_atendida') {
+                        botones.push(`<button class="btn-small btn-avanzar" onclick="avanzarEstado('${pedido.id}', 'reserva_completada')"><i class="fas fa-check"></i> Pedido Entregado</button>`);
+                    }
+                }
+            }
+            
             card.innerHTML = `
-                <div class="menu-card-image" style="background-image: url('${item.imagen || 'https://via.placeholder.com/250x120'}')"></div>
-                <div class="menu-card-content">
-                    <div class="menu-card-header">
-                        <span class="menu-card-title">${item.nombre}</span>
-                        <span class="${item.disponible ? 'menu-card-disponible' : 'menu-card-no-disponible'}"></span>
-                    </div>
-                    <div class="menu-card-precio">
-                        ${formatUSD(item.precio || 0)} / ${formatBs(usdToBs(item.precio || 0))}
-                    </div>
-                    <div class="menu-card-stock">Stock: ${item.stock || 0}</div>
+                <div class="pedido-card-header">
+                    <span class="pedido-hora">${hora}</span>
+                    <span class="pedido-tipo-badge tipo-${pedido.tipo}">${pedido.tipo ? pedido.tipo.toUpperCase() : 'N/A'}</span>
+                </div>
+                <div class="pedido-cliente">
+                    ${pedido.cliente_nombre || (pedido.tipo === 'mesa' ? `Mesa ${pedido.mesa || 'N/A'}` : 'Cliente')}
+                </div>
+                <div class="pedido-items">
+                    ${itemsHtml}
+                </div>
+                <div class="pedido-total">
+                    Total: ${formatBs(usdToBs(pedido.total || 0))}
+                </div>
+                ${temporizador}
+                <div class="pedido-actions">
+                    ${botones.join('')}
                 </div>
             `;
-            grid.appendChild(card);
-        });
-    }
-
-    // Actualizar vista de pedidos
-    function actualizarVistaPedidos() {
-        // Pendientes por tipo
-        const mesaPendientes = pedidos.filter(p => p.tipo === 'mesa' && p.estado === 'pendiente');
-        const deliveryPendientes = pedidos.filter(p => p.tipo === 'delivery' && p.estado === 'pendiente');
-        const reservasPendientes = pedidos.filter(p => p.tipo === 'reserva' && p.estado === 'pendiente');
-        
-        // En preparación
-        const mesaCocina = pedidos.filter(p => p.tipo === 'mesa' && p.estado === 'en_cocina');
-        const deliveryCamino = pedidos.filter(p => p.tipo === 'delivery' && p.estado === 'en_camino');
-        const reservasProceso = pedidos.filter(p => p.tipo === 'reserva' && (p.estado === 'reserva_pendiente' || p.estado === 'reserva_atendida'));
-        
-        // Actualizar contadores
-        document.getElementById('mesaPendientesCount').textContent = mesaPendientes.length;
-        document.getElementById('deliveryPendientesCount').textContent = deliveryPendientes.length;
-        document.getElementById('reservasPendientesCount').textContent = reservasPendientes.length;
-        document.getElementById('mesaCocinaCount').textContent = mesaCocina.length;
-        document.getElementById('deliveryCaminoCount').textContent = deliveryCamino.length;
-        document.getElementById('reservasPendientesProcesoCount').textContent = reservasProceso.length;
-        
-        // Renderizar columnas
-        renderizarColumnaPendientes('mesaPendientes', mesaPendientes);
-        renderizarColumnaPendientes('deliveryPendientes', deliveryPendientes);
-        renderizarColumnaPendientes('reservasPendientes', reservasPendientes);
-        renderizarColumnaPreparacion('mesaCocina', mesaCocina);
-        renderizarColumnaPreparacion('deliveryCamino', deliveryCamino);
-        renderizarColumnaPreparacion('reservasPendientesProceso', reservasProceso);
-    }
-
-    // Renderizar columna de pendientes
-    function renderizarColumnaPendientes(elementId, pedidosLista) {
-        const container = document.getElementById(elementId);
-        container.innerHTML = '';
-        
-        pedidosLista.forEach(pedido => {
-            const card = crearTarjetaPedido('pendiente', pedido);
-            container.appendChild(card);
-        });
-        
-        if (pedidosLista.length === 0) {
-            container.innerHTML = '<p style="text-align: center; color: var(--gray-500); padding: 1rem;">No hay pedidos pendientes</p>';
-        }
-    }
-
-    // Renderizar columna de preparación
-    function renderizarColumnaPreparacion(elementId, pedidosLista) {
-        const container = document.getElementById(elementId);
-        container.innerHTML = '';
-        
-        pedidosLista.forEach(pedido => {
-            const card = crearTarjetaPedido('preparacion', pedido);
-            container.appendChild(card);
-        });
-        
-        if (pedidosLista.length === 0) {
-            container.innerHTML = '<p style="text-align: center; color: var(--gray-500); padding: 1rem;">No hay pedidos en esta sección</p>';
-        }
-    }
-
-    // Crear tarjeta de pedido
-    function crearTarjetaPedido(tipo, pedido) {
-        const card = document.createElement('div');
-        card.className = `pedido-card ${tipo}`;
-        
-        const fecha = new Date(pedido.timestamp);
-        const hora = fecha.toLocaleTimeString();
-        
-        // Calcular tiempo restante para delivery/reserva
-        let temporizador = '';
-        if (pedido.tipo === 'delivery' || pedido.tipo === 'reserva') {
-            const creado = new Date(pedido.timestamp).getTime();
-            const ahora = Date.now();
-            const transcurrido = Math.floor((ahora - creado) / 1000 / 60);
-            const restante = 20 - transcurrido;
             
-            if (restante > 0 && pedido.estado === 'pendiente') {
-                temporizador = `<div class="pedido-temporizador"><i class="fas fa-clock"></i> ${restante} min restantes</div>`;
-            } else if (restante <= 0 && pedido.estado === 'pendiente') {
-                temporizador = `<div class="pedido-temporizador" style="color: var(--danger);"><i class="fas fa-exclamation-triangle"></i> Tiempo agotado</div>`;
+            return card;
+        }
+
+        // Actualizar estadísticas
+        async function actualizarEstadisticas() {
+            try {
+                const hoy = new Date();
+                hoy.setHours(0, 0, 0, 0);
+                const manana = new Date(hoy);
+                manana.setDate(manana.getDate() + 1);
+                
+                const { data: pedidosHoy, error } = await window.supabaseClient
+                    .from('pedidos')
+                    .select('*')
+                    .gte('timestamp', hoy.toISOString())
+                    .lt('timestamp', manana.toISOString())
+                    .in('estado', ['cobrado', 'entregado', 'enviado', 'reserva_completada']);
+                
+                if (error) throw error;
+                
+                const enPreparacion = pedidos.filter(p => 
+                    ['en_cocina', 'en_camino', 'reserva_pendiente', 'reserva_atendida'].includes(p.estado)
+                ).length;
+                
+                const cobradosHoy = pedidosHoy?.length || 0;
+                const ventasHoy = pedidosHoy?.reduce((sum, p) => sum + (p.total || 0), 0) || 0;
+                const platillosHoy = pedidosHoy?.reduce((sum, p) => {
+                    return sum + (p.items?.reduce((s, i) => s + (i.cantidad || 0), 0) || 0);
+                }, 0) || 0;
+                
+                document.getElementById('statsPreparacion').textContent = enPreparacion;
+                document.getElementById('statsCobrados').textContent = cobradosHoy;
+                document.getElementById('statsVentas').textContent = formatBs(usdToBs(ventasHoy));
+                document.getElementById('statsPlatillos').textContent = platillosHoy;
+            } catch (error) {
+                console.error('Error actualizando estadísticas:', error);
             }
         }
-        
-        const itemsHtml = pedido.items ? pedido.items.map(item => 
-            `<div>${item.cantidad || 0}x ${item.nombre || ''} ${item.personalizacion?.length ? '(Personalizado)' : ''}</div>`
-        ).join('') : '';
-        
-        const botones = [];
-        
-        if (tipo === 'pendiente') {
-            botones.push(`<button class="btn-small btn-cobrar" onclick="abrirCobro('${pedido.id}')"><i class="fas fa-cash-register"></i> Cobrar</button>`);
+
+        // Abrir modal de cobro
+        function abrirCobro(pedidoId) {
+            const pedido = pedidos.find(p => p.id === pedidoId);
+            if (!pedido) return;
             
-            if (pedido.tipo === 'delivery' || pedido.tipo === 'reserva') {
-                botones.push(`<button class="btn-small btn-rechazar" onclick="rechazarPedido('${pedido.id}')"><i class="fas fa-times"></i> Rechazar</button>`);
-                
-                if (pedido.comprobante_url) {
-                    botones.push(`<button class="btn-small btn-ver" onclick="verComprobante('${pedido.comprobante_url}')"><i class="fas fa-image"></i> Ver</button>`);
-                }
+            pedidoActual = pedido;
+            pagosMixtos = [];
+            totalAPagar = usdToBs(pedido.total || 0);
+            totalRecibido = 0;
+            vuelto = 0;
+            condonado = 0;
+            aFavorCaja = 0;
+            invitacionActiva = false;
+            
+            actualizarModalCobro();
+            document.getElementById('cobroModal').classList.add('active');
+        }
+
+        // Actualizar modal de cobro
+        function actualizarModalCobro() {
+            const body = document.getElementById('cobroModalBody');
+            
+            // Calcular totales
+            const pendiente = Math.max(0, totalAPagar - totalRecibido);
+            const sobrante = Math.max(0, totalRecibido - totalAPagar);
+            
+            let itemsHtml = '';
+            if (pedidoActual.items && Array.isArray(pedidoActual.items)) {
+                itemsHtml = pedidoActual.items.map(item => `
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.25rem;">
+                        <span>${item.cantidad || 0}x ${item.nombre || ''}</span>
+                        <span>${formatBs(usdToBs((item.precioUnitarioUSD || 0) * (item.cantidad || 0)))}</span>
+                    </div>
+                `).join('');
             }
-        } else {
-            // Botones para avanzar estado
-            if (pedido.tipo === 'mesa' && pedido.estado === 'en_cocina') {
-                botones.push(`<button class="btn-small btn-avanzar" onclick="avanzarEstado('${pedido.id}', 'entregado')"><i class="fas fa-check"></i> Pedido Entregado</button>`);
-            } else if (pedido.tipo === 'delivery' && pedido.estado === 'en_camino') {
-                botones.push(`<button class="btn-small btn-avanzar" onclick="avanzarEstado('${pedido.id}', 'enviado')"><i class="fas fa-check"></i> Pedido Enviado</button>`);
-            } else if (pedido.tipo === 'reserva') {
-                if (pedido.estado === 'reserva_pendiente') {
-                    botones.push(`<button class="btn-small btn-avanzar" onclick="avanzarEstado('${pedido.id}', 'reserva_atendida')"><i class="fas fa-user-check"></i> Cliente Confirmado</button>`);
-                } else if (pedido.estado === 'reserva_atendida') {
-                    botones.push(`<button class="btn-small btn-avanzar" onclick="avanzarEstado('${pedido.id}', 'reserva_completada')"><i class="fas fa-check"></i> Pedido Entregado</button>`);
-                }
-            }
-        }
-        
-        card.innerHTML = `
-            <div class="pedido-card-header">
-                <span class="pedido-hora">${hora}</span>
-                <span class="pedido-tipo-badge tipo-${pedido.tipo}">${pedido.tipo ? pedido.tipo.toUpperCase() : 'N/A'}</span>
-            </div>
-            <div class="pedido-cliente">
-                ${pedido.cliente_nombre || (pedido.tipo === 'mesa' ? `Mesa ${pedido.mesa || 'N/A'}` : 'Cliente')}
-            </div>
-            <div class="pedido-items">
-                ${itemsHtml}
-            </div>
-            <div class="pedido-total">
-                Total: ${formatBs(usdToBs(pedido.total || 0))}
-            </div>
-            ${temporizador}
-            <div class="pedido-actions">
-                ${botones.join('')}
-            </div>
-        `;
-        
-        return card;
-    }
-
-    // Actualizar estadísticas - AHORA USA window.supabaseClient
-    async function actualizarEstadisticas() {
-        try {
-            const hoy = new Date();
-            hoy.setHours(0, 0, 0, 0);
-            const manana = new Date(hoy);
-            manana.setDate(manana.getDate() + 1);
             
-            const { data: pedidosHoy, error } = await window.supabaseClient
-                .from('pedidos')
-                .select('*')
-                .gte('timestamp', hoy.toISOString())
-                .lt('timestamp', manana.toISOString())
-                .in('estado', ['cobrado', 'entregado', 'enviado', 'reserva_completada']);
-            
-            if (error) throw error;
-            
-            const enPreparacion = pedidos.filter(p => 
-                ['en_cocina', 'en_camino', 'reserva_pendiente', 'reserva_atendida'].includes(p.estado)
-            ).length;
-            
-            const cobradosHoy = pedidosHoy?.length || 0;
-            const ventasHoy = pedidosHoy?.reduce((sum, p) => sum + (p.total || 0), 0) || 0;
-            const platillosHoy = pedidosHoy?.reduce((sum, p) => {
-                return sum + (p.items?.reduce((s, i) => s + (i.cantidad || 0), 0) || 0);
-            }, 0) || 0;
-            
-            document.getElementById('statsPreparacion').textContent = enPreparacion;
-            document.getElementById('statsCobrados').textContent = cobradosHoy;
-            document.getElementById('statsVentas').textContent = formatBs(usdToBs(ventasHoy));
-            document.getElementById('statsPlatillos').textContent = platillosHoy;
-        } catch (error) {
-            console.error('Error actualizando estadísticas:', error);
-        }
-    }
-
-    // Abrir modal de cobro
-    function abrirCobro(pedidoId) {
-        const pedido = pedidos.find(p => p.id === pedidoId);
-        if (!pedido) return;
-        
-        pedidoActual = pedido;
-        pagosMixtos = [];
-        totalAPagar = usdToBs(pedido.total || 0);
-        totalRecibido = 0;
-        vuelto = 0;
-        condonado = 0;
-        aFavorCaja = 0;
-        invitacionActiva = false;
-        
-        actualizarModalCobro();
-        document.getElementById('cobroModal').classList.add('active');
-    }
-
-    // Actualizar modal de cobro
-    function actualizarModalCobro() {
-        const body = document.getElementById('cobroModalBody');
-        
-        // Calcular totales
-        const pendiente = Math.max(0, totalAPagar - totalRecibido);
-        const sobrante = Math.max(0, totalRecibido - totalAPagar);
-        
-        let itemsHtml = '';
-        if (pedidoActual.items && Array.isArray(pedidoActual.items)) {
-            itemsHtml = pedidoActual.items.map(item => `
-                <div style="display: flex; justify-content: space-between; margin-bottom: 0.25rem;">
-                    <span>${item.cantidad || 0}x ${item.nombre || ''}</span>
-                    <span>${formatBs(usdToBs((item.precioUnitarioUSD || 0) * (item.cantidad || 0)))}</span>
-                </div>
-            `).join('');
-        }
-        
-        body.innerHTML = `
-            <div style="margin-bottom: 1rem;">
-                <h4>Resumen del Pedido</h4>
-                ${itemsHtml}
-                ${pedidoActual.costo_delivery ? `
-                    <div style="display: flex; justify-content: space-between; margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid var(--gray-200);">
-                        <span>Costo delivery:</span>
-                        <span>${formatBs(pedidoActual.costo_delivery)}</span>
-                    </div>
-                ` : ''}
-                <div style="display: flex; justify-content: space-between; margin-top: 0.5rem; padding-top: 0.5rem; border-top: 2px solid var(--gray-300); font-weight: 700;">
-                    <span>Total a pagar:</span>
-                    <span class="text-primary">${formatBs(totalAPagar)}</span>
-                </div>
-            </div>
-            
-            <div style="margin-bottom: 1rem;">
-                <label style="display: flex; align-items: center; gap: 0.5rem;">
-                    <input type="checkbox" id="invitacionCheck" ${invitacionActiva ? 'checked' : ''}>
-                    <strong>Por parte de la casa (invitación)</strong>
-                </label>
-            </div>
-            
-            <div id="pagosSection" style="${invitacionActiva ? 'display: none;' : ''}">
-                <h4>Pagos Mixtos</h4>
-                <button class="btn-secondary" onclick="agregarMetodoPago()" style="margin-bottom: 1rem;">
-                    <i class="fas fa-plus"></i> Agregar Método de Pago
-                </button>
-                
-                <div id="pagosContainer" class="pagos-container">
-                    ${pagosMixtos.map((pago, index) => `
-                        <div class="pago-item">
-                            <button class="remove-pago" onclick="eliminarMetodoPago(${index})">&times;</button>
-                            <select onchange="actualizarPago(${index}, 'metodo', this.value)">
-                                <option value="efectivo_bs" ${pago.metodo === 'efectivo_bs' ? 'selected' : ''}>Efectivo Bs</option>
-                                <option value="efectivo_usd" ${pago.metodo === 'efectivo_usd' ? 'selected' : ''}>Efectivo Dólar</option>
-                                <option value="pago_movil" ${pago.metodo === 'pago_movil' ? 'selected' : ''}>Pago Móvil</option>
-                                <option value="punto_venta" ${pago.metodo === 'punto_venta' ? 'selected' : ''}>Punto de Venta</option>
-                            </select>
-                            <input type="number" step="0.01" placeholder="Monto ${pago.metodo === 'efectivo_usd' ? 'en USD' : 'en Bs'}" 
-                                   value="${pago.monto || 0}" onchange="actualizarPago(${index}, 'monto', this.value)">
-                            ${pago.metodo === 'pago_movil' ? `
-                                <input type="text" maxlength="6" placeholder="Referencia (6 dígitos)" 
-                                       value="${pago.referencia || ''}" onchange="actualizarPago(${index}, 'referencia', this.value)">
-                            ` : ''}
-                        </div>
-                    `).join('')}
-                </div>
-                
-                <div class="pagos-total">
-                    <div class="pagos-resumen">
-                        <span class="pagos-resumen-item">Total recibido:</span>
-                        <span class="pagos-resumen-value" id="totalRecibido">${formatBs(totalRecibido)}</span>
-                    </div>
-                    <div class="pagos-resumen">
-                        <span class="pagos-resumen-item">Pendiente:</span>
-                        <span class="pagos-resumen-value" style="color: var(--danger);" id="pendiente">${formatBs(pendiente)}</span>
-                    </div>
-                    <div class="pagos-resumen">
-                        <span class="pagos-resumen-item">Sobrante:</span>
-                        <span class="pagos-resumen-value" style="color: var(--success);" id="sobrante">${formatBs(sobrante)}</span>
-                    </div>
-                </div>
-                
-                ${sobrante > 0 ? `
-                    <div class="alert success">
-                        <h4>Vuelto: ${formatBs(sobrante)}</h4>
-                        <div style="margin-top: 0.5rem;">
-                            <input type="number" step="0.01" id="vueltoEntregado" placeholder="Vuelto a entregar" 
-                                   value="${sobrante}" style="width: 100%; padding: 0.5rem; margin-bottom: 0.5rem;">
-                            <label style="display: flex; align-items: center; gap: 0.5rem;">
-                                <input type="checkbox" id="aFavorCajaCheck">
-                                A favor de caja (cliente no quiere vuelto)
-                            </label>
-                        </div>
-                    </div>
-                ` : ''}
-                
-                ${pendiente > 0 ? `
-                    <div class="alert warning">
-                        <label style="display: flex; align-items: center; gap: 0.5rem;">
-                            <input type="checkbox" id="condonarCheck">
-                                Monto a condonar: ${formatBs(pendiente)}
-                            </label>
+            body.innerHTML = `
+                <div style="margin-bottom: 1rem;">
+                    <h4>Resumen del Pedido</h4>
+                    ${itemsHtml}
+                    ${pedidoActual.costo_delivery ? `
+                        <div style="display: flex; justify-content: space-between; margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid var(--gray-200);">
+                            <span>Costo delivery:</span>
+                            <span>${formatBs(pedidoActual.costo_delivery)}</span>
                         </div>
                     ` : ''}
+                    <div style="display: flex; justify-content: space-between; margin-top: 0.5rem; padding-top: 0.5rem; border-top: 2px solid var(--gray-300); font-weight: 700;">
+                        <span>Total a pagar:</span>
+                        <span class="text-primary">${formatBs(totalAPagar)}</span>
+                    </div>
                 </div>
-            `;
+                
+                <div style="margin-bottom: 1rem;">
+                    <label style="display: flex; align-items: center; gap: 0.5rem;">
+                        <input type="checkbox" id="invitacionCheck" ${invitacionActiva ? 'checked' : ''}>
+                        <strong>Por parte de la casa (invitación)</strong>
+                    </label>
+                </div>
+                
+                <div id="pagosSection" style="${invitacionActiva ? 'display: none;' : ''}">
+                    <h4>Pagos Mixtos</h4>
+                    <button class="btn-secondary" onclick="agregarMetodoPago()" style="margin-bottom: 1rem;">
+                        <i class="fas fa-plus"></i> Agregar Método de Pago
+                    </button>
+                    
+                    <div id="pagosContainer" class="pagos-container">
+                        ${pagosMixtos.map((pago, index) => `
+                            <div class="pago-item">
+                                <button class="remove-pago" onclick="eliminarMetodoPago(${index})">&times;</button>
+                                <select onchange="actualizarPago(${index}, 'metodo', this.value)">
+                                    <option value="efectivo_bs" ${pago.metodo === 'efectivo_bs' ? 'selected' : ''}>Efectivo Bs</option>
+                                    <option value="efectivo_usd" ${pago.metodo === 'efectivo_usd' ? 'selected' : ''}>Efectivo Dólar</option>
+                                    <option value="pago_movil" ${pago.metodo === 'pago_movil' ? 'selected' : ''}>Pago Móvil</option>
+                                    <option value="punto_venta" ${pago.metodo === 'punto_venta' ? 'selected' : ''}>Punto de Venta</option>
+                                </select>
+                                <input type="number" step="0.01" placeholder="Monto ${pago.metodo === 'efectivo_usd' ? 'en USD' : 'en Bs'}" 
+                                       value="${pago.monto || 0}" onchange="actualizarPago(${index}, 'monto', this.value)">
+                                ${pago.metodo === 'pago_movil' ? `
+                                    <input type="text" maxlength="6" placeholder="Referencia (6 dígitos)" 
+                                           value="${pago.referencia || ''}" onchange="actualizarPago(${index}, 'referencia', this.value)">
+                                ` : ''}
+                            </div>
+                        `).join('')}
+                    </div>
+                    
+                    <div class="pagos-total">
+                        <div class="pagos-resumen">
+                            <span class="pagos-resumen-item">Total recibido:</span>
+                            <span class="pagos-resumen-value" id="totalRecibido">${formatBs(totalRecibido)}</span>
+                        </div>
+                        <div class="pagos-resumen">
+                            <span class="pagos-resumen-item">Pendiente:</span>
+                            <span class="pagos-resumen-value" style="color: var(--danger);" id="pendiente">${formatBs(pendiente)}</span>
+                        </div>
+                        <div class="pagos-resumen">
+                            <span class="pagos-resumen-item">Sobrante:</span>
+                            <span class="pagos-resumen-value" style="color: var(--success);" id="sobrante">${formatBs(sobrante)}</span>
+                        </div>
+                    </div>
+                    
+                    ${sobrante > 0 ? `
+                        <div class="alert success">
+                            <h4>Vuelto: ${formatBs(sobrante)}</h4>
+                            <div style="margin-top: 0.5rem;">
+                                <input type="number" step="0.01" id="vueltoEntregado" placeholder="Vuelto a entregar" 
+                                       value="${sobrante}" style="width: 100%; padding: 0.5rem; margin-bottom: 0.5rem;">
+                                <label style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <input type="checkbox" id="aFavorCajaCheck">
+                                    A favor de caja (cliente no quiere vuelto)
+                                </label>
+                            </div>
+                        </div>
+                    ` : ''}
+                    
+                    ${pendiente > 0 ? `
+                        <div class="alert warning">
+                            <label style="display: flex; align-items: center; gap: 0.5rem;">
+                                <input type="checkbox" id="condonarCheck">
+                                    Monto a condonar: ${formatBs(pendiente)}
+                                </label>
+                            </div>
+                        ` : ''}
+                    </div>
+                `;
             
             // Event listeners
             document.getElementById('invitacionCheck').addEventListener('change', (e) => {
@@ -1499,12 +1508,11 @@
             confirmButton.disabled = !valido;
         }
 
-        // Confirmar cobro - AHORA USA window.supabaseClient
+        // Confirmar cobro
         document.getElementById('confirmCobro').addEventListener('click', async () => {
             if (!pedidoActual) return;
             
             try {
-                // Llamar a la función RPC procesar_cobro
                 const { error } = await window.supabaseClient.rpc('procesar_cobro', {
                     p_pedido_id: pedidoActual.id,
                     p_pagos_mixtos: pagosMixtos,
@@ -1516,13 +1524,11 @@
                 
                 if (error) throw error;
                 
-                // Actualizar estado local
                 pedidoActual.estado = pedidoActual.tipo === 'delivery' ? 'en_camino' : 
                                      (pedidoActual.tipo === 'reserva' ? 'reserva_pendiente' : 'en_cocina');
                 
                 document.getElementById('cobroModal').classList.remove('active');
                 await cargarPedidos();
-                
                 alert('Cobro procesado exitosamente');
             } catch (error) {
                 console.error('Error procesando cobro:', error);
@@ -1530,7 +1536,7 @@
             }
         });
 
-        // Rechazar pedido - AHORA USA window.supabaseClient
+        // Rechazar pedido
         async function rechazarPedido(pedidoId) {
             if (!confirm('¿Estás seguro de rechazar este pedido?')) return;
             
@@ -1542,7 +1548,6 @@
                 
                 if (error) throw error;
                 
-                // Notificar al cliente
                 await window.supabaseClient
                     .from('notificaciones')
                     .insert([{
@@ -1560,7 +1565,7 @@
             }
         }
 
-        // Avanzar estado - AHORA USA window.supabaseClient
+        // Avanzar estado
         async function avanzarEstado(pedidoId, nuevoEstado) {
             try {
                 let estadoFinal = nuevoEstado;
@@ -1663,145 +1668,129 @@
             modal.classList.add('active');
         }
 
-        // Configurar event listeners - AHORA USA window.supabaseClient
-        // Configurar event listeners - VERSIÓN SIMPLIFICADA PARA DEPURAR
-		function setupEventListeners() {
-			console.log('⚙️ Configurando event listeners...');
-			
-			// Login simplificado
-			document.getElementById('loginForm').addEventListener('submit', async (e) => {
-				e.preventDefault();
-				console.log('1️⃣ Evento submit capturado');
-				
-				const username = document.getElementById('username').value;
-				const password = document.getElementById('password').value;
-				
-				console.log('2️⃣ Usuario ingresado:', username);
-				
-				if (!username || !password) {
-					alert('Completa los campos');
-					return;
-				}
-				
-				try {
-					console.log('3️⃣ Consultando Supabase...');
-					
-					const { data, error } = await window.supabaseClient
-						.from('usuarios')
-						.select('*')
-						.eq('username', username)
-						.eq('password', password)
-						.eq('activo', true)
-						.maybeSingle();
-					
-					console.log('4️⃣ Respuesta de Supabase:', { data, error });
-					
-					if (error) {
-						console.error('5️⃣ Error en consulta:', error);
-						alert('Error: ' + error.message);
-						return;
-					}
-					
-					if (!data) {
-						console.log('5️⃣ Usuario no encontrado');
-						alert('Credenciales inválidas');
-						return;
-					}
-					
-					console.log('6️⃣ Usuario encontrado:', data.nombre);
-					
-					// Guardar usuario
-					currentUser = data;
-					sessionStorage.setItem('cajero_user', JSON.stringify(data));
-					
-					console.log('7️⃣ Ocultando login...');
-					document.getElementById('loginContainer').style.display = 'none';
-					
-					console.log('8️⃣ Mostrando panel...');
-					document.getElementById('panelContainer').classList.add('active');
-					
-					console.log('9️⃣ Cargando datos...');
-					
-					// Cargar datos uno por uno para ver cuál falla
-					try {
-						console.log('9.1 Cargando configuración...');
-						await cargarConfiguracionInicial();
-						console.log('✅ Configuración cargada');
-						
-						console.log('9.2 Cargando pedidos...');
-						await cargarPedidos();
-						console.log('✅ Pedidos cargados');
-						
-						console.log('9.3 Cargando menú...');
-						await cargarMenu();
-						console.log('✅ Menú cargado');
-						
-						console.log('9.4 Configurando suscripciones...');
-						setupRealtimeSubscriptions();
-						console.log('✅ Suscripciones configuradas');
-						
-						console.log('🎉 TODO COMPLETADO');
-					} catch (error) {
-						console.error('❌ Error en carga:', error);
-					}
-					
-				} catch (error) {
-					console.error('❌ Error general:', error);
-					alert('Error: ' + error.message);
-				}
-			});
-			
-			// Logout
-			document.getElementById('logoutButton').addEventListener('click', () => {
-				console.log('👋 Cerrando sesión');
-				sessionStorage.removeItem('cajero_user');
-				currentUser = null;
-				mostrarLogin();
-			});
-			
-			// Sincronizar
-			document.getElementById('syncButton').addEventListener('click', async () => {
-				console.log('🔄 Sincronizando...');
-				await cargarConfiguracionInicial();
-				await cargarPedidos();
-				await cargarMenu();
-				console.log('✅ Sincronización completa');
-			});
-			
-			// Pestañas
-			document.querySelectorAll('.tab').forEach(tab => {
-				tab.addEventListener('click', () => {
-					document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-					tab.classList.add('active');
-					
-					const tabId = tab.dataset.tab;
-					document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
-					document.getElementById(tabId + 'Pane').classList.add('active');
-				});
-			});
-			
-			// Cerrar modales (simplificado)
-			const closeButtons = [
-				'closeCobroModal', 'cancelCobro',
-				'closeDetalleModal', 'closeDetalle',
-				'closeComprobanteModal', 'closeComprobante'
-			];
-			
-			closeButtons.forEach(id => {
-				const btn = document.getElementById(id);
-				if (btn) {
-					btn.addEventListener('click', () => {
-						const modal = btn.closest('.modal');
-						if (modal) modal.classList.remove('active');
-					});
-				}
-			});
-			
-			console.log('✅ Event listeners configurados');
-		}
+        // Configurar event listeners
+        function setupEventListeners() {
+            console.log('🔧 Configurando event listeners...');
+            
+            // Login
+            document.getElementById('loginForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                console.log('1️⃣ Evento submit capturado');
+                
+                const username = document.getElementById('username').value;
+                const password = document.getElementById('password').value;
+                
+                console.log('2️⃣ Usuario ingresado:', username);
+                
+                if (!username || !password) {
+                    alert('Completa los campos');
+                    return;
+                }
+                
+                try {
+                    console.log('3️⃣ Consultando Supabase...');
+                    
+                    const { data, error } = await window.supabaseClient
+                        .from('usuarios')
+                        .select('*')
+                        .eq('username', username)
+                        .eq('password', password)
+                        .eq('activo', true)
+                        .maybeSingle();
+                    
+                    console.log('4️⃣ Respuesta de Supabase:', { data, error });
+                    
+                    if (error) {
+                        console.error('5️⃣ Error en consulta:', error);
+                        alert('Error: ' + error.message);
+                        return;
+                    }
+                    
+                    if (!data) {
+                        console.log('5️⃣ Usuario no encontrado');
+                        alert('Credenciales inválidas');
+                        return;
+                    }
+                    
+                    console.log('6️⃣ Usuario encontrado:', data.nombre);
+                    
+                    // Guardar usuario
+                    currentUser = data;
+                    sessionStorage.setItem('cajero_user', JSON.stringify(data));
+                    
+                    console.log('7️⃣ Ocultando login...');
+                    document.getElementById('loginContainer').style.display = 'none';
+                    
+                    console.log('8️⃣ Mostrando panel...');
+                    document.getElementById('panelContainer').classList.add('active');
+                    
+                    console.log('9️⃣ Cargando datos...');
+                    
+                    await cargarConfiguracionInicial();
+                    await cargarPedidos();
+                    await cargarMenu();
+                    setupRealtimeSubscriptions();
+                    
+                    console.log('🎉 TODO COMPLETADO');
+                    
+                } catch (error) {
+                    console.error('❌ Error general:', error);
+                    alert('Error: ' + error.message);
+                }
+            });
+            
+            // Logout
+            document.getElementById('logoutButton').addEventListener('click', () => {
+                console.log('👋 Cerrando sesión');
+                sessionStorage.removeItem('cajero_user');
+                currentUser = null;
+                mostrarLogin();
+            });
+            
+            // Sincronizar
+            document.getElementById('syncButton').addEventListener('click', async () => {
+                console.log('🔄 Sincronizando...');
+                await cargarConfiguracionInicial();
+                await cargarPedidos();
+                await cargarMenu();
+                console.log('✅ Sincronización completa');
+            });
+            
+            // Pestañas
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    
+                    const tabId = tab.dataset.tab;
+                    document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+                    document.getElementById(tabId + 'Pane').classList.add('active');
+                });
+            });
+            
+            // Cerrar modales
+            const closeButtons = [
+                'closeCobroModal', 'cancelCobro',
+                'closeDetalleModal', 'closeDetalle',
+                'closeComprobanteModal', 'closeComprobante'
+            ];
+            
+            closeButtons.forEach(id => {
+                const btn = document.getElementById(id);
+                if (btn) {
+                    btn.addEventListener('click', () => {
+                        const modal = btn.closest('.modal');
+                        if (modal) modal.classList.remove('active');
+                    });
+                }
+            });
+            
+            console.log('✅ Event listeners configurados');
+        }
 
-        // Suscripciones en tiempo real - AHORA USA window.supabaseClient
+        // Suscripciones en tiempo real
         function setupRealtimeSubscriptions() {
+            console.log('🔄 Configurando suscripciones en tiempo real...');
             let subscription = window.supabaseClient
                 .channel('cajero-pedidos')
                 .on('postgres_changes', {
@@ -1809,10 +1798,17 @@
                     schema: 'public',
                     table: 'pedidos'
                 }, () => {
+                    console.log('📦 Cambio detectado en pedidos, recargando...');
                     cargarPedidos();
                 })
                 .subscribe();
+            console.log('✅ Suscripciones configuradas');
         }
+
+        // Inicializar event listeners cuando cargue la página
+        document.addEventListener('DOMContentLoaded', () => {
+            setupEventListeners();
+        });
     </script>
 </body>
 </html>
