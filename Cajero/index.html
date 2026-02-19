@@ -1664,100 +1664,141 @@
         }
 
         // Configurar event listeners - AHORA USA window.supabaseClient
-        function setupEventListeners() {
-            // Login - VERSIÓN CORREGIDA
-            document.getElementById('loginForm').addEventListener('submit', async (e) => {
-                e.preventDefault();
-                
-                const username = document.getElementById('username').value;
-                const password = document.getElementById('password').value;
-                
-                console.log('Intentando login cajero:', username);
-                
-                try {
-                    const { data, error } = await window.supabaseClient
-                        .from('usuarios')
-                        .select('*')
-                        .eq('username', username)
-                        .eq('password', password)
-                        .eq('activo', true)
-                        .maybeSingle();
-                    
-                    console.log('Respuesta de Supabase:', { data, error });
-                    
-                    if (error) {
-                        console.error('Error de Supabase:', error);
-                        alert('Error al conectar con la base de datos: ' + error.message);
-                        return;
-                    }
-                    
-                    if (!data) {
-                        alert('Credenciales inválidas o usuario inactivo');
-                        return;
-                    }
-                    
-                    // Login exitoso
-                    currentUser = data;
-                    sessionStorage.setItem('cajero_user', JSON.stringify(data));
-                    mostrarPanel();
-                    
-                } catch (error) {
-                    console.error('Error en login:', error);
-                    alert('Error al iniciar sesión: ' + error.message);
-                }
-            });
-            
-            // Logout
-            document.getElementById('logoutButton').addEventListener('click', () => {
-                sessionStorage.removeItem('cajero_user');
-                currentUser = null;
-                mostrarLogin();
-            });
-            
-            // Sincronizar
-            document.getElementById('syncButton').addEventListener('click', async () => {
-                await cargarConfiguracionInicial();
-                await cargarPedidos();
-                await cargarMenu();
-            });
-            
-            // Pestañas
-            document.querySelectorAll('.tab').forEach(tab => {
-                tab.addEventListener('click', () => {
-                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-                    tab.classList.add('active');
-                    
-                    const tabId = tab.dataset.tab;
-                    document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
-                    document.getElementById(tabId + 'Pane').classList.add('active');
-                });
-            });
-            
-            // Cerrar modales
-            document.getElementById('closeCobroModal').addEventListener('click', () => {
-                document.getElementById('cobroModal').classList.remove('active');
-            });
-            
-            document.getElementById('cancelCobro').addEventListener('click', () => {
-                document.getElementById('cobroModal').classList.remove('active');
-            });
-            
-            document.getElementById('closeDetalleModal').addEventListener('click', () => {
-                document.getElementById('detallePedidosModal').classList.remove('active');
-            });
-            
-            document.getElementById('closeDetalle').addEventListener('click', () => {
-                document.getElementById('detallePedidosModal').classList.remove('active');
-            });
-            
-            document.getElementById('closeComprobanteModal').addEventListener('click', () => {
-                document.getElementById('comprobanteModal').classList.remove('active');
-            });
-            
-            document.getElementById('closeComprobante').addEventListener('click', () => {
-                document.getElementById('comprobanteModal').classList.remove('active');
-            });
-        }
+        // Configurar event listeners - VERSIÓN SIMPLIFICADA PARA DEPURAR
+		function setupEventListeners() {
+			console.log('⚙️ Configurando event listeners...');
+			
+			// Login simplificado
+			document.getElementById('loginForm').addEventListener('submit', async (e) => {
+				e.preventDefault();
+				console.log('1️⃣ Evento submit capturado');
+				
+				const username = document.getElementById('username').value;
+				const password = document.getElementById('password').value;
+				
+				console.log('2️⃣ Usuario ingresado:', username);
+				
+				if (!username || !password) {
+					alert('Completa los campos');
+					return;
+				}
+				
+				try {
+					console.log('3️⃣ Consultando Supabase...');
+					
+					const { data, error } = await window.supabaseClient
+						.from('usuarios')
+						.select('*')
+						.eq('username', username)
+						.eq('password', password)
+						.eq('activo', true)
+						.maybeSingle();
+					
+					console.log('4️⃣ Respuesta de Supabase:', { data, error });
+					
+					if (error) {
+						console.error('5️⃣ Error en consulta:', error);
+						alert('Error: ' + error.message);
+						return;
+					}
+					
+					if (!data) {
+						console.log('5️⃣ Usuario no encontrado');
+						alert('Credenciales inválidas');
+						return;
+					}
+					
+					console.log('6️⃣ Usuario encontrado:', data.nombre);
+					
+					// Guardar usuario
+					currentUser = data;
+					sessionStorage.setItem('cajero_user', JSON.stringify(data));
+					
+					console.log('7️⃣ Ocultando login...');
+					document.getElementById('loginContainer').style.display = 'none';
+					
+					console.log('8️⃣ Mostrando panel...');
+					document.getElementById('panelContainer').classList.add('active');
+					
+					console.log('9️⃣ Cargando datos...');
+					
+					// Cargar datos uno por uno para ver cuál falla
+					try {
+						console.log('9.1 Cargando configuración...');
+						await cargarConfiguracionInicial();
+						console.log('✅ Configuración cargada');
+						
+						console.log('9.2 Cargando pedidos...');
+						await cargarPedidos();
+						console.log('✅ Pedidos cargados');
+						
+						console.log('9.3 Cargando menú...');
+						await cargarMenu();
+						console.log('✅ Menú cargado');
+						
+						console.log('9.4 Configurando suscripciones...');
+						setupRealtimeSubscriptions();
+						console.log('✅ Suscripciones configuradas');
+						
+						console.log('🎉 TODO COMPLETADO');
+					} catch (error) {
+						console.error('❌ Error en carga:', error);
+					}
+					
+				} catch (error) {
+					console.error('❌ Error general:', error);
+					alert('Error: ' + error.message);
+				}
+			});
+			
+			// Logout
+			document.getElementById('logoutButton').addEventListener('click', () => {
+				console.log('👋 Cerrando sesión');
+				sessionStorage.removeItem('cajero_user');
+				currentUser = null;
+				mostrarLogin();
+			});
+			
+			// Sincronizar
+			document.getElementById('syncButton').addEventListener('click', async () => {
+				console.log('🔄 Sincronizando...');
+				await cargarConfiguracionInicial();
+				await cargarPedidos();
+				await cargarMenu();
+				console.log('✅ Sincronización completa');
+			});
+			
+			// Pestañas
+			document.querySelectorAll('.tab').forEach(tab => {
+				tab.addEventListener('click', () => {
+					document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+					tab.classList.add('active');
+					
+					const tabId = tab.dataset.tab;
+					document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+					document.getElementById(tabId + 'Pane').classList.add('active');
+				});
+			});
+			
+			// Cerrar modales (simplificado)
+			const closeButtons = [
+				'closeCobroModal', 'cancelCobro',
+				'closeDetalleModal', 'closeDetalle',
+				'closeComprobanteModal', 'closeComprobante'
+			];
+			
+			closeButtons.forEach(id => {
+				const btn = document.getElementById(id);
+				if (btn) {
+					btn.addEventListener('click', () => {
+						const modal = btn.closest('.modal');
+						if (modal) modal.classList.remove('active');
+					});
+				}
+			});
+			
+			console.log('✅ Event listeners configurados');
+		}
 
         // Suscripciones en tiempo real - AHORA USA window.supabaseClient
         function setupRealtimeSubscriptions() {
