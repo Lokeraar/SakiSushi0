@@ -1019,18 +1019,17 @@
         </div>
     </footer>
 
-<!-- Primero Supabase (CDN) -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<!-- Luego tu configuración -->
-<script src="../supabase-config.js"></script>
-<script>
+	<!-- Primero Supabase (CDN) -->
+	<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+	<!-- Luego tu configuración -->
+	<script src="../supabase-config.js"></script>
+	<script>
+		// ✅ Usar el cliente global (UNA SOLA VEZ)
+		const supabase = window.supabaseClient;
 
-    // ✅ Usar el cliente global (ESTA LÍNEA ES LA CLAVE)
-    const supabase = window.supabaseClient;
-	
-        // Inicialización
-        let sessionId = localStorage.getItem('saki_session_id') || generarId('session_');
-        localStorage.setItem('saki_session_id', sessionId);
+		// Inicialización
+		let sessionId = localStorage.getItem('saki_session_id') || generarId('session_');
+		localStorage.setItem('saki_session_id', sessionId);
         
         let menuItems = [];
         let inventario = [];
