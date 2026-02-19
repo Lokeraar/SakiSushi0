@@ -1,9 +1,9 @@
 // supabase-config.js
-// Configuración compartida para todos los paneles
+// Configuración compartida para todos los paneles - VERSIÓN FINAL
 
 // Inicializar cliente de Supabase
-const SUPABASE_URL = 'https://iqwwoihiiyrtypyqzhgy.supabase.co'; // Reemplazar con tu URL
-const SUPABASE_ANON_KEY = 'sb_publishable_m4WcF4gmkj1olAj95HMLlA_4yKqPFXm'; // Reemplazar con tu clave anónima
+const SUPABASE_URL = 'https://iqwwoihiiyrtypyqzhgy.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_m4WcF4gmkj1olAj95HMLlA_4yKqPFXm';
 
 // Crear cliente de Supabase
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -17,7 +17,9 @@ let configGlobal = {
     aumento_activo: false,
     aumento_detenido: false,
     fecha_ultimo_aumento: null,
-    ultima_actualizacion: null
+    ultima_actualizacion: null,
+    admin_password: '654321',
+    recovery_email: 'admin@sakisushi.com'
 };
 
 // Función para cargar configuración global
@@ -37,6 +39,120 @@ async function cargarConfiguracion() {
     } catch (error) {
         console.error('Error cargando configuración:', error);
         return configGlobal;
+    }
+}
+
+// NUEVA FUNCIÓN: Subir imagen de platillo al bucket 'imagenes-platillos'
+async function subirImagenPlatillo(archivoImagen, carpetaAdicional = '') {
+    try {
+        if (!archivoImagen) {
+            return {
+                success: false,
+                error: 'No se proporcionó archivo'
+            };
+        }
+
+        // Validar tipo de archivo
+        const tipoValido = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp', 'image/gif'];
+        if (!tipoValido.includes(archivoImagen.type)) {
+            return {
+                success: false,
+                error: 'Tipo de archivo no válido. Solo se permiten imágenes (JPEG, PNG, WEBP, GIF)'
+            };
+        }
+
+        // Validar tamaño (máximo 5MB)
+        const maxSize = 5 * 1024 * 1024; // 5MB
+        if (archivoImagen.size > maxSize) {
+            return {
+                success: false,
+                error: 'El archivo es demasiado grande. Máximo 5MB'
+            };
+        }
+
+        // Generar nombre único para el archivo
+        const timestamp = Date.now();
+        const random = Math.random().toString(36).substring(2, 8);
+        const extension = archivoImagen.name.split('.').pop();
+        const nombreArchivo = `${timestamp}_${random}.${extension}`;
+        
+        // Construir la ruta: si hay carpeta adicional, se usa como subdirectorio
+        const ruta = carpetaAdicional 
+            ? `${carpetaAdicional}/${nombreArchivo}` 
+            : nombreArchivo;
+        
+        console.log('Subiendo imagen a:', ruta);
+        
+        // Subir el archivo al bucket 'imagenes-platillos'
+        const { data, error } = await supabase.storage
+            .from('imagenes-platillos')
+            .upload(ruta, archivoImagen, {
+                cacheControl: '3600',
+                upsert: false
+            });
+        
+        if (error) {
+            console.error('Error de Supabase:', error);
+            throw error;
+        }
+        
+        // Obtener la URL pública de la imagen
+        const { data: urlData } = supabase.storage
+            .from('imagenes-platillos')
+            .getPublicUrl(ruta);
+        
+        console.log('Imagen subida exitosamente:', urlData.publicUrl);
+        
+        return {
+            success: true,
+            path: ruta,
+            url: urlData.publicUrl
+        };
+    } catch (error) {
+        console.error('Error subiendo imagen:', error);
+        return {
+            success: false,
+            error: error.message || 'Error al subir la imagen'
+        };
+    }
+}
+
+// NUEVA FUNCIÓN: Eliminar imagen de platillo
+async function eliminarImagenPlatillo(urlImagen) {
+    try {
+        if (!urlImagen) return { success: true };
+        
+        // Extraer la ruta relativa de la URL completa
+        // Ej: https://.../storage/v1/object/public/imagenes-platillos/menu/imagen.jpg
+        const bucketName = 'imagenes-platillos';
+        const bucketIndex = urlImagen.indexOf(`/public/${bucketName}/`);
+        
+        if (bucketIndex === -1) {
+            // No es una imagen de nuestro bucket
+            return { success: true };
+        }
+        
+        const rutaRelativa = urlImagen.substring(bucketIndex + `/public/${bucketName}/`.length);
+        
+        if (!rutaRelativa) {
+            return { success: true };
+        }
+        
+        console.log('Eliminando imagen:', rutaRelativa);
+        
+        const { error } = await supabase.storage
+            .from(bucketName)
+            .remove([rutaRelativa]);
+        
+        if (error) throw error;
+        
+        return { success: true };
+    } catch (error) {
+        console.error('Error eliminando imagen:', error);
+        return {
+            success: false,
+            error: error.message
+        };
     }
 }
 
@@ -61,7 +177,7 @@ function formatUSD(monto) {
 
 // Función para generar ID único
 function generarId(prefix = '') {
-    return `${prefix}${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    return `${prefix}${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 }
 
 // Función para validar teléfono venezolano
@@ -136,4 +252,4 @@ const categoriasMenu = {
     "Ofertas Especiales": [],
     "Para Niños": [],
     "Combo Ejecutivo": []
-};
+}
