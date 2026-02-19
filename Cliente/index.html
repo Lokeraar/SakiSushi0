@@ -3,923 +3,2037 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Saki Sushi - Cliente</title>
-    <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <!-- Estilos embebidos -->
+    <title>Saki Sushi - Menú Cliente</title>
+    
+    <!-- Fuentes Google -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- Estilos compartidos -->
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #f8f9fa; color: #333; }
-        header { background: #b22222; color: white; padding: 1rem; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
-        .logo { font-size: 1.5rem; font-weight: bold; cursor: pointer; }
-        .logo i { margin-right: 0.5rem; }
-        .header-actions { display: flex; align-items: center; gap: 1rem; }
-        .search-box { padding: 0.5rem; border-radius: 20px; border: none; width: 250px; }
-        .notification-bell { position: relative; cursor: pointer; }
-        .badge { position: absolute; top: -5px; right: -5px; background: gold; color: black; border-radius: 50%; padding: 0.2rem 0.5rem; font-size: 0.7rem; }
-        .menu-toggle { font-size: 1.5rem; cursor: pointer; }
-        .sidebar { position: fixed; top: 0; left: -300px; width: 300px; height: 100%; background: white; box-shadow: 2px 0 5px rgba(0,0,0,0.2); transition: left 0.3s; z-index: 200; overflow-y: auto; padding: 1rem; }
-        .sidebar.open { left: 0; }
-        .sidebar .close-btn { text-align: right; font-size: 1.5rem; cursor: pointer; }
-        .categoria { padding: 0.5rem; border-bottom: 1px solid #ddd; cursor: pointer; }
-        .subcategoria { padding-left: 1rem; font-size: 0.9rem; color: #555; display: none; }
-        .subcategoria.visible { display: block; }
-        .main { display: flex; padding: 1rem; gap: 1rem; flex-wrap: wrap; }
-        .menu-grid { flex: 3; display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 1rem; }
-        .card { background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.1); position: relative; }
-        .card img { width: 100%; height: 150px; object-fit: cover; }
-        .card-content { padding: 1rem; }
-        .card-title { font-weight: bold; margin-bottom: 0.5rem; }
-        .card-desc { font-size: 0.9rem; color: #666; margin-bottom: 0.5rem; }
-        .card-price { font-weight: bold; color: #b22222; }
-        .agotado { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; pointer-events: none; }
-        .card-actions { display: flex; justify-content: space-between; align-items: center; margin-top: 0.5rem; }
-        .btn { background: #b22222; color: white; border: none; padding: 0.5rem 1rem; border-radius: 5px; cursor: pointer; }
-        .btn:disabled { background: #ccc; cursor: not-allowed; }
-        .carrito { flex: 1; background: white; border-radius: 8px; padding: 1rem; box-shadow: 0 2px 5px rgba(0,0,0,0.1); height: fit-content; position: sticky; top: 80px; }
-        .carrito-item { display: flex; justify-content: space-between; margin-bottom: 0.5rem; border-bottom: 1px solid #eee; padding-bottom: 0.5rem; }
-        .carrito-total { font-weight: bold; margin-top: 1rem; text-align: right; }
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 300; }
-        .modal-content { background: white; border-radius: 8px; padding: 2rem; max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto; }
-        .close { float: right; font-size: 1.5rem; cursor: pointer; }
-        .form-group { margin-bottom: 1rem; }
-        label { display: block; margin-bottom: 0.3rem; font-weight: bold; }
-        input, select, textarea { width: 100%; padding: 0.5rem; border: 1px solid #ddd; border-radius: 4px; }
-        .parroquia-selector { position: relative; }
-        .parroquia-list { max-height: 200px; overflow-y: auto; border: 1px solid #ccc; display: none; }
-        .parroquia-list div { padding: 0.5rem; cursor: pointer; }
-        .parroquia-list div:hover { background: #f0f0f0; }
-        .costo-envio { margin-top: 0.5rem; font-style: italic; }
-        .referencia-inputs { display: flex; gap: 0.3rem; }
-        .referencia-inputs input { width: 3rem; text-align: center; }
-        .notif-panel { position: fixed; top: 0; right: -350px; width: 350px; height: 100%; background: white; box-shadow: -2px 0 5px rgba(0,0,0,0.2); transition: right 0.3s; z-index: 250; overflow-y: auto; padding: 1rem; }
-        .notif-panel.open { right: 0; }
-        .notif-item { padding: 0.5rem; border-bottom: 1px solid #eee; cursor: pointer; }
-        .notif-item.pending { background: #fff3cd; }
-        .notif-item.approved { background: #d4edda; }
-        .notif-item.rejected { background: #f8d7da; }
-        .notif-titulo { font-weight: bold; }
-        .notif-mensaje { font-size: 0.9rem; }
-        .badge-mesa { background: gold; padding: 0.2rem 0.5rem; border-radius: 5px; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #D32F2F;
+            --secondary: #212121;
+            --accent: #FF9800;
+            --light-bg: #F5F5F5;
+            --dark-bg: #121212;
+            --success: #388E3C;
+            --info: #1976D2;
+            --warning: #F57C00;
+            --danger: #ef4444;
+            --text-light: #ffffff;
+            --text-dark: #333333;
+            --gray-100: #f8f9fa;
+            --gray-200: #e9ecef;
+            --gray-300: #dee2e6;
+            --gray-400: #ced4da;
+            --gray-500: #adb5bd;
+            --gray-600: #6c757d;
+            --gray-700: #495057;
+            --gray-800: #343a40;
+            --gray-900: #212529;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--light-bg);
+            color: var(--text-dark);
+            min-height: 100vh;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        /* Header */
+        .header {
+            background-color: var(--primary);
+            color: white;
+            padding: 1rem 2rem;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: white;
+            color: var(--primary);
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+        }
+
+        .search-bar {
+            flex: 1;
+            max-width: 500px;
+            margin: 0 2rem;
+            position: relative;
+        }
+
+        .search-bar input {
+            width: 100%;
+            padding: 0.75rem 1rem 0.75rem 3rem;
+            border: none;
+            border-radius: 25px;
+            font-size: 1rem;
+            outline: none;
+        }
+
+        .search-bar i {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--gray-600);
+        }
+
+        .header-icons {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .header-icons i {
+            font-size: 1.25rem;
+            cursor: pointer;
+            transition: transform 0.2s;
+            position: relative;
+        }
+
+        .header-icons i:hover {
+            transform: scale(1.1);
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background-color: var(--accent);
+            color: white;
+            font-size: 0.7rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 10px;
+            min-width: 18px;
+            text-align: center;
+        }
+
+        /* Menú lateral de categorías */
+        .category-sidebar {
+            position: fixed;
+            top: 72px;
+            left: 0;
+            bottom: 0;
+            width: 250px;
+            background-color: white;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.05);
+            overflow-y: auto;
+            padding: 1.5rem 0;
+            transition: transform 0.3s ease;
+            z-index: 900;
+        }
+
+        .category-sidebar.closed {
+            transform: translateX(-100%);
+        }
+
+        .category-header {
+            padding: 0 1.5rem;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: var(--gray-700);
+        }
+
+        .category-header i {
+            cursor: pointer;
+            font-size: 1.2rem;
+        }
+
+        .category-list {
+            list-style: none;
+        }
+
+        .category-item {
+            padding: 0.75rem 1.5rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
+            color: var(--gray-700);
+            border-left: 3px solid transparent;
+        }
+
+        .category-item:hover {
+            background-color: var(--gray-100);
+            color: var(--primary);
+        }
+
+        .category-item.active {
+            background-color: rgba(211, 47, 47, 0.1);
+            color: var(--primary);
+            border-left-color: var(--primary);
+            font-weight: 600;
+        }
+
+        .subcategory-list {
+            list-style: none;
+            margin-left: 1.5rem;
+            font-size: 0.9rem;
+        }
+
+        .subcategory-item {
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            color: var(--gray-600);
+            border-radius: 4px;
+        }
+
+        .subcategory-item:hover {
+            background-color: var(--gray-200);
+            color: var(--secondary);
+        }
+
+        /* Contenido principal */
+        .main-content {
+            margin-left: 250px;
+            margin-top: 72px;
+            margin-right: 350px;
+            padding: 2rem;
+            transition: margin 0.3s ease;
+        }
+
+        .main-content.sidebar-closed {
+            margin-left: 0;
+        }
+
+        .main-content.cart-closed {
+            margin-right: 0;
+        }
+
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        /* Tarjeta de platillo */
+        .menu-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transition: transform 0.2s, box-shadow 0.2s;
+            position: relative;
+        }
+
+        .menu-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+        }
+
+        .menu-card.out-of-stock {
+            opacity: 0.7;
+            filter: grayscale(0.5);
+        }
+
+        .menu-card-image {
+            height: 160px;
+            background-color: var(--gray-200);
+            background-size: cover;
+            background-position: center;
+            position: relative;
+        }
+
+        .stock-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+        }
+
+        .menu-card-content {
+            padding: 1rem;
+        }
+
+        .menu-card-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: var(--secondary);
+        }
+
+        .menu-card-description {
+            font-size: 0.9rem;
+            color: var(--gray-600);
+            margin-bottom: 1rem;
+            line-height: 1.4;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .menu-card-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .menu-card-price {
+            font-weight: 700;
+            color: var(--primary);
+            font-size: 1.2rem;
+        }
+
+        .menu-card-actions {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .btn-icon {
+            background: none;
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: var(--gray-700);
+        }
+
+        .btn-icon:hover {
+            background-color: var(--gray-200);
+            color: var(--primary);
+        }
+
+        .btn-icon:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .btn-customize {
+            background-color: var(--accent);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 15px;
+            font-size: 0.8rem;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .btn-customize:hover {
+            background-color: #e68900;
+        }
+
+        .btn-customize:disabled {
+            background-color: var(--gray-400);
+            cursor: not-allowed;
+        }
+
+        /* Carrito lateral */
+        .cart-sidebar {
+            position: fixed;
+            top: 72px;
+            right: 0;
+            bottom: 0;
+            width: 350px;
+            background-color: white;
+            box-shadow: -2px 0 10px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            z-index: 900;
+            transition: transform 0.3s ease;
+        }
+
+        .cart-sidebar.closed {
+            transform: translateX(100%);
+        }
+
+        .cart-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--gray-200);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .cart-header h3 {
+            color: var(--secondary);
+            font-weight: 600;
+        }
+
+        .cart-items {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+        }
+
+        .cart-item {
+            display: flex;
+            gap: 1rem;
+            padding: 1rem 0;
+            border-bottom: 1px solid var(--gray-200);
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .cart-item-details {
+            flex: 1;
+        }
+
+        .cart-item-name {
+            font-weight: 600;
+            color: var(--secondary);
+            font-size: 0.95rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .cart-item-customization {
+            font-size: 0.8rem;
+            color: var(--gray-600);
+            margin-bottom: 0.25rem;
+        }
+
+        .cart-item-price {
+            font-weight: 600;
+            color: var(--primary);
+            font-size: 0.9rem;
+        }
+
+        .cart-item-actions {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 0.5rem;
+        }
+
+        .cart-item-quantity {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .cart-item-quantity span {
+            min-width: 20px;
+            text-align: center;
+        }
+
+        .btn-remove {
+            color: var(--danger);
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .cart-footer {
+            padding: 1.5rem;
+            border-top: 1px solid var(--gray-200);
+            background-color: var(--gray-100);
+        }
+
+        .cart-total {
+            display: flex;
+            justify-content: space-between;
+            font-weight: 700;
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+        }
+
+        .cart-buttons {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            flex: 1;
+        }
+
+        .btn-primary:hover {
+            background-color: #b71c1c;
+        }
+
+        .btn-primary:disabled {
+            background-color: var(--gray-400);
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            flex: 1;
+        }
+
+        .btn-secondary:hover {
+            background-color: #e68900;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background-color: white;
+            border-radius: 12px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            animation: modalSlideIn 0.3s ease;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .modal-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--gray-200);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            background: white;
+            z-index: 10;
+        }
+
+        .modal-header h3 {
+            color: var(--secondary);
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--gray-600);
+        }
+
+        .modal-body {
+            padding: 1.5rem;
+        }
+
+        .modal-footer {
+            padding: 1.5rem;
+            border-top: 1px solid var(--gray-200);
+            background-color: var(--gray-100);
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+            position: sticky;
+            bottom: 0;
+        }
+
+        /* Notificaciones */
+        .notifications-panel {
+            position: absolute;
+            top: 60px;
+            right: 0;
+            width: 350px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            display: none;
+            max-height: 400px;
+            overflow-y: auto;
+            z-index: 1001;
+        }
+
+        .notifications-panel.active {
+            display: block;
+        }
+
+        .notification-item {
+            padding: 1rem;
+            border-bottom: 1px solid var(--gray-200);
+            transition: background-color 0.2s;
+        }
+
+        .notification-item:hover {
+            background-color: var(--gray-100);
+        }
+
+        .notification-item.unread {
+            background-color: rgba(211, 47, 47, 0.05);
+            border-left: 3px solid var(--primary);
+        }
+
+        .notification-title {
+            font-weight: 600;
+            color: var(--secondary);
+            margin-bottom: 0.25rem;
+        }
+
+        .notification-message {
+            font-size: 0.9rem;
+            color: var(--gray-600);
+        }
+
+        .notification-time {
+            font-size: 0.75rem;
+            color: var(--gray-500);
+            margin-top: 0.25rem;
+        }
+
+        /* Loading */
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(211, 47, 47, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--primary);
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Footer */
+        .footer {
+            background-color: var(--secondary);
+            color: white;
+            padding: 2rem;
+            margin-top: 2rem;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+        }
+
+        .footer-section h4 {
+            margin-bottom: 1rem;
+            color: var(--accent);
+        }
+
+        .footer-section p, .footer-section a {
+            color: var(--gray-400);
+            text-decoration: none;
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+
+        .footer-section a:hover {
+            color: var(--accent);
+        }
+
+        .social-icons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .social-icons a {
+            color: white;
+            font-size: 1.5rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header {
+                padding: 0.5rem 1rem;
+            }
+            
+            .search-bar {
+                margin: 0 1rem;
+            }
+            
+            .category-sidebar {
+                width: 100%;
+                z-index: 1001;
+            }
+            
+            .main-content {
+                margin-left: 0;
+                margin-right: 0;
+                padding: 1rem;
+            }
+            
+            .cart-sidebar {
+                width: 100%;
+                z-index: 1001;
+            }
+            
+            .footer-content {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 </head>
 <body>
-    <header>
-        <div class="logo" onclick="cargarMenu()"><i class="fas fa-utensils"></i> Saki Sushi</div>
-        <div class="header-actions">
-            <input type="text" id="buscador" class="search-box" placeholder="Buscar platillo...">
-            <div class="notification-bell" onclick="toggleNotificaciones()">
-                <i class="fas fa-bell"></i>
-                <span class="badge" id="notif-count">0</span>
+    <!-- Header -->
+    <header class="header">
+        <div class="logo-area">
+            <div class="logo">
+                <i class="fas fa-fish"></i>
             </div>
-            <div class="menu-toggle" onclick="toggleSidebar()"><i class="fas fa-bars"></i></div>
+            <h2>Saki Sushi</h2>
+        </div>
+        
+        <div class="search-bar">
+            <i class="fas fa-search"></i>
+            <input type="text" id="searchInput" placeholder="Buscar en el menú...">
+        </div>
+        
+        <div class="header-icons">
+            <i class="fas fa-bars" id="menuToggle" title="Categorías"></i>
+            <div style="position: relative;">
+                <i class="fas fa-bell" id="notificationBell"></i>
+                <span class="notification-badge" id="notificationBadge" style="display: none;">0</span>
+                <div class="notifications-panel" id="notificationsPanel"></div>
+            </div>
+            <i class="fas fa-shopping-cart" id="cartToggle" title="Carrito"></i>
         </div>
     </header>
 
-    <!-- Sidebar categorías -->
-    <div class="sidebar" id="sidebar">
-        <div class="close-btn" onclick="toggleSidebar()"><i class="fas fa-times"></i></div>
-        <h3>Categorías</h3>
-        <div id="categorias-list"></div>
-    </div>
-
-    <!-- Panel de notificaciones -->
-    <div class="notif-panel" id="notifPanel">
-        <div style="display: flex; justify-content: space-between;">
-            <h3>Notificaciones</h3>
-            <i class="fas fa-times" onclick="toggleNotificaciones()" style="cursor:pointer;"></i>
+    <!-- Menú lateral de categorías -->
+    <div class="category-sidebar" id="categorySidebar">
+        <div class="category-header">
+            <span>Categorías</span>
+            <i class="fas fa-times" id="closeCategoryMenu"></i>
         </div>
-        <div id="notificaciones-list"></div>
+        <ul class="category-list" id="categoryList"></ul>
     </div>
 
-    <!-- Main content -->
-    <div class="main">
-        <div class="menu-grid" id="menu-grid"></div>
-        <div class="carrito" id="carrito">
-            <h3>Tu Pedido</h3>
-            <div id="carrito-items"></div>
-            <div class="carrito-total" id="carrito-total">Total: 0 Bs</div>
-            <div style="display: flex; gap: 0.5rem; margin-top: 1rem;">
-                <button class="btn" id="btnDelivery" onclick="abrirModalDelivery()" style="flex:1;">Delivery</button>
-                <button class="btn" id="btnReserva" onclick="abrirModalReserva()" style="flex:1;">Reserva</button>
+    <!-- Contenido principal -->
+    <main class="main-content" id="mainContent">
+        <div id="categoryTitle">
+            <h1>Menú</h1>
+            <p id="currentCategory">Todos los platillos</p>
+        </div>
+        
+        <div class="menu-grid" id="menuGrid">
+            <!-- Se llena dinámicamente -->
+        </div>
+    </main>
+
+    <!-- Carrito lateral -->
+    <div class="cart-sidebar" id="cartSidebar">
+        <div class="cart-header">
+            <h3><i class="fas fa-shopping-cart"></i> Tu Pedido</h3>
+            <i class="fas fa-times" id="closeCart" style="cursor: pointer;"></i>
+        </div>
+        
+        <div class="cart-items" id="cartItems">
+            <!-- Se llena dinámicamente -->
+        </div>
+        
+        <div class="cart-footer" id="cartFooter">
+            <div class="cart-total">
+                <span>Total:</span>
+                <span id="cartTotal">Bs. 0,00</span>
             </div>
-            <button class="btn" id="btnMesa" onclick="confirmarPedidoMesa()" style="display:none; width:100%;">Confirmar Pedido</button>
+            <div class="cart-buttons" id="cartButtons">
+                <!-- Los botones se añaden según el modo -->
+            </div>
         </div>
     </div>
 
-    <!-- Modal Personalización -->
-    <div class="modal" id="modalPersonalizar">
+    <!-- Modal de personalización -->
+    <div class="modal" id="customizeModal">
         <div class="modal-content">
-            <span class="close" onclick="cerrarModalPersonalizar()">&times;</span>
-            <h3 id="personalizar-titulo"></h3>
-            <div id="personalizar-ingredientes"></div>
-            <p>Precio ajustado: <span id="personalizar-precio"></span> Bs</p>
-            <button class="btn" id="btnConfirmarPersonalizar" onclick="confirmarPersonalizacion()">Añadir al pedido</button>
+            <div class="modal-header">
+                <h3>Personalizar Platillo</h3>
+                <button class="modal-close" id="closeCustomizeModal">&times;</button>
+            </div>
+            <div class="modal-body" id="customizeModalBody">
+                <!-- Se llena dinámicamente -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="cancelCustomize">Cancelar</button>
+                <button class="btn-primary" id="addToCartFromModal">Añadir al Pedido</button>
+            </div>
         </div>
     </div>
 
-    <!-- Modal Delivery -->
-    <div class="modal" id="modalDelivery">
+    <!-- Modal de confirmación para pedido en mesa -->
+    <div class="modal" id="confirmMesaModal">
         <div class="modal-content">
-            <span class="close" onclick="cerrarModalDelivery()">&times;</span>
-            <h3>Pedir Delivery</h3>
-            <p class="aviso">Tienes 20 minutos para realizar el pago, de lo contrario tu pedido será cancelado.</p>
-            <div class="form-group">
-                <label>Datos de pago:</label>
-                <p>Banco Banesco<br>Teléfono: 0424-1525233<br>Rif: J-501519838</p>
+            <div class="modal-header">
+                <h3>Confirmar Pedido</h3>
+                <button class="modal-close" id="closeConfirmMesaModal">&times;</button>
             </div>
-            <div class="form-group parroquia-selector">
-                <label>Parroquia</label>
-                <input type="text" id="parroquiaSearch" placeholder="Buscar parroquia..." onkeyup="filtrarParroquias()">
-                <div id="parroquiaSelected" style="padding:0.5rem; background:#eee; margin-top:0.3rem; cursor:pointer;" onclick="toggleParroquiaList()">San Bernardino ▼</div>
-                <div class="parroquia-list" id="parroquiaList"></div>
-                <div class="costo-envio" id="costoEnvio">Costo envío: 2 USD (80 Bs)</div>
-            </div>
-            <div class="form-group">
-                <label>Dirección completa</label>
-                <textarea id="direccion" rows="3" minlength="20"></textarea>
-            </div>
-            <div class="form-group">
-                <label>Número de contacto</label>
-                <input type="tel" id="telefono" pattern="[0-9]{11,14}">
-            </div>
-            <div class="form-group">
-                <label>Código de referencia (6 dígitos)</label>
-                <div class="referencia-inputs" id="refInputs">
-                    <input type="text" maxlength="1" onkeyup="moveFocus(this, event)">
-                    <input type="text" maxlength="1" onkeyup="moveFocus(this, event)">
-                    <input type="text" maxlength="1" onkeyup="moveFocus(this, event)">
-                    <input type="text" maxlength="1" onkeyup="moveFocus(this, event)">
-                    <input type="text" maxlength="1" onkeyup="moveFocus(this, event)">
-                    <input type="text" maxlength="1" onkeyup="moveFocus(this, event)">
+            <div class="modal-body">
+                <p>¿Confirmar tu pedido para la mesa?</p>
+                <div style="margin: 1rem 0;">
+                    <strong>Resumen:</strong>
+                    <div id="mesaOrderSummary"></div>
+                </div>
+                <div style="margin: 1rem 0;">
+                    <label for="clienteNombre">Nombre (opcional):</label>
+                    <input type="text" id="clienteNombre" placeholder="Tu nombre" style="width: 100%; padding: 0.5rem; margin-top: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;">
                 </div>
             </div>
-            <div class="form-group">
-                <label>Comprobante de pago (imagen)</label>
-                <input type="file" id="comprobante" accept="image/*">
+            <div class="modal-footer">
+                <button class="btn-secondary" id="cancelMesaOrder">Cancelar</button>
+                <button class="btn-primary" id="confirmMesaOrder">Confirmar Pedido</button>
             </div>
-            <button class="btn" id="btnConfirmarDelivery" onclick="confirmarDelivery()" disabled>Confirmar Pedido</button>
         </div>
     </div>
 
-    <!-- Modal Reserva -->
-    <div class="modal" id="modalReserva">
+    <!-- Modal de delivery -->
+    <div class="modal" id="deliveryModal">
         <div class="modal-content">
-            <span class="close" onclick="cerrarModalReserva()">&times;</span>
-            <h3>Reservar Pedido</h3>
-            <p class="aviso">Tienes 20 minutos para realizar el pago, de lo contrario tu pedido será cancelado.</p>
-            <div class="form-group">
-                <label>Datos de pago:</label>
-                <p>Banco Banesco<br>Teléfono: 0424-1525233<br>Rif: J-501519838</p>
+            <div class="modal-header">
+                <h3>Pedido a Domicilio</h3>
+                <button class="modal-close" id="closeDeliveryModal">&times;</button>
             </div>
-            <div class="form-group">
-                <label>Fecha de reserva</label>
-                <input type="date" id="fechaReserva" min="">
-            </div>
-            <div class="form-group">
-                <label>Nombre y apellido</label>
-                <input type="text" id="nombreReserva">
-            </div>
-            <div class="form-group">
-                <label>Código de referencia (6 dígitos)</label>
-                <div class="referencia-inputs" id="refReservaInputs">
-                    <input type="text" maxlength="1" onkeyup="moveFocus(this, event)">
-                    <input type="text" maxlength="1" onkeyup="moveFocus(this, event)">
-                    <input type="text" maxlength="1" onkeyup="moveFocus(this, event)">
-                    <input type="text" maxlength="1" onkeyup="moveFocus(this, event)">
-                    <input type="text" maxlength="1" onkeyup="moveFocus(this, event)">
-                    <input type="text" maxlength="1" onkeyup="moveFocus(this, event)">
+            <div class="modal-body">
+                <div class="alert warning" style="background-color: #fff3cd; color: #856404; padding: 1rem; border-radius: 4px; margin-bottom: 1rem;">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    Tienes 20 minutos para realizar el pago, de lo contrario el pedido será cancelado automáticamente.
                 </div>
-            </div>
-            <div class="form-group">
-                <label>Comprobante de pago (imagen)</label>
-                <input type="file" id="comprobanteReserva" accept="image/*">
-            </div>
-            <button class="btn" id="btnConfirmarReserva" onclick="confirmarReserva()" disabled>Confirmar Pedido</button>
-        </div>
-    </div>
-
-    <!-- Supabase JS v2 -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script>
-        // ==================== CONFIGURACIÓN SUPABASE ====================
-        const SUPABASE_URL = 'https://tu-proyecto.supabase.co';
-        const SUPABASE_ANON_KEY = 'tu-anon-key';
-        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-        // ==================== VARIABLES GLOBALES ====================
-        let menu = [];
-        let inventario = [];
-        let config = null;
-        let carrito = [];
-        let platilloSeleccionado = null;
-        let personalizacionActual = [];
-        let tasaEfectiva = 40;
-        let pedidoIdActual = null; // Para notificaciones
-        let modoMesa = false;
-        let numeroMesa = null;
-        let parroquias = [
-            { nombre: "San Bernardino", precioUSD: 2 },
-            { nombre: "San José", precioUSD: 2 },
-            { nombre: "San Agustín", precioUSD: 2 },
-            { nombre: "Candelaria", precioUSD: 2 },
-            { nombre: "San Juan", precioUSD: 3 },
-            { nombre: "Catedral", precioUSD: 3 },
-            { nombre: "Santa Rosalía", precioUSD: 3 },
-            { nombre: "El Recreo", precioUSD: 4 },
-            { nombre: "La Candelaria", precioUSD: 2 },
-            { nombre: "San Pedro", precioUSD: 4 },
-            { nombre: "El Paraíso", precioUSD: 4 },
-            { nombre: "La Vega", precioUSD: 4 },
-            { nombre: "El Valle", precioUSD: 5 },
-            { nombre: "Coche", precioUSD: 5 },
-            { nombre: "Caricuao", precioUSD: 7 },
-            { nombre: "Antímano", precioUSD: 7 },
-            { nombre: "Macarao", precioUSD: 7 },
-            { nombre: "23 de Enero", precioUSD: 4 },
-            { nombre: "La Pastora", precioUSD: 3 },
-            { nombre: "Altagracia", precioUSD: 3 },
-            { nombre: "Santa Teresa", precioUSD: 3 },
-            { nombre: "Santa Rosalía de Palermo", precioUSD: 3 },
-            { nombre: "Chacao", precioUSD: 5 },
-            { nombre: "Leoncio Martínez", precioUSD: 6 },
-            { nombre: "Petare", precioUSD: 6 },
-            { nombre: "La Dolorita", precioUSD: 6 },
-            { nombre: "Fila de Mariches", precioUSD: 6 },
-            { nombre: "Caucagüita", precioUSD: 7 },
-            { nombre: "El Cafetal", precioUSD: 6 },
-            { nombre: "Las Minas", precioUSD: 5 },
-            { nombre: "Nuestra Señora del Rosario", precioUSD: 7 },
-            { nombre: "Sucre", precioUSD: 7 },
-            { nombre: "El Junquito", precioUSD: 7 }
-        ];
-        let parroquiaSeleccionada = "San Bernardino";
-
-        // ==================== INICIALIZACIÓN ====================
-        window.onload = async () => {
-            // Detectar si es modo mesa por URL
-            const urlParams = new URLSearchParams(window.location.search);
-            const mesa = urlParams.get('mesa');
-            if (mesa) {
-                modoMesa = true;
-                numeroMesa = mesa;
-                document.getElementById('btnDelivery').style.display = 'none';
-                document.getElementById('btnReserva').style.display = 'none';
-                document.getElementById('btnMesa').style.display = 'block';
-                document.querySelector('.badge-mesa')?.remove();
-                const header = document.querySelector('header');
-                const badge = document.createElement('span');
-                badge.className = 'badge-mesa';
-                badge.innerText = `Mesa ${mesa}`;
-                header.appendChild(badge);
-            }
-
-            await cargarConfig();
-            await cargarInventario();
-            await cargarMenu();
-            await cargarNotificaciones();
-            suscribirseCambios();
-            construirSidebar();
-            cargarCarritoLocal();
-
-            // Inputs de referencia
-            document.querySelectorAll('#refInputs input, #refReservaInputs input').forEach(input => {
-                input.addEventListener('input', validarReferencia);
-            });
-
-            // Validación de campos en delivery/reserva
-            document.getElementById('direccion').addEventListener('input', validarDelivery);
-            document.getElementById('telefono').addEventListener('input', validarDelivery);
-            document.getElementById('parroquiaSearch').addEventListener('input', filtrarParroquias);
-            document.getElementById('comprobante').addEventListener('change', validarDelivery);
-            document.getElementById('fechaReserva').addEventListener('change', validarReserva);
-            document.getElementById('nombreReserva').addEventListener('input', validarReserva);
-            document.getElementById('comprobanteReserva').addEventListener('change', validarReserva);
-
-            // Iniciar verificación de timeout (solo para este cliente, pero no es necesario porque el cajero lo maneja)
-        };
-
-        // ==================== FUNCIONES SUPABASE ====================
-        async function cargarConfig() {
-            const { data, error } = await supabase.from('config').select('*').eq('id',1).single();
-            if (error) console.error(error);
-            else {
-                config = data;
-                tasaEfectiva = data.tasa_efectiva;
-            }
-        }
-
-        async function cargarInventario() {
-            const { data, error } = await supabase.from('inventario').select('*');
-            if (error) console.error(error);
-            else inventario = data;
-        }
-
-        async function cargarMenu() {
-            const { data, error } = await supabase.from('menu').select('*').eq('disponible', true);
-            if (error) console.error(error);
-            else {
-                menu = data;
-                renderizarMenu();
-            }
-        }
-
-        async function cargarNotificaciones() {
-            if (!pedidoIdActual) return;
-            const { data, error } = await supabase.from('notificaciones').select('*').eq('pedido_id', pedidoIdActual).order('timestamp', { ascending: false });
-            if (error) console.error(error);
-            else renderNotificaciones(data);
-        }
-
-        function suscribirseCambios() {
-            // Suscripción a cambios en menú
-            supabase.channel('menu-changes')
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'menu' }, payload => {
-                    cargarMenu(); // Recargar todo por simplicidad
-                })
-                .subscribe();
-
-            supabase.channel('inventario-changes')
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'inventario' }, payload => {
-                    cargarInventario();
-                })
-                .subscribe();
-
-            supabase.channel('config-changes')
-                .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'config' }, payload => {
-                    config = payload.new;
-                    tasaEfectiva = payload.new.tasa_efectiva;
-                    actualizarPreciosEnUI();
-                })
-                .subscribe();
-
-            if (pedidoIdActual) {
-                supabase.channel(`notif-${pedidoIdActual}`)
-                    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notificaciones', filter: `pedido_id=eq.${pedidoIdActual}` }, payload => {
-                        agregarNotificacion(payload.new);
-                    })
-                    .subscribe();
-            }
-        }
-
-        // ==================== RENDERIZADO ====================
-        function renderizarMenu(filtro = '') {
-            const grid = document.getElementById('menu-grid');
-            grid.innerHTML = '';
-            const filtroLower = filtro.toLowerCase();
-            menu.forEach(platillo => {
-                if (filtro && !platillo.nombre.toLowerCase().includes(filtroLower)) return;
-                const stock = calcularStockPlatillo(platillo);
-                const disponible = stock > 0 && platillo.disponible;
-                const card = document.createElement('div');
-                card.className = 'card';
-                card.innerHTML = `
-                    <img src="${platillo.imagen || 'https://via.placeholder.com/300?text=Sushi'}" alt="${platillo.nombre}">
-                    <div class="card-content">
-                        <div class="card-title">${platillo.nombre}</div>
-                        <div class="card-desc">${platillo.descripcion || ''}</div>
-                        <div class="card-price">${(platillo.precio * tasaEfectiva).toFixed(2)} Bs</div>
-                        <div class="card-actions">
-                            <button class="btn" onclick="agregarAlCarrito('${platillo.id}')" ${!disponible ? 'disabled' : ''}>+</button>
-                            <span>Stock: ${stock}</span>
+                
+                <div style="margin-bottom: 1rem;">
+                    <h4>Datos de Pago</h4>
+                    <p><strong>Banco:</strong> Banesco</p>
+                    <p><strong>Teléfono:</strong> 0424-1525233</p>
+                    <p><strong>RIF:</strong> J-501519838</p>
+                </div>
+                
+                <form id="deliveryForm">
+                    <div style="margin-bottom: 1rem;">
+                        <label for="parroquia">Parroquia:</label>
+                        <select id="parroquia" required style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;">
+                            <option value="">Selecciona una parroquia</option>
+                        </select>
+                    </div>
+                    
+                    <div style="margin-bottom: 1rem;">
+                        <label for="direccion">Dirección completa:</label>
+                        <textarea id="direccion" required minlength="20" style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;" rows="3"></textarea>
+                        <small id="direccionCounter" style="color: var(--gray-600);">0/20 caracteres mínimo</small>
+                    </div>
+                    
+                    <div style="margin-bottom: 1rem;">
+                        <label for="telefono">Número de contacto:</label>
+                        <input type="tel" id="telefono" required pattern="[0-9]{11,14}" placeholder="04121234567" style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;">
+                        <small style="color: var(--gray-600);">11-14 dígitos, solo números</small>
+                    </div>
+                    
+                    <div style="margin-bottom: 1rem;">
+                        <label>Código de referencia (6 dígitos):</label>
+                        <div style="display: flex; gap: 0.5rem; justify-content: space-between;">
+                            <input type="text" maxlength="1" class="ref-digit" style="width: 15%; text-align: center; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;">
+                            <input type="text" maxlength="1" class="ref-digit" style="width: 15%; text-align: center; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;">
+                            <input type="text" maxlength="1" class="ref-digit" style="width: 15%; text-align: center; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;">
+                            <input type="text" maxlength="1" class="ref-digit" style="width: 15%; text-align: center; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;">
+                            <input type="text" maxlength="1" class="ref-digit" style="width: 15%; text-align: center; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;">
+                            <input type="text" maxlength="1" class="ref-digit" style="width: 15%; text-align: center; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;">
                         </div>
                     </div>
-                    ${!disponible ? '<div class="agotado">AGOTADO</div>' : ''}
+                    
+                    <div style="margin-bottom: 1rem;">
+                        <label for="comprobante">Subir comprobante:</label>
+                        <input type="file" id="comprobante" accept="image/*" required style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;">
+                    </div>
+                    
+                    <div style="margin-bottom: 1rem; font-weight: 600;">
+                        <span>Total a pagar: </span>
+                        <span id="deliveryTotal">Bs. 0,00</span>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="cancelDelivery">Cancelar</button>
+                <button class="btn-primary" id="confirmDelivery" disabled>Confirmar Pedido</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de reserva -->
+    <div class="modal" id="reservaModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Reservar Mesa</h3>
+                <button class="modal-close" id="closeReservaModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="reservaForm">
+                    <div style="margin-bottom: 1rem;">
+                        <label for="fechaReserva">Fecha de reserva:</label>
+                        <input type="date" id="fechaReserva" required min="" style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;">
+                    </div>
+                    
+                    <div style="margin-bottom: 1rem;">
+                        <label for="nombreReserva">Nombre y apellido:</label>
+                        <input type="text" id="nombreReserva" required style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;">
+                    </div>
+                    
+                    <div style="margin-bottom: 1rem;">
+                        <label>Código de referencia (6 dígitos):</label>
+                        <div style="display: flex; gap: 0.5rem; justify-content: space-between;">
+                            <input type="text" maxlength="1" class="ref-digit-reserva" style="width: 15%; text-align: center; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;">
+                            <input type="text" maxlength="1" class="ref-digit-reserva" style="width: 15%; text-align: center; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;">
+                            <input type="text" maxlength="1" class="ref-digit-reserva" style="width: 15%; text-align: center; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;">
+                            <input type="text" maxlength="1" class="ref-digit-reserva" style="width: 15%; text-align: center; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;">
+                            <input type="text" maxlength="1" class="ref-digit-reserva" style="width: 15%; text-align: center; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;">
+                            <input type="text" maxlength="1" class="ref-digit-reserva" style="width: 15%; text-align: center; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;">
+                        </div>
+                    </div>
+                    
+                    <div style="margin-bottom: 1rem;">
+                        <label for="comprobanteReserva">Subir comprobante:</label>
+                        <input type="file" id="comprobanteReserva" accept="image/*" required style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: 4px;">
+                    </div>
+                    
+                    <div style="margin-bottom: 1rem; font-weight: 600;">
+                        <span>Total a pagar: </span>
+                        <span id="reservaTotal">Bs. 0,00</span>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="cancelReserva">Cancelar</button>
+                <button class="btn-primary" id="confirmReserva" disabled>Confirmar Reserva</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-section">
+                <h4>Horarios</h4>
+                <p>Lunes a Jueves: 12:00 PM - 10:00 PM</p>
+                <p>Viernes y Sábado: 12:00 PM - 11:00 PM</p>
+                <p>Domingo: 12:00 PM - 9:00 PM</p>
+            </div>
+            <div class="footer-section">
+                <h4>Direcciones</h4>
+                <p>CCCT, Nivel C1, Local 45</p>
+                <p>Las Mercedes, Calle Madrid</p>
+                <p>Plaza Las Américas, Nivel PB</p>
+            </div>
+            <div class="footer-section">
+                <h4>Contacto</h4>
+                <p><i class="fas fa-phone"></i> 0212-1234567</p>
+                <p><i class="fas fa-envelope"></i> info@sakisushi.com</p>
+                <p><i class="fas fa-whatsapp"></i> 0424-1525233</p>
+            </div>
+            <div class="footer-section">
+                <h4>Síguenos</h4>
+                <div class="social-icons">
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                    <a href="#"><i class="fab fa-facebook"></i></a>
+                    <a href="#"><i class="fab fa-twitter"></i></a>
+                    <a href="#"><i class="fab fa-tiktok"></i></a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="supabase-config.js"></script>
+    <script>
+        // Inicialización
+        let sessionId = localStorage.getItem('saki_session_id') || generarId('session_');
+        localStorage.setItem('saki_session_id', sessionId);
+        
+        let menuItems = [];
+        let inventario = [];
+        let carrito = [];
+        let notificaciones = [];
+        let currentCustomizeItem = null;
+        let mesaId = null;
+
+        // Detectar parámetro de mesa en URL
+        const urlParams = new URLSearchParams(window.location.search);
+        mesaId = urlParams.get('mesa');
+
+        // Cargar configuración al inicio
+        document.addEventListener('DOMContentLoaded', async () => {
+            await cargarConfiguracion();
+            await cargarMenu();
+            await cargarInventario();
+            cargarCategorias();
+            setupEventListeners();
+            setupRealtimeSubscriptions();
+            restaurarCarrito();
+            actualizarUI();
+            
+            // Configurar fecha mínima para reservas
+            const hoy = new Date().toISOString().split('T')[0];
+            document.getElementById('fechaReserva').min = hoy;
+        });
+
+        // Cargar menú desde Supabase
+        async function cargarMenu() {
+            try {
+                const { data, error } = await supabase
+                    .from('menu')
+                    .select('*')
+                    .eq('disponible', true);
+                
+                if (error) throw error;
+                menuItems = data || [];
+                renderizarMenu();
+            } catch (error) {
+                console.error('Error cargando menú:', error);
+            }
+        }
+
+        // Cargar inventario desde Supabase
+        async function cargarInventario() {
+            try {
+                const { data, error } = await supabase
+                    .from('inventario')
+                    .select('*');
+                
+                if (error) throw error;
+                inventario = data || [];
+            } catch (error) {
+                console.error('Error cargando inventario:', error);
+            }
+        }
+
+        // Calcular stock disponible de un platillo
+        function calcularStockPlatillo(platillo) {
+            if (!platillo.ingredientes || Object.keys(platillo.ingredientes).length === 0) {
+                return platillo.stock_maximo || 999;
+            }
+            
+            let stockMaximo = Infinity;
+            
+            for (const [ingId, ingInfo] of Object.entries(platillo.ingredientes)) {
+                const ingrediente = inventario.find(i => i.id === ingId);
+                if (!ingrediente) {
+                    stockMaximo = 0;
+                    break;
+                }
+                
+                const cantidadNecesaria = ingInfo.cantidad;
+                const stockDisponible = Math.floor(ingrediente.stock / cantidadNecesaria);
+                stockMaximo = Math.min(stockMaximo, stockDisponible);
+            }
+            
+            return stockMaximo;
+        }
+
+        // Renderizar menú
+        function renderizarMenu(filtroCategoria = null, filtroSubcategoria = null, busqueda = '') {
+            const grid = document.getElementById('menuGrid');
+            grid.innerHTML = '';
+            
+            let itemsFiltrados = [...menuItems];
+            
+            // Filtrar por categoría
+            if (filtroCategoria) {
+                itemsFiltrados = itemsFiltrados.filter(item => item.categoria === filtroCategoria);
+            }
+            
+            // Filtrar por subcategoría
+            if (filtroSubcategoria) {
+                itemsFiltrados = itemsFiltrados.filter(item => item.subcategoria === filtroSubcategoria);
+            }
+            
+            // Filtrar por búsqueda
+            if (busqueda) {
+                const termino = busqueda.toLowerCase();
+                itemsFiltrados = itemsFiltrados.filter(item => 
+                    item.nombre.toLowerCase().includes(termino) || 
+                    (item.descripcion && item.descripcion.toLowerCase().includes(termino))
+                );
+            }
+            
+            itemsFiltrados.forEach(item => {
+                const stock = calcularStockPlatillo(item);
+                const agotado = stock <= 0;
+                const card = document.createElement('div');
+                card.className = `menu-card ${agotado ? 'out-of-stock' : ''}`;
+                
+                // Verificar ingredientes faltantes
+                let ingredientesFaltantes = [];
+                if (item.ingredientes) {
+                    for (const [ingId, ingInfo] of Object.entries(item.ingredientes)) {
+                        const ingrediente = inventario.find(i => i.id === ingId);
+                        if (!ingrediente || ingrediente.stock < ingInfo.cantidad) {
+                            ingredientesFaltantes.push(ingInfo.nombre || ingId);
+                        }
+                    }
+                }
+                
+                card.innerHTML = `
+                    <div class="menu-card-image" style="background-image: url('${item.imagen || 'https://via.placeholder.com/300x200?text=Saki+Sushi'}')">
+                        ${agotado ? '<div class="stock-badge"><i class="fas fa-times-circle"></i> Agotado</div>' : ''}
+                    </div>
+                    <div class="menu-card-content">
+                        <h3 class="menu-card-title">${item.nombre}</h3>
+                        <p class="menu-card-description">${item.descripcion || 'Sin descripción'}</p>
+                        <div class="menu-card-footer">
+                            <span class="menu-card-price">${formatBs(usdToBs(item.precio))}</span>
+                            <div class="menu-card-actions">
+                                ${agotado ? `
+                                    <span class="stock-badge" title="${ingredientesFaltantes.join(', ')}">
+                                        <i class="fas fa-info-circle"></i> Sin stock
+                                    </span>
+                                ` : `
+                                    <button class="btn-icon" onclick="agregarAlCarrito('${item.id}')" ${agotado ? 'disabled' : ''}>
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                    <button class="btn-customize" onclick="abrirPersonalizacion('${item.id}')" ${agotado ? 'disabled' : ''}>
+                                        <i class="fas fa-star"></i> Personalizar
+                                    </button>
+                                `}
+                            </div>
+                        </div>
+                    </div>
                 `;
                 grid.appendChild(card);
             });
         }
 
-        function calcularStockPlatillo(platillo) {
-            // Usar el stock ya calculado en la tabla, pero también verificar ingredientes
-            return platillo.stock;
-        }
-
-        function actualizarPreciosEnUI() {
-            document.querySelectorAll('.card-price').forEach((el, index) => {
-                // Recalcular con nuevo tasaEfectiva
+        // Cargar categorías en el menú lateral
+        function cargarCategorias() {
+            const categoryList = document.getElementById('categoryList');
+            categoryList.innerHTML = '';
+            
+            // Opción "Todos"
+            const allItem = document.createElement('li');
+            allItem.className = 'category-item active';
+            allItem.textContent = 'Todos los platillos';
+            allItem.onclick = () => {
+                document.querySelectorAll('.category-item').forEach(c => c.classList.remove('active'));
+                allItem.classList.add('active');
+                renderizarMenu();
+                document.getElementById('currentCategory').textContent = 'Todos los platillos';
+            };
+            categoryList.appendChild(allItem);
+            
+            // Categorías principales
+            Object.keys(categoriasMenu).forEach(categoria => {
+                const li = document.createElement('li');
+                li.className = 'category-item';
+                li.textContent = categoria;
+                li.onclick = (e) => {
+                    e.stopPropagation();
+                    document.querySelectorAll('.category-item').forEach(c => c.classList.remove('active'));
+                    li.classList.add('active');
+                    renderizarMenu(categoria);
+                    document.getElementById('currentCategory').textContent = categoria;
+                    
+                    // Mostrar subcategorías si existen
+                    const subcatList = document.getElementById(`subcat-${categoria}`);
+                    if (subcatList) {
+                        subcatList.style.display = subcatList.style.display === 'none' ? 'block' : 'none';
+                    }
+                };
+                categoryList.appendChild(li);
+                
+                // Subcategorías
+                if (categoriasMenu[categoria].length > 0) {
+                    const subUl = document.createElement('ul');
+                    subUl.className = 'subcategory-list';
+                    subUl.id = `subcat-${categoria}`;
+                    subUl.style.display = 'none';
+                    
+                    categoriasMenu[categoria].forEach(subcat => {
+                        const subLi = document.createElement('li');
+                        subLi.className = 'subcategory-item';
+                        subLi.textContent = subcat;
+                        subLi.onclick = () => {
+                            renderizarMenu(categoria, subcat);
+                            document.getElementById('currentCategory').textContent = `${categoria} - ${subcat}`;
+                        };
+                        subUl.appendChild(subLi);
+                    });
+                    
+                    categoryList.appendChild(subUl);
+                }
             });
-            renderizarMenu(document.getElementById('buscador').value);
-            renderCarrito();
         }
 
-        // ==================== PERSONALIZACIÓN ====================
+        // Configurar event listeners
+        function setupEventListeners() {
+            // Toggle menú lateral
+            document.getElementById('menuToggle').addEventListener('click', () => {
+                document.getElementById('categorySidebar').classList.toggle('closed');
+                document.getElementById('mainContent').classList.toggle('sidebar-closed');
+            });
+            
+            document.getElementById('closeCategoryMenu').addEventListener('click', () => {
+                document.getElementById('categorySidebar').classList.add('closed');
+                document.getElementById('mainContent').classList.add('sidebar-closed');
+            });
+            
+            // Toggle carrito
+            document.getElementById('cartToggle').addEventListener('click', () => {
+                document.getElementById('cartSidebar').classList.toggle('closed');
+                document.getElementById('mainContent').classList.toggle('cart-closed');
+            });
+            
+            document.getElementById('closeCart').addEventListener('click', () => {
+                document.getElementById('cartSidebar').classList.add('closed');
+                document.getElementById('mainContent').classList.add('cart-closed');
+            });
+            
+            // Búsqueda
+            document.getElementById('searchInput').addEventListener('input', (e) => {
+                renderizarMenu(
+                    document.querySelector('.category-item.active')?.textContent === 'Todos los platillos' ? null : document.querySelector('.category-item.active')?.textContent,
+                    null,
+                    e.target.value
+                );
+            });
+            
+            // Notificaciones
+            document.getElementById('notificationBell').addEventListener('click', toggleNotifications);
+            
+            // Modales
+            document.getElementById('closeCustomizeModal').addEventListener('click', cerrarModalPersonalizacion);
+            document.getElementById('cancelCustomize').addEventListener('click', cerrarModalPersonalizacion);
+            document.getElementById('addToCartFromModal').addEventListener('click', agregarPersonalizadoAlCarrito);
+            
+            // Delivery
+            document.getElementById('parroquia').addEventListener('change', actualizarTotalDelivery);
+            setupReferenceInputs('ref-digit', 'referencia');
+            setupReferenceInputs('ref-digit-reserva', 'referenciaReserva');
+            
+            document.getElementById('direccion').addEventListener('input', (e) => {
+                const counter = document.getElementById('direccionCounter');
+                counter.textContent = `${e.target.value.length}/20 caracteres mínimo`;
+                validarFormularioDelivery();
+            });
+            
+            document.getElementById('telefono').addEventListener('input', validarFormularioDelivery);
+            document.getElementById('comprobante').addEventListener('change', validarFormularioDelivery);
+            
+            // Confirmar pedidos
+            document.getElementById('confirmMesaOrder').addEventListener('click', confirmarPedidoMesa);
+            document.getElementById('confirmDelivery').addEventListener('click', confirmarPedidoDelivery);
+            document.getElementById('confirmReserva').addEventListener('click', confirmarPedidoReserva);
+            
+            // Cancelar
+            document.getElementById('cancelMesaOrder').addEventListener('click', () => {
+                document.getElementById('confirmMesaModal').classList.remove('active');
+            });
+            
+            document.getElementById('cancelDelivery').addEventListener('click', () => {
+                document.getElementById('deliveryModal').classList.remove('active');
+            });
+            
+            document.getElementById('cancelReserva').addEventListener('click', () => {
+                document.getElementById('reservaModal').classList.remove('active');
+            });
+            
+            // Cerrar modales con X
+            document.getElementById('closeConfirmMesaModal').addEventListener('click', () => {
+                document.getElementById('confirmMesaModal').classList.remove('active');
+            });
+            
+            document.getElementById('closeDeliveryModal').addEventListener('click', () => {
+                document.getElementById('deliveryModal').classList.remove('active');
+            });
+            
+            document.getElementById('closeReservaModal').addEventListener('click', () => {
+                document.getElementById('reservaModal').classList.remove('active');
+            });
+        }
+
+        // Configurar inputs de referencia de 6 dígitos
+        function setupReferenceInputs(className, targetId) {
+            const digits = document.querySelectorAll(`.${className}`);
+            digits.forEach((input, index) => {
+                input.addEventListener('input', (e) => {
+                    if (e.target.value.length === 1 && index < digits.length - 1) {
+                        digits[index + 1].focus();
+                    }
+                });
+                
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Backspace' && e.target.value.length === 0 && index > 0) {
+                        digits[index - 1].focus();
+                    }
+                });
+            });
+        }
+
+        // Obtener referencia completa
+        function getReferencia(className) {
+            const digits = document.querySelectorAll(`.${className}`);
+            return Array.from(digits).map(d => d.value).join('');
+        }
+
+        // Función para agregar al carrito (versión simple)
         function agregarAlCarrito(platilloId) {
-            const platillo = menu.find(p => p.id === platilloId);
+            const platillo = menuItems.find(p => p.id === platilloId);
             if (!platillo) return;
-            // Verificar si tiene ingredientes no obligatorios
-            const ingredientes = Object.entries(platillo.ingredientes).filter(([id, ing]) => !ing.obligatorio);
-            if (ingredientes.length > 0) {
-                abrirModalPersonalizacion(platillo);
+            
+            const itemExistente = carrito.find(item => 
+                item.platilloId === platilloId && (!item.personalizacion || item.personalizacion.length === 0)
+            );
+            
+            if (itemExistente) {
+                itemExistente.cantidad++;
             } else {
-                // Añadir directamente
-                añadirItemAlCarrito(platillo, []);
+                carrito.push({
+                    id: generarId('cart_'),
+                    platilloId: platillo.id,
+                    nombre: platillo.nombre,
+                    cantidad: 1,
+                    personalizacion: [],
+                    precioUnitarioUSD: platillo.precio,
+                    precioUnitarioBs: usdToBs(platillo.precio),
+                    subtotal: usdToBs(platillo.precio)
+                });
+            }
+            
+            guardarCarrito();
+            actualizarCarritoUI();
+        }
+
+        // Abrir modal de personalización
+        function abrirPersonalizacion(platilloId) {
+            const platillo = menuItems.find(p => p.id === platilloId);
+            if (!platillo) return;
+            
+            currentCustomizeItem = {
+                ...platillo,
+                cantidad: 1,
+                ingredientesQuitados: []
+            };
+            
+            const modalBody = document.getElementById('customizeModalBody');
+            modalBody.innerHTML = `
+                <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
+                    <img src="${platillo.imagen || 'https://via.placeholder.com/100x100'}" style="width: 100px; height: 100px; object-fit: cover; border-radius: 8px;">
+                    <div>
+                        <h4>${platillo.nombre}</h4>
+                        <p>${platillo.descripcion || ''}</p>
+                    </div>
+                </div>
+                
+                <div style="margin-bottom: 1rem;">
+                    <label>Cantidad:</label>
+                    <div style="display: flex; align-items: center; gap: 1rem; margin-top: 0.5rem;">
+                        <button class="btn-icon" onclick="actualizarCantidadPersonalizacion(-1)">-</button>
+                        <span id="customizeCantidad">1</span>
+                        <button class="btn-icon" onclick="actualizarCantidadPersonalizacion(1)">+</button>
+                    </div>
+                </div>
+                
+                <div style="margin-bottom: 1rem;">
+                    <label>Ingredientes (quitar):</label>
+                    <div id="ingredientesList" style="margin-top: 0.5rem;">
+                        ${Object.entries(platillo.ingredientes || {}).map(([ingId, ingInfo]) => {
+                            const ingrediente = inventario.find(i => i.id === ingId);
+                            const disponible = ingrediente && ingrediente.stock >= ingInfo.cantidad;
+                            return `
+                                <div style="margin-bottom: 0.5rem; ${!disponible ? 'opacity: 0.5;' : ''}">
+                                    <label>
+                                        <input type="checkbox" class="ingrediente-check" data-ingrediente="${ingId}" data-precio="${ingrediente?.precio_unitario || 0}" ${!disponible ? 'disabled' : ''}>
+                                        ${ingInfo.nombre || ingId} - ${formatBs(usdToBs(ingrediente?.precio_unitario || 0))}
+                                        ${!disponible ? '<small>(Sin stock)</small>' : ''}
+                                    </label>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+                
+                <div style="font-weight: 600; font-size: 1.2rem; text-align: right;">
+                    Precio: <span id="customizePrecio">${formatBs(usdToBs(platillo.precio))}</span>
+                </div>
+            `;
+            
+            // Agregar event listeners a checkboxes
+            document.querySelectorAll('.ingrediente-check').forEach(cb => {
+                cb.addEventListener('change', calcularPrecioPersonalizado);
+            });
+            
+            document.getElementById('customizeModal').classList.add('active');
+        }
+
+        // Actualizar cantidad en personalización
+        function actualizarCantidadPersonalizacion(delta) {
+            if (!currentCustomizeItem) return;
+            currentCustomizeItem.cantidad = Math.max(1, currentCustomizeItem.cantidad + delta);
+            document.getElementById('customizeCantidad').textContent = currentCustomizeItem.cantidad;
+            calcularPrecioPersonalizado();
+        }
+
+        // Calcular precio personalizado
+        function calcularPrecioPersonalizado() {
+            if (!currentCustomizeItem) return;
+            
+            let descuento = 0;
+            document.querySelectorAll('.ingrediente-check:checked').forEach(cb => {
+                descuento += parseFloat(cb.dataset.precio) || 0;
+            });
+            
+            const precioBaseUSD = currentCustomizeItem.precio;
+            const precioFinalUSD = Math.max(0, precioBaseUSD - descuento);
+            const precioFinalBs = usdToBs(precioFinalUSD) * currentCustomizeItem.cantidad;
+            
+            document.getElementById('customizePrecio').textContent = formatBs(precioFinalBs);
+        }
+
+        // Agregar personalizado al carrito
+        function agregarPersonalizadoAlCarrito() {
+            if (!currentCustomizeItem) return;
+            
+            const ingredientesQuitados = Array.from(document.querySelectorAll('.ingrediente-check:checked'))
+                .map(cb => cb.dataset.ingrediente);
+            
+            let descuento = 0;
+            document.querySelectorAll('.ingrediente-check:checked').forEach(cb => {
+                descuento += parseFloat(cb.dataset.precio) || 0;
+            });
+            
+            const precioFinalUSD = Math.max(0, currentCustomizeItem.precio - descuento);
+            
+            carrito.push({
+                id: generarId('cart_'),
+                platilloId: currentCustomizeItem.id,
+                nombre: currentCustomizeItem.nombre,
+                cantidad: currentCustomizeItem.cantidad,
+                personalizacion: ingredientesQuitados,
+                precioUnitarioUSD: precioFinalUSD,
+                precioUnitarioBs: usdToBs(precioFinalUSD),
+                subtotal: usdToBs(precioFinalUSD) * currentCustomizeItem.cantidad
+            });
+            
+            guardarCarrito();
+            actualizarCarritoUI();
+            cerrarModalPersonalizacion();
+        }
+
+        // Cerrar modal de personalización
+        function cerrarModalPersonalizacion() {
+            document.getElementById('customizeModal').classList.remove('active');
+            currentCustomizeItem = null;
+        }
+
+        // Actualizar UI del carrito
+        function actualizarCarritoUI() {
+            const cartItems = document.getElementById('cartItems');
+            const cartTotal = document.getElementById('cartTotal');
+            const cartButtons = document.getElementById('cartButtons');
+            
+            if (carrito.length === 0) {
+                cartItems.innerHTML = '<p style="text-align: center; color: var(--gray-500); padding: 2rem;">Tu carrito está vacío</p>';
+                cartTotal.textContent = formatBs(0);
+                cartButtons.innerHTML = '';
+                return;
+            }
+            
+            cartItems.innerHTML = '';
+            let total = 0;
+            
+            carrito.forEach((item, index) => {
+                total += item.subtotal;
+                
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'cart-item';
+                itemDiv.innerHTML = `
+                    <div class="cart-item-details">
+                        <div class="cart-item-name">${item.nombre}</div>
+                        ${item.personalizacion.length > 0 ? `
+                            <div class="cart-item-customization">
+                                Sin: ${item.personalizacion.map(p => {
+                                    const ing = inventario.find(i => i.id === p);
+                                    return ing?.nombre || p;
+                                }).join(', ')}
+                            </div>
+                        ` : ''}
+                        <div class="cart-item-price">${formatBs(item.precioUnitarioBs)} c/u</div>
+                    </div>
+                    <div class="cart-item-actions">
+                        <div class="cart-item-quantity">
+                            <button class="btn-icon" onclick="actualizarCantidadCarrito('${item.id}', -1)">-</button>
+                            <span>${item.cantidad}</span>
+                            <button class="btn-icon" onclick="actualizarCantidadCarrito('${item.id}', 1)">+</button>
+                        </div>
+                        <button class="btn-remove" onclick="eliminarDelCarrito('${item.id}')">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                `;
+                cartItems.appendChild(itemDiv);
+            });
+            
+            cartTotal.textContent = formatBs(total);
+            
+            // Botones según modo
+            cartButtons.innerHTML = '';
+            if (mesaId) {
+                cartButtons.innerHTML = `
+                    <button class="btn-primary" onclick="abrirConfirmacionMesa()" ${carrito.length === 0 ? 'disabled' : ''}>
+                        Confirmar Pedido
+                    </button>
+                `;
+            } else {
+                cartButtons.innerHTML = `
+                    <button class="btn-primary" onclick="abrirDeliveryModal()" ${carrito.length === 0 ? 'disabled' : ''}>
+                        <i class="fas fa-motorcycle"></i> Delivery
+                    </button>
+                    <button class="btn-secondary" onclick="abrirReservaModal()" ${carrito.length === 0 ? 'disabled' : ''}>
+                        <i class="fas fa-calendar"></i> Reserva
+                    </button>
+                `;
             }
         }
 
-        function abrirModalPersonalizacion(platillo) {
-            platilloSeleccionado = platillo;
-            personalizacionActual = [];
-            document.getElementById('personalizar-titulo').innerText = platillo.nombre;
-            const container = document.getElementById('personalizar-ingredientes');
-            container.innerHTML = '';
-            const ingredientes = Object.entries(platillo.ingredientes).filter(([id, ing]) => !ing.obligatorio);
-            ingredientes.forEach(([id, ing]) => {
-                const ingrediente = inventario.find(i => i.id === id);
-                if (!ingrediente) return;
-                const div = document.createElement('div');
-                div.style.marginBottom = '0.5rem';
-                div.innerHTML = `
-                    <label>
-                        <input type="checkbox" data-id="${id}" data-precio="${ingrediente.precio_unitario}" data-cantidad="${ing.cantidad}" onchange="actualizarPrecioPersonalizacion()">
-                        ${ingrediente.nombre} (descuento ${(ingrediente.precio_unitario * ing.cantidad * tasaEfectiva).toFixed(2)} Bs)
-                    </label>
-                `;
-                container.appendChild(div);
-            });
-            actualizarPrecioPersonalizacion();
-            document.getElementById('modalPersonalizar').style.display = 'flex';
-        }
-
-        function actualizarPrecioPersonalizacion() {
-            if (!platilloSeleccionado) return;
-            let descuento = 0;
-            document.querySelectorAll('#personalizar-ingredientes input:checked').forEach(cb => {
-                const precio = parseFloat(cb.dataset.precio);
-                const cantidad = parseFloat(cb.dataset.cantidad);
-                descuento += precio * cantidad * tasaEfectiva;
-            });
-            const precioBase = platilloSeleccionado.precio * tasaEfectiva;
-            const precioFinal = Math.max(0, precioBase - descuento);
-            document.getElementById('personalizar-precio').innerText = precioFinal.toFixed(2);
-        }
-
-        function confirmarPersonalizacion() {
-            const quitados = [];
-            document.querySelectorAll('#personalizar-ingredientes input:checked').forEach(cb => {
-                quitados.push(cb.dataset.id);
-            });
-            añadirItemAlCarrito(platilloSeleccionado, quitados);
-            cerrarModalPersonalizar();
-        }
-
-        function cerrarModalPersonalizar() {
-            document.getElementById('modalPersonalizar').style.display = 'none';
-        }
-
-        function añadirItemAlCarrito(platillo, quitados) {
-            const item = {
-                platilloId: platillo.id,
-                nombre: platillo.nombre,
-                cantidad: 1,
-                personalizacion: quitados,
-                precioUnitarioUSD: platillo.precio,
-                precioEnBs: platillo.precio * tasaEfectiva,
-                subtotal: platillo.precio * tasaEfectiva,
-                descuentoPorIngredientes: 0 // se recalcula al mostrar
-            };
-            // Calcular descuento real
-            let descuento = 0;
-            quitados.forEach(id => {
-                const ing = platillo.ingredientes[id];
-                if (ing) {
-                    const ingrediente = inventario.find(i => i.id === id);
-                    if (ingrediente) {
-                        descuento += ingrediente.precio_unitario * ing.cantidad * tasaEfectiva;
-                    }
+        // Actualizar cantidad en carrito
+        function actualizarCantidadCarrito(itemId, delta) {
+            const item = carrito.find(i => i.id === itemId);
+            if (item) {
+                const nuevaCantidad = item.cantidad + delta;
+                if (nuevaCantidad <= 0) {
+                    eliminarDelCarrito(itemId);
+                } else {
+                    item.cantidad = nuevaCantidad;
+                    item.subtotal = item.precioUnitarioBs * nuevaCantidad;
+                    guardarCarrito();
+                    actualizarCarritoUI();
                 }
-            });
-            item.subtotal = (platillo.precio * tasaEfectiva) - descuento;
-            item.precioEnBs = item.subtotal;
-            carrito.push(item);
-            guardarCarritoLocal();
-            renderCarrito();
+            }
         }
 
-        function renderCarrito() {
-            const container = document.getElementById('carrito-items');
-            container.innerHTML = '';
-            let total = 0;
-            carrito.forEach((item, index) => {
-                const div = document.createElement('div');
-                div.className = 'carrito-item';
-                div.innerHTML = `
-                    <div>
-                        <strong>${item.nombre}</strong> x${item.cantidad}
-                        ${item.personalizacion.length ? '<br><small>sin: '+item.personalizacion.join(', ')+'</small>' : ''}
-                    </div>
-                    <div>${item.precioEnBs.toFixed(2)} Bs <i class="fas fa-trash" onclick="eliminarItemCarrito(${index})" style="cursor:pointer; margin-left:0.5rem;"></i></div>
-                `;
-                container.appendChild(div);
-                total += item.precioEnBs;
-            });
-            document.getElementById('carrito-total').innerText = `Total: ${total.toFixed(2)} Bs`;
+        // Eliminar del carrito
+        function eliminarDelCarrito(itemId) {
+            carrito = carrito.filter(i => i.id !== itemId);
+            guardarCarrito();
+            actualizarCarritoUI();
         }
 
-        function eliminarItemCarrito(index) {
-            carrito.splice(index, 1);
-            guardarCarritoLocal();
-            renderCarrito();
+        // Guardar carrito en localStorage
+        function guardarCarrito() {
+            const carritoData = {
+                items: carrito,
+                timestamp: Date.now()
+            };
+            localStorage.setItem('saki_carrito', JSON.stringify(carritoData));
         }
 
-        function guardarCarritoLocal() {
-            localStorage.setItem('carrito', JSON.stringify(carrito));
+        // Restaurar carrito desde localStorage
+        function restaurarCarrito() {
+            const saved = localStorage.getItem('saki_carrito');
+            if (saved) {
+                try {
+                    const data = JSON.parse(saved);
+                    const edad = Date.now() - data.timestamp;
+                    
+                    if (edad < 60 * 60 * 1000) { // Menos de 1 hora
+                        if (confirm('¿Quieres continuar con tu pedido anterior?')) {
+                            carrito = data.items;
+                        } else {
+                            localStorage.removeItem('saki_carrito');
+                        }
+                    } else {
+                        localStorage.removeItem('saki_carrito');
+                    }
+                } catch (e) {
+                    console.error('Error restaurando carrito:', e);
+                }
+            }
         }
 
-        function cargarCarritoLocal() {
-            const saved = localStorage.getItem('carrito');
-            if (saved) carrito = JSON.parse(saved);
-            renderCarrito();
+        // Abrir confirmación de pedido en mesa
+        function abrirConfirmacionMesa() {
+            const summary = document.getElementById('mesaOrderSummary');
+            summary.innerHTML = carrito.map(item => 
+                `<div>${item.cantidad}x ${item.nombre} - ${formatBs(item.subtotal)}</div>`
+            ).join('');
+            document.getElementById('confirmMesaModal').classList.add('active');
         }
 
-        // ==================== PEDIDOS ====================
+        // Confirmar pedido en mesa
         async function confirmarPedidoMesa() {
-            if (carrito.length === 0) return alert('Añade items al carrito');
-            const pedidoId = 'PED-' + Date.now() + Math.floor(Math.random()*1000);
+            const nombre = document.getElementById('clienteNombre').value.trim();
+            
             const pedido = {
-                id: pedidoId,
+                id: generarId('PED-'),
                 timestamp: new Date().toISOString(),
                 estado: 'pendiente',
                 tipo: 'mesa',
-                items: carrito.map(i => ({
-                    platilloId: i.platilloId,
-                    nombre: i.nombre,
-                    cantidad: i.cantidad,
-                    personalizacion: i.personalizacion,
-                    precioUnitarioUSD: i.precioUnitarioUSD,
-                    precioEnBs: i.precioEnBs,
-                    subtotal: i.precioEnBs,
-                    descuentoPorIngredientes: 0,
-                    tasaCambioAplicada: tasaEfectiva
+                mesa: mesaId,
+                cliente_nombre: nombre || 'Cliente',
+                items: carrito.map(item => ({
+                    platilloId: item.platilloId,
+                    nombre: item.nombre,
+                    cantidad: item.cantidad,
+                    personalizacion: item.personalizacion,
+                    precioUnitarioUSD: item.precioUnitarioUSD,
+                    precioEnBs: item.precioUnitarioBs,
+                    subtotal: item.subtotal,
+                    tasaCambioAplicada: configGlobal.tasa_efectiva
                 })),
-                total: carrito.reduce((acc, i) => acc + i.precioEnBs, 0) / tasaEfectiva, // total en USD
-                origen: 'cliente_web',
-                mesa: numeroMesa,
-                tiene_comprobante: false
+                total: carrito.reduce((sum, item) => sum + (item.precioUnitarioUSD * item.cantidad), 0),
+                session_id: sessionId
             };
-
+            
             try {
-                // Llamar a la función RPC para reservar inventario (inserta pedido y descuenta)
-                const { error } = await supabase.rpc('reservar_inventario', { p_pedido_id: pedidoId }); // Esta función necesita el pedido ya insertado, así que primero insertamos
-                // Mejor: insertar pedido y luego reservar. Pero para atomicidad, se puede crear una función que haga todo.
-                // Por simplicidad, insertamos directamente y luego llamamos a reservar_inventario.
-                const { error: insertError } = await supabase.from('pedidos').insert([pedido]);
-                if (insertError) throw insertError;
-                await supabase.rpc('reservar_inventario', { p_pedido_id: pedidoId });
-                pedidoIdActual = pedidoId;
-                localStorage.setItem('pedidoId', pedidoId);
-                // Insertar notificación de pedido creado
-                await supabase.from('notificaciones').insert([{
-                    pedido_id: pedidoId,
-                    tipo: 'pending',
-                    titulo: 'Pedido recibido',
-                    mensaje: 'Tu pedido está pendiente de pago por el cajero.'
-                }]);
-                alert('Pedido enviado a la cocina');
+                const { error } = await supabase
+                    .from('pedidos')
+                    .insert([pedido]);
+                
+                if (error) throw error;
+                
+                // Crear notificación para el cliente
+                await supabase
+                    .from('notificaciones')
+                    .insert([{
+                        pedido_id: pedido.id,
+                        tipo: 'pending',
+                        titulo: 'Pedido recibido',
+                        mensaje: 'Tu pedido ha sido recibido y está pendiente de pago',
+                        timestamp: new Date().toISOString(),
+                        leida: false
+                    }]);
+                
+                // Limpiar carrito
                 carrito = [];
-                guardarCarritoLocal();
-                renderCarrito();
-            } catch (e) {
-                alert('Error al enviar pedido: ' + e.message);
+                guardarCarrito();
+                actualizarCarritoUI();
+                
+                document.getElementById('confirmMesaModal').classList.remove('active');
+                alert('¡Pedido confirmado! El cajero procesará tu pago en breve.');
+            } catch (error) {
+                console.error('Error confirmando pedido:', error);
+                alert('Error al confirmar el pedido. Intenta de nuevo.');
             }
         }
 
-        // ==================== MODALES DELIVERY/RESERVA ====================
-        function abrirModalDelivery() {
-            document.getElementById('modalDelivery').style.display = 'flex';
-            cargarParroquias();
-            validarDelivery();
-        }
-
-        function cerrarModalDelivery() {
-            document.getElementById('modalDelivery').style.display = 'none';
-        }
-
-        function abrirModalReserva() {
-            document.getElementById('modalReserva').style.display = 'flex';
-            document.getElementById('fechaReserva').min = new Date().toISOString().split('T')[0];
-            validarReserva();
-        }
-
-        function cerrarModalReserva() {
-            document.getElementById('modalReserva').style.display = 'none';
-        }
-
-        function cargarParroquias() {
-            const list = document.getElementById('parroquiaList');
-            list.innerHTML = '';
-            parroquias.forEach(p => {
-                const div = document.createElement('div');
-                div.innerText = `${p.nombre} (${p.precioUSD} USD)`;
-                div.onclick = () => seleccionarParroquia(p.nombre);
-                list.appendChild(div);
+        // Abrir modal de delivery
+        function abrirDeliveryModal() {
+            // Cargar parroquias
+            const select = document.getElementById('parroquia');
+            select.innerHTML = '<option value="">Selecciona una parroquia</option>';
+            parroquiasDelivery.forEach(p => {
+                const option = document.createElement('option');
+                option.value = p.nombre;
+                option.dataset.precio = p.precioUSD;
+                option.textContent = `${p.nombre} - ${formatUSD(p.precioUSD)}`;
+                select.appendChild(option);
             });
+            
+            actualizarTotalDelivery();
+            document.getElementById('deliveryModal').classList.add('active');
         }
 
-        function filtrarParroquias() {
-            const search = document.getElementById('parroquiaSearch').value.toLowerCase();
-            const list = document.getElementById('parroquiaList');
-            list.innerHTML = '';
-            parroquias.filter(p => p.nombre.toLowerCase().includes(search)).forEach(p => {
-                const div = document.createElement('div');
-                div.innerText = `${p.nombre} (${p.precioUSD} USD)`;
-                div.onclick = () => seleccionarParroquia(p.nombre);
-                list.appendChild(div);
-            });
+        // Actualizar total de delivery
+        function actualizarTotalDelivery() {
+            const select = document.getElementById('parroquia');
+            const selected = select.options[select.selectedIndex];
+            const precioDeliveryUSD = selected?.dataset?.precio ? parseFloat(selected.dataset.precio) : 0;
+            
+            const subtotalUSD = carrito.reduce((sum, item) => sum + (item.precioUnitarioUSD * item.cantidad), 0);
+            const totalUSD = subtotalUSD + precioDeliveryUSD;
+            const totalBs = usdToBs(totalUSD);
+            
+            document.getElementById('deliveryTotal').textContent = formatBs(totalBs);
         }
 
-        function toggleParroquiaList() {
-            const list = document.getElementById('parroquiaList');
-            list.style.display = list.style.display === 'block' ? 'none' : 'block';
-        }
-
-        function seleccionarParroquia(nombre) {
-            parroquiaSeleccionada = nombre;
-            document.getElementById('parroquiaSelected').innerText = nombre + ' ▼';
-            document.getElementById('parroquiaList').style.display = 'none';
-            const parroquia = parroquias.find(p => p.nombre === nombre);
-            const costoUSD = parroquia ? parroquia.precioUSD : 2;
-            const costoBs = costoUSD * tasaEfectiva;
-            document.getElementById('costoEnvio').innerText = `Costo envío: ${costoUSD} USD (${costoBs.toFixed(2)} Bs)`;
-            validarDelivery();
-        }
-
-        function moveFocus(input, event) {
-            if (input.value.length === 1) {
-                const next = input.nextElementSibling;
-                if (next) next.focus();
-            }
-        }
-
-        function validarReferencia() {
-            const refInputs = document.querySelectorAll('#refInputs input');
-            const ref = Array.from(refInputs).map(i => i.value).join('');
-            const refReserva = document.querySelectorAll('#refReservaInputs input');
-            const refR = Array.from(refReserva).map(i => i.value).join('');
-            // Se valida cuando tenga 6 dígitos
-        }
-
-        function validarDelivery() {
+        // Validar formulario de delivery
+        function validarFormularioDelivery() {
+            const parroquia = document.getElementById('parroquia').value;
             const direccion = document.getElementById('direccion').value;
             const telefono = document.getElementById('telefono').value;
-            const refInputs = document.querySelectorAll('#refInputs input');
-            const ref = Array.from(refInputs).map(i => i.value).join('');
+            const referencia = getReferencia('ref-digit');
             const comprobante = document.getElementById('comprobante').files.length > 0;
-            const ok = direccion.length >= 20 && telefono.length >= 11 && telefono.length <= 14 && ref.length === 6 && comprobante;
-            document.getElementById('btnConfirmarDelivery').disabled = !ok;
+            
+            const valido = parroquia && 
+                          direccion.length >= 20 && 
+                          validarTelefono(telefono) && 
+                          validarReferencia(referencia) && 
+                          comprobante;
+            
+            document.getElementById('confirmDelivery').disabled = !valido;
         }
 
-        function validarReserva() {
-            const fecha = document.getElementById('fechaReserva').value;
-            const nombre = document.getElementById('nombreReserva').value;
-            const refInputs = document.querySelectorAll('#refReservaInputs input');
-            const ref = Array.from(refInputs).map(i => i.value).join('');
-            const comprobante = document.getElementById('comprobanteReserva').files.length > 0;
-            const ok = fecha && nombre && ref.length === 6 && comprobante;
-            document.getElementById('btnConfirmarReserva').disabled = !ok;
-        }
-
-        async function confirmarDelivery() {
-            if (carrito.length === 0) return alert('Carrito vacío');
-            const pedidoId = 'PED-' + Date.now() + Math.floor(Math.random()*1000);
-            const parroquia = parroquias.find(p => p.nombre === parroquiaSeleccionada);
-            const costoUSD = parroquia ? parroquia.precioUSD : 2;
-            const costoBs = costoUSD * tasaEfectiva;
-            const totalUSD = carrito.reduce((acc, i) => acc + i.precioUnitarioUSD * i.cantidad, 0) + costoUSD;
-            const totalBs = totalUSD * tasaEfectiva;
-
-            const refInputs = document.querySelectorAll('#refInputs input');
-            const referencia = Array.from(refInputs).map(i => i.value).join('');
-
-            const file = document.getElementById('comprobante').files[0];
-            let comprobanteUrl = '';
-            if (file) {
-                const fileName = `${pedidoId}_${file.name}`;
-                const { error: uploadError } = await supabase.storage.from('comprobantes').upload(fileName, file);
-                if (uploadError) throw uploadError;
-                comprobanteUrl = supabase.storage.from('comprobantes').getPublicUrl(fileName).data.publicUrl;
+        // Confirmar pedido de delivery
+        async function confirmarPedidoDelivery() {
+            const select = document.getElementById('parroquia');
+            const selected = select.options[select.selectedIndex];
+            const precioDeliveryUSD = parseFloat(selected.dataset.precio);
+            const referencia = getReferencia('ref-digit');
+            const comprobanteFile = document.getElementById('comprobante').files[0];
+            
+            // Subir comprobante
+            const comprobantePath = `delivery/${Date.now()}_${comprobanteFile.name}`;
+            const { data: uploadData, error: uploadError } = await supabase.storage
+                .from('comprobantes')
+                .upload(comprobantePath, comprobanteFile);
+            
+            if (uploadError) {
+                alert('Error al subir el comprobante');
+                return;
             }
-
+            
+            const comprobanteUrl = `${SUPABASE_URL}/storage/v1/object/public/comprobantes/${comprobantePath}`;
+            
+            const subtotalUSD = carrito.reduce((sum, item) => sum + (item.precioUnitarioUSD * item.cantidad), 0);
+            const totalUSD = subtotalUSD + precioDeliveryUSD;
+            
             const pedido = {
-                id: pedidoId,
+                id: generarId('PED-'),
                 timestamp: new Date().toISOString(),
                 estado: 'pendiente',
                 tipo: 'delivery',
-                items: carrito.map(i => ({
-                    platilloId: i.platilloId,
-                    nombre: i.nombre,
-                    cantidad: i.cantidad,
-                    personalizacion: i.personalizacion,
-                    precioUnitarioUSD: i.precioUnitarioUSD,
-                    precioEnBs: i.precioEnBs,
-                    subtotal: i.precioEnBs,
-                    descuentoPorIngredientes: 0,
-                    tasaCambioAplicada: tasaEfectiva
-                })),
-                total: totalUSD,
-                origen: 'cliente_web',
-                parroquia: parroquiaSeleccionada,
+                parroquia: select.value,
                 direccion: document.getElementById('direccion').value,
                 telefono: document.getElementById('telefono').value,
                 referencia: referencia,
-                tiene_comprobante: true,
-                comprobante_nombre: comprobanteUrl,
-                costo_delivery: costoBs,
-                costo_delivery_usd: costoUSD
+                comprobante_url: comprobanteUrl,
+                costo_delivery_usd: precioDeliveryUSD,
+                costo_delivery: usdToBs(precioDeliveryUSD),
+                items: carrito.map(item => ({
+                    platilloId: item.platilloId,
+                    nombre: item.nombre,
+                    cantidad: item.cantidad,
+                    personalizacion: item.personalizacion,
+                    precioUnitarioUSD: item.precioUnitarioUSD,
+                    precioEnBs: item.precioUnitarioBs,
+                    subtotal: item.subtotal,
+                    tasaCambioAplicada: configGlobal.tasa_efectiva
+                })),
+                total: totalUSD,
+                session_id: sessionId
             };
-
+            
             try {
-                const { error } = await supabase.from('pedidos').insert([pedido]);
+                const { error } = await supabase
+                    .from('pedidos')
+                    .insert([pedido]);
+                
                 if (error) throw error;
-                await supabase.rpc('reservar_inventario', { p_pedido_id: pedidoId });
-                pedidoIdActual = pedidoId;
-                localStorage.setItem('pedidoId', pedidoId);
-                await supabase.from('notificaciones').insert([{
-                    pedido_id: pedidoId,
-                    tipo: 'pending',
-                    titulo: 'Pedido recibido',
-                    mensaje: 'Esperando confirmación del pago.'
-                }]);
-                alert('Pedido enviado. Tienes 20 minutos para que el cajero confirme.');
+                
+                // Crear notificación
+                await supabase
+                    .from('notificaciones')
+                    .insert([{
+                        pedido_id: pedido.id,
+                        tipo: 'pending',
+                        titulo: 'Pedido de delivery recibido',
+                        mensaje: 'Tu pedido ha sido recibido. Espera la confirmación del pago.',
+                        timestamp: new Date().toISOString(),
+                        leida: false
+                    }]);
+                
+                // Limpiar carrito
                 carrito = [];
-                guardarCarritoLocal();
-                cerrarModalDelivery();
-                renderCarrito();
-            } catch (e) {
-                alert('Error: ' + e.message);
+                guardarCarrito();
+                actualizarCarritoUI();
+                
+                document.getElementById('deliveryModal').classList.remove('active');
+                
+                // Iniciar temporizador de 20 minutos (solo visual)
+                iniciarTemporizadorPedido(pedido.id, 20);
+                
+                alert('¡Pedido de delivery confirmado! Tienes 20 minutos para completar el pago.');
+            } catch (error) {
+                console.error('Error confirmando delivery:', error);
+                alert('Error al confirmar el pedido. Intenta de nuevo.');
             }
         }
 
-        async function confirmarReserva() {
-            if (carrito.length === 0) return alert('Carrito vacío');
-            const pedidoId = 'PED-' + Date.now() + Math.floor(Math.random()*1000);
-            const totalUSD = carrito.reduce((acc, i) => acc + i.precioUnitarioUSD * i.cantidad, 0);
-            const refInputs = document.querySelectorAll('#refReservaInputs input');
-            const referencia = Array.from(refInputs).map(i => i.value).join('');
-            const file = document.getElementById('comprobanteReserva').files[0];
-            let comprobanteUrl = '';
-            if (file) {
-                const fileName = `${pedidoId}_${file.name}`;
-                const { error: uploadError } = await supabase.storage.from('comprobantes').upload(fileName, file);
-                if (uploadError) throw uploadError;
-                comprobanteUrl = supabase.storage.from('comprobantes').getPublicUrl(fileName).data.publicUrl;
-            }
+        // Abrir modal de reserva
+        function abrirReservaModal() {
+            const subtotalUSD = carrito.reduce((sum, item) => sum + (item.precioUnitarioUSD * item.cantidad), 0);
+            document.getElementById('reservaTotal').textContent = formatBs(usdToBs(subtotalUSD));
+            document.getElementById('reservaModal').classList.add('active');
+        }
 
+        // Validar formulario de reserva
+        function validarFormularioReserva() {
+            const fecha = document.getElementById('fechaReserva').value;
+            const nombre = document.getElementById('nombreReserva').value;
+            const referencia = getReferencia('ref-digit-reserva');
+            const comprobante = document.getElementById('comprobanteReserva').files.length > 0;
+            
+            const valido = fecha && nombre && validarReferencia(referencia) && comprobante;
+            
+            document.getElementById('confirmReserva').disabled = !valido;
+        }
+
+        // Confirmar pedido de reserva
+        async function confirmarPedidoReserva() {
+            const referencia = getReferencia('ref-digit-reserva');
+            const comprobanteFile = document.getElementById('comprobanteReserva').files[0];
+            
+            // Subir comprobante
+            const comprobantePath = `reserva/${Date.now()}_${comprobanteFile.name}`;
+            const { data: uploadData, error: uploadError } = await supabase.storage
+                .from('comprobantes')
+                .upload(comprobantePath, comprobanteFile);
+            
+            if (uploadError) {
+                alert('Error al subir el comprobante');
+                return;
+            }
+            
+            const comprobanteUrl = `${SUPABASE_URL}/storage/v1/object/public/comprobantes/${comprobantePath}`;
+            
+            const subtotalUSD = carrito.reduce((sum, item) => sum + (item.precioUnitarioUSD * item.cantidad), 0);
+            
             const pedido = {
-                id: pedidoId,
+                id: generarId('PED-'),
                 timestamp: new Date().toISOString(),
-                estado: 'reserva_pendiente',
+                estado: 'pendiente',
                 tipo: 'reserva',
-                items: carrito.map(i => ({
-                    platilloId: i.platilloId,
-                    nombre: i.nombre,
-                    cantidad: i.cantidad,
-                    personalizacion: i.personalizacion,
-                    precioUnitarioUSD: i.precioUnitarioUSD,
-                    precioEnBs: i.precioEnBs,
-                    subtotal: i.precioEnBs,
-                    descuentoPorIngredientes: 0,
-                    tasaCambioAplicada: tasaEfectiva
-                })),
-                total: totalUSD,
-                origen: 'cliente_web',
                 fecha_reserva: document.getElementById('fechaReserva').value,
                 cliente_nombre: document.getElementById('nombreReserva').value,
                 referencia: referencia,
-                tiene_comprobante: true,
-                comprobante_nombre: comprobanteUrl
+                comprobante_url: comprobanteUrl,
+                items: carrito.map(item => ({
+                    platilloId: item.platilloId,
+                    nombre: item.nombre,
+                    cantidad: item.cantidad,
+                    personalizacion: item.personalizacion,
+                    precioUnitarioUSD: item.precioUnitarioUSD,
+                    precioEnBs: item.precioUnitarioBs,
+                    subtotal: item.subtotal,
+                    tasaCambioAplicada: configGlobal.tasa_efectiva
+                })),
+                total: subtotalUSD,
+                session_id: sessionId
             };
-
+            
             try {
-                const { error } = await supabase.from('pedidos').insert([pedido]);
+                const { error } = await supabase
+                    .from('pedidos')
+                    .insert([pedido]);
+                
                 if (error) throw error;
-                await supabase.rpc('reservar_inventario', { p_pedido_id: pedidoId });
-                pedidoIdActual = pedidoId;
-                localStorage.setItem('pedidoId', pedidoId);
-                await supabase.from('notificaciones').insert([{
-                    pedido_id: pedidoId,
-                    tipo: 'pending',
-                    titulo: 'Reserva recibida',
-                    mensaje: 'Esperando confirmación del pago.'
-                }]);
-                alert('Reserva enviada. Tienes 20 minutos para que el cajero confirme.');
+                
+                // Crear notificación
+                await supabase
+                    .from('notificaciones')
+                    .insert([{
+                        pedido_id: pedido.id,
+                        tipo: 'pending',
+                        titulo: 'Reserva recibida',
+                        mensaje: 'Tu solicitud de reserva ha sido recibida. Espera la confirmación.',
+                        timestamp: new Date().toISOString(),
+                        leida: false
+                    }]);
+                
+                // Limpiar carrito
                 carrito = [];
-                guardarCarritoLocal();
-                cerrarModalReserva();
-                renderCarrito();
-            } catch (e) {
-                alert('Error: ' + e.message);
+                guardarCarrito();
+                actualizarCarritoUI();
+                
+                document.getElementById('reservaModal').classList.remove('active');
+                
+                alert('¡Solicitud de reserva enviada! Te confirmaremos por notificación.');
+            } catch (error) {
+                console.error('Error confirmando reserva:', error);
+                alert('Error al confirmar la reserva. Intenta de nuevo.');
             }
         }
 
-        // ==================== NOTIFICACIONES ====================
-        function toggleNotificaciones() {
-            const panel = document.getElementById('notifPanel');
-            panel.classList.toggle('open');
-            if (panel.classList.contains('open')) {
+        // Iniciar temporizador visual para pedido
+        function iniciarTemporizadorPedido(pedidoId, minutos) {
+            // Esto es solo visual, la cancelación real la hace pg_cron
+            const fin = Date.now() + minutos * 60 * 1000;
+            
+            const interval = setInterval(() => {
+                const ahora = Date.now();
+                const restante = Math.max(0, Math.floor((fin - ahora) / 1000));
+                
+                if (restante <= 0) {
+                    clearInterval(interval);
+                    // Verificar estado real del pedido
+                }
+            }, 1000);
+        }
+
+        // Configurar suscripciones en tiempo real
+        function setupRealtimeSubscriptions() {
+            // Suscribirse a notificaciones del cliente
+            const subscription = supabase
+                .channel('notificaciones-cliente')
+                .on('postgres_changes', {
+                    event: 'INSERT',
+                    schema: 'public',
+                    table: 'notificaciones',
+                    filter: `pedido_id=in.(${getPedidosCliente()})`
+                }, (payload) => {
+                    notificaciones.unshift(payload.new);
+                    actualizarNotificacionesUI();
+                    
+                    // Vibrar la campana
+                    const bell = document.getElementById('notificationBell');
+                    bell.classList.add('fa-shake');
+                    setTimeout(() => bell.classList.remove('fa-shake'), 1000);
+                })
+                .subscribe();
+        }
+
+        // Obtener IDs de pedidos del cliente
+        function getPedidosCliente() {
+            // En un sistema real, esto vendría de localStorage o sesión
+            return [];
+        }
+
+        // Toggle notificaciones
+        function toggleNotifications() {
+            const panel = document.getElementById('notificationsPanel');
+            panel.classList.toggle('active');
+            
+            if (panel.classList.contains('active')) {
                 cargarNotificaciones();
             }
         }
 
-        function renderNotificaciones(notifs) {
-            const container = document.getElementById('notificaciones-list');
-            container.innerHTML = '';
-            notifs.forEach(n => {
-                const div = document.createElement('div');
-                div.className = `notif-item ${n.tipo}`;
-                div.onclick = () => marcarLeida(n.id);
-                div.innerHTML = `<div class="notif-titulo">${n.titulo}</div><div class="notif-mensaje">${n.mensaje}</div>`;
-                container.appendChild(div);
-            });
-            document.getElementById('notif-count').innerText = notifs.filter(n => !n.leida).length;
+        // Cargar notificaciones
+        async function cargarNotificaciones() {
+            try {
+                const { data, error } = await supabase
+                    .from('notificaciones')
+                    .select('*')
+                    .eq('leida', false)
+                    .order('timestamp', { ascending: false })
+                    .limit(20);
+                
+                if (error) throw error;
+                notificaciones = data || [];
+                actualizarNotificacionesUI();
+            } catch (error) {
+                console.error('Error cargando notificaciones:', error);
+            }
         }
 
-        async function marcarLeida(id) {
-            await supabase.from('notificaciones').update({ leida: true }).eq('id', id);
+        // Actualizar UI de notificaciones
+        function actualizarNotificacionesUI() {
+            const panel = document.getElementById('notificationsPanel');
+            const badge = document.getElementById('notificationBadge');
+            
+            const noLeidas = notificaciones.filter(n => !n.leida).length;
+            
+            if (noLeidas > 0) {
+                badge.style.display = 'block';
+                badge.textContent = noLeidas;
+            } else {
+                badge.style.display = 'none';
+            }
+            
+            panel.innerHTML = notificaciones.map(n => `
+                <div class="notification-item ${!n.leida ? 'unread' : ''}" onclick="marcarNotificacionLeida('${n.id}')">
+                    <div class="notification-title">${n.titulo}</div>
+                    <div class="notification-message">${n.mensaje}</div>
+                    <div class="notification-time">${new Date(n.timestamp).toLocaleString()}</div>
+                </div>
+            `).join('');
         }
 
-        function agregarNotificacion(notif) {
-            const container = document.getElementById('notificaciones-list');
-            const div = document.createElement('div');
-            div.className = `notif-item ${notif.tipo}`;
-            div.innerHTML = `<div class="notif-titulo">${notif.titulo}</div><div class="notif-mensaje">${notif.mensaje}</div>`;
-            container.prepend(div);
-            const count = parseInt(document.getElementById('notif-count').innerText) + 1;
-            document.getElementById('notif-count').innerText = count;
+        // Marcar notificación como leída
+        async function marcarNotificacionLeida(id) {
+            try {
+                await supabase
+                    .from('notificaciones')
+                    .update({ leida: true })
+                    .eq('id', id);
+                
+                notificaciones = notificaciones.map(n => 
+                    n.id === id ? { ...n, leida: true } : n
+                );
+                actualizarNotificacionesUI();
+            } catch (error) {
+                console.error('Error marcando notificación:', error);
+            }
         }
 
-        // ==================== SIDEBAR ====================
-        function toggleSidebar() {
-            document.getElementById('sidebar').classList.toggle('open');
+        // Actualizar UI general
+        function actualizarUI() {
+            actualizarCarritoUI();
         }
-
-        function construirSidebar() {
-            const categorias = [...new Set(menu.map(p => p.categoria))];
-            const container = document.getElementById('categorias-list');
-            categorias.forEach(cat => {
-                const div = document.createElement('div');
-                div.className = 'categoria';
-                div.innerText = cat.charAt(0).toUpperCase() + cat.slice(1);
-                div.onclick = () => filtrarPorCategoria(cat);
-                container.appendChild(div);
-                // Subcategorías si existen
-                const subcats = [...new Set(menu.filter(p => p.categoria === cat && p.subcategoria).map(p => p.subcategoria))];
-                if (subcats.length) {
-                    const subDiv = document.createElement('div');
-                    subDiv.className = 'subcategoria';
-                    subcats.forEach(sub => {
-                        const subItem = document.createElement('div');
-                        subItem.innerText = sub;
-                        subItem.onclick = (e) => {
-                            e.stopPropagation();
-                            filtrarPorSubcategoria(cat, sub);
-                        };
-                        subDiv.appendChild(subItem);
-                    });
-                    container.appendChild(subDiv);
-                }
-            });
-        }
-
-        function filtrarPorCategoria(cat) {
-            document.getElementById('buscador').value = '';
-            renderizarMenuConFiltro(p => p.categoria === cat);
-        }
-
-        function filtrarPorSubcategoria(cat, sub) {
-            document.getElementById('buscador').value = '';
-            renderizarMenuConFiltro(p => p.categoria === cat && p.subcategoria === sub);
-        }
-
-        function renderizarMenuConFiltro(filtroFn) {
-            const grid = document.getElementById('menu-grid');
-            grid.innerHTML = '';
-            menu.filter(filtroFn).forEach(platillo => {
-                const stock = platillo.stock;
-                const disponible = stock > 0 && platillo.disponible;
-                const card = document.createElement('div');
-                card.className = 'card';
-                card.innerHTML = `
-                    <img src="${platillo.imagen || 'https://via.placeholder.com/300?text=Sushi'}" alt="${platillo.nombre}">
-                    <div class="card-content">
-                        <div class="card-title">${platillo.nombre}</div>
-                        <div class="card-desc">${platillo.descripcion || ''}</div>
-                        <div class="card-price">${(platillo.precio * tasaEfectiva).toFixed(2)} Bs</div>
-                        <div class="card-actions">
-                            <button class="btn" onclick="agregarAlCarrito('${platillo.id}')" ${!disponible ? 'disabled' : ''}>+</button>
-                            <span>Stock: ${stock}</span>
-                        </div>
-                    </div>
-                    ${!disponible ? '<div class="agotado">AGOTADO</div>' : ''}
-                `;
-                grid.appendChild(card);
-            });
-        }
-
-        // Buscador
-        document.getElementById('buscador').addEventListener('input', (e) => {
-            renderizarMenu(e.target.value);
-        });
     </script>
 </body>
 </html>
