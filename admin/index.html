@@ -1005,7 +1005,7 @@
         <div class="login-box">
             <h2><i class="fas fa-cog"></i> Admin Saki Sushi</h2>
             <form class="login-form" id="loginForm">
-                <input type="password" id="adminPassword" placeholder="Contraseña de Administrador" required>
+                <input type="password" id="adminPassword" placeholder="Contraseña de Administrador" required autocomplete="current-password">
                 <button type="submit">Ingresar</button>
             </form>
             <div class="recovery-link">
@@ -1025,10 +1025,10 @@
                 </button>
             </div>
             <div class="header-right">
-                <a href="cliente.html" target="_blank" class="nav-button">
+                <a href="../Cliente/index.html" target="_blank" class="nav-button">
                     <i class="fas fa-utensils"></i> Cliente
                 </a>
-                <a href="cajero.html" target="_blank" class="nav-button">
+                <a href="../Cajero/index.html" target="_blank" class="nav-button">
                     <i class="fas fa-cash-register"></i> Cajero
                 </a>
                 <button class="logout-button" id="logoutButton">
@@ -1478,14 +1478,11 @@
         </div>
     </div>
 
-	<!-- Primero Supabase (CDN) -->
+    <!-- Primero Supabase (CDN) -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Luego tu configuración -->
     <script src="../supabase-config.js"></script>
     <script>
-        // ✅ Usar el cliente global (UNA SOLA VEZ)
-        const supabase = window.supabaseClient;
-    
         // Variables globales
         let isAdminAuthenticated = false;
         let menuItems = [];
@@ -1497,25 +1494,31 @@
 
         // Verificar sesión
         document.addEventListener('DOMContentLoaded', () => {
+            console.log('🔍 Verificando sesión de admin...');
             const adminSession = sessionStorage.getItem('admin_authenticated');
             if (adminSession === 'true') {
+                console.log('👤 Sesión de admin encontrada');
                 isAdminAuthenticated = true;
                 mostrarPanel();
             } else {
+                console.log('👤 No hay sesión de admin');
                 mostrarLogin();
             }
         });
 
         // Mostrar login
         function mostrarLogin() {
+            console.log('🔐 Mostrando pantalla de login admin');
             document.getElementById('loginContainer').style.display = 'flex';
             document.getElementById('panelContainer').classList.remove('active');
         }
 
         // Mostrar panel
         function mostrarPanel() {
+            console.log('📊 Mostrando panel de administración');
             document.getElementById('loginContainer').style.display = 'none';
             document.getElementById('panelContainer').classList.add('active');
+            console.log('⚙️ Cargando datos iniciales...');
             cargarConfiguracionInicial();
             cargarMenu();
             cargarInventario();
@@ -1529,8 +1532,10 @@
 
         // Configuración inicial
         async function cargarConfiguracionInicial() {
+            console.log('⚙️ Cargando configuración inicial...');
             await cargarConfiguracion();
             actualizarTasaUI();
+            console.log('✅ Configuración cargada');
         }
 
         // Actualizar UI de tasa
@@ -1543,15 +1548,17 @@
             document.getElementById('tasaEfectivaCard').textContent = `Bs. ${(configGlobal.tasa_efectiva || 400).toFixed(2)}`;
         }
 
-        // Cargar menú
+        // Cargar menú - AHORA USA window.supabaseClient
         async function cargarMenu() {
+            console.log('🍣 Cargando menú...');
             try {
-                const { data, error } = await supabase
+                const { data, error } = await window.supabaseClient
                     .from('menu')
                     .select('*');
                 
                 if (error) throw error;
                 menuItems = data || [];
+                console.log(`🍣 ${menuItems.length} platillos cargados`);
                 renderizarMenu();
                 actualizarProductosActivos();
             } catch (error) {
@@ -1610,15 +1617,17 @@
             });
         }
 
-        // Cargar inventario
+        // Cargar inventario - AHORA USA window.supabaseClient
         async function cargarInventario() {
+            console.log('📦 Cargando inventario...');
             try {
-                const { data, error } = await supabase
+                const { data, error } = await window.supabaseClient
                     .from('inventario')
                     .select('*');
                 
                 if (error) throw error;
                 inventarioItems = data || [];
+                console.log(`📦 ${inventarioItems.length} ingredientes cargados`);
                 renderizarInventario();
                 actualizarAlertasStock();
             } catch (error) {
@@ -1670,16 +1679,18 @@
             });
         }
 
-        // Cargar usuarios
+        // Cargar usuarios - AHORA USA window.supabaseClient
         async function cargarUsuarios() {
+            console.log('👥 Cargando usuarios...');
             try {
-                const { data, error } = await supabase
+                const { data, error } = await window.supabaseClient
                     .from('usuarios')
                     .select('*')
                     .order('created_at', { ascending: false });
                 
                 if (error) throw error;
                 usuarios = data || [];
+                console.log(`👥 ${usuarios.length} usuarios cargados`);
                 renderizarUsuarios();
             } catch (error) {
                 console.error('Error cargando usuarios:', error);
@@ -1716,16 +1727,18 @@
             });
         }
 
-        // Cargar QRs
+        // Cargar QRs - AHORA USA window.supabaseClient
         async function cargarQRs() {
+            console.log('📱 Cargando códigos QR...');
             try {
-                const { data, error } = await supabase
+                const { data, error } = await window.supabaseClient
                     .from('codigos_qr')
                     .select('*')
                     .order('fecha', { ascending: false });
                 
                 if (error) throw error;
                 qrCodes = data || [];
+                console.log(`📱 ${qrCodes.length} códigos QR cargados`);
                 renderizarQRs();
             } catch (error) {
                 console.error('Error cargando QRs:', error);
@@ -1738,7 +1751,7 @@
             grid.innerHTML = '';
             
             qrCodes.forEach(qr => {
-                const url = `${window.location.origin}/cliente.html?mesa=${encodeURIComponent(qr.nombre)}`;
+                const url = `${window.location.origin}/Cliente/index.html?mesa=${encodeURIComponent(qr.nombre)}`;
                 
                 const card = document.createElement('div');
                 card.className = 'qr-card';
@@ -1762,10 +1775,11 @@
             });
         }
 
-        // Cargar pedidos recientes
+        // Cargar pedidos recientes - AHORA USA window.supabaseClient
         async function cargarPedidosRecientes() {
+            console.log('📋 Cargando pedidos recientes...');
             try {
-                const { data, error } = await supabase
+                const { data, error } = await window.supabaseClient
                     .from('pedidos')
                     .select('*')
                     .order('timestamp', { ascending: false })
@@ -1774,12 +1788,13 @@
                 if (error) throw error;
                 
                 const container = document.getElementById('pedidosRecientes');
-                container.innerHTML = data.map(p => `
+                container.innerHTML = (data || []).map(p => `
                     <div class="alert-item">
                         <span><strong>${p.id}</strong> - ${formatUSD(p.total || 0)}</span>
                         <small>${new Date(p.timestamp).toLocaleString()}</small>
                     </div>
                 `).join('') || '<p>No hay pedidos recientes</p>';
+                console.log('📋 Pedidos recientes cargados');
             } catch (error) {
                 console.error('Error cargando pedidos recientes:', error);
             }
@@ -1811,54 +1826,75 @@
 
         // Configurar event listeners
         function setupEventListeners() {
-		
-		// Login - VERSIÓN CORREGIDA
-		document.getElementById('loginForm').addEventListener('submit', async (e) => {
-			e.preventDefault();
-			
-			const password = document.getElementById('adminPassword').value;
-			console.log('Intentando login con:', password); // Para depurar
-			
-			try {
-				// Primero verificar si la tabla config existe y tiene datos
-				const { data, error } = await supabase
-					.from('config')
-					.select('admin_password')
-					.eq('id', 1)
-					.maybeSingle(); // Cambiado de single() a maybeSingle()
-				
-				console.log('Respuesta de Supabase:', { data, error }); // Para depurar
-				
-				if (error) {
-					console.error('Error de Supabase:', error);
-					alert('Error al conectar con la base de datos: ' + error.message);
-					return;
-				}
-				
-				if (!data) {
-					alert('No se encontró configuración en la base de datos. Ejecuta el script init.sql primero.');
-					return;
-				}
-				
-				if (data.admin_password !== password) {
-					alert('Contraseña incorrecta');
-					return;
-				}
-				
-				// Login exitoso
-				isAdminAuthenticated = true;
-				sessionStorage.setItem('admin_authenticated', 'true');
-				mostrarPanel();
-				
-			} catch (error) {
-				console.error('Error en login:', error);
-				alert('Error al iniciar sesión: ' + error.message);
-			}
-		});
+            console.log('🔧 Configurando event listeners de admin...');
+            
+            // Login
+            document.getElementById('loginForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                console.log('1️⃣ Evento submit login admin');
+                
+                const password = document.getElementById('adminPassword').value;
+                console.log('2️⃣ Intentando login con contraseña');
+                
+                try {
+                    console.log('3️⃣ Consultando Supabase...');
+                    const { data, error } = await window.supabaseClient
+                        .from('config')
+                        .select('admin_password')
+                        .eq('id', 1)
+                        .maybeSingle();
+                    
+                    console.log('4️⃣ Respuesta de Supabase:', { data, error });
+                    
+                    if (error) {
+                        console.error('5️⃣ Error en consulta:', error);
+                        alert('Error al conectar con la base de datos: ' + error.message);
+                        return;
+                    }
+                    
+                    if (!data) {
+                        console.log('5️⃣ No se encontró configuración');
+                        alert('No se encontró configuración en la base de datos. Ejecuta el script init.sql primero.');
+                        return;
+                    }
+                    
+                    if (data.admin_password !== password) {
+                        console.log('5️⃣ Contraseña incorrecta');
+                        alert('Contraseña incorrecta');
+                        return;
+                    }
+                    
+                    console.log('6️⃣ Login exitoso');
+                    isAdminAuthenticated = true;
+                    sessionStorage.setItem('admin_authenticated', 'true');
+                    
+                    console.log('7️⃣ Ocultando login...');
+                    document.getElementById('loginContainer').style.display = 'none';
+                    
+                    console.log('8️⃣ Mostrando panel...');
+                    document.getElementById('panelContainer').classList.add('active');
+                    
+                    console.log('9️⃣ Cargando datos...');
+                    await cargarConfiguracionInicial();
+                    await cargarMenu();
+                    await cargarInventario();
+                    await cargarUsuarios();
+                    await cargarQRs();
+                    await cargarReportes();
+                    await cargarPedidosRecientes();
+                    
+                    console.log('🎉 TODO COMPLETADO');
+                    
+                } catch (error) {
+                    console.error('❌ Error general:', error);
+                    alert('Error al iniciar sesión: ' + error.message);
+                }
+            });
 
             // Recuperación de contraseña
             document.getElementById('recoveryLink').addEventListener('click', async (e) => {
                 e.preventDefault();
+                console.log('🔑 Solicitud de recuperación de contraseña');
                 
                 // Simular envío de código
                 const codigo = Math.floor(100000 + Math.random() * 900000);
@@ -1867,7 +1903,7 @@
                 const codigoIngresado = prompt('Ingresa el código de recuperación (revisa la consola):');
                 
                 if (codigoIngresado === codigo.toString()) {
-                    const { data } = await supabase
+                    const { data } = await window.supabaseClient
                         .from('config')
                         .select('admin_password, recovery_email')
                         .eq('id', 1)
@@ -1881,6 +1917,7 @@
 
             // Logout
             document.getElementById('logoutButton').addEventListener('click', () => {
+                console.log('👋 Cerrando sesión de admin');
                 sessionStorage.removeItem('admin_authenticated');
                 isAdminAuthenticated = false;
                 mostrarLogin();
@@ -1888,6 +1925,7 @@
 
             // Guardar todo
             document.getElementById('saveAllButton').addEventListener('click', async () => {
+                console.log('💾 Guardando configuración...');
                 await guardarConfiguracion();
             });
 
@@ -1926,38 +1964,21 @@
             });
 
             // Cerrar modales
-            document.getElementById('closePlatilloModal').addEventListener('click', () => {
-                document.getElementById('platilloModal').classList.remove('active');
-                platilloEditandoId = null;
-            });
+            const closeButtons = [
+                'closePlatilloModal', 'cancelPlatillo',
+                'closeIngredienteModal', 'cancelIngrediente',
+                'closeUsuarioModal', 'cancelUsuario',
+                'closeQrAmpliadoModal', 'closeQrAmpliado'
+            ];
             
-            document.getElementById('cancelPlatillo').addEventListener('click', () => {
-                document.getElementById('platilloModal').classList.remove('active');
-                platilloEditandoId = null;
-            });
-
-            document.getElementById('closeIngredienteModal').addEventListener('click', () => {
-                document.getElementById('ingredienteModal').classList.remove('active');
-            });
-            
-            document.getElementById('cancelIngrediente').addEventListener('click', () => {
-                document.getElementById('ingredienteModal').classList.remove('active');
-            });
-
-            document.getElementById('closeUsuarioModal').addEventListener('click', () => {
-                document.getElementById('usuarioModal').classList.remove('active');
-            });
-            
-            document.getElementById('cancelUsuario').addEventListener('click', () => {
-                document.getElementById('usuarioModal').classList.remove('active');
-            });
-
-            document.getElementById('closeQrAmpliadoModal').addEventListener('click', () => {
-                document.getElementById('qrAmpliadoModal').classList.remove('active');
-            });
-            
-            document.getElementById('closeQrAmpliado').addEventListener('click', () => {
-                document.getElementById('qrAmpliadoModal').classList.remove('active');
+            closeButtons.forEach(id => {
+                const btn = document.getElementById(id);
+                if (btn) {
+                    btn.addEventListener('click', () => {
+                        const modal = btn.closest('.modal');
+                        if (modal) modal.classList.remove('active');
+                    });
+                }
             });
 
             // Preview de imagen
@@ -1981,6 +2002,8 @@
 
             // Guardar platillo
             document.getElementById('savePlatillo').addEventListener('click', guardarPlatillo);
+            
+            console.log('✅ Event listeners de admin configurados');
         }
 
         // Función para limpiar preview de imagen
@@ -1991,7 +2014,7 @@
             document.getElementById('previewImg').src = '';
         }
 
-        // Función para guardar platillo
+        // Función para guardar platillo - AHORA USA window.supabaseClient
         async function guardarPlatillo() {
             try {
                 // Mostrar indicador de carga
@@ -2060,20 +2083,20 @@
                     imagen: imagenUrl,
                     ingredientes: ingredientes,
                     disponible: disponible,
-                    stock: 0, // Se calculará después
+                    stock: 0,
                     stock_maximo: 0
                 };
                 
                 let error;
                 if (platilloEditandoId) {
                     // Actualizar existente
-                    ({ error } = await supabase
+                    ({ error } = await window.supabaseClient
                         .from('menu')
                         .update(platillo)
                         .eq('id', platilloEditandoId));
                 } else {
                     // Insertar nuevo
-                    ({ error } = await supabase
+                    ({ error } = await window.supabaseClient
                         .from('menu')
                         .insert([platillo]));
                 }
@@ -2138,7 +2161,7 @@
             document.getElementById('platilloModal').classList.add('active');
         }
 
-        // Función para eliminar platillo
+        // Función para eliminar platillo - AHORA USA window.supabaseClient
         async function eliminarPlatillo(id) {
             if (!confirm('¿Estás seguro de eliminar este platillo?')) return;
             
@@ -2149,7 +2172,7 @@
                     await eliminarImagenPlatillo(platillo.imagen);
                 }
                 
-                const { error } = await supabase
+                const { error } = await window.supabaseClient
                     .from('menu')
                     .delete()
                     .eq('id', id);
@@ -2194,10 +2217,10 @@
             configGlobal.tasa_efectiva = tasaEfectiva;
         }
 
-        // Guardar configuración
+        // Guardar configuración - AHORA USA window.supabaseClient
         async function guardarConfiguracion() {
             try {
-                const { error } = await supabase
+                const { error } = await window.supabaseClient
                     .from('config')
                     .update({
                         tasa_cambio: configGlobal.tasa_cambio,
@@ -2363,7 +2386,7 @@
             }
         }
 
-        // Funciones para usuarios
+        // Funciones para usuarios - AHORA USA window.supabaseClient
         function abrirModalNuevoUsuario() {
             document.getElementById('usuarioForm').reset();
             document.getElementById('usuarioModal').classList.add('active');
@@ -2371,7 +2394,7 @@
 
         async function toggleUsuarioActivo(userId, activo) {
             try {
-                const { error } = await supabase
+                const { error } = await window.supabaseClient
                     .from('usuarios')
                     .update({ activo: activo })
                     .eq('id', userId);
@@ -2388,7 +2411,7 @@
             if (!confirm('¿Estás seguro de eliminar este usuario?')) return;
             
             try {
-                const { error } = await supabase
+                const { error } = await window.supabaseClient
                     .from('usuarios')
                     .delete()
                     .eq('id', userId);
@@ -2401,7 +2424,7 @@
             }
         }
 
-        // Funciones para QR
+        // Funciones para QR - AHORA USA window.supabaseClient
         async function generarQR() {
             const nombre = document.getElementById('qrNombreMesa').value.trim();
             if (!nombre) {
@@ -2416,7 +2439,7 @@
             };
             
             try {
-                const { error } = await supabase
+                const { error } = await window.supabaseClient
                     .from('codigos_qr')
                     .insert([qr]);
                 
@@ -2452,7 +2475,7 @@
             if (!confirm('¿Estás seguro de eliminar este código QR?')) return;
             
             try {
-                const { error } = await supabase
+                const { error } = await window.supabaseClient
                     .from('codigos_qr')
                     .delete()
                     .eq('id', id);
@@ -2465,13 +2488,14 @@
             }
         }
 
-        // Funciones para reportes
+        // Funciones para reportes - AHORA USA window.supabaseClient
         async function cargarReportes() {
+            console.log('📊 Cargando reportes...');
             try {
                 const desde = document.getElementById('reporteDesde').value;
                 const hasta = document.getElementById('reporteHasta').value;
                 
-                let query = supabase
+                let query = window.supabaseClient
                     .from('pedidos')
                     .select('*')
                     .in('estado', ['cobrado', 'entregado', 'enviado', 'reserva_completada']);
@@ -2489,6 +2513,7 @@
                 
                 if (error) throw error;
                 
+                console.log(`📊 ${data?.length || 0} pedidos cargados para reportes`);
                 actualizarEstadisticasReportes(data || []);
                 actualizarGraficos(data || []);
                 actualizarTablaVentas(data || []);
@@ -2675,7 +2700,7 @@
             });
         }
 
-        // Funciones para configuración
+        // Funciones para configuración - AHORA USA window.supabaseClient
         async function cambiarPassword() {
             const current = document.getElementById('currentPassword').value;
             const nueva = document.getElementById('newPassword').value;
@@ -2697,7 +2722,7 @@
             }
             
             try {
-                const { error } = await supabase
+                const { error } = await window.supabaseClient
                     .from('config')
                     .update({ admin_password: nueva })
                     .eq('id', 1);
@@ -2725,7 +2750,7 @@
             }
             
             try {
-                const { error } = await supabase
+                const { error } = await window.supabaseClient
                     .from('config')
                     .update({ recovery_email: email })
                     .eq('id', 1);
@@ -2738,15 +2763,17 @@
             }
         }
 
-        // Suscripciones en tiempo real
+        // Suscripciones en tiempo real - AHORA USA window.supabaseClient
         function setupRealtimeSubscriptions() {
-            const subscription = supabase
+            console.log('🔄 Configurando suscripciones en tiempo real...');
+            const subscription = window.supabaseClient
                 .channel('admin-changes')
                 .on('postgres_changes', {
                     event: '*',
                     schema: 'public',
                     table: 'menu'
                 }, () => {
+                    console.log('📦 Cambio en menú, recargando...');
                     cargarMenu();
                 })
                 .on('postgres_changes', {
@@ -2754,6 +2781,7 @@
                     schema: 'public',
                     table: 'inventario'
                 }, () => {
+                    console.log('📦 Cambio en inventario, recargando...');
                     cargarInventario();
                 })
                 .on('postgres_changes', {
@@ -2761,6 +2789,7 @@
                     schema: 'public',
                     table: 'usuarios'
                 }, () => {
+                    console.log('👥 Cambio en usuarios, recargando...');
                     cargarUsuarios();
                 })
                 .on('postgres_changes', {
@@ -2768,10 +2797,17 @@
                     schema: 'public',
                     table: 'codigos_qr'
                 }, () => {
+                    console.log('📱 Cambio en códigos QR, recargando...');
                     cargarQRs();
                 })
                 .subscribe();
+            console.log('✅ Suscripciones configuradas');
         }
+
+        // Inicializar event listeners
+        document.addEventListener('DOMContentLoaded', () => {
+            setupEventListeners();
+        });
     </script>
 </body>
 </html>
