@@ -974,8 +974,13 @@
 
 	<!-- Primero Supabase (CDN) -->
 	<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="../supabase-config.js"></script>
-    <script>
+	<!-- Luego tu configuración -->
+	<script src="../supabase-config.js"></script>
+	<script>
+	
+		// ✅ Usar el cliente global (ESTA LÍNEA ES LA CLAVE)
+		const supabase = window.supabaseClient;
+	
         // Variables globales
         let currentUser = null;
         let pedidos = [];
