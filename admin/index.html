@@ -1478,12 +1478,14 @@
         </div>
     </div>
 
-    <!-- Primero Supabase (CDN) -->
+	<!-- Primero Supabase (CDN) -->
 	<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
 	<!-- Luego tu configuración -->
 	<script src="../supabase-config.js"></script>
-    <script>
+	<script>
+		// ✅ Usar el cliente global (ESTA LÍNEA ES LA CLAVE)
+		const supabase = window.supabaseClient;
+	
         // Variables globales
         let isAdminAuthenticated = false;
         let menuItems = [];
