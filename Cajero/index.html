@@ -1760,9 +1760,10 @@
             });
         }
 
-        // Suscripciones en tiempo real
+        // Suscripciones en tiempo real - VERSIÓN CORREGIDA
         function setupRealtimeSubscriptions() {
-            const subscription = supabase
+            // CAMBIADO: const → let
+            let subscription = supabase
                 .channel('cajero-pedidos')
                 .on('postgres_changes', {
                     event: '*',
