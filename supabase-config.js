@@ -1,15 +1,17 @@
 // supabase-config.js
-// Configuración compartida para todos los paneles - VERSIÓN FINAL
+// Configuración compartida para todos los paneles - VERSIÓN FINAL CON VARIABLES GLOBALES
 
-// Inicializar cliente de Supabase
-const SUPABASE_URL = 'https://iqwwoihiiyrtypyqzhgy.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable_m4WcF4gmkj1olAj95HMLlA_4yKqPFXm';
+// Hacer las variables globales (window)
+window.SUPABASE_URL = 'https://iqwwoihiiyrtypyqzhgy.supabase.co';
+window.SUPABASE_ANON_KEY = 'sb_publishable_m4WcF4gmkj1olAj95HMLlA_4yKqPFXm';
 
-// Crear cliente de Supabase
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// Crear cliente de Supabase (solo si no existe)
+if (!window.supabase) {
+    window.supabase = window.supabaseLib.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
+}
 
 // Variables globales de configuración
-let configGlobal = {
+window.configGlobal = {
     tasa_cambio: 400,
     tasa_efectiva: 400,
     aumento_diario: 0,
@@ -23,9 +25,9 @@ let configGlobal = {
 };
 
 // Función para cargar configuración global
-async function cargarConfiguracion() {
+window.cargarConfiguracion = async function() {
     try {
-        const { data, error } = await supabase
+        const { data, error } = await window.supabase
             .from('config')
             .select('*')
             .eq('id', 1)
@@ -33,23 +35,20 @@ async function cargarConfiguracion() {
         
         if (error) throw error;
         if (data) {
-            configGlobal = { ...configGlobal, ...data };
+            window.configGlobal = { ...window.configGlobal, ...data };
         }
-        return configGlobal;
+        return window.configGlobal;
     } catch (error) {
         console.error('Error cargando configuración:', error);
-        return configGlobal;
+        return window.configGlobal;
     }
-}
+};
 
-// NUEVA FUNCIÓN: Subir imagen de platillo al bucket 'imagenes-platillos'
-async function subirImagenPlatillo(archivoImagen, carpetaAdicional = '') {
+// Función para subir imagen de platillo
+window.subirImagenPlatillo = async function(archivoImagen, carpetaAdicional = '') {
     try {
         if (!archivoImagen) {
-            return {
-                success: false,
-                error: 'No se proporcionó archivo'
-            };
+            return { success: false, error: 'No se proporcionó archivo' };
         }
 
         // Validar tipo de archivo
@@ -62,7 +61,7 @@ async function subirImagenPlatillo(archivoImagen, carpetaAdicional = '') {
         }
 
         // Validar tamaño (máximo 5MB)
-        const maxSize = 5 * 1024 * 1024; // 5MB
+        const maxSize = 5 * 1024 * 1024;
         if (archivoImagen.size > maxSize) {
             return {
                 success: false,
@@ -70,38 +69,25 @@ async function subirImagenPlatillo(archivoImagen, carpetaAdicional = '') {
             };
         }
 
-        // Generar nombre único para el archivo
         const timestamp = Date.now();
         const random = Math.random().toString(36).substring(2, 8);
         const extension = archivoImagen.name.split('.').pop();
         const nombreArchivo = `${timestamp}_${random}.${extension}`;
         
-        // Construir la ruta: si hay carpeta adicional, se usa como subdirectorio
-        const ruta = carpetaAdicional 
-            ? `${carpetaAdicional}/${nombreArchivo}` 
-            : nombreArchivo;
+        const ruta = carpetaAdicional ? `${carpetaAdicional}/${nombreArchivo}` : nombreArchivo;
         
-        console.log('Subiendo imagen a:', ruta);
-        
-        // Subir el archivo al bucket 'imagenes-platillos'
-        const { data, error } = await supabase.storage
+        const { data, error } = await window.supabase.storage
             .from('imagenes-platillos')
             .upload(ruta, archivoImagen, {
                 cacheControl: '3600',
                 upsert: false
             });
         
-        if (error) {
-            console.error('Error de Supabase:', error);
-            throw error;
-        }
+        if (error) throw error;
         
-        // Obtener la URL pública de la imagen
-        const { data: urlData } = supabase.storage
+        const { data: urlData } = window.supabase.storage
             .from('imagenes-platillos')
             .getPublicUrl(ruta);
-        
-        console.log('Imagen subida exitosamente:', urlData.publicUrl);
         
         return {
             success: true,
@@ -110,37 +96,25 @@ async function subirImagenPlatillo(archivoImagen, carpetaAdicional = '') {
         };
     } catch (error) {
         console.error('Error subiendo imagen:', error);
-        return {
-            success: false,
-            error: error.message || 'Error al subir la imagen'
-        };
+        return { success: false, error: error.message };
     }
-}
+};
 
-// NUEVA FUNCIÓN: Eliminar imagen de platillo
-async function eliminarImagenPlatillo(urlImagen) {
+// Función para eliminar imagen
+window.eliminarImagenPlatillo = async function(urlImagen) {
     try {
         if (!urlImagen) return { success: true };
         
-        // Extraer la ruta relativa de la URL completa
-        // Ej: https://.../storage/v1/object/public/imagenes-platillos/menu/imagen.jpg
         const bucketName = 'imagenes-platillos';
         const bucketIndex = urlImagen.indexOf(`/public/${bucketName}/`);
         
-        if (bucketIndex === -1) {
-            // No es una imagen de nuestro bucket
-            return { success: true };
-        }
+        if (bucketIndex === -1) return { success: true };
         
         const rutaRelativa = urlImagen.substring(bucketIndex + `/public/${bucketName}/`.length);
         
-        if (!rutaRelativa) {
-            return { success: true };
-        }
+        if (!rutaRelativa) return { success: true };
         
-        console.log('Eliminando imagen:', rutaRelativa);
-        
-        const { error } = await supabase.storage
+        const { error } = await window.supabase.storage
             .from(bucketName)
             .remove([rutaRelativa]);
         
@@ -149,107 +123,81 @@ async function eliminarImagenPlatillo(urlImagen) {
         return { success: true };
     } catch (error) {
         console.error('Error eliminando imagen:', error);
-        return {
-            success: false,
-            error: error.message
-        };
+        return { success: false, error: error.message };
     }
-}
+};
 
-// Función para formatear moneda en bolívares
-function formatBs(monto) {
+// Funciones de utilidad
+window.formatBs = function(monto) {
     return new Intl.NumberFormat('es-VE', {
         style: 'currency',
         currency: 'VES',
         minimumFractionDigits: 2,
         maximumFractionDigits: 2
     }).format(monto).replace('VES', 'Bs.');
-}
+};
 
-// Función para formatear moneda en dólares
-function formatUSD(monto) {
+window.formatUSD = function(monto) {
     return new Intl.NumberFormat('en-US', {
         style: 'currency',
         currency: 'USD',
         minimumFractionDigits: 2
     }).format(monto);
-}
+};
 
-// Función para generar ID único
-function generarId(prefix = '') {
+window.generarId = function(prefix = '') {
     return `${prefix}${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
-}
+};
 
-// Función para validar teléfono venezolano
-function validarTelefono(telefono) {
+window.validarTelefono = function(telefono) {
     const regex = /^(0412|0414|0424|0416|0426|0418|0422|0212|0234|0241|0243|0246|0251|0254|0255|0257|0261|0264|0265|0268|0271|0273|0274|0275|0276|0281)\d{7}$/;
     return regex.test(telefono.replace(/\D/g, ''));
-}
+};
 
-// Función para validar referencia de 6 dígitos
-function validarReferencia(ref) {
+window.validarReferencia = function(ref) {
     const regex = /^\d{6}$/;
     return regex.test(ref);
-}
+};
 
-// Función para convertir dólares a bolívares
-function usdToBs(usd, tasa = configGlobal.tasa_efectiva) {
-    return usd * tasa;
-}
+window.usdToBs = function(usd, tasa) {
+    const tasaActual = tasa || window.configGlobal.tasa_efectiva;
+    return usd * tasaActual;
+};
 
-// Función para convertir bolívares a dólares
-function bsToUsd(bs, tasa = configGlobal.tasa_efectiva) {
-    return bs / tasa;
-}
+window.bsToUsd = function(bs, tasa) {
+    const tasaActual = tasa || window.configGlobal.tasa_efectiva;
+    return bs / tasaActual;
+};
 
-// Parroquias con precios de delivery
-const parroquiasDelivery = [
-    { nombre: "San Bernardino", precioUSD: 2 },
-    { nombre: "San José", precioUSD: 2 },
-    { nombre: "San Agustín", precioUSD: 2 },
-    { nombre: "Candelaria", precioUSD: 2 },
-    { nombre: "San Juan", precioUSD: 3 },
-    { nombre: "Catedral", precioUSD: 3 },
-    { nombre: "Santa Rosalía", precioUSD: 3 },
-    { nombre: "El Recreo", precioUSD: 4 },
-    { nombre: "La Candelaria", precioUSD: 2 },
-    { nombre: "San Pedro", precioUSD: 4 },
-    { nombre: "El Paraíso", precioUSD: 4 },
-    { nombre: "La Vega", precioUSD: 4 },
-    { nombre: "El Valle", precioUSD: 5 },
-    { nombre: "Coche", precioUSD: 5 },
-    { nombre: "Caricuao", precioUSD: 7 },
-    { nombre: "Antímano", precioUSD: 7 },
-    { nombre: "Macarao", precioUSD: 7 },
-    { nombre: "23 de Enero", precioUSD: 4 },
-    { nombre: "La Pastora", precioUSD: 3 },
-    { nombre: "Altagracia", precioUSD: 3 },
-    { nombre: "Santa Teresa", precioUSD: 3 },
-    { nombre: "Santa Rosalía de Palermo", precioUSD: 3 },
-    { nombre: "Chacao", precioUSD: 5 },
-    { nombre: "Leoncio Martínez", precioUSD: 6 },
-    { nombre: "Petare", precioUSD: 6 },
-    { nombre: "La Dolorita", precioUSD: 6 },
-    { nombre: "Fila de Mariches", precioUSD: 6 },
-    { nombre: "Caucagüita", precioUSD: 7 },
-    { nombre: "El Cafetal", precioUSD: 6 },
-    { nombre: "Las Minas", precioUSD: 5 },
-    { nombre: "Nuestra Señora del Rosario", precioUSD: 7 },
-    { nombre: "Sucre", precioUSD: 7 },
+// Datos estáticos
+window.parroquiasDelivery = [
+    { nombre: "San Bernardino", precioUSD: 2 }, { nombre: "San José", precioUSD: 2 },
+    { nombre: "San Agustín", precioUSD: 2 }, { nombre: "Candelaria", precioUSD: 2 },
+    { nombre: "San Juan", precioUSD: 3 }, { nombre: "Catedral", precioUSD: 3 },
+    { nombre: "Santa Rosalía", precioUSD: 3 }, { nombre: "El Recreo", precioUSD: 4 },
+    { nombre: "La Candelaria", precioUSD: 2 }, { nombre: "San Pedro", precioUSD: 4 },
+    { nombre: "El Paraíso", precioUSD: 4 }, { nombre: "La Vega", precioUSD: 4 },
+    { nombre: "El Valle", precioUSD: 5 }, { nombre: "Coche", precioUSD: 5 },
+    { nombre: "Caricuao", precioUSD: 7 }, { nombre: "Antímano", precioUSD: 7 },
+    { nombre: "Macarao", precioUSD: 7 }, { nombre: "23 de Enero", precioUSD: 4 },
+    { nombre: "La Pastora", precioUSD: 3 }, { nombre: "Altagracia", precioUSD: 3 },
+    { nombre: "Santa Teresa", precioUSD: 3 }, { nombre: "Santa Rosalía de Palermo", precioUSD: 3 },
+    { nombre: "Chacao", precioUSD: 5 }, { nombre: "Leoncio Martínez", precioUSD: 6 },
+    { nombre: "Petare", precioUSD: 6 }, { nombre: "La Dolorita", precioUSD: 6 },
+    { nombre: "Fila de Mariches", precioUSD: 6 }, { nombre: "Caucagüita", precioUSD: 7 },
+    { nombre: "El Cafetal", precioUSD: 6 }, { nombre: "Las Minas", precioUSD: 5 },
+    { nombre: "Nuestra Señora del Rosario", precioUSD: 7 }, { nombre: "Sucre", precioUSD: 7 },
     { nombre: "El Junquito", precioUSD: 7 }
 ];
 
-// Categorías y subcategorías
-const categoriasMenu = {
-    "Entradas": [],
-    "Sushi": [],
+window.categoriasMenu = {
+    "Entradas": [], "Sushi": [],
     "Rolls": ["Rolls Fríos de 10 piezas", "Rolls Tempura de 12 piezas"],
-    "Tragos y bebidas": [],
-    "Pokes": [],
-    "Ensaladas": [],
+    "Tragos y bebidas": [], "Pokes": [], "Ensaladas": [],
     "Comida China": ["Arroz Chino", "Arroz Cantones", "Chopsuey", "Lomey", "Chow Mein", "Fideos de Arroz", "Tallarines Cantones", "Mariscos", "Foo Yong", "Sopas", "Entremeses"],
     "Comida Japonesa": ["Yakimeshi", "Yakisoba", "Pasta Udon", "Churrasco"],
-    "Ofertas Especiales": [],
-    "Para Niños": [],
-    "Combo Ejecutivo": []
-}
+    "Ofertas Especiales": [], "Para Niños": [], "Combo Ejecutivo": []
+};
+
+console.log('✅ supabase-config.js cargado correctamente');
+console.log('📌 URL:', window.SUPABASE_URL);
