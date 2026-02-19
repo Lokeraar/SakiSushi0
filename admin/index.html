@@ -3,947 +3,2750 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Saki Sushi - Administración</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <title>Saki Sushi - Panel Administración</title>
+    
+    <!-- Fuentes Google -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- QRCode.js -->
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
     <style>
-        /* Estilos generales */
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: 'Segoe UI', sans-serif; background: #f0f2f5; }
-        .login-container { max-width: 300px; margin: 100px auto; background: white; padding: 2rem; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        .login-container input { width: 100%; padding: 0.5rem; margin: 0.5rem 0; }
-        .login-container button { width: 100%; padding: 0.5rem; background: #b22222; color: white; border: none; cursor: pointer; }
-        .panel { display: none; }
-        .panel.visible { display: block; }
-        header { background: #b22222; color: white; padding: 1rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; }
-        .tasa-bar { background: #333; color: white; padding: 0.5rem 1rem; display: flex; gap: 1rem; align-items: center; flex-wrap: wrap; }
-        .tasa-bar input, .tasa-bar select { padding: 0.3rem; border-radius: 4px; border: none; }
-        .tabs { display: flex; background: #ddd; flex-wrap: wrap; }
-        .tab { padding: 0.8rem 1.5rem; cursor: pointer; background: #eee; border: none; }
-        .tab.active { background: white; font-weight: bold; }
-        .tab-content { display: none; padding: 1rem; }
-        .tab-content.active { display: block; }
-        .cards { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1rem; }
-        .card { background: white; padding: 1rem; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .btn { background: #b22222; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; margin: 0.2rem; }
-        .btn-secondary { background: #666; }
-        table { width: 100%; border-collapse: collapse; background: white; }
-        th, td { padding: 0.5rem; border-bottom: 1px solid #ddd; text-align: left; }
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000; }
-        .modal-content { background: white; border-radius: 8px; padding: 2rem; max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto; }
-        .qr-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 1rem; }
-        .qr-item { background: white; padding: 1rem; text-align: center; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); position: relative; }
-        .qr-item img { width: 100%; max-width: 150px; }
-        .qr-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); color: white; display: flex; flex-direction: column; justify-content: center; opacity: 0; transition: opacity 0.3s; }
-        .qr-item:hover .qr-overlay { opacity: 1; }
-        .chart-container { width: 100%; height: 300px; margin-bottom: 2rem; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #D32F2F;
+            --secondary: #212121;
+            --accent: #FF9800;
+            --light-bg: #F5F5F5;
+            --dark-bg: #121212;
+            --success: #388E3C;
+            --info: #1976D2;
+            --warning: #F57C00;
+            --danger: #ef4444;
+            --text-light: #ffffff;
+            --text-dark: #333333;
+            --gray-100: #f8f9fa;
+            --gray-200: #e9ecef;
+            --gray-300: #dee2e6;
+            --gray-400: #ced4da;
+            --gray-500: #adb5bd;
+            --gray-600: #6c757d;
+            --gray-700: #495057;
+            --gray-800: #343a40;
+            --gray-900: #212529;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--light-bg);
+            color: var(--text-dark);
+            min-height: 100vh;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        /* Login */
+        .login-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+        }
+
+        .login-box {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .login-box h2 {
+            color: var(--primary);
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        .login-form input {
+            width: 100%;
+            padding: 0.75rem;
+            margin-bottom: 1rem;
+            border: 1px solid var(--gray-300);
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+
+        .login-form input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .login-form button {
+            width: 100%;
+            padding: 0.75rem;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .login-form button:hover {
+            background-color: #b71c1c;
+        }
+
+        .recovery-link {
+            text-align: center;
+            margin-top: 1rem;
+        }
+
+        .recovery-link a {
+            color: var(--info);
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+
+        /* Panel principal */
+        .panel-container {
+            display: none;
+            min-height: 100vh;
+            background-color: var(--light-bg);
+        }
+
+        .panel-container.active {
+            display: block;
+        }
+
+        /* Header */
+        .header {
+            background-color: var(--secondary);
+            color: white;
+            padding: 1rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .header-left h2 {
+            color: var(--accent);
+        }
+
+        .save-button {
+            background-color: var(--success);
+            border: none;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 600;
+            transition: background-color 0.2s;
+        }
+
+        .save-button:hover {
+            background-color: #2e7d32;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .nav-button {
+            background: none;
+            border: 1px solid var(--gray-600);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        .nav-button:hover {
+            background-color: var(--gray-700);
+        }
+
+        .logout-button {
+            background-color: var(--danger);
+            border: none;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background-color 0.2s;
+        }
+
+        .logout-button:hover {
+            background-color: #dc2626;
+        }
+
+        /* Barra de tasa (editable) */
+        .tasa-bar {
+            background-color: white;
+            padding: 1rem 2rem;
+            border-bottom: 1px solid var(--gray-200);
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .tasa-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .tasa-item label {
+            font-weight: 600;
+            color: var(--gray-700);
+        }
+
+        .tasa-item input {
+            width: 100px;
+            padding: 0.25rem 0.5rem;
+            border: 1px solid var(--gray-300);
+            border-radius: 4px;
+        }
+
+        .tasa-value {
+            font-weight: 700;
+            color: var(--primary);
+            min-width: 80px;
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--gray-400);
+            transition: .4s;
+            border-radius: 24px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 2px;
+            bottom: 2px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .toggle-slider {
+            background-color: var(--primary);
+        }
+
+        input:checked + .toggle-slider:before {
+            transform: translateX(26px);
+        }
+
+        .btn-small {
+            padding: 0.25rem 0.75rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 600;
+            background-color: var(--gray-200);
+            color: var(--gray-700);
+        }
+
+        .btn-small.danger {
+            background-color: var(--danger);
+            color: white;
+        }
+
+        .btn-small.success {
+            background-color: var(--success);
+            color: white;
+        }
+
+        /* Pestañas */
+        .tabs {
+            display: flex;
+            background-color: white;
+            border-bottom: 1px solid var(--gray-200);
+            padding: 0 2rem;
+            flex-wrap: wrap;
+        }
+
+        .tab {
+            padding: 1rem 2rem;
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--gray-600);
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .tab:hover {
+            color: var(--primary);
+        }
+
+        .tab.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        /* Contenido */
+        .content {
+            padding: 2rem;
+        }
+
+        .tab-pane {
+            display: none;
+        }
+
+        .tab-pane.active {
+            display: block;
+        }
+
+        /* Tarjetas de dashboard */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .dashboard-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .card-title {
+            color: var(--gray-600);
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .card-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--secondary);
+        }
+
+        .card-value small {
+            font-size: 0.9rem;
+            color: var(--gray-500);
+        }
+
+        .alert-list {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+
+        .alert-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .alert-item:last-child {
+            border-bottom: none;
+        }
+
+        .alert-item.critical {
+            color: var(--danger);
+            font-weight: 600;
+        }
+
+        /* Gráficos */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .chart-container {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .chart-container h3 {
+            margin-bottom: 1rem;
+            color: var(--secondary);
+        }
+
+        .chart-wrapper {
+            height: 300px;
+            position: relative;
+        }
+
+        /* Tablas */
+        .table-responsive {
+            overflow-x: auto;
+        }
+
+        .data-table {
+            width: 100%;
+            background: white;
+            border-collapse: collapse;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .data-table th {
+            background-color: var(--gray-800);
+            color: white;
+            padding: 1rem;
+            text-align: left;
+        }
+
+        .data-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .data-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .data-table tr:hover {
+            background-color: var(--gray-100);
+        }
+
+        /* Tarjetas de menú */
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1rem;
+        }
+
+        .menu-card {
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            position: relative;
+        }
+
+        .menu-card-image {
+            height: 150px;
+            background-color: var(--gray-200);
+            background-size: cover;
+            background-position: center;
+            position: relative;
+        }
+
+        .menu-card-actions {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .menu-card-actions button {
+            background: rgba(255,255,255,0.9);
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .menu-card-actions button:hover {
+            background: white;
+            transform: scale(1.1);
+        }
+
+        .menu-card-content {
+            padding: 1rem;
+        }
+
+        .menu-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+        }
+
+        .menu-card-title {
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .menu-card-stock {
+            font-size: 0.8rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            background-color: var(--gray-200);
+        }
+
+        .menu-card-precio {
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .menu-card-descripcion {
+            font-size: 0.9rem;
+            color: var(--gray-600);
+            margin-bottom: 0.5rem;
+        }
+
+        .menu-card-ingredientes {
+            font-size: 0.8rem;
+            color: var(--gray-500);
+            max-height: 100px;
+            overflow-y: auto;
+        }
+
+        .menu-card-ingredientes span {
+            display: inline-block;
+            background-color: var(--gray-200);
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            margin: 0.2rem;
+        }
+
+        .menu-card-ingredientes .sin-stock {
+            background-color: #fee2e2;
+            color: var(--danger);
+        }
+
+        .disponible-badge {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: var(--success);
+        }
+
+        .no-disponible-badge {
+            background-color: var(--danger);
+        }
+
+        /* Tarjetas de inventario */
+        .inventario-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .inventario-card {
+            background: white;
+            border-radius: 8px;
+            padding: 1rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .inventario-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+        }
+
+        .inventario-nombre {
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .inventario-actions button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--gray-600);
+            margin-left: 0.5rem;
+        }
+
+        .inventario-stock {
+            margin: 0.5rem 0;
+        }
+
+        .stock-bar {
+            height: 8px;
+            background-color: var(--gray-200);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 0.25rem;
+        }
+
+        .stock-fill {
+            height: 100%;
+            background-color: var(--primary);
+            transition: width 0.3s;
+        }
+
+        .stock-fill.critical {
+            background-color: var(--danger);
+        }
+
+        .inventario-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.5rem;
+            margin: 0.5rem 0;
+            font-size: 0.9rem;
+        }
+
+        .inventario-minimo {
+            color: var(--warning);
+        }
+
+        /* Tarjetas de usuarios */
+        .usuarios-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .usuario-card {
+            background: white;
+            border-radius: 8px;
+            padding: 1rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .usuario-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+        }
+
+        .usuario-nombre {
+            font-weight: 600;
+        }
+
+        .usuario-username {
+            color: var(--gray-600);
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .usuario-estado {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .usuario-estado span {
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            background-color: var(--gray-200);
+        }
+
+        .usuario-estado .activo {
+            background-color: var(--success);
+            color: white;
+        }
+
+        .usuario-estado .inactivo {
+            background-color: var(--danger);
+            color: white;
+        }
+
+        .usuario-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        /* Tarjetas de QR */
+        .qr-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .qr-card {
+            background: white;
+            border-radius: 8px;
+            padding: 1rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .qr-image {
+            width: 150px;
+            height: 150px;
+            margin: 0 auto 1rem;
+        }
+
+        .qr-nombre {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .qr-url {
+            font-size: 0.7rem;
+            color: var(--gray-600);
+            margin-bottom: 0.5rem;
+            word-break: break-all;
+        }
+
+        .qr-actions {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: center;
+        }
+
+        .qr-actions button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--gray-600);
+            font-size: 1rem;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background-color: white;
+            border-radius: 12px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .modal-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--gray-200);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            background: white;
+            z-index: 10;
+        }
+
+        .modal-header h3 {
+            color: var(--secondary);
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--gray-600);
+        }
+
+        .modal-body {
+            padding: 1.5rem;
+        }
+
+        .modal-footer {
+            padding: 1.5rem;
+            border-top: 1px solid var(--gray-200);
+            background-color: var(--gray-100);
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+        }
+
+        /* Formularios */
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--gray-700);
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--gray-300);
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .ingrediente-row {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+            align-items: center;
+        }
+
+        .ingrediente-row select {
+            flex: 2;
+        }
+
+        .ingrediente-row input {
+            flex: 1;
+        }
+
+        .ingrediente-row button {
+            background: none;
+            border: none;
+            color: var(--danger);
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-primary:hover {
+            background-color: #b71c1c;
+        }
+
+        .btn-secondary {
+            background-color: var(--gray-200);
+            color: var(--gray-700);
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-secondary:hover {
+            background-color: var(--gray-300);
+        }
+
+        .btn-danger {
+            background-color: var(--danger);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-danger:hover {
+            background-color: #dc2626;
+        }
+
+        /* Overlay para contraseña */
+        .password-overlay {
+            position: relative;
+        }
+
+        .password-protected {
+            filter: blur(4px);
+            pointer-events: none;
+            user-select: none;
+        }
+
+        .password-unlock {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            z-index: 10;
+        }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(211, 47, 47, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--primary);
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Preview de imagen */
+        .image-preview {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            border: 1px solid var(--gray-300);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .image-preview img {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 4px;
+        }
+
+        .image-preview small {
+            color: var(--gray-600);
+        }
     </style>
 </head>
 <body>
-    <!-- Login -->
-    <div class="login-container" id="loginView">
-        <h2>Acceso Administrador</h2>
-        <input type="password" id="adminPassword" placeholder="Contraseña">
-        <button onclick="loginAdmin()">Ingresar</button>
-        <p id="loginError" style="color:red;"></p>
+    <!-- Pantalla de Login -->
+    <div class="login-container" id="loginContainer">
+        <div class="login-box">
+            <h2><i class="fas fa-cog"></i> Admin Saki Sushi</h2>
+            <form class="login-form" id="loginForm">
+                <input type="password" id="adminPassword" placeholder="Contraseña de Administrador" required>
+                <button type="submit">Ingresar</button>
+            </form>
+            <div class="recovery-link">
+                <a href="#" id="recoveryLink">¿Olvidaste la contraseña?</a>
+            </div>
+        </div>
     </div>
 
-    <!-- Panel principal -->
-    <div class="panel" id="panelView">
-        <header>
-            <div><i class="fas fa-crown"></i> Saki Sushi - Administración</div>
-            <div>
-                <span id="syncStatus"><i class="fas fa-sync-alt"></i> Sincronizado</span>
-                <button onclick="verCliente()">Ver Menú Cliente</button>
-                <button onclick="verCajero()">Panel Cajero</button>
-                <button onclick="guardarTodo()">Guardar Todo</button>
-                <button onclick="logoutAdmin()">Salir</button>
+    <!-- Panel Principal -->
+    <div class="panel-container" id="panelContainer">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-left">
+                <h2><i class="fas fa-crown"></i> Administración Saki Sushi</h2>
+                <button class="save-button" id="saveAllButton">
+                    <i class="fas fa-save"></i> Guardar Todo
+                </button>
+            </div>
+            <div class="header-right">
+                <a href="cliente.html" target="_blank" class="nav-button">
+                    <i class="fas fa-utensils"></i> Cliente
+                </a>
+                <a href="cajero.html" target="_blank" class="nav-button">
+                    <i class="fas fa-cash-register"></i> Cajero
+                </a>
+                <button class="logout-button" id="logoutButton">
+                    <i class="fas fa-sign-out-alt"></i> Salir
+                </button>
             </div>
         </header>
 
-        <!-- Barra de tasa -->
-        <div class="tasa-bar">
-            <label>Tasa base USD: <input type="number" id="tasaBase" step="0.01" value="40" onchange="actualizarTasa()"></label>
-            <label>Aumento diario %: <input type="number" id="aumentoDiario" step="0.1" value="1" onchange="actualizarTasa()"></label>
-            <label><input type="checkbox" id="aumentoActivo" onchange="toggleAumento()"> Aumento automático</label>
-            <button id="detenerBtn" onclick="detenerAumento()">Detener por completo</button>
-            <button id="activarBtn" style="display:none;" onclick="activarAumento()">Activar por completo</button>
-            <span>Tasa efectiva: <span id="tasaEfectiva">40.00</span></span>
+        <!-- Barra de tasa (editable) -->
+        <div class="tasa-bar" id="tasaBar">
+            <div class="tasa-item">
+                <label>Tasa Base:</label>
+                <input type="number" step="0.01" id="tasaBaseInput" value="400.00">
+            </div>
+            <div class="tasa-item">
+                <label>Aumento Diario %:</label>
+                <input type="number" step="0.1" id="aumentoDiarioInput" value="0">
+            </div>
+            <div class="tasa-item">
+                <label>Aumento Activo:</label>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="aumentoActivoToggle">
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+            <div class="tasa-item">
+                <button class="btn-small danger" id="detenerAumentoBtn">Detener por Completo</button>
+                <button class="btn-small success" id="activarAumentoBtn">Activar por Completo</button>
+            </div>
+            <div class="tasa-item">
+                <label>Tasa Efectiva:</label>
+                <span class="tasa-value" id="tasaEfectivaDisplay">400.00</span>
+            </div>
+            <div class="tasa-item">
+                <label>Aumento Acumulado:</label>
+                <span class="tasa-value" id="aumentoAcumuladoDisplay">0%</span>
+            </div>
         </div>
 
+        <!-- Pestañas -->
         <div class="tabs">
-            <button class="tab active" onclick="cambiarTab('dashboard')">Dashboard</button>
-            <button class="tab" onclick="cambiarTab('menu')">Menú & Precios</button>
-            <button class="tab" onclick="cambiarTab('inventario')">Inventario</button>
-            <button class="tab" onclick="cambiarTab('usuarios')">Usuarios</button>
-            <button class="tab" onclick="cambiarTab('config')">Configuración</button>
-            <button class="tab" onclick="cambiarTab('qr')">Códigos QR</button>
-            <button class="tab" onclick="cambiarTab('reportes')">Reportes</button>
+            <div class="tab active" data-tab="dashboard">Dashboard</div>
+            <div class="tab" data-tab="menu">Menú y Precios</div>
+            <div class="tab" data-tab="inventario">Inventario</div>
+            <div class="tab" data-tab="usuarios">Usuarios</div>
+            <div class="tab" data-tab="configuracion">Configuración</div>
+            <div class="tab" data-tab="qr">Códigos QR</div>
+            <div class="tab" data-tab="reportes">Reportes</div>
         </div>
 
-        <!-- Dashboard -->
-        <div class="tab-content active" id="tabDashboard">
-            <div class="cards">
-                <div class="card"><h3>Ventas hoy</h3><p id="ventasHoy">0 USD</p></div>
-                <div class="card"><h3>Tasa efectiva</h3><p id="tasaCard">40.00</p></div>
-                <div class="card"><h3>Productos activos</h3><p id="productosActivos">0</p></div>
-                <div class="card"><h3>Alertas stock</h3><p id="alertasStock">0</p></div>
+        <!-- Contenido -->
+        <div class="content">
+            <!-- Dashboard -->
+            <div class="tab-pane active" id="dashboardPane">
+                <div class="dashboard-grid">
+                    <div class="dashboard-card">
+                        <div class="card-title">Ventas Hoy</div>
+                        <div class="card-value" id="ventasHoy">$0.00</div>
+                    </div>
+                    <div class="dashboard-card">
+                        <div class="card-title">Tasa Efectiva</div>
+                        <div class="card-value" id="tasaEfectivaCard">Bs. 400.00</div>
+                    </div>
+                    <div class="dashboard-card">
+                        <div class="card-title">Productos Activos</div>
+                        <div class="card-value" id="productosActivos">0</div>
+                    </div>
+                    <div class="dashboard-card">
+                        <div class="card-title">Alertas Stock</div>
+                        <div class="card-value" id="alertasStock">0</div>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                    <!-- Pedidos recientes -->
+                    <div class="alert-list">
+                        <h3 style="margin-bottom: 1rem;">Pedidos Recientes</h3>
+                        <div id="pedidosRecientes"></div>
+                    </div>
+
+                    <!-- Stock crítico -->
+                    <div class="alert-list">
+                        <h3 style="margin-bottom: 1rem;">Stock Crítico</h3>
+                        <div id="stockCritico"></div>
+                    </div>
+                </div>
             </div>
-            <h3>Últimos 5 pedidos</h3>
-            <table id="ultimosPedidos">
-                <thead><tr><th>ID</th><th>Fecha</th><th>Total USD</th><th>Estado</th></tr></thead>
-                <tbody></tbody>
-            </table>
-            <h3>Ingredientes con stock crítico</h3>
-            <table id="stockCritico">
-                <thead><tr><th>Ingrediente</th><th>Stock</th><th>Mínimo</th></tr></thead>
-                <tbody></tbody>
-            </table>
-        </div>
 
-        <!-- Menú & Precios -->
-        <div class="tab-content" id="tabMenu">
-            <button class="btn" onclick="abrirModalPlatillo()">+ Nuevo Platillo</button>
-            <table id="menuTable">
-                <thead><tr><th>Imagen</th><th>Nombre</th><th>Precio USD</th><th>Precio Bs</th><th>Stock</th><th>Disponible</th><th>Acciones</th></tr></thead>
-                <tbody></tbody>
-            </table>
-        </div>
-
-        <!-- Inventario -->
-        <div class="tab-content" id="tabInventario">
-            <button class="btn" onclick="abrirModalIngrediente()">+ Nuevo Ingrediente</button>
-            <table id="inventarioTable">
-                <thead><tr><th>Nombre</th><th>Stock</th><th>Unidad</th><th>Mínimo</th><th>Costo USD</th><th>Precio venta USD</th><th>Barra</th><th>Acciones</th></tr></thead>
-                <tbody></tbody>
-            </table>
-        </div>
-
-        <!-- Usuarios -->
-        <div class="tab-content" id="tabUsuarios">
-            <h3>Nuevo Cajero</h3>
-            <input type="text" id="nuevoNombre" placeholder="Nombre">
-            <input type="text" id="nuevoUsername" placeholder="Username">
-            <input type="password" id="nuevoPassword" placeholder="Contraseña">
-            <button class="btn" onclick="crearUsuario()">Crear</button>
-            <h3>Lista de Cajeros</h3>
-            <table id="usuariosTable">
-                <thead><tr><th>Nombre</th><th>Username</th><th>Activo</th><th>Acciones</th></tr></thead>
-                <tbody></tbody>
-            </table>
-        </div>
-
-        <!-- Configuración -->
-        <div class="tab-content" id="tabConfig">
-            <h3>Cambiar contraseña de admin</h3>
-            <input type="password" id="currentPass" placeholder="Actual">
-            <input type="password" id="newPass" placeholder="Nueva">
-            <input type="password" id="confirmPass" placeholder="Confirmar">
-            <button class="btn" onclick="cambiarPassword()">Cambiar</button>
-            <h3>Correo de recuperación</h3>
-            <input type="email" id="recoveryEmail" placeholder="correo@ejemplo.com">
-            <button class="btn" onclick="guardarRecoveryEmail()">Guardar</button>
-        </div>
-
-        <!-- Códigos QR -->
-        <div class="tab-content" id="tabQR">
-            <h3>Generar QR para mesa</h3>
-            <input type="text" id="nombreMesa" placeholder="Ej: Mesa 1">
-            <button class="btn" onclick="generarQR()">Generar</button>
-            <div class="qr-grid" id="qrGrid"></div>
-        </div>
-
-        <!-- Reportes -->
-        <div class="tab-content" id="tabReportes">
-            <div class="cards">
-                <div class="card"><h3>Ventas hoy</h3><p id="repVentasHoy">0 USD</p></div>
-                <div class="card"><h3>Ventas semana</h3><p id="repVentasSemana">0 USD</p></div>
-                <div class="card"><h3>Ticket promedio</h3><p id="repTicketPromedio">0 USD</p></div>
-                <div class="card"><h3>Platillo más vendido</h3><p id="repPlatilloTop">-</p></div>
+            <!-- Menú y Precios -->
+            <div class="tab-pane" id="menuPane">
+                <button class="btn-primary" onclick="abrirModalNuevoPlatillo()" style="margin-bottom: 1rem;">
+                    <i class="fas fa-plus"></i> Nuevo Platillo
+                </button>
+                <div class="menu-grid" id="menuGrid"></div>
             </div>
-            <div class="chart-container">
-                <canvas id="chartVentasDiarias"></canvas>
+
+            <!-- Inventario -->
+            <div class="tab-pane" id="inventarioPane">
+                <button class="btn-primary" onclick="abrirModalNuevoIngrediente()" style="margin-bottom: 1rem;">
+                    <i class="fas fa-plus"></i> Nuevo Ingrediente
+                </button>
+                <div class="inventario-grid" id="inventarioGrid"></div>
             </div>
-            <div class="chart-container">
-                <canvas id="chartCategorias"></canvas>
+
+            <!-- Usuarios -->
+            <div class="tab-pane" id="usuariosPane">
+                <button class="btn-primary" onclick="abrirModalNuevoUsuario()" style="margin-bottom: 1rem;">
+                    <i class="fas fa-plus"></i> Nuevo Cajero
+                </button>
+                <div class="usuarios-grid" id="usuariosGrid"></div>
             </div>
-            <div class="chart-container">
-                <canvas id="chartMetodosPago"></canvas>
+
+            <!-- Configuración -->
+            <div class="tab-pane" id="configuracionPane">
+                <div class="alert-list" style="max-width: 500px;">
+                    <h3 style="margin-bottom: 1rem;">Cambiar Contraseña</h3>
+                    <div class="form-group">
+                        <label>Contraseña Actual</label>
+                        <input type="password" id="currentPassword">
+                    </div>
+                    <div class="form-group">
+                        <label>Nueva Contraseña</label>
+                        <input type="password" id="newPassword">
+                    </div>
+                    <div class="form-group">
+                        <label>Confirmar Nueva Contraseña</label>
+                        <input type="password" id="confirmPassword">
+                    </div>
+                    <button class="btn-primary" onclick="cambiarPassword()">Cambiar Contraseña</button>
+                </div>
+
+                <div class="alert-list" style="max-width: 500px; margin-top: 2rem;">
+                    <h3 style="margin-bottom: 1rem;">Correo de Recuperación</h3>
+                    <div class="form-group">
+                        <label>Correo Electrónico</label>
+                        <input type="email" id="recoveryEmail" value="admin@sakisushi.com">
+                    </div>
+                    <button class="btn-primary" onclick="guardarRecoveryEmail()">Guardar</button>
+                </div>
             </div>
-            <div class="chart-container">
-                <canvas id="chartHoras"></canvas>
+
+            <!-- Códigos QR -->
+            <div class="tab-pane" id="qrPane">
+                <div style="margin-bottom: 2rem;">
+                    <h3>Generar Nuevo QR</h3>
+                    <div style="display: flex; gap: 1rem; align-items: flex-end;">
+                        <div class="form-group" style="flex: 1;">
+                            <label>Nombre de la Mesa</label>
+                            <input type="text" id="qrNombreMesa" placeholder="Ej: Mesa 1">
+                        </div>
+                        <button class="btn-primary" onclick="generarQR()">
+                            <i class="fas fa-qrcode"></i> Generar QR
+                        </button>
+                    </div>
+                </div>
+                <div class="qr-grid" id="qrGrid"></div>
             </div>
-            <h3>Transacciones</h3>
-            <table id="transaccionesTable">
-                <thead><tr><th>Fecha</th><th>Pedido ID</th><th>Cajero</th><th>Items</th><th>Total USD</th><th>Método</th><th>Estado</th></tr></thead>
-                <tbody></tbody>
-            </table>
+
+            <!-- Reportes -->
+            <div class="tab-pane" id="reportesPane">
+                <div style="display: flex; gap: 1rem; margin-bottom: 2rem;">
+                    <div class="form-group">
+                        <label>Desde</label>
+                        <input type="date" id="reporteDesde">
+                    </div>
+                    <div class="form-group">
+                        <label>Hasta</label>
+                        <input type="date" id="reporteHasta">
+                    </div>
+                    <div class="form-group" style="align-self: flex-end;">
+                        <button class="btn-primary" onclick="cargarReportes()">Filtrar</button>
+                    </div>
+                </div>
+
+                <div class="dashboard-grid">
+                    <div class="dashboard-card">
+                        <div class="card-title">Ventas Día</div>
+                        <div class="card-value" id="ventasDia">$0.00</div>
+                    </div>
+                    <div class="dashboard-card">
+                        <div class="card-title">Ventas Semana</div>
+                        <div class="card-value" id="ventasSemana">$0.00</div>
+                    </div>
+                    <div class="dashboard-card">
+                        <div class="card-title">Ticket Promedio</div>
+                        <div class="card-value" id="ticketPromedio">$0.00</div>
+                    </div>
+                    <div class="dashboard-card">
+                        <div class="card-title">Platillo Top</div>
+                        <div class="card-value" id="platilloTop">-</div>
+                    </div>
+                </div>
+
+                <div class="charts-grid">
+                    <div class="chart-container">
+                        <h3>Ventas Últimos 7 Días</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="ventasChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <h3>Ventas por Categoría</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="categoriasChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <h3>Métodos de Pago</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="pagosChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <h3>Ventas por Hora</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="horaChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-responsive" style="margin-top: 2rem;">
+                    <h3>Detalle de Ventas</h3>
+                    <table class="data-table" id="ventasTable">
+                        <thead>
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Pedido</th>
+                                <th>Total</th>
+                                <th>Items</th>
+                                <th>Método</th>
+                                <th>Tipo</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ventasTableBody">
+                            <!-- Datos dinámicos -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
 
-    <!-- Modal Platillo -->
-    <div class="modal" id="modalPlatillo">
+    <!-- Modal de Platillo -->
+    <div class="modal" id="platilloModal">
         <div class="modal-content">
-            <span class="close" onclick="cerrarModalPlatillo()">&times;</span>
-            <h3 id="modalPlatilloTitulo">Nuevo Platillo</h3>
-            <form id="formPlatillo">
-                <input type="hidden" id="platilloId">
-                <div class="form-group"><label>Nombre</label><input type="text" id="platilloNombre" required></div>
-                <div class="form-group"><label>Categoría</label>
-                    <select id="platilloCategoria" onchange="cambiarCategoria()">
-                        <option value="entradas">Entradas</option>
-                        <option value="sushi">Sushi</option>
-                        <option value="rolls">Rolls</option>
-                        <option value="tragos">Tragos</option>
-                        <option value="pokes">Pokes</option>
-                        <option value="ensaladas">Ensaladas</option>
-                        <option value="china">Comida China</option>
-                        <option value="japonesa">Comida Japonesa</option>
-                        <option value="ninos">Para Niños</option>
-                        <option value="ejecutivo">Combo Ejecutivo</option>
-                    </select>
-                </div>
-                <div class="form-group" id="subcategoriaGroup" style="display:none;"><label>Subcategoría</label>
-                    <select id="platilloSubcategoria"></select>
-                </div>
-                <div class="form-group"><label>Precio USD</label><input type="number" step="0.01" id="platilloPrecio" required></div>
-                <div class="form-group"><label>Descripción</label><textarea id="platilloDescripcion"></textarea></div>
-                <div class="form-group"><label>Imagen (URL o subir)</label>
-                    <input type="file" id="platilloImagenFile" accept="image/*">
-                    <input type="text" id="platilloImagenUrl" placeholder="O pegar URL">
-                    <img id="platilloImagenPreview" style="max-width:100px; display:none;">
-                </div>
-                <h4>Ingredientes</h4>
-                <div id="ingredientesList"></div>
-                <button type="button" class="btn" onclick="agregarIngredienteFila()">+ Agregar Ingrediente</button>
-                <p>Stock calculado: <span id="stockCalculado">0</span></p>
-                <button type="submit" class="btn">Guardar</button>
-            </form>
+            <div class="modal-header">
+                <h3 id="platilloModalTitle">Nuevo Platillo</h3>
+                <button class="modal-close" id="closePlatilloModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="platilloForm">
+                    <div class="form-group">
+                        <label>Imagen del Platillo</label>
+                        <input type="file" id="platilloImagen" accept="image/*">
+                        <small>O ingresa URL (opcional):</small>
+                        <input type="url" id="platilloImagenUrl" placeholder="https://...">
+                        <div id="imagenPreview" class="image-preview" style="display: none;">
+                            <img id="previewImg" src="" alt="Vista previa">
+                            <div>
+                                <small>Vista previa</small>
+                                <button type="button" class="btn-small" onclick="limpiarImagenPreview()">Eliminar</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Nombre</label>
+                            <input type="text" id="platilloNombre" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Categoría</label>
+                            <select id="platilloCategoria" required>
+                                <option value="">Seleccionar</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Subcategoría</label>
+                        <select id="platilloSubcategoria">
+                            <option value="">Ninguna</option>
+                        </select>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Precio (USD)</label>
+                            <input type="number" step="0.01" id="platilloPrecio" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Disponible</label>
+                            <select id="platilloDisponible">
+                                <option value="true">Sí</option>
+                                <option value="false">No</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Descripción</label>
+                        <textarea id="platilloDescripcion" rows="3"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Ingredientes</label>
+                        <div id="ingredientesContainer">
+                            <!-- Ingredientes dinámicos -->
+                        </div>
+                        <button type="button" class="btn-secondary" onclick="agregarIngredienteRow()" style="margin-top: 0.5rem;">
+                            <i class="fas fa-plus"></i> Agregar Ingrediente
+                        </button>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Stock Calculado:</label>
+                        <span id="stockCalculado">0</span>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="cancelPlatillo">Cancelar</button>
+                <button class="btn-primary" id="savePlatillo">Guardar</button>
+            </div>
         </div>
     </div>
 
-    <!-- Modal Ingrediente -->
-    <div class="modal" id="modalIngrediente">
+    <!-- Modal de Ingrediente -->
+    <div class="modal" id="ingredienteModal">
         <div class="modal-content">
-            <span class="close" onclick="cerrarModalIngrediente()">&times;</span>
-            <h3 id="modalIngredienteTitulo">Nuevo Ingrediente</h3>
-            <form id="formIngrediente">
-                <input type="hidden" id="ingredienteId">
-                <div class="form-group"><label>Nombre</label><input type="text" id="ingredienteNombre" required></div>
-                <div class="form-group"><label>Unidad</label>
-                    <select id="ingredienteUnidad">
-                        <option value="unidades">Unidades</option>
-                        <option value="kilogramos">Kilogramos</option>
-                        <option value="litros">Litros</option>
-                    </select>
-                </div>
-                <div class="form-group"><label>Stock actual</label><input type="number" step="0.01" id="ingredienteStock" disabled></div>
-                <div class="form-group"><label>Stock nuevo a agregar</label><input type="number" step="0.01" id="ingredienteStockNuevo" oninput="calcularStockTotal()"></div>
-                <div class="form-group"><label>Stock total resultante</label><input type="number" step="0.01" id="ingredienteStockTotal" readonly></div>
-                <div class="form-group"><label>Stock mínimo</label><input type="number" step="0.01" id="ingredienteMinimo" required></div>
-                <h4>Calculadora de costo</h4>
-                <div class="form-group"><label>Costo total de compra ($)</label><input type="number" step="0.01" id="costoTotalCompra" oninput="calcularPrecioUnitario()"></div>
-                <div class="form-group"><label>Cantidad comprada</label><input type="number" step="0.01" id="cantidadComprada" oninput="calcularPrecioUnitario()"></div>
-                <div class="form-group"><label>Precio de costo unitario ($)</label><input type="number" step="0.01" id="precioCostoUnitario" readonly></div>
-                <div class="form-group"><label>Precio de venta unitario ($)</label><input type="number" step="0.01" id="precioVentaUnitario" required></div>
-                <button type="submit" class="btn">Guardar</button>
-                <button type="button" class="btn btn-secondary" id="btnEliminarIngrediente" onclick="eliminarIngrediente()" style="display:none;">Eliminar</button>
-            </form>
+            <div class="modal-header">
+                <h3 id="ingredienteModalTitle">Nuevo Ingrediente</h3>
+                <button class="modal-close" id="closeIngredienteModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="ingredienteForm">
+                    <div class="form-group">
+                        <label>Nombre</label>
+                        <input type="text" id="ingredienteNombre" required>
+                    </div>
+
+                    <div class="form-group password-overlay" id="stockOverlay">
+                        <label>Stock Actual</label>
+                        <div id="stockActualField" class="password-protected">
+                            <input type="number" step="0.01" id="ingredienteStock" disabled>
+                        </div>
+                        <div class="password-unlock" id="stockUnlock">
+                            <input type="password" placeholder="Contraseña" id="stockPassword">
+                            <button type="button" onclick="desbloquearStock()">Desbloquear</button>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Mercancía Nueva a Agregar</label>
+                        <input type="number" step="0.01" id="ingredienteAgregar">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Unidad</label>
+                        <select id="ingredienteUnidad">
+                            <option value="unidades">Unidades</option>
+                            <option value="gramos">Gramos</option>
+                            <option value="mililitros">Mililitros</option>
+                            <option value="kilogramos">Kilogramos</option>
+                            <option value="litros">Litros</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Stock Mínimo (en unidad base)</label>
+                        <input type="number" step="0.01" id="ingredienteMinimo">
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Costo Total Compra (USD)</label>
+                            <input type="number" step="0.01" id="costoTotal" onchange="calcularCostoUnitario()">
+                        </div>
+                        <div class="form-group">
+                            <label>Cantidad Comprada</label>
+                            <input type="number" step="0.01" id="cantidadComprada" onchange="calcularCostoUnitario()">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Precio de Costo (USD por unidad)</label>
+                        <input type="number" step="0.01" id="ingredienteCosto">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Precio de Venta (USD por unidad)</label>
+                        <input type="number" step="0.01" id="ingredienteVenta">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="cancelIngrediente">Cancelar</button>
+                <button class="btn-primary" id="saveIngrediente">Guardar</button>
+            </div>
         </div>
     </div>
 
-    <!-- Modal Confirmación (para vueltos, etc) -->
-    <div class="modal" id="modalConfirm">
+    <!-- Modal de Usuario -->
+    <div class="modal" id="usuarioModal">
         <div class="modal-content">
-            <p id="confirmMsg"></p>
-            <button class="btn" onclick="confirmAction()">Aceptar</button>
-            <button class="btn btn-secondary" onclick="cerrarModalConfirm()">Cancelar</button>
+            <div class="modal-header">
+                <h3>Nuevo Cajero</h3>
+                <button class="modal-close" id="closeUsuarioModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="usuarioForm">
+                    <div class="form-group">
+                        <label>Nombre Completo</label>
+                        <input type="text" id="usuarioNombre" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Nombre de Usuario</label>
+                        <input type="text" id="usuarioUsername" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Contraseña Temporal</label>
+                        <input type="text" id="usuarioPassword" value="123456" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="cancelUsuario">Cancelar</button>
+                <button class="btn-primary" id="saveUsuario">Guardar</button>
+            </div>
         </div>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Modal de QR Ampliado -->
+    <div class="modal" id="qrAmpliadoModal">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header">
+                <h3>Código QR</h3>
+                <button class="modal-close" id="closeQrAmpliadoModal">&times;</button>
+            </div>
+            <div class="modal-body" style="text-align: center;">
+                <div id="qrAmpliado" style="width: 300px; height: 300px; margin: 0 auto;"></div>
+                <div id="qrAmpliadoInfo" style="margin-top: 1rem;"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-primary" id="closeQrAmpliado">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="supabase-config.js"></script>
     <script>
-        const SUPABASE_URL = 'https://tu-proyecto.supabase.co';
-        const SUPABASE_ANON_KEY = 'tu-anon-key';
-        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-        let config = null;
-        let menu = [];
-        let inventario = [];
+        // Variables globales
+        let isAdminAuthenticated = false;
+        let menuItems = [];
+        let inventarioItems = [];
         let usuarios = [];
-        let pedidos = [];
-        let codigosQR = [];
-        let tasaEfectiva = 40;
-        let accionConfirm = null;
+        let qrCodes = [];
+        let charts = {};
+        let platilloEditandoId = null;
 
-        // Login
-        async function loginAdmin() {
-            const pass = document.getElementById('adminPassword').value;
-            const { data, error } = await supabase.from('config').select('admin_password').eq('id',1).single();
-            if (error || data.admin_password !== pass) {
-                document.getElementById('loginError').innerText = 'Contraseña incorrecta';
+        // Verificar sesión
+        document.addEventListener('DOMContentLoaded', () => {
+            const adminSession = sessionStorage.getItem('admin_authenticated');
+            if (adminSession === 'true') {
+                isAdminAuthenticated = true;
+                mostrarPanel();
             } else {
-                document.getElementById('loginView').style.display = 'none';
-                document.getElementById('panelView').classList.add('visible');
-                iniciarPanel();
+                mostrarLogin();
             }
+        });
+
+        // Mostrar login
+        function mostrarLogin() {
+            document.getElementById('loginContainer').style.display = 'flex';
+            document.getElementById('panelContainer').classList.remove('active');
         }
 
-        function logoutAdmin() {
-            document.getElementById('loginView').style.display = 'block';
-            document.getElementById('panelView').classList.remove('visible');
+        // Mostrar panel
+        function mostrarPanel() {
+            document.getElementById('loginContainer').style.display = 'none';
+            document.getElementById('panelContainer').classList.add('active');
+            cargarConfiguracionInicial();
+            cargarMenu();
+            cargarInventario();
+            cargarUsuarios();
+            cargarQRs();
+            cargarReportes();
+            cargarPedidosRecientes();
+            setupEventListeners();
+            setupRealtimeSubscriptions();
         }
 
-        function verCliente() { window.open('cliente.html', '_blank'); }
-        function verCajero() { window.open('cajero.html', '_blank'); }
-
-        async function iniciarPanel() {
-            await cargarConfig();
-            await cargarMenu();
-            await cargarInventario();
-            await cargarUsuarios();
-            await cargarPedidos();
-            await cargarQR();
-            suscribirseCambios();
-            renderDashboard();
-            renderMenuTable();
-            renderInventarioTable();
-            renderUsuariosTable();
-            renderQRGrid();
+        // Configuración inicial
+        async function cargarConfiguracionInicial() {
+            await cargarConfiguracion();
             actualizarTasaUI();
         }
 
-        async function cargarConfig() {
-            const { data } = await supabase.from('config').select('*').eq('id',1).single();
-            config = data;
-            tasaEfectiva = data.tasa_efectiva;
-            document.getElementById('tasaBase').value = data.tasa_cambio;
-            document.getElementById('aumentoDiario').value = data.aumento_diario;
-            document.getElementById('aumentoActivo').checked = data.aumento_activo;
-            if (data.aumento_detenido) {
-                document.getElementById('detenerBtn').style.display = 'none';
-                document.getElementById('activarBtn').style.display = 'inline-block';
-            } else {
-                document.getElementById('detenerBtn').style.display = 'inline-block';
-                document.getElementById('activarBtn').style.display = 'none';
-            }
-            document.getElementById('recoveryEmail').value = data.recovery_email || '';
-        }
-
-        async function cargarMenu() {
-            const { data } = await supabase.from('menu').select('*');
-            menu = data || [];
-        }
-
-        async function cargarInventario() {
-            const { data } = await supabase.from('inventario').select('*');
-            inventario = data || [];
-        }
-
-        async function cargarUsuarios() {
-            const { data } = await supabase.from('usuarios').select('*').eq('rol', 'cajero');
-            usuarios = data || [];
-        }
-
-        async function cargarPedidos() {
-            const { data } = await supabase.from('pedidos').select('*').order('timestamp', { ascending: false }).limit(100);
-            pedidos = data || [];
-        }
-
-        async function cargarQR() {
-            const { data } = await supabase.from('codigos_qr').select('*');
-            codigosQR = data || [];
-        }
-
-        function suscribirseCambios() {
-            supabase.channel('admin-changes')
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'config' }, payload => {
-                    config = payload.new;
-                    tasaEfectiva = payload.new.tasa_efectiva;
-                    actualizarTasaUI();
-                })
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'menu' }, () => cargarMenu().then(() => renderMenuTable()))
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'inventario' }, () => cargarInventario().then(() => renderInventarioTable()))
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'usuarios' }, () => cargarUsuarios().then(() => renderUsuariosTable()))
-                .on('postgres_changes', { event: '*', schema: 'public', table: 'codigos_qr' }, () => cargarQR().then(() => renderQRGrid()))
-                .subscribe();
-        }
-
-        // ========== TASA ==========
-        function actualizarTasa() {
-            const tasa = parseFloat(document.getElementById('tasaBase').value);
-            const aumento = parseFloat(document.getElementById('aumentoDiario').value);
-            const activo = document.getElementById('aumentoActivo').checked;
-            // Actualizar en DB
-            supabase.from('config').update({
-                tasa_cambio: tasa,
-                aumento_diario: aumento,
-                aumento_activo: activo,
-                ultima_actualizacion: new Date().toISOString()
-            }).eq('id',1).then(() => {
-                // La tasa efectiva se recalcula por trigger
-            });
-        }
-
-        function toggleAumento() {
-            actualizarTasa();
-        }
-
-        function detenerAumento() {
-            supabase.from('config').update({ aumento_detenido: true, aumento_activo: false }).eq('id',1).then(() => {
-                document.getElementById('detenerBtn').style.display = 'none';
-                document.getElementById('activarBtn').style.display = 'inline-block';
-            });
-        }
-
-        function activarAumento() {
-            supabase.from('config').update({ aumento_detenido: false, aumento_activo: true, fecha_inicio_aumento: new Date().toISOString() }).eq('id',1).then(() => {
-                document.getElementById('detenerBtn').style.display = 'inline-block';
-                document.getElementById('activarBtn').style.display = 'none';
-            });
-        }
-
+        // Actualizar UI de tasa
         function actualizarTasaUI() {
-            document.getElementById('tasaEfectiva').innerText = tasaEfectiva.toFixed(2);
-            document.getElementById('tasaCard').innerText = tasaEfectiva.toFixed(2);
+            document.getElementById('tasaBaseInput').value = configGlobal.tasa_cambio || 400;
+            document.getElementById('aumentoDiarioInput').value = configGlobal.aumento_diario || 0;
+            document.getElementById('aumentoActivoToggle').checked = configGlobal.aumento_activo || false;
+            document.getElementById('tasaEfectivaDisplay').textContent = (configGlobal.tasa_efectiva || 400).toFixed(2);
+            document.getElementById('aumentoAcumuladoDisplay').textContent = (configGlobal.aumento_acumulado || 0) + '%';
+            document.getElementById('tasaEfectivaCard').textContent = `Bs. ${(configGlobal.tasa_efectiva || 400).toFixed(2)}`;
         }
 
-        // ========== DASHBOARD ==========
-        function renderDashboard() {
-            const hoy = new Date().toISOString().split('T')[0];
-            const ventasHoy = pedidos.filter(p => p.estado === 'cobrado' && p.fecha_cobro && p.fecha_cobro.startsWith(hoy)).reduce((acc, p) => acc + p.total, 0);
-            document.getElementById('ventasHoy').innerText = ventasHoy.toFixed(2) + ' USD';
-            document.getElementById('productosActivos').innerText = menu.filter(m => m.disponible).length;
-            const alertas = inventario.filter(i => i.stock < i.minimo).length;
-            document.getElementById('alertasStock').innerText = alertas;
-
-            const ultimos = pedidos.slice(0,5);
-            let html = '';
-            ultimos.forEach(p => {
-                html += `<tr><td>${p.id}</td><td>${new Date(p.timestamp).toLocaleString()}</td><td>${p.total.toFixed(2)}</td><td>${p.estado}</td></tr>`;
-            });
-            document.querySelector('#ultimosPedidos tbody').innerHTML = html;
-
-            const criticos = inventario.filter(i => i.stock < i.minimo);
-            let critHtml = '';
-            criticos.forEach(i => {
-                critHtml += `<tr><td>${i.nombre}</td><td>${i.stock}</td><td>${i.minimo}</td></tr>`;
-            });
-            document.querySelector('#stockCritico tbody').innerHTML = critHtml;
-        }
-
-        // ========== MENÚ ==========
-        function renderMenuTable() {
-            const tbody = document.querySelector('#menuTable tbody');
-            tbody.innerHTML = '';
-            menu.forEach(p => {
-                const precioBs = (p.precio * tasaEfectiva).toFixed(2);
-                const ingredientesTooltip = Object.keys(p.ingredientes || {}).map(id => {
-                    const ing = inventario.find(i => i.id === id);
-                    return ing ? `${ing.nombre}: ${ing.stock >= p.ingredientes[id].cantidad ? '✅' : '❌'}` : '';
-                }).join(', ');
-                tbody.innerHTML += `<tr>
-                    <td><img src="${p.imagen || 'https://via.placeholder.com/50'}" width="50"></td>
-                    <td title="${ingredientesTooltip}">${p.nombre}</td>
-                    <td>${p.precio}</td>
-                    <td>${precioBs}</td>
-                    <td>${p.stock}</td>
-                    <td><input type="checkbox" ${p.disponible ? 'checked' : ''} onchange="toggleDisponible('${p.id}', this.checked)"></td>
-                    <td><button onclick="editarPlatillo('${p.id}')"><i class="fas fa-edit"></i></button> <button onclick="eliminarPlatillo('${p.id}')"><i class="fas fa-trash"></i></button></td>
-                </tr>`;
-            });
-        }
-
-        function toggleDisponible(id, disponible) {
-            supabase.from('menu').update({ disponible }).eq('id', id);
-        }
-
-        function abrirModalPlatillo() {
-            document.getElementById('modalPlatilloTitulo').innerText = 'Nuevo Platillo';
-            document.getElementById('formPlatillo').reset();
-            document.getElementById('platilloId').value = '';
-            document.getElementById('ingredientesList').innerHTML = '';
-            document.getElementById('modalPlatillo').style.display = 'flex';
-        }
-
-        function cerrarModalPlatillo() {
-            document.getElementById('modalPlatillo').style.display = 'none';
-        }
-
-        function cambiarCategoria() {
-            const cat = document.getElementById('platilloCategoria').value;
-            const subGroup = document.getElementById('subcategoriaGroup');
-            const subSelect = document.getElementById('platilloSubcategoria');
-            let opciones = [];
-            if (cat === 'rolls') opciones = ['rolls-frios', 'rolls-tempura'];
-            else if (cat === 'china') opciones = ['arroz-chino', 'arroz-cantones', 'chopsuey', 'lomey', 'chow-mein', 'fideos-arroz', 'tallarines-cantones', 'mariscos', 'foo-yung', 'sopas', 'entremeses'];
-            else if (cat === 'japonesa') opciones = ['yakimeshi', 'yakisoba', 'pasta-udon', 'churrasco'];
-            else {
-                subGroup.style.display = 'none';
-                return;
-            }
-            subGroup.style.display = 'block';
-            subSelect.innerHTML = opciones.map(o => `<option value="${o}">${o}</option>`).join('');
-        }
-
-        function agregarIngredienteFila() {
-            const container = document.getElementById('ingredientesList');
-            const div = document.createElement('div');
-            div.className = 'ingrediente-fila';
-            div.innerHTML = `
-                <input type="text" placeholder="Nombre ingrediente" list="ingredientesLista" onchange="buscarIngrediente(this)">
-                <input type="number" step="0.01" placeholder="Cantidad" onchange="calcularStockPlatilloLocal()">
-                <span class="unidad"></span>
-                <label><input type="checkbox" checked> Obligatorio</label>
-                <button type="button" onclick="this.parentElement.remove(); calcularStockPlatilloLocal();"><i class="fas fa-trash"></i></button>
-            `;
-            container.appendChild(div);
-        }
-
-        function buscarIngrediente(input) {
-            const nombre = input.value;
-            const ing = inventario.find(i => i.nombre.toLowerCase() === nombre.toLowerCase());
-            if (ing) {
-                input.dataset.id = ing.id;
-                input.value = ing.nombre;
-                const fila = input.parentElement;
-                fila.querySelector('.unidad').innerText = ing.unidad;
-                fila.querySelector('input[type="number"]').step = ing.unidad === 'unidades' ? 1 : 0.01;
+        // Cargar menú
+        async function cargarMenu() {
+            try {
+                const { data, error } = await supabase
+                    .from('menu')
+                    .select('*');
+                
+                if (error) throw error;
+                menuItems = data || [];
+                renderizarMenu();
+                actualizarProductosActivos();
+            } catch (error) {
+                console.error('Error cargando menú:', error);
             }
         }
 
-        function calcularStockPlatilloLocal() {
-            // Simulación: calcular mínimo de ingredientes
-            let stock = Infinity;
-            document.querySelectorAll('.ingrediente-fila').forEach(fila => {
-                const ingId = fila.querySelector('input[list]')?.dataset?.id;
-                const cantidad = parseFloat(fila.querySelector('input[type="number"]').value);
-                if (ingId && cantidad > 0) {
-                    const ing = inventario.find(i => i.id === ingId);
-                    if (ing) {
-                        const posible = Math.floor(ing.stock / cantidad);
-                        if (posible < stock) stock = posible;
+        // Renderizar menú
+        function renderizarMenu() {
+            const grid = document.getElementById('menuGrid');
+            grid.innerHTML = '';
+            
+            menuItems.forEach(item => {
+                // Verificar disponibilidad de ingredientes
+                const ingredientesEstado = [];
+                if (item.ingredientes) {
+                    for (const [ingId, ingInfo] of Object.entries(item.ingredientes)) {
+                        const ing = inventarioItems.find(i => i.id === ingId);
+                        const disponible = ing && ing.stock >= (ingInfo.cantidad || 0);
+                        ingredientesEstado.push({
+                            nombre: ingInfo.nombre || ingId,
+                            disponible: disponible
+                        });
                     }
                 }
+                
+                const card = document.createElement('div');
+                card.className = 'menu-card';
+                card.innerHTML = `
+                    <div class="menu-card-image" style="background-image: url('${item.imagen || 'https://via.placeholder.com/300x150?text=Saki+Sushi'}')">
+                        <div class="menu-card-actions">
+                            <button onclick="editarPlatillo('${item.id}')" title="Editar"><i class="fas fa-edit"></i></button>
+                            <button onclick="eliminarPlatillo('${item.id}')" title="Eliminar"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </div>
+                    <div class="menu-card-content">
+                        <div class="menu-card-header">
+                            <span class="menu-card-title">${item.nombre}</span>
+                            <span class="${item.disponible ? 'disponible-badge' : 'no-disponible-badge'}"></span>
+                        </div>
+                        <div class="menu-card-precio">
+                            ${formatUSD(item.precio || 0)} / ${formatBs(usdToBs(item.precio || 0))}
+                        </div>
+                        <div class="menu-card-stock">Stock: ${item.stock || 0}</div>
+                        <div class="menu-card-descripcion">${item.descripcion || ''}</div>
+                        <div class="menu-card-ingredientes">
+                            ${ingredientesEstado.map(ing => `
+                                <span class="${!ing.disponible ? 'sin-stock' : ''}">
+                                    ${ing.nombre} ${!ing.disponible ? '(sin stock)' : ''}
+                                </span>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+                grid.appendChild(card);
             });
-            if (stock === Infinity) stock = 0;
-            document.getElementById('stockCalculado').innerText = stock;
         }
 
-        document.getElementById('formPlatillo').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const id = document.getElementById('platilloId').value || 'plat_' + Date.now();
-            const nombre = document.getElementById('platilloNombre').value;
-            const categoria = document.getElementById('platilloCategoria').value;
-            const subcategoria = document.getElementById('subcategoriaGroup').style.display !== 'none' ? document.getElementById('platilloSubcategoria').value : null;
-            const precio = parseFloat(document.getElementById('platilloPrecio').value);
-            const descripcion = document.getElementById('platilloDescripcion').value;
-            let imagen = document.getElementById('platilloImagenUrl').value;
-            // Si hay archivo, subirlo
-            const file = document.getElementById('platilloImagenFile').files[0];
-            if (file) {
-                const fileName = `platillos/${id}_${file.name}`;
-                const { error } = await supabase.storage.from('platillos').upload(fileName, file);
-                if (!error) {
-                    imagen = supabase.storage.from('platillos').getPublicUrl(fileName).data.publicUrl;
-                }
+        // Cargar inventario
+        async function cargarInventario() {
+            try {
+                const { data, error } = await supabase
+                    .from('inventario')
+                    .select('*');
+                
+                if (error) throw error;
+                inventarioItems = data || [];
+                renderizarInventario();
+                actualizarAlertasStock();
+            } catch (error) {
+                console.error('Error cargando inventario:', error);
             }
+        }
 
-            // Construir ingredientes
-            const ingredientes = {};
-            document.querySelectorAll('.ingrediente-fila').forEach(fila => {
-                const ingId = fila.querySelector('input[list]')?.dataset?.id;
-                const cantidad = parseFloat(fila.querySelector('input[type="number"]').value);
-                const obligatorio = fila.querySelector('input[type="checkbox"]').checked;
-                const unidad = fila.querySelector('.unidad').innerText;
-                if (ingId && cantidad > 0) {
-                    ingredientes[ingId] = { cantidad, obligatorio, unidad };
+        // Renderizar inventario
+        function renderizarInventario() {
+            const grid = document.getElementById('inventarioGrid');
+            grid.innerHTML = '';
+            
+            inventarioItems.forEach(item => {
+                const porcentajeStock = item.minimo > 0 ? (item.stock / item.minimo) * 100 : 100;
+                const critical = item.stock <= item.minimo;
+                
+                const card = document.createElement('div');
+                card.className = 'inventario-card';
+                card.innerHTML = `
+                    <div class="inventario-header">
+                        <span class="inventario-nombre">${item.nombre}</span>
+                        <div class="inventario-actions">
+                            <button onclick="editarIngrediente('${item.id}')"><i class="fas fa-edit"></i></button>
+                            <button onclick="eliminarIngrediente('${item.id}')"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </div>
+                    <div class="inventario-stock">
+                        <strong>Stock:</strong> ${item.stock || 0} ${item.unidad_base || 'unidades'}
+                        <div class="stock-bar">
+                            <div class="stock-fill ${critical ? 'critical' : ''}" style="width: ${Math.min(porcentajeStock, 100)}%"></div>
+                        </div>
+                    </div>
+                    <div class="inventario-info">
+                        <div>
+                            <strong>Mínimo:</strong><br>
+                            <span class="inventario-minimo">${item.minimo || 0} ${item.unidad_base || 'unidades'}</span>
+                        </div>
+                        <div>
+                            <strong>Costo:</strong><br>
+                            ${formatUSD(item.precio_costo || 0)} / ${formatBs(usdToBs(item.precio_costo || 0))}
+                        </div>
+                        <div>
+                            <strong>Venta:</strong><br>
+                            ${formatUSD(item.precio_unitario || 0)} / ${formatBs(usdToBs(item.precio_unitario || 0))}
+                        </div>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        // Cargar usuarios
+        async function cargarUsuarios() {
+            try {
+                const { data, error } = await supabase
+                    .from('usuarios')
+                    .select('*')
+                    .order('created_at', { ascending: false });
+                
+                if (error) throw error;
+                usuarios = data || [];
+                renderizarUsuarios();
+            } catch (error) {
+                console.error('Error cargando usuarios:', error);
+            }
+        }
+
+        // Renderizar usuarios
+        function renderizarUsuarios() {
+            const grid = document.getElementById('usuariosGrid');
+            grid.innerHTML = '';
+            
+            usuarios.forEach(user => {
+                const card = document.createElement('div');
+                card.className = 'usuario-card';
+                card.innerHTML = `
+                    <div class="usuario-header">
+                        <span class="usuario-nombre">${user.nombre}</span>
+                        <span class="${user.activo ? 'activo' : 'inactivo'}">${user.activo ? 'Activo' : 'Inactivo'}</span>
+                    </div>
+                    <div class="usuario-username">@${user.username}</div>
+                    <div class="usuario-estado">
+                        <span>Rol: ${user.rol || 'cajero'}</span>
+                    </div>
+                    <div class="usuario-actions">
+                        <button class="btn-small ${user.activo ? 'danger' : 'success'}" onclick="toggleUsuarioActivo('${user.id}', ${!user.activo})">
+                            ${user.activo ? 'Desactivar' : 'Activar'}
+                        </button>
+                        <button class="btn-small danger" onclick="eliminarUsuario('${user.id}')">
+                            Eliminar
+                        </button>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        // Cargar QRs
+        async function cargarQRs() {
+            try {
+                const { data, error } = await supabase
+                    .from('codigos_qr')
+                    .select('*')
+                    .order('fecha', { ascending: false });
+                
+                if (error) throw error;
+                qrCodes = data || [];
+                renderizarQRs();
+            } catch (error) {
+                console.error('Error cargando QRs:', error);
+            }
+        }
+
+        // Renderizar QRs
+        function renderizarQRs() {
+            const grid = document.getElementById('qrGrid');
+            grid.innerHTML = '';
+            
+            qrCodes.forEach(qr => {
+                const url = `${window.location.origin}/cliente.html?mesa=${encodeURIComponent(qr.nombre)}`;
+                
+                const card = document.createElement('div');
+                card.className = 'qr-card';
+                card.innerHTML = `
+                    <div class="qr-image" id="qr-${qr.id}"></div>
+                    <div class="qr-nombre">${qr.nombre}</div>
+                    <div class="qr-url">${url}</div>
+                    <div class="qr-actions">
+                        <button onclick="ampliarQR('${qr.id}', '${qr.nombre}', '${url}')" title="Ampliar"><i class="fas fa-expand"></i></button>
+                        <button onclick="eliminarQR('${qr.id}')" title="Eliminar"><i class="fas fa-trash"></i></button>
+                    </div>
+                `;
+                grid.appendChild(card);
+                
+                // Generar QR
+                new QRCode(document.getElementById(`qr-${qr.id}`), {
+                    text: url,
+                    width: 150,
+                    height: 150
+                });
+            });
+        }
+
+        // Cargar pedidos recientes
+        async function cargarPedidosRecientes() {
+            try {
+                const { data, error } = await supabase
+                    .from('pedidos')
+                    .select('*')
+                    .order('timestamp', { ascending: false })
+                    .limit(5);
+                
+                if (error) throw error;
+                
+                const container = document.getElementById('pedidosRecientes');
+                container.innerHTML = data.map(p => `
+                    <div class="alert-item">
+                        <span><strong>${p.id}</strong> - ${formatUSD(p.total || 0)}</span>
+                        <small>${new Date(p.timestamp).toLocaleString()}</small>
+                    </div>
+                `).join('') || '<p>No hay pedidos recientes</p>';
+            } catch (error) {
+                console.error('Error cargando pedidos recientes:', error);
+            }
+        }
+
+        // Actualizar estadísticas del dashboard
+        async function actualizarProductosActivos() {
+            const activos = menuItems.filter(m => m.disponible).length;
+            document.getElementById('productosActivos').textContent = activos;
+        }
+
+        async function actualizarAlertasStock() {
+            const alertas = inventarioItems.filter(i => i.stock <= i.minimo).length;
+            document.getElementById('alertasStock').textContent = alertas;
+            
+            // Mostrar stock crítico
+            const stockCriticoDiv = document.getElementById('stockCritico');
+            const itemsCriticos = inventarioItems.filter(i => i.stock <= i.minimo);
+            
+            stockCriticoDiv.innerHTML = itemsCriticos.map(item => `
+                <div class="alert-item critical">
+                    <span>${item.nombre} - Stock: ${item.stock || 0} ${item.unidad_base || 'unidades'} (Mínimo: ${item.minimo || 0})</span>
+                    <button class="btn-small" onclick="agregarStock('${item.id}')">
+                        <i class="fas fa-plus"></i> Agregar
+                    </button>
+                </div>
+            `).join('') || '<p>No hay alertas de stock</p>';
+        }
+
+        // Configurar event listeners
+        function setupEventListeners() {
+            // Login
+            document.getElementById('loginForm').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const password = document.getElementById('adminPassword').value;
+                
+                try {
+                    const { data, error } = await supabase
+                        .from('config')
+                        .select('admin_password')
+                        .eq('id', 1)
+                        .single();
+                    
+                    if (error || data.admin_password !== password) {
+                        alert('Contraseña incorrecta');
+                        return;
+                    }
+                    
+                    isAdminAuthenticated = true;
+                    sessionStorage.setItem('admin_authenticated', 'true');
+                    mostrarPanel();
+                } catch (error) {
+                    console.error('Error en login:', error);
+                    alert('Error al iniciar sesión');
                 }
             });
 
-            const stockCalculado = parseInt(document.getElementById('stockCalculado').innerText);
+            // Recuperación de contraseña
+            document.getElementById('recoveryLink').addEventListener('click', async (e) => {
+                e.preventDefault();
+                
+                // Simular envío de código
+                const codigo = Math.floor(100000 + Math.random() * 900000);
+                console.log('Código de recuperación (simulado):', codigo);
+                
+                const codigoIngresado = prompt('Ingresa el código de recuperación (revisa la consola):');
+                
+                if (codigoIngresado === codigo.toString()) {
+                    const { data } = await supabase
+                        .from('config')
+                        .select('admin_password, recovery_email')
+                        .eq('id', 1)
+                        .single();
+                    
+                    alert(`Tu contraseña es: ${data.admin_password}\nCorreo de recuperación: ${data.recovery_email}`);
+                } else {
+                    alert('Código incorrecto');
+                }
+            });
 
-            const platillo = {
-                id,
-                nombre,
-                categoria,
-                subcategoria,
-                precio,
-                descripcion,
-                imagen,
-                ingredientes,
-                stock: stockCalculado,
-                stock_maximo: stockCalculado,
-                disponible: true,
-                created_at: new Date().toISOString()
-            };
+            // Logout
+            document.getElementById('logoutButton').addEventListener('click', () => {
+                sessionStorage.removeItem('admin_authenticated');
+                isAdminAuthenticated = false;
+                mostrarLogin();
+            });
 
-            const { error } = await supabase.from('menu').upsert([platillo]);
-            if (error) alert('Error: ' + error.message);
-            else cerrarModalPlatillo();
-        });
+            // Guardar todo
+            document.getElementById('saveAllButton').addEventListener('click', async () => {
+                await guardarConfiguracion();
+            });
 
+            // Cambios en tasa
+            document.getElementById('tasaBaseInput').addEventListener('change', recalcularTasaEfectiva);
+            document.getElementById('aumentoDiarioInput').addEventListener('change', recalcularTasaEfectiva);
+            document.getElementById('aumentoActivoToggle').addEventListener('change', recalcularTasaEfectiva);
+
+            // Botones de aumento
+            document.getElementById('detenerAumentoBtn').addEventListener('click', () => {
+                document.getElementById('aumentoActivoToggle').checked = false;
+                configGlobal.aumento_detenido = true;
+                recalcularTasaEfectiva();
+            });
+
+            document.getElementById('activarAumentoBtn').addEventListener('click', () => {
+                document.getElementById('aumentoActivoToggle').checked = true;
+                configGlobal.aumento_detenido = false;
+                recalcularTasaEfectiva();
+            });
+
+            // Pestañas
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    
+                    const tabId = tab.dataset.tab;
+                    document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+                    document.getElementById(tabId + 'Pane').classList.add('active');
+                    
+                    if (tabId === 'reportes') {
+                        cargarReportes();
+                    }
+                });
+            });
+
+            // Cerrar modales
+            document.getElementById('closePlatilloModal').addEventListener('click', () => {
+                document.getElementById('platilloModal').classList.remove('active');
+                platilloEditandoId = null;
+            });
+            
+            document.getElementById('cancelPlatillo').addEventListener('click', () => {
+                document.getElementById('platilloModal').classList.remove('active');
+                platilloEditandoId = null;
+            });
+
+            document.getElementById('closeIngredienteModal').addEventListener('click', () => {
+                document.getElementById('ingredienteModal').classList.remove('active');
+            });
+            
+            document.getElementById('cancelIngrediente').addEventListener('click', () => {
+                document.getElementById('ingredienteModal').classList.remove('active');
+            });
+
+            document.getElementById('closeUsuarioModal').addEventListener('click', () => {
+                document.getElementById('usuarioModal').classList.remove('active');
+            });
+            
+            document.getElementById('cancelUsuario').addEventListener('click', () => {
+                document.getElementById('usuarioModal').classList.remove('active');
+            });
+
+            document.getElementById('closeQrAmpliadoModal').addEventListener('click', () => {
+                document.getElementById('qrAmpliadoModal').classList.remove('active');
+            });
+            
+            document.getElementById('closeQrAmpliado').addEventListener('click', () => {
+                document.getElementById('qrAmpliadoModal').classList.remove('active');
+            });
+
+            // Preview de imagen
+            document.getElementById('platilloImagen').addEventListener('change', function(e) {
+                if (this.files && this.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        document.getElementById('previewImg').src = e.target.result;
+                        document.getElementById('imagenPreview').style.display = 'flex';
+                    };
+                    reader.readAsDataURL(this.files[0]);
+                }
+            });
+
+            document.getElementById('platilloImagenUrl').addEventListener('input', function(e) {
+                if (this.value) {
+                    document.getElementById('previewImg').src = this.value;
+                    document.getElementById('imagenPreview').style.display = 'flex';
+                }
+            });
+
+            // Guardar platillo
+            document.getElementById('savePlatillo').addEventListener('click', guardarPlatillo);
+        }
+
+        // Función para limpiar preview de imagen
+        function limpiarImagenPreview() {
+            document.getElementById('platilloImagen').value = '';
+            document.getElementById('platilloImagenUrl').value = '';
+            document.getElementById('imagenPreview').style.display = 'none';
+            document.getElementById('previewImg').src = '';
+        }
+
+        // Función para guardar platillo
+        async function guardarPlatillo() {
+            try {
+                // Mostrar indicador de carga
+                const saveBtn = document.getElementById('savePlatillo');
+                const originalText = saveBtn.textContent;
+                saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+                saveBtn.disabled = true;
+
+                // Obtener datos del formulario
+                const nombre = document.getElementById('platilloNombre').value;
+                const categoria = document.getElementById('platilloCategoria').value;
+                const subcategoria = document.getElementById('platilloSubcategoria').value;
+                const precio = parseFloat(document.getElementById('platilloPrecio').value);
+                const descripcion = document.getElementById('platilloDescripcion').value;
+                const disponible = document.getElementById('platilloDisponible').value === 'true';
+                
+                if (!nombre || !categoria || !precio) {
+                    alert('Por favor completa los campos obligatorios');
+                    return;
+                }
+
+                // Procesar imagen
+                let imagenUrl = '';
+                const archivoImagen = document.getElementById('platilloImagen').files[0];
+                const imagenUrlInput = document.getElementById('platilloImagenUrl').value;
+                
+                if (archivoImagen) {
+                    // Subir archivo al bucket 'imagenes-platillos'
+                    const resultado = await subirImagenPlatillo(archivoImagen, 'menu');
+                    if (resultado.success) {
+                        imagenUrl = resultado.url;
+                    } else {
+                        alert('Error al subir la imagen: ' + resultado.error);
+                        return;
+                    }
+                } else if (imagenUrlInput) {
+                    // Usar URL proporcionada
+                    imagenUrl = imagenUrlInput;
+                }
+                
+                // Procesar ingredientes
+                const ingredientes = {};
+                const ingredienteRows = document.querySelectorAll('#ingredientesContainer .ingrediente-row');
+                ingredienteRows.forEach(row => {
+                    const select = row.querySelector('select');
+                    const cantidad = row.querySelector('input[type="number"]').value;
+                    const unidad = row.querySelectorAll('input')[1]?.value || '';
+                    
+                    if (select && select.value && cantidad) {
+                        ingredientes[select.value] = {
+                            cantidad: parseFloat(cantidad),
+                            unidad: unidad,
+                            nombre: select.options[select.selectedIndex]?.text || select.value
+                        };
+                    }
+                });
+                
+                // Crear objeto del platillo
+                const platillo = {
+                    id: platilloEditandoId || generarId('plat_'),
+                    nombre: nombre,
+                    categoria: categoria,
+                    subcategoria: subcategoria || null,
+                    precio: precio,
+                    descripcion: descripcion,
+                    imagen: imagenUrl,
+                    ingredientes: ingredientes,
+                    disponible: disponible,
+                    stock: 0, // Se calculará después
+                    stock_maximo: 0
+                };
+                
+                let error;
+                if (platilloEditandoId) {
+                    // Actualizar existente
+                    ({ error } = await supabase
+                        .from('menu')
+                        .update(platillo)
+                        .eq('id', platilloEditandoId));
+                } else {
+                    // Insertar nuevo
+                    ({ error } = await supabase
+                        .from('menu')
+                        .insert([platillo]));
+                }
+                
+                if (error) throw error;
+                
+                // Cerrar modal y recargar menú
+                document.getElementById('platilloModal').classList.remove('active');
+                platilloEditandoId = null;
+                limpiarImagenPreview();
+                await cargarMenu();
+                
+                alert('Platillo guardado exitosamente');
+                
+            } catch (error) {
+                console.error('Error guardando platillo:', error);
+                alert('Error al guardar el platillo: ' + error.message);
+            } finally {
+                const saveBtn = document.getElementById('savePlatillo');
+                saveBtn.innerHTML = 'Guardar';
+                saveBtn.disabled = false;
+            }
+        }
+
+        // Función para editar platillo
         function editarPlatillo(id) {
-            const p = menu.find(m => m.id === id);
-            if (!p) return;
-            document.getElementById('modalPlatilloTitulo').innerText = 'Editar Platillo';
-            document.getElementById('platilloId').value = p.id;
-            document.getElementById('platilloNombre').value = p.nombre;
-            document.getElementById('platilloCategoria').value = p.categoria;
-            if (p.subcategoria) {
-                document.getElementById('subcategoriaGroup').style.display = 'block';
-                document.getElementById('platilloSubcategoria').innerHTML = `<option value="${p.subcategoria}">${p.subcategoria}</option>`;
-            } else {
-                document.getElementById('subcategoriaGroup').style.display = 'none';
+            const platillo = menuItems.find(p => p.id === id);
+            if (!platillo) return;
+            
+            platilloEditandoId = id;
+            document.getElementById('platilloModalTitle').textContent = 'Editar Platillo';
+            
+            // Limpiar preview
+            limpiarImagenPreview();
+            
+            // Llenar formulario
+            document.getElementById('platilloNombre').value = platillo.nombre || '';
+            document.getElementById('platilloCategoria').value = platillo.categoria || '';
+            document.getElementById('platilloSubcategoria').value = platillo.subcategoria || '';
+            document.getElementById('platilloPrecio').value = platillo.precio || '';
+            document.getElementById('platilloDescripcion').value = platillo.descripcion || '';
+            document.getElementById('platilloDisponible').value = platillo.disponible ? 'true' : 'false';
+            
+            // Mostrar preview de imagen si existe
+            if (platillo.imagen) {
+                document.getElementById('previewImg').src = platillo.imagen;
+                document.getElementById('imagenPreview').style.display = 'flex';
+                document.getElementById('platilloImagenUrl').value = platillo.imagen;
             }
-            document.getElementById('platilloPrecio').value = p.precio;
-            document.getElementById('platilloDescripcion').value = p.descripcion || '';
-            document.getElementById('platilloImagenUrl').value = p.imagen || '';
-            document.getElementById('platilloImagenPreview').src = p.imagen || '';
-            document.getElementById('platilloImagenPreview').style.display = p.imagen ? 'block' : 'none';
-            // Ingredientes
-            const container = document.getElementById('ingredientesList');
-            container.innerHTML = '';
-            for (let [ingId, data] of Object.entries(p.ingredientes || {})) {
-                const ing = inventario.find(i => i.id === ingId);
-                if (ing) {
-                    const div = document.createElement('div');
-                    div.className = 'ingrediente-fila';
-                    div.innerHTML = `
-                        <input type="text" value="${ing.nombre}" list="ingredientesLista" onchange="buscarIngrediente(this)" data-id="${ingId}">
-                        <input type="number" step="${ing.unidad==='unidades'?1:0.01}" value="${data.cantidad}" onchange="calcularStockPlatilloLocal()">
-                        <span class="unidad">${ing.unidad}</span>
-                        <label><input type="checkbox" ${data.obligatorio ? 'checked' : ''}> Obligatorio</label>
-                        <button type="button" onclick="this.parentElement.remove(); calcularStockPlatilloLocal();"><i class="fas fa-trash"></i></button>
-                    `;
-                    container.appendChild(div);
+            
+            // Cargar subcategorías
+            cargarSubcategoriasSelect(platillo.categoria);
+            
+            // Limpiar y cargar ingredientes
+            document.getElementById('ingredientesContainer').innerHTML = '';
+            if (platillo.ingredientes) {
+                Object.entries(platillo.ingredientes).forEach(([ingId, ingInfo]) => {
+                    agregarIngredienteRow(ingId, ingInfo.cantidad, ingInfo.unidad);
+                });
+            }
+            
+            document.getElementById('platilloModal').classList.add('active');
+        }
+
+        // Función para eliminar platillo
+        async function eliminarPlatillo(id) {
+            if (!confirm('¿Estás seguro de eliminar este platillo?')) return;
+            
+            try {
+                // Obtener platillo para eliminar imagen si existe
+                const platillo = menuItems.find(p => p.id === id);
+                if (platillo && platillo.imagen && platillo.imagen.includes('imagenes-platillos')) {
+                    await eliminarImagenPlatillo(platillo.imagen);
+                }
+                
+                const { error } = await supabase
+                    .from('menu')
+                    .delete()
+                    .eq('id', id);
+                
+                if (error) throw error;
+                
+                await cargarMenu();
+            } catch (error) {
+                console.error('Error eliminando platillo:', error);
+                alert('Error al eliminar el platillo');
+            }
+        }
+
+        // Recalcular tasa efectiva
+        function recalcularTasaEfectiva() {
+            const tasaBase = parseFloat(document.getElementById('tasaBaseInput').value) || 0;
+            const aumentoDiario = parseFloat(document.getElementById('aumentoDiarioInput').value) || 0;
+            const aumentoActivo = document.getElementById('aumentoActivoToggle').checked;
+            
+            let aumentoAcumulado = configGlobal.aumento_acumulado || 0;
+            
+            if (aumentoActivo && !configGlobal.aumento_detenido) {
+                // Calcular aumento desde última actualización
+                const ahora = new Date();
+                if (configGlobal.fecha_ultimo_aumento) {
+                    const ultimo = new Date(configGlobal.fecha_ultimo_aumento);
+                    const dias = Math.floor((ahora - ultimo) / (1000 * 60 * 60 * 24));
+                    aumentoAcumulado += dias * aumentoDiario;
                 }
             }
-            calcularStockPlatilloLocal();
-            document.getElementById('modalPlatillo').style.display = 'flex';
+            
+            const tasaEfectiva = tasaBase * (1 + aumentoAcumulado / 100);
+            
+            document.getElementById('tasaEfectivaDisplay').textContent = tasaEfectiva.toFixed(2);
+            document.getElementById('aumentoAcumuladoDisplay').textContent = aumentoAcumulado.toFixed(2) + '%';
+            
+            // Actualizar objeto global
+            configGlobal.tasa_cambio = tasaBase;
+            configGlobal.aumento_diario = aumentoDiario;
+            configGlobal.aumento_activo = aumentoActivo;
+            configGlobal.aumento_acumulado = aumentoAcumulado;
+            configGlobal.tasa_efectiva = tasaEfectiva;
         }
 
-        function eliminarPlatillo(id) {
-            if (confirm('¿Eliminar platillo?')) {
-                supabase.from('menu').delete().eq('id', id);
+        // Guardar configuración
+        async function guardarConfiguracion() {
+            try {
+                const { error } = await supabase
+                    .from('config')
+                    .update({
+                        tasa_cambio: configGlobal.tasa_cambio,
+                        aumento_diario: configGlobal.aumento_diario,
+                        aumento_activo: configGlobal.aumento_activo,
+                        aumento_detenido: configGlobal.aumento_detenido,
+                        aumento_acumulado: configGlobal.aumento_acumulado,
+                        tasa_efectiva: configGlobal.tasa_efectiva,
+                        ultima_actualizacion: new Date().toISOString()
+                    })
+                    .eq('id', 1);
+                
+                if (error) throw error;
+                alert('Configuración guardada');
+            } catch (error) {
+                console.error('Error guardando configuración:', error);
+                alert('Error al guardar la configuración');
             }
         }
 
-        // ========== INVENTARIO ==========
-        function renderInventarioTable() {
-            const tbody = document.querySelector('#inventarioTable tbody');
-            tbody.innerHTML = '';
-            inventario.forEach(i => {
-                const porcentaje = (i.stock / i.minimo) * 100;
-                let color = 'green';
-                if (i.stock < i.minimo) color = 'red';
-                else if (i.stock < i.minimo * 2) color = 'orange';
-                const barra = `<div style="background:${color}; width:${Math.min(porcentaje,100)}%; height:20px;"></div>`;
-                tbody.innerHTML += `<tr>
-                    <td>${i.nombre}</td>
-                    <td>${i.stock} ${i.unidad}</td>
-                    <td>${i.minimo}</td>
-                    <td>${i.precio_costo} USD</td>
-                    <td>${i.precio_unitario} USD</td>
-                    <td>${barra}</td>
-                    <td><button onclick="editarIngrediente('${i.id}')"><i class="fas fa-edit"></i></button></td>
-                </tr>`;
+        // Funciones para menú
+        function abrirModalNuevoPlatillo() {
+            document.getElementById('platilloModalTitle').textContent = 'Nuevo Platillo';
+            document.getElementById('platilloForm').reset();
+            document.getElementById('ingredientesContainer').innerHTML = '';
+            limpiarImagenPreview();
+            cargarCategoriasSelect();
+            platilloEditandoId = null;
+            document.getElementById('platilloModal').classList.add('active');
+        }
+
+        function cargarCategoriasSelect() {
+            const select = document.getElementById('platilloCategoria');
+            select.innerHTML = '<option value="">Seleccionar</option>';
+            
+            Object.keys(categoriasMenu).forEach(cat => {
+                const option = document.createElement('option');
+                option.value = cat;
+                option.textContent = cat;
+                select.appendChild(option);
+            });
+            
+            select.addEventListener('change', (e) => {
+                cargarSubcategoriasSelect(e.target.value);
             });
         }
 
-        function abrirModalIngrediente() {
-            document.getElementById('modalIngredienteTitulo').innerText = 'Nuevo Ingrediente';
-            document.getElementById('formIngrediente').reset();
-            document.getElementById('ingredienteId').value = '';
-            document.getElementById('btnEliminarIngrediente').style.display = 'none';
-            document.getElementById('modalIngrediente').style.display = 'flex';
-        }
-
-        function cerrarModalIngrediente() {
-            document.getElementById('modalIngrediente').style.display = 'none';
-        }
-
-        function calcularStockTotal() {
-            const stockActual = parseFloat(document.getElementById('ingredienteStock').value) || 0;
-            const nuevo = parseFloat(document.getElementById('ingredienteStockNuevo').value) || 0;
-            document.getElementById('ingredienteStockTotal').value = stockActual + nuevo;
-        }
-
-        function calcularPrecioUnitario() {
-            const total = parseFloat(document.getElementById('costoTotalCompra').value) || 0;
-            const cantidad = parseFloat(document.getElementById('cantidadComprada').value) || 0;
-            if (cantidad > 0) {
-                document.getElementById('precioCostoUnitario').value = (total / cantidad).toFixed(2);
+        function cargarSubcategoriasSelect(categoria) {
+            const select = document.getElementById('platilloSubcategoria');
+            select.innerHTML = '<option value="">Ninguna</option>';
+            
+            if (categoria && categoriasMenu[categoria]) {
+                categoriasMenu[categoria].forEach(sub => {
+                    const option = document.createElement('option');
+                    option.value = sub;
+                    option.textContent = sub;
+                    select.appendChild(option);
+                });
             }
         }
 
-        document.getElementById('formIngrediente').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const id = document.getElementById('ingredienteId').value || 'ing_' + Date.now();
-            const nombre = document.getElementById('ingredienteNombre').value;
-            const unidad = document.getElementById('ingredienteUnidad').value;
-            const stockNuevo = parseFloat(document.getElementById('ingredienteStockNuevo').value) || 0;
-            const stockActual = parseFloat(document.getElementById('ingredienteStock').value) || 0;
-            const stock = stockActual + stockNuevo;
-            const minimo = parseFloat(document.getElementById('ingredienteMinimo').value);
-            const precioCosto = parseFloat(document.getElementById('precioCostoUnitario').value) || 0;
-            const precioVenta = parseFloat(document.getElementById('precioVentaUnitario').value);
+        function agregarIngredienteRow(ingredienteId = '', cantidad = '', unidad = '') {
+            const container = document.getElementById('ingredientesContainer');
+            const row = document.createElement('div');
+            row.className = 'ingrediente-row';
+            
+            const select = document.createElement('select');
+            select.innerHTML = '<option value="">Seleccionar ingrediente</option>';
+            inventarioItems.forEach(ing => {
+                const option = document.createElement('option');
+                option.value = ing.id;
+                option.textContent = ing.nombre;
+                if (ing.id === ingredienteId) option.selected = true;
+                select.appendChild(option);
+            });
+            
+            const inputCantidad = document.createElement('input');
+            inputCantidad.type = 'number';
+            inputCantidad.step = '0.01';
+            inputCantidad.placeholder = 'Cantidad';
+            inputCantidad.value = cantidad;
+            
+            const inputUnidad = document.createElement('input');
+            inputUnidad.type = 'text';
+            inputUnidad.placeholder = 'Unidad (ej: gramos, unidades)';
+            inputUnidad.value = unidad;
+            
+            const removeBtn = document.createElement('button');
+            removeBtn.innerHTML = '<i class="fas fa-times"></i>';
+            removeBtn.onclick = () => row.remove();
+            
+            row.appendChild(select);
+            row.appendChild(inputCantidad);
+            row.appendChild(inputUnidad);
+            row.appendChild(removeBtn);
+            
+            container.appendChild(row);
+        }
 
-            const ingrediente = {
-                id,
-                nombre,
-                unidad,
-                stock,
-                minimo,
-                precio_costo: precioCosto,
-                precio_unitario: precioVenta
-            };
-
-            const { error } = await supabase.from('inventario').upsert([ingrediente]);
-            if (error) alert('Error: ' + error.message);
-            else cerrarModalIngrediente();
-        });
+        // Funciones para inventario
+        function abrirModalNuevoIngrediente() {
+            document.getElementById('ingredienteModalTitle').textContent = 'Nuevo Ingrediente';
+            document.getElementById('ingredienteForm').reset();
+            document.getElementById('ingredienteStock').disabled = true;
+            document.getElementById('ingredienteStock').value = 0;
+            document.getElementById('stockActualField').classList.add('password-protected');
+            document.getElementById('stockUnlock').style.display = 'block';
+            document.getElementById('ingredienteModal').classList.add('active');
+        }
 
         function editarIngrediente(id) {
-            const ing = inventario.find(i => i.id === id);
-            if (!ing) return;
-            document.getElementById('modalIngredienteTitulo').innerText = 'Editar Ingrediente';
-            document.getElementById('ingredienteId').value = ing.id;
-            document.getElementById('ingredienteNombre').value = ing.nombre;
-            document.getElementById('ingredienteUnidad').value = ing.unidad;
-            document.getElementById('ingredienteStock').value = ing.stock;
-            document.getElementById('ingredienteMinimo').value = ing.minimo;
-            document.getElementById('precioCostoUnitario').value = ing.precio_costo;
-            document.getElementById('precioVentaUnitario').value = ing.precio_unitario;
-            document.getElementById('btnEliminarIngrediente').style.display = 'inline-block';
-            document.getElementById('modalIngrediente').style.display = 'flex';
+            const ingrediente = inventarioItems.find(i => i.id === id);
+            if (!ingrediente) return;
+            
+            document.getElementById('ingredienteModalTitle').textContent = 'Editar Ingrediente';
+            document.getElementById('ingredienteNombre').value = ingrediente.nombre || '';
+            document.getElementById('ingredienteStock').value = ingrediente.stock || 0;
+            document.getElementById('ingredienteUnidad').value = ingrediente.unidad_base || 'unidades';
+            document.getElementById('ingredienteMinimo').value = ingrediente.minimo || 0;
+            document.getElementById('ingredienteCosto').value = ingrediente.precio_costo || 0;
+            document.getElementById('ingredienteVenta').value = ingrediente.precio_unitario || 0;
+            document.getElementById('ingredienteAgregar').value = '';
+            
+            // Bloquear stock si no se ha desbloqueado
+            document.getElementById('ingredienteStock').disabled = true;
+            document.getElementById('stockActualField').classList.add('password-protected');
+            document.getElementById('stockUnlock').style.display = 'block';
+            document.getElementById('stockPassword').value = '';
+            
+            document.getElementById('ingredienteModal').classList.add('active');
         }
 
-        async function eliminarIngrediente() {
-            const id = document.getElementById('ingredienteId').value;
-            if (!id) return;
-            // Verificar si está en uso
-            const enUso = menu.some(p => p.ingredientes && p.ingredientes[id]);
-            if (enUso) {
-                alert('No se puede eliminar porque está en uso en algún platillo.');
+        function desbloquearStock() {
+            const password = document.getElementById('stockPassword').value;
+            
+            // Verificar contraseña de admin
+            if (password === configGlobal.admin_password) {
+                document.getElementById('ingredienteStock').disabled = false;
+                document.getElementById('stockActualField').classList.remove('password-protected');
+                document.getElementById('stockUnlock').style.display = 'none';
+            } else {
+                alert('Contraseña incorrecta');
+            }
+        }
+
+        function calcularCostoUnitario() {
+            const costoTotal = parseFloat(document.getElementById('costoTotal').value) || 0;
+            const cantidad = parseFloat(document.getElementById('cantidadComprada').value) || 1;
+            
+            if (costoTotal && cantidad) {
+                document.getElementById('ingredienteCosto').value = (costoTotal / cantidad).toFixed(2);
+            }
+        }
+
+        function agregarStock(ingredienteId) {
+            const ingrediente = inventarioItems.find(i => i.id === ingredienteId);
+            if (ingrediente) {
+                editarIngrediente(ingredienteId);
+                // Enfocar campo de agregar stock
+                setTimeout(() => {
+                    document.getElementById('ingredienteAgregar').focus();
+                }, 500);
+            }
+        }
+
+        // Funciones para usuarios
+        function abrirModalNuevoUsuario() {
+            document.getElementById('usuarioForm').reset();
+            document.getElementById('usuarioModal').classList.add('active');
+        }
+
+        async function toggleUsuarioActivo(userId, activo) {
+            try {
+                const { error } = await supabase
+                    .from('usuarios')
+                    .update({ activo: activo })
+                    .eq('id', userId);
+                
+                if (error) throw error;
+                await cargarUsuarios();
+            } catch (error) {
+                console.error('Error actualizando usuario:', error);
+                alert('Error al actualizar el usuario');
+            }
+        }
+
+        async function eliminarUsuario(userId) {
+            if (!confirm('¿Estás seguro de eliminar este usuario?')) return;
+            
+            try {
+                const { error } = await supabase
+                    .from('usuarios')
+                    .delete()
+                    .eq('id', userId);
+                
+                if (error) throw error;
+                await cargarUsuarios();
+            } catch (error) {
+                console.error('Error eliminando usuario:', error);
+                alert('Error al eliminar el usuario');
+            }
+        }
+
+        // Funciones para QR
+        async function generarQR() {
+            const nombre = document.getElementById('qrNombreMesa').value.trim();
+            if (!nombre) {
+                alert('Ingresa un nombre para la mesa');
                 return;
             }
-            if (confirm('¿Eliminar ingrediente?')) {
-                await supabase.from('inventario').delete().eq('id', id);
-                cerrarModalIngrediente();
+            
+            const qr = {
+                id: generarId('QR_'),
+                nombre: nombre,
+                fecha: new Date().toISOString()
+            };
+            
+            try {
+                const { error } = await supabase
+                    .from('codigos_qr')
+                    .insert([qr]);
+                
+                if (error) throw error;
+                
+                document.getElementById('qrNombreMesa').value = '';
+                await cargarQRs();
+            } catch (error) {
+                console.error('Error generando QR:', error);
+                alert('Error al generar el código QR');
             }
         }
 
-        // ========== USUARIOS ==========
-        function renderUsuariosTable() {
-            const tbody = document.querySelector('#usuariosTable tbody');
-            tbody.innerHTML = '';
-            usuarios.forEach(u => {
-                tbody.innerHTML += `<tr>
-                    <td>${u.nombre}</td>
-                    <td>${u.username}</td>
-                    <td><input type="checkbox" ${u.activo ? 'checked' : ''} onchange="toggleUsuarioActivo('${u.id}', this.checked)"></td>
-                    <td><button onclick="eliminarUsuario('${u.id}')"><i class="fas fa-trash"></i></button></td>
-                </tr>`;
+        function ampliarQR(id, nombre, url) {
+            const container = document.getElementById('qrAmpliado');
+            container.innerHTML = '';
+            
+            new QRCode(container, {
+                text: url,
+                width: 300,
+                height: 300
+            });
+            
+            document.getElementById('qrAmpliadoInfo').innerHTML = `
+                <strong>${nombre}</strong><br>
+                <small>${url}</small>
+            `;
+            
+            document.getElementById('qrAmpliadoModal').classList.add('active');
+        }
+
+        async function eliminarQR(id) {
+            if (!confirm('¿Estás seguro de eliminar este código QR?')) return;
+            
+            try {
+                const { error } = await supabase
+                    .from('codigos_qr')
+                    .delete()
+                    .eq('id', id);
+                
+                if (error) throw error;
+                await cargarQRs();
+            } catch (error) {
+                console.error('Error eliminando QR:', error);
+                alert('Error al eliminar el código QR');
+            }
+        }
+
+        // Funciones para reportes
+        async function cargarReportes() {
+            try {
+                const desde = document.getElementById('reporteDesde').value;
+                const hasta = document.getElementById('reporteHasta').value;
+                
+                let query = supabase
+                    .from('pedidos')
+                    .select('*')
+                    .in('estado', ['cobrado', 'entregado', 'enviado', 'reserva_completada']);
+                
+                if (desde) {
+                    query = query.gte('timestamp', new Date(desde).toISOString());
+                }
+                if (hasta) {
+                    const hastaDate = new Date(hasta);
+                    hastaDate.setDate(hastaDate.getDate() + 1);
+                    query = query.lt('timestamp', hastaDate.toISOString());
+                }
+                
+                const { data, error } = await query.order('timestamp', { ascending: false });
+                
+                if (error) throw error;
+                
+                actualizarEstadisticasReportes(data || []);
+                actualizarGraficos(data || []);
+                actualizarTablaVentas(data || []);
+            } catch (error) {
+                console.error('Error cargando reportes:', error);
+            }
+        }
+
+        function actualizarEstadisticasReportes(pedidos) {
+            // Ventas día (últimas 24h)
+            const hoy = new Date();
+            hoy.setHours(0, 0, 0, 0);
+            const ventasHoy = pedidos.filter(p => new Date(p.timestamp) >= hoy)
+                .reduce((sum, p) => sum + (p.total || 0), 0);
+            
+            // Ventas semana (últimos 7 días)
+            const semana = new Date();
+            semana.setDate(semana.getDate() - 7);
+            const ventasSemana = pedidos.filter(p => new Date(p.timestamp) >= semana)
+                .reduce((sum, p) => sum + (p.total || 0), 0);
+            
+            // Ticket promedio
+            const ticketPromedio = pedidos.length > 0 
+                ? pedidos.reduce((sum, p) => sum + (p.total || 0), 0) / pedidos.length 
+                : 0;
+            
+            // Platillo top
+            const platillosCount = {};
+            pedidos.forEach(p => {
+                if (p.items) {
+                    p.items.forEach(item => {
+                        platillosCount[item.nombre] = (platillosCount[item.nombre] || 0) + (item.cantidad || 0);
+                    });
+                }
+            });
+            
+            let platilloTop = '-';
+            let maxCount = 0;
+            for (const [nombre, count] of Object.entries(platillosCount)) {
+                if (count > maxCount) {
+                    maxCount = count;
+                    platilloTop = nombre;
+                }
+            }
+            
+            document.getElementById('ventasDia').textContent = formatUSD(ventasHoy);
+            document.getElementById('ventasSemana').textContent = formatUSD(ventasSemana);
+            document.getElementById('ticketPromedio').textContent = formatUSD(ticketPromedio);
+            document.getElementById('platilloTop').textContent = platilloTop;
+        }
+
+        function actualizarGraficos(pedidos) {
+            // Ventas últimos 7 días
+            const ventasPorDia = {};
+            for (let i = 6; i >= 0; i--) {
+                const fecha = new Date();
+                fecha.setDate(fecha.getDate() - i);
+                const fechaStr = fecha.toISOString().split('T')[0];
+                ventasPorDia[fechaStr] = 0;
+            }
+            
+            pedidos.forEach(p => {
+                const fecha = new Date(p.timestamp).toISOString().split('T')[0];
+                if (ventasPorDia.hasOwnProperty(fecha)) {
+                    ventasPorDia[fecha] += p.total || 0;
+                }
+            });
+            
+            if (charts.ventas) charts.ventas.destroy();
+            charts.ventas = new Chart(document.getElementById('ventasChart'), {
+                type: 'line',
+                data: {
+                    labels: Object.keys(ventasPorDia),
+                    datasets: [{
+                        label: 'Ventas (USD)',
+                        data: Object.values(ventasPorDia),
+                        borderColor: 'var(--primary)',
+                        backgroundColor: 'rgba(211, 47, 47, 0.1)',
+                        tension: 0.1
+                    }]
+                }
+            });
+            
+            // Ventas por categoría
+            const categorias = {};
+            pedidos.forEach(p => {
+                if (p.items) {
+                    p.items.forEach(item => {
+                        const platillo = menuItems.find(m => m.nombre === item.nombre);
+                        const categoria = platillo?.categoria || 'Otros';
+                        categorias[categoria] = (categorias[categoria] || 0) + ((item.precioUnitarioUSD || 0) * (item.cantidad || 0));
+                    });
+                }
+            });
+            
+            if (charts.categorias) charts.categorias.destroy();
+            charts.categorias = new Chart(document.getElementById('categoriasChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(categorias),
+                    datasets: [{
+                        data: Object.values(categorias),
+                        backgroundColor: ['#D32F2F', '#FF9800', '#1976D2', '#388E3C', '#F57C00', '#6c757d']
+                    }]
+                }
+            });
+            
+            // Métodos de pago
+            const metodos = {};
+            pedidos.forEach(p => {
+                if (p.pagos_mixtos && Array.isArray(p.pagos_mixtos)) {
+                    p.pagos_mixtos.forEach(pago => {
+                        const key = pago.metodo || 'otro';
+                        metodos[key] = (metodos[key] || 0) + (pago.monto || 0);
+                    });
+                } else if (p.metodo_pago) {
+                    metodos[p.metodo_pago] = (metodos[p.metodo_pago] || 0) + (p.total || 0);
+                }
+            });
+            
+            if (charts.pagos) charts.pagos.destroy();
+            charts.pagos = new Chart(document.getElementById('pagosChart'), {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(metodos).map(m => {
+                        const nombres = {
+                            efectivo_bs: 'Efectivo Bs',
+                            efectivo_usd: 'Efectivo USD',
+                            pago_movil: 'Pago Móvil',
+                            punto_venta: 'Punto de Venta',
+                            mixto: 'Mixto',
+                            invitacion: 'Invitación'
+                        };
+                        return nombres[m] || m;
+                    }),
+                    datasets: [{
+                        label: 'Monto (USD)',
+                        data: Object.values(metodos).map(v => v / (configGlobal.tasa_efectiva || 400)),
+                        backgroundColor: 'var(--info)'
+                    }]
+                }
+            });
+            
+            // Ventas por hora
+            const horas = {};
+            for (let i = 0; i < 24; i++) {
+                horas[i] = 0;
+            }
+            
+            pedidos.forEach(p => {
+                const hora = new Date(p.timestamp).getHours();
+                horas[hora] += p.total || 0;
+            });
+            
+            if (charts.hora) charts.hora.destroy();
+            charts.hora = new Chart(document.getElementById('horaChart'), {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(horas).map(h => `${h}:00`),
+                    datasets: [{
+                        label: 'Ventas (USD)',
+                        data: Object.values(horas),
+                        backgroundColor: 'var(--accent)'
+                    }]
+                }
             });
         }
 
-        function toggleUsuarioActivo(id, activo) {
-            supabase.from('usuarios').update({ activo }).eq('id', id);
+        function actualizarTablaVentas(pedidos) {
+            const tbody = document.getElementById('ventasTableBody');
+            tbody.innerHTML = '';
+            
+            pedidos.slice(0, 50).forEach(p => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${new Date(p.timestamp).toLocaleDateString()}</td>
+                    <td>${p.id}</td>
+                    <td>${formatUSD(p.total || 0)}</td>
+                    <td>${p.items?.reduce((sum, i) => sum + (i.cantidad || 0), 0) || 0}</td>
+                    <td>${p.metodo_pago || 'N/A'}</td>
+                    <td>${p.tipo || 'N/A'}</td>
+                `;
+                tbody.appendChild(row);
+            });
         }
 
-        function eliminarUsuario(id) {
-            if (confirm('¿Eliminar usuario?')) {
-                supabase.from('usuarios').delete().eq('id', id);
-            }
-        }
-
-        async function crearUsuario() {
-            const nombre = document.getElementById('nuevoNombre').value;
-            const username = document.getElementById('nuevoUsername').value;
-            const password = document.getElementById('nuevoPassword').value;
-            if (!nombre || !username || !password) return alert('Complete todos los campos');
-            const id = 'user_' + Date.now();
-            const { error } = await supabase.from('usuarios').insert([{
-                id, nombre, username, password, rol: 'cajero', activo: true, created_at: new Date().toISOString()
-            }]);
-            if (error) alert(error.message);
-            else {
-                document.getElementById('nuevoNombre').value = '';
-                document.getElementById('nuevoUsername').value = '';
-                document.getElementById('nuevoPassword').value = '';
-            }
-        }
-
-        // ========== CONFIGURACIÓN ==========
+        // Funciones para configuración
         async function cambiarPassword() {
-            const current = document.getElementById('currentPass').value;
-            const newPass = document.getElementById('newPass').value;
-            const confirm = document.getElementById('confirmPass').value;
-            if (newPass !== confirm) return alert('Las contraseñas no coinciden');
-            const { data } = await supabase.from('config').select('admin_password').eq('id',1).single();
-            if (data.admin_password !== current) return alert('Contraseña actual incorrecta');
-            await supabase.from('config').update({ admin_password: newPass }).eq('id',1);
-            alert('Contraseña cambiada');
+            const current = document.getElementById('currentPassword').value;
+            const nueva = document.getElementById('newPassword').value;
+            const confirm = document.getElementById('confirmPassword').value;
+            
+            if (current !== configGlobal.admin_password) {
+                alert('Contraseña actual incorrecta');
+                return;
+            }
+            
+            if (nueva !== confirm) {
+                alert('Las contraseñas no coinciden');
+                return;
+            }
+            
+            if (nueva.length < 4) {
+                alert('La contraseña debe tener al menos 4 caracteres');
+                return;
+            }
+            
+            try {
+                const { error } = await supabase
+                    .from('config')
+                    .update({ admin_password: nueva })
+                    .eq('id', 1);
+                
+                if (error) throw error;
+                
+                configGlobal.admin_password = nueva;
+                alert('Contraseña actualizada');
+                
+                document.getElementById('currentPassword').value = '';
+                document.getElementById('newPassword').value = '';
+                document.getElementById('confirmPassword').value = '';
+            } catch (error) {
+                console.error('Error cambiando contraseña:', error);
+                alert('Error al cambiar la contraseña');
+            }
         }
 
         async function guardarRecoveryEmail() {
             const email = document.getElementById('recoveryEmail').value;
-            await supabase.from('config').update({ recovery_email: email }).eq('id',1);
-        }
-
-        // ========== CÓDIGOS QR ==========
-        function generarQR() {
-            const nombre = document.getElementById('nombreMesa').value;
-            if (!nombre) return;
-            const id = 'QR_' + Date.now();
-            const url = window.location.origin + '/cliente.html?mesa=' + encodeURIComponent(nombre);
-            // Guardar en DB
-            supabase.from('codigos_qr').insert([{ id, nombre, fecha: new Date().toISOString() }]).then(() => {
-                renderQRGrid();
-            });
-        }
-
-        function renderQRGrid() {
-            const grid = document.getElementById('qrGrid');
-            grid.innerHTML = '';
-            codigosQR.forEach(qr => {
-                const url = window.location.origin + '/cliente.html?mesa=' + encodeURIComponent(qr.nombre);
-                const div = document.createElement('div');
-                div.className = 'qr-item';
-                div.innerHTML = `<div id="qrcode-${qr.id}"></div><p>${qr.nombre}</p><div class="qr-overlay"><button onclick="ampliarQR('${qr.id}')">Ampliar</button><button onclick="eliminarQR('${qr.id}')">Eliminar</button></div>`;
-                grid.appendChild(div);
-                new QRCode(document.getElementById(`qrcode-${qr.id}`), { text: url, width: 150, height: 150 });
-            });
-        }
-
-        function ampliarQR(id) {
-            const qr = codigosQR.find(q => q.id === id);
-            if (!qr) return;
-            const url = window.location.origin + '/cliente.html?mesa=' + encodeURIComponent(qr.nombre);
-            const modal = document.createElement('div');
-            modal.className = 'modal';
-            modal.style.display = 'flex';
-            modal.innerHTML = `<div class="modal-content"><span class="close" onclick="this.parentElement.parentElement.remove()">&times;</span><div id="qrGrande"></div><a href="${url}" download="${qr.nombre}.png">Descargar</a></div>`;
-            document.body.appendChild(modal);
-            new QRCode(document.getElementById('qrGrande'), { text: url, width: 300, height: 300 });
-        }
-
-        function eliminarQR(id) {
-            if (confirm('¿Eliminar QR?')) {
-                supabase.from('codigos_qr').delete().eq('id', id);
+            
+            if (!email || !email.includes('@')) {
+                alert('Ingresa un correo válido');
+                return;
+            }
+            
+            try {
+                const { error } = await supabase
+                    .from('config')
+                    .update({ recovery_email: email })
+                    .eq('id', 1);
+                
+                if (error) throw error;
+                alert('Correo de recuperación guardado');
+            } catch (error) {
+                console.error('Error guardando email:', error);
+                alert('Error al guardar el correo');
             }
         }
 
-        // ========== REPORTES ==========
-        function renderReportes() {
-            const hoy = new Date().toISOString().split('T')[0];
-            const ventasHoy = pedidos.filter(p => p.estado === 'cobrado' && p.fecha_cobro && p.fecha_cobro.startsWith(hoy)).reduce((acc, p) => acc + p.total, 0);
-            document.getElementById('repVentasHoy').innerText = ventasHoy.toFixed(2) + ' USD';
-
-            const hace7 = new Date(Date.now() - 7*24*60*60*1000).toISOString();
-            const ventasSemana = pedidos.filter(p => p.estado === 'cobrado' && p.fecha_cobro && p.fecha_cobro >= hace7).reduce((acc, p) => acc + p.total, 0);
-            document.getElementById('repVentasSemana').innerText = ventasSemana.toFixed(2) + ' USD';
-
-            const cobrados = pedidos.filter(p => p.estado === 'cobrado');
-            const ticketProm = cobrados.length ? cobrados.reduce((acc, p) => acc + p.total, 0) / cobrados.length : 0;
-            document.getElementById('repTicketPromedio').innerText = ticketProm.toFixed(2) + ' USD';
-
-            // Platillo más vendido
-            const ventasPorPlatillo = {};
-            cobrados.forEach(p => {
-                p.items.forEach(i => {
-                    ventasPorPlatillo[i.nombre] = (ventasPorPlatillo[i.nombre] || 0) + i.cantidad;
-                });
-            });
-            let topPlatillo = Object.entries(ventasPorPlatillo).sort((a,b) => b[1] - a[1])[0];
-            document.getElementById('repPlatilloTop').innerText = topPlatillo ? `${topPlatillo[0]} (${topPlatillo[1]})` : '-';
-
-            // Gráficos
-            // Ventas diarias últimos 7 días
-            const fechas = [];
-            const ventasDiarias = [];
-            for (let i = 6; i >= 0; i--) {
-                const d = new Date();
-                d.setDate(d.getDate() - i);
-                const fechaStr = d.toISOString().split('T')[0];
-                fechas.push(fechaStr);
-                const total = pedidos.filter(p => p.estado === 'cobrado' && p.fecha_cobro && p.fecha_cobro.startsWith(fechaStr)).reduce((acc, p) => acc + p.total, 0);
-                ventasDiarias.push(total);
-            }
-            new Chart(document.getElementById('chartVentasDiarias'), {
-                type: 'line',
-                data: { labels: fechas, datasets: [{ label: 'Ventas USD', data: ventasDiarias }] }
-            });
-
-            // Ventas por categoría
-            const categorias = {};
-            cobrados.forEach(p => {
-                p.items.forEach(i => {
-                    const platillo = menu.find(m => m.id === i.platilloId);
-                    if (platillo) {
-                        categorias[platillo.categoria] = (categorias[platillo.categoria] || 0) + i.cantidad * platillo.precio;
-                    }
-                });
-            });
-            new Chart(document.getElementById('chartCategorias'), {
-                type: 'doughnut',
-                data: { labels: Object.keys(categorias), datasets: [{ data: Object.values(categorias) }] }
-            });
-
-            // Métodos de pago
-            const metodos = {};
-            cobrados.forEach(p => {
-                metodos[p.metodo_pago] = (metodos[p.metodo_pago] || 0) + 1;
-            });
-            new Chart(document.getElementById('chartMetodosPago'), {
-                type: 'bar',
-                data: { labels: Object.keys(metodos), datasets: [{ label: 'Cantidad', data: Object.values(metodos) }] }
-            });
-
-            // Ventas por hora
-            const horas = Array(24).fill(0);
-            cobrados.forEach(p => {
-                const hora = new Date(p.fecha_cobro).getHours();
-                horas[hora] += p.total;
-            });
-            new Chart(document.getElementById('chartHoras'), {
-                type: 'bar',
-                data: { labels: [...Array(24).keys()], datasets: [{ label: 'Ventas USD', data: horas }] }
-            });
-
-            // Tabla de transacciones
-            const tbody = document.querySelector('#transaccionesTable tbody');
-            tbody.innerHTML = '';
-            cobrados.slice(0,20).forEach(p => {
-                tbody.innerHTML += `<tr>
-                    <td>${new Date(p.fecha_cobro).toLocaleString()}</td>
-                    <td>${p.id}</td>
-                    <td>${p.cajero || ''}</td>
-                    <td>${p.items.length}</td>
-                    <td>${p.total.toFixed(2)}</td>
-                    <td>${p.metodo_pago}</td>
-                    <td>${p.estado}</td>
-                </tr>`;
-            });
-        }
-
-        // ========== UTILIDADES ==========
-        function cambiarTab(tab) {
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-            document.getElementById(`tab${tab.charAt(0).toUpperCase()+tab.slice(1)}`).classList.add('active');
-            document.querySelector(`.tab:nth-child(${['dashboard','menu','inventario','usuarios','config','qr','reportes'].indexOf(tab)+1})`).classList.add('active');
-            if (tab === 'reportes') renderReportes();
-        }
-
-        function guardarTodo() {
-            // Forzar sincronización (no necesario, pero feedback)
-            document.getElementById('syncStatus').innerHTML = '<i class="fas fa-sync-alt fa-spin"></i> Sincronizando...';
-            setTimeout(() => {
-                document.getElementById('syncStatus').innerHTML = '<i class="fas fa-check"></i> Sincronizado';
-            }, 1000);
+        // Suscripciones en tiempo real
+        function setupRealtimeSubscriptions() {
+            const subscription = supabase
+                .channel('admin-changes')
+                .on('postgres_changes', {
+                    event: '*',
+                    schema: 'public',
+                    table: 'menu'
+                }, () => {
+                    cargarMenu();
+                })
+                .on('postgres_changes', {
+                    event: '*',
+                    schema: 'public',
+                    table: 'inventario'
+                }, () => {
+                    cargarInventario();
+                })
+                .on('postgres_changes', {
+                    event: '*',
+                    schema: 'public',
+                    table: 'usuarios'
+                }, () => {
+                    cargarUsuarios();
+                })
+                .on('postgres_changes', {
+                    event: '*',
+                    schema: 'public',
+                    table: 'codigos_qr'
+                }, () => {
+                    cargarQRs();
+                })
+                .subscribe();
         }
     </script>
 </body>
