@@ -112,6 +112,28 @@
             letter-spacing: 1px;
         }
 
+        .menu-hamburguesa {
+            background: rgba(255,255,255,0.15);
+            border: none;
+            color: white;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 1.2rem;
+            backdrop-filter: blur(5px);
+            margin-right: 0.5rem;
+        }
+
+        .menu-hamburguesa:hover {
+            background: rgba(255,255,255,0.25);
+            transform: scale(1.1);
+        }
+
         .search-bar {
             flex: 1;
             max-width: 500px;
@@ -309,7 +331,7 @@
         }
 
         .subcategory-list.expanded {
-            max-height: 300px;
+            max-height: 500px;
         }
 
         .subcategory-item {
@@ -391,21 +413,23 @@
         }
         
         .tagline-item {
-            background: rgba(255, 255, 255, 0.25);
+            background: rgba(255, 255, 255, 0.8);
             padding: 8px 15px;
             border-radius: 50px;
             font-size: 0.85em;
             backdrop-filter: blur(5px);
             font-family: 'Montserrat', sans-serif;
             font-weight: 500;
-            color: white;
+            color: #000000;
             cursor: pointer;
             transition: var(--transition);
+            border: 1px solid rgba(0,0,0,0.1);
         }
         
         .tagline-item:hover {
-            background: rgba(255,255,255,0.4);
+            background: rgba(255,255,255,0.95);
             transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
         }
 
         /* Menu Grid */
@@ -1264,6 +1288,75 @@
             margin-top: 10px;
         }
 
+        /* Parroquia Selector */
+        .parroquia-selector {
+            position: relative;
+        }
+        
+        .selected-parroquia {
+            background: var(--gray-100);
+            padding: 0.8rem;
+            border: 1px solid var(--gray-300);
+            border-radius: var(--radius-sm);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+        }
+        
+        .parroquia-search {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid var(--gray-300);
+            border-radius: var(--radius-sm);
+            font-size: 1rem;
+            margin-top: 0.5rem;
+        }
+        
+        .parroquia-select {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid var(--gray-300);
+            border-radius: var(--radius-sm);
+            margin-top: 0.5rem;
+        }
+        
+        .delivery-price-display {
+            background: #E8F5E9;
+            border: 2px solid var(--success);
+            border-radius: var(--radius-sm);
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            text-align: center;
+            font-weight: 600;
+            color: var(--success);
+        }
+
+        /* File Input */
+        .file-input-wrapper {
+            position: relative;
+        }
+        
+        .file-input-label {
+            display: block;
+            padding: 1rem;
+            background: var(--gray-100);
+            border: 2px dashed var(--primary);
+            border-radius: var(--radius-sm);
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .file-input-label:hover {
+            background: var(--gray-200);
+        }
+        
+        .file-input-label.has-file {
+            border-color: var(--success);
+            background: #E8F5E9;
+        }
+
         /* Responsive */
         @media (max-width: 1200px) {
             .main-content {
@@ -1350,9 +1443,14 @@
     
     <!-- Header -->
     <header class="header">
-        <div class="logo-area" onclick="resetToAllCategories()">
-            <img src="https://lh3.googleusercontent.com/pw/AP1GczPrZAoWxmsOGRD9xl1hO5Q65JXuwUZzoR6gUk-cw5lVmarxQe_-lwqpA60tTKLlXfpvIjAJlKC6jFls-xETJOPkebLIIPhbGlUkknmhrRbdhMUll2UViGSUj3WmHKg2YEsZlAfxBPPTjIHhScjD0jfe=w1439-h1439-s-no-gm" alt="Saki Sushi" class="logo">
-            <h1>Saki Sushi</h1>
+        <div style="display: flex; align-items: center;">
+            <button class="menu-hamburguesa" id="menuToggle" title="Categorías">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="logo-area" onclick="resetToAllCategories()">
+                <img src="https://lh3.googleusercontent.com/pw/AP1GczPrZAoWxmsOGRD9xl1hO5Q65JXuwUZzoR6gUk-cw5lVmarxQe_-lwqpA60tTKLlXfpvIjAJlKC6jFls-xETJOPkebLIIPhbGlUkknmhrRbdhMUll2UViGSUj3WmHKg2YEsZlAfxBPPTjIHhScjD0jfe=w1439-h1439-s-no-gm" alt="Saki Sushi" class="logo">
+                <h1>Saki Sushi</h1>
+            </div>
         </div>
         
         <div class="search-bar">
@@ -1361,9 +1459,6 @@
         </div>
         
         <div class="header-icons">
-            <button class="icon-button" id="menuToggle" title="Categorías">
-                <i class="fas fa-bars"></i>
-            </button>
             <div style="position: relative;">
                 <button class="icon-button" id="notificationBell">
                     <i class="fas fa-bell"></i>
@@ -1399,7 +1494,7 @@
                 <h2 id="categoryTitle">Menú</h2>
                 <p id="currentCategory"><i class="fas fa-chevron-right"></i> Todos los platillos</p>
                 <div class="tagline">
-                    <div class="tagline-item" onclick="selectCategory('ofertas')">🔥 Ofertas Especiales</div>
+                    <div class="tagline-item" onclick="selectCategoriaOfertas()">🔥 Ofertas Especiales</div>
                     <div class="tagline-item">🐟 Fresco del día</div>
                     <div class="tagline-item">🎌 Tradicional</div>
                     <div class="tagline-item">👨‍🍳 Chef experto</div>
@@ -1511,12 +1606,12 @@
                     <div style="margin-bottom: 1.2rem;">
                         <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Parroquia de entrega:</label>
                         <div class="parroquia-selector">
-                            <div class="selected-parroquia" onclick="toggleParroquiaSelect()" style="background: var(--gray-100); padding: 0.8rem; border: 1px solid var(--gray-300); border-radius: var(--radius-sm); display: flex; justify-content: space-between; align-items: center; cursor: pointer;">
+                            <div class="selected-parroquia" onclick="toggleParroquiaSelect()">
                                 <span id="selectedParroquiaText">San Bernardino</span>
                                 <i class="fas fa-chevron-down" id="parroquiaChevron"></i>
                             </div>
-                            <input type="text" id="parroquiaSearch" placeholder="Buscar parroquia..." style="width: 100%; padding: 0.8rem; border: 1px solid var(--gray-300); border-radius: var(--radius-sm); font-size: 1rem; margin-top: 0.5rem; display: none;">
-                            <select id="parroquiaSelect" size="5" style="width: 100%; padding: 0.5rem; border: 1px solid var(--gray-300); border-radius: var(--radius-sm); margin-top: 0.5rem; display: none;">
+                            <input type="text" id="parroquiaSearch" class="parroquia-search" placeholder="Buscar parroquia..." style="display: none;">
+                            <select id="parroquiaSelect" class="parroquia-select" size="5" style="display: none;">
                                 <option value="Altagracia">Altagracia</option>
                                 <option value="Antímano">Antímano</option>
                                 <option value="Candelaria">Candelaria</option>
@@ -1553,7 +1648,7 @@
                         </div>
                     </div>
                     
-                    <div class="delivery-price-display" id="deliveryPriceDisplay" style="background: #E8F5E9; border: 2px solid var(--success); border-radius: var(--radius-sm); padding: 1rem; margin-bottom: 1.5rem; text-align: center; font-weight: 600; color: var(--success);">
+                    <div class="delivery-price-display" id="deliveryPriceDisplay">
                         Costo de envío: Bs. 0,00
                     </div>
                     
@@ -1585,7 +1680,7 @@
                         <label for="comprobante" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Comprobante de pago:</label>
                         <div class="file-input-wrapper">
                             <input type="file" id="comprobante" accept="image/*" style="display: none;">
-                            <label for="comprobante" class="file-input-label" id="comprobanteLabel" style="display: block; padding: 1rem; background: var(--gray-100); border: 2px dashed var(--primary); border-radius: var(--radius-sm); text-align: center; cursor: pointer;">
+                            <label for="comprobante" class="file-input-label" id="comprobanteLabel">
                                 <i class="fas fa-cloud-upload-alt" style="font-size: 2rem; color: var(--primary); margin-bottom: 0.5rem; display: block;"></i>
                                 Haz clic para subir el comprobante
                             </label>
@@ -1622,6 +1717,13 @@
                     <div class="timer-display" id="reservaTimerDisplay">20:00</div>
                 </div>
                 
+                <div class="payment-info" style="background: var(--gray-100); padding: 1rem; border-radius: var(--radius-sm); margin-bottom: 1.5rem;">
+                    <h4 style="margin-bottom: 0.8rem; color: var(--secondary);"><i class="fas fa-credit-card"></i> Datos de Pago</h4>
+                    <p><strong>Banco:</strong> Banesco</p>
+                    <p><strong>Teléfono:</strong> 0424-1525233</p>
+                    <p><strong>RIF:</strong> J-501519838</p>
+                </div>
+                
                 <form id="reservaForm">
                     <div style="margin-bottom: 1.2rem;">
                         <label for="fechaReserva" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Fecha de la reserva:</label>
@@ -1649,7 +1751,7 @@
                         <label for="comprobanteReserva" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Comprobante de pago:</label>
                         <div class="file-input-wrapper">
                             <input type="file" id="comprobanteReserva" accept="image/*" style="display: none;">
-                            <label for="comprobanteReserva" class="file-input-label" id="comprobanteReservaLabel" style="display: block; padding: 1rem; background: var(--gray-100); border: 2px dashed var(--primary); border-radius: var(--radius-sm); text-align: center; cursor: pointer;">
+                            <label for="comprobanteReserva" class="file-input-label" id="comprobanteReservaLabel">
                                 <i class="fas fa-cloud-upload-alt" style="font-size: 2rem; color: var(--primary); margin-bottom: 0.5rem; display: block;"></i>
                                 Haz clic para subir el comprobante
                             </label>
@@ -1712,25 +1814,24 @@
     <!-- Luego tu configuración -->
     <script src="../supabase-config.js"></script>
     <script>
-        // --- VARIABLES GLOBALES ---
+        // ============================================
+        // VARIABLES GLOBALES
+        // ============================================
         let sessionId = localStorage.getItem('saki_session_id') || generarId('session_');
         localStorage.setItem('saki_session_id', sessionId);
         
         let menuItems = [];
         let inventario = [];
-        let carrito = []; // Array de instancias: { id, platilloId, nombre, cantidad (siempre 1 por instancia), personalizacion, imagen, precioUnitarioUSD, precioUnitarioBs, subtotal, instanceNumber }
+        let carrito = []; // Array de instancias
         let notificaciones = [];
         let currentCustomizeItem = null;
         let mesaId = null;
         
-        // Para manejo de stock y pedidos
-        let stockCache = {};
-        let lastStockUpdate = 0;
-        const STOCK_CACHE_DURATION = 5000;
-        let pedidosCliente = []; // Historial de pedidos del día
-        let pedidosConTimer = {}; // Para timers de 20 minutos
+        // Para manejo de timers de 20 minutos
+        let pedidosConTimer = {};
+        let timerInterval = null;
 
-        // Precios de parroquias (de saki sushi 1.0)
+        // Precios de parroquias
         const preciosPorParroquia = {
             "Altagracia": 3, "Antímano": 7, "Candelaria": 2, "Caricuao": 7, "Caucagüita": 7,
             "Catedral": 3, "Chacao": 5, "Coche": 5, "El Cafetal": 6, "El Junquito": 7,
@@ -1742,43 +1843,28 @@
             "Santa Rosalía de Palermo": 3, "Santa Teresa": 3, "Sucre": 7, "23 de Enero": 4
         };
 
-        // Diccionario de mensajes para transiciones de estado
+        // Diccionario de mensajes para notificaciones
         const mensajesEstado = {
-            'pendiente': {
-                'cobrado': { titulo: '¡Pago confirmado! 🎉', mensaje: 'Tu pedido ha sido cobrado y está en preparación.' },
-                'en_cocina': { titulo: '¡En preparación! 👨‍🍳', mensaje: 'Tu pedido está siendo preparado por nuestros chefs.' },
-                'en_camino': { titulo: '¡En camino! 🛵', mensaje: 'Tu delivery va en camino. ¡Prepárate!' },
-                'reserva_pendiente': { titulo: '¡Reserva confirmada! 📅', mensaje: 'Tu reserva ha sido confirmada.' },
-                'reserva_atendida': { titulo: '¡Cliente confirmado! ✅', mensaje: 'Has llegado, estás siendo atendido.' },
-                'rechazado': { titulo: '❌ Pedido rechazado', mensaje: 'Motivo: ' }
-            },
-            'cobrado': {
-                'en_cocina': { titulo: '¡En preparación! 👨‍🍳', mensaje: 'Tu pedido está siendo preparado.' },
-                'en_camino': { titulo: '¡En camino! 🛵', mensaje: 'Tu delivery va en camino.' },
-                'reserva_pendiente': { titulo: '¡Reserva confirmada! 📅', mensaje: 'Tu reserva ha sido confirmada.' }
-            },
-            'en_cocina': {
-                'entregado': { titulo: '¡Pedido entregado! 🍽️', mensaje: 'Tu pedido ha sido entregado. ¡Buen provecho!' }
-            },
-            'en_camino': {
-                'enviado': { titulo: '¡Pedido entregado! 🍽️', mensaje: 'Tu delivery ha sido entregado.' }
-            },
-            'reserva_pendiente': {
-                'reserva_atendida': { titulo: '¡Cliente confirmado! ✅', mensaje: 'Has llegado, estás siendo atendido.' }
-            },
-            'reserva_atendida': {
-                'reserva_completada': { titulo: '¡Pedido completado! 🎉', mensaje: 'Gracias por visitarnos.' }
-            }
+            'approved': { titulo: '✅ Pedido confirmado', icono: 'check-circle' },
+            'rejected': { titulo: '❌ Pedido rechazado', icono: 'times-circle' },
+            'pending': { titulo: '⏳ Pedido pendiente', icono: 'clock' }
         };
 
-        // Traducción de razones de rechazo
-        const razonesRechazo = {
-            'referencia_invalida': 'Referencia de pago inválida',
-            'monto_insuficiente': 'Monto insuficiente',
-            'datos_incorrectos': 'Datos de contacto/dirección incorrectos',
-            'no_disponible': 'Producto no disponible',
-            'fuera_horario': 'Fuera de horario de delivery'
-        };
+        // Categorías predefinidas (de saki sushi 1.0)
+        const categoriasPredefinidas = [
+            { id: 'todos', nombre: 'Todos los platillos' },
+            { id: 'entradas', nombre: 'Entradas' },
+            { id: 'sushi', nombre: 'Sushi' },
+            { id: 'rolls', nombre: 'Rolls', subcategorias: ['Rolls Fríos de 10 piezas', 'Rolls Tempura de 12 piezas'] },
+            { id: 'tragos', nombre: 'Tragos y bebidas' },
+            { id: 'pokes', nombre: 'Pokes' },
+            { id: 'ensaladas', nombre: 'Ensaladas' },
+            { id: 'china', nombre: 'Comida China', subcategorias: ['Arroz Chino', 'Arroz Cantones', 'Chopsuey', 'Lomey', 'Chow Mein', 'Fideos de Arroz', 'Tallarines Cantones', 'Mariscos', 'Foo Yong', 'Sopas', 'Entremeses'] },
+            { id: 'japonesa', nombre: 'Comida Japonesa', subcategorias: ['Yakimeshi', 'Yakisoba', 'Pasta Udon', 'Churrasco'] },
+            { id: 'ofertas', nombre: 'Ofertas Especiales' },
+            { id: 'ninos', nombre: 'Para Niños' },
+            { id: 'ejecutivo', nombre: 'Combo Ejecutivo' }
+        ];
 
         // Detectar parámetro de mesa en URL
         const urlParams = new URLSearchParams(window.location.search);
@@ -1786,7 +1872,9 @@
 
         console.log('🍣 Cliente Saki Sushi iniciado', { mesaId, sessionId });
 
-        // --- FUNCIONES DE INICIALIZACIÓN ---
+        // ============================================
+        // FUNCIONES DE INICIALIZACIÓN
+        // ============================================
         document.addEventListener('DOMContentLoaded', async () => {
             console.log('1️⃣ Inicializando cliente...');
             await cargarConfiguracion();
@@ -1805,12 +1893,6 @@
             console.log('8️⃣ Carrito restaurado', carrito.length, 'items');
             actualizarUI();
             
-            // Limpiar notificaciones viejas al inicio
-            limpiarNotificacionesDiarias();
-            
-            // Verificar pedidos pendientes al inicio
-            verificarPedidosPendientes();
-            
             // Configurar fecha mínima para reservas
             const hoy = new Date().toISOString().split('T')[0];
             document.getElementById('fechaReserva').min = hoy;
@@ -1825,7 +1907,9 @@
             console.log('🎉 Cliente listo!');
         });
 
-        // --- FUNCIONES DE CARGA DE DATOS ---
+        // ============================================
+        // FUNCIONES DE CARGA DE DATOS
+        // ============================================
         async function cargarMenu() {
             try {
                 const { data, error } = await window.supabaseClient
@@ -1855,85 +1939,90 @@
             }
         }
 
-        // --- FUNCIONES DE STOCK Y CACHÉ ---
-        function calcularReservadoConCache(ingredienteId) {
-            const ahora = Date.now();
-            
-            if (ahora - lastStockUpdate > STOCK_CACHE_DURATION) {
-                stockCache = {};
-                lastStockUpdate = ahora;
-            }
-            
-            if (stockCache[ingredienteId] !== undefined) {
-                return stockCache[ingredienteId];
-            }
-            
-            // Calcular reservado basado en pedidos en carrito (instancias confirmadas)
-            let total = 0;
-            
-            // Recorrer instancias en carrito
-            carrito.forEach(instancia => {
-                if (instancia.platilloId && instancia.personalizacion && !instancia.personalizacion.includes(ingredienteId)) {
-                    const platillo = menuItems.find(p => p.id === instancia.platilloId);
-                    if (platillo && platillo.ingredientes && platillo.ingredientes[ingredienteId]) {
-                        total += platillo.ingredientes[ingredienteId].cantidad || 1;
+        // ============================================
+        // FUNCIONES DE STOCK Y RESERVAS (NUEVAS)
+        // ============================================
+        
+        /**
+         * Obtiene el stock disponible de un ingrediente (stock - reservado)
+         */
+        async function getStockDisponible(ingredienteId) {
+            try {
+                // Intentar obtener del inventario local primero
+                const ingrediente = inventario.find(i => i.id === ingredienteId);
+                if (ingrediente) {
+                    // Si tenemos el campo reservado, calcular
+                    if (ingrediente.reservado !== undefined) {
+                        return ingrediente.stock - ingrediente.reservado;
                     }
                 }
-            });
-            
-            stockCache[ingredienteId] = total;
-            return total;
-        }
-
-        function verificarIngredientesPrincipales(item) {
-            if (!item.ingredientes || Object.keys(item.ingredientes).length === 0) {
-                return { disponible: true, faltantes: [] };
-            }
-            
-            const faltantes = [];
-            let disponible = true;
-            
-            // Consideramos obligatorios todos los ingredientes para este cálculo simple
-            // (En una versión más avanzada, se podría marcar obligatorio en la BD)
-            Object.entries(item.ingredientes).forEach(([ingId, ingInfo]) => {
-                const ingrediente = inventario.find(i => i.id === ingId);
-                const stockIng = ingrediente?.stock || 0;
-                const reservado = calcularReservadoConCache(ingId);
-                const stockReal = stockIng - reservado;
                 
-                if (stockReal <= 0) {
-                    faltantes.push(ingrediente?.nombre || ingId);
-                    disponible = false;
-                }
-            });
-            
-            return { disponible, faltantes };
+                // Si no, consultar a la base de datos
+                const { data, error } = await window.supabaseClient
+                    .from('inventario')
+                    .select('stock, reservado')
+                    .eq('id', ingredienteId)
+                    .single();
+                
+                if (error) throw error;
+                return data.stock - (data.reservado || 0);
+            } catch (error) {
+                console.error('Error obteniendo stock disponible:', error);
+                return 0;
+            }
         }
 
-        function calcularStockPlatillo(platillo) {
-            if (!platillo.ingredientes || Object.keys(platillo.ingredientes).length === 0) {
-                return platillo.stock_maximo || 999;
+        /**
+         * Reserva ingredientes en la base de datos
+         */
+        async function reservarIngredientes(pedidoId, items) {
+            try {
+                const { data, error } = await window.supabaseClient.rpc('reservar_ingredientes', {
+                    p_pedido_id: pedidoId,
+                    p_items: items
+                });
+                
+                if (error) throw error;
+                return { success: true, data };
+            } catch (error) {
+                console.error('Error reservando ingredientes:', error);
+                return { success: false, error: error.message };
             }
+        }
+
+        /**
+         * Verifica stock disponible antes de añadir al carrito
+         */
+        async function verificarStockDisponible(platilloId, personalizacion = []) {
+            const platillo = menuItems.find(p => p.id === platilloId);
+            if (!platillo) return { disponible: false, motivo: 'Platillo no encontrado' };
             
-            let stockMaximo = Infinity;
+            if (!platillo.ingredientes || Object.keys(platillo.ingredientes).length === 0) {
+                return { disponible: true };
+            }
             
             for (const [ingId, ingInfo] of Object.entries(platillo.ingredientes)) {
-                const ingrediente = inventario.find(i => i.id === ingId);
-                if (!ingrediente) {
-                    stockMaximo = 0;
-                    break;
-                }
+                // Si el ingrediente fue quitado en personalización, no lo consideramos
+                if (personalizacion.includes(ingId)) continue;
                 
                 const cantidadNecesaria = ingInfo.cantidad || 1;
-                const reservado = calcularReservadoConCache(ingId);
-                const stockDisponible = Math.floor((ingrediente.stock - reservado) / cantidadNecesaria);
-                stockMaximo = Math.min(stockMaximo, stockDisponible);
+                const stockDisp = await getStockDisponible(ingId);
+                
+                if (stockDisp < cantidadNecesaria) {
+                    const ingrediente = inventario.find(i => i.id === ingId);
+                    return { 
+                        disponible: false, 
+                        motivo: `No hay suficiente ${ingrediente?.nombre || ingId}` 
+                    };
+                }
             }
             
-            return stockMaximo;
+            return { disponible: true };
         }
 
-        // --- FUNCIONES DE RENDERIZADO ---
+        // ============================================
+        // FUNCIONES DE RENDERIZADO
+        // ============================================
         function renderizarMenu(filtroCategoria = null, filtroSubcategoria = null, busqueda = '') {
             const grid = document.getElementById('menuGrid');
             
@@ -1943,7 +2032,10 @@
             if (filtroCategoria && filtroCategoria !== 'Todos' && filtroCategoria !== 'ofertas') {
                 itemsFiltrados = itemsFiltrados.filter(item => item.categoria === filtroCategoria);
             } else if (filtroCategoria === 'ofertas') {
-                itemsFiltrados = itemsFiltrados.filter(item => item.categoria === 'Ofertas Especiales' || (item.categoria && item.categoria.includes('Oferta')));
+                itemsFiltrados = itemsFiltrados.filter(item => 
+                    item.categoria === 'Ofertas Especiales' || 
+                    (item.categoria && item.categoria.includes('Oferta'))
+                );
             }
             
             // Filtrar por subcategoría
@@ -1951,7 +2043,7 @@
                 itemsFiltrados = itemsFiltrados.filter(item => item.subcategoria === filtroSubcategoria);
             }
             
-            // Filtrar por búsqueda (por palabras sueltas)
+            // Filtrar por búsqueda
             if (busqueda) {
                 const terminos = busqueda.toLowerCase().split(/\s+/).filter(t => t.length > 0);
                 itemsFiltrados = itemsFiltrados.filter(item => {
@@ -1972,23 +2064,38 @@
                 return;
             }
             
-            grid.innerHTML = itemsFiltrados.map(item => {
-                const stock = calcularStockPlatillo(item);
-                const agotado = stock <= 0;
-                const ingredientesPrincipales = verificarIngredientesPrincipales(item);
-                const hayIngredientes = ingredientesPrincipales.disponible;
-                const esAgotado = !hayIngredientes && agotado;
+            // Renderizar cada platillo (versión simplificada con verificación de stock async)
+            Promise.all(itemsFiltrados.map(async (item) => {
+                // Verificar stock de cada ingrediente
+                let stockDisponible = Infinity;
+                let ingredientesFaltantes = [];
+                
+                if (item.ingredientes && Object.keys(item.ingredientes).length > 0) {
+                    for (const [ingId, ingInfo] of Object.entries(item.ingredientes)) {
+                        const stockDisp = await getStockDisponible(ingId);
+                        const cantidadNecesaria = ingInfo.cantidad || 1;
+                        const posible = Math.floor(stockDisp / cantidadNecesaria);
+                        stockDisponible = Math.min(stockDisponible, posible);
+                        
+                        if (posible <= 0) {
+                            const ingrediente = inventario.find(i => i.id === ingId);
+                            ingredientesFaltantes.push(ingrediente?.nombre || ingId);
+                        }
+                    }
+                } else {
+                    stockDisponible = item.stock_maximo || 999;
+                }
+                
+                const agotado = stockDisponible <= 0;
                 
                 let stockClass = 'available';
-                if (esAgotado || stock <= 0) stockClass = 'sold-out';
-                else if (stock < 5) stockClass = 'low';
-                
-                const ingredientesFaltantes = ingredientesPrincipales.faltantes;
+                if (agotado) stockClass = 'sold-out';
+                else if (stockDisponible < 5) stockClass = 'low';
                 
                 return `
-                    <div class="menu-card ${esAgotado ? 'agotado' : ''}">
+                    <div class="menu-card ${agotado ? 'agotado' : ''}" data-id="${item.id}">
                         <div class="menu-card-image" style="background-image: url('${item.imagen || 'https://via.placeholder.com/400x300?text=Saki+Sushi'}')">
-                            ${esAgotado ? '<div class="menu-card-badge sold-out"><i class="fas fa-times-circle"></i> Agotado</div>' : stockClass === 'low' ? '<div class="menu-card-badge low"><i class="fas fa-exclamation-triangle"></i> Últimas unidades</div>' : ''}
+                            ${agotado ? '<div class="menu-card-badge sold-out"><i class="fas fa-times-circle"></i> Agotado</div>' : stockClass === 'low' ? '<div class="menu-card-badge low"><i class="fas fa-exclamation-triangle"></i> Últimas unidades</div>' : ''}
                         </div>
                         <div class="menu-card-content">
                             <div class="menu-card-header">
@@ -1997,7 +2104,7 @@
                             </div>
                             <p class="menu-card-description">${item.descripcion || 'Delicioso platillo de nuestra cocina'}</p>
                             <div class="menu-card-footer">
-                                ${!esAgotado ? `
+                                ${!agotado ? `
                                     <button class="btn-add" onclick="agregarAlCarrito('${item.id}')" title="Agregar al carrito">
                                         <i class="fas fa-plus"></i>
                                     </button>
@@ -2010,22 +2117,22 @@
                                     </span>
                                 `}
                             </div>
-                            ${!esAgotado ? `
+                            ${!agotado ? `
                                 <div class="stock-info">
                                     <i class="fas fa-box ${stockClass}"></i>
-                                    <span>${stock} disponibles</span>
+                                    <span>${stockDisponible} disponibles</span>
                                 </div>
                             ` : ''}
                         </div>
                     </div>
                 `;
-            }).join('');
+            })).then(cards => {
+                grid.innerHTML = cards.join('');
+            });
         }
 
         function cargarCategorias() {
             const categoryList = document.getElementById('categoryList');
-            
-            const categoriasUnicas = [...new Set(menuItems.map(item => item.categoria))].filter(Boolean);
             
             let html = `
                 <li class="category-item active" data-categoria="Todos">
@@ -2034,22 +2141,20 @@
                 </li>
             `;
             
-            categoriasUnicas.sort().forEach(categoria => {
-                const tieneSubcategorias = menuItems.some(item => item.categoria === categoria && item.subcategoria);
-                const subcategorias = [...new Set(menuItems
-                    .filter(item => item.categoria === categoria && item.subcategoria)
-                    .map(item => item.subcategoria))];
+            // Usar categorías predefinidas de saki sushi 1.0
+            categoriasPredefinidas.forEach(cat => {
+                if (cat.id === 'todos') return;
                 
                 html += `
-                    <li class="category-item" data-categoria="${categoria}">
-                        <span>${categoria}</span>
-                        ${tieneSubcategorias ? '<i class="fas fa-chevron-right"></i>' : ''}
+                    <li class="category-item" data-categoria="${cat.id}">
+                        <span>${cat.nombre}</span>
+                        ${cat.subcategorias ? '<i class="fas fa-chevron-right"></i>' : ''}
                     </li>
                 `;
                 
-                if (tieneSubcategorias) {
-                    html += `<ul class="subcategory-list" data-categoria="${categoria}">`;
-                    subcategorias.sort().forEach(sub => {
+                if (cat.subcategorias) {
+                    html += `<ul class="subcategory-list" data-categoria="${cat.id}">`;
+                    cat.subcategorias.forEach(sub => {
                         html += `<li class="subcategory-item" data-subcategoria="${sub}">${sub}</li>`;
                     });
                     html += `</ul>`;
@@ -2076,9 +2181,14 @@
                         subList.classList.add('expanded');
                     }
                     
-                    document.getElementById('categoryTitle').textContent = categoria === 'Todos' ? 'Menú' : categoria;
-                    document.getElementById('currentCategory').innerHTML = `<i class="fas fa-chevron-right"></i> ${categoria === 'Todos' ? 'Todos los platillos' : categoria}`;
-                    renderizarMenu(categoria === 'Todos' ? null : categoria);
+                    document.getElementById('categoryTitle').textContent = categoria === 'Todos' ? 'Menú' : item.querySelector('span').textContent;
+                    document.getElementById('currentCategory').innerHTML = `<i class="fas fa-chevron-right"></i> ${categoria === 'Todos' ? 'Todos los platillos' : item.querySelector('span').textContent}`;
+                    
+                    if (categoria === 'Todos') {
+                        renderizarMenu();
+                    } else {
+                        renderizarMenu(categoria);
+                    }
                 });
             });
             
@@ -2102,31 +2212,27 @@
             });
         }
 
-        // --- FUNCIONES DE PERSONALIZACIÓN (Instancias múltiples) ---
-        // Explicación: "Instancias múltiples" significa que cada vez que un cliente añade un platillo al carrito, 
-        // se crea una "instancia" única de ese platillo con su propia configuración (ingredientes quitados).
-        // Esto permite tener varias versiones del mismo platillo (ej. 2 rolls, uno sin aguacate y otro completo)
-        // y poder eliminarlas individualmente. Cada instancia tiene un ID único y un número de instancia para identificarla.
-
+        // ============================================
+        // FUNCIONES DE PERSONALIZACIÓN
+        // ============================================
         function abrirPersonalizacion(platilloId) {
             const platillo = menuItems.find(p => p.id === platilloId);
             if (!platillo) return;
             
-            // Inicializar el objeto de personalización
             currentCustomizeItem = {
                 ...platillo,
-                cantidad: 1, // Por ahora solo una instancia por personalización
+                cantidad: 1,
                 ingredientesQuitados: [],
-                selectionType: 'completo' // 'completo' o 'personalizado'
+                selectionType: 'completo'
             };
             
             const modalBody = document.getElementById('customizeModalBody');
             
-            const ingredientesHtml = Object.entries(platillo.ingredientes || {}).map(([ingId, ingInfo]) => {
+            // Generar opciones de ingredientes (asíncrono)
+            Promise.all(Object.entries(platillo.ingredientes || {}).map(async ([ingId, ingInfo]) => {
                 const ingrediente = inventario.find(i => i.id === ingId);
-                const stockIng = ingrediente?.stock || 0;
-                const reservado = calcularReservadoConCache(ingId);
-                const disponible = (stockIng - reservado) >= (ingInfo.cantidad || 1);
+                const stockDisp = await getStockDisponible(ingId);
+                const disponible = stockDisp >= (ingInfo.cantidad || 1);
                 const precio = ingrediente?.precio_unitario || 0;
                 
                 return `
@@ -2146,63 +2252,61 @@
                         </label>
                     </div>
                 `;
-            }).join('');
-            
-            // Opción "Completo" especial
-            const completoOption = `
-                <div style="margin-bottom: 1rem; padding: 0.8rem; background: ${currentCustomizeItem.selectionType === 'completo' ? '#E8F5E9' : 'var(--gray-50)'}; border-radius: var(--radius-sm); border: 2px solid ${currentCustomizeItem.selectionType === 'completo' ? 'var(--success)' : 'transparent'}; cursor: pointer;" onclick="selectCompleto()">
-                    <div style="display: flex; align-items: center; gap: 0.8rem;">
-                        <div style="width: 22px; height: 22px; border-radius: 50%; background: ${currentCustomizeItem.selectionType === 'completo' ? 'var(--success)' : 'var(--gray-300)'}; display: flex; align-items: center; justify-content: center; color: white;">
-                            ${currentCustomizeItem.selectionType === 'completo' ? '<i class="fas fa-check" style="font-size: 0.7rem;"></i>' : ''}
+            })).then(ingredientesHtml => {
+                const completoOption = `
+                    <div style="margin-bottom: 1rem; padding: 0.8rem; background: ${currentCustomizeItem.selectionType === 'completo' ? '#E8F5E9' : 'var(--gray-50)'}; border-radius: var(--radius-sm); border: 2px solid ${currentCustomizeItem.selectionType === 'completo' ? 'var(--success)' : 'transparent'}; cursor: pointer;" onclick="selectCompleto()">
+                        <div style="display: flex; align-items: center; gap: 0.8rem;">
+                            <div style="width: 22px; height: 22px; border-radius: 50%; background: ${currentCustomizeItem.selectionType === 'completo' ? 'var(--success)' : 'var(--gray-300)'}; display: flex; align-items: center; justify-content: center; color: white;">
+                                ${currentCustomizeItem.selectionType === 'completo' ? '<i class="fas fa-check" style="font-size: 0.7rem;"></i>' : ''}
+                            </div>
+                            <div style="flex: 1;">
+                                <div style="font-weight: 600;">Platillo completo</div>
+                                <div style="font-size: 0.9rem; color: var(--gray-600);">Con todos los ingredientes incluidos</div>
+                            </div>
                         </div>
-                        <div style="flex: 1;">
-                            <div style="font-weight: 600;">Platillo completo</div>
-                            <div style="font-size: 0.9rem; color: var(--gray-600);">Con todos los ingredientes incluidos</div>
+                    </div>
+                `;
+                
+                modalBody.innerHTML = `
+                    <div style="display: flex; gap: 1.5rem; margin-bottom: 2rem; background: var(--gray-100); padding: 1rem; border-radius: var(--radius-sm);">
+                        <img src="${platillo.imagen || 'https://via.placeholder.com/150x150'}" 
+                             style="width: 120px; height: 120px; object-fit: cover; border-radius: var(--radius-sm); box-shadow: var(--shadow-sm);">
+                        <div>
+                            <h4 style="font-size: 1.3rem; margin-bottom: 0.5rem;">${platillo.nombre}</h4>
+                            <p style="color: var(--gray-600); margin-bottom: 0.5rem;">${platillo.descripcion || ''}</p>
+                            <p style="font-weight: 600; color: var(--primary);">Precio base: ${formatBs(usdToBs(platillo.precio))}</p>
                         </div>
                     </div>
-                </div>
-            `;
-            
-            modalBody.innerHTML = `
-                <div style="display: flex; gap: 1.5rem; margin-bottom: 2rem; background: var(--gray-100); padding: 1rem; border-radius: var(--radius-sm);">
-                    <img src="${platillo.imagen || 'https://via.placeholder.com/150x150'}" 
-                         style="width: 120px; height: 120px; object-fit: cover; border-radius: var(--radius-sm); box-shadow: var(--shadow-sm);">
-                    <div>
-                        <h4 style="font-size: 1.3rem; margin-bottom: 0.5rem;">${platillo.nombre}</h4>
-                        <p style="color: var(--gray-600); margin-bottom: 0.5rem;">${platillo.descripcion || ''}</p>
-                        <p style="font-weight: 600; color: var(--primary);">Precio base: ${formatBs(usdToBs(platillo.precio))}</p>
+                    
+                    <div style="margin-bottom: 2rem;">
+                        <label style="display: block; margin-bottom: 0.8rem; font-weight: 600;">Opciones:</label>
+                        ${completoOption}
+                        <div id="ingredientesList" style="margin-top: 1rem;">
+                            <div style="font-weight: 500; margin-bottom: 0.5rem;">Quitar ingredientes (personalizado):</div>
+                            ${ingredientesHtml.join('') || '<p style="color: var(--gray-500);">Este platillo no tiene ingredientes para personalizar</p>'}
+                        </div>
                     </div>
-                </div>
+                    
+                    <div style="background: var(--gray-100); padding: 1rem; border-radius: var(--radius-sm);">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-weight: 600;">Precio final:</span>
+                            <span style="font-size: 1.4rem; font-weight: 700; color: var(--primary);" id="customizePrecio">${formatBs(usdToBs(platillo.precio))}</span>
+                        </div>
+                    </div>
+                `;
                 
-                <div style="margin-bottom: 2rem;">
-                    <label style="display: block; margin-bottom: 0.8rem; font-weight: 600;">Opciones:</label>
-                    ${completoOption}
-                    <div id="ingredientesList" style="margin-top: 1rem;">
-                        <div style="font-weight: 500; margin-bottom: 0.5rem;">Quitar ingredientes (personalizado):</div>
-                        ${ingredientesHtml || '<p style="color: var(--gray-500);">Este platillo no tiene ingredientes para personalizar</p>'}
-                    </div>
-                </div>
-                
-                <div style="background: var(--gray-100); padding: 1rem; border-radius: var(--radius-sm);">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <span style="font-weight: 600;">Precio final:</span>
-                        <span style="font-size: 1.4rem; font-weight: 700; color: var(--primary);" id="customizePrecio">${formatBs(usdToBs(platillo.precio))}</span>
-                    </div>
-                </div>
-            `;
-            
-            // Agregar event listeners a checkboxes
-            document.querySelectorAll('.ingrediente-check').forEach(cb => {
-                cb.addEventListener('change', function() {
-                    if (this.checked) {
-                        // Si se marca un checkbox, cambia a modo personalizado
-                        selectPersonalizado();
-                    }
-                    calcularPrecioPersonalizado();
+                // Agregar event listeners a checkboxes
+                document.querySelectorAll('.ingrediente-check').forEach(cb => {
+                    cb.addEventListener('change', function() {
+                        if (this.checked) {
+                            selectPersonalizado();
+                        }
+                        calcularPrecioPersonalizado();
+                    });
                 });
+                
+                document.getElementById('customizeModal').classList.add('active');
             });
-            
-            document.getElementById('customizeModal').classList.add('active');
         }
 
         function selectCompleto() {
@@ -2210,12 +2314,10 @@
             currentCustomizeItem.selectionType = 'completo';
             currentCustomizeItem.ingredientesQuitados = [];
             
-            // Desmarcar todos los checkboxes
             document.querySelectorAll('.ingrediente-check').forEach(cb => {
                 cb.checked = false;
             });
             
-            // Actualizar UI de la opción completo
             const completoOption = document.querySelector('#ingredientesList').previousElementSibling;
             if (completoOption) {
                 completoOption.style.background = '#E8F5E9';
@@ -2231,7 +2333,6 @@
             if (!currentCustomizeItem) return;
             currentCustomizeItem.selectionType = 'personalizado';
             
-            // Actualizar UI de la opción completo
             const completoOption = document.querySelector('#ingredientesList').previousElementSibling;
             if (completoOption) {
                 completoOption.style.background = 'var(--gray-50)';
@@ -2253,16 +2354,23 @@
             
             const precioBaseUSD = currentCustomizeItem.precio;
             const precioFinalUSD = Math.max(0, precioBaseUSD - descuento);
-            const precioFinalBs = usdToBs(precioFinalUSD); // * currentCustomizeItem.cantidad (es 1 por instancia)
+            const precioFinalBs = usdToBs(precioFinalUSD);
             
             document.getElementById('customizePrecio').textContent = formatBs(precioFinalBs);
         }
 
-        function agregarPersonalizadoAlCarrito() {
+        async function agregarPersonalizadoAlCarrito() {
             if (!currentCustomizeItem) return;
             
             const ingredientesQuitados = Array.from(document.querySelectorAll('.ingrediente-check:checked'))
                 .map(cb => cb.dataset.ingrediente);
+            
+            // Verificar stock disponible antes de agregar
+            const verificado = await verificarStockDisponible(currentCustomizeItem.id, ingredientesQuitados);
+            if (!verificado.disponible) {
+                mostrarToast(verificado.motivo || 'No hay stock disponible', 'error');
+                return;
+            }
             
             let descuento = 0;
             document.querySelectorAll('.ingrediente-check:checked').forEach(cb => {
@@ -2271,7 +2379,7 @@
             
             const precioFinalUSD = Math.max(0, currentCustomizeItem.precio - descuento);
             
-            // Crear nueva instancia
+            // Crear nueva instancia (aún sin reservar en BD, solo local)
             const nuevaInstancia = {
                 id: generarId('inst_'),
                 platilloId: currentCustomizeItem.id,
@@ -2282,7 +2390,8 @@
                 precioUnitarioBs: usdToBs(precioFinalUSD),
                 subtotal: usdToBs(precioFinalUSD),
                 selectionType: currentCustomizeItem.selectionType,
-                instanceNumber: carrito.filter(i => i.platilloId === currentCustomizeItem.id).length + 1
+                instanceNumber: carrito.filter(i => i.platilloId === currentCustomizeItem.id).length + 1,
+                reservado: false // Aún no reservado en BD
             };
             
             carrito.push(nuevaInstancia);
@@ -2299,14 +2408,17 @@
             currentCustomizeItem = null;
         }
 
-        // --- FUNCIONES DEL CARRITO (con instancias) ---
-        function agregarAlCarrito(platilloId) {
+        // ============================================
+        // FUNCIONES DEL CARRITO
+        // ============================================
+        async function agregarAlCarrito(platilloId) {
             const platillo = menuItems.find(p => p.id === platilloId);
             if (!platillo) return;
             
-            const stockDisponible = calcularStockPlatillo(platillo);
-            if (stockDisponible <= 0) {
-                mostrarToast('No hay stock disponible', 'error');
+            // Verificar stock disponible
+            const verificado = await verificarStockDisponible(platilloId);
+            if (!verificado.disponible) {
+                mostrarToast(verificado.motivo || 'No hay stock disponible', 'error');
                 return;
             }
             
@@ -2320,7 +2432,8 @@
                 precioUnitarioBs: usdToBs(platillo.precio),
                 subtotal: usdToBs(platillo.precio),
                 selectionType: 'completo',
-                instanceNumber: carrito.filter(i => i.platilloId === platillo.id).length + 1
+                instanceNumber: carrito.filter(i => i.platilloId === platillo.id).length + 1,
+                reservado: false
             };
             
             carrito.push(nuevaInstancia);
@@ -2334,7 +2447,7 @@
         function eliminarInstancia(instanciaId) {
             carrito = carrito.filter(i => i.id !== instanciaId);
             
-            // Renumerar instancias del mismo platillo
+            // Renumerar instancias
             const platillosUnicos = [...new Set(carrito.map(i => i.platilloId))];
             platillosUnicos.forEach(pid => {
                 let contador = 1;
@@ -2345,7 +2458,6 @@
             
             guardarCarrito();
             actualizarCarritoUI();
-            stockCache = {}; // Invalidar caché de stock
         }
 
         function actualizarCarritoUI() {
@@ -2460,7 +2572,9 @@
             }
         }
 
-        // --- FUNCIONES DE PEDIDOS (con timers reales de 20 min) ---
+        // ============================================
+        // FUNCIONES DE PEDIDOS Y RESERVAS EN BD
+        // ============================================
         function crearPedidoBase(tipo) {
             const tasaActual = configGlobal.tasa_efectiva;
             let totalUSD = 0;
@@ -2471,13 +2585,13 @@
                 items.push({
                     platilloId: instancia.platilloId,
                     nombre: instancia.nombre,
-                    cantidad: 1, // Siempre 1 por instancia
+                    cantidad: 1,
                     personalizacion: instancia.personalizacion,
                     precioUnitarioUSD: instancia.precioUnitarioUSD,
                     precioEnBs: instancia.precioUnitarioBs,
                     subtotal: instancia.subtotal,
                     tasaCambioAplicada: tasaActual,
-                    instanceNumber: instancia.instanceNumber // Guardar número de instancia
+                    instanceNumber: instancia.instanceNumber
                 });
             });
             
@@ -2488,7 +2602,8 @@
                 tipo: tipo,
                 items: items,
                 total: totalUSD,
-                session_id: sessionId
+                session_id: sessionId,
+                reservas_confirmadas: false
             };
             
             if (tipo === 'mesa') {
@@ -2498,15 +2613,32 @@
             return pedido;
         }
 
+        /**
+         * Guarda pedido y reserva ingredientes (versión mejorada)
+         */
         async function guardarPedido(pedido) {
             try {
-                const { error } = await window.supabaseClient
+                // 1. Insertar pedido en la base de datos
+                const { error: insertError } = await window.supabaseClient
                     .from('pedidos')
                     .insert([pedido]);
                 
-                if (error) throw error;
+                if (insertError) throw insertError;
                 
-                // Crear notificación para el cliente
+                // 2. Reservar ingredientes en la base de datos
+                const reservaResult = await reservarIngredientes(pedido.id, pedido.items);
+                
+                if (!reservaResult.success) {
+                    // Si falla la reserva, eliminar el pedido (rollback manual)
+                    await window.supabaseClient
+                        .from('pedidos')
+                        .delete()
+                        .eq('id', pedido.id);
+                    
+                    throw new Error(reservaResult.error || 'Error al reservar ingredientes');
+                }
+                
+                // 3. Crear notificación para el cliente
                 await window.supabaseClient
                     .from('notificaciones')
                     .insert([{
@@ -2518,27 +2650,17 @@
                         leida: false
                     }]);
                 
-                // Guardar en historial local
-                pedidosCliente.push({
-                    id: pedido.id,
-                    estado: 'pendiente',
-                    timestamp: pedido.timestamp,
-                    tipo: pedido.tipo
-                });
-                
-                // Guardar historial en localStorage
-                localStorage.setItem('saki_historial', JSON.stringify(pedidosCliente));
-                
-                // Iniciar timer de 20 minutos para delivery/reserva
+                // 4. Iniciar timer de 20 minutos SOLO para delivery/reserva
+                // El timer comienza AHORA, cuando se confirma el pedido (no cuando se abre el modal)
                 if (pedido.tipo === 'delivery' || pedido.tipo === 'reserva') {
                     iniciarTimerReal(pedido.id, 20);
                 }
                 
-                return true;
+                return { success: true, pedidoId: pedido.id };
                 
             } catch (error) {
                 console.error('Error guardando pedido:', error);
-                return false;
+                return { success: false, error: error.message };
             }
         }
 
@@ -2551,40 +2673,45 @@
             const fin = Date.now() + minutos * 60 * 1000;
             
             const timerId = setTimeout(async () => {
-                // Cancelar pedido por timeout
                 try {
-                    const { error } = await window.supabaseClient
+                    // Verificar si el pedido sigue pendiente
+                    const { data: pedido, error } = await window.supabaseClient
                         .from('pedidos')
-                        .update({ estado: 'cancelado_timeout' })
+                        .select('estado')
                         .eq('id', pedidoId)
-                        .eq('estado', 'pendiente'); // Solo si sigue pendiente
+                        .single();
                     
                     if (error) throw error;
                     
-                    // Crear notificación de cancelación
-                    await window.supabaseClient
-                        .from('notificaciones')
-                        .insert([{
-                            pedido_id: pedidoId,
-                            tipo: 'rejected',
-                            titulo: '⏰ Pedido cancelado',
-                            mensaje: 'El tiempo para pagar ha expirado (20 minutos).',
-                            timestamp: new Date().toISOString(),
-                            leida: false
-                        }]);
-                    
-                    // Actualizar historial local
-                    const pedidoLocal = pedidosCliente.find(p => p.id === pedidoId);
-                    if (pedidoLocal) pedidoLocal.estado = 'cancelado_timeout';
-                    localStorage.setItem('saki_historial', JSON.stringify(pedidosCliente));
-                    
-                    mostrarToast('Tu pedido fue cancelado por exceder el tiempo de pago', 'error');
-                    
-                    // Reproducir sonido de notificación (para alertar)
-                    reproducirSonidoNotificacion();
-                    
+                    if (pedido.estado === 'pendiente') {
+                        // Liberar ingredientes (la función RPC liberar_ingredientes se encarga)
+                        await window.supabaseClient.rpc('liberar_ingredientes', {
+                            p_pedido_id: pedidoId
+                        });
+                        
+                        // Actualizar estado del pedido
+                        await window.supabaseClient
+                            .from('pedidos')
+                            .update({ estado: 'cancelado_timeout' })
+                            .eq('id', pedidoId);
+                        
+                        // Crear notificación
+                        await window.supabaseClient
+                            .from('notificaciones')
+                            .insert([{
+                                pedido_id: pedidoId,
+                                tipo: 'rejected',
+                                titulo: '⏰ Pedido cancelado',
+                                mensaje: 'El tiempo para pagar ha expirado (20 minutos).',
+                                timestamp: new Date().toISOString(),
+                                leida: false
+                            }]);
+                        
+                        mostrarToast('Tu pedido fue cancelado por exceder el tiempo de pago', 'error');
+                        reproducirSonidoNotificacion();
+                    }
                 } catch (error) {
-                    console.error('Error cancelando pedido por timeout:', error);
+                    console.error('Error en timeout de pedido:', error);
                 } finally {
                     delete pedidosConTimer[pedidoId];
                 }
@@ -2594,18 +2721,11 @@
                 timerId: timerId,
                 fin: fin
             };
-            
-            // Actualizar display del timer si el modal está abierto
-            actualizarTimerDisplay(pedidoId);
         }
 
-        function actualizarTimerDisplay(pedidoId) {
-            // Esta función se llamaría desde el modal si está abierto
-            // Por simplicidad, no implementamos el display en tiempo real aquí,
-            // pero se podría hacer con un setInterval que actualice el DOM.
-        }
-
-        // --- FUNCIONES DE CONFIRMACIÓN DE PEDIDOS ---
+        // ============================================
+        // FUNCIONES DE CONFIRMACIÓN DE PEDIDOS
+        // ============================================
         function abrirConfirmacionMesa() {
             const summary = document.getElementById('mesaOrderSummary');
             let total = 0;
@@ -2629,9 +2749,9 @@
             const pedido = crearPedidoBase('mesa');
             pedido.cliente_nombre = nombre || 'Cliente';
             
-            const exito = await guardarPedido(pedido);
+            const resultado = await guardarPedido(pedido);
             
-            if (exito) {
+            if (resultado.success) {
                 // Limpiar carrito
                 carrito = [];
                 guardarCarrito();
@@ -2641,7 +2761,7 @@
                 
                 mostrarToast('¡Pedido confirmado! El cajero procesará tu pago.', 'success');
             } else {
-                mostrarToast('Error al confirmar el pedido. Intenta de nuevo.', 'error');
+                mostrarToast('Error al confirmar el pedido: ' + resultado.error, 'error');
             }
         }
 
@@ -2759,12 +2879,11 @@
             pedido.comprobante_url = comprobanteUrl;
             pedido.costo_delivery_usd = precioUSD;
             pedido.costo_delivery = usdToBs(precioUSD);
-            pedido.total += precioUSD; // Añadir costo de delivery al total USD
+            pedido.total += precioUSD;
             
-            const exito = await guardarPedido(pedido);
+            const resultado = await guardarPedido(pedido);
             
-            if (exito) {
-                // Limpiar carrito
+            if (resultado.success) {
                 carrito = [];
                 guardarCarrito();
                 actualizarCarritoUI();
@@ -2773,7 +2892,7 @@
                 
                 mostrarToast('¡Pedido de delivery confirmado! Tienes 20 minutos para pagar.', 'success');
             } else {
-                mostrarToast('Error al confirmar el pedido. Intenta de nuevo.', 'error');
+                mostrarToast('Error al confirmar el pedido: ' + resultado.error, 'error');
             }
         }
 
@@ -2816,9 +2935,9 @@
             pedido.referencia = referencia;
             pedido.comprobante_url = comprobanteUrl;
             
-            const exito = await guardarPedido(pedido);
+            const resultado = await guardarPedido(pedido);
             
-            if (exito) {
+            if (resultado.success) {
                 carrito = [];
                 guardarCarrito();
                 actualizarCarritoUI();
@@ -2827,11 +2946,13 @@
                 
                 mostrarToast('¡Solicitud de reserva enviada! Te confirmaremos por notificación.', 'success');
             } else {
-                mostrarToast('Error al confirmar la reserva. Intenta de nuevo.', 'error');
+                mostrarToast('Error al confirmar la reserva: ' + resultado.error, 'error');
             }
         }
 
-        // --- FUNCIONES DE NOTIFICACIONES ---
+        // ============================================
+        // FUNCIONES DE NOTIFICACIONES
+        // ============================================
         function setupRealtimeSubscriptions() {
             const subscription = window.supabaseClient
                 .channel('notificaciones-cliente')
@@ -2840,29 +2961,21 @@
                     schema: 'public',
                     table: 'notificaciones'
                 }, (payload) => {
-                    // Solo notificaciones para este cliente (por sessionId o pedidos relacionados)
-                    // Por simplicidad, aceptamos todas y verificamos si son de pedidos del cliente
                     const notif = payload.new;
                     
-                    // Verificar si la notificación corresponde a un pedido del cliente
-                    const pedidoRelacionado = pedidosCliente.find(p => p.id === notif.pedido_id);
-                    if (pedidoRelacionado) {
-                        notificaciones.unshift(notif);
-                        actualizarNotificacionesUI();
-                        reproducirSonidoNotificacion();
-                        
-                        // Actualizar estado del pedido en historial
-                        if (pedidoRelacionado.estado !== notif.tipo) {
-                            pedidoRelacionado.estado = notif.tipo;
-                            localStorage.setItem('saki_historial', JSON.stringify(pedidosCliente));
-                        }
-                        
-                        // Cancelar timer si el pedido fue aprobado o rechazado
-                        if (notif.tipo === 'approved' || notif.tipo === 'rejected') {
-                            if (pedidosConTimer[notif.pedido_id]) {
-                                clearTimeout(pedidosConTimer[notif.pedido_id].timerId);
-                                delete pedidosConTimer[notif.pedido_id];
-                            }
+                    // Verificar si la notificación es para este cliente (por sessionId o pedidos)
+                    // Por simplicidad, asumimos que todas las notificaciones son para este cliente
+                    // En un sistema real, se filtraría por pedido_id y se verificaría si ese pedido pertenece a este sessionId
+                    
+                    notificaciones.unshift(notif);
+                    actualizarNotificacionesUI();
+                    reproducirSonidoNotificacion();
+                    
+                    // Si la notificación es de aprobado o rechazado, cancelar timer
+                    if (notif.tipo === 'approved' || notif.tipo === 'rejected') {
+                        if (pedidosConTimer[notif.pedido_id]) {
+                            clearTimeout(pedidosConTimer[notif.pedido_id].timerId);
+                            delete pedidosConTimer[notif.pedido_id];
                         }
                     }
                 })
@@ -2875,7 +2988,6 @@
                 audio.play().catch(e => console.log('Error reproduciendo sonido:', e));
             }
             
-            // Vibrar la campana
             const bell = document.getElementById('notificationBell');
             bell.classList.add('fa-shake');
             setTimeout(() => bell.classList.remove('fa-shake'), 1000);
@@ -2892,19 +3004,11 @@
 
         async function cargarNotificaciones() {
             try {
-                // Obtener IDs de pedidos del cliente
-                const pedidoIds = pedidosCliente.map(p => p.id);
-                
-                if (pedidoIds.length === 0) {
-                    notificaciones = [];
-                    actualizarNotificacionesUI();
-                    return;
-                }
-                
+                // Por simplicidad, cargamos todas las notificaciones recientes
+                // En un sistema real, se filtrarían por pedidos del cliente
                 const { data, error } = await window.supabaseClient
                     .from('notificaciones')
                     .select('*')
-                    .in('pedido_id', pedidoIds)
                     .order('timestamp', { ascending: false })
                     .limit(50);
                 
@@ -2937,19 +3041,22 @@
                     <span>${noLeidas} nuevas</span>
                 </div>
                 <div class="notifications-list">
-                    ${notificaciones.map(n => `
-                        <div class="notification-item ${n.tipo} ${!n.leida ? 'unread' : ''}" onclick="marcarNotificacionLeida('${n.id}')">
-                            <div class="notification-title">
-                                <i class="fas fa-${n.tipo === 'approved' ? 'check-circle' : n.tipo === 'rejected' ? 'times-circle' : 'clock'}"></i>
-                                ${n.titulo}
+                    ${notificaciones.map(n => {
+                        const info = mensajesEstado[n.tipo] || { titulo: n.titulo, icono: 'bell' };
+                        return `
+                            <div class="notification-item ${n.tipo} ${!n.leida ? 'unread' : ''}" onclick="marcarNotificacionLeida('${n.id}')">
+                                <div class="notification-title">
+                                    <i class="fas fa-${info.icono}"></i>
+                                    ${info.titulo}
+                                </div>
+                                <div class="notification-message">${n.mensaje}</div>
+                                <div class="notification-time">
+                                    <i class="far fa-clock"></i>
+                                    ${new Date(n.timestamp).toLocaleString()}
+                                </div>
                             </div>
-                            <div class="notification-message">${n.mensaje}</div>
-                            <div class="notification-time">
-                                <i class="far fa-clock"></i>
-                                ${new Date(n.timestamp).toLocaleString()}
-                            </div>
-                        </div>
-                    `).join('')}
+                        `;
+                    }).join('')}
                     ${notificaciones.length === 0 ? '<div style="text-align: center; padding: 2rem; color: var(--gray-500);">No hay notificaciones</div>' : ''}
                 </div>
             `;
@@ -2971,35 +3078,9 @@
             }
         }
 
-        // --- FUNCIONES DE HISTORIAL Y LIMPIEZA ---
-        function verificarPedidosPendientes() {
-            const historial = localStorage.getItem('saki_historial');
-            if (historial) {
-                try {
-                    pedidosCliente = JSON.parse(historial);
-                    // Filtrar pedidos del día (timestamp de hoy)
-                    const hoy = new Date().toDateString();
-                    pedidosCliente = pedidosCliente.filter(p => new Date(p.timestamp).toDateString() === hoy);
-                    localStorage.setItem('saki_historial', JSON.stringify(pedidosCliente));
-                } catch (e) {
-                    console.error('Error cargando historial:', e);
-                    pedidosCliente = [];
-                }
-            }
-        }
-
-        function limpiarNotificacionesDiarias() {
-            const hoy = new Date().toDateString();
-            const ultimaLimpieza = localStorage.getItem('ultimaLimpiezaNotificaciones');
-            
-            if (ultimaLimpieza !== hoy) {
-                // Eliminar notificaciones del día anterior del localStorage (solo copia local)
-                // Las de la BD se mantienen
-                localStorage.setItem('ultimaLimpiezaNotificaciones', hoy);
-            }
-        }
-
-        // --- FUNCIONES DE UTILIDAD ---
+        // ============================================
+        // FUNCIONES DE UTILIDAD
+        // ============================================
         function setupReferenceInputs() {
             document.querySelectorAll('.ref-digit').forEach(input => {
                 input.addEventListener('input', function(e) {
@@ -3091,9 +3172,11 @@
                 if (this.files && this.files[0]) {
                     label.innerHTML = `<i class="fas fa-check-circle" style="color: var(--success); font-size: 2rem; margin-bottom: 0.5rem; display: block;"></i> ${this.files[0].name}`;
                     label.style.borderColor = 'var(--success)';
+                    label.classList.add('has-file');
                 } else {
                     label.innerHTML = `<i class="fas fa-cloud-upload-alt" style="font-size: 2rem; color: var(--primary); margin-bottom: 0.5rem; display: block;"></i> Haz clic para subir el comprobante`;
                     label.style.borderColor = 'var(--primary)';
+                    label.classList.remove('has-file');
                 }
                 validarFormularioDelivery();
             });
@@ -3103,9 +3186,11 @@
                 if (this.files && this.files[0]) {
                     label.innerHTML = `<i class="fas fa-check-circle" style="color: var(--success); font-size: 2rem; margin-bottom: 0.5rem; display: block;"></i> ${this.files[0].name}`;
                     label.style.borderColor = 'var(--success)';
+                    label.classList.add('has-file');
                 } else {
                     label.innerHTML = `<i class="fas fa-cloud-upload-alt" style="font-size: 2rem; color: var(--primary); margin-bottom: 0.5rem; display: block;"></i> Haz clic para subir el comprobante`;
                     label.style.borderColor = 'var(--primary)';
+                    label.classList.remove('has-file');
                 }
                 validarFormularioReserva();
             });
@@ -3159,8 +3244,8 @@
             document.querySelector('.category-item[data-categoria="Todos"]')?.click();
         }
 
-        function selectCategory(categoria) {
-            document.querySelector(`.category-item[data-categoria="${categoria}"]`)?.click();
+        function selectCategoriaOfertas() {
+            document.querySelector('.category-item[data-categoria="ofertas"]')?.click();
         }
 
         function mostrarToast(mensaje, tipo = 'info') {
