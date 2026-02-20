@@ -17,6 +17,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <style>
+        /* Mismo estilo que tenías antes */
         * {
             margin: 0;
             padding: 0;
@@ -767,8 +768,8 @@
         <div class="login-box">
             <h2><i class="fas fa-user"></i> Cajero Saki Sushi</h2>
             <form class="login-form" id="loginForm">
-                <input type="text" id="username" placeholder="Usuario" required autocomplete="username">
-                <input type="password" id="password" placeholder="Contraseña" required autocomplete="current-password">
+                <input type="text" id="username" placeholder="Usuario" required>
+                <input type="password" id="password" placeholder="Contraseña" required>
                 <button type="submit">Iniciar Sesión</button>
             </form>
         </div>
@@ -991,47 +992,40 @@
 
         // Verificar sesión al cargar
         document.addEventListener('DOMContentLoaded', () => {
-            console.log('🔍 Verificando sesión guardada...');
             const savedUser = sessionStorage.getItem('cajero_user');
             if (savedUser) {
                 try {
                     currentUser = JSON.parse(savedUser);
-                    console.log('👤 Usuario encontrado en sesión:', currentUser.nombre);
                     mostrarPanel();
                 } catch {
-                    console.log('❌ Error al parsear usuario guardado');
                     mostrarLogin();
                 }
             } else {
-                console.log('👤 No hay sesión guardada');
                 mostrarLogin();
             }
         });
 
         // Mostrar login
         function mostrarLogin() {
-            console.log('🔐 Mostrando pantalla de login');
             document.getElementById('loginContainer').style.display = 'flex';
             document.getElementById('panelContainer').classList.remove('active');
         }
 
         // Mostrar panel
         function mostrarPanel() {
-            console.log('📊 Mostrando panel principal');
             document.getElementById('loginContainer').style.display = 'none';
             document.getElementById('panelContainer').classList.add('active');
             cargarConfiguracionInicial();
             cargarPedidos();
             cargarMenu();
             setupRealtimeSubscriptions();
+            setupEventListeners();
         }
 
         // Configuración inicial
         async function cargarConfiguracionInicial() {
-            console.log('⚙️ Cargando configuración inicial...');
             await cargarConfiguracion();
             actualizarTasaUI();
-            console.log('✅ Configuración cargada');
         }
 
         // Actualizar UI de tasa
@@ -1044,7 +1038,6 @@
 
         // Cargar pedidos
         async function cargarPedidos() {
-            console.log('📦 Cargando pedidos...');
             try {
                 const hoy = new Date();
                 hoy.setHours(0, 0, 0, 0);
@@ -1057,7 +1050,6 @@
                 
                 if (error) throw error;
                 pedidos = data || [];
-                console.log(`📦 ${pedidos.length} pedidos cargados`);
                 actualizarVistaPedidos();
                 actualizarEstadisticas();
             } catch (error) {
@@ -1067,14 +1059,12 @@
 
         // Cargar menú
         async function cargarMenu() {
-            console.log('🍣 Cargando menú...');
             try {
                 const { data, error } = await window.supabaseClient
                     .from('menu')
                     .select('*');
                 
                 if (error) throw error;
-                console.log(`🍣 ${data?.length || 0} platillos cargados`);
                 renderizarMenu(data || []);
             } catch (error) {
                 console.error('Error cargando menú:', error);
@@ -1175,21 +1165,21 @@
             
             // Calcular tiempo restante para delivery/reserva
             let temporizador = '';
-            if (pedido.tipo === 'delivery' || pedido.tipo === 'reserva') {
+            if ((pedido.tipo === 'delivery' || pedido.tipo === 'reserva') && pedido.estado === 'pendiente') {
                 const creado = new Date(pedido.timestamp).getTime();
                 const ahora = Date.now();
                 const transcurrido = Math.floor((ahora - creado) / 1000 / 60);
                 const restante = 20 - transcurrido;
                 
-                if (restante > 0 && pedido.estado === 'pendiente') {
+                if (restante > 0) {
                     temporizador = `<div class="pedido-temporizador"><i class="fas fa-clock"></i> ${restante} min restantes</div>`;
-                } else if (restante <= 0 && pedido.estado === 'pendiente') {
+                } else {
                     temporizador = `<div class="pedido-temporizador" style="color: var(--danger);"><i class="fas fa-exclamation-triangle"></i> Tiempo agotado</div>`;
                 }
             }
             
             const itemsHtml = pedido.items ? pedido.items.map(item => 
-                `<div>${item.cantidad || 0}x ${item.nombre || ''} ${item.personalizacion?.length ? '(Personalizado)' : ''}</div>`
+                `<div>${item.cantidad || 0}x ${item.nombre || ''} ${item.personalizacion?.length ? '(Personalizado)' : ''} ${item.instanceNumber ? `#${item.instanceNumber}` : ''}</div>`
             ).join('') : '';
             
             const botones = [];
@@ -1232,6 +1222,7 @@
                 </div>
                 <div class="pedido-total">
                     Total: ${formatBs(usdToBs(pedido.total || 0))}
+                    ${pedido.costo_delivery ? `<br><small>Delivery: ${formatBs(pedido.costo_delivery)}</small>` : ''}
                 </div>
                 ${temporizador}
                 <div class="pedido-actions">
@@ -1286,6 +1277,9 @@
             pedidoActual = pedido;
             pagosMixtos = [];
             totalAPagar = usdToBs(pedido.total || 0);
+            if (pedido.costo_delivery) {
+                totalAPagar += pedido.costo_delivery;
+            }
             totalRecibido = 0;
             vuelto = 0;
             condonado = 0;
@@ -1308,7 +1302,7 @@
             if (pedidoActual.items && Array.isArray(pedidoActual.items)) {
                 itemsHtml = pedidoActual.items.map(item => `
                     <div style="display: flex; justify-content: space-between; margin-bottom: 0.25rem;">
-                        <span>${item.cantidad || 0}x ${item.nombre || ''}</span>
+                        <span>${item.cantidad || 0}x ${item.nombre || ''} ${item.instanceNumber ? `#${item.instanceNumber}` : ''}</span>
                         <span>${formatBs(usdToBs((item.precioUnitarioUSD || 0) * (item.cantidad || 0)))}</span>
                     </div>
                 `).join('');
@@ -1396,12 +1390,12 @@
                         <div class="alert warning">
                             <label style="display: flex; align-items: center; gap: 0.5rem;">
                                 <input type="checkbox" id="condonarCheck">
-                                    Monto a condonar: ${formatBs(pendiente)}
-                                </label>
-                            </div>
-                        ` : ''}
-                    </div>
-                `;
+                                Monto a condonar: ${formatBs(pendiente)}
+                            </label>
+                        </div>
+                    ` : ''}
+                </div>
+            `;
             
             // Event listeners
             document.getElementById('invitacionCheck').addEventListener('change', (e) => {
@@ -1513,6 +1507,7 @@
             if (!pedidoActual) return;
             
             try {
+                // Llamar a la función RPC procesar_cobro
                 const { error } = await window.supabaseClient.rpc('procesar_cobro', {
                     p_pedido_id: pedidoActual.id,
                     p_pagos_mixtos: pagosMixtos,
@@ -1524,11 +1519,13 @@
                 
                 if (error) throw error;
                 
+                // Actualizar estado local
                 pedidoActual.estado = pedidoActual.tipo === 'delivery' ? 'en_camino' : 
                                      (pedidoActual.tipo === 'reserva' ? 'reserva_pendiente' : 'en_cocina');
                 
                 document.getElementById('cobroModal').classList.remove('active');
                 await cargarPedidos();
+                
                 alert('Cobro procesado exitosamente');
             } catch (error) {
                 console.error('Error procesando cobro:', error);
@@ -1541,6 +1538,12 @@
             if (!confirm('¿Estás seguro de rechazar este pedido?')) return;
             
             try {
+                // Primero liberar ingredientes
+                await window.supabaseClient.rpc('liberar_ingredientes', {
+                    p_pedido_id: pedidoId
+                });
+                
+                // Actualizar estado del pedido
                 const { error } = await window.supabaseClient
                     .from('pedidos')
                     .update({ estado: 'rechazado' })
@@ -1548,12 +1551,13 @@
                 
                 if (error) throw error;
                 
+                // Notificar al cliente
                 await window.supabaseClient
                     .from('notificaciones')
                     .insert([{
                         pedido_id: pedidoId,
                         tipo: 'rejected',
-                        titulo: 'Pedido rechazado',
+                        titulo: '❌ Pedido rechazado',
                         mensaje: 'Lo sentimos, tu pedido ha sido rechazado',
                         timestamp: new Date().toISOString()
                     }]);
@@ -1651,17 +1655,48 @@
                     
                 case 'cobrados':
                     title.textContent = 'Pedidos Cobrados Hoy';
-                    body.innerHTML = '<p>Función en desarrollo</p>';
+                    const cobradosHoy = pedidos.filter(p => 
+                        ['cobrado', 'entregado', 'enviado', 'reserva_completada'].includes(p.estado) && 
+                        new Date(p.timestamp).toDateString() === new Date().toDateString()
+                    );
+                    body.innerHTML = cobradosHoy.map(p => `
+                        <div style="border-bottom: 1px solid var(--gray-200); padding: 1rem 0;">
+                            <strong>${p.id}</strong> - ${new Date(p.timestamp).toLocaleString()}<br>
+                            Total: ${formatBs(usdToBs(p.total || 0))}
+                        </div>
+                    `).join('') || '<p>No hay pedidos cobrados hoy</p>';
                     break;
                     
                 case 'ventas':
                     title.textContent = 'Detalle de Ventas';
-                    body.innerHTML = '<p>Función en desarrollo</p>';
+                    const ventasHoy = pedidos.filter(p => 
+                        ['cobrado', 'entregado', 'enviado', 'reserva_completada'].includes(p.estado) && 
+                        new Date(p.timestamp).toDateString() === new Date().toDateString()
+                    );
+                    const totalVentas = ventasHoy.reduce((sum, p) => sum + (p.total || 0), 0);
+                    body.innerHTML = `
+                        <p><strong>Total ventas hoy:</strong> ${formatUSD(totalVentas)}</p>
+                        <p><strong>Cantidad de pedidos:</strong> ${ventasHoy.length}</p>
+                    `;
                     break;
                     
                 case 'platillos':
                     title.textContent = 'Platillos Vendidos Hoy';
-                    body.innerHTML = '<p>Función en desarrollo</p>';
+                    const platillosHoy = pedidos.filter(p => 
+                        ['cobrado', 'entregado', 'enviado', 'reserva_completada'].includes(p.estado) && 
+                        new Date(p.timestamp).toDateString() === new Date().toDateString()
+                    );
+                    const platillosMap = {};
+                    platillosHoy.forEach(p => {
+                        p.items?.forEach(item => {
+                            platillosMap[item.nombre] = (platillosMap[item.nombre] || 0) + (item.cantidad || 0);
+                        });
+                    });
+                    body.innerHTML = Object.entries(platillosMap).map(([nombre, cantidad]) => `
+                        <div style="border-bottom: 1px solid var(--gray-200); padding: 0.5rem 0;">
+                            <strong>${nombre}:</strong> ${cantidad} unidad(es)
+                        </div>
+                    `).join('') || '<p>No hay platillos vendidos hoy</p>';
                     break;
             }
             
@@ -1670,26 +1705,16 @@
 
         // Configurar event listeners
         function setupEventListeners() {
-            console.log('🔧 Configurando event listeners...');
-            
-            // Login
+            // Login - VERSIÓN CORREGIDA
             document.getElementById('loginForm').addEventListener('submit', async (e) => {
                 e.preventDefault();
-                console.log('1️⃣ Evento submit capturado');
                 
                 const username = document.getElementById('username').value;
                 const password = document.getElementById('password').value;
                 
-                console.log('2️⃣ Usuario ingresado:', username);
-                
-                if (!username || !password) {
-                    alert('Completa los campos');
-                    return;
-                }
+                console.log('Intentando login cajero:', username);
                 
                 try {
-                    console.log('3️⃣ Consultando Supabase...');
-                    
                     const { data, error } = await window.supabaseClient
                         .from('usuarios')
                         .select('*')
@@ -1698,50 +1723,32 @@
                         .eq('activo', true)
                         .maybeSingle();
                     
-                    console.log('4️⃣ Respuesta de Supabase:', { data, error });
+                    console.log('Respuesta de Supabase:', { data, error });
                     
                     if (error) {
-                        console.error('5️⃣ Error en consulta:', error);
-                        alert('Error: ' + error.message);
+                        console.error('Error de Supabase:', error);
+                        alert('Error al conectar con la base de datos: ' + error.message);
                         return;
                     }
                     
                     if (!data) {
-                        console.log('5️⃣ Usuario no encontrado');
-                        alert('Credenciales inválidas');
+                        alert('Credenciales inválidas o usuario inactivo');
                         return;
                     }
                     
-                    console.log('6️⃣ Usuario encontrado:', data.nombre);
-                    
-                    // Guardar usuario
+                    // Login exitoso
                     currentUser = data;
                     sessionStorage.setItem('cajero_user', JSON.stringify(data));
-                    
-                    console.log('7️⃣ Ocultando login...');
-                    document.getElementById('loginContainer').style.display = 'none';
-                    
-                    console.log('8️⃣ Mostrando panel...');
-                    document.getElementById('panelContainer').classList.add('active');
-                    
-                    console.log('9️⃣ Cargando datos...');
-                    
-                    await cargarConfiguracionInicial();
-                    await cargarPedidos();
-                    await cargarMenu();
-                    setupRealtimeSubscriptions();
-                    
-                    console.log('🎉 TODO COMPLETADO');
+                    mostrarPanel();
                     
                 } catch (error) {
-                    console.error('❌ Error general:', error);
-                    alert('Error: ' + error.message);
+                    console.error('Error en login:', error);
+                    alert('Error al iniciar sesión: ' + error.message);
                 }
             });
             
             // Logout
             document.getElementById('logoutButton').addEventListener('click', () => {
-                console.log('👋 Cerrando sesión');
                 sessionStorage.removeItem('cajero_user');
                 currentUser = null;
                 mostrarLogin();
@@ -1749,11 +1756,9 @@
             
             // Sincronizar
             document.getElementById('syncButton').addEventListener('click', async () => {
-                console.log('🔄 Sincronizando...');
                 await cargarConfiguracionInicial();
                 await cargarPedidos();
                 await cargarMenu();
-                console.log('✅ Sincronización completa');
             });
             
             // Pestañas
@@ -1769,46 +1774,44 @@
             });
             
             // Cerrar modales
-            const closeButtons = [
-                'closeCobroModal', 'cancelCobro',
-                'closeDetalleModal', 'closeDetalle',
-                'closeComprobanteModal', 'closeComprobante'
-            ];
-            
-            closeButtons.forEach(id => {
-                const btn = document.getElementById(id);
-                if (btn) {
-                    btn.addEventListener('click', () => {
-                        const modal = btn.closest('.modal');
-                        if (modal) modal.classList.remove('active');
-                    });
-                }
+            document.getElementById('closeCobroModal').addEventListener('click', () => {
+                document.getElementById('cobroModal').classList.remove('active');
             });
             
-            console.log('✅ Event listeners configurados');
+            document.getElementById('cancelCobro').addEventListener('click', () => {
+                document.getElementById('cobroModal').classList.remove('active');
+            });
+            
+            document.getElementById('closeDetalleModal').addEventListener('click', () => {
+                document.getElementById('detallePedidosModal').classList.remove('active');
+            });
+            
+            document.getElementById('closeDetalle').addEventListener('click', () => {
+                document.getElementById('detallePedidosModal').classList.remove('active');
+            });
+            
+            document.getElementById('closeComprobanteModal').addEventListener('click', () => {
+                document.getElementById('comprobanteModal').classList.remove('active');
+            });
+            
+            document.getElementById('closeComprobante').addEventListener('click', () => {
+                document.getElementById('comprobanteModal').classList.remove('active');
+            });
         }
 
         // Suscripciones en tiempo real
         function setupRealtimeSubscriptions() {
-            console.log('🔄 Configurando suscripciones en tiempo real...');
-            let subscription = window.supabaseClient
+            const subscription = window.supabaseClient
                 .channel('cajero-pedidos')
                 .on('postgres_changes', {
                     event: '*',
                     schema: 'public',
                     table: 'pedidos'
                 }, () => {
-                    console.log('📦 Cambio detectado en pedidos, recargando...');
                     cargarPedidos();
                 })
                 .subscribe();
-            console.log('✅ Suscripciones configuradas');
         }
-
-        // Inicializar event listeners cuando cargue la página
-        document.addEventListener('DOMContentLoaded', () => {
-            setupEventListeners();
-        });
     </script>
 </body>
 </html>
