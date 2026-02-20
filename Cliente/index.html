@@ -69,20 +69,20 @@
             font-family: 'Montserrat', sans-serif;
         }
 
-        /* Overlay solo para paneles deslizables */
-        .panel-overlay {
+        /* Overlay para clic fuera (solo para menú y carrito) */
+        .overlay {
             position: fixed;
             top: 0;
             left: 0;
             right: 0;
             bottom: 0;
             background: rgba(0,0,0,0.5);
-            z-index: 850;
+            z-index: 800;
             display: none;
             backdrop-filter: blur(3px);
         }
 
-        .panel-overlay.active {
+        .overlay.active {
             display: block;
         }
 
@@ -266,7 +266,7 @@
             min-height: calc(100vh - 70px);
         }
 
-        /* Category Sidebar - panel deslizable */
+        /* Category Sidebar */
         .category-sidebar {
             width: 280px;
             background: white;
@@ -388,7 +388,7 @@
             font-weight: bold;
         }
 
-        /* Cart Sidebar - panel deslizable */
+        /* Cart Sidebar */
         .cart-sidebar {
             width: 320px;
             background: white;
@@ -662,7 +662,7 @@
             cursor: not-allowed;
         }
 
-        /* Main Content - flujo normal sin oscurecimiento */
+        /* Main Content */
         .main-content {
             flex: 1;
             padding: 1rem;
@@ -692,14 +692,9 @@
             margin-bottom: 0.3rem;
         }
 
+        /* Eliminado el subtítulo redundante */
         .category-title p {
-            color: var(--gray-700);
-            font-size: 0.95rem;
-        }
-
-        .category-title p i {
-            color: var(--primary);
-            margin: 0 0.3rem;
+            display: none;
         }
         
         .tagline {
@@ -708,6 +703,9 @@
             gap: 0.5rem;
             margin-top: 1rem;
             flex-wrap: wrap;
+            /* Flujo normal del documento - sin posicionamiento absoluto */
+            position: relative;
+            z-index: 1;
         }
         
         .tagline-item {
@@ -922,7 +920,7 @@
         .stock-info i.low { color: var(--warning); }
         .stock-info i.sold-out { color: var(--danger); }
 
-        /* Notifications Panel - flotante */
+        /* Notifications Panel */
         .notifications-panel {
             position: absolute;
             top: 60px;
@@ -1422,8 +1420,8 @@
     </style>
 </head>
 <body>
-    <!-- Overlay solo para paneles deslizables (menú y carrito) -->
-    <div class="panel-overlay" id="panelOverlay" onclick="cerrarTodosLosPaneles()"></div>
+    <!-- Overlay para clic fuera (solo para menú y carrito) -->
+    <div class="overlay" id="overlay" onclick="cerrarTodosLosPaneles()"></div>
 
     <div class="toast" id="toast"></div>
     
@@ -1460,7 +1458,7 @@
     </header>
 
     <div class="main-layout">
-        <!-- Category Sidebar (panel deslizable) -->
+        <!-- Category Sidebar -->
         <div class="category-sidebar" id="categorySidebar">
             <div class="category-header">
                 <span><i class="fas fa-utensils"></i> Categorías</span>
@@ -1474,11 +1472,11 @@
             </ul>
         </div>
 
-        <!-- Main Content - flujo normal sin oscurecimiento -->
+        <!-- Main Content -->
         <main class="main-content" id="mainContent">
             <div class="category-title">
                 <h2 id="categoryTitle">Menú</h2>
-                <p id="currentCategory"><i class="fas fa-chevron-right"></i> Todos los platillos</p>
+                <!-- Subtítulo eliminado -->
                 <div class="tagline">
                     <div class="tagline-item" onclick="selectCategoria('ofertas')">🔥 Ofertas Especiales</div>
                     <div class="tagline-item" onclick="selectCategoria('fresco')">🐟 Fresco del día</div>
@@ -1495,7 +1493,7 @@
             </div>
         </main>
 
-        <!-- Cart Sidebar (panel deslizable) -->
+        <!-- Cart Sidebar -->
         <div class="cart-sidebar" id="cartSidebar">
             <div class="cart-header">
                 <h3><i class="fas fa-shopping-cart"></i> Tu Pedido</h3>
@@ -1520,7 +1518,6 @@
         </div>
     </div>
 
-    <!-- Resto de modales (sin cambios) -->
     <!-- Customize Modal -->
     <div class="modal-overlay" id="customizeModal">
         <div class="modal-container">
@@ -1870,33 +1867,34 @@
         function toggleMenuCategorias() {
             document.getElementById('categorySidebar').classList.toggle('open');
             if (document.getElementById('categorySidebar').classList.contains('open')) {
-                document.getElementById('panelOverlay').classList.add('active');
+                document.getElementById('overlay').classList.add('active');
             } else {
-                document.getElementById('panelOverlay').classList.remove('active');
+                document.getElementById('overlay').classList.remove('active');
             }
         }
         
         function cerrarMenuCategorias() {
             document.getElementById('categorySidebar').classList.remove('open');
-            document.getElementById('panelOverlay').classList.remove('active');
+            document.getElementById('overlay').classList.remove('active');
         }
         
         function toggleCarrito() {
             document.getElementById('cartSidebar').classList.toggle('open');
             if (document.getElementById('cartSidebar').classList.contains('open')) {
-                document.getElementById('panelOverlay').classList.add('active');
+                document.getElementById('overlay').classList.add('active');
             } else {
-                document.getElementById('panelOverlay').classList.remove('active');
+                document.getElementById('overlay').classList.remove('active');
             }
         }
         
         function cerrarCarrito() {
             document.getElementById('cartSidebar').classList.remove('open');
-            document.getElementById('panelOverlay').classList.remove('active');
+            document.getElementById('overlay').classList.remove('active');
         }
         
         function cerrarNotificaciones() {
             document.getElementById('notificationsPanel').classList.remove('active');
+            // No cerramos overlay al cerrar notificaciones porque el overlay es solo para menú y carrito
         }
         
         function cerrarTodosLosPaneles() {
@@ -2211,7 +2209,6 @@
                     document.querySelectorAll('.subcategory-list').forEach(list => list.classList.remove('expanded'));
                     
                     document.getElementById('categoryTitle').textContent = categoria === 'Todos' ? 'Menú' : item.querySelector('span').textContent;
-                    document.getElementById('currentCategory').innerHTML = `<i class="fas fa-chevron-right"></i> ${categoria === 'Todos' ? 'Todos' : item.querySelector('span').textContent}`;
                     
                     renderizarMenu(categoria === 'Todos' ? null : categoria);
                     
@@ -2236,7 +2233,6 @@
                     item.classList.add('active');
                     
                     document.getElementById('categoryTitle').textContent = subcategoria;
-                    document.getElementById('currentCategory').innerHTML = `<i class="fas fa-chevron-right"></i> ${categoria} <i class="fas fa-chevron-right"></i> ${subcategoria}`;
                     renderizarMenu(categoria, subcategoria);
                     
                     // Cerrar menú en móvil después de seleccionar subcategoría
@@ -2891,7 +2887,10 @@
         function toggleNotifications() {
             const panel = document.getElementById('notificationsPanel');
             panel.classList.toggle('active');
-            // No activamos overlay para notificaciones (son flotantes)
+            // No activamos overlay para notificaciones, solo para menú y carrito
+            if (panel.classList.contains('active')) {
+                cargarNotificaciones();
+            }
         }
 
         async function cargarNotificaciones() {
