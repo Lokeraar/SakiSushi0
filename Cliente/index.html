@@ -17,6 +17,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <style>
+        /* Mismos estilos que antes - mantenemos todo igual */
         * {
             margin: 0;
             padding: 0;
@@ -227,6 +228,7 @@
             border-radius: 25px;
             font-weight: 700;
             font-family: 'Montserrat', sans-serif;
+            display: inline-block;
         }
 
         /* Main Layout */
@@ -1286,6 +1288,7 @@
             font-size: 2rem;
             font-weight: 700;
             margin-top: 10px;
+            font-family: monospace;
         }
 
         /* Parroquia Selector */
@@ -1355,6 +1358,31 @@
         .file-input-label.has-file {
             border-color: var(--success);
             background: #E8F5E9;
+        }
+
+        /* Mensajes específicos por tipo de pedido */
+        .info-box {
+            padding: 1rem;
+            border-radius: var(--radius-sm);
+            margin-bottom: 1rem;
+        }
+        
+        .info-box.mesa {
+            background: #E3F2FD;
+            border-left: 4px solid var(--info);
+            color: var(--info);
+        }
+        
+        .info-box.delivery-pending {
+            background: #FFF3E0;
+            border-left: 4px solid var(--warning);
+            color: var(--warning);
+        }
+        
+        .info-box.confirmed {
+            background: #E8F5E9;
+            border-left: 4px solid var(--success);
+            color: var(--success);
         }
 
         /* Responsive */
@@ -1469,7 +1497,7 @@
             <button class="icon-button" id="cartToggle" title="Carrito">
                 <i class="fas fa-shopping-cart"></i>
             </button>
-            <div class="table-badge" id="tableBadge" style="display: none;">Mesa #<span id="tableNumber">--</span></div>
+            <div class="table-badge" id="tableBadge" style="display: none;">Mesa <span id="tableNumber">--</span></div>
         </div>
     </header>
 
@@ -1559,13 +1587,17 @@
                 <button class="modal-close" id="closeConfirmMesaModal">&times;</button>
             </div>
             <div class="modal-body">
-                <div class="alert success" style="background: #d4edda; color: #155724; padding: 1rem; border-radius: var(--radius-sm); margin-bottom: 1rem;">
-                    <i class="fas fa-check-circle"></i> Estás realizando un pedido para la mesa <span id="confirmTableNumber">#--</span>
+                <div class="info-box mesa">
+                    <i class="fas fa-info-circle"></i> Estás realizando un pedido para la <strong>Mesa <span id="confirmTableNumber">#--</span></strong>
                 </div>
                 
                 <div style="margin: 1.5rem 0;">
                     <h4 style="margin-bottom: 1rem;">Resumen de tu pedido:</h4>
                     <div id="mesaOrderSummary" style="background: var(--gray-100); padding: 1rem; border-radius: var(--radius-sm);"></div>
+                </div>
+                
+                <div class="info-box mesa" style="margin-top: 1rem;">
+                    <i class="fas fa-clock"></i> Por favor, pasa a caja a cancelar tu pedido. El cajero lo procesará en breve.
                 </div>
                 
                 <div style="margin: 1.5rem 0;">
@@ -1576,7 +1608,7 @@
             <div class="modal-footer">
                 <button class="btn-secondary" id="cancelMesaOrder">Cancelar</button>
                 <button class="btn-primary" id="confirmMesaOrder">
-                    <i class="fas fa-check"></i> Confirmar Pedido
+                    <i class="fas fa-check"></i> Hacer Pedido
                 </button>
             </div>
         </div>
@@ -1590,9 +1622,14 @@
                 <button class="modal-close" id="closeDeliveryModal">&times;</button>
             </div>
             <div class="modal-body">
-                <div class="payment-timer" id="deliveryTimer" style="display: none;">
-                    <i class="fas fa-clock"></i> Tiempo para pagar
+                <div class="payment-timer" id="deliveryTimer" style="display: block;">
+                    <i class="fas fa-hourglass-half"></i> Tienes <strong>20 minutos</strong> para pagar
                     <div class="timer-display" id="deliveryTimerDisplay">20:00</div>
+                    <small>Si no pagas en este tiempo, el pedido será cancelado automáticamente</small>
+                </div>
+                
+                <div class="info-box delivery-pending">
+                    <i class="fas fa-exclamation-triangle"></i> Una vez que confirmes, el timer se detendrá y pasaremos a verificar tu pago.
                 </div>
                 
                 <div class="payment-info" style="background: var(--gray-100); padding: 1rem; border-radius: var(--radius-sm); margin-bottom: 1.5rem;">
@@ -1698,7 +1735,7 @@
             <div class="modal-footer">
                 <button class="btn-secondary" id="cancelDelivery">Cancelar</button>
                 <button class="btn-primary" id="confirmDelivery" disabled>
-                    <i class="fas fa-check"></i> Confirmar Pedido
+                    <i class="fas fa-check"></i> Confirmar Pedido (Pago realizado)
                 </button>
             </div>
         </div>
@@ -1712,9 +1749,14 @@
                 <button class="modal-close" id="closeReservaModal">&times;</button>
             </div>
             <div class="modal-body">
-                <div class="payment-timer" id="reservaTimer" style="display: none;">
-                    <i class="fas fa-clock"></i> Tiempo para pagar
+                <div class="payment-timer" id="reservaTimer" style="display: block;">
+                    <i class="fas fa-hourglass-half"></i> Tienes <strong>20 minutos</strong> para pagar
                     <div class="timer-display" id="reservaTimerDisplay">20:00</div>
+                    <small>Si no pagas en este tiempo, la reserva será cancelada automáticamente</small>
+                </div>
+                
+                <div class="info-box delivery-pending">
+                    <i class="fas fa-exclamation-triangle"></i> Una vez que confirmes, el timer se detendrá y pasaremos a verificar tu pago.
                 </div>
                 
                 <div class="payment-info" style="background: var(--gray-100); padding: 1rem; border-radius: var(--radius-sm); margin-bottom: 1.5rem;">
@@ -1769,7 +1811,7 @@
             <div class="modal-footer">
                 <button class="btn-secondary" id="cancelReserva">Cancelar</button>
                 <button class="btn-primary" id="confirmReserva" disabled>
-                    <i class="fas fa-check"></i> Confirmar Reserva
+                    <i class="fas fa-check"></i> Confirmar Reserva (Pago realizado)
                 </button>
             </div>
         </div>
@@ -1822,14 +1864,14 @@
         
         let menuItems = [];
         let inventario = [];
-        let carrito = []; // Array de instancias
+        let carrito = [];
         let notificaciones = [];
         let currentCustomizeItem = null;
         let mesaId = null;
         
-        // Para manejo de timers de 20 minutos
-        let pedidosConTimer = {};
-        let timerInterval = null;
+        // Para manejo de timers de 20 minutos (frontend)
+        let timersActivos = {};
+        let intervalosTimer = {};
 
         // Precios de parroquias
         const preciosPorParroquia = {
@@ -1845,12 +1887,12 @@
 
         // Diccionario de mensajes para notificaciones
         const mensajesEstado = {
-            'approved': { titulo: '✅ Pedido confirmado', icono: 'check-circle' },
+            'approved': { titulo: '✅ Pago confirmado', icono: 'check-circle' },
             'rejected': { titulo: '❌ Pedido rechazado', icono: 'times-circle' },
             'pending': { titulo: '⏳ Pedido pendiente', icono: 'clock' }
         };
 
-        // Categorías predefinidas (de saki sushi 1.0)
+        // Categorías predefinidas
         const categoriasPredefinidas = [
             { id: 'todos', nombre: 'Todos los platillos' },
             { id: 'entradas', nombre: 'Entradas' },
@@ -1900,8 +1942,8 @@
             // Mostrar badge de mesa si aplica
             if (mesaId) {
                 document.getElementById('tableNumber').textContent = mesaId;
-                document.getElementById('tableBadge').style.display = 'block';
-                document.getElementById('confirmTableNumber').textContent = `#${mesaId}`;
+                document.getElementById('tableBadge').style.display = 'inline-block';
+                document.getElementById('confirmTableNumber').textContent = mesaId;
             }
             
             console.log('🎉 Cliente listo!');
@@ -1940,24 +1982,16 @@
         }
 
         // ============================================
-        // FUNCIONES DE STOCK Y RESERVAS (NUEVAS)
+        // FUNCIONES DE STOCK Y RESERVAS
         // ============================================
         
-        /**
-         * Obtiene el stock disponible de un ingrediente (stock - reservado)
-         */
         async function getStockDisponible(ingredienteId) {
             try {
-                // Intentar obtener del inventario local primero
                 const ingrediente = inventario.find(i => i.id === ingredienteId);
-                if (ingrediente) {
-                    // Si tenemos el campo reservado, calcular
-                    if (ingrediente.reservado !== undefined) {
-                        return ingrediente.stock - ingrediente.reservado;
-                    }
+                if (ingrediente && ingrediente.reservado !== undefined) {
+                    return ingrediente.stock - ingrediente.reservado;
                 }
                 
-                // Si no, consultar a la base de datos
                 const { data, error } = await window.supabaseClient
                     .from('inventario')
                     .select('stock, reservado')
@@ -1972,9 +2006,6 @@
             }
         }
 
-        /**
-         * Reserva ingredientes en la base de datos
-         */
         async function reservarIngredientes(pedidoId, items) {
             try {
                 const { data, error } = await window.supabaseClient.rpc('reservar_ingredientes', {
@@ -1990,9 +2021,6 @@
             }
         }
 
-        /**
-         * Verifica stock disponible antes de añadir al carrito
-         */
         async function verificarStockDisponible(platilloId, personalizacion = []) {
             const platillo = menuItems.find(p => p.id === platilloId);
             if (!platillo) return { disponible: false, motivo: 'Platillo no encontrado' };
@@ -2002,7 +2030,6 @@
             }
             
             for (const [ingId, ingInfo] of Object.entries(platillo.ingredientes)) {
-                // Si el ingrediente fue quitado en personalización, no lo consideramos
                 if (personalizacion.includes(ingId)) continue;
                 
                 const cantidadNecesaria = ingInfo.cantidad || 1;
@@ -2028,7 +2055,6 @@
             
             let itemsFiltrados = [...menuItems];
             
-            // Filtrar por categoría
             if (filtroCategoria && filtroCategoria !== 'Todos' && filtroCategoria !== 'ofertas') {
                 itemsFiltrados = itemsFiltrados.filter(item => item.categoria === filtroCategoria);
             } else if (filtroCategoria === 'ofertas') {
@@ -2038,12 +2064,10 @@
                 );
             }
             
-            // Filtrar por subcategoría
             if (filtroSubcategoria) {
                 itemsFiltrados = itemsFiltrados.filter(item => item.subcategoria === filtroSubcategoria);
             }
             
-            // Filtrar por búsqueda
             if (busqueda) {
                 const terminos = busqueda.toLowerCase().split(/\s+/).filter(t => t.length > 0);
                 itemsFiltrados = itemsFiltrados.filter(item => {
@@ -2064,9 +2088,7 @@
                 return;
             }
             
-            // Renderizar cada platillo (versión simplificada con verificación de stock async)
             Promise.all(itemsFiltrados.map(async (item) => {
-                // Verificar stock de cada ingrediente
                 let stockDisponible = Infinity;
                 let ingredientesFaltantes = [];
                 
@@ -2141,7 +2163,6 @@
                 </li>
             `;
             
-            // Usar categorías predefinidas de saki sushi 1.0
             categoriasPredefinidas.forEach(cat => {
                 if (cat.id === 'todos') return;
                 
@@ -2163,7 +2184,6 @@
             
             categoryList.innerHTML = html;
             
-            // Event listeners a categorías
             document.querySelectorAll('.category-item').forEach(item => {
                 item.addEventListener('click', (e) => {
                     e.stopPropagation();
@@ -2192,7 +2212,6 @@
                 });
             });
             
-            // Event listeners a subcategorías
             document.querySelectorAll('.subcategory-item').forEach(item => {
                 item.addEventListener('click', (e) => {
                     e.stopPropagation();
@@ -2228,7 +2247,6 @@
             
             const modalBody = document.getElementById('customizeModalBody');
             
-            // Generar opciones de ingredientes (asíncrono)
             Promise.all(Object.entries(platillo.ingredientes || {}).map(async ([ingId, ingInfo]) => {
                 const ingrediente = inventario.find(i => i.id === ingId);
                 const stockDisp = await getStockDisponible(ingId);
@@ -2295,7 +2313,6 @@
                     </div>
                 `;
                 
-                // Agregar event listeners a checkboxes
                 document.querySelectorAll('.ingrediente-check').forEach(cb => {
                     cb.addEventListener('change', function() {
                         if (this.checked) {
@@ -2365,7 +2382,6 @@
             const ingredientesQuitados = Array.from(document.querySelectorAll('.ingrediente-check:checked'))
                 .map(cb => cb.dataset.ingrediente);
             
-            // Verificar stock disponible antes de agregar
             const verificado = await verificarStockDisponible(currentCustomizeItem.id, ingredientesQuitados);
             if (!verificado.disponible) {
                 mostrarToast(verificado.motivo || 'No hay stock disponible', 'error');
@@ -2379,7 +2395,6 @@
             
             const precioFinalUSD = Math.max(0, currentCustomizeItem.precio - descuento);
             
-            // Crear nueva instancia (aún sin reservar en BD, solo local)
             const nuevaInstancia = {
                 id: generarId('inst_'),
                 platilloId: currentCustomizeItem.id,
@@ -2390,8 +2405,7 @@
                 precioUnitarioBs: usdToBs(precioFinalUSD),
                 subtotal: usdToBs(precioFinalUSD),
                 selectionType: currentCustomizeItem.selectionType,
-                instanceNumber: carrito.filter(i => i.platilloId === currentCustomizeItem.id).length + 1,
-                reservado: false // Aún no reservado en BD
+                instanceNumber: carrito.filter(i => i.platilloId === currentCustomizeItem.id).length + 1
             };
             
             carrito.push(nuevaInstancia);
@@ -2415,7 +2429,6 @@
             const platillo = menuItems.find(p => p.id === platilloId);
             if (!platillo) return;
             
-            // Verificar stock disponible
             const verificado = await verificarStockDisponible(platilloId);
             if (!verificado.disponible) {
                 mostrarToast(verificado.motivo || 'No hay stock disponible', 'error');
@@ -2432,8 +2445,7 @@
                 precioUnitarioBs: usdToBs(platillo.precio),
                 subtotal: usdToBs(platillo.precio),
                 selectionType: 'completo',
-                instanceNumber: carrito.filter(i => i.platilloId === platillo.id).length + 1,
-                reservado: false
+                instanceNumber: carrito.filter(i => i.platilloId === platillo.id).length + 1
             };
             
             carrito.push(nuevaInstancia);
@@ -2447,7 +2459,6 @@
         function eliminarInstancia(instanciaId) {
             carrito = carrito.filter(i => i.id !== instanciaId);
             
-            // Renumerar instancias
             const platillosUnicos = [...new Set(carrito.map(i => i.platilloId))];
             platillosUnicos.forEach(pid => {
                 let contador = 1;
@@ -2522,21 +2533,20 @@
             
             cartTotal.textContent = formatBs(total);
             
-            // Botones según modo
             cartButtons.innerHTML = '';
             if (mesaId) {
                 cartButtons.innerHTML = `
                     <button class="btn-primary" onclick="abrirConfirmacionMesa()">
-                        <i class="fas fa-check"></i> Confirmar Pedido
+                        <i class="fas fa-check"></i> Hacer Pedido (Pasar a Caja)
                     </button>
                 `;
             } else {
                 cartButtons.innerHTML = `
-                    <button class="btn-primary" onclick="abrirDeliveryModal()">
-                        <i class="fas fa-motorcycle"></i> Delivery
+                    <button class="btn-primary" onclick="iniciarProcesoDelivery()">
+                        <i class="fas fa-motorcycle"></i> Pedir Delivery
                     </button>
-                    <button class="btn-secondary" onclick="abrirReservaModal()">
-                        <i class="fas fa-calendar-alt"></i> Reserva
+                    <button class="btn-secondary" onclick="iniciarProcesoReserva()">
+                        <i class="fas fa-calendar-alt"></i> Pedir Reserva
                     </button>
                 `;
             }
@@ -2573,7 +2583,105 @@
         }
 
         // ============================================
-        // FUNCIONES DE PEDIDOS Y RESERVAS EN BD
+        // FUNCIONES DE TIMER (20 MINUTOS)
+        // ============================================
+        
+        /**
+         * Inicia el proceso de delivery (abre modal y comienza timer)
+         */
+        function iniciarProcesoDelivery() {
+            // Iniciar timer de 20 minutos
+            iniciarTimerFrontend('delivery', 20);
+            
+            // Resetear selector de parroquia
+            document.getElementById('selectedParroquiaText').textContent = 'San Bernardino';
+            document.getElementById('parroquiaSelect').value = 'San Bernardino';
+            document.getElementById('parroquiaSearch').value = '';
+            document.getElementById('parroquiaSelect').style.display = 'none';
+            document.getElementById('parroquiaSearch').style.display = 'none';
+            document.getElementById('parroquiaChevron').className = 'fas fa-chevron-down';
+            
+            actualizarTotalDelivery();
+            document.getElementById('deliveryModal').classList.add('active');
+        }
+
+        /**
+         * Inicia el proceso de reserva (abre modal y comienza timer)
+         */
+        function iniciarProcesoReserva() {
+            // Iniciar timer de 20 minutos
+            iniciarTimerFrontend('reserva', 20);
+            
+            const subtotalUSD = carrito.reduce((sum, item) => sum + item.precioUnitarioUSD, 0);
+            document.getElementById('reservaTotal').textContent = formatBs(usdToBs(subtotalUSD));
+            document.getElementById('reservaModal').classList.add('active');
+        }
+
+        /**
+         * Inicia el timer visual en el frontend
+         */
+        function iniciarTimerFrontend(tipo, minutos) {
+            // Detener timer anterior si existe
+            if (timersActivos[tipo]) {
+                clearInterval(intervalosTimer[tipo]);
+                delete timersActivos[tipo];
+                delete intervalosTimer[tipo];
+            }
+            
+            const timerDisplay = document.getElementById(tipo + 'TimerDisplay');
+            if (!timerDisplay) return;
+            
+            const fin = Date.now() + minutos * 60 * 1000;
+            timersActivos[tipo] = fin;
+            
+            // Actualizar cada segundo
+            intervalosTimer[tipo] = setInterval(() => {
+                const ahora = Date.now();
+                const restante = Math.max(0, Math.floor((fin - ahora) / 1000));
+                
+                if (restante <= 0) {
+                    // Tiempo agotado
+                    clearInterval(intervalosTimer[tipo]);
+                    timerDisplay.textContent = '00:00';
+                    
+                    // Cerrar modal y notificar
+                    if (tipo === 'delivery') {
+                        document.getElementById('deliveryModal').classList.remove('active');
+                        mostrarToast('⏰ Tiempo agotado. Debes iniciar el proceso nuevamente.', 'error');
+                    } else {
+                        document.getElementById('reservaModal').classList.remove('active');
+                        mostrarToast('⏰ Tiempo agotado. Debes iniciar la reserva nuevamente.', 'error');
+                    }
+                    
+                    delete timersActivos[tipo];
+                    delete intervalosTimer[tipo];
+                } else {
+                    const mins = Math.floor(restante / 60);
+                    const segs = restante % 60;
+                    timerDisplay.textContent = `${mins.toString().padStart(2, '0')}:${segs.toString().padStart(2, '0')}`;
+                }
+            }, 1000);
+        }
+
+        /**
+         * Detiene el timer (cuando el cliente confirma el pedido)
+         */
+        function detenerTimer(tipo) {
+            if (intervalosTimer[tipo]) {
+                clearInterval(intervalosTimer[tipo]);
+                delete intervalosTimer[tipo];
+                delete timersActivos[tipo];
+                
+                // Resetear display
+                const timerDisplay = document.getElementById(tipo + 'TimerDisplay');
+                if (timerDisplay) {
+                    timerDisplay.textContent = '20:00';
+                }
+            }
+        }
+
+        // ============================================
+        // FUNCIONES DE PEDIDOS
         // ============================================
         function crearPedidoBase(tipo) {
             const tasaActual = configGlobal.tasa_efectiva;
@@ -2613,23 +2721,19 @@
             return pedido;
         }
 
-        /**
-         * Guarda pedido y reserva ingredientes (versión mejorada)
-         */
         async function guardarPedido(pedido) {
             try {
-                // 1. Insertar pedido en la base de datos
+                // Insertar pedido
                 const { error: insertError } = await window.supabaseClient
                     .from('pedidos')
                     .insert([pedido]);
                 
                 if (insertError) throw insertError;
                 
-                // 2. Reservar ingredientes en la base de datos
+                // Reservar ingredientes
                 const reservaResult = await reservarIngredientes(pedido.id, pedido.items);
                 
                 if (!reservaResult.success) {
-                    // Si falla la reserva, eliminar el pedido (rollback manual)
                     await window.supabaseClient
                         .from('pedidos')
                         .delete()
@@ -2638,23 +2742,24 @@
                     throw new Error(reservaResult.error || 'Error al reservar ingredientes');
                 }
                 
-                // 3. Crear notificación para el cliente
+                // Crear notificación
+                let mensajeNotificacion = '';
+                if (pedido.tipo === 'mesa') {
+                    mensajeNotificacion = 'Tu pedido ha sido recibido. Por favor, pasa a caja a cancelar.';
+                } else {
+                    mensajeNotificacion = 'Tu pedido ha sido recibido y está pendiente de confirmación de pago.';
+                }
+                
                 await window.supabaseClient
                     .from('notificaciones')
                     .insert([{
                         pedido_id: pedido.id,
                         tipo: 'pending',
                         titulo: 'Pedido recibido',
-                        mensaje: `Tu pedido ha sido recibido y está pendiente de ${pedido.tipo === 'delivery' || pedido.tipo === 'reserva' ? 'pago' : 'confirmación del cajero'}.`,
+                        mensaje: mensajeNotificacion,
                         timestamp: new Date().toISOString(),
                         leida: false
                     }]);
-                
-                // 4. Iniciar timer de 20 minutos SOLO para delivery/reserva
-                // El timer comienza AHORA, cuando se confirma el pedido (no cuando se abre el modal)
-                if (pedido.tipo === 'delivery' || pedido.tipo === 'reserva') {
-                    iniciarTimerReal(pedido.id, 20);
-                }
                 
                 return { success: true, pedidoId: pedido.id };
                 
@@ -2662,65 +2767,6 @@
                 console.error('Error guardando pedido:', error);
                 return { success: false, error: error.message };
             }
-        }
-
-        function iniciarTimerReal(pedidoId, minutos) {
-            // Cancelar timer anterior si existe
-            if (pedidosConTimer[pedidoId]) {
-                clearTimeout(pedidosConTimer[pedidoId].timerId);
-            }
-            
-            const fin = Date.now() + minutos * 60 * 1000;
-            
-            const timerId = setTimeout(async () => {
-                try {
-                    // Verificar si el pedido sigue pendiente
-                    const { data: pedido, error } = await window.supabaseClient
-                        .from('pedidos')
-                        .select('estado')
-                        .eq('id', pedidoId)
-                        .single();
-                    
-                    if (error) throw error;
-                    
-                    if (pedido.estado === 'pendiente') {
-                        // Liberar ingredientes (la función RPC liberar_ingredientes se encarga)
-                        await window.supabaseClient.rpc('liberar_ingredientes', {
-                            p_pedido_id: pedidoId
-                        });
-                        
-                        // Actualizar estado del pedido
-                        await window.supabaseClient
-                            .from('pedidos')
-                            .update({ estado: 'cancelado_timeout' })
-                            .eq('id', pedidoId);
-                        
-                        // Crear notificación
-                        await window.supabaseClient
-                            .from('notificaciones')
-                            .insert([{
-                                pedido_id: pedidoId,
-                                tipo: 'rejected',
-                                titulo: '⏰ Pedido cancelado',
-                                mensaje: 'El tiempo para pagar ha expirado (20 minutos).',
-                                timestamp: new Date().toISOString(),
-                                leida: false
-                            }]);
-                        
-                        mostrarToast('Tu pedido fue cancelado por exceder el tiempo de pago', 'error');
-                        reproducirSonidoNotificacion();
-                    }
-                } catch (error) {
-                    console.error('Error en timeout de pedido:', error);
-                } finally {
-                    delete pedidosConTimer[pedidoId];
-                }
-            }, minutos * 60 * 1000);
-            
-            pedidosConTimer[pedidoId] = {
-                timerId: timerId,
-                fin: fin
-            };
         }
 
         // ============================================
@@ -2752,30 +2798,16 @@
             const resultado = await guardarPedido(pedido);
             
             if (resultado.success) {
-                // Limpiar carrito
                 carrito = [];
                 guardarCarrito();
                 actualizarCarritoUI();
                 
                 document.getElementById('confirmMesaModal').classList.remove('active');
                 
-                mostrarToast('¡Pedido confirmado! El cajero procesará tu pago.', 'success');
+                mostrarToast('✅ Pedido enviado a cocina. Por favor, pasa a caja.', 'success');
             } else {
                 mostrarToast('Error al confirmar el pedido: ' + resultado.error, 'error');
             }
-        }
-
-        function abrirDeliveryModal() {
-            // Resetear selector de parroquia
-            document.getElementById('selectedParroquiaText').textContent = 'San Bernardino';
-            document.getElementById('parroquiaSelect').value = 'San Bernardino';
-            document.getElementById('parroquiaSearch').value = '';
-            document.getElementById('parroquiaSelect').style.display = 'none';
-            document.getElementById('parroquiaSearch').style.display = 'none';
-            document.getElementById('parroquiaChevron').className = 'fas fa-chevron-down';
-            
-            actualizarTotalDelivery();
-            document.getElementById('deliveryModal').classList.add('active');
         }
 
         function toggleParroquiaSelect() {
@@ -2852,6 +2884,9 @@
         }
 
         async function confirmarPedidoDelivery() {
+            // Detener el timer (el cliente ya pagó)
+            detenerTimer('delivery');
+            
             const select = document.getElementById('parroquiaSelect');
             const selectedParroquia = select.value;
             const precioUSD = preciosPorParroquia[selectedParroquia] || 2;
@@ -2890,16 +2925,10 @@
                 
                 document.getElementById('deliveryModal').classList.remove('active');
                 
-                mostrarToast('¡Pedido de delivery confirmado! Tienes 20 minutos para pagar.', 'success');
+                mostrarToast('✅ Pedido de delivery confirmado. Espera la confirmación del pago.', 'success');
             } else {
                 mostrarToast('Error al confirmar el pedido: ' + resultado.error, 'error');
             }
-        }
-
-        function abrirReservaModal() {
-            const subtotalUSD = carrito.reduce((sum, item) => sum + item.precioUnitarioUSD, 0);
-            document.getElementById('reservaTotal').textContent = formatBs(usdToBs(subtotalUSD));
-            document.getElementById('reservaModal').classList.add('active');
         }
 
         function validarFormularioReserva() {
@@ -2914,6 +2943,9 @@
         }
 
         async function confirmarPedidoReserva() {
+            // Detener el timer (el cliente ya pagó)
+            detenerTimer('reserva');
+            
             const referencia = getReferencia('reserva');
             const comprobanteFile = document.getElementById('comprobanteReserva').files[0];
             
@@ -2944,7 +2976,7 @@
                 
                 document.getElementById('reservaModal').classList.remove('active');
                 
-                mostrarToast('¡Solicitud de reserva enviada! Te confirmaremos por notificación.', 'success');
+                mostrarToast('✅ Reserva confirmada. Espera la confirmación del pago.', 'success');
             } else {
                 mostrarToast('Error al confirmar la reserva: ' + resultado.error, 'error');
             }
@@ -2962,22 +2994,9 @@
                     table: 'notificaciones'
                 }, (payload) => {
                     const notif = payload.new;
-                    
-                    // Verificar si la notificación es para este cliente (por sessionId o pedidos)
-                    // Por simplicidad, asumimos que todas las notificaciones son para este cliente
-                    // En un sistema real, se filtraría por pedido_id y se verificaría si ese pedido pertenece a este sessionId
-                    
                     notificaciones.unshift(notif);
                     actualizarNotificacionesUI();
                     reproducirSonidoNotificacion();
-                    
-                    // Si la notificación es de aprobado o rechazado, cancelar timer
-                    if (notif.tipo === 'approved' || notif.tipo === 'rejected') {
-                        if (pedidosConTimer[notif.pedido_id]) {
-                            clearTimeout(pedidosConTimer[notif.pedido_id].timerId);
-                            delete pedidosConTimer[notif.pedido_id];
-                        }
-                    }
                 })
                 .subscribe();
         }
@@ -3004,8 +3023,6 @@
 
         async function cargarNotificaciones() {
             try {
-                // Por simplicidad, cargamos todas las notificaciones recientes
-                // En un sistema real, se filtrarían por pedidos del cliente
                 const { data, error } = await window.supabaseClient
                     .from('notificaciones')
                     .select('*')
@@ -3116,7 +3133,6 @@
         }
 
         function setupEventListeners() {
-            // Toggle menú lateral
             document.getElementById('menuToggle').addEventListener('click', () => {
                 document.getElementById('categorySidebar').classList.toggle('mobile-closed');
                 document.getElementById('mainContent').classList.toggle('sidebar-hidden');
@@ -3127,7 +3143,6 @@
                 document.getElementById('mainContent').classList.add('sidebar-hidden');
             });
             
-            // Toggle carrito
             document.getElementById('cartToggle').addEventListener('click', () => {
                 document.getElementById('cartSidebar').classList.toggle('mobile-closed');
                 document.getElementById('mainContent').classList.toggle('cart-hidden');
@@ -3138,7 +3153,6 @@
                 document.getElementById('mainContent').classList.add('cart-hidden');
             });
             
-            // Búsqueda
             document.getElementById('searchInput').addEventListener('input', (e) => {
                 const categoriaActiva = document.querySelector('.category-item.active')?.dataset.categoria;
                 renderizarMenu(
@@ -3148,16 +3162,12 @@
                 );
             });
             
-            // Notificaciones
             document.getElementById('notificationBell').addEventListener('click', toggleNotifications);
             
-            // Modales
             document.getElementById('closeCustomizeModal').addEventListener('click', cerrarModalPersonalizacion);
             document.getElementById('cancelCustomize').addEventListener('click', cerrarModalPersonalizacion);
             document.getElementById('addToCartFromModal').addEventListener('click', agregarPersonalizadoAlCarrito);
             
-            // Delivery validaciones
-            document.getElementById('parroquia').addEventListener('change', actualizarTotalDelivery);
             setupReferenceInputs();
             
             document.getElementById('direccion').addEventListener('input', (e) => {
@@ -3195,45 +3205,47 @@
                 validarFormularioReserva();
             });
             
-            // Reserva validaciones
             document.getElementById('fechaReserva').addEventListener('input', validarFormularioReserva);
             document.getElementById('nombreReserva').addEventListener('input', validarFormularioReserva);
             
-            // Confirmar pedidos
             document.getElementById('confirmMesaOrder').addEventListener('click', confirmarPedidoMesa);
             document.getElementById('confirmDelivery').addEventListener('click', confirmarPedidoDelivery);
             document.getElementById('confirmReserva').addEventListener('click', confirmarPedidoReserva);
             
-            // Cancelar
             document.getElementById('cancelMesaOrder').addEventListener('click', () => {
                 document.getElementById('confirmMesaModal').classList.remove('active');
             });
             
             document.getElementById('cancelDelivery').addEventListener('click', () => {
+                detenerTimer('delivery');
                 document.getElementById('deliveryModal').classList.remove('active');
             });
             
             document.getElementById('cancelReserva').addEventListener('click', () => {
+                detenerTimer('reserva');
                 document.getElementById('reservaModal').classList.remove('active');
             });
             
-            // Cerrar modales con X
             document.getElementById('closeConfirmMesaModal').addEventListener('click', () => {
                 document.getElementById('confirmMesaModal').classList.remove('active');
             });
             
             document.getElementById('closeDeliveryModal').addEventListener('click', () => {
+                detenerTimer('delivery');
                 document.getElementById('deliveryModal').classList.remove('active');
             });
             
             document.getElementById('closeReservaModal').addEventListener('click', () => {
+                detenerTimer('reserva');
                 document.getElementById('reservaModal').classList.remove('active');
             });
             
-            // Cerrar modales con click fuera
             document.querySelectorAll('.modal-overlay').forEach(modal => {
                 modal.addEventListener('click', (e) => {
                     if (e.target === modal) {
+                        // Si se cierra haciendo clic fuera, detener timers
+                        if (modal.id === 'deliveryModal') detenerTimer('delivery');
+                        if (modal.id === 'reservaModal') detenerTimer('reserva');
                         modal.classList.remove('active');
                     }
                 });
@@ -3262,10 +3274,9 @@
             actualizarCarritoUI();
         }
 
-        // Limpiar timers al cerrar página
         window.addEventListener('beforeunload', () => {
-            Object.values(pedidosConTimer).forEach(t => {
-                if (t.timerId) clearTimeout(t.timerId);
+            Object.values(intervalosTimer).forEach(interval => {
+                if (interval) clearInterval(interval);
             });
         });
     </script>
