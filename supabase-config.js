@@ -1,5 +1,5 @@
 // supabase-config.js
-// Configuración compartida para todos los paneles - VERSIÓN CORREGIDA
+// Configuración compartida para todos los paneles - VERSIÓN FINAL CON RESERVAS
 
 // Hacer las variables globales (window)
 window.SUPABASE_URL = 'https://iqwwoihiiyrtypyqzhgy.supabase.co';
@@ -46,7 +46,7 @@ window.cargarConfiguracion = async function() {
     }
 };
 
-// Función para subir imagen de platillo
+// Función para subir imagen de platillo (usada en admin)
 window.subirImagenPlatillo = async function(archivoImagen, carpetaAdicional = '') {
     try {
         if (!archivoImagen) {
@@ -102,7 +102,7 @@ window.subirImagenPlatillo = async function(archivoImagen, carpetaAdicional = ''
     }
 };
 
-// Función para eliminar imagen
+// Función para eliminar imagen (usada en admin)
 window.eliminarImagenPlatillo = async function(urlImagen) {
     try {
         if (!urlImagen) return { success: true };
@@ -192,13 +192,19 @@ window.parroquiasDelivery = [
     { nombre: "El Junquito", precioUSD: 7 }
 ];
 
+// Categorías y subcategorías (usadas en admin para selects)
 window.categoriasMenu = {
-    "Entradas": [], "Sushi": [],
+    "Entradas": [],
+    "Sushi": [],
     "Rolls": ["Rolls Fríos de 10 piezas", "Rolls Tempura de 12 piezas"],
-    "Tragos y bebidas": [], "Pokes": [], "Ensaladas": [],
+    "Tragos y bebidas": [],
+    "Pokes": [],
+    "Ensaladas": [],
     "Comida China": ["Arroz Chino", "Arroz Cantones", "Chopsuey", "Lomey", "Chow Mein", "Fideos de Arroz", "Tallarines Cantones", "Mariscos", "Foo Yong", "Sopas", "Entremeses"],
     "Comida Japonesa": ["Yakimeshi", "Yakisoba", "Pasta Udon", "Churrasco"],
-    "Ofertas Especiales": [], "Para Niños": [], "Combo Ejecutivo": []
+    "Ofertas Especiales": [],
+    "Para Niños": [],
+    "Combo Ejecutivo": []
 };
 
 console.log('✅ supabase-config.js cargado correctamente');
