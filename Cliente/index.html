@@ -65,18 +65,6 @@
             flex-direction: column;
         }
 
-        /* Contenedor principal con fondo blanco para el contenido */
-        .content-wrapper {
-            background: white;
-            max-width: 1400px;
-            margin: 1rem auto;
-            border-radius: var(--radius-lg);
-            overflow: hidden;
-            box-shadow: var(--shadow-lg);
-            width: calc(100% - 2rem);
-            flex: 1;
-        }
-
         h1, h2, h3, h4, h5, h6 {
             font-family: 'Montserrat', sans-serif;
         }
@@ -168,6 +156,7 @@
             font-weight: 800;
             letter-spacing: 0.5px;
             white-space: nowrap;
+            cursor: pointer;
         }
 
         .search-bar {
@@ -270,12 +259,22 @@
             white-space: nowrap;
         }
 
+        /* Contenedor principal blanco - ahora ocupa todo el ancho */
+        .content-wrapper {
+            background: white;
+            width: 100%;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
         /* Main Layout */
         .main-layout {
             display: flex;
             flex: 1;
             position: relative;
             min-height: calc(100vh - 70px);
+            background: white;
         }
 
         /* Category Sidebar */
@@ -351,13 +350,20 @@
             font-weight: 600;
         }
 
-        .category-item i {
+        .category-item i:first-child {
+            font-size: 1rem;
+            margin-right: 0.8rem;
+            color: var(--primary);
+        }
+
+        .category-item i.fa-chevron-right {
             font-size: 0.8rem;
             color: var(--gray-500);
             transition: transform 0.2s;
+            margin-right: 0;
         }
 
-        .category-item.active i {
+        .category-item.active i.fa-chevron-right {
             color: var(--primary);
         }
 
@@ -375,7 +381,7 @@
         }
 
         .subcategory-item {
-            padding: 0.7rem 1.5rem 0.7rem 3rem;
+            padding: 0.7rem 1.5rem 0.7rem 3.5rem;
             cursor: pointer;
             color: var(--gray-600);
             transition: all 0.2s;
@@ -395,7 +401,7 @@
         .subcategory-item.active::before {
             content: '•';
             position: absolute;
-            left: 2rem;
+            left: 2.5rem;
             color: var(--primary);
             font-weight: bold;
         }
@@ -677,7 +683,7 @@
         /* Main Content */
         .main-content {
             flex: 1;
-            padding: 1rem;
+            padding: 1.5rem;
             transition: margin-left 0.3s;
             margin-left: 0;
             width: 100%;
@@ -716,7 +722,6 @@
             gap: 0.5rem;
             margin-top: 1rem;
             flex-wrap: wrap;
-            /* Flujo normal del documento - sin posicionamiento absoluto */
             position: relative;
             z-index: 1;
         }
@@ -1857,6 +1862,22 @@
             'pending': { titulo: '⏳ Pedido pendiente', icono: 'clock' }
         };
 
+        // Iconos para categorías
+        const iconosCategorias = {
+            'todos': 'fa-utensils',
+            'entradas': 'fa-leaf',
+            'sushi': 'fa-fish',
+            'rolls': 'fa-egg',
+            'tragos': 'fa-wine-glass-alt',
+            'pokes': 'fa-bowl-food',
+            'ensaladas': 'fa-carrot',
+            'china': 'fa-dragon',
+            'japonesa': 'fa-sun',
+            'ofertas': 'fa-fire',
+            'ninos': 'fa-child',
+            'ejecutivo': 'fa-briefcase'
+        };
+
         const categoriasPredefinidas = [
             { id: 'todos', nombre: 'Todos los platillos' },
             { id: 'entradas', nombre: 'Entradas' },
@@ -1908,7 +1929,6 @@
         
         function cerrarNotificaciones() {
             document.getElementById('notificationsPanel').classList.remove('active');
-            // No cerramos overlay al cerrar notificaciones porque el overlay es solo para menú y carrito
         }
         
         function cerrarTodosLosPaneles() {
@@ -2078,7 +2098,7 @@
             
             let itemsFiltrados = [...menuItems];
             
-            if (filtroCategoria && filtroCategoria !== 'Todos' && filtroCategoria !== 'ofertas' && filtroCategoria !== 'fresco' && filtroCategoria !== 'tradicional' && filtroCategoria !== 'chef') {
+            if (filtroCategoria && filtroCategoria !== 'todos' && filtroCategoria !== 'ofertas' && filtroCategoria !== 'fresco' && filtroCategoria !== 'tradicional' && filtroCategoria !== 'chef') {
                 itemsFiltrados = itemsFiltrados.filter(item => item.categoria === filtroCategoria);
             } else if (filtroCategoria === 'ofertas') {
                 itemsFiltrados = itemsFiltrados.filter(item => item.categoria === 'Ofertas Especiales');
@@ -2170,19 +2190,15 @@
         function cargarCategorias() {
             const categoryList = document.getElementById('categoryList');
             
-            let html = `
-                <li class="category-item active" data-categoria="Todos">
-                    <span><i class="fas fa-utensils"></i> Todos</span>
-                    <i class="fas fa-chevron-right"></i>
-                </li>
-            `;
+            let html = '';
             
             categoriasPredefinidas.forEach(cat => {
-                if (cat.id === 'todos') return;
+                const icono = iconosCategorias[cat.id] || 'fa-utensils';
+                const activeClass = cat.id === 'todos' ? 'active' : '';
                 
                 html += `
-                    <li class="category-item" data-categoria="${cat.id}">
-                        <span>${cat.nombre}</span>
+                    <li class="category-item ${activeClass}" data-categoria="${cat.id}">
+                        <span><i class="fas ${icono}"></i> ${cat.nombre}</span>
                         ${cat.subcategorias ? '<i class="fas fa-chevron-right"></i>' : ''}
                     </li>
                 `;
@@ -2204,29 +2220,28 @@
                     e.stopPropagation();
                     const categoria = item.dataset.categoria;
                     
-                    // Si la categoría tiene subcategorías, solo expandir/colapsar, NO cerrar el menú
+                    // Si la categoría tiene subcategorías, solo expandir/colapsar
                     const tieneSubcategorias = item.querySelector('i.fa-chevron-right') !== null;
                     
-                    if (tieneSubcategorias) {
-                        // Solo expandir/colapsar subcategorías, no cambiar categoría activa
+                    if (tieneSubcategorias && categoria !== 'todos') {
                         const subList = document.querySelector(`.subcategory-list[data-categoria="${categoria}"]`);
                         if (subList) {
                             subList.classList.toggle('expanded');
                         }
-                        return; // Importante: salir sin cambiar categoría ni cerrar menú
+                        return;
                     }
                     
-                    // Para categorías sin subcategorías, cambiar categoría y cerrar menú
+                    // Para categorías sin subcategorías (incluyendo "Todos los platillos"), cambiar categoría
                     document.querySelectorAll('.category-item').forEach(c => c.classList.remove('active'));
                     item.classList.add('active');
                     
                     document.querySelectorAll('.subcategory-list').forEach(list => list.classList.remove('expanded'));
                     
-                    document.getElementById('categoryTitle').textContent = categoria === 'Todos' ? 'Menú' : item.querySelector('span').textContent;
+                    document.getElementById('categoryTitle').textContent = categoria === 'todos' ? 'Menú' : item.querySelector('span').textContent.replace(/^[^\s]+\s/, '');
                     
-                    renderizarMenu(categoria === 'Todos' ? null : categoria);
+                    renderizarMenu(categoria === 'todos' ? null : categoria);
                     
-                    // Cerrar menú en móvil después de seleccionar (solo categorías sin subcategorías)
+                    // Cerrar menú en móvil después de seleccionar
                     if (window.innerWidth <= 992) {
                         cerrarMenuCategorias();
                     }
@@ -2249,7 +2264,6 @@
                     document.getElementById('categoryTitle').textContent = subcategoria;
                     renderizarMenu(categoria, subcategoria);
                     
-                    // Cerrar menú en móvil después de seleccionar subcategoría
                     if (window.innerWidth <= 992) {
                         cerrarMenuCategorias();
                     }
@@ -2901,7 +2915,6 @@
         function toggleNotifications() {
             const panel = document.getElementById('notificationsPanel');
             panel.classList.toggle('active');
-            // No activamos overlay para notificaciones, solo para menú y carrito
             if (panel.classList.contains('active')) {
                 cargarNotificaciones();
             }
@@ -2991,7 +3004,7 @@
             
             document.getElementById('searchInput').addEventListener('input', (e) => {
                 const cat = document.querySelector('.category-item.active')?.dataset.categoria;
-                renderizarMenu(cat === 'Todos' ? null : cat, null, e.target.value);
+                renderizarMenu(cat === 'todos' ? null : cat, null, e.target.value);
             });
             
             document.getElementById('notificationBell').addEventListener('click', toggleNotifications);
@@ -3072,8 +3085,8 @@
         }
 
         function resetToAllCategories() {
-            // Simular clic en la categoría "Todos"
-            const todosItem = document.querySelector('.category-item[data-categoria="Todos"]');
+            // Simular clic en la categoría "Todos los platillos"
+            const todosItem = document.querySelector('.category-item[data-categoria="todos"]');
             if (todosItem) {
                 todosItem.click();
             }
