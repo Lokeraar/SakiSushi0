@@ -381,13 +381,9 @@
             max-width: 100%;
         }
 
-        .main-content.sidebar-open {
-            margin-left: 280px;
-        }
-
-        @media (max-width: 992px) {
+        @media (min-width: 993px) {
             .main-content.sidebar-open {
-                margin-left: 0;
+                margin-left: 280px;
             }
         }
 
@@ -874,6 +870,7 @@
             align-items: center;
             justify-content: center;
             gap: 0.5rem;
+            min-width: 120px;
         }
 
         .btn-primary {
@@ -1315,6 +1312,7 @@
             justify-content: space-between;
             align-items: center;
             cursor: pointer;
+            font-size: 0.95rem;
         }
         
         .parroquia-search {
@@ -1332,6 +1330,7 @@
             border: 1px solid var(--gray-300);
             border-radius: var(--radius-sm);
             margin-top: 0.5rem;
+            font-size: 0.95rem;
         }
         
         .delivery-price-display {
@@ -1461,10 +1460,10 @@
                 <h2 id="categoryTitle">Menú</h2>
                 <p id="currentCategory"><i class="fas fa-chevron-right"></i> Todos los platillos</p>
                 <div class="tagline">
-                    <div class="tagline-item" onclick="selectCategoria('ofertas')">🔥 Ofertas</div>
-                    <div class="tagline-item">🐟 Fresco</div>
-                    <div class="tagline-item">🎌 Tradicional</div>
-                    <div class="tagline-item">👨‍🍳 Chef</div>
+                    <div class="tagline-item" onclick="selectCategoria('ofertas')">🔥 Ofertas Especiales</div>
+                    <div class="tagline-item" onclick="selectCategoria('fresco')">🐟 Fresco del día</div>
+                    <div class="tagline-item" onclick="selectCategoria('tradicional')">🎌 Tradicional</div>
+                    <div class="tagline-item" onclick="selectCategoria('chef')">👨‍🍳 Chef experto</div>
                 </div>
             </div>
             
@@ -1800,8 +1799,14 @@
         let currentCustomizeItem = null;
         let mesaId = null;
         
+        // Timers
         let timersActivos = {};
         let intervalosTimer = {};
+        
+        // Caché de stock
+        let stockCache = {};
+        let lastStockUpdate = 0;
+        const STOCK_CACHE_DURATION = 5000;
 
         const preciosPorParroquia = {
             "Altagracia": 3, "Antímano": 7, "Candelaria": 2, "Caricuao": 7, "Caucagüita": 7,
@@ -1824,12 +1829,12 @@
             { id: 'todos', nombre: 'Todos los platillos' },
             { id: 'entradas', nombre: 'Entradas' },
             { id: 'sushi', nombre: 'Sushi' },
-            { id: 'rolls', nombre: 'Rolls', subcategorias: ['Rolls Fríos', 'Rolls Tempura'] },
+            { id: 'rolls', nombre: 'Rolls', subcategorias: ['Rolls Fríos de 10 piezas', 'Rolls Tempura de 12 piezas'] },
             { id: 'tragos', nombre: 'Tragos y bebidas' },
             { id: 'pokes', nombre: 'Pokes' },
             { id: 'ensaladas', nombre: 'Ensaladas' },
-            { id: 'china', nombre: 'Comida China', subcategorias: ['Arroz', 'Chopsuey', 'Lomey', 'Chow Mein', 'Fideos', 'Mariscos', 'Sopas'] },
-            { id: 'japonesa', nombre: 'Comida Japonesa', subcategorias: ['Yakimeshi', 'Yakisoba', 'Udon'] },
+            { id: 'china', nombre: 'Comida China', subcategorias: ['Arroz Chino', 'Arroz Cantones', 'Chopsuey', 'Lomey', 'Chow Mein', 'Fideos de Arroz', 'Tallarines Cantones', 'Mariscos', 'Foo Yong', 'Sopas', 'Entremeses'] },
+            { id: 'japonesa', nombre: 'Comida Japonesa', subcategorias: ['Yakimeshi', 'Yakisoba', 'Pasta Udon', 'Churrasco'] },
             { id: 'ofertas', nombre: 'Ofertas Especiales' },
             { id: 'ninos', nombre: 'Para Niños' },
             { id: 'ejecutivo', nombre: 'Combo Ejecutivo' }
@@ -1842,13 +1847,21 @@
         // FUNCIONES DE INICIALIZACIÓN
         // ============================================
         document.addEventListener('DOMContentLoaded', async () => {
+            console.log('1️⃣ Inicializando cliente...');
             await cargarConfiguracion();
+            console.log('2️⃣ Configuración cargada');
             await cargarMenu();
+            console.log('3️⃣ Menú cargado');
             await cargarInventario();
+            console.log('4️⃣ Inventario cargado');
             cargarCategorias();
+            console.log('5️⃣ Categorías cargadas');
             setupEventListeners();
+            console.log('6️⃣ Event listeners configurados');
             setupRealtimeSubscriptions();
+            console.log('7️⃣ Suscripciones configuradas');
             restaurarCarrito();
+            console.log('8️⃣ Carrito restaurado');
             actualizarUI();
             
             const hoy = new Date().toISOString().split('T')[0];
@@ -1860,10 +1873,12 @@
                 document.getElementById('confirmTableNumber').textContent = mesaId;
             }
             
-            // Estado inicial: categoría Todos, menú y carrito plegados
+            // Estado inicial
             resetToAllCategories();
             cerrarMenuCategorias();
             cerrarCarrito();
+            
+            console.log('🎉 Cliente listo!');
         });
 
         // ============================================
@@ -1899,18 +1914,72 @@
         }
 
         // ============================================
-        // FUNCIONES DE STOCK
+        // FUNCIONES DE STOCK (CON CACHÉ)
         // ============================================
+        function calcularReservadoConCache(ingredienteId) {
+            const ahora = Date.now();
+            
+            if (ahora - lastStockUpdate > STOCK_CACHE_DURATION) {
+                stockCache = {};
+                lastStockUpdate = ahora;
+            }
+            
+            if (stockCache[ingredienteId] !== undefined) {
+                return stockCache[ingredienteId];
+            }
+            
+            // Calcular reservado basado en instancias en carrito
+            let total = 0;
+            carrito.forEach(instancia => {
+                if (instancia.platilloId && instancia.personalizacion && !instancia.personalizacion.includes(ingredienteId)) {
+                    const platillo = menuItems.find(p => p.id === instancia.platilloId);
+                    if (platillo && platillo.ingredientes && platillo.ingredientes[ingredienteId]) {
+                        total += platillo.ingredientes[ingredienteId].cantidad || 1;
+                    }
+                }
+            });
+            
+            stockCache[ingredienteId] = total;
+            return total;
+        }
+
         async function getStockDisponible(ingredienteId) {
             try {
                 const ingrediente = inventario.find(i => i.id === ingredienteId);
-                if (ingrediente && ingrediente.reservado !== undefined) {
-                    return ingrediente.stock - ingrediente.reservado;
-                }
-                return 999;
+                if (!ingrediente) return 0;
+                
+                const reservado = calcularReservadoConCache(ingredienteId);
+                return (ingrediente.stock || 0) - reservado;
             } catch (error) {
-                return 999;
+                console.error('Error obteniendo stock:', error);
+                return 0;
             }
+        }
+
+        async function verificarStockDisponible(platilloId, personalizacion = []) {
+            const platillo = menuItems.find(p => p.id === platilloId);
+            if (!platillo) return { disponible: false, motivo: 'Platillo no encontrado' };
+            
+            if (!platillo.ingredientes || Object.keys(platillo.ingredientes).length === 0) {
+                return { disponible: true };
+            }
+            
+            for (const [ingId, ingInfo] of Object.entries(platillo.ingredientes)) {
+                if (personalizacion.includes(ingId)) continue;
+                
+                const cantidadNecesaria = ingInfo.cantidad || 1;
+                const stockDisp = await getStockDisponible(ingId);
+                
+                if (stockDisp < cantidadNecesaria) {
+                    const ingrediente = inventario.find(i => i.id === ingId);
+                    return { 
+                        disponible: false, 
+                        motivo: `No hay suficiente ${ingrediente?.nombre || ingId}` 
+                    };
+                }
+            }
+            
+            return { disponible: true };
         }
 
         async function reservarIngredientes(pedidoId, items) {
@@ -1919,17 +1988,13 @@
                     p_pedido_id: pedidoId,
                     p_items: items
                 });
+                
                 if (error) throw error;
                 return { success: true };
             } catch (error) {
+                console.error('Error reservando ingredientes:', error);
                 return { success: false, error: error.message };
             }
-        }
-
-        async function verificarStockDisponible(platilloId, personalizacion = []) {
-            const platillo = menuItems.find(p => p.id === platilloId);
-            if (!platillo) return { disponible: false };
-            return { disponible: true };
         }
 
         // ============================================
@@ -1940,13 +2005,12 @@
             
             let itemsFiltrados = [...menuItems];
             
-            if (filtroCategoria && filtroCategoria !== 'Todos' && filtroCategoria !== 'ofertas') {
+            if (filtroCategoria && filtroCategoria !== 'Todos' && filtroCategoria !== 'ofertas' && filtroCategoria !== 'fresco' && filtroCategoria !== 'tradicional' && filtroCategoria !== 'chef') {
                 itemsFiltrados = itemsFiltrados.filter(item => item.categoria === filtroCategoria);
             } else if (filtroCategoria === 'ofertas') {
-                itemsFiltrados = itemsFiltrados.filter(item => 
-                    item.categoria === 'Ofertas Especiales' || item.categoria?.includes('Oferta')
-                );
+                itemsFiltrados = itemsFiltrados.filter(item => item.categoria === 'Ofertas Especiales');
             }
+            // Los otros tags son decorativos, no filtran realmente
             
             if (filtroSubcategoria) {
                 itemsFiltrados = itemsFiltrados.filter(item => item.subcategoria === filtroSubcategoria);
@@ -1966,12 +2030,27 @@
             }
             
             Promise.all(itemsFiltrados.map(async (item) => {
-                let stockDisponible = 999;
+                let stockDisponible = Infinity;
+                let ingredientesFaltantes = [];
+                
                 if (item.ingredientes && Object.keys(item.ingredientes).length > 0) {
-                    stockDisponible = 5; // Simplificado
+                    for (const [ingId, ingInfo] of Object.entries(item.ingredientes)) {
+                        const stockDisp = await getStockDisponible(ingId);
+                        const cantidadNecesaria = ingInfo.cantidad || 1;
+                        const posible = Math.floor(stockDisp / cantidadNecesaria);
+                        stockDisponible = Math.min(stockDisponible, posible);
+                        
+                        if (posible <= 0) {
+                            const ingrediente = inventario.find(i => i.id === ingId);
+                            ingredientesFaltantes.push(ingrediente?.nombre || ingId);
+                        }
+                    }
+                } else {
+                    stockDisponible = item.stock_maximo || 999;
                 }
                 
                 const agotado = stockDisponible <= 0;
+                
                 let stockClass = 'available';
                 if (agotado) stockClass = 'sold-out';
                 else if (stockDisponible < 5) stockClass = 'low';
@@ -1979,7 +2058,7 @@
                 return `
                     <div class="menu-card ${agotado ? 'agotado' : ''}" data-id="${item.id}">
                         <div class="menu-card-image" style="background-image: url('${item.imagen || 'https://via.placeholder.com/400x300?text=Sushi'}')">
-                            ${agotado ? '<div class="menu-card-badge sold-out"><i class="fas fa-times-circle"></i> Agotado</div>' : ''}
+                            ${agotado ? '<div class="menu-card-badge sold-out"><i class="fas fa-times-circle"></i> Agotado</div>' : stockClass === 'low' ? '<div class="menu-card-badge low"><i class="fas fa-exclamation-triangle"></i> Últimas</div>' : ''}
                         </div>
                         <div class="menu-card-content">
                             <div class="menu-card-header">
@@ -1989,14 +2068,24 @@
                             <p class="menu-card-description">${item.descripcion || ''}</p>
                             <div class="menu-card-footer">
                                 ${!agotado ? `
-                                    <button class="btn-add" onclick="agregarAlCarrito('${item.id}')">
+                                    <button class="btn-add" onclick="agregarAlCarrito('${item.id}')" title="Agregar">
                                         <i class="fas fa-plus"></i>
                                     </button>
-                                    <button class="btn-customize" onclick="abrirPersonalizacion('${item.id}')">
+                                    <button class="btn-customize" onclick="abrirPersonalizacion('${item.id}')" title="Personalizar">
                                         <i class="fas fa-star"></i> Personalizar
                                     </button>
-                                ` : ''}
+                                ` : `
+                                    <span class="stock-info" title="${ingredientesFaltantes.join(', ')}">
+                                        <i class="fas fa-info-circle"></i> Sin stock
+                                    </span>
+                                `}
                             </div>
+                            ${!agotado ? `
+                                <div class="stock-info">
+                                    <i class="fas fa-box ${stockClass}"></i>
+                                    <span>${stockDisponible} disponibles</span>
+                                </div>
+                            ` : ''}
                         </div>
                     </div>
                 `;
@@ -2054,7 +2143,6 @@
                     
                     renderizarMenu(categoria === 'Todos' ? null : categoria);
                     
-                    // Plegar menú después de seleccionar (en móvil)
                     if (window.innerWidth <= 992) {
                         cerrarMenuCategorias();
                     }
@@ -2077,7 +2165,6 @@
                     document.getElementById('currentCategory').innerHTML = `<i class="fas fa-chevron-right"></i> ${categoria} <i class="fas fa-chevron-right"></i> ${subcategoria}`;
                     renderizarMenu(categoria, subcategoria);
                     
-                    // Plegar menú después de seleccionar (en móvil)
                     if (window.innerWidth <= 992) {
                         cerrarMenuCategorias();
                     }
@@ -2111,42 +2198,146 @@
             const platillo = menuItems.find(p => p.id === platilloId);
             if (!platillo) return;
             
-            currentCustomizeItem = { ...platillo, cantidad: 1, ingredientesQuitados: [], selectionType: 'completo' };
+            currentCustomizeItem = {
+                ...platillo,
+                cantidad: 1,
+                ingredientesQuitados: [],
+                selectionType: 'completo'
+            };
             
             const modalBody = document.getElementById('customizeModalBody');
             
-            modalBody.innerHTML = `
-                <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
-                    <img src="${platillo.imagen || 'https://via.placeholder.com/100'}" style="width: 80px; height: 80px; border-radius: var(--radius-sm);">
-                    <div>
-                        <h4>${platillo.nombre}</h4>
-                        <p>Precio base: ${formatBs(usdToBs(platillo.precio))}</p>
-                    </div>
-                </div>
+            Promise.all(Object.entries(platillo.ingredientes || {}).map(async ([ingId, ingInfo]) => {
+                const ingrediente = inventario.find(i => i.id === ingId);
+                const stockDisp = await getStockDisponible(ingId);
+                const disponible = stockDisp >= (ingInfo.cantidad || 1);
+                const precio = ingrediente?.precio_unitario || 0;
                 
-                <div style="margin-bottom: 1rem;">
-                    <label>Cantidad:</label>
-                    <div style="display: flex; align-items: center; gap: 1rem; margin-top: 0.5rem;">
-                        <button class="btn-icon" onclick="actualizarCantidadPersonalizacion(-1)">-</button>
-                        <span id="customizeCantidad">1</span>
-                        <button class="btn-icon" onclick="actualizarCantidadPersonalizacion(1)">+</button>
+                return `
+                    <div style="margin-bottom: 0.8rem; padding: 0.7rem; background: var(--gray-50); border-radius: var(--radius-sm); ${!disponible ? 'opacity: 0.5;' : ''}">
+                        <label style="display: flex; align-items: center; gap: 0.8rem; cursor: ${disponible ? 'pointer' : 'not-allowed'};">
+                            <input type="checkbox" class="ingrediente-check" 
+                                   data-ingrediente="${ingId}" 
+                                   data-precio="${precio}" 
+                                   ${!disponible ? 'disabled' : ''}>
+                            <div style="flex: 1;">
+                                <div style="font-weight: 500;">${ingInfo.nombre || ingId}</div>
+                                <div style="font-size: 0.85rem; color: var(--gray-600);">
+                                    Valor: ${formatBs(usdToBs(precio))}
+                                    ${!disponible ? '<span style="color: var(--danger); margin-left: 0.5rem;">(Sin stock)</span>' : ''}
+                                </div>
+                            </div>
+                        </label>
                     </div>
-                </div>
-                
-                <div style="margin-bottom: 1rem;">
-                    <label>Ingredientes:</label>
-                    <p style="color: var(--gray-500);">(Personalización simplificada)</p>
-                </div>
-                
-                <div style="background: var(--gray-100); padding: 0.8rem; border-radius: var(--radius-sm);">
-                    <div style="display: flex; justify-content: space-between;">
-                        <span>Precio final:</span>
-                        <span style="font-weight: 700; color: var(--primary);" id="customizePrecio">${formatBs(usdToBs(platillo.precio))}</span>
+                `;
+            })).then(ingredientesHtml => {
+                const completoOption = `
+                    <div style="margin-bottom: 0.8rem; padding: 0.7rem; background: ${currentCustomizeItem.selectionType === 'completo' ? '#E8F5E9' : 'var(--gray-50)'}; border-radius: var(--radius-sm); border: 2px solid ${currentCustomizeItem.selectionType === 'completo' ? 'var(--success)' : 'transparent'}; cursor: pointer;" onclick="selectCompleto()">
+                        <div style="display: flex; align-items: center; gap: 0.8rem;">
+                            <div style="width: 22px; height: 22px; border-radius: 50%; background: ${currentCustomizeItem.selectionType === 'completo' ? 'var(--success)' : 'var(--gray-300)'}; display: flex; align-items: center; justify-content: center; color: white;">
+                                ${currentCustomizeItem.selectionType === 'completo' ? '<i class="fas fa-check" style="font-size: 0.7rem;"></i>' : ''}
+                            </div>
+                            <div style="flex: 1;">
+                                <div style="font-weight: 600;">Platillo completo</div>
+                                <div style="font-size: 0.85rem; color: var(--gray-600);">Con todos los ingredientes</div>
+                            </div>
+                        </div>
                     </div>
-                </div>
-            `;
+                `;
+                
+                modalBody.innerHTML = `
+                    <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem; background: var(--gray-100); padding: 0.8rem; border-radius: var(--radius-sm);">
+                        <img src="${platillo.imagen || 'https://via.placeholder.com/80'}" 
+                             style="width: 80px; height: 80px; object-fit: cover; border-radius: var(--radius-sm);">
+                        <div>
+                            <h4 style="font-size: 1.2rem; margin-bottom: 0.3rem;">${platillo.nombre}</h4>
+                            <p style="color: var(--gray-600); font-size: 0.9rem;">${platillo.descripcion || ''}</p>
+                            <p style="font-weight: 600; color: var(--primary); font-size: 1rem;">Base: ${formatBs(usdToBs(platillo.precio))}</p>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-bottom: 1.5rem;">
+                        <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Cantidad:</label>
+                        <div style="display: flex; align-items: center; gap: 1rem;">
+                            <button class="btn-icon" onclick="actualizarCantidadPersonalizacion(-1)" style="width: 36px; height: 36px; border: 1px solid var(--gray-300); background: white; border-radius: 50%; cursor: pointer;">
+                                <i class="fas fa-minus"></i>
+                            </button>
+                            <span id="customizeCantidad" style="font-size: 1.2rem; font-weight: 600; min-width: 40px; text-align: center;">1</span>
+                            <button class="btn-icon" onclick="actualizarCantidadPersonalizacion(1)" style="width: 36px; height: 36px; border: 1px solid var(--gray-300); background: white; border-radius: 50%; cursor: pointer;">
+                                <i class="fas fa-plus"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-bottom: 1.5rem;">
+                        <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Opciones:</label>
+                        ${completoOption}
+                        <div id="ingredientesList" style="margin-top: 0.8rem;">
+                            <div style="font-weight: 500; margin-bottom: 0.5rem;">Quitar ingredientes:</div>
+                            ${ingredientesHtml.join('') || '<p style="color: var(--gray-500);">Sin ingredientes para personalizar</p>'}
+                        </div>
+                    </div>
+                    
+                    <div style="background: var(--gray-100); padding: 0.8rem; border-radius: var(--radius-sm);">
+                        <div style="display: flex; justify-content: space-between;">
+                            <span style="font-weight: 600;">Precio final:</span>
+                            <span style="font-size: 1.3rem; font-weight: 700; color: var(--primary);" id="customizePrecio">${formatBs(usdToBs(platillo.precio))}</span>
+                        </div>
+                    </div>
+                `;
+                
+                document.querySelectorAll('.ingrediente-check').forEach(cb => {
+                    cb.addEventListener('change', function() {
+                        if (this.checked) {
+                            selectPersonalizado();
+                        }
+                        calcularPrecioPersonalizado();
+                    });
+                });
+                
+                document.getElementById('customizeModal').classList.add('active');
+            });
+        }
+
+        function selectCompleto() {
+            if (!currentCustomizeItem) return;
+            currentCustomizeItem.selectionType = 'completo';
+            currentCustomizeItem.ingredientesQuitados = [];
             
-            document.getElementById('customizeModal').classList.add('active');
+            document.querySelectorAll('.ingrediente-check').forEach(cb => {
+                cb.checked = false;
+            });
+            
+            const completoOption = document.querySelector('#ingredientesList').previousElementSibling;
+            if (completoOption) {
+                completoOption.style.background = '#E8F5E9';
+                completoOption.style.borderColor = 'var(--success)';
+                const circle = completoOption.querySelector('div > div:first-child');
+                if (circle) {
+                    circle.style.background = 'var(--success)';
+                    circle.innerHTML = '<i class="fas fa-check" style="font-size: 0.7rem;"></i>';
+                }
+            }
+            
+            calcularPrecioPersonalizado();
+        }
+
+        function selectPersonalizado() {
+            if (!currentCustomizeItem) return;
+            currentCustomizeItem.selectionType = 'personalizado';
+            
+            const completoOption = document.querySelector('#ingredientesList').previousElementSibling;
+            if (completoOption) {
+                completoOption.style.background = 'var(--gray-50)';
+                completoOption.style.borderColor = 'transparent';
+                const circle = completoOption.querySelector('div > div:first-child');
+                if (circle) {
+                    circle.style.background = 'var(--gray-300)';
+                    circle.innerHTML = '';
+                }
+            }
+            
+            calcularPrecioPersonalizado();
         }
 
         function actualizarCantidadPersonalizacion(delta) {
@@ -2158,30 +2349,61 @@
 
         function calcularPrecioPersonalizado() {
             if (!currentCustomizeItem) return;
-            const precioFinalBs = usdToBs(currentCustomizeItem.precio) * currentCustomizeItem.cantidad;
+            
+            let descuento = 0;
+            document.querySelectorAll('.ingrediente-check:checked').forEach(cb => {
+                descuento += parseFloat(cb.dataset.precio) || 0;
+            });
+            
+            const precioBaseUSD = currentCustomizeItem.precio;
+            const precioFinalUSD = Math.max(0, precioBaseUSD - descuento);
+            const precioFinalBs = usdToBs(precioFinalUSD) * currentCustomizeItem.cantidad;
+            
             document.getElementById('customizePrecio').textContent = formatBs(precioFinalBs);
         }
 
-        function agregarPersonalizadoAlCarrito() {
+        async function agregarPersonalizadoAlCarrito() {
             if (!currentCustomizeItem) return;
             
-            const nuevaInstancia = {
-                id: generarId('inst_'),
-                platilloId: currentCustomizeItem.id,
-                nombre: currentCustomizeItem.nombre,
-                personalizacion: [],
-                imagen: currentCustomizeItem.imagen,
-                precioUnitarioUSD: currentCustomizeItem.precio,
-                precioUnitarioBs: usdToBs(currentCustomizeItem.precio),
-                subtotal: usdToBs(currentCustomizeItem.precio) * currentCustomizeItem.cantidad,
-                instanceNumber: carrito.filter(i => i.platilloId === currentCustomizeItem.id).length + 1
-            };
+            const ingredientesQuitados = Array.from(document.querySelectorAll('.ingrediente-check:checked'))
+                .map(cb => cb.dataset.ingrediente);
             
-            carrito.push(nuevaInstancia);
+            const verificado = await verificarStockDisponible(currentCustomizeItem.id, ingredientesQuitados);
+            if (!verificado.disponible) {
+                mostrarToast(verificado.motivo || 'No hay stock', 'error');
+                return;
+            }
+            
+            let descuento = 0;
+            document.querySelectorAll('.ingrediente-check:checked').forEach(cb => {
+                descuento += parseFloat(cb.dataset.precio) || 0;
+            });
+            
+            const precioFinalUSD = Math.max(0, currentCustomizeItem.precio - descuento);
+            
+            // Crear múltiples instancias según la cantidad
+            for (let i = 0; i < currentCustomizeItem.cantidad; i++) {
+                const nuevaInstancia = {
+                    id: generarId('inst_'),
+                    platilloId: currentCustomizeItem.id,
+                    nombre: currentCustomizeItem.nombre,
+                    personalizacion: ingredientesQuitados,
+                    imagen: currentCustomizeItem.imagen,
+                    precioUnitarioUSD: precioFinalUSD,
+                    precioUnitarioBs: usdToBs(precioFinalUSD),
+                    subtotal: usdToBs(precioFinalUSD),
+                    selectionType: currentCustomizeItem.selectionType,
+                    instanceNumber: carrito.filter(inst => inst.platilloId === currentCustomizeItem.id).length + 1
+                };
+                carrito.push(nuevaInstancia);
+            }
+            
             guardarCarrito();
             actualizarCarritoUI();
             cerrarModalPersonalizacion();
-            mostrarToast('Agregado al carrito', 'success');
+            
+            mostrarToast(`${currentCustomizeItem.cantidad} agregado(s)`, 'success');
+            stockCache = {}; // Invalidar caché
         }
 
         function cerrarModalPersonalizacion() {
@@ -2196,6 +2418,12 @@
             const platillo = menuItems.find(p => p.id === platilloId);
             if (!platillo) return;
             
+            const verificado = await verificarStockDisponible(platilloId);
+            if (!verificado.disponible) {
+                mostrarToast(verificado.motivo || 'No hay stock', 'error');
+                return;
+            }
+            
             const nuevaInstancia = {
                 id: generarId('inst_'),
                 platilloId: platillo.id,
@@ -2205,19 +2433,33 @@
                 precioUnitarioUSD: platillo.precio,
                 precioUnitarioBs: usdToBs(platillo.precio),
                 subtotal: usdToBs(platillo.precio),
-                instanceNumber: carrito.filter(i => i.platilloId === platillo.id).length + 1
+                selectionType: 'completo',
+                instanceNumber: carrito.filter(inst => inst.platilloId === platillo.id).length + 1
             };
             
             carrito.push(nuevaInstancia);
+            
             guardarCarrito();
             actualizarCarritoUI();
+            stockCache = {}; // Invalidar caché
+            
             mostrarToast('Agregado', 'success');
         }
 
         function eliminarInstancia(instanciaId) {
             carrito = carrito.filter(i => i.id !== instanciaId);
+            
+            const platillosUnicos = [...new Set(carrito.map(i => i.platilloId))];
+            platillosUnicos.forEach(pid => {
+                let contador = 1;
+                carrito.filter(i => i.platilloId === pid).forEach(inst => {
+                    inst.instanceNumber = contador++;
+                });
+            });
+            
             guardarCarrito();
             actualizarCarritoUI();
+            stockCache = {}; // Invalidar caché
         }
 
         function actualizarCarritoUI() {
@@ -2237,6 +2479,12 @@
             let total = 0;
             cartItems.innerHTML = carrito.map(instancia => {
                 total += instancia.subtotal;
+                
+                const ingredientesNombres = instancia.personalizacion.map(p => {
+                    const ing = inventario.find(i => i.id === p);
+                    return ing?.nombre || p;
+                }).join(', ');
+                
                 return `
                     <div class="cart-item">
                         <div class="cart-item-image" style="background-image: url('${instancia.imagen || 'https://via.placeholder.com/50'}')"></div>
@@ -2245,8 +2493,13 @@
                                 <span class="instance-number">${instancia.instanceNumber}</span>
                                 <span class="cart-item-name">${instancia.nombre}</span>
                             </div>
+                            ${instancia.personalizacion.length > 0 ? `
+                                <div class="cart-item-customization">
+                                    <i class="fas fa-utensil-spoon"></i> Sin: ${ingredientesNombres}
+                                </div>
+                            ` : ''}
                             <div class="cart-item-price-info">
-                                <span class="cart-item-unit-price">${formatBs(instancia.precioUnitarioBs)}</span>
+                                <span class="cart-item-unit-price">${formatBs(instancia.precioUnitarioBs)} c/u</span>
                                 <span class="cart-item-subtotal">${formatBs(instancia.subtotal)}</span>
                             </div>
                         </div>
@@ -2362,6 +2615,7 @@
         // FUNCIONES DE PEDIDOS
         // ============================================
         function crearPedidoBase(tipo) {
+            const tasaActual = configGlobal.tasa_efectiva;
             const items = carrito.map(instancia => ({
                 platilloId: instancia.platilloId,
                 nombre: instancia.nombre,
@@ -2370,7 +2624,7 @@
                 precioUnitarioUSD: instancia.precioUnitarioUSD,
                 precioEnBs: instancia.precioUnitarioBs,
                 subtotal: instancia.subtotal,
-                tasaCambioAplicada: configGlobal.tasa_efectiva,
+                tasaCambioAplicada: tasaActual,
                 instanceNumber: instancia.instanceNumber
             }));
             
@@ -2391,17 +2645,28 @@
                 const { error } = await window.supabaseClient.from('pedidos').insert([pedido]);
                 if (error) throw error;
                 
+                // Reservar ingredientes
+                await reservarIngredientes(pedido.id, pedido.items);
+                
+                let mensaje = '';
+                if (pedido.tipo === 'mesa') {
+                    mensaje = 'Tu pedido ha sido recibido. Por favor, pasa a caja.';
+                } else {
+                    mensaje = 'Tu pedido ha sido recibido y está pendiente de confirmación.';
+                }
+                
                 await window.supabaseClient.from('notificaciones').insert([{
                     pedido_id: pedido.id,
                     tipo: 'pending',
                     titulo: 'Pedido recibido',
-                    mensaje: 'Tu pedido ha sido recibido',
+                    mensaje: mensaje,
                     timestamp: new Date().toISOString(),
                     leida: false
                 }]);
                 
                 return { success: true };
             } catch (error) {
+                console.error('Error guardando pedido:', error);
                 return { success: false, error: error.message };
             }
         }
@@ -2432,7 +2697,7 @@
                 guardarCarrito();
                 actualizarCarritoUI();
                 document.getElementById('confirmMesaModal').classList.remove('active');
-                mostrarToast('Pedido enviado a cocina', 'success');
+                mostrarToast('Pedido enviado', 'success');
             }
         }
 
@@ -2674,6 +2939,7 @@
             });
             
             document.getElementById('telefono').addEventListener('input', validarFormularioDelivery);
+            
             document.getElementById('comprobante').addEventListener('change', function(e) {
                 const label = document.getElementById('comprobanteLabel');
                 if (this.files[0]) {
@@ -2741,7 +3007,8 @@
         }
 
         function selectCategoria(cat) {
-            document.querySelector(`.category-item[data-categoria="${cat}"]`)?.click();
+            const item = document.querySelector(`.category-item[data-categoria="${cat}"]`);
+            if (item) item.click();
         }
 
         function mostrarToast(msg, tipo) {
