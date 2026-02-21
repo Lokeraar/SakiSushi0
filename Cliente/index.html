@@ -52,12 +52,6 @@
             --radius-lg: 16px;
         }
 
-        html, body {
-            height: 100%;
-            margin: 0;
-            padding: 0;
-        }
-
         body {
             font-family: 'Roboto', sans-serif;
             background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), 
@@ -66,6 +60,7 @@
             background-attachment: fixed;
             background-position: center;
             color: var(--text-dark);
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
         }
@@ -310,23 +305,25 @@
             white-space: nowrap;
         }
 
-        /* Contenedor principal - MODIFICADO: estructura correcta */
-        .main-container {
-            flex: 1 0 auto;
+        /* Contenedor principal blanco - MODIFICADO: ahora no incluye el footer */
+        .content-wrapper {
             background: white;
             width: 100%;
-            position: relative;
+            flex: 1 0 auto;
+            display: flex;
+            flex-direction: column;
         }
 
         /* Main Layout */
         .main-layout {
             display: flex;
-            min-height: 100%;
+            flex: 1;
             position: relative;
+            min-height: calc(100vh - 82px);
             background: white;
         }
 
-        /* Category Sidebar - Fijo pero con posición sticky */
+        /* Category Sidebar */
         .category-sidebar {
             width: 280px;
             background: white;
@@ -335,19 +332,23 @@
             overflow-y: auto;
             transition: transform 0.3s ease;
             box-shadow: 2px 0 8px rgba(0,0,0,0.05);
-            position: sticky;
+            position: fixed;
             top: 82px;
-            height: calc(100vh - 82px);
-            flex-shrink: 0;
+            left: 0;
+            bottom: 0;
+            z-index: 900;
+        }
+
+        @media (min-width: 993px) {
+            .category-sidebar {
+                transform: translateX(0) !important;
+            }
         }
 
         @media (max-width: 992px) {
             .category-sidebar {
-                position: fixed;
-                top: 70px;
-                height: calc(100vh - 70px);
                 transform: translateX(-100%);
-                z-index: 900;
+                top: 70px;
             }
             .category-sidebar.open {
                 transform: translateX(0);
@@ -473,7 +474,7 @@
             font-weight: bold;
         }
 
-        /* Cart Sidebar - Fijo pero con posición sticky */
+        /* Cart Sidebar */
         .cart-sidebar {
             width: 320px;
             background: white;
@@ -481,20 +482,24 @@
             display: flex;
             flex-direction: column;
             transition: transform 0.3s ease;
-            box-shadow: -2px 0 8px rgba(0,0,0,0.05);
-            position: sticky;
+            position: fixed;
+            right: 0;
             top: 82px;
-            height: calc(100vh - 82px);
-            flex-shrink: 0;
+            bottom: 0;
+            z-index: 900;
+            box-shadow: -2px 0 8px rgba(0,0,0,0.05);
+        }
+
+        @media (min-width: 993px) {
+            .cart-sidebar {
+                transform: translateX(0) !important;
+            }
         }
 
         @media (max-width: 992px) {
             .cart-sidebar {
-                position: fixed;
-                top: 70px;
-                height: calc(100vh - 70px);
                 transform: translateX(100%);
-                z-index: 900;
+                top: 70px;
             }
             .cart-sidebar.open {
                 transform: translateX(0);
@@ -760,18 +765,23 @@
             cursor: not-allowed;
         }
 
-        /* Main Content - Con márgenes para los menús laterales */
+        /* Main Content */
         .main-content {
             flex: 1;
             padding: 1.5rem;
+            transition: margin-left 0.3s, margin-right 0.3s;
+            margin-left: 0;
+            margin-right: 0;
             width: 100%;
+            max-width: 100%;
             background: white;
-            min-width: 0; /* Evita desbordamiento */
         }
 
         @media (min-width: 993px) {
             .main-content {
-                max-width: calc(100% - 600px);
+                margin-left: 280px;
+                margin-right: 320px;
+                width: calc(100% - 600px);
             }
         }
 
@@ -1257,16 +1267,15 @@
             border-radius: 0 0 var(--radius-lg) var(--radius-lg);
         }
 
-        /* Footer - MODIFICADO: Ahora es relativo y está fuera del main-layout */
+        /* Footer - MODIFICADO: Ahora fuera del content-wrapper, independiente */
         .footer {
             background: var(--secondary);
             color: white;
             padding: 3rem 1.5rem 1.5rem;
-            width: 100%;
-            margin-top: auto;
             position: relative;
-            z-index: 10;
-            clear: both;
+            width: 100%;
+            flex-shrink: 0;
+            margin-top: auto;
         }
 
         .footer::before {
@@ -1657,8 +1666,8 @@
         </div>
     </header>
 
-    <!-- Contenedor principal -->
-    <div class="main-container">
+    <!-- Contenedor principal (sin footer) -->
+    <div class="content-wrapper">
         <div class="main-layout">
             <!-- Category Sidebar -->
             <div class="category-sidebar" id="categorySidebar">
@@ -1732,257 +1741,257 @@
                 </div>
             </div>
         </div>
-    </div>
 
-    <!-- Customize Modal -->
-    <div class="modal-overlay" id="customizeModal">
-        <div class="modal-container">
-            <div class="modal-header">
-                <h3><i class="fas fa-star text-accent"></i> Personalizar</h3>
-                <button class="modal-close" id="closeCustomizeModal">&times;</button>
-            </div>
-            <div class="modal-body" id="customizeModalBody"></div>
-            <div class="modal-footer">
-                <button class="btn-secondary" id="cancelCustomize">Cancelar</button>
-                <button class="btn-primary" id="addToCartFromModal">
-                    <i class="fas fa-cart-plus"></i> Añadir
-                </button>
+        <!-- Customize Modal -->
+        <div class="modal-overlay" id="customizeModal">
+            <div class="modal-container">
+                <div class="modal-header">
+                    <h3><i class="fas fa-star text-accent"></i> Personalizar</h3>
+                    <button class="modal-close" id="closeCustomizeModal">&times;</button>
+                </div>
+                <div class="modal-body" id="customizeModalBody"></div>
+                <div class="modal-footer">
+                    <button class="btn-secondary" id="cancelCustomize">Cancelar</button>
+                    <button class="btn-primary" id="addToCartFromModal">
+                        <i class="fas fa-cart-plus"></i> Añadir
+                    </button>
+                </div>
             </div>
         </div>
-    </div>
 
-    <!-- Mesa Confirmation Modal -->
-    <div class="modal-overlay" id="confirmMesaModal">
-        <div class="modal-container">
-            <div class="modal-header">
-                <h3><i class="fas fa-store"></i> Confirmar Pedido</h3>
-                <button class="modal-close" id="closeConfirmMesaModal">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="info-box mesa">
-                    <i class="fas fa-info-circle"></i> Pedido para <strong>Mesa <span id="confirmTableNumber">#--</span></strong>
+        <!-- Mesa Confirmation Modal -->
+        <div class="modal-overlay" id="confirmMesaModal">
+            <div class="modal-container">
+                <div class="modal-header">
+                    <h3><i class="fas fa-store"></i> Confirmar Pedido</h3>
+                    <button class="modal-close" id="closeConfirmMesaModal">&times;</button>
                 </div>
-                
-                <div style="margin: 1rem 0;">
-                    <h4 style="margin-bottom: 0.8rem;">Resumen:</h4>
-                    <div id="mesaOrderSummary" style="background: var(--gray-100); padding: 0.8rem; border-radius: var(--radius-sm);"></div>
+                <div class="modal-body">
+                    <div class="info-box mesa">
+                        <i class="fas fa-info-circle"></i> Pedido para <strong>Mesa <span id="confirmTableNumber">#--</span></strong>
+                    </div>
+                    
+                    <div style="margin: 1rem 0;">
+                        <h4 style="margin-bottom: 0.8rem;">Resumen:</h4>
+                        <div id="mesaOrderSummary" style="background: var(--gray-100); padding: 0.8rem; border-radius: var(--radius-sm);"></div>
+                    </div>
+                    
+                    <div class="info-box mesa" style="margin-top: 0.5rem;">
+                        <i class="fas fa-clock"></i> Por favor, pasa a caja a cancelar.
+                    </div>
+                    
+                    <div style="margin: 1rem 0;">
+                        <label for="clienteNombre" style="display: block; margin-bottom: 0.3rem; font-weight: 600;">Tu nombre (opcional):</label>
+                        <input type="text" id="clienteNombre" placeholder="Ej: Juan" style="width: 100%; padding: 0.7rem; border: 1px solid var(--gray-300); border-radius: var(--radius-sm);">
+                    </div>
                 </div>
-                
-                <div class="info-box mesa" style="margin-top: 0.5rem;">
-                    <i class="fas fa-clock"></i> Por favor, pasa a caja a cancelar.
+                <div class="modal-footer">
+                    <button class="btn-secondary" id="cancelMesaOrder">Cancelar</button>
+                    <button class="btn-primary" id="confirmMesaOrder">
+                        <i class="fas fa-check"></i> Hacer Pedido
+                    </button>
                 </div>
-                
-                <div style="margin: 1rem 0;">
-                    <label for="clienteNombre" style="display: block; margin-bottom: 0.3rem; font-weight: 600;">Tu nombre (opcional):</label>
-                    <input type="text" id="clienteNombre" placeholder="Ej: Juan" style="width: 100%; padding: 0.7rem; border: 1px solid var(--gray-300); border-radius: var(--radius-sm);">
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn-secondary" id="cancelMesaOrder">Cancelar</button>
-                <button class="btn-primary" id="confirmMesaOrder">
-                    <i class="fas fa-check"></i> Hacer Pedido
-                </button>
             </div>
         </div>
-    </div>
 
-    <!-- Delivery Modal -->
-    <div class="modal-overlay" id="deliveryModal">
-        <div class="modal-container">
-            <div class="modal-header">
-                <h3><i class="fas fa-motorcycle"></i> Delivery</h3>
-                <button class="modal-close" id="closeDeliveryModal">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="payment-timer" id="deliveryTimer" style="display: block;">
-                    <i class="fas fa-hourglass-half"></i> 20 min para pagar
-                    <div class="timer-display" id="deliveryTimerDisplay">20:00</div>
+        <!-- Delivery Modal -->
+        <div class="modal-overlay" id="deliveryModal">
+            <div class="modal-container">
+                <div class="modal-header">
+                    <h3><i class="fas fa-motorcycle"></i> Delivery</h3>
+                    <button class="modal-close" id="closeDeliveryModal">&times;</button>
                 </div>
-                
-                <div class="info-box delivery-pending">
-                    <i class="fas fa-exclamation-triangle"></i> Al confirmar, el timer se detiene.
-                </div>
-                
-                <div class="payment-info" style="background: var(--gray-100); padding: 0.8rem; border-radius: var(--radius-sm); margin-bottom: 1rem;">
-                    <h4 style="margin-bottom: 0.5rem;"><i class="fas fa-credit-card"></i> Pago Móvil</h4>
-                    <p><strong>Banesco</strong> 0424-1525233</p>
-                    <p><strong>RIF</strong> J-501519838</p>
-                </div>
-                
-                <form id="deliveryForm">
-                    <div style="margin-bottom: 1rem;">
-                        <label style="display: block; margin-bottom: 0.3rem; font-weight: 600;">Parroquia:</label>
-                        <div class="parroquia-selector">
-                            <div class="selected-parroquia" onclick="toggleParroquiaSelect()">
-                                <span id="selectedParroquiaText">San Bernardino</span>
-                                <i class="fas fa-chevron-down" id="parroquiaChevron"></i>
+                <div class="modal-body">
+                    <div class="payment-timer" id="deliveryTimer" style="display: block;">
+                        <i class="fas fa-hourglass-half"></i> 20 min para pagar
+                        <div class="timer-display" id="deliveryTimerDisplay">20:00</div>
+                    </div>
+                    
+                    <div class="info-box delivery-pending">
+                        <i class="fas fa-exclamation-triangle"></i> Al confirmar, el timer se detiene.
+                    </div>
+                    
+                    <div class="payment-info" style="background: var(--gray-100); padding: 0.8rem; border-radius: var(--radius-sm); margin-bottom: 1rem;">
+                        <h4 style="margin-bottom: 0.5rem;"><i class="fas fa-credit-card"></i> Pago Móvil</h4>
+                        <p><strong>Banesco</strong> 0424-1525233</p>
+                        <p><strong>RIF</strong> J-501519838</p>
+                    </div>
+                    
+                    <form id="deliveryForm">
+                        <div style="margin-bottom: 1rem;">
+                            <label style="display: block; margin-bottom: 0.3rem; font-weight: 600;">Parroquia:</label>
+                            <div class="parroquia-selector">
+                                <div class="selected-parroquia" onclick="toggleParroquiaSelect()">
+                                    <span id="selectedParroquiaText">San Bernardino</span>
+                                    <i class="fas fa-chevron-down" id="parroquiaChevron"></i>
+                                </div>
+                                <input type="text" id="parroquiaSearch" class="parroquia-search" placeholder="Buscar..." style="display: none;">
+                                <select id="parroquiaSelect" class="parroquia-select" size="5" style="display: none;">
+                                    <option value="Altagracia">Altagracia</option>
+                                    <option value="Antímano">Antímano</option>
+                                    <option value="Candelaria">Candelaria</option>
+                                    <option value="Caricuao">Caricuao</option>
+                                    <option value="Caucagüita">Caucagüita</option>
+                                    <option value="Catedral">Catedral</option>
+                                    <option value="Chacao">Chacao</option>
+                                    <option value="Coche">Coche</option>
+                                    <option value="El Cafetal">El Cafetal</option>
+                                    <option value="El Junquito">El Junquito</option>
+                                    <option value="El Paraíso">El Paraíso</option>
+                                    <option value="El Recreo">El Recreo</option>
+                                    <option value="El Valle">El Valle</option>
+                                    <option value="Fila de Mariches">Fila de Mariches</option>
+                                    <option value="La Dolorita">La Dolorita</option>
+                                    <option value="La Pastora">La Pastora</option>
+                                    <option value="La Vega">La Vega</option>
+                                    <option value="Las Minas">Las Minas</option>
+                                    <option value="Leoncio Martínez">Leoncio Martínez</option>
+                                    <option value="Macarao">Macarao</option>
+                                    <option value="Nuestra Señora del Rosario">Nuestra Señora del Rosario</option>
+                                    <option value="Petare">Petare</option>
+                                    <option value="San Agustín">San Agustín</option>
+                                    <option value="San Bernardino" selected>San Bernardino</option>
+                                    <option value="San José">San José</option>
+                                    <option value="San Juan">San Juan</option>
+                                    <option value="San Pedro">San Pedro</option>
+                                    <option value="Santa Rosalía">Santa Rosalía</option>
+                                    <option value="Santa Rosalía de Palermo">Santa Rosalía de Palermo</option>
+                                    <option value="Santa Teresa">Santa Teresa</option>
+                                    <option value="Sucre">Sucre</option>
+                                    <option value="23 de Enero">23 de Enero</option>
+                                </select>
                             </div>
-                            <input type="text" id="parroquiaSearch" class="parroquia-search" placeholder="Buscar..." style="display: none;">
-                            <select id="parroquiaSelect" class="parroquia-select" size="5" style="display: none;">
-                                <option value="Altagracia">Altagracia</option>
-                                <option value="Antímano">Antímano</option>
-                                <option value="Candelaria">Candelaria</option>
-                                <option value="Caricuao">Caricuao</option>
-                                <option value="Caucagüita">Caucagüita</option>
-                                <option value="Catedral">Catedral</option>
-                                <option value="Chacao">Chacao</option>
-                                <option value="Coche">Coche</option>
-                                <option value="El Cafetal">El Cafetal</option>
-                                <option value="El Junquito">El Junquito</option>
-                                <option value="El Paraíso">El Paraíso</option>
-                                <option value="El Recreo">El Recreo</option>
-                                <option value="El Valle">El Valle</option>
-                                <option value="Fila de Mariches">Fila de Mariches</option>
-                                <option value="La Dolorita">La Dolorita</option>
-                                <option value="La Pastora">La Pastora</option>
-                                <option value="La Vega">La Vega</option>
-                                <option value="Las Minas">Las Minas</option>
-                                <option value="Leoncio Martínez">Leoncio Martínez</option>
-                                <option value="Macarao">Macarao</option>
-                                <option value="Nuestra Señora del Rosario">Nuestra Señora del Rosario</option>
-                                <option value="Petare">Petare</option>
-                                <option value="San Agustín">San Agustín</option>
-                                <option value="San Bernardino" selected>San Bernardino</option>
-                                <option value="San José">San José</option>
-                                <option value="San Juan">San Juan</option>
-                                <option value="San Pedro">San Pedro</option>
-                                <option value="Santa Rosalía">Santa Rosalía</option>
-                                <option value="Santa Rosalía de Palermo">Santa Rosalía de Palermo</option>
-                                <option value="Santa Teresa">Santa Teresa</option>
-                                <option value="Sucre">Sucre</option>
-                                <option value="23 de Enero">23 de Enero</option>
-                            </select>
                         </div>
-                    </div>
-                    
-                    <div class="delivery-price-display" id="deliveryPriceDisplay">
-                        Envío: Bs. 0,00
-                    </div>
-                    
-                    <div style="margin-bottom: 1rem;">
-                        <label for="direccion" style="display: block; margin-bottom: 0.3rem; font-weight: 600;">Dirección:</label>
-                        <textarea id="direccion" required minlength="20" placeholder="Av., Edif., Piso, Apto" style="width: 100%; padding: 0.7rem; border: 1px solid var(--gray-300); border-radius: var(--radius-sm);" rows="2"></textarea>
-                        <small id="direccionCounter" style="color: var(--gray-600);">0/20</small>
-                    </div>
-                    
-                    <div style="margin-bottom: 1rem;">
-                        <label for="telefono" style="display: block; margin-bottom: 0.3rem; font-weight: 600;">Teléfono:</label>
-                        <input type="tel" id="telefono" required pattern="[0-9]{11,14}" placeholder="04121234567" style="width: 100%; padding: 0.7rem; border: 1px solid var(--gray-300); border-radius: var(--radius-sm);">
-                    </div>
-                    
-                    <div style="margin-bottom: 1rem;">
-                        <label style="display: block; margin-bottom: 0.3rem; font-weight: 600;">Referencia (solo números):</label>
-                        <div style="display: flex; gap: 0.3rem;">
-                            <input type="text" maxlength="1" class="ref-digit" data-type="delivery" data-index="0" style="width: 15%; text-align: center; padding: 0.7rem; border: 1px solid var(--gray-300); border-radius: var(--radius-sm); font-size: 1.2rem;" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
-                            <input type="text" maxlength="1" class="ref-digit" data-type="delivery" data-index="1" style="width: 15%; text-align: center; padding: 0.7rem; border: 1px solid var(--gray-300); border-radius: var(--radius-sm); font-size: 1.2rem;" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
-                            <input type="text" maxlength="1" class="ref-digit" data-type="delivery" data-index="2" style="width: 15%; text-align: center; padding: 0.7rem; border: 1px solid var(--gray-300); border-radius: var(--radius-sm); font-size: 1.2rem;" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
-                            <input type="text" maxlength="1" class="ref-digit" data-type="delivery" data-index="3" style="width: 15%; text-align: center; padding: 0.7rem; border: 1px solid var(--gray-300); border-radius: var(--radius-sm); font-size: 1.2rem;" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
-                            <input type="text" maxlength="1" class="ref-digit" data-type="delivery" data-index="4" style="width: 15%; text-align: center; padding: 0.7rem; border: 1px solid var(--gray-300); border-radius: var(--radius-sm); font-size: 1.2rem;" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
-                            <input type="text" maxlength="1" class="ref-digit" data-type="delivery" data-index="5" style="width: 15%; text-align: center; padding: 0.7rem; border: 1px solid var(--gray-300); border-radius: var(--radius-sm); font-size: 1.2rem;" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+                        
+                        <div class="delivery-price-display" id="deliveryPriceDisplay">
+                            Envío: Bs. 0,00
                         </div>
-                    </div>
-                    
-                    <div style="margin-bottom: 1rem;">
-                        <label for="comprobante" style="display: block; margin-bottom: 0.3rem; font-weight: 600;">Comprobante:</label>
-                        <div class="file-input-wrapper">
-                            <input type="file" id="comprobante" accept="image/*" style="display: none;">
-                            <label for="comprobante" class="file-input-label" id="comprobanteLabel">
-                                <i class="fas fa-cloud-upload-alt" style="font-size: 1.5rem;"></i> Subir
-                            </label>
+                        
+                        <div style="margin-bottom: 1rem;">
+                            <label for="direccion" style="display: block; margin-bottom: 0.3rem; font-weight: 600;">Dirección:</label>
+                            <textarea id="direccion" required minlength="20" placeholder="Av., Edif., Piso, Apto" style="width: 100%; padding: 0.7rem; border: 1px solid var(--gray-300); border-radius: var(--radius-sm);" rows="2"></textarea>
+                            <small id="direccionCounter" style="color: var(--gray-600);">0/20</small>
                         </div>
-                    </div>
-                    
-                    <div style="padding: 0.8rem; background: var(--gray-100); border-radius: var(--radius-sm);">
-                        <div style="display: flex; justify-content: space-between;">
-                            <span>Total a pagar:</span>
-                            <span style="font-weight: 700; color: var(--primary);" id="deliveryTotal">Bs. 0,00</span>
+                        
+                        <div style="margin-bottom: 1rem;">
+                            <label for="telefono" style="display: block; margin-bottom: 0.3rem; font-weight: 600;">Teléfono:</label>
+                            <input type="tel" id="telefono" required pattern="[0-9]{11,14}" placeholder="04121234567" style="width: 100%; padding: 0.7rem; border: 1px solid var(--gray-300); border-radius: var(--radius-sm);">
                         </div>
-                    </div>
-                </form>
+                        
+                        <div style="margin-bottom: 1rem;">
+                            <label style="display: block; margin-bottom: 0.3rem; font-weight: 600;">Referencia (solo números):</label>
+                            <div style="display: flex; gap: 0.3rem;">
+                                <input type="text" maxlength="1" class="ref-digit" data-type="delivery" data-index="0" style="width: 15%; text-align: center; padding: 0.7rem; border: 1px solid var(--gray-300); border-radius: var(--radius-sm); font-size: 1.2rem;" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+                                <input type="text" maxlength="1" class="ref-digit" data-type="delivery" data-index="1" style="width: 15%; text-align: center; padding: 0.7rem; border: 1px solid var(--gray-300); border-radius: var(--radius-sm); font-size: 1.2rem;" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+                                <input type="text" maxlength="1" class="ref-digit" data-type="delivery" data-index="2" style="width: 15%; text-align: center; padding: 0.7rem; border: 1px solid var(--gray-300); border-radius: var(--radius-sm); font-size: 1.2rem;" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+                                <input type="text" maxlength="1" class="ref-digit" data-type="delivery" data-index="3" style="width: 15%; text-align: center; padding: 0.7rem; border: 1px solid var(--gray-300); border-radius: var(--radius-sm); font-size: 1.2rem;" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+                                <input type="text" maxlength="1" class="ref-digit" data-type="delivery" data-index="4" style="width: 15%; text-align: center; padding: 0.7rem; border: 1px solid var(--gray-300); border-radius: var(--radius-sm); font-size: 1.2rem;" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+                                <input type="text" maxlength="1" class="ref-digit" data-type="delivery" data-index="5" style="width: 15%; text-align: center; padding: 0.7rem; border: 1px solid var(--gray-300); border-radius: var(--radius-sm); font-size: 1.2rem;" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+                            </div>
+                        </div>
+                        
+                        <div style="margin-bottom: 1rem;">
+                            <label for="comprobante" style="display: block; margin-bottom: 0.3rem; font-weight: 600;">Comprobante:</label>
+                            <div class="file-input-wrapper">
+                                <input type="file" id="comprobante" accept="image/*" style="display: none;">
+                                <label for="comprobante" class="file-input-label" id="comprobanteLabel">
+                                    <i class="fas fa-cloud-upload-alt" style="font-size: 1.5rem;"></i> Subir
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div style="padding: 0.8rem; background: var(--gray-100); border-radius: var(--radius-sm);">
+                            <div style="display: flex; justify-content: space-between;">
+                                <span>Total a pagar:</span>
+                                <span style="font-weight: 700; color: var(--primary);" id="deliveryTotal">Bs. 0,00</span>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn-secondary" id="cancelDelivery">Cancelar</button>
+                    <button class="btn-primary" id="confirmDelivery" disabled>
+                        <i class="fas fa-check"></i> Confirmar
+                    </button>
+                </div>
             </div>
-            <div class="modal-footer">
-                <button class="btn-secondary" id="cancelDelivery">Cancelar</button>
-                <button class="btn-primary" id="confirmDelivery" disabled>
-                    <i class="fas fa-check"></i> Confirmar
-                </button>
+        </div>
+
+        <!-- Reserva Modal -->
+        <div class="modal-overlay" id="reservaModal">
+            <div class="modal-container">
+                <div class="modal-header">
+                    <h3><i class="fas fa-calendar-alt"></i> Reserva</h3>
+                    <button class="modal-close" id="closeReservaModal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="payment-timer" id="reservaTimer" style="display: block;">
+                        <i class="fas fa-hourglass-half"></i> 20 min para pagar
+                        <div class="timer-display" id="reservaTimerDisplay">20:00</div>
+                    </div>
+                    
+                    <div class="info-box delivery-pending">
+                        <i class="fas fa-exclamation-triangle"></i> Al confirmar, el timer se detiene.
+                    </div>
+                    
+                    <div class="payment-info" style="background: var(--gray-100); padding: 0.8rem; border-radius: var(--radius-sm); margin-bottom: 1rem;">
+                        <h4 style="margin-bottom: 0.5rem;"><i class="fas fa-credit-card"></i> Pago Móvil</h4>
+                        <p><strong>Banesco</strong> 0424-1525233</p>
+                        <p><strong>RIF</strong> J-501519838</p>
+                    </div>
+                    
+                    <form id="reservaForm">
+                        <div style="margin-bottom: 1rem;">
+                            <label for="fechaReserva" style="display: block; margin-bottom: 0.3rem; font-weight: 600;">Fecha:</label>
+                            <input type="date" id="fechaReserva" required min="" style="width: 100%; padding: 0.7rem; border: 1px solid var(--gray-300); border-radius: var(--radius-sm);">
+                        </div>
+                        
+                        <div style="margin-bottom: 1rem;">
+                            <label for="nombreReserva" style="display: block; margin-bottom: 0.3rem; font-weight: 600;">Nombre:</label>
+                            <input type="text" id="nombreReserva" required placeholder="Tu nombre" style="width: 100%; padding: 0.7rem; border: 1px solid var(--gray-300); border-radius: var(--radius-sm);">
+                        </div>
+                        
+                        <div style="margin-bottom: 1rem;">
+                            <label style="display: block; margin-bottom: 0.3rem; font-weight: 600;">Referencia (solo números):</label>
+                            <div style="display: flex; gap: 0.3rem;">
+                                <input type="text" maxlength="1" class="ref-digit" data-type="reserva" data-index="0" style="width: 15%; text-align: center; padding: 0.7rem; border: 1px solid var(--gray-300); border-radius: var(--radius-sm); font-size: 1.2rem;" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+                                <input type="text" maxlength="1" class="ref-digit" data-type="reserva" data-index="1" style="width: 15%; text-align: center; padding: 0.7rem; border: 1px solid var(--gray-300); border-radius: var(--radius-sm); font-size: 1.2rem;" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+                                <input type="text" maxlength="1" class="ref-digit" data-type="reserva" data-index="2" style="width: 15%; text-align: center; padding: 0.7rem; border: 1px solid var(--gray-300); border-radius: var(--radius-sm); font-size: 1.2rem;" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+                                <input type="text" maxlength="1" class="ref-digit" data-type="reserva" data-index="3" style="width: 15%; text-align: center; padding: 0.7rem; border: 1px solid var(--gray-300); border-radius: var(--radius-sm); font-size: 1.2rem;" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+                                <input type="text" maxlength="1" class="ref-digit" data-type="reserva" data-index="4" style="width: 15%; text-align: center; padding: 0.7rem; border: 1px solid var(--gray-300); border-radius: var(--radius-sm); font-size: 1.2rem;" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+                                <input type="text" maxlength="1" class="ref-digit" data-type="reserva" data-index="5" style="width: 15%; text-align: center; padding: 0.7rem; border: 1px solid var(--gray-300); border-radius: var(--radius-sm); font-size: 1.2rem;" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+                            </div>
+                        </div>
+                        
+                        <div style="margin-bottom: 1rem;">
+                            <label for="comprobanteReserva" style="display: block; margin-bottom: 0.3rem; font-weight: 600;">Comprobante:</label>
+                            <div class="file-input-wrapper">
+                                <input type="file" id="comprobanteReserva" accept="image/*" style="display: none;">
+                                <label for="comprobanteReserva" class="file-input-label" id="comprobanteReservaLabel">
+                                    <i class="fas fa-cloud-upload-alt" style="font-size: 1.5rem;"></i> Subir
+                                </label>
+                            </div>
+                        </div>
+                        
+                        <div style="padding: 0.8rem; background: var(--gray-100); border-radius: var(--radius-sm);">
+                            <div style="display: flex; justify-content: space-between;">
+                                <span>Total:</span>
+                                <span style="font-weight: 700; color: var(--primary);" id="reservaTotal">Bs. 0,00</span>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn-secondary" id="cancelReserva">Cancelar</button>
+                    <button class="btn-primary" id="confirmReserva" disabled>
+                        <i class="fas fa-check"></i> Confirmar
+                    </button>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Reserva Modal -->
-    <div class="modal-overlay" id="reservaModal">
-        <div class="modal-container">
-            <div class="modal-header">
-                <h3><i class="fas fa-calendar-alt"></i> Reserva</h3>
-                <button class="modal-close" id="closeReservaModal">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="payment-timer" id="reservaTimer" style="display: block;">
-                    <i class="fas fa-hourglass-half"></i> 20 min para pagar
-                    <div class="timer-display" id="reservaTimerDisplay">20:00</div>
-                </div>
-                
-                <div class="info-box delivery-pending">
-                    <i class="fas fa-exclamation-triangle"></i> Al confirmar, el timer se detiene.
-                </div>
-                
-                <div class="payment-info" style="background: var(--gray-100); padding: 0.8rem; border-radius: var(--radius-sm); margin-bottom: 1rem;">
-                    <h4 style="margin-bottom: 0.5rem;"><i class="fas fa-credit-card"></i> Pago Móvil</h4>
-                    <p><strong>Banesco</strong> 0424-1525233</p>
-                    <p><strong>RIF</strong> J-501519838</p>
-                </div>
-                
-                <form id="reservaForm">
-                    <div style="margin-bottom: 1rem;">
-                        <label for="fechaReserva" style="display: block; margin-bottom: 0.3rem; font-weight: 600;">Fecha:</label>
-                        <input type="date" id="fechaReserva" required min="" style="width: 100%; padding: 0.7rem; border: 1px solid var(--gray-300); border-radius: var(--radius-sm);">
-                    </div>
-                    
-                    <div style="margin-bottom: 1rem;">
-                        <label for="nombreReserva" style="display: block; margin-bottom: 0.3rem; font-weight: 600;">Nombre:</label>
-                        <input type="text" id="nombreReserva" required placeholder="Tu nombre" style="width: 100%; padding: 0.7rem; border: 1px solid var(--gray-300); border-radius: var(--radius-sm);">
-                    </div>
-                    
-                    <div style="margin-bottom: 1rem;">
-                        <label style="display: block; margin-bottom: 0.3rem; font-weight: 600;">Referencia (solo números):</label>
-                        <div style="display: flex; gap: 0.3rem;">
-                            <input type="text" maxlength="1" class="ref-digit" data-type="reserva" data-index="0" style="width: 15%; text-align: center; padding: 0.7rem; border: 1px solid var(--gray-300); border-radius: var(--radius-sm); font-size: 1.2rem;" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
-                            <input type="text" maxlength="1" class="ref-digit" data-type="reserva" data-index="1" style="width: 15%; text-align: center; padding: 0.7rem; border: 1px solid var(--gray-300); border-radius: var(--radius-sm); font-size: 1.2rem;" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
-                            <input type="text" maxlength="1" class="ref-digit" data-type="reserva" data-index="2" style="width: 15%; text-align: center; padding: 0.7rem; border: 1px solid var(--gray-300); border-radius: var(--radius-sm); font-size: 1.2rem;" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
-                            <input type="text" maxlength="1" class="ref-digit" data-type="reserva" data-index="3" style="width: 15%; text-align: center; padding: 0.7rem; border: 1px solid var(--gray-300); border-radius: var(--radius-sm); font-size: 1.2rem;" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
-                            <input type="text" maxlength="1" class="ref-digit" data-type="reserva" data-index="4" style="width: 15%; text-align: center; padding: 0.7rem; border: 1px solid var(--gray-300); border-radius: var(--radius-sm); font-size: 1.2rem;" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
-                            <input type="text" maxlength="1" class="ref-digit" data-type="reserva" data-index="5" style="width: 15%; text-align: center; padding: 0.7rem; border: 1px solid var(--gray-300); border-radius: var(--radius-sm); font-size: 1.2rem;" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
-                        </div>
-                    </div>
-                    
-                    <div style="margin-bottom: 1rem;">
-                        <label for="comprobanteReserva" style="display: block; margin-bottom: 0.3rem; font-weight: 600;">Comprobante:</label>
-                        <div class="file-input-wrapper">
-                            <input type="file" id="comprobanteReserva" accept="image/*" style="display: none;">
-                            <label for="comprobanteReserva" class="file-input-label" id="comprobanteReservaLabel">
-                                <i class="fas fa-cloud-upload-alt" style="font-size: 1.5rem;"></i> Subir
-                            </label>
-                        </div>
-                    </div>
-                    
-                    <div style="padding: 0.8rem; background: var(--gray-100); border-radius: var(--radius-sm);">
-                        <div style="display: flex; justify-content: space-between;">
-                            <span>Total:</span>
-                            <span style="font-weight: 700; color: var(--primary);" id="reservaTotal">Bs. 0,00</span>
-                        </div>
-                    </div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button class="btn-secondary" id="cancelReserva">Cancelar</button>
-                <button class="btn-primary" id="confirmReserva" disabled>
-                    <i class="fas fa-check"></i> Confirmar
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Footer - MODIFICADO: Ahora está fuera del main-container -->
+    <!-- Footer - MODIFICADO: Ahora fuera del content-wrapper, como sección independiente -->
     <footer class="footer">
         <div class="footer-logo-section">
             <img src="https://lh3.googleusercontent.com/pw/AP1GczPrZAoWxmsOGRD9xl1hO5Q65JXuwUZzoR6gUk-cw5lVmarxQe_-lwqpA60tTKLlXfpvIjAJlKC6jFls-xETJOPkebLIIPhbGlUkknmhrRbdhMUll2UViGSUj3WmHKg2YEsZlAfxBPPTjIHhScjD0jfe=w1439-h1439-s-no-gm" alt="Saki Sushi" class="footer-logo">
@@ -2086,7 +2095,6 @@
             'ejecutivo': 'fa-briefcase'
         };
 
-        // Categorías actualizadas con mapeo correcto
         const categoriasPredefinidas = [
             { id: 'todos', nombre: 'Todos los platillos' },
             { id: 'entradas', nombre: 'Entradas', subcategorias: ['Sashimi', 'Ensaladas', 'Entremeses'] },
@@ -2330,7 +2338,6 @@
             
             let itemsFiltrados = [...menuItems];
             
-            // Mapeo de categorías para los tags
             if (filtroCategoria) {
                 if (filtroCategoria === 'ofertas') {
                     itemsFiltrados = itemsFiltrados.filter(item => 
@@ -2354,7 +2361,6 @@
                         item.descripcion?.toLowerCase().includes('especial')
                     );
                 } else if (filtroCategoria !== 'todos') {
-                    // Filtrado por categoría real
                     itemsFiltrados = itemsFiltrados.filter(item => item.categoria === filtroCategoria);
                 }
             }
@@ -2735,7 +2741,6 @@
             mostrarToast(`${currentCustomizeItem.cantidad} agregado(s)`, 'success');
             window.stockCache.invalidate();
             
-            // En móvil/tablet, abrir carrito automáticamente
             if (window.innerWidth <= 992) {
                 document.getElementById('cartSidebar').classList.add('open');
                 document.getElementById('overlay').classList.add('active');
@@ -2781,7 +2786,6 @@
             
             mostrarToast('Agregado', 'success');
             
-            // En móvil/tablet, abrir carrito automáticamente
             if (window.innerWidth <= 992) {
                 document.getElementById('cartSidebar').classList.add('open');
                 document.getElementById('overlay').classList.add('active');
@@ -2801,7 +2805,7 @@
             
             guardarCarrito();
             actualizarCarritoUI();
-            window.stockCache.invalidate(); // Actualizar stock en tiempo real
+            window.stockCache.invalidate();
         }
 
         function actualizarCarritoUI() {
@@ -3182,7 +3186,6 @@
                 })
                 .subscribe();
             
-            // Suscripción a cambios en inventario (stock en tiempo real)
             window.supabaseClient.channel('inventario-cliente')
                 .on('postgres_changes', { 
                     event: 'UPDATE', 
@@ -3395,7 +3398,6 @@
                 });
             });
             
-            // Resize event para manejar escritorio/móvil
             window.addEventListener('resize', function() {
                 if (window.innerWidth > 992) {
                     document.getElementById('categorySidebar').classList.remove('open');
@@ -3413,7 +3415,6 @@
         }
 
         function selectCategoria(cat) {
-            // Mapear tags a categorías reales
             const categoriaMap = {
                 'ofertas': 'ofertas',
                 'fresco': 'sushi',
