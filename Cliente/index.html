@@ -284,7 +284,7 @@
             width: 280px;
             background: white;
             border-right: 1px solid var(--gray-200);
-            overflow-y: auto;
+            overflow-y: hidden;
             transition: transform 0.3s ease;
             box-shadow: 2px 0 8px rgba(0,0,0,0.05);
             position: fixed;
@@ -292,7 +292,6 @@
             left: 0;
             bottom: 0;
             z-index: 900;
-            padding-top: 0;
             display: flex;
             flex-direction: column;
         }
@@ -323,9 +322,6 @@
             font-size: 1.1rem;
             background: white;
             border-bottom: 1px solid var(--gray-200);
-            position: sticky;
-            top: 0;
-            z-index: 10;
             flex-shrink: 0;
         }
 
@@ -392,6 +388,12 @@
 
         .category-item.active i.fa-chevron-right {
             color: var(--primary);
+        }
+
+        .category-item[data-categoria="todos"] {
+            font-weight: 700;
+            border-bottom: 1px solid var(--gray-200);
+            margin-bottom: 0.5rem;
         }
 
         .category-item[data-categoria="ofertas"] span {
@@ -477,9 +479,6 @@
             align-items: center;
             justify-content: space-between;
             background: white;
-            position: sticky;
-            top: 0;
-            z-index: 10;
             flex-shrink: 0;
         }
 
@@ -663,6 +662,7 @@
             padding: 1.2rem;
             border-top: 2px solid var(--gray-200);
             background: white;
+            flex-shrink: 0;
         }
 
         .cart-total {
@@ -1711,7 +1711,7 @@
             </div>
         </div>
 
-        <!-- Modales (sin cambios) -->
+        <!-- Customize Modal -->
         <div class="modal-overlay" id="customizeModal">
             <div class="modal-container">
                 <div class="modal-header">
@@ -1728,6 +1728,7 @@
             </div>
         </div>
 
+        <!-- Mesa Confirmation Modal -->
         <div class="modal-overlay" id="confirmMesaModal">
             <div class="modal-container">
                 <div class="modal-header">
@@ -1762,6 +1763,7 @@
             </div>
         </div>
 
+        <!-- Delivery Modal -->
         <div class="modal-overlay" id="deliveryModal">
             <div class="modal-container">
                 <div class="modal-header">
@@ -1884,6 +1886,7 @@
             </div>
         </div>
 
+        <!-- Reserva Modal -->
         <div class="modal-overlay" id="reservaModal">
             <div class="modal-container">
                 <div class="modal-header">
@@ -2061,21 +2064,19 @@
         mesaId = urlParams.get('mesa');
 
         // ============================================
-        // FUNCIONES DE CONTROL DE PANELES - MODIFICADAS
+        // FUNCIONES DE CONTROL DE PANELES
         // ============================================
         function toggleMenuCategorias() {
             if (window.innerWidth <= 992) {
                 const menu = document.getElementById('categorySidebar');
                 const carrito = document.getElementById('cartSidebar');
                 
-                // Si el menú se va a abrir, cerrar el carrito
                 if (!menu.classList.contains('open')) {
                     carrito.classList.remove('open');
                 }
                 
                 menu.classList.toggle('open');
                 
-                // Actualizar overlay
                 if (menu.classList.contains('open') || carrito.classList.contains('open')) {
                     document.getElementById('overlay').classList.add('active');
                 } else {
@@ -2098,14 +2099,12 @@
                 const carrito = document.getElementById('cartSidebar');
                 const menu = document.getElementById('categorySidebar');
                 
-                // Si el carrito se va a abrir, cerrar el menú
                 if (!carrito.classList.contains('open')) {
                     menu.classList.remove('open');
                 }
                 
                 carrito.classList.toggle('open');
                 
-                // Actualizar overlay
                 if (carrito.classList.contains('open') || menu.classList.contains('open')) {
                     document.getElementById('overlay').classList.add('active');
                 } else {
@@ -2134,10 +2133,6 @@
                 document.getElementById('overlay').classList.remove('active');
             }
             cerrarNotificaciones();
-        }
-
-        function ajustarAlturaMenus() {
-            // No es necesario para escritorio, los headers sticky ya funcionan
         }
 
         // ============================================
@@ -2185,7 +2180,7 @@
         });
 
         // ============================================
-        // FUNCIONES DE CARGA (sin cambios)
+        // FUNCIONES DE CARGA
         // ============================================
         async function cargarMenu() {
             try {
@@ -2218,7 +2213,7 @@
         }
 
         // ============================================
-        // FUNCIONES DE STOCK (sin cambios)
+        // FUNCIONES DE STOCK
         // ============================================
         async function getStockDisponible(ingredienteId) {
             try {
@@ -2368,7 +2363,7 @@
         }
 
         // ============================================
-        // FUNCIONES DE RENDERIZADO (sin cambios)
+        // FUNCIONES DE RENDERIZADO
         // ============================================
         function renderizarMenu(filtroCategoria = null, filtroSubcategoria = null, busqueda = '') {
             const grid = document.getElementById('menuGrid');
@@ -2563,7 +2558,7 @@
         }
 
         // ============================================
-        // FUNCIONES DE PERSONALIZACIÓN (sin cambios)
+        // FUNCIONES DE PERSONALIZACIÓN
         // ============================================
         function abrirPersonalizacion(platilloId) {
             const platillo = menuItems.find(p => p.id === platilloId);
@@ -2734,7 +2729,7 @@
         }
 
         // ============================================
-        // FUNCIONES DEL CARRITO (sin cambios)
+        // FUNCIONES DEL CARRITO
         // ============================================
         async function agregarAlCarrito(platilloId) {
             const platillo = menuItems.find(p => p.id === platilloId);
@@ -2857,7 +2852,7 @@
             const cartButtons = document.getElementById('cartButtons');
             
             if (carrito.length === 0) {
-                cartItems.innerHTML = '<div class="cart-empty"><i class="fas fa-shopping-basket"></i><p>Carrito vacío</p></div>';
+                cartItems.innerHTML = '<div class="cart-empty"><i class="fas fa-shopping-basket"></i><p>Tu carrito está vacío</p></div>';
                 cartFooter.style.display = 'none';
                 return;
             }
@@ -2940,7 +2935,7 @@
         }
 
         // ============================================
-        // FUNCIONES DE TIMER (sin cambios)
+        // FUNCIONES DE TIMER
         // ============================================
         function iniciarTimerFrontend(tipo, minutos) {
             if (timersActivos[tipo]) {
@@ -3000,7 +2995,7 @@
         }
 
         // ============================================
-        // FUNCIONES DE PEDIDOS (sin cambios)
+        // FUNCIONES DE PEDIDOS
         // ============================================
         function crearPedidoBase(tipo) {
             const tasaActual = configGlobal.tasa_efectiva;
@@ -3219,7 +3214,7 @@
         }
 
         // ============================================
-        // FUNCIONES DE NOTIFICACIONES (sin cambios)
+        // FUNCIONES DE NOTIFICACIONES
         // ============================================
         function setupRealtimeSubscriptions() {
             window.supabaseClient.channel('notificaciones-cliente')
@@ -3338,7 +3333,7 @@
         }
 
         // ============================================
-        // FUNCIONES DE UTILIDAD (sin cambios)
+        // FUNCIONES DE UTILIDAD
         // ============================================
         function setupReferenceInputs() {
             document.querySelectorAll('.ref-digit').forEach(input => {
