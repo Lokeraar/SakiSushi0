@@ -489,6 +489,7 @@
             display: flex;
             gap: 0.5rem;
             margin-top: 0.5rem;
+            flex-wrap: wrap;
         }
 
         .btn-small {
@@ -699,6 +700,49 @@
 
         @keyframes spin {
             to { transform: rotate(360deg); }
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--secondary);
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            z-index: 3000;
+            display: none;
+            animation: slideIn 0.3s ease;
+            max-width: 300px;
+        }
+
+        .toast.show {
+            display: block;
+        }
+
+        .toast.success {
+            background: var(--success);
+        }
+
+        .toast.error {
+            background: var(--danger);
+        }
+
+        .toast.info {
+            background: var(--info);
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
         }
 
         /* Menú vista */
@@ -973,12 +1017,17 @@
         </div>
     </div>
 
+    <!-- Toast para notificaciones -->
+    <div class="toast" id="toast"></div>
+
     <!-- Primero Supabase (CDN) -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Luego tu configuración -->
     <script src="../supabase-config.js"></script>
     <script>
-        // Variables globales
+        // ============================================
+        // VARIABLES GLOBALES
+        // ============================================
         let currentUser = null;
         let pedidos = [];
         let pedidoActual = null;
@@ -1022,13 +1071,26 @@
             setupEventListeners();
         }
 
-        // Configuración inicial
+        // ============================================
+        // FUNCIONES DE TOAST
+        // ============================================
+        function mostrarToast(mensaje, tipo = 'info') {
+            const toast = document.getElementById('toast');
+            toast.textContent = mensaje;
+            toast.className = `toast show ${tipo}`;
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        // ============================================
+        // FUNCIONES DE CARGA
+        // ============================================
         async function cargarConfiguracionInicial() {
             await cargarConfiguracion();
             actualizarTasaUI();
         }
 
-        // Actualizar UI de tasa
         function actualizarTasaUI() {
             document.getElementById('tasaBase').textContent = (configGlobal.tasa_cambio || 400).toFixed(2);
             document.getElementById('aumentoDiario').textContent = (configGlobal.aumento_diario || 0) + '%';
@@ -1036,7 +1098,6 @@
             document.getElementById('tasaEfectiva').textContent = (configGlobal.tasa_efectiva || 400).toFixed(2);
         }
 
-        // Cargar pedidos
         async function cargarPedidos() {
             try {
                 const hoy = new Date();
@@ -1054,10 +1115,10 @@
                 actualizarEstadisticas();
             } catch (error) {
                 console.error('Error cargando pedidos:', error);
+                mostrarToast('Error cargando pedidos', 'error');
             }
         }
 
-        // Cargar menú
         async function cargarMenu() {
             try {
                 const { data, error } = await window.supabaseClient
@@ -1071,7 +1132,6 @@
             }
         }
 
-        // Renderizar menú
         function renderizarMenu(menu) {
             const grid = document.getElementById('menuGrid');
             grid.innerHTML = '';
@@ -1096,7 +1156,9 @@
             });
         }
 
-        // Actualizar vista de pedidos
+        // ============================================
+        // FUNCIONES DE VISTA DE PEDIDOS
+        // ============================================
         function actualizarVistaPedidos() {
             // Pendientes por tipo
             const mesaPendientes = pedidos.filter(p => p.tipo === 'mesa' && p.estado === 'pendiente');
@@ -1125,7 +1187,6 @@
             renderizarColumnaPreparacion('reservasPendientesProceso', reservasProceso);
         }
 
-        // Renderizar columna de pendientes
         function renderizarColumnaPendientes(elementId, pedidosLista) {
             const container = document.getElementById(elementId);
             container.innerHTML = '';
@@ -1140,7 +1201,6 @@
             }
         }
 
-        // Renderizar columna de preparación
         function renderizarColumnaPreparacion(elementId, pedidosLista) {
             const container = document.getElementById(elementId);
             container.innerHTML = '';
@@ -1155,7 +1215,6 @@
             }
         }
 
-        // Crear tarjeta de pedido
         function crearTarjetaPedido(tipo, pedido) {
             const card = document.createElement('div');
             card.className = `pedido-card ${tipo}`;
@@ -1233,7 +1292,9 @@
             return card;
         }
 
-        // Actualizar estadísticas
+        // ============================================
+        // FUNCIONES DE ESTADÍSTICAS
+        // ============================================
         async function actualizarEstadisticas() {
             try {
                 const hoy = new Date();
@@ -1269,7 +1330,134 @@
             }
         }
 
-        // Abrir modal de cobro
+        // ============================================
+        // FUNCIÓN MEJORADA DE RECHAZAR PEDIDO
+        // ============================================
+        async function rechazarPedido(pedidoId) {
+            if (!confirm('¿Estás seguro de rechazar este pedido? Los ingredientes reservados se liberarán automáticamente.')) return;
+            
+            try {
+                // Mostrar indicador de carga
+                const botonRechazar = event?.target;
+                if (botonRechazar) {
+                    botonRechazar.disabled = true;
+                    botonRechazar.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+                }
+                
+                // Primero liberar ingredientes (esto ya es transaccional en la BD)
+                const { data, error: liberarError } = await window.supabaseClient.rpc('liberar_ingredientes', {
+                    p_pedido_id: pedidoId
+                });
+                
+                if (liberarError) throw liberarError;
+                
+                // Obtener el pedido para conocer el session_id
+                const pedido = pedidos.find(p => p.id === pedidoId);
+                
+                // Actualizar estado del pedido
+                const { error } = await window.supabaseClient
+                    .from('pedidos')
+                    .update({ estado: 'rechazado' })
+                    .eq('id', pedidoId);
+                
+                if (error) throw error;
+                
+                // Notificar al cliente
+                await window.supabaseClient
+                    .from('notificaciones')
+                    .insert([{
+                        pedido_id: pedidoId,
+                        tipo: 'rejected',
+                        titulo: '❌ Pedido rechazado',
+                        mensaje: 'Lo sentimos, tu pedido ha sido rechazado',
+                        timestamp: new Date().toISOString(),
+                        session_id: pedido?.session_id || null,
+                        leida: false
+                    }]);
+                
+                await cargarPedidos();
+                mostrarToast('✅ Pedido rechazado correctamente', 'success');
+                
+            } catch (error) {
+                console.error('Error rechazando pedido:', error);
+                mostrarToast('❌ Error al rechazar el pedido: ' + error.message, 'error');
+            } finally {
+                // Restaurar botón
+                const botonRechazar = event?.target;
+                if (botonRechazar) {
+                    botonRechazar.disabled = false;
+                    botonRechazar.innerHTML = '<i class="fas fa-times"></i> Rechazar';
+                }
+            }
+        }
+
+        // ============================================
+        // FUNCIONES DE AVANCE DE ESTADO
+        // ============================================
+        async function avanzarEstado(pedidoId, nuevoEstado) {
+            try {
+                let estadoFinal = nuevoEstado;
+                let notificacionTitulo = '';
+                let notificacionMensaje = '';
+                
+                switch (nuevoEstado) {
+                    case 'entregado':
+                        estadoFinal = 'entregado';
+                        notificacionTitulo = '✅ Pedido entregado';
+                        notificacionMensaje = 'Tu pedido ha sido entregado. ¡Disfruta!';
+                        break;
+                    case 'enviado':
+                        estadoFinal = 'enviado';
+                        notificacionTitulo = '🚚 Pedido enviado';
+                        notificacionMensaje = 'Tu pedido está en camino';
+                        break;
+                    case 'reserva_atendida':
+                        estadoFinal = 'reserva_atendida';
+                        notificacionTitulo = '✅ Reserva confirmada';
+                        notificacionMensaje = 'Tu reserva ha sido confirmada. Te esperamos';
+                        break;
+                    case 'reserva_completada':
+                        estadoFinal = 'reserva_completada';
+                        notificacionTitulo = '🎉 Reserva completada';
+                        notificacionMensaje = 'Gracias por visitarnos';
+                        break;
+                }
+                
+                // Obtener el pedido para conocer el session_id
+                const pedido = pedidos.find(p => p.id === pedidoId);
+                
+                const { error } = await window.supabaseClient
+                    .from('pedidos')
+                    .update({ estado: estadoFinal })
+                    .eq('id', pedidoId);
+                
+                if (error) throw error;
+                
+                if (notificacionTitulo) {
+                    await window.supabaseClient
+                        .from('notificaciones')
+                        .insert([{
+                            pedido_id: pedidoId,
+                            tipo: 'approved',
+                            titulo: notificacionTitulo,
+                            mensaje: notificacionMensaje,
+                            timestamp: new Date().toISOString(),
+                            session_id: pedido?.session_id || null,
+                            leida: false
+                        }]);
+                }
+                
+                await cargarPedidos();
+                mostrarToast('✅ Estado actualizado', 'success');
+            } catch (error) {
+                console.error('Error avanzando estado:', error);
+                mostrarToast('❌ Error al actualizar el estado', 'error');
+            }
+        }
+
+        // ============================================
+        // FUNCIONES DE COBRO (sin cambios, ya funcionan bien)
+        // ============================================
         function abrirCobro(pedidoId) {
             const pedido = pedidos.find(p => p.id === pedidoId);
             if (!pedido) return;
@@ -1290,11 +1478,9 @@
             document.getElementById('cobroModal').classList.add('active');
         }
 
-        // Actualizar modal de cobro
         function actualizarModalCobro() {
             const body = document.getElementById('cobroModalBody');
             
-            // Calcular totales
             const pendiente = Math.max(0, totalAPagar - totalRecibido);
             const sobrante = Math.max(0, totalRecibido - totalAPagar);
             
@@ -1440,7 +1626,6 @@
             validarCobro();
         }
 
-        // Agregar método de pago
         function agregarMetodoPago() {
             pagosMixtos.push({
                 metodo: 'efectivo_bs',
@@ -1450,14 +1635,12 @@
             actualizarModalCobro();
         }
 
-        // Eliminar método de pago
         function eliminarMetodoPago(index) {
             pagosMixtos.splice(index, 1);
             recalcularTotales();
             actualizarModalCobro();
         }
 
-        // Actualizar pago
         function actualizarPago(index, campo, valor) {
             if (campo === 'monto') {
                 pagosMixtos[index].monto = parseFloat(valor) || 0;
@@ -1473,7 +1656,6 @@
             actualizarModalCobro();
         }
 
-        // Recalcular totales
         function recalcularTotales() {
             totalRecibido = pagosMixtos.reduce((sum, pago) => {
                 if (pago.metodo === 'efectivo_usd') {
@@ -1483,7 +1665,6 @@
             }, 0);
         }
 
-        // Validar cobro
         function validarCobro() {
             const confirmButton = document.getElementById('confirmCobro');
             if (!confirmButton) return;
@@ -1502,7 +1683,6 @@
             confirmButton.disabled = !valido;
         }
 
-        // Confirmar cobro
         document.getElementById('confirmCobro').addEventListener('click', async () => {
             if (!pedidoActual) return;
             
@@ -1526,106 +1706,16 @@
                 document.getElementById('cobroModal').classList.remove('active');
                 await cargarPedidos();
                 
-                alert('Cobro procesado exitosamente');
+                mostrarToast('✅ Cobro procesado exitosamente', 'success');
             } catch (error) {
                 console.error('Error procesando cobro:', error);
-                alert('Error al procesar el cobro: ' + error.message);
+                mostrarToast('❌ Error al procesar el cobro: ' + error.message, 'error');
             }
         });
 
-        // Rechazar pedido
-        async function rechazarPedido(pedidoId) {
-            if (!confirm('¿Estás seguro de rechazar este pedido?')) return;
-            
-            try {
-                // Primero liberar ingredientes
-                await window.supabaseClient.rpc('liberar_ingredientes', {
-                    p_pedido_id: pedidoId
-                });
-                
-                // Actualizar estado del pedido
-                const { error } = await window.supabaseClient
-                    .from('pedidos')
-                    .update({ estado: 'rechazado' })
-                    .eq('id', pedidoId);
-                
-                if (error) throw error;
-                
-                // Notificar al cliente
-                await window.supabaseClient
-                    .from('notificaciones')
-                    .insert([{
-                        pedido_id: pedidoId,
-                        tipo: 'rejected',
-                        titulo: '❌ Pedido rechazado',
-                        mensaje: 'Lo sentimos, tu pedido ha sido rechazado',
-                        timestamp: new Date().toISOString()
-                    }]);
-                
-                await cargarPedidos();
-            } catch (error) {
-                console.error('Error rechazando pedido:', error);
-                alert('Error al rechazar el pedido');
-            }
-        }
-
-        // Avanzar estado
-        async function avanzarEstado(pedidoId, nuevoEstado) {
-            try {
-                let estadoFinal = nuevoEstado;
-                let notificacionTitulo = '';
-                let notificacionMensaje = '';
-                
-                switch (nuevoEstado) {
-                    case 'entregado':
-                        estadoFinal = 'entregado';
-                        notificacionTitulo = '✅ Pedido entregado';
-                        notificacionMensaje = 'Tu pedido ha sido entregado. ¡Disfruta!';
-                        break;
-                    case 'enviado':
-                        estadoFinal = 'enviado';
-                        notificacionTitulo = '🚚 Pedido enviado';
-                        notificacionMensaje = 'Tu pedido está en camino';
-                        break;
-                    case 'reserva_atendida':
-                        estadoFinal = 'reserva_atendida';
-                        notificacionTitulo = '✅ Reserva confirmada';
-                        notificacionMensaje = 'Tu reserva ha sido confirmada. Te esperamos';
-                        break;
-                    case 'reserva_completada':
-                        estadoFinal = 'reserva_completada';
-                        notificacionTitulo = '🎉 Reserva completada';
-                        notificacionMensaje = 'Gracias por visitarnos';
-                        break;
-                }
-                
-                const { error } = await window.supabaseClient
-                    .from('pedidos')
-                    .update({ estado: estadoFinal })
-                    .eq('id', pedidoId);
-                
-                if (error) throw error;
-                
-                if (notificacionTitulo) {
-                    await window.supabaseClient
-                        .from('notificaciones')
-                        .insert([{
-                            pedido_id: pedidoId,
-                            tipo: 'approved',
-                            titulo: notificacionTitulo,
-                            mensaje: notificacionMensaje,
-                            timestamp: new Date().toISOString()
-                        }]);
-                }
-                
-                await cargarPedidos();
-            } catch (error) {
-                console.error('Error avanzando estado:', error);
-                alert('Error al actualizar el estado');
-            }
-        }
-
-        // Ver comprobante
+        // ============================================
+        // FUNCIONES DE COMPROBANTE
+        // ============================================
         function verComprobante(url) {
             document.getElementById('comprobanteModalBody').innerHTML = `
                 <img src="${url}" style="max-width: 100%; max-height: 400px; border-radius: 8px;">
@@ -1633,7 +1723,9 @@
             document.getElementById('comprobanteModal').classList.add('active');
         }
 
-        // Abrir modal de detalle de pedidos
+        // ============================================
+        // FUNCIONES DE MODAL DE DETALLE
+        // ============================================
         function abrirModalPedidos(tipo) {
             const modal = document.getElementById('detallePedidosModal');
             const title = document.getElementById('detalleModalTitle');
@@ -1703,16 +1795,62 @@
             modal.classList.add('active');
         }
 
-        // Configurar event listeners
+        // ============================================
+        // FUNCIONES DE SUSCRIPCIÓN EN TIEMPO REAL MEJORADAS
+        // ============================================
+        function setupRealtimeSubscriptions() {
+            // Suscripción a pedidos
+            window.supabaseClient
+                .channel('cajero-pedidos')
+                .on('postgres_changes', {
+                    event: '*',
+                    schema: 'public',
+                    table: 'pedidos'
+                }, (payload) => {
+                    console.log('Cambio en pedidos:', payload);
+                    cargarPedidos();
+                })
+                .subscribe();
+            
+            // NUEVO: Suscripción a cambios en inventario para actualizar disponibilidad
+            window.supabaseClient
+                .channel('cajero-inventario')
+                .on('postgres_changes', {
+                    event: 'UPDATE',
+                    schema: 'public',
+                    table: 'inventario'
+                }, () => {
+                    console.log('Cambio en inventario, recargando pedidos...');
+                    cargarPedidos(); // Por si algún pedido se ve afectado
+                })
+                .subscribe();
+            
+            // NUEVO: Suscripción a cambios en configuración (tasa de cambio)
+            window.supabaseClient
+                .channel('cajero-config')
+                .on('postgres_changes', {
+                    event: 'UPDATE',
+                    schema: 'public',
+                    table: 'config',
+                    filter: 'id=eq.1'
+                }, (payload) => {
+                    console.log('Cambio en configuración:', payload);
+                    configGlobal = { ...configGlobal, ...payload.new };
+                    actualizarTasaUI();
+                })
+                .subscribe();
+        }
+
+        // ============================================
+        // FUNCIONES DE EVENT LISTENERS
+        // ============================================
         function setupEventListeners() {
-            // Login - VERSIÓN CORREGIDA
+            // Login
             document.getElementById('loginForm').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 
                 const username = document.getElementById('username').value;
                 const password = document.getElementById('password').value;
-                
-                console.log('Intentando login cajero:', username);
                 
                 try {
                     const { data, error } = await window.supabaseClient
@@ -1723,16 +1861,14 @@
                         .eq('activo', true)
                         .maybeSingle();
                     
-                    console.log('Respuesta de Supabase:', { data, error });
-                    
                     if (error) {
                         console.error('Error de Supabase:', error);
-                        alert('Error al conectar con la base de datos: ' + error.message);
+                        mostrarToast('Error al conectar con la base de datos', 'error');
                         return;
                     }
                     
                     if (!data) {
-                        alert('Credenciales inválidas o usuario inactivo');
+                        mostrarToast('Credenciales inválidas o usuario inactivo', 'error');
                         return;
                     }
                     
@@ -1743,7 +1879,7 @@
                     
                 } catch (error) {
                     console.error('Error en login:', error);
-                    alert('Error al iniciar sesión: ' + error.message);
+                    mostrarToast('Error al iniciar sesión: ' + error.message, 'error');
                 }
             });
             
@@ -1759,6 +1895,7 @@
                 await cargarConfiguracionInicial();
                 await cargarPedidos();
                 await cargarMenu();
+                mostrarToast('✅ Datos sincronizados', 'success');
             });
             
             // Pestañas
@@ -1797,20 +1934,15 @@
             document.getElementById('closeComprobante').addEventListener('click', () => {
                 document.getElementById('comprobanteModal').classList.remove('active');
             });
-        }
-
-        // Suscripciones en tiempo real
-        function setupRealtimeSubscriptions() {
-            const subscription = window.supabaseClient
-                .channel('cajero-pedidos')
-                .on('postgres_changes', {
-                    event: '*',
-                    schema: 'public',
-                    table: 'pedidos'
-                }, () => {
-                    cargarPedidos();
-                })
-                .subscribe();
+            
+            // Cerrar modales al hacer clic fuera
+            document.querySelectorAll('.modal').forEach(modal => {
+                modal.addEventListener('click', (e) => {
+                    if (e.target === modal) {
+                        modal.classList.remove('active');
+                    }
+                });
+            });
         }
     </script>
 </body>
