@@ -279,33 +279,33 @@
             background: white;
         }
 
+        /* Category Sidebar - CORREGIDO */
         .category-sidebar {
             width: 280px;
             background: white;
             border-right: 1px solid var(--gray-200);
-            padding: 0;
             overflow-y: auto;
             transition: transform 0.3s ease;
             box-shadow: 2px 0 8px rgba(0,0,0,0.05);
             position: fixed;
             top: 0;
+            left: 0;
+            bottom: 0;
             z-index: 900;
-            padding-top: 82px; /* Espacio para el header */
+            padding-top: 0;
+            display: flex;
+            flex-direction: column;
         }
 
         @media (min-width: 993px) {
             .category-sidebar {
                 transform: translateX(0) !important;
-                height: 100vh;
             }
         }
 
         @media (max-width: 992px) {
             .category-sidebar {
                 transform: translateX(-100%);
-                top: 0;
-                height: 100vh;
-                padding-top: 70px;
             }
             .category-sidebar.open {
                 transform: translateX(0);
@@ -315,7 +315,6 @@
 
         .category-header {
             padding: 1rem 1.5rem;
-            margin-bottom: 0.5rem;
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -325,14 +324,9 @@
             background: white;
             border-bottom: 1px solid var(--gray-200);
             position: sticky;
-            top: 82px;
+            top: 0;
             z-index: 10;
-        }
-
-        @media (max-width: 992px) {
-            .category-header {
-                top: 70px;
-            }
+            flex-shrink: 0;
         }
 
         .category-header i {
@@ -354,7 +348,9 @@
 
         .category-list {
             list-style: none;
-            padding-bottom: 1rem;
+            flex: 1;
+            overflow-y: auto;
+            padding-bottom: 2rem;
         }
 
         .category-item {
@@ -442,6 +438,7 @@
             font-weight: bold;
         }
 
+        /* Cart Sidebar - CORREGIDO */
         .cart-sidebar {
             width: 320px;
             background: white;
@@ -452,10 +449,9 @@
             position: fixed;
             right: 0;
             top: 0;
+            bottom: 0;
             z-index: 900;
             box-shadow: -2px 0 8px rgba(0,0,0,0.05);
-            padding-top: 82px; /* Espacio para el header */
-            height: 100vh;
         }
 
         @media (min-width: 993px) {
@@ -467,8 +463,6 @@
         @media (max-width: 992px) {
             .cart-sidebar {
                 transform: translateX(100%);
-                top: 0;
-                padding-top: 70px;
             }
             .cart-sidebar.open {
                 transform: translateX(0);
@@ -484,14 +478,9 @@
             justify-content: space-between;
             background: white;
             position: sticky;
-            top: 82px;
+            top: 0;
             z-index: 10;
-        }
-
-        @media (max-width: 992px) {
-            .cart-header {
-                top: 70px;
-            }
+            flex-shrink: 0;
         }
 
         .cart-header h3 {
@@ -1654,6 +1643,7 @@
 
     <div class="content-wrapper">
         <div class="main-layout">
+            <!-- Category Sidebar -->
             <div class="category-sidebar" id="categorySidebar">
                 <div class="category-header">
                     <span><i class="fas fa-utensils"></i> Categorías</span>
@@ -1696,6 +1686,7 @@
                 </div>
             </main>
 
+            <!-- Cart Sidebar -->
             <div class="cart-sidebar" id="cartSidebar">
                 <div class="cart-header">
                     <h3><i class="fas fa-shopping-cart"></i> Tu Pedido</h3>
@@ -1720,6 +1711,7 @@
             </div>
         </div>
 
+        <!-- Modales (sin cambios) -->
         <div class="modal-overlay" id="customizeModal">
             <div class="modal-container">
                 <div class="modal-header">
@@ -2069,12 +2061,22 @@
         mesaId = urlParams.get('mesa');
 
         // ============================================
-        // FUNCIONES DE CONTROL DE PANELES
+        // FUNCIONES DE CONTROL DE PANELES - MODIFICADAS
         // ============================================
         function toggleMenuCategorias() {
             if (window.innerWidth <= 992) {
-                document.getElementById('categorySidebar').classList.toggle('open');
-                if (document.getElementById('categorySidebar').classList.contains('open')) {
+                const menu = document.getElementById('categorySidebar');
+                const carrito = document.getElementById('cartSidebar');
+                
+                // Si el menú se va a abrir, cerrar el carrito
+                if (!menu.classList.contains('open')) {
+                    carrito.classList.remove('open');
+                }
+                
+                menu.classList.toggle('open');
+                
+                // Actualizar overlay
+                if (menu.classList.contains('open') || carrito.classList.contains('open')) {
                     document.getElementById('overlay').classList.add('active');
                 } else {
                     document.getElementById('overlay').classList.remove('active');
@@ -2085,14 +2087,26 @@
         function cerrarMenuCategorias() {
             if (window.innerWidth <= 992) {
                 document.getElementById('categorySidebar').classList.remove('open');
-                document.getElementById('overlay').classList.remove('active');
+                if (!document.getElementById('cartSidebar').classList.contains('open')) {
+                    document.getElementById('overlay').classList.remove('active');
+                }
             }
         }
         
         function toggleCarrito() {
             if (window.innerWidth <= 992) {
-                document.getElementById('cartSidebar').classList.toggle('open');
-                if (document.getElementById('cartSidebar').classList.contains('open')) {
+                const carrito = document.getElementById('cartSidebar');
+                const menu = document.getElementById('categorySidebar');
+                
+                // Si el carrito se va a abrir, cerrar el menú
+                if (!carrito.classList.contains('open')) {
+                    menu.classList.remove('open');
+                }
+                
+                carrito.classList.toggle('open');
+                
+                // Actualizar overlay
+                if (carrito.classList.contains('open') || menu.classList.contains('open')) {
                     document.getElementById('overlay').classList.add('active');
                 } else {
                     document.getElementById('overlay').classList.remove('active');
@@ -2103,7 +2117,9 @@
         function cerrarCarrito() {
             if (window.innerWidth <= 992) {
                 document.getElementById('cartSidebar').classList.remove('open');
-                document.getElementById('overlay').classList.remove('active');
+                if (!document.getElementById('categorySidebar').classList.contains('open')) {
+                    document.getElementById('overlay').classList.remove('active');
+                }
             }
         }
         
@@ -2112,24 +2128,16 @@
         }
         
         function cerrarTodosLosPaneles() {
-            cerrarMenuCategorias();
-            cerrarCarrito();
+            if (window.innerWidth <= 992) {
+                document.getElementById('categorySidebar').classList.remove('open');
+                document.getElementById('cartSidebar').classList.remove('open');
+                document.getElementById('overlay').classList.remove('active');
+            }
             cerrarNotificaciones();
         }
 
         function ajustarAlturaMenus() {
-            const header = document.querySelector('.header');
-            const footer = document.querySelector('.footer');
-            const menuLateral = document.querySelector('.category-sidebar');
-            const carrito = document.querySelector('.cart-sidebar');
-            
-            if (window.innerWidth > 992 && header && footer) {
-                const alturaHeader = header.offsetHeight;
-                const alturaFooter = footer.offsetHeight;
-                const alturaRestante = window.innerHeight - alturaHeader - alturaFooter;
-                
-                // No necesitamos ajustar altura porque ya tienen height: 100vh y padding-top
-            }
+            // No es necesario para escritorio, los headers sticky ya funcionan
         }
 
         // ============================================
@@ -2164,15 +2172,20 @@
             
             resetToAllCategories();
             cerrarTodosLosPaneles();
-            ajustarAlturaMenus();
             
             console.log('🎉 Cliente listo!');
         });
 
-        window.addEventListener('resize', ajustarAlturaMenus);
+        window.addEventListener('resize', function() {
+            if (window.innerWidth > 992) {
+                document.getElementById('categorySidebar').classList.remove('open');
+                document.getElementById('cartSidebar').classList.remove('open');
+                document.getElementById('overlay').classList.remove('active');
+            }
+        });
 
         // ============================================
-        // FUNCIONES DE CARGA
+        // FUNCIONES DE CARGA (sin cambios)
         // ============================================
         async function cargarMenu() {
             try {
@@ -2205,7 +2218,7 @@
         }
 
         // ============================================
-        // FUNCIONES DE STOCK EN TIEMPO REAL
+        // FUNCIONES DE STOCK (sin cambios)
         // ============================================
         async function getStockDisponible(ingredienteId) {
             try {
@@ -2260,10 +2273,6 @@
             return { disponible: true };
         }
 
-        // ============================================
-        // NUEVA FUNCIÓN: actualizarStockPlatillo
-        // Actualiza el stock visible de un platillo específico en tiempo real
-        // ============================================
         async function actualizarStockPlatillo(platilloId) {
             const platillo = menuItems.find(p => p.id === platilloId);
             if (!platillo) return;
@@ -2289,16 +2298,13 @@
             if (agotado) stockClass = 'sold-out';
             else if (stockDisponible < 5) stockClass = 'low';
             
-            // Actualizar el texto
             stockElement.textContent = `${stockDisponible} disponibles`;
             
-            // Actualizar la clase del ícono
             const iconElement = stockElement.previousElementSibling;
             if (iconElement) {
                 iconElement.className = `fas fa-box ${stockClass}`;
             }
             
-            // Actualizar badge si es necesario
             const card = stockElement.closest('.menu-card');
             if (card) {
                 const existingBadge = card.querySelector('.menu-card-badge');
@@ -2322,9 +2328,6 @@
             }
         }
 
-        // ============================================
-        // FUNCIÓN DE PEDIDO TRANSACCIONAL
-        // ============================================
         async function crearPedidoTransaccional(pedido) {
             try {
                 const pedidoParaRPC = {
@@ -2365,7 +2368,7 @@
         }
 
         // ============================================
-        // FUNCIONES DE RENDERIZADO
+        // FUNCIONES DE RENDERIZADO (sin cambios)
         // ============================================
         function renderizarMenu(filtroCategoria = null, filtroSubcategoria = null, busqueda = '') {
             const grid = document.getElementById('menuGrid');
@@ -2560,7 +2563,7 @@
         }
 
         // ============================================
-        // FUNCIONES DE PERSONALIZACIÓN
+        // FUNCIONES DE PERSONALIZACIÓN (sin cambios)
         // ============================================
         function abrirPersonalizacion(platilloId) {
             const platillo = menuItems.find(p => p.id === platilloId);
@@ -2731,7 +2734,7 @@
         }
 
         // ============================================
-        // FUNCIONES DEL CARRITO - MODIFICADAS
+        // FUNCIONES DEL CARRITO (sin cambios)
         // ============================================
         async function agregarAlCarrito(platilloId) {
             const platillo = menuItems.find(p => p.id === platilloId);
@@ -2762,7 +2765,6 @@
             actualizarCarritoUI();
             window.stockCache.invalidate();
             
-            // ACTUALIZACIÓN EN TIEMPO REAL: Actualizar stock del platillo
             await actualizarStockPlatillo(platilloId);
             
             mostrarToast('Agregado', 'success');
@@ -2770,6 +2772,7 @@
             if (window.innerWidth <= 992) {
                 document.getElementById('cartSidebar').classList.add('open');
                 document.getElementById('overlay').classList.add('active');
+                document.getElementById('categorySidebar').classList.remove('open');
             }
         }
 
@@ -2813,7 +2816,6 @@
             cerrarModalPersonalizacion();
             window.stockCache.invalidate();
             
-            // ACTUALIZACIÓN EN TIEMPO REAL: Actualizar stock del platillo personalizado
             await actualizarStockPlatillo(currentCustomizeItem.id);
             
             mostrarToast(`${currentCustomizeItem.cantidad} agregado(s)`, 'success');
@@ -2821,11 +2823,11 @@
             if (window.innerWidth <= 992) {
                 document.getElementById('cartSidebar').classList.add('open');
                 document.getElementById('overlay').classList.add('active');
+                document.getElementById('categorySidebar').classList.remove('open');
             }
         }
 
         function eliminarInstancia(instanciaId) {
-            // Guardar platilloId antes de eliminar
             const instancia = carrito.find(i => i.id === instanciaId);
             const platilloId = instancia?.platilloId;
             
@@ -2843,7 +2845,6 @@
             actualizarCarritoUI();
             window.stockCache.invalidate();
             
-            // ACTUALIZACIÓN EN TIEMPO REAL: Actualizar stock del platillo eliminado
             if (platilloId) {
                 actualizarStockPlatillo(platilloId);
             }
@@ -2939,7 +2940,7 @@
         }
 
         // ============================================
-        // FUNCIONES DE TIMER
+        // FUNCIONES DE TIMER (sin cambios)
         // ============================================
         function iniciarTimerFrontend(tipo, minutos) {
             if (timersActivos[tipo]) {
@@ -2999,7 +3000,7 @@
         }
 
         // ============================================
-        // FUNCIONES DE PEDIDOS
+        // FUNCIONES DE PEDIDOS (sin cambios)
         // ============================================
         function crearPedidoBase(tipo) {
             const tasaActual = configGlobal.tasa_efectiva;
@@ -3057,7 +3058,6 @@
                 document.getElementById('confirmMesaModal').classList.remove('active');
                 window.stockCache.invalidate();
                 
-                // Actualizar stock de todos los platillos después de confirmar pedido
                 menuItems.forEach(item => actualizarStockPlatillo(item.id));
                 
                 mostrarToast('✅ Pedido enviado a cocina', 'success');
@@ -3162,7 +3162,6 @@
                 document.getElementById('deliveryModal').classList.remove('active');
                 window.stockCache.invalidate();
                 
-                // Actualizar stock de todos los platillos después de confirmar pedido
                 menuItems.forEach(item => actualizarStockPlatillo(item.id));
                 
                 mostrarToast('✅ Pedido confirmado', 'success');
@@ -3210,7 +3209,6 @@
                 document.getElementById('reservaModal').classList.remove('active');
                 window.stockCache.invalidate();
                 
-                // Actualizar stock de todos los platillos después de confirmar pedido
                 menuItems.forEach(item => actualizarStockPlatillo(item.id));
                 
                 mostrarToast('✅ Reserva confirmada', 'success');
@@ -3221,7 +3219,7 @@
         }
 
         // ============================================
-        // FUNCIONES DE NOTIFICACIONES
+        // FUNCIONES DE NOTIFICACIONES (sin cambios)
         // ============================================
         function setupRealtimeSubscriptions() {
             window.supabaseClient.channel('notificaciones-cliente')
@@ -3340,7 +3338,7 @@
         }
 
         // ============================================
-        // FUNCIONES DE UTILIDAD
+        // FUNCIONES DE UTILIDAD (sin cambios)
         // ============================================
         function setupReferenceInputs() {
             document.querySelectorAll('.ref-digit').forEach(input => {
@@ -3457,7 +3455,6 @@
                     document.getElementById('cartSidebar').classList.remove('open');
                     document.getElementById('overlay').classList.remove('active');
                 }
-                ajustarAlturaMenus();
             });
         }
 
