@@ -52,6 +52,12 @@
             --radius-lg: 16px;
         }
 
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
         body {
             font-family: 'Roboto', sans-serif;
             background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), 
@@ -60,7 +66,8 @@
             background-attachment: fixed;
             background-position: center;
             color: var(--text-dark);
-            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
 
         h1, h2, h3, h4, h5, h6 {
@@ -303,13 +310,12 @@
             white-space: nowrap;
         }
 
-        /* Contenedor principal - MODIFICADO: padding inferior para el footer */
+        /* Contenedor principal - MODIFICADO: estructura correcta */
         .main-container {
+            flex: 1 0 auto;
             background: white;
             width: 100%;
-            padding-bottom: 300px; /* Espacio para el footer fijo */
             position: relative;
-            min-height: calc(100vh - 82px); /* Altura total menos el header */
         }
 
         /* Main Layout */
@@ -320,7 +326,7 @@
             background: white;
         }
 
-        /* Category Sidebar - Fijo */
+        /* Category Sidebar - Fijo pero con posición sticky */
         .category-sidebar {
             width: 280px;
             background: white;
@@ -329,23 +335,19 @@
             overflow-y: auto;
             transition: transform 0.3s ease;
             box-shadow: 2px 0 8px rgba(0,0,0,0.05);
-            position: fixed;
+            position: sticky;
             top: 82px;
-            left: 0;
-            bottom: 0;
-            z-index: 900;
-        }
-
-        @media (min-width: 993px) {
-            .category-sidebar {
-                transform: translateX(0) !important;
-            }
+            height: calc(100vh - 82px);
+            flex-shrink: 0;
         }
 
         @media (max-width: 992px) {
             .category-sidebar {
-                transform: translateX(-100%);
+                position: fixed;
                 top: 70px;
+                height: calc(100vh - 70px);
+                transform: translateX(-100%);
+                z-index: 900;
             }
             .category-sidebar.open {
                 transform: translateX(0);
@@ -471,7 +473,7 @@
             font-weight: bold;
         }
 
-        /* Cart Sidebar - Fijo */
+        /* Cart Sidebar - Fijo pero con posición sticky */
         .cart-sidebar {
             width: 320px;
             background: white;
@@ -479,24 +481,20 @@
             display: flex;
             flex-direction: column;
             transition: transform 0.3s ease;
-            position: fixed;
-            right: 0;
-            top: 82px;
-            bottom: 0;
-            z-index: 900;
             box-shadow: -2px 0 8px rgba(0,0,0,0.05);
-        }
-
-        @media (min-width: 993px) {
-            .cart-sidebar {
-                transform: translateX(0) !important;
-            }
+            position: sticky;
+            top: 82px;
+            height: calc(100vh - 82px);
+            flex-shrink: 0;
         }
 
         @media (max-width: 992px) {
             .cart-sidebar {
-                transform: translateX(100%);
+                position: fixed;
                 top: 70px;
+                height: calc(100vh - 70px);
+                transform: translateX(100%);
+                z-index: 900;
             }
             .cart-sidebar.open {
                 transform: translateX(0);
@@ -762,20 +760,18 @@
             cursor: not-allowed;
         }
 
-        /* Main Content - Con padding para los menús fijos */
+        /* Main Content - Con márgenes para los menús laterales */
         .main-content {
             flex: 1;
             padding: 1.5rem;
             width: 100%;
             background: white;
-            min-height: 100%;
+            min-width: 0; /* Evita desbordamiento */
         }
 
         @media (min-width: 993px) {
             .main-content {
-                margin-left: 280px;
-                margin-right: 320px;
-                width: calc(100% - 600px);
+                max-width: calc(100% - 600px);
             }
         }
 
@@ -1261,18 +1257,16 @@
             border-radius: 0 0 var(--radius-lg) var(--radius-lg);
         }
 
-        /* Footer - MODIFICADO: Ahora es fijo pero con espacio reservado */
+        /* Footer - MODIFICADO: Ahora es relativo y está fuera del main-layout */
         .footer {
             background: var(--secondary);
             color: white;
             padding: 3rem 1.5rem 1.5rem;
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
             width: 100%;
-            z-index: 100;
-            box-shadow: 0 -5px 20px rgba(0,0,0,0.2);
+            margin-top: auto;
+            position: relative;
+            z-index: 10;
+            clear: both;
         }
 
         .footer::before {
@@ -1663,8 +1657,8 @@
         </div>
     </header>
 
-    <!-- Contenedor principal - MODIFICADO: padding inferior para el footer -->
-    <div class="main-container" id="mainContainer">
+    <!-- Contenedor principal -->
+    <div class="main-container">
         <div class="main-layout">
             <!-- Category Sidebar -->
             <div class="category-sidebar" id="categorySidebar">
@@ -1988,7 +1982,7 @@
         </div>
     </div>
 
-    <!-- Footer - MODIFICADO: Ahora es fijo en la parte inferior -->
+    <!-- Footer - MODIFICADO: Ahora está fuera del main-container -->
     <footer class="footer">
         <div class="footer-logo-section">
             <img src="https://lh3.googleusercontent.com/pw/AP1GczPrZAoWxmsOGRD9xl1hO5Q65JXuwUZzoR6gUk-cw5lVmarxQe_-lwqpA60tTKLlXfpvIjAJlKC6jFls-xETJOPkebLIIPhbGlUkknmhrRbdhMUll2UViGSUj3WmHKg2YEsZlAfxBPPTjIHhScjD0jfe=w1439-h1439-s-no-gm" alt="Saki Sushi" class="footer-logo">
