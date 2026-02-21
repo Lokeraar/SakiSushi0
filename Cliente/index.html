@@ -93,7 +93,6 @@
             display: block;
         }
 
-        /* Header */
         .header {
             background: linear-gradient(135deg, var(--primary), #b71c1c);
             color: white;
@@ -265,7 +264,6 @@
             white-space: nowrap;
         }
 
-        /* Contenedor principal */
         .content-wrapper {
             background: white;
             width: 100%;
@@ -274,7 +272,6 @@
             flex-direction: column;
         }
 
-        /* Main Layout */
         .main-layout {
             display: flex;
             flex: 1;
@@ -282,7 +279,6 @@
             background: white;
         }
 
-        /* Category Sidebar */
         .category-sidebar {
             width: 280px;
             background: white;
@@ -388,7 +384,6 @@
             color: var(--primary);
         }
 
-        /* Estilo especial para Ofertas Especiales */
         .category-item[data-categoria="ofertas"] span {
             text-transform: uppercase;
             font-weight: 700;
@@ -433,7 +428,6 @@
             font-weight: bold;
         }
 
-        /* Cart Sidebar */
         .cart-sidebar {
             width: 320px;
             background: white;
@@ -725,7 +719,6 @@
             cursor: not-allowed;
         }
 
-        /* Main Content */
         .main-content {
             flex: 1;
             padding: 0;
@@ -745,7 +738,6 @@
             }
         }
 
-        /* Tagline Section */
         .tagline-section {
             padding: 1rem 1.5rem 0.5rem 1.5rem;
             background: white;
@@ -809,7 +801,6 @@
             }
         }
 
-        /* Search Section */
         .search-section {
             padding: 0 1.5rem 1rem 1.5rem;
             background: white;
@@ -862,7 +853,6 @@
             margin-bottom: 0.3rem;
         }
 
-        /* Menu Grid */
         .menu-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
@@ -1045,7 +1035,6 @@
         .stock-info i.low { color: var(--warning); }
         .stock-info i.sold-out { color: var(--danger); }
 
-        /* Notifications Panel */
         .notifications-panel {
             position: absolute;
             top: 60px;
@@ -1161,7 +1150,6 @@
             gap: 0.3rem;
         }
 
-        /* Modal */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -1263,7 +1251,6 @@
             border-radius: 0 0 var(--radius-lg) var(--radius-lg);
         }
 
-        /* Footer - Rediseñado completo */
         .footer {
             background: var(--secondary);
             color: white;
@@ -1436,7 +1423,6 @@
             font-size: 0.85rem;
         }
 
-        /* Loading Spinner */
         .loading-spinner {
             display: inline-block;
             width: 30px;
@@ -1610,12 +1596,10 @@
     </style>
 </head>
 <body>
-    <!-- Overlay para clic fuera -->
     <div class="overlay" id="overlay" onclick="cerrarTodosLosPaneles()"></div>
 
     <div class="toast" id="toast"></div>
     
-    <!-- Header -->
     <header class="header">
         <div class="header-left">
             <button class="menu-hamburguesa" id="menuToggle" title="Categorías">
@@ -1646,7 +1630,6 @@
 
     <div class="content-wrapper">
         <div class="main-layout">
-            <!-- Category Sidebar -->
             <div class="category-sidebar" id="categorySidebar">
                 <div class="category-header">
                     <span><i class="fas fa-utensils"></i> Categorías</span>
@@ -1660,9 +1643,7 @@
                 </ul>
             </div>
 
-            <!-- Main Content -->
             <main class="main-content" id="mainContent">
-                <!-- Tagline Section -->
                 <div class="tagline-section">
                     <div class="tagline">
                         <div class="tagline-item ofertas" onclick="selectCategoria('ofertas')">🔥 OFERTAS ESPECIALES</div>
@@ -1672,7 +1653,6 @@
                     </div>
                 </div>
 
-                <!-- Search Section -->
                 <div class="search-section">
                     <div class="search-bar">
                         <i class="fas fa-search"></i>
@@ -1680,12 +1660,10 @@
                     </div>
                 </div>
 
-                <!-- Category Title -->
                 <div class="category-title">
                     <h2 id="categoryTitle">Menú</h2>
                 </div>
                 
-                <!-- Menu Grid -->
                 <div class="menu-grid" id="menuGrid">
                     <div class="loading-container">
                         <div class="loading-spinner"></div>
@@ -1694,7 +1672,6 @@
                 </div>
             </main>
 
-            <!-- Cart Sidebar -->
             <div class="cart-sidebar" id="cartSidebar">
                 <div class="cart-header">
                     <h3><i class="fas fa-shopping-cart"></i> Tu Pedido</h3>
@@ -1719,7 +1696,6 @@
             </div>
         </div>
 
-        <!-- Customize Modal -->
         <div class="modal-overlay" id="customizeModal">
             <div class="modal-container">
                 <div class="modal-header">
@@ -1736,7 +1712,6 @@
             </div>
         </div>
 
-        <!-- Mesa Confirmation Modal -->
         <div class="modal-overlay" id="confirmMesaModal">
             <div class="modal-container">
                 <div class="modal-header">
@@ -1771,7 +1746,6 @@
             </div>
         </div>
 
-        <!-- Delivery Modal -->
         <div class="modal-overlay" id="deliveryModal">
             <div class="modal-container">
                 <div class="modal-header">
@@ -1894,7 +1868,6 @@
             </div>
         </div>
 
-        <!-- Reserva Modal -->
         <div class="modal-overlay" id="reservaModal">
             <div class="modal-container">
                 <div class="modal-header">
@@ -1968,7 +1941,6 @@
         </div>
     </div>
 
-    <!-- Footer - Rediseñado -->
     <footer class="footer">
         <div class="footer-content">
             <div class="footer-section">
@@ -2000,12 +1972,9 @@
         </div>
     </footer>
 
-    <!-- Audio para notificaciones -->
     <audio id="notificationSound" src="https://iqwwoihiiyrtypyqzhgy.supabase.co/storage/v1/object/public/alarma/IPHONE%20NOTIFICATION%20SOUND%20EFFECT%20(PING_DING).mp3" preload="auto"></audio>
 
-    <!-- Primero Supabase (CDN) -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- Luego tu configuración -->
     <script src="../supabase-config.js"></script>
     <script>
         // ============================================
@@ -2124,7 +2093,6 @@
             cerrarNotificaciones();
         }
 
-        // Función para ajustar altura de menús laterales
         function ajustarAlturaMenus() {
             const header = document.querySelector('.header');
             const footer = document.querySelector('.footer');
@@ -2214,7 +2182,7 @@
         }
 
         // ============================================
-        // FUNCIONES DE STOCK
+        // FUNCIONES DE STOCK EN TIEMPO REAL
         // ============================================
         async function getStockDisponible(ingredienteId) {
             try {
@@ -2267,6 +2235,68 @@
             }
             
             return { disponible: true };
+        }
+
+        // ============================================
+        // NUEVA FUNCIÓN: actualizarStockPlatillo
+        // Actualiza el stock visible de un platillo específico en tiempo real
+        // ============================================
+        async function actualizarStockPlatillo(platilloId) {
+            const platillo = menuItems.find(p => p.id === platilloId);
+            if (!platillo) return;
+            
+            const stockElement = document.getElementById(`stock-${platilloId}`);
+            if (!stockElement) return;
+            
+            let stockDisponible = Infinity;
+            
+            if (platillo.ingredientes && Object.keys(platillo.ingredientes).length > 0) {
+                for (const [ingId, ingInfo] of Object.entries(platillo.ingredientes)) {
+                    const stockDisp = await getStockDisponible(ingId);
+                    const cantidadNecesaria = ingInfo.cantidad || 1;
+                    const posible = Math.floor(stockDisp / cantidadNecesaria);
+                    stockDisponible = Math.min(stockDisponible, posible);
+                }
+            } else {
+                stockDisponible = platillo.stock_maximo || 999;
+            }
+            
+            const agotado = stockDisponible <= 0;
+            let stockClass = 'available';
+            if (agotado) stockClass = 'sold-out';
+            else if (stockDisponible < 5) stockClass = 'low';
+            
+            // Actualizar el texto
+            stockElement.textContent = `${stockDisponible} disponibles`;
+            
+            // Actualizar la clase del ícono
+            const iconElement = stockElement.previousElementSibling;
+            if (iconElement) {
+                iconElement.className = `fas fa-box ${stockClass}`;
+            }
+            
+            // Actualizar badge si es necesario
+            const card = stockElement.closest('.menu-card');
+            if (card) {
+                const existingBadge = card.querySelector('.menu-card-badge');
+                const imageDiv = card.querySelector('.menu-card-image');
+                
+                if (agotado && !existingBadge) {
+                    const badge = document.createElement('div');
+                    badge.className = 'menu-card-badge sold-out';
+                    badge.innerHTML = '<i class="fas fa-times-circle"></i> Agotado';
+                    imageDiv.appendChild(badge);
+                } else if (!agotado && existingBadge && existingBadge.classList.contains('sold-out')) {
+                    existingBadge.remove();
+                } else if (stockDisponible < 5 && !existingBadge) {
+                    const badge = document.createElement('div');
+                    badge.className = 'menu-card-badge low';
+                    badge.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Últimas';
+                    imageDiv.appendChild(badge);
+                } else if (stockDisponible >= 5 && existingBadge && existingBadge.classList.contains('low')) {
+                    existingBadge.remove();
+                }
+            }
         }
 
         // ============================================
@@ -2677,6 +2707,49 @@
             document.getElementById('customizePrecio').textContent = formatBs(precioFinalBs);
         }
 
+        // ============================================
+        // FUNCIONES DEL CARRITO - MODIFICADAS
+        // ============================================
+        async function agregarAlCarrito(platilloId) {
+            const platillo = menuItems.find(p => p.id === platilloId);
+            if (!platillo) return;
+            
+            const verificado = await verificarStockDisponible(platilloId);
+            if (!verificado.disponible) {
+                mostrarToast(verificado.motivo || 'No hay stock', 'error');
+                return;
+            }
+            
+            const nuevaInstancia = {
+                id: generarId('inst_'),
+                platilloId: platillo.id,
+                nombre: platillo.nombre,
+                personalizacion: [],
+                imagen: platillo.imagen,
+                precioUnitarioUSD: platillo.precio,
+                precioUnitarioBs: usdToBs(platillo.precio),
+                subtotal: usdToBs(platillo.precio),
+                selectionType: 'completo',
+                instanceNumber: carrito.filter(inst => inst.platilloId === platillo.id).length + 1
+            };
+            
+            carrito.push(nuevaInstancia);
+            
+            guardarCarrito();
+            actualizarCarritoUI();
+            window.stockCache.invalidate();
+            
+            // ACTUALIZACIÓN EN TIEMPO REAL: Actualizar stock del platillo
+            await actualizarStockPlatillo(platilloId);
+            
+            mostrarToast('Agregado', 'success');
+            
+            if (window.innerWidth <= 992) {
+                document.getElementById('cartSidebar').classList.add('open');
+                document.getElementById('overlay').classList.add('active');
+            }
+        }
+
         async function agregarPersonalizadoAlCarrito() {
             if (!currentCustomizeItem) return;
             
@@ -2715,54 +2788,12 @@
             guardarCarrito();
             actualizarCarritoUI();
             cerrarModalPersonalizacion();
+            window.stockCache.invalidate();
+            
+            // ACTUALIZACIÓN EN TIEMPO REAL: Actualizar stock del platillo personalizado
+            await actualizarStockPlatillo(currentCustomizeItem.id);
             
             mostrarToast(`${currentCustomizeItem.cantidad} agregado(s)`, 'success');
-            window.stockCache.invalidate();
-            
-            if (window.innerWidth <= 992) {
-                document.getElementById('cartSidebar').classList.add('open');
-                document.getElementById('overlay').classList.add('active');
-            }
-        }
-
-        function cerrarModalPersonalizacion() {
-            document.getElementById('customizeModal').classList.remove('active');
-            currentCustomizeItem = null;
-        }
-
-        // ============================================
-        // FUNCIONES DEL CARRITO
-        // ============================================
-        async function agregarAlCarrito(platilloId) {
-            const platillo = menuItems.find(p => p.id === platilloId);
-            if (!platillo) return;
-            
-            const verificado = await verificarStockDisponible(platilloId);
-            if (!verificado.disponible) {
-                mostrarToast(verificado.motivo || 'No hay stock', 'error');
-                return;
-            }
-            
-            const nuevaInstancia = {
-                id: generarId('inst_'),
-                platilloId: platillo.id,
-                nombre: platillo.nombre,
-                personalizacion: [],
-                imagen: platillo.imagen,
-                precioUnitarioUSD: platillo.precio,
-                precioUnitarioBs: usdToBs(platillo.precio),
-                subtotal: usdToBs(platillo.precio),
-                selectionType: 'completo',
-                instanceNumber: carrito.filter(inst => inst.platilloId === platillo.id).length + 1
-            };
-            
-            carrito.push(nuevaInstancia);
-            
-            guardarCarrito();
-            actualizarCarritoUI();
-            window.stockCache.invalidate();
-            
-            mostrarToast('Agregado', 'success');
             
             if (window.innerWidth <= 992) {
                 document.getElementById('cartSidebar').classList.add('open');
@@ -2771,6 +2802,10 @@
         }
 
         function eliminarInstancia(instanciaId) {
+            // Guardar platilloId antes de eliminar
+            const instancia = carrito.find(i => i.id === instanciaId);
+            const platilloId = instancia?.platilloId;
+            
             carrito = carrito.filter(i => i.id !== instanciaId);
             
             const platillosUnicos = [...new Set(carrito.map(i => i.platilloId))];
@@ -2784,6 +2819,11 @@
             guardarCarrito();
             actualizarCarritoUI();
             window.stockCache.invalidate();
+            
+            // ACTUALIZACIÓN EN TIEMPO REAL: Actualizar stock del platillo eliminado
+            if (platilloId) {
+                actualizarStockPlatillo(platilloId);
+            }
         }
 
         function actualizarCarritoUI() {
@@ -2993,6 +3033,10 @@
                 actualizarCarritoUI();
                 document.getElementById('confirmMesaModal').classList.remove('active');
                 window.stockCache.invalidate();
+                
+                // Actualizar stock de todos los platillos después de confirmar pedido
+                menuItems.forEach(item => actualizarStockPlatillo(item.id));
+                
                 mostrarToast('✅ Pedido enviado a cocina', 'success');
             } else {
                 mostrarToast('❌ Error: ' + resultado.error, 'error');
@@ -3094,6 +3138,10 @@
                 actualizarCarritoUI();
                 document.getElementById('deliveryModal').classList.remove('active');
                 window.stockCache.invalidate();
+                
+                // Actualizar stock de todos los platillos después de confirmar pedido
+                menuItems.forEach(item => actualizarStockPlatillo(item.id));
+                
                 mostrarToast('✅ Pedido confirmado', 'success');
             } else {
                 mostrarToast('❌ Error: ' + resultado.error, 'error');
@@ -3138,6 +3186,10 @@
                 actualizarCarritoUI();
                 document.getElementById('reservaModal').classList.remove('active');
                 window.stockCache.invalidate();
+                
+                // Actualizar stock de todos los platillos después de confirmar pedido
+                menuItems.forEach(item => actualizarStockPlatillo(item.id));
+                
                 mostrarToast('✅ Reserva confirmada', 'success');
             } else {
                 mostrarToast('❌ Error: ' + resultado.error, 'error');
@@ -3422,4 +3474,4 @@
         });
     </script>
 </body>
-</html
+</html>
