@@ -106,6 +106,13 @@
             justify-content: space-between;
             flex-wrap: wrap;
             gap: 0.5rem;
+            height: 82px;
+        }
+
+        @media (max-width: 992px) {
+            .header {
+                height: 70px;
+            }
         }
 
         .header-left {
@@ -288,7 +295,7 @@
             transition: transform 0.3s ease;
             box-shadow: 2px 0 8px rgba(0,0,0,0.05);
             position: fixed;
-            top: 0;
+            top: 82px;
             left: 0;
             bottom: 0;
             z-index: 900;
@@ -296,19 +303,20 @@
             flex-direction: column;
         }
 
-        @media (min-width: 993px) {
-            .category-sidebar {
-                transform: translateX(0) !important;
-            }
-        }
-
         @media (max-width: 992px) {
             .category-sidebar {
+                top: 70px;
                 transform: translateX(-100%);
             }
             .category-sidebar.open {
                 transform: translateX(0);
                 box-shadow: var(--shadow-lg);
+            }
+        }
+
+        @media (min-width: 993px) {
+            .category-sidebar {
+                transform: translateX(0) !important;
             }
         }
 
@@ -450,25 +458,26 @@
             transition: transform 0.3s ease;
             position: fixed;
             right: 0;
-            top: 0;
+            top: 82px;
             bottom: 0;
             z-index: 900;
             box-shadow: -2px 0 8px rgba(0,0,0,0.05);
         }
 
-        @media (min-width: 993px) {
-            .cart-sidebar {
-                transform: translateX(0) !important;
-            }
-        }
-
         @media (max-width: 992px) {
             .cart-sidebar {
+                top: 70px;
                 transform: translateX(100%);
             }
             .cart-sidebar.open {
                 transform: translateX(0);
                 box-shadow: var(--shadow-lg);
+            }
+        }
+
+        @media (min-width: 993px) {
+            .cart-sidebar {
+                transform: translateX(0) !important;
             }
         }
 
