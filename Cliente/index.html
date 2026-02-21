@@ -283,27 +283,29 @@
             width: 280px;
             background: white;
             border-right: 1px solid var(--gray-200);
-            padding: 1.5rem 0;
+            padding: 0;
             overflow-y: auto;
             transition: transform 0.3s ease;
             box-shadow: 2px 0 8px rgba(0,0,0,0.05);
             position: fixed;
-            top: 82px;
+            top: 0;
             z-index: 900;
+            padding-top: 82px; /* Espacio para el header */
         }
 
         @media (min-width: 993px) {
             .category-sidebar {
                 transform: translateX(0) !important;
-                height: calc(100vh - 82px);
+                height: 100vh;
             }
         }
 
         @media (max-width: 992px) {
             .category-sidebar {
                 transform: translateX(-100%);
-                top: 70px;
-                height: calc(100vh - 70px);
+                top: 0;
+                height: 100vh;
+                padding-top: 70px;
             }
             .category-sidebar.open {
                 transform: translateX(0);
@@ -312,14 +314,25 @@
         }
 
         .category-header {
-            padding: 0 1.5rem;
-            margin-bottom: 1.5rem;
+            padding: 1rem 1.5rem;
+            margin-bottom: 0.5rem;
             display: flex;
             align-items: center;
             justify-content: space-between;
             color: var(--gray-700);
             font-weight: 600;
             font-size: 1.1rem;
+            background: white;
+            border-bottom: 1px solid var(--gray-200);
+            position: sticky;
+            top: 82px;
+            z-index: 10;
+        }
+
+        @media (max-width: 992px) {
+            .category-header {
+                top: 70px;
+            }
         }
 
         .category-header i {
@@ -341,6 +354,7 @@
 
         .category-list {
             list-style: none;
+            padding-bottom: 1rem;
         }
 
         .category-item {
@@ -437,23 +451,24 @@
             transition: transform 0.3s ease;
             position: fixed;
             right: 0;
-            top: 82px;
+            top: 0;
             z-index: 900;
             box-shadow: -2px 0 8px rgba(0,0,0,0.05);
+            padding-top: 82px; /* Espacio para el header */
+            height: 100vh;
         }
 
         @media (min-width: 993px) {
             .cart-sidebar {
                 transform: translateX(0) !important;
-                height: calc(100vh - 82px);
             }
         }
 
         @media (max-width: 992px) {
             .cart-sidebar {
                 transform: translateX(100%);
-                top: 70px;
-                height: calc(100vh - 70px);
+                top: 0;
+                padding-top: 70px;
             }
             .cart-sidebar.open {
                 transform: translateX(0);
@@ -462,12 +477,21 @@
         }
 
         .cart-header {
-            padding: 1.2rem;
+            padding: 1rem 1.2rem;
             border-bottom: 1px solid var(--gray-200);
             display: flex;
             align-items: center;
             justify-content: space-between;
             background: white;
+            position: sticky;
+            top: 82px;
+            z-index: 10;
+        }
+
+        @media (max-width: 992px) {
+            .cart-header {
+                top: 70px;
+            }
         }
 
         .cart-header h3 {
@@ -2104,8 +2128,7 @@
                 const alturaFooter = footer.offsetHeight;
                 const alturaRestante = window.innerHeight - alturaHeader - alturaFooter;
                 
-                menuLateral.style.height = alturaRestante + 'px';
-                carrito.style.height = alturaRestante + 'px';
+                // No necesitamos ajustar altura porque ya tienen height: 100vh y padding-top
             }
         }
 
