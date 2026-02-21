@@ -61,8 +61,6 @@
             background-position: center;
             color: var(--text-dark);
             min-height: 100vh;
-            display: flex;
-            flex-direction: column;
         }
 
         h1, h2, h3, h4, h5, h6 {
@@ -305,15 +303,16 @@
             white-space: nowrap;
         }
 
-        /* Contenedor principal blanco */
+        /* Contenedor principal - MODIFICADO: padding inferior para el footer */
         .main-container {
             background: white;
             width: 100%;
-            flex: 1;
+            padding-bottom: 300px; /* Espacio para el footer fijo */
             position: relative;
+            min-height: calc(100vh - 82px); /* Altura total menos el header */
         }
 
-        /* Main Layout - MODIFICADO: Ahora con padding para los menús fijos */
+        /* Main Layout */
         .main-layout {
             display: flex;
             min-height: 100%;
@@ -321,7 +320,7 @@
             background: white;
         }
 
-        /* Category Sidebar - Fijo en escritorio */
+        /* Category Sidebar - Fijo */
         .category-sidebar {
             width: 280px;
             background: white;
@@ -472,7 +471,7 @@
             font-weight: bold;
         }
 
-        /* Cart Sidebar - Fijo en escritorio */
+        /* Cart Sidebar - Fijo */
         .cart-sidebar {
             width: 320px;
             background: white;
@@ -1262,16 +1261,18 @@
             border-radius: 0 0 var(--radius-lg) var(--radius-lg);
         }
 
-        /* Footer - MODIFICADO: Totalmente independiente */
+        /* Footer - MODIFICADO: Ahora es fijo pero con espacio reservado */
         .footer {
             background: var(--secondary);
             color: white;
             padding: 3rem 1.5rem 1.5rem;
-            position: relative;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
             width: 100%;
-            margin-top: auto;
-            clear: both;
-            z-index: 10;
+            z-index: 100;
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.2);
         }
 
         .footer::before {
@@ -1662,8 +1663,8 @@
         </div>
     </header>
 
-    <!-- Contenedor principal - MODIFICADO: main-container en lugar de content-wrapper -->
-    <div class="main-container">
+    <!-- Contenedor principal - MODIFICADO: padding inferior para el footer -->
+    <div class="main-container" id="mainContainer">
         <div class="main-layout">
             <!-- Category Sidebar -->
             <div class="category-sidebar" id="categorySidebar">
@@ -1987,7 +1988,7 @@
         </div>
     </div>
 
-    <!-- Footer - MODIFICADO: Ahora completamente independiente -->
+    <!-- Footer - MODIFICADO: Ahora es fijo en la parte inferior -->
     <footer class="footer">
         <div class="footer-logo-section">
             <img src="https://lh3.googleusercontent.com/pw/AP1GczPrZAoWxmsOGRD9xl1hO5Q65JXuwUZzoR6gUk-cw5lVmarxQe_-lwqpA60tTKLlXfpvIjAJlKC6jFls-xETJOPkebLIIPhbGlUkknmhrRbdhMUll2UViGSUj3WmHKg2YEsZlAfxBPPTjIHhScjD0jfe=w1439-h1439-s-no-gm" alt="Saki Sushi" class="footer-logo">
