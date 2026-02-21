@@ -1,13 +1,12 @@
 // supabase-config.js
-// Configuración compartida para todos los paneles - VERSIÓN FINAL CON RESERVAS
+// Configuración compartida para todos los paneles - VERSIÓN MEJORADA
 
 // Hacer las variables globales (window)
 window.SUPABASE_URL = 'https://iqwwoihiiyrtypyqzhgy.supabase.co';
 window.SUPABASE_ANON_KEY = 'sb_publishable_m4WcF4gmkj1olAj95HMLlA_4yKqPFXm';
 
-// Crear cliente de Supabase (CORREGIDO)
+// Crear cliente de Supabase
 if (!window.supabaseClient) {
-    // window.supabase viene del CDN: https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2
     window.supabaseClient = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
     console.log('✅ Cliente Supabase inicializado');
 }
@@ -23,7 +22,8 @@ window.configGlobal = {
     fecha_ultimo_aumento: null,
     ultima_actualizacion: null,
     admin_password: '654321',
-    recovery_email: 'admin@sakisushi.com'
+    recovery_email: 'admin@sakisushi.com',
+    alerta_stock_minimo: 5 // Nuevo: umbral para alertas de stock
 };
 
 // Función para cargar configuración global
@@ -46,7 +46,7 @@ window.cargarConfiguracion = async function() {
     }
 };
 
-// Función para subir imagen de platillo (usada en admin)
+// Función para subir imagen de platillo
 window.subirImagenPlatillo = async function(archivoImagen, carpetaAdicional = '') {
     try {
         if (!archivoImagen) {
@@ -102,7 +102,7 @@ window.subirImagenPlatillo = async function(archivoImagen, carpetaAdicional = ''
     }
 };
 
-// Función para eliminar imagen (usada en admin)
+// Función para eliminar imagen
 window.eliminarImagenPlatillo = async function(urlImagen) {
     try {
         if (!urlImagen) return { success: true };
@@ -129,7 +129,7 @@ window.eliminarImagenPlatillo = async function(urlImagen) {
     }
 };
 
-// Funciones de utilidad
+// Funciones de utilidad mejoradas
 window.formatBs = function(monto) {
     return new Intl.NumberFormat('es-VE', {
         style: 'currency',
@@ -151,14 +151,26 @@ window.generarId = function(prefix = '') {
     return `${prefix}${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 };
 
+// Validaciones mejoradas
 window.validarTelefono = function(telefono) {
+    const soloNumeros = telefono.replace(/\D/g, '');
     const regex = /^(0412|0414|0424|0416|0426|0418|0422|0212|0234|0241|0243|0246|0251|0254|0255|0257|0261|0264|0265|0268|0271|0273|0274|0275|0276|0281)\d{7}$/;
-    return regex.test(telefono.replace(/\D/g, ''));
+    return regex.test(soloNumeros);
 };
 
 window.validarReferencia = function(ref) {
-    const regex = /^\d{6}$/;
-    return regex.test(ref);
+    // Solo números, exactamente 6 dígitos
+    const soloNumeros = ref.replace(/\D/g, '');
+    return soloNumeros.length === 6;
+};
+
+window.formatearReferenciaInput = function(input) {
+    // Solo permitir números
+    input.value = input.value.replace(/[^0-9]/g, '');
+    // Limitar a 1 carácter
+    if (input.value.length > 1) {
+        input.value = input.value.charAt(0);
+    }
 };
 
 window.usdToBs = function(usd, tasa) {
@@ -169,6 +181,36 @@ window.usdToBs = function(usd, tasa) {
 window.bsToUsd = function(bs, tasa) {
     const tasaActual = tasa || window.configGlobal.tasa_efectiva;
     return bs / tasaActual;
+};
+
+// Cache de stock mejorado
+window.stockCache = {
+    data: {},
+    lastUpdate: 0,
+    duration: 5000,
+    
+    get: function(ingredienteId) {
+        const ahora = Date.now();
+        if (ahora - this.lastUpdate > this.duration) {
+            this.clear();
+        }
+        return this.data[ingredienteId];
+    },
+    
+    set: function(ingredienteId, valor) {
+        this.data[ingredienteId] = valor;
+        this.lastUpdate = Date.now();
+    },
+    
+    clear: function() {
+        this.data = {};
+        this.lastUpdate = Date.now();
+    },
+    
+    invalidate: function() {
+        this.data = {};
+        this.lastUpdate = 0;
+    }
 };
 
 // Datos estáticos
@@ -192,7 +234,7 @@ window.parroquiasDelivery = [
     { nombre: "El Junquito", precioUSD: 7 }
 ];
 
-// Categorías y subcategorías (usadas en admin para selects)
+// Categorías y subcategorías
 window.categoriasMenu = {
     "Entradas": [],
     "Sushi": [],
@@ -208,5 +250,3 @@ window.categoriasMenu = {
 };
 
 console.log('✅ supabase-config.js cargado correctamente');
-console.log('📌 URL:', window.SUPABASE_URL);
-console.log('📌 Cliente:', window.supabaseClient ? '✅ OK' : '❌ Error');
