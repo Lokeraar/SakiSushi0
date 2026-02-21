@@ -17,7 +17,6 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <style>
-        /* MISMO ESTILO QUE TENÍAS ANTES - SIN CAMBIOS */
         * {
             margin: 0;
             padding: 0;
@@ -70,14 +69,22 @@
             font-family: 'Montserrat', sans-serif;
         }
 
-        .slogan-text {
+        /* Fuente elegante para el eslogan */
+        .slogan-text, .header-slogan, .footer-slogan {
             font-family: 'Playfair Display', serif;
             font-style: italic;
             font-weight: 500;
             letter-spacing: 0.5px;
-            color: var(--accent);
         }
 
+        .header-slogan {
+            color: var(--accent);
+            font-size: 1rem;
+            margin-top: 0.2rem;
+            text-align: center;
+        }
+
+        /* Overlay para clic fuera */
         .overlay {
             position: fixed;
             top: 0;
@@ -94,6 +101,7 @@
             display: block;
         }
 
+        /* Header */
         .header {
             background: linear-gradient(135deg, var(--primary), #b71c1c);
             color: white;
@@ -119,15 +127,15 @@
             background: rgba(255,255,255,0.15);
             border: none;
             color: white;
-            width: 40px;
-            height: 40px;
+            width: 45px;
+            height: 45px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
             transition: all 0.3s;
-            font-size: 1.2rem;
+            font-size: 1.3rem;
             backdrop-filter: blur(5px);
             flex-shrink: 0;
         }
@@ -139,19 +147,21 @@
 
         .logo-area {
             display: flex;
+            flex-direction: column;
             align-items: center;
-            gap: 0.5rem;
             cursor: pointer;
+            text-align: center;
         }
 
         .logo {
-            width: 45px;
-            height: 45px;
-            border-radius: 10px;
-            box-shadow: var(--shadow-sm);
+            width: 70px;
+            height: 70px;
+            border-radius: 15px;
+            box-shadow: var(--shadow-lg);
             transform: rotate(-5deg);
             transition: transform 0.3s;
             object-fit: cover;
+            border: 3px solid var(--accent);
         }
 
         .logo:hover {
@@ -159,45 +169,12 @@
         }
 
         .logo-area h1 {
-            font-size: 1.4rem;
+            font-size: 1.8rem;
             font-weight: 800;
-            letter-spacing: 0.5px;
-            white-space: nowrap;
+            letter-spacing: 1px;
             cursor: pointer;
-        }
-
-        .search-bar {
-            flex: 1;
-            min-width: 200px;
-            max-width: 400px;
-            margin: 0 0.5rem;
-            position: relative;
-        }
-
-        .search-bar input {
-            width: 100%;
-            padding: 0.7rem 1rem 0.7rem 2.8rem;
-            border: none;
-            border-radius: 50px;
-            font-size: 0.95rem;
-            outline: none;
-            background: rgba(255,255,255,0.95);
-            transition: all 0.3s;
-            box-shadow: var(--shadow-sm);
-        }
-
-        .search-bar input:focus {
-            box-shadow: var(--shadow-lg);
-            background: white;
-        }
-
-        .search-bar i {
-            position: absolute;
-            left: 1rem;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--gray-600);
-            font-size: 1rem;
+            line-height: 1.2;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
         }
 
         .header-icons {
@@ -210,15 +187,15 @@
             background: rgba(255,255,255,0.15);
             border: none;
             color: white;
-            width: 40px;
-            height: 40px;
+            width: 45px;
+            height: 45px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
             transition: all 0.3s;
-            font-size: 1.2rem;
+            font-size: 1.3rem;
             position: relative;
             backdrop-filter: blur(5px);
             flex-shrink: 0;
@@ -235,10 +212,10 @@
             right: -5px;
             background-color: var(--accent);
             color: white;
-            font-size: 0.7rem;
+            font-size: 0.8rem;
             padding: 0.2rem 0.5rem;
             border-radius: 20px;
-            min-width: 20px;
+            min-width: 22px;
             text-align: center;
             font-weight: 600;
             box-shadow: var(--shadow-sm);
@@ -257,15 +234,16 @@
         .table-badge {
             background: var(--accent);
             color: var(--secondary);
-            padding: 0.3rem 0.8rem;
+            padding: 0.4rem 1rem;
             border-radius: 25px;
             font-weight: 700;
             font-family: 'Montserrat', sans-serif;
-            font-size: 0.9rem;
+            font-size: 1rem;
             display: inline-block;
             white-space: nowrap;
         }
 
+        /* Contenedor principal blanco */
         .content-wrapper {
             background: white;
             width: 100%;
@@ -274,6 +252,108 @@
             flex-direction: column;
         }
 
+        /* Tagline mejorado */
+        .tagline-container {
+            background: white;
+            padding: 1.5rem 1rem 0.5rem;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .tagline {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            flex-wrap: wrap;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .tagline-item {
+            padding: 0.8rem 1.5rem;
+            border-radius: 50px;
+            font-size: 1rem;
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 600;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            white-space: nowrap;
+            flex: 0 1 auto;
+            background: var(--gray-700);
+            border: 2px solid transparent;
+        }
+        
+        .tagline-item:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .tagline-item.ofertas {
+            background: var(--primary);
+            text-transform: uppercase;
+            font-weight: 800;
+            letter-spacing: 1px;
+            animation: neonPulse 2s infinite;
+            border: 2px solid var(--accent);
+        }
+
+        @keyframes neonPulse {
+            0% {
+                box-shadow: 0 0 5px var(--primary), 0 0 10px var(--primary), 0 0 15px var(--accent);
+                border-color: var(--accent);
+            }
+            50% {
+                box-shadow: 0 0 10px var(--primary), 0 0 20px var(--primary), 0 0 30px var(--accent);
+                border-color: #fff;
+            }
+            100% {
+                box-shadow: 0 0 5px var(--primary), 0 0 10px var(--primary), 0 0 15px var(--accent);
+                border-color: var(--accent);
+            }
+        }
+
+        /* Search bar debajo del tagline */
+        .search-container {
+            background: white;
+            padding: 1rem 1rem 1.5rem;
+            display: flex;
+            justify-content: center;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .search-bar {
+            width: 100%;
+            max-width: 600px;
+            position: relative;
+        }
+
+        .search-bar input {
+            width: 100%;
+            padding: 1rem 1.5rem 1rem 3.5rem;
+            border: 2px solid var(--gray-300);
+            border-radius: 50px;
+            font-size: 1.1rem;
+            outline: none;
+            background: white;
+            transition: all 0.3s;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .search-bar input:focus {
+            border-color: var(--primary);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .search-bar i {
+            position: absolute;
+            left: 1.3rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--gray-600);
+            font-size: 1.2rem;
+        }
+
+        /* Main Layout - MEJORADO PARA ESCRITORIO */
         .main-layout {
             display: flex;
             flex: 1;
@@ -282,6 +362,7 @@
             background: white;
         }
 
+        /* Category Sidebar - FIJO EN ESCRITORIO */
         .category-sidebar {
             width: 280px;
             background: white;
@@ -295,12 +376,24 @@
             left: 0;
             bottom: 0;
             z-index: 900;
-            transform: translateX(-100%);
         }
 
-        .category-sidebar.open {
-            transform: translateX(0);
-            box-shadow: var(--shadow-lg);
+        /* En móvil/tablet, se oculta y se despliega con hamburguesa */
+        @media (max-width: 992px) {
+            .category-sidebar {
+                transform: translateX(-100%);
+            }
+            .category-sidebar.open {
+                transform: translateX(0);
+                box-shadow: var(--shadow-lg);
+            }
+        }
+
+        /* En escritorio, siempre visible */
+        @media (min-width: 993px) {
+            .category-sidebar {
+                transform: translateX(0) !important;
+            }
         }
 
         .category-header {
@@ -319,7 +412,12 @@
             font-size: 1.2rem;
             color: var(--gray-500);
             transition: color 0.2s;
-            display: block;
+        }
+
+        @media (min-width: 993px) {
+            .category-header i.fa-times {
+                display: none;
+            }
         }
 
         .category-header i:hover {
@@ -410,6 +508,7 @@
             font-weight: bold;
         }
 
+        /* Cart Sidebar - FIJO EN ESCRITORIO */
         .cart-sidebar {
             width: 320px;
             background: white;
@@ -423,12 +522,22 @@
             bottom: 0;
             z-index: 900;
             box-shadow: -2px 0 8px rgba(0,0,0,0.05);
-            transform: translateX(100%);
         }
 
-        .cart-sidebar.open {
-            transform: translateX(0);
-            box-shadow: var(--shadow-lg);
+        @media (max-width: 992px) {
+            .cart-sidebar {
+                transform: translateX(100%);
+            }
+            .cart-sidebar.open {
+                transform: translateX(0);
+                box-shadow: var(--shadow-lg);
+            }
+        }
+
+        @media (min-width: 993px) {
+            .cart-sidebar {
+                transform: translateX(0) !important;
+            }
         }
 
         .cart-header {
@@ -467,6 +576,12 @@
             justify-content: center;
         }
 
+        @media (min-width: 993px) {
+            .cart-header button {
+                display: none;
+            }
+        }
+
         .cart-header button:hover {
             background: var(--gray-100);
             color: var(--danger);
@@ -491,10 +606,6 @@
             font-size: 3rem;
             margin-bottom: 0.8rem;
             opacity: 0.5;
-        }
-
-        .cart-empty p {
-            font-size: 1rem;
         }
 
         .cart-item {
@@ -635,67 +746,20 @@
             flex-wrap: wrap;
         }
 
-        .btn-primary, .btn-secondary {
-            flex: 1;
-            padding: 0.8rem;
-            border: none;
-            border-radius: 50px;
-            font-weight: 600;
-            font-size: 0.9rem;
-            cursor: pointer;
-            transition: all 0.3s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 0.5rem;
-            min-width: 120px;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, var(--primary), #b71c1c);
-            color: white;
-            box-shadow: var(--shadow-sm);
-        }
-
-        .btn-primary:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-md);
-        }
-
-        .btn-primary:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            background: var(--gray-400);
-        }
-
-        .btn-secondary {
-            background: var(--accent);
-            color: white;
-        }
-
-        .btn-secondary:hover:not(:disabled) {
-            background: #e68900;
-            transform: translateY(-2px);
-        }
-
-        .btn-secondary:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
+        /* Main Content - AJUSTADO PARA ESCRITORIO */
         .main-content {
             flex: 1;
             padding: 1.5rem;
-            transition: margin-left 0.3s;
-            margin-left: 0;
-            width: 100%;
-            max-width: 100%;
+            transition: margin-left 0.3s, margin-right 0.3s;
             background: white;
+            width: 100%;
         }
 
         @media (min-width: 993px) {
-            .main-content.sidebar-open {
+            .main-content {
                 margin-left: 280px;
+                margin-right: 320px;
+                width: calc(100% - 600px);
             }
         }
 
@@ -705,55 +769,18 @@
             padding: 1.2rem;
             border-radius: var(--radius-lg);
             border: 1px solid var(--gray-200);
+            text-align: center;
         }
 
         .category-title h2 {
-            font-size: 1.8rem;
+            font-size: 2rem;
             color: var(--secondary);
             margin-bottom: 0.3rem;
         }
 
-        .tagline {
-            display: flex;
-            justify-content: center;
-            gap: 0.5rem;
-            margin-top: 1rem;
-            flex-wrap: wrap;
-            position: relative;
-            z-index: 1;
-        }
-        
-        .tagline-item {
-            background: var(--gray-100);
-            padding: 0.5rem 1rem;
-            border-radius: 50px;
-            font-size: 0.85rem;
-            font-family: 'Montserrat', sans-serif;
-            font-weight: 600;
-            color: #000000;
-            cursor: pointer;
-            transition: all 0.2s;
-            border: 1px solid var(--gray-300);
-            white-space: nowrap;
-            flex: 0 1 auto;
-        }
-        
-        .tagline-item:hover {
-            background: var(--gray-200);
-            transform: translateY(-2px);
-            box-shadow: var(--shadow-md);
-        }
-
-        @media (max-width: 480px) {
-            .tagline-item {
-                font-size: 0.75rem;
-                padding: 0.4rem 0.8rem;
-            }
-        }
-
+        /* Menu Grid - 2 COLUMNAS EN ESCRITORIO */
         .menu-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
             gap: 1.2rem;
         }
 
@@ -763,6 +790,19 @@
             }
         }
 
+        @media (min-width: 641px) and (max-width: 992px) {
+            .menu-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (min-width: 993px) {
+            .menu-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        /* Menu Card */
         .menu-card {
             background: white;
             border-radius: var(--radius-md);
@@ -781,7 +821,7 @@
         }
 
         .menu-card-image {
-            height: 160px;
+            height: 180px;
             background-size: cover;
             background-position: center;
             position: relative;
@@ -794,9 +834,9 @@
             right: 0.8rem;
             background: rgba(0,0,0,0.7);
             color: white;
-            padding: 0.2rem 0.6rem;
+            padding: 0.3rem 0.8rem;
             border-radius: 20px;
-            font-size: 0.75rem;
+            font-size: 0.85rem;
             font-weight: 500;
             backdrop-filter: blur(4px);
             display: flex;
@@ -805,7 +845,7 @@
         }
 
         .menu-card-badge i {
-            font-size: 0.7rem;
+            font-size: 0.8rem;
         }
 
         .menu-card-badge.agotado {
@@ -817,7 +857,7 @@
         .menu-card-badge.sold-out { background: var(--danger); }
 
         .menu-card-content {
-            padding: 1rem;
+            padding: 1.2rem;
             flex: 1;
             display: flex;
             flex-direction: column;
@@ -831,7 +871,7 @@
         }
 
         .menu-card-title {
-            font-size: 1.1rem;
+            font-size: 1.2rem;
             font-weight: 600;
             color: var(--secondary);
             line-height: 1.3;
@@ -840,14 +880,14 @@
         .menu-card-price {
             font-weight: 700;
             color: var(--primary);
-            font-size: 1.2rem;
+            font-size: 1.3rem;
             white-space: nowrap;
         }
 
         .menu-card-description {
-            font-size: 0.85rem;
+            font-size: 0.9rem;
             color: var(--gray-600);
-            margin-bottom: 0.8rem;
+            margin-bottom: 1rem;
             line-height: 1.4;
             flex: 1;
         }
@@ -864,15 +904,15 @@
             background: var(--primary);
             color: white;
             border: none;
-            width: 36px;
-            height: 36px;
+            width: 42px;
+            height: 42px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
             transition: all 0.2s;
-            font-size: 1rem;
+            font-size: 1.1rem;
             box-shadow: var(--shadow-sm);
             flex-shrink: 0;
         }
@@ -892,9 +932,9 @@
             background: var(--accent);
             color: white;
             border: none;
-            padding: 0.4rem 0.8rem;
+            padding: 0.5rem 1rem;
             border-radius: 25px;
-            font-size: 0.8rem;
+            font-size: 0.9rem;
             font-weight: 500;
             cursor: pointer;
             display: flex;
@@ -915,12 +955,8 @@
             cursor: not-allowed;
         }
 
-        .btn-customize i {
-            font-size: 0.8rem;
-        }
-
         .stock-info {
-            font-size: 0.75rem;
+            font-size: 0.85rem;
             color: var(--gray-500);
             display: flex;
             align-items: center;
@@ -932,16 +968,17 @@
         .stock-info i.low { color: var(--warning); }
         .stock-info i.sold-out { color: var(--danger); }
 
+        /* Notifications Panel */
         .notifications-panel {
             position: absolute;
-            top: 60px;
+            top: 70px;
             right: 0;
-            width: 320px;
+            width: 350px;
             background: white;
             border-radius: var(--radius-md);
             box-shadow: var(--shadow-lg);
             display: none;
-            max-height: 400px;
+            max-height: 500px;
             overflow-y: auto;
             z-index: 1001;
             border: 1px solid var(--gray-200);
@@ -949,7 +986,7 @@
 
         @media (max-width: 480px) {
             .notifications-panel {
-                width: 280px;
+                width: 300px;
                 right: 10px;
             }
         }
@@ -969,7 +1006,7 @@
         }
 
         .notifications-header h4 {
-            font-size: 1rem;
+            font-size: 1.1rem;
             color: var(--secondary);
         }
 
@@ -978,7 +1015,7 @@
             color: white;
             padding: 0.2rem 0.6rem;
             border-radius: 20px;
-            font-size: 0.75rem;
+            font-size: 0.85rem;
         }
 
         .notifications-list {
@@ -986,13 +1023,12 @@
         }
 
         .notification-item {
-            padding: 0.8rem;
+            padding: 1rem;
             border-bottom: 1px solid var(--gray-200);
             transition: background 0.2s;
             cursor: pointer;
             border-radius: var(--radius-sm);
             margin: 0.2rem;
-            font-size: 0.9rem;
         }
 
         .notification-item:hover {
@@ -1022,11 +1058,11 @@
         .notification-title {
             font-weight: 600;
             color: var(--secondary);
-            margin-bottom: 0.2rem;
+            margin-bottom: 0.3rem;
             display: flex;
             align-items: center;
             gap: 0.5rem;
-            font-size: 0.95rem;
+            font-size: 1rem;
         }
 
         .notification-title i.fa-check-circle { color: var(--success); }
@@ -1034,19 +1070,20 @@
         .notification-title i.fa-clock { color: var(--warning); }
 
         .notification-message {
-            font-size: 0.85rem;
+            font-size: 0.9rem;
             color: var(--gray-600);
-            margin-bottom: 0.2rem;
+            margin-bottom: 0.3rem;
         }
 
         .notification-time {
-            font-size: 0.7rem;
+            font-size: 0.8rem;
             color: var(--gray-500);
             display: flex;
             align-items: center;
             gap: 0.3rem;
         }
 
+        /* Modal */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -1120,8 +1157,8 @@
             font-size: 1.5rem;
             cursor: pointer;
             color: var(--gray-600);
-            width: 35px;
-            height: 35px;
+            width: 40px;
+            height: 40px;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -1135,11 +1172,11 @@
         }
 
         .modal-body {
-            padding: 1.2rem;
+            padding: 1.5rem;
         }
 
         .modal-footer {
-            padding: 1.2rem;
+            padding: 1.5rem;
             border-top: 1px solid var(--gray-200);
             background: var(--gray-50);
             display: flex;
@@ -1148,6 +1185,7 @@
             border-radius: 0 0 var(--radius-lg) var(--radius-lg);
         }
 
+        /* Footer */
         .footer {
             background: var(--secondary);
             color: white;
@@ -1174,11 +1212,11 @@
         }
 
         .footer-logo {
-            width: 80px;
-            height: 80px;
+            width: 100px;
+            height: 100px;
             border-radius: 50%;
             object-fit: cover;
-            border: 3px solid var(--accent);
+            border: 4px solid var(--accent);
             margin-bottom: 1rem;
             box-shadow: var(--shadow-lg);
         }
@@ -1186,7 +1224,7 @@
         .footer-slogan {
             font-family: 'Playfair Display', serif;
             font-style: italic;
-            font-size: 1.3rem;
+            font-size: 1.4rem;
             color: var(--accent);
             letter-spacing: 1px;
             margin-top: 0.5rem;
@@ -1277,9 +1315,9 @@
         }
 
         .footer-section i {
-            width: 20px;
+            width: 25px;
             color: var(--primary);
-            font-size: 1.1rem;
+            font-size: 1.2rem;
         }
 
         .whatsapp-link {
@@ -1305,15 +1343,15 @@
 
         .social-icons a {
             background: rgba(255,255,255,0.1);
-            width: 40px;
-            height: 40px;
+            width: 45px;
+            height: 45px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             transition: all 0.3s;
             color: white;
-            font-size: 1.2rem;
+            font-size: 1.3rem;
             margin-bottom: 0;
         }
 
@@ -1327,7 +1365,7 @@
             padding-top: 1.5rem;
             border-top: 1px solid var(--gray-800);
             color: var(--gray-500);
-            font-size: 0.85rem;
+            font-size: 0.9rem;
         }
 
         .footer-bottom i {
@@ -1335,11 +1373,12 @@
             margin: 0 0.2rem;
         }
 
+        /* Loading Spinner */
         .loading-spinner {
             display: inline-block;
-            width: 30px;
-            height: 30px;
-            border: 3px solid rgba(211,47,47,0.2);
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(211,47,47,0.2);
             border-radius: 50%;
             border-top-color: var(--primary);
             animation: spin 1s linear infinite;
@@ -1351,16 +1390,17 @@
 
         .loading-container {
             text-align: center;
-            padding: 2rem;
+            padding: 3rem;
         }
         
+        /* Toast Notifications */
         .toast {
             position: fixed;
             bottom: 20px;
             left: 50%;
             transform: translateX(-50%);
             color: white;
-            padding: 0.8rem 1.5rem;
+            padding: 1rem 2rem;
             border-radius: 50px;
             box-shadow: var(--shadow-lg);
             z-index: 3000;
@@ -1369,7 +1409,7 @@
             font-family: 'Montserrat', sans-serif;
             align-items: center;
             gap: 0.8rem;
-            font-size: 0.9rem;
+            font-size: 1rem;
             max-width: 90%;
             text-align: center;
         }
@@ -1388,6 +1428,7 @@
             to { transform: translate(-50%, 0); opacity: 1; }
         }
         
+        /* Timer Display */
         .payment-timer {
             background: linear-gradient(135deg, var(--warning), #F57C00);
             color: white;
@@ -1399,34 +1440,35 @@
         }
         
         .timer-display {
-            font-size: 1.8rem;
+            font-size: 2rem;
             font-weight: 700;
             margin-top: 5px;
             font-family: monospace;
         }
 
+        /* Parroquia Selector */
         .parroquia-selector {
             position: relative;
         }
         
         .selected-parroquia {
             background: var(--gray-100);
-            padding: 0.7rem;
+            padding: 0.8rem;
             border: 1px solid var(--gray-300);
             border-radius: var(--radius-sm);
             display: flex;
             justify-content: space-between;
             align-items: center;
             cursor: pointer;
-            font-size: 0.95rem;
+            font-size: 1rem;
         }
         
         .parroquia-search {
             width: 100%;
-            padding: 0.7rem;
+            padding: 0.8rem;
             border: 1px solid var(--gray-300);
             border-radius: var(--radius-sm);
-            font-size: 0.95rem;
+            font-size: 1rem;
             margin-top: 0.5rem;
         }
         
@@ -1436,19 +1478,19 @@
             border: 1px solid var(--gray-300);
             border-radius: var(--radius-sm);
             margin-top: 0.5rem;
-            font-size: 0.95rem;
+            font-size: 1rem;
         }
         
         .delivery-price-display {
             background: #E8F5E9;
             border: 2px solid var(--success);
             border-radius: var(--radius-sm);
-            padding: 0.8rem;
+            padding: 1rem;
             margin-bottom: 1.2rem;
             text-align: center;
             font-weight: 600;
             color: var(--success);
-            font-size: 0.95rem;
+            font-size: 1rem;
         }
 
         .file-input-wrapper {
@@ -1457,14 +1499,14 @@
         
         .file-input-label {
             display: block;
-            padding: 0.8rem;
+            padding: 1rem;
             background: var(--gray-100);
             border: 2px dashed var(--primary);
             border-radius: var(--radius-sm);
             text-align: center;
             cursor: pointer;
             transition: all 0.3s;
-            font-size: 0.9rem;
+            font-size: 1rem;
         }
         
         .file-input-label:hover {
@@ -1477,10 +1519,10 @@
         }
 
         .info-box {
-            padding: 0.8rem;
+            padding: 1rem;
             border-radius: var(--radius-sm);
             margin-bottom: 1rem;
-            font-size: 0.9rem;
+            font-size: 1rem;
         }
         
         .info-box.mesa {
@@ -1522,12 +1564,8 @@
             <div class="logo-area" onclick="resetToAllCategories()">
                 <img src="https://lh3.googleusercontent.com/pw/AP1GczPrZAoWxmsOGRD9xl1hO5Q65JXuwUZzoR6gUk-cw5lVmarxQe_-lwqpA60tTKLlXfpvIjAJlKC6jFls-xETJOPkebLIIPhbGlUkknmhrRbdhMUll2UViGSUj3WmHKg2YEsZlAfxBPPTjIHhScjD0jfe=w1439-h1439-s-no-gm" alt="Saki Sushi" class="logo">
                 <h1>Saki Sushi</h1>
+                <div class="header-slogan">"Adictos al universo saki"</div>
             </div>
-        </div>
-        
-        <div class="search-bar">
-            <i class="fas fa-search"></i>
-            <input type="text" id="searchInput" placeholder="Buscar...">
         </div>
         
         <div class="header-icons">
@@ -1544,6 +1582,24 @@
             <div class="table-badge" id="tableBadge" style="display: none;">Mesa <span id="tableNumber">--</span></div>
         </div>
     </header>
+
+    <!-- Tagline mejorado con ofertas destacadas -->
+    <div class="tagline-container">
+        <div class="tagline">
+            <div class="tagline-item ofertas" onclick="selectCategoria('ofertas')">🔥 Ofertas Especiales</div>
+            <div class="tagline-item" onclick="selectCategoria('fresco')">🐟 Fresco del día</div>
+            <div class="tagline-item" onclick="selectCategoria('tradicional')">🎌 Tradicional</div>
+            <div class="tagline-item" onclick="selectCategoria('chef')">👨‍🍳 Chef experto</div>
+        </div>
+    </div>
+
+    <!-- Search Bar debajo del tagline -->
+    <div class="search-container">
+        <div class="search-bar">
+            <i class="fas fa-search"></i>
+            <input type="text" id="searchInput" placeholder="Buscar platillos...">
+        </div>
+    </div>
 
     <div class="content-wrapper">
         <div class="main-layout">
@@ -1565,12 +1621,6 @@
             <main class="main-content" id="mainContent">
                 <div class="category-title">
                     <h2 id="categoryTitle">Menú</h2>
-                    <div class="tagline">
-                        <div class="tagline-item" onclick="selectCategoria('ofertas')">🔥 Ofertas Especiales</div>
-                        <div class="tagline-item" onclick="selectCategoria('fresco')">🐟 Fresco del día</div>
-                        <div class="tagline-item" onclick="selectCategoria('tradicional')">🎌 Tradicional</div>
-                        <div class="tagline-item" onclick="selectCategoria('chef')">👨‍🍳 Chef experto</div>
-                    </div>
                 </div>
                 
                 <div class="menu-grid" id="menuGrid">
@@ -1896,7 +1946,7 @@
         
         <div class="footer-bottom">
             <p>© 2024 Saki Sushi. Todos los derechos reservados.</p>
-            <p style="margin-top: 0.5rem; font-size: 0.8rem;">Hecho con <i class="fas fa-heart"></i> para nuestros clientes</p>
+            <p style="margin-top: 0.5rem; font-size: 0.9rem;">Hecho con <i class="fas fa-heart"></i> para nuestros clientes</p>
         </div>
     </footer>
 
@@ -1909,7 +1959,7 @@
     <script src="../supabase-config.js"></script>
     <script>
         // ============================================
-        // VARIABLES GLOBALES - MEJORADAS
+        // VARIABLES GLOBALES
         // ============================================
         let sessionId = localStorage.getItem('saki_session_id') || generarId('session_');
         localStorage.setItem('saki_session_id', sessionId);
@@ -2020,7 +2070,7 @@
         }
 
         // ============================================
-        // FUNCIONES DE INICIALIZACIÓN MEJORADAS
+        // FUNCIONES DE INICIALIZACIÓN
         // ============================================
         document.addEventListener('DOMContentLoaded', async () => {
             console.log('1️⃣ Inicializando cliente...');
@@ -2057,7 +2107,7 @@
         });
 
         // ============================================
-        // FUNCIONES DE CARGA MEJORADAS
+        // FUNCIONES DE CARGA
         // ============================================
         async function cargarMenu() {
             try {
@@ -2083,7 +2133,6 @@
                 
                 if (error) throw error;
                 inventario = data || [];
-                // Al cargar inventario, volver a renderizar el menú para actualizar disponibilidad
                 renderizarMenu();
             } catch (error) {
                 console.error('Error cargando inventario:', error);
@@ -2091,11 +2140,10 @@
         }
 
         // ============================================
-        // FUNCIONES DE STOCK MEJORADAS
+        // FUNCIONES DE STOCK EN TIEMPO REAL
         // ============================================
         async function getStockDisponible(ingredienteId) {
             try {
-                // Usar el caché global
                 const cache = window.stockCache.get(ingredienteId);
                 if (cache !== undefined) return cache;
                 
@@ -2149,11 +2197,10 @@
         }
 
         // ============================================
-        // FUNCIÓN NUEVA: crearPedidoTransaccional
+        // FUNCIÓN DE PEDIDO TRANSACCIONAL
         // ============================================
         async function crearPedidoTransaccional(pedido) {
             try {
-                // Preparar el objeto para la función RPC
                 const pedidoParaRPC = {
                     id: pedido.id,
                     timestamp: pedido.timestamp,
@@ -2173,7 +2220,6 @@
                     costo_delivery_usd: pedido.costo_delivery_usd || 0
                 };
 
-                // Llamar a la nueva función RPC
                 const { data, error } = await window.supabaseClient.rpc('crear_pedido_con_reserva', {
                     p_pedido: pedidoParaRPC,
                     p_items: pedido.items
@@ -2193,17 +2239,25 @@
         }
 
         // ============================================
-        // FUNCIONES DE RENDERIZADO MEJORADAS
+        // FUNCIONES DE RENDERIZADO
         // ============================================
         function renderizarMenu(filtroCategoria = null, filtroSubcategoria = null, busqueda = '') {
             const grid = document.getElementById('menuGrid');
             
             let itemsFiltrados = [...menuItems];
             
-            if (filtroCategoria && filtroCategoria !== 'todos' && filtroCategoria !== 'ofertas' && filtroCategoria !== 'fresco' && filtroCategoria !== 'tradicional' && filtroCategoria !== 'chef') {
-                itemsFiltrados = itemsFiltrados.filter(item => item.categoria === filtroCategoria);
-            } else if (filtroCategoria === 'ofertas') {
-                itemsFiltrados = itemsFiltrados.filter(item => item.categoria === 'Ofertas Especiales');
+            if (filtroCategoria && filtroCategoria !== 'todos') {
+                if (filtroCategoria === 'ofertas') {
+                    itemsFiltrados = itemsFiltrados.filter(item => item.categoria === 'Ofertas Especiales');
+                } else if (filtroCategoria === 'fresco') {
+                    // Lógica para fresco del día (puede ser un tag especial)
+                } else if (filtroCategoria === 'tradicional') {
+                    // Lógica para tradicional
+                } else if (filtroCategoria === 'chef') {
+                    // Lógica para chef experto
+                } else {
+                    itemsFiltrados = itemsFiltrados.filter(item => item.categoria === filtroCategoria);
+                }
             }
             
             if (filtroSubcategoria) {
@@ -2277,7 +2331,7 @@
                             ${!agotado ? `
                                 <div class="stock-info">
                                     <i class="fas fa-box ${stockClass}"></i>
-                                    <span>${stockDisponible} disponibles</span>
+                                    <span id="stock-${item.id}">${stockDisponible} disponibles</span>
                                 </div>
                             ` : ''}
                         </div>
@@ -2286,6 +2340,24 @@
             })).then(cards => {
                 grid.innerHTML = cards.join('');
             });
+        }
+
+        function actualizarStockEnTiempoReal(platilloId) {
+            const stockSpan = document.getElementById(`stock-${platilloId}`);
+            if (stockSpan) {
+                // Recalcular stock disponible para este platillo
+                const platillo = menuItems.find(p => p.id === platilloId);
+                if (platillo && platillo.ingredientes) {
+                    let stockDisponible = Infinity;
+                    for (const [ingId, ingInfo] of Object.entries(platillo.ingredientes)) {
+                        const stockDisp = window.stockCache.get(ingId) || 0;
+                        const cantidadNecesaria = ingInfo.cantidad || 1;
+                        const posible = Math.floor(stockDisp / cantidadNecesaria);
+                        stockDisponible = Math.min(stockDisponible, posible);
+                    }
+                    stockSpan.textContent = `${stockDisponible} disponibles`;
+                }
+            }
         }
 
         function cargarCategorias() {
@@ -2315,7 +2387,6 @@
             
             categoryList.innerHTML = html;
             
-            // Event listeners para categorías
             document.querySelectorAll('.category-item').forEach(item => {
                 item.addEventListener('click', (e) => {
                     e.stopPropagation();
@@ -2346,7 +2417,6 @@
                 });
             });
             
-            // Event listeners para subcategorías
             document.querySelectorAll('.subcategory-item').forEach(item => {
                 item.addEventListener('click', (e) => {
                     e.stopPropagation();
@@ -2559,7 +2629,6 @@
             
             const precioFinalUSD = Math.max(0, currentCustomizeItem.precio - descuento);
             
-            // Crear múltiples instancias según la cantidad
             for (let i = 0; i < currentCustomizeItem.cantidad; i++) {
                 const nuevaInstancia = {
                     id: generarId('inst_'),
@@ -2580,8 +2649,16 @@
             actualizarCarritoUI();
             cerrarModalPersonalizacion();
             
+            // Actualizar stock en tiempo real
+            window.stockCache.invalidate();
+            renderizarMenu();
+            
             mostrarToast(`${currentCustomizeItem.cantidad} agregado(s)`, 'success');
-            window.stockCache.invalidate(); // Invalidar caché
+            
+            // En móvil/tablet, abrir carrito automáticamente
+            if (window.innerWidth <= 992) {
+                toggleCarrito();
+            }
         }
 
         function cerrarModalPersonalizacion() {
@@ -2619,12 +2696,21 @@
             
             guardarCarrito();
             actualizarCarritoUI();
-            window.stockCache.invalidate(); // Invalidar caché
+            window.stockCache.invalidate();
+            
+            // Actualizar stock en tiempo real
+            actualizarStockEnTiempoReal(platilloId);
             
             mostrarToast('Agregado', 'success');
+            
+            // En móvil/tablet, abrir carrito automáticamente
+            if (window.innerWidth <= 992) {
+                toggleCarrito();
+            }
         }
 
         function eliminarInstancia(instanciaId) {
+            const instanciaEliminada = carrito.find(i => i.id === instanciaId);
             carrito = carrito.filter(i => i.id !== instanciaId);
             
             const platillosUnicos = [...new Set(carrito.map(i => i.platilloId))];
@@ -2637,7 +2723,12 @@
             
             guardarCarrito();
             actualizarCarritoUI();
-            window.stockCache.invalidate(); // Invalidar caché
+            window.stockCache.invalidate();
+            
+            // Actualizar stock en tiempo real del platillo eliminado
+            if (instanciaEliminada) {
+                actualizarStockEnTiempoReal(instanciaEliminada.platilloId);
+            }
         }
 
         function actualizarCarritoUI() {
@@ -2790,7 +2881,7 @@
         }
 
         // ============================================
-        // FUNCIONES DE PEDIDOS MEJORADAS (TRANSACCIONALES)
+        // FUNCIONES DE PEDIDOS
         // ============================================
         function crearPedidoBase(tipo) {
             const tasaActual = configGlobal.tasa_efectiva;
@@ -2847,6 +2938,7 @@
                 actualizarCarritoUI();
                 document.getElementById('confirmMesaModal').classList.remove('active');
                 window.stockCache.invalidate();
+                renderizarMenu();
                 mostrarToast('✅ Pedido enviado a cocina', 'success');
             } else {
                 mostrarToast('❌ Error: ' + resultado.error, 'error');
@@ -2903,7 +2995,6 @@
             const referencia = getReferencia('delivery');
             const comprobante = document.getElementById('comprobante').files.length > 0;
             
-            // Validar teléfono usando la función global
             const telefonoValido = window.validarTelefono(telefono);
             const referenciaValida = window.validarReferencia(referencia);
             
@@ -2949,10 +3040,10 @@
                 actualizarCarritoUI();
                 document.getElementById('deliveryModal').classList.remove('active');
                 window.stockCache.invalidate();
+                renderizarMenu();
                 mostrarToast('✅ Pedido confirmado', 'success');
             } else {
                 mostrarToast('❌ Error: ' + resultado.error, 'error');
-                // Si falla, reactivar el timer
                 iniciarTimerFrontend('delivery', 20);
             }
         }
@@ -2994,6 +3085,7 @@
                 actualizarCarritoUI();
                 document.getElementById('reservaModal').classList.remove('active');
                 window.stockCache.invalidate();
+                renderizarMenu();
                 mostrarToast('✅ Reserva confirmada', 'success');
             } else {
                 mostrarToast('❌ Error: ' + resultado.error, 'error');
@@ -3002,10 +3094,9 @@
         }
 
         // ============================================
-        // FUNCIONES DE NOTIFICACIONES MEJORADAS
+        // FUNCIONES DE NOTIFICACIONES
         // ============================================
         function setupRealtimeSubscriptions() {
-            // Suscripción a notificaciones
             window.supabaseClient.channel('notificaciones-cliente')
                 .on('postgres_changes', { 
                     event: 'INSERT', 
@@ -3021,7 +3112,6 @@
                 })
                 .subscribe();
             
-            // NUEVO: Suscripción a cambios en inventario
             window.supabaseClient.channel('inventario-cliente')
                 .on('postgres_changes', { 
                     event: 'UPDATE', 
@@ -3029,11 +3119,10 @@
                     table: 'inventario' 
                 }, () => {
                     window.stockCache.invalidate();
-                    cargarInventario(); // Esto ya llama a renderizarMenu()
+                    cargarInventario();
                 })
                 .subscribe();
             
-            // NUEVO: Suscripción a cambios en menú
             window.supabaseClient.channel('menu-cliente')
                 .on('postgres_changes', { 
                     event: '*', 
@@ -3044,7 +3133,6 @@
                 })
                 .subscribe();
             
-            // NUEVO: Suscripción a pedidos propios para tracking
             window.supabaseClient.channel('pedidos-cliente')
                 .on('postgres_changes', { 
                     event: 'UPDATE', 
@@ -3053,7 +3141,6 @@
                     filter: `session_id=eq.${sessionId}`
                 }, (payload) => {
                     const pedido = payload.new;
-                    // Mostrar notificación de cambio de estado si no es pendiente
                     if (pedido.estado !== 'pendiente') {
                         const mensajes = {
                             'en_cocina': '🍳 Tu pedido está en preparación',
