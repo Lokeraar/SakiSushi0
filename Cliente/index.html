@@ -17,7 +17,6 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <style>
-        /* MISMO ESTILO QUE TENÍAS - SIN CAMBIOS */
         * {
             margin: 0;
             padding: 0;
@@ -2230,7 +2229,7 @@
                             <p>
                                 <i class="fas fa-dollar-sign"></i>
                                 <strong>Monto:</strong>
-                                <span class="valor-placeholder" id="montoPago">primero seleccione parroquia</span>
+                                <span class="valor-placeholder" id="montoPago">Primero seleccione Parroquia a enviar</span>
                             </p>
                         </div>
                         
@@ -2289,7 +2288,7 @@
                         </div>
                         
                         <div class="delivery-price-display" id="deliveryPriceDisplay">
-                            primero seleccione parroquia
+                            Primero seleccione Parroquia a enviar
                         </div>
                         
                         <div style="margin-bottom: 1.5rem;">
@@ -2301,7 +2300,7 @@
                         </div>
                         
                         <div style="margin-bottom: 1.5rem;">
-                            <label for="telefono" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Teléfono (máx 14 dígitos después del +):</label>
+                            <label for="telefono" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Teléfono (máx 14 dígitos):</label>
                             <input type="tel" id="telefono" required pattern="\+[0-9]{11,14}" maxlength="15" placeholder="+5804121234567" inputmode="numeric" style="width: 100%; padding: 0.8rem; border: 2px solid var(--gray-200); border-radius: var(--radius-sm); font-size: 1rem;" oninput="this.value=this.value.replace(/[^0-9+]/g,''); if(this.value.indexOf('+') !== 0 && this.value.length > 0) { this.value = '+' + this.value.replace(/\+/g,''); } validarFormularioDelivery()">
                         </div>
                         
@@ -2332,7 +2331,7 @@
                         <div style="padding: 1rem; background: var(--gray-100); border-radius: var(--radius-md); border: 2px solid var(--primary);">
                             <div style="display: flex; justify-content: space-between; align-items: center;">
                                 <span style="font-weight: 600; font-size: 1.1rem;">Total a pagar:</span>
-                                <span style="font-weight: 700; color: var(--primary); font-size: 1.4rem;" id="deliveryTotal">primero seleccione parroquia</span>
+                                <span style="font-weight: 700; color: var(--primary); font-size: 1.4rem;" id="deliveryTotal">Primero seleccione parroquia a enviar</span>
                             </div>
                         </div>
                     </form>
@@ -2889,38 +2888,38 @@
                             mensaje = 'Tu pedido ha sido registrado';
                     }
                     
-                    // Crear notificación en la base de datos
-                    await window.supabaseClient
-                        .from('notificaciones')
-                        .insert([{
-                            pedido_id: data.pedido_id,
-                            tipo: 'pending',
-                            titulo: titulo,
-                            mensaje: mensaje,
-                            timestamp: new Date().toISOString(),
-                            session_id: sessionId,
-                            leida: false
-                        }]);
-                    
-                    // Reproducir sonido
-                    const audio = document.getElementById('notificationSound');
-                    audio.play().catch(() => {});
-                    
-                    // Activar vibración si el navegador lo soporta
-                    if (navigator.vibrate) {
-                        navigator.vibrate(200);
-                    }
-                    
-                    // Animar la campana
-                    const bell = document.getElementById('notificationBell');
-                    bell.classList.add('fa-shake');
-                    setTimeout(() => bell.classList.remove('fa-shake'), 1000);
-                    
-                    // Mostrar toast de confirmación INMEDIATAMENTE
-                    mostrarToast(titulo, 'success');
-                    
-                    // Recargar notificaciones para actualizar el badge
-                    await cargarNotificaciones();
+                    // Esperar 1 segundo antes de crear la notificación
+                    setTimeout(async () => {
+                        // Crear notificación en la base de datos
+                        await window.supabaseClient
+                            .from('notificaciones')
+                            .insert([{
+                                pedido_id: data.pedido_id,
+                                tipo: 'pending',
+                                titulo: titulo,
+                                mensaje: mensaje,
+                                timestamp: new Date().toISOString(),
+                                session_id: sessionId,
+                                leida: false
+                            }]);
+                        
+                        // Reproducir sonido
+                        const audio = document.getElementById('notificationSound');
+                        audio.play().catch(() => {});
+                        
+                        // Activar vibración si el navegador lo soporta
+                        if (navigator.vibrate) {
+                            navigator.vibrate(200);
+                        }
+                        
+                        // Animar la campana
+                        const bell = document.getElementById('notificationBell');
+                        bell.classList.add('fa-shake');
+                        setTimeout(() => bell.classList.remove('fa-shake'), 1000);
+                        
+                        // Mostrar toast
+                        mostrarToast(titulo, 'success');
+                    }, 1000);
                     
                     return { success: true, pedidoId: data.pedido_id };
                 } else {
@@ -4201,13 +4200,13 @@
                     montoPago.textContent = formatBs(totalBs);
                 }
             } else {
-                document.getElementById('deliveryTotal').textContent = 'primero seleccione parroquia';
-                document.getElementById('deliveryPriceDisplay').textContent = 'primero seleccione parroquia';
+                document.getElementById('deliveryTotal').textContent = 'Primero seleccione Parroquia a enviar';
+                document.getElementById('deliveryPriceDisplay').textContent = 'Primero seleccione Parroquia a enviar';
                 
                 const montoPago = document.getElementById('montoPago');
                 if (montoPago) {
                     montoPago.className = 'valor-placeholder';
-                    montoPago.textContent = 'primero seleccione parroquia';
+                    montoPago.textContent = 'Primero seleccione Parroquia a enviar';
                 }
             }
             
