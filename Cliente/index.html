@@ -59,13 +59,6 @@
             --nivel2-text: #E65100;
             --nivel3-bg: white;
             --nivel3-border: var(--gray-200);
-            
-            /* Colores pastel para pago móvil */
-            --pastel-primary: #ffcdd2;
-            --pastel-accent: #fff3e0;
-            --pastel-success: #c8e6c9;
-            --pastel-info: #b3e5fc;
-            --pastel-warning: #ffe0b2;
         }
 
         body {
@@ -509,7 +502,7 @@
             font-weight: bold;
         }
 
-        /* Cart Sidebar - Estilo jerárquico mejorado */
+        /* Cart Sidebar - Estilo jerárquico */
         .cart-sidebar {
             width: 320px;
             background: white;
@@ -1820,53 +1813,51 @@
             border-bottom: none;
         }
         
-        /* Información de pago mejorada con colores pastel */
+        /* NUEVO: Estilo para la información de pago - Diseño limpio con borde punteado */
         .payment-info {
-            background: linear-gradient(135deg, var(--pastel-primary), var(--pastel-accent));
-            padding: 1.2rem;
+            background: white;
+            padding: 1.5rem;
             border-radius: var(--radius-md);
             margin-bottom: 1.5rem;
-            border: 2px solid var(--primary);
-            box-shadow: var(--shadow-md);
+            border: 2px dashed var(--primary);
+            box-shadow: var(--shadow-sm);
         }
         
         .payment-info h4 {
-            color: var(--primary);
-            margin-bottom: 1rem;
+            color: var(--secondary);
+            margin-bottom: 1.2rem;
             font-size: 1.2rem;
             display: flex;
             align-items: center;
             gap: 0.5rem;
+            border-bottom: 1px solid var(--gray-200);
+            padding-bottom: 0.8rem;
         }
         
         .payment-info h4 i {
             font-size: 1.3rem;
+            color: var(--primary);
         }
         
         .payment-details {
-            background: rgba(255,255,255,0.9);
+            background: var(--gray-50);
             padding: 1rem;
             border-radius: var(--radius-sm);
-            border: 1px solid var(--primary);
-            backdrop-filter: blur(5px);
+            margin-bottom: 1rem;
         }
         
         .payment-details p {
             display: flex;
             align-items: center;
-            gap: 0.5rem;
+            gap: 0.8rem;
             margin-bottom: 0.8rem;
             font-size: 1rem;
-            padding: 0.3rem;
-            border-radius: var(--radius-sm);
-            transition: background 0.2s;
-        }
-        
-        .payment-details p:hover {
-            background: rgba(255,255,255,0.5);
+            padding: 0.3rem 0;
+            border-bottom: 1px solid var(--gray-200);
         }
         
         .payment-details p:last-child {
+            border-bottom: none;
             margin-bottom: 0;
         }
         
@@ -1878,42 +1869,37 @@
         
         .payment-details strong {
             color: var(--secondary);
-            min-width: 45px;
+            min-width: 70px;
+            font-weight: 600;
         }
         
         .payment-details .valor {
             color: var(--primary);
-            font-weight: 600;
+            font-weight: 700;
             font-family: monospace;
             font-size: 1.1rem;
             flex: 1;
+            text-align: right;
         }
         
-        .btn-copy {
-            background: var(--pastel-success);
-            border: none;
-            color: var(--success);
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.2s;
+        .payment-note {
+            background: #FFF8E1;
+            padding: 1rem;
+            border-radius: var(--radius-sm);
+            border-left: 4px solid var(--accent);
             font-size: 0.9rem;
-            margin-left: 0.5rem;
+            color: var(--gray-700);
         }
         
-        .btn-copy:hover {
-            background: var(--success);
-            color: white;
-            transform: scale(1.1);
+        .payment-note i {
+            color: var(--accent);
+            margin-right: 0.5rem;
         }
         
-        .btn-copy.copied {
-            background: var(--success);
-            color: white;
+        .payment-note p {
+            margin-top: 0.3rem;
+            font-size: 0.85rem;
+            color: var(--gray-600);
         }
 
         .delivery-price-display {
@@ -2155,7 +2141,7 @@
             </div>
         </div>
 
-        <!-- Delivery Modal -->
+        <!-- Delivery Modal - NUEVO DISEÑO -->
         <div class="modal-overlay" id="deliveryModal">
             <div class="modal-container">
                 <div class="modal-header">
@@ -2172,37 +2158,42 @@
                         <i class="fas fa-exclamation-triangle"></i> Al confirmar, el timer se detiene.
                     </div>
                     
-                    <!-- Información de pago con colores pastel y botones copiar -->
+                    <!-- NUEVO: Información de pago con diseño limpio -->
                     <div class="payment-info">
-                        <h4><i class="fas fa-credit-card"></i> Pago Móvil</h4>
+                        <h4><i class="fas fa-credit-card"></i> Datos de Pago - Pago Móvil</h4>
                         <div class="payment-details">
                             <p>
                                 <i class="fas fa-university"></i>
                                 <strong>Banco:</strong>
-                                <span class="valor"><strong>Banesco</strong></span>
+                                <span class="valor">Banesco</span>
                             </p>
                             <p>
                                 <i class="fas fa-phone-alt"></i>
                                 <strong>Teléfono:</strong>
-                                <span class="valor" id="telefonoPago">0424-1525233</span>
-                                <button class="btn-copy" onclick="copiarAlPortapapeles('0424-1525233', this)" title="Copiar teléfono">
-                                    <i class="fas fa-copy"></i>
-                                </button>
+                                <span class="valor">0424-1525233</span>
                             </p>
                             <p>
                                 <i class="fas fa-id-card"></i>
                                 <strong>RIF:</strong>
-                                <span class="valor" id="rifPago">J-501519838</span>
-                                <button class="btn-copy" onclick="copiarAlPortapapeles('J-501519838', this)" title="Copiar RIF">
-                                    <i class="fas fa-copy"></i>
-                                </button>
+                                <span class="valor">J-501519838</span>
                             </p>
+                            <p>
+                                <i class="fas fa-dollar-sign"></i>
+                                <strong>Monto:</strong>
+                                <span class="valor" id="montoPago">Bs. 0,00</span>
+                            </p>
+                        </div>
+                        
+                        <div class="payment-note">
+                            <i class="fas fa-info-circle"></i>
+                            <strong>Sólo se aceptan pagos por Pago Móvil</strong>
+                            <p>Por favor, asegúrese de que su dirección y teléfono sean los correctos para garantizar que su pedido llegue a sus manos sin inconvenientes.</p>
                         </div>
                     </div>
                     
                     <form id="deliveryForm">
                         <div style="margin-bottom: 1.5rem;">
-                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Parroquia:</label>
+                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Parroquia a enviar: *</label>
                             <div class="parroquia-selector">
                                 <div class="selected-parroquia" onclick="toggleParroquiaSelect()">
                                     <span id="selectedParroquiaText">San Bernardino</span>
@@ -2247,12 +2238,12 @@
                         </div>
                         
                         <div class="delivery-price-display" id="deliveryPriceDisplay">
-                            Envío: Bs. 0,00
+                            Costo de envío: Bs. 0,00
                         </div>
                         
                         <div style="margin-bottom: 1.5rem;">
-                            <label for="direccion" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Dirección completa:</label>
-                            <textarea id="direccion" required minlength="20" placeholder="Av., Calle, Edificio, Piso, Apartamento" style="width: 100%; padding: 0.8rem; border: 2px solid var(--gray-200); border-radius: var(--radius-sm); font-size: 1rem; transition: border 0.2s;" rows="3" oninput="actualizarContadorDireccion()"></textarea>
+                            <label for="direccion" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Dirección completa *</label>
+                            <textarea id="direccion" required minlength="20" placeholder="Introduce tu dirección completa (mínimo 20 caracteres)" style="width: 100%; padding: 0.8rem; border: 2px solid var(--gray-200); border-radius: var(--radius-sm); font-size: 1rem; transition: border 0.2s;" rows="3" oninput="actualizarContadorDireccion()"></textarea>
                             <div style="display: flex; justify-content: flex-end; margin-top: 0.3rem;">
                                 <small id="direccionCounter" style="color: var(--gray-600); font-weight: 500;">0/20 caracteres</small>
                             </div>
@@ -2304,7 +2295,7 @@
             </div>
         </div>
 
-        <!-- Reserva Modal -->
+        <!-- Reserva Modal - Con el mismo nuevo diseño -->
         <div class="modal-overlay" id="reservaModal">
             <div class="modal-container">
                 <div class="modal-header">
@@ -2321,31 +2312,36 @@
                         <i class="fas fa-exclamation-triangle"></i> Al confirmar, el timer se detiene.
                     </div>
                     
-                    <!-- Información de pago con colores pastel y botones copiar -->
+                    <!-- NUEVO: Información de pago con diseño limpio -->
                     <div class="payment-info">
-                        <h4><i class="fas fa-credit-card"></i> Pago Móvil</h4>
+                        <h4><i class="fas fa-credit-card"></i> Datos de Pago - Pago Móvil</h4>
                         <div class="payment-details">
                             <p>
                                 <i class="fas fa-university"></i>
                                 <strong>Banco:</strong>
-                                <span class="valor"><strong>Banesco</strong></span>
+                                <span class="valor">Banesco</span>
                             </p>
                             <p>
                                 <i class="fas fa-phone-alt"></i>
                                 <strong>Teléfono:</strong>
-                                <span class="valor" id="telefonoPagoReserva">0424-1525233</span>
-                                <button class="btn-copy" onclick="copiarAlPortapapeles('0424-1525233', this)" title="Copiar teléfono">
-                                    <i class="fas fa-copy"></i>
-                                </button>
+                                <span class="valor">0424-1525233</span>
                             </p>
                             <p>
                                 <i class="fas fa-id-card"></i>
                                 <strong>RIF:</strong>
-                                <span class="valor" id="rifPagoReserva">J-501519838</span>
-                                <button class="btn-copy" onclick="copiarAlPortapapeles('J-501519838', this)" title="Copiar RIF">
-                                    <i class="fas fa-copy"></i>
-                                </button>
+                                <span class="valor">J-501519838</span>
                             </p>
+                            <p>
+                                <i class="fas fa-dollar-sign"></i>
+                                <strong>Monto:</strong>
+                                <span class="valor" id="montoReserva">Bs. 0,00</span>
+                            </p>
+                        </div>
+                        
+                        <div class="payment-note">
+                            <i class="fas fa-info-circle"></i>
+                            <strong>Sólo se aceptan pagos por Pago Móvil</strong>
+                            <p>Por favor, asegúrese de que su dirección y teléfono sean los correctos para garantizar que su pedido llegue a sus manos sin inconvenientes.</p>
                         </div>
                     </div>
                     
@@ -2464,8 +2460,8 @@
         let mesaId = null;
         
         // Control de niveles desplegados
-        let nivel1Activo = null;      // ID del grupo principal desplegado
-        let nivel2Activo = null;      // ID del subgrupo por personalización desplegado
+        let nivel1Activo = null;
+        let nivel2Activo = null;
         
         let timersActivos = {};
         let intervalosTimer = {};
@@ -2813,7 +2809,6 @@
                 if (error) throw error;
                 
                 if (data.success) {
-                    // Crear notificación de confirmación
                     const titulo = pedido.tipo === 'mesa' ? '✅ Pedido enviado a cocina' :
                                   pedido.tipo === 'delivery' ? '✅ Pedido de delivery confirmado' :
                                   '✅ Reserva confirmada';
@@ -3388,12 +3383,10 @@
             }
         }
 
-        // Funciones para manejar niveles jerárquicos
         function toggleNivel1(grupoId) {
             const nivel1Container = document.getElementById(`nivel1-${grupoId}`);
             const icon = document.getElementById(`icon1-${grupoId}`);
             
-            // Si hay otro nivel1 abierto, cerrarlo
             if (nivel1Activo && nivel1Activo !== grupoId) {
                 const nivelAnterior = document.getElementById(`nivel1-${nivel1Activo}`);
                 const iconAnterior = document.getElementById(`icon1-${nivel1Activo}`);
@@ -3403,7 +3396,6 @@
                 if (iconAnterior) {
                     iconAnterior.classList.remove('rotated');
                 }
-                // También cerrar cualquier nivel2 abierto del grupo anterior
                 if (nivel2Activo && nivel2Activo.startsWith(nivel1Activo)) {
                     const nivel2Anterior = document.getElementById(`nivel2-${nivel2Activo}`);
                     const icon2Anterior = document.getElementById(`icon2-${nivel2Activo}`);
@@ -3417,19 +3409,17 @@
                 }
             }
             
-            // Toggle del nivel actual
             if (nivel1Container) {
                 nivel1Container.classList.toggle('expanded');
                 if (icon) {
                     icon.classList.toggle('rotated');
                 }
                 
-                // Actualizar nivel activo
                 if (nivel1Container.classList.contains('expanded')) {
                     nivel1Activo = grupoId;
                 } else {
                     nivel1Activo = null;
-                    nivel2Activo = null; // Si cerramos el nivel1, también cerramos nivel2
+                    nivel2Activo = null;
                 }
             }
         }
@@ -3438,7 +3428,6 @@
             const nivel2Container = document.getElementById(`nivel2-${subgrupoId}`);
             const icon = document.getElementById(`icon2-${subgrupoId}`);
             
-            // Si hay otro nivel2 abierto en el mismo grupo padre, cerrarlo
             if (nivel2Activo && nivel2Activo !== subgrupoId && nivel2Activo.startsWith(grupoPadreId)) {
                 const nivel2Anterior = document.getElementById(`nivel2-${nivel2Activo}`);
                 const icon2Anterior = document.getElementById(`icon2-${nivel2Activo}`);
@@ -3450,14 +3439,12 @@
                 }
             }
             
-            // Toggle del nivel actual
             if (nivel2Container) {
                 nivel2Container.classList.toggle('expanded');
                 if (icon) {
                     icon.classList.toggle('rotated');
                 }
                 
-                // Actualizar nivel activo
                 if (nivel2Container.classList.contains('expanded')) {
                     nivel2Activo = subgrupoId;
                 } else {
@@ -3467,7 +3454,6 @@
         }
 
         function agruparItemsJerarquicamente() {
-            // Primero agrupar por platilloId
             const gruposPorPlatillo = {};
             
             carrito.forEach(instancia => {
@@ -3482,7 +3468,6 @@
                 gruposPorPlatillo[instancia.platilloId].items.push(instancia);
             });
             
-            // Para cada grupo de platillo, agrupar por personalización
             const resultado = [];
             
             Object.values(gruposPorPlatillo).forEach(grupoPlatillo => {
@@ -3547,7 +3532,6 @@
             grupos.forEach(grupo => {
                 totalGeneral += grupo.subtotal;
                 
-                // Determinar si este grupo está expandido
                 const nivel1Expandido = nivel1Activo === grupo.id;
                 
                 html += `
@@ -3567,12 +3551,10 @@
                         <div class="nivel2-container ${nivel1Expandido ? 'expanded' : ''}" id="nivel1-${grupo.id}">
                 `;
                 
-                // Subgrupos por personalización (NIVEL 2)
                 grupo.subgrupos.forEach(subgrupo => {
                     const subgrupoId = `${grupo.id}_${subgrupo.id}`;
                     const nivel2Expandido = nivel2Activo === subgrupoId;
                     
-                    // Crear descripción de personalización
                     let descripcionPersonalizacion = 'Completo';
                     if (subgrupo.personalizacion.length > 0) {
                         const ingredientesNombres = subgrupo.personalizacion.map(p => {
@@ -3599,7 +3581,6 @@
                             <div class="nivel3-container ${nivel2Expandido ? 'expanded' : ''}" id="nivel2-${subgrupoId}">
                     `;
                     
-                    // Items individuales (NIVEL 3)
                     subgrupo.items.forEach((item, index) => {
                         const ingredientesNombres = item.personalizacion.map(p => {
                             const ing = inventario.find(i => i.id === p);
@@ -4101,8 +4082,16 @@
             const precioUSD = preciosPorParroquia[select.value] || 2;
             const subtotalUSD = carrito.reduce((sum, item) => sum + item.precioUnitarioUSD, 0);
             const totalUSD = subtotalUSD + precioUSD;
-            document.getElementById('deliveryTotal').textContent = formatBs(usdToBs(totalUSD));
+            const totalBs = usdToBs(totalUSD);
+            
+            document.getElementById('deliveryTotal').textContent = formatBs(totalBs);
             document.getElementById('deliveryPriceDisplay').textContent = `Costo de envío: ${formatBs(usdToBs(precioUSD))}`;
+            
+            // Actualizar el monto en la sección de pago
+            const montoPago = document.getElementById('montoPago');
+            if (montoPago) {
+                montoPago.textContent = formatBs(totalBs);
+            }
         }
 
         function getReferencia(type) {
@@ -4219,28 +4208,6 @@
                 mostrarToast('❌ Error: ' + resultado.error, 'error');
                 iniciarTimerFrontend('reserva', 20);
             }
-        }
-
-        // ============================================
-        // FUNCIÓN PARA COPIAR AL PORTAPAPELES
-        // ============================================
-        function copiarAlPortapapeles(texto, boton) {
-            navigator.clipboard.writeText(texto).then(() => {
-                const icono = boton.querySelector('i');
-                const claseOriginal = icono.className;
-                icono.className = 'fas fa-check';
-                boton.classList.add('copied');
-                
-                setTimeout(() => {
-                    icono.className = claseOriginal;
-                    boton.classList.remove('copied');
-                }, 1500);
-                
-                mostrarToast('✅ Copiado al portapapeles', 'success');
-            }).catch(err => {
-                console.error('Error al copiar:', err);
-                mostrarToast('❌ Error al copiar', 'error');
-            });
         }
 
         // ============================================
