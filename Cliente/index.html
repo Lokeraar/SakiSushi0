@@ -93,6 +93,7 @@
             display: block;
         }
 
+        /* Header - AHORA MÁS GRANDE (110px) */
         .header {
             background: linear-gradient(135deg, var(--primary), #b71c1c);
             color: white;
@@ -106,12 +107,21 @@
             justify-content: space-between;
             flex-wrap: wrap;
             gap: 0.5rem;
-            height: 82px;
+            height: 110px;
         }
 
         @media (max-width: 992px) {
             .header {
-                height: 70px;
+                height: 100px;
+                padding: 0.5rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                height: auto;
+                min-height: 100px;
+                padding: 0.5rem;
             }
         }
 
@@ -126,15 +136,15 @@
             background: rgba(255,255,255,0.15);
             border: none;
             color: white;
-            width: 45px;
-            height: 45px;
+            width: 50px;
+            height: 50px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
             transition: all 0.3s;
-            font-size: 1.3rem;
+            font-size: 1.4rem;
             backdrop-filter: blur(5px);
             flex-shrink: 0;
         }
@@ -147,16 +157,17 @@
         .logo-area {
             display: flex;
             align-items: center;
-            gap: 0.8rem;
+            gap: 1rem;
             cursor: pointer;
             flex: 1;
             justify-content: center;
+            flex-wrap: wrap;
         }
 
         .logo {
-            width: 60px;
-            height: 60px;
-            border-radius: 12px;
+            width: 70px;
+            height: 70px;
+            border-radius: 14px;
             box-shadow: var(--shadow-md);
             transform: rotate(-5deg);
             transition: transform 0.3s;
@@ -168,35 +179,49 @@
         }
 
         .logo-area h1 {
-            font-size: 1.8rem;
+            font-size: 2rem;
             font-weight: 800;
             letter-spacing: 0.5px;
             white-space: nowrap;
             cursor: pointer;
-            line-height: 1;
+            line-height: 1.2;
         }
 
         .header-slogan {
             font-family: 'Playfair Display', serif;
             font-style: italic;
-            font-size: 1rem;
+            font-size: 1.1rem;
             color: var(--accent);
             margin-left: 0.5rem;
             white-space: nowrap;
             border-left: 2px solid rgba(255,255,255,0.3);
-            padding-left: 0.8rem;
+            padding-left: 1rem;
+        }
+
+        @media (max-width: 992px) {
+            .logo {
+                width: 60px;
+                height: 60px;
+            }
+            .logo-area h1 {
+                font-size: 1.6rem;
+            }
+            .header-slogan {
+                font-size: 1rem;
+            }
         }
 
         @media (max-width: 768px) {
             .logo-area {
-                flex-wrap: wrap;
+                flex-direction: column;
                 gap: 0.3rem;
             }
             .logo-area h1 {
                 font-size: 1.4rem;
+                white-space: normal;
             }
             .header-slogan {
-                font-size: 0.8rem;
+                font-size: 0.9rem;
                 border-left: none;
                 padding-left: 0;
                 width: 100%;
@@ -215,15 +240,15 @@
             background: rgba(255,255,255,0.15);
             border: none;
             color: white;
-            width: 45px;
-            height: 45px;
+            width: 50px;
+            height: 50px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
             transition: all 0.3s;
-            font-size: 1.3rem;
+            font-size: 1.4rem;
             position: relative;
             backdrop-filter: blur(5px);
             flex-shrink: 0;
@@ -286,7 +311,7 @@
             background: white;
         }
 
-        /* Category Sidebar - CORREGIDO */
+        /* Category Sidebar - AJUSTADO para comenzar debajo del header de 110px */
         .category-sidebar {
             width: 280px;
             background: white;
@@ -295,7 +320,7 @@
             transition: transform 0.3s ease;
             box-shadow: 2px 0 8px rgba(0,0,0,0.05);
             position: fixed;
-            top: 82px;
+            top: 110px;
             left: 0;
             bottom: 0;
             z-index: 900;
@@ -305,12 +330,18 @@
 
         @media (max-width: 992px) {
             .category-sidebar {
-                top: 70px;
+                top: 100px;
                 transform: translateX(-100%);
             }
             .category-sidebar.open {
                 transform: translateX(0);
                 box-shadow: var(--shadow-lg);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .category-sidebar {
+                top: 100px;
             }
         }
 
@@ -448,7 +479,7 @@
             font-weight: bold;
         }
 
-        /* Cart Sidebar - CORREGIDO */
+        /* Cart Sidebar - AJUSTADO para comenzar debajo del header de 110px */
         .cart-sidebar {
             width: 320px;
             background: white;
@@ -458,7 +489,7 @@
             transition: transform 0.3s ease;
             position: fixed;
             right: 0;
-            top: 82px;
+            top: 110px;
             bottom: 0;
             z-index: 900;
             box-shadow: -2px 0 8px rgba(0,0,0,0.05);
@@ -466,12 +497,18 @@
 
         @media (max-width: 992px) {
             .cart-sidebar {
-                top: 70px;
+                top: 100px;
                 transform: translateX(100%);
             }
             .cart-sidebar.open {
                 transform: translateX(0);
                 box-shadow: var(--shadow-lg);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .cart-sidebar {
+                top: 100px;
             }
         }
 
@@ -1937,7 +1974,7 @@
                                 <input type="text" maxlength="1" class="ref-digit" data-type="reserva" data-index="2" style="width: 15%; text-align: center; padding: 0.7rem; border: 1px solid var(--gray-300); border-radius: var(--radius-sm); font-size: 1.2rem;" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
                                 <input type="text" maxlength="1" class="ref-digit" data-type="reserva" data-index="3" style="width: 15%; text-align: center; padding: 0.7rem; border: 1px solid var(--gray-300); border-radius: var(--radius-sm); font-size: 1.2rem;" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
                                 <input type="text" maxlength="1" class="ref-digit" data-type="reserva" data-index="4" style="width: 15%; text-align: center; padding: 0.7rem; border: 1px solid var(--gray-300); border-radius: var(--radius-sm); font-size: 1.2rem;" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
-                                <input type="text" maxlength="1" class="ref-digit" data-type="reserva" data-index="5" style="width: 15%; text-align: center; padding: 0.7rem; border: 1px solid var(--gray-300); border-radius: var(--radius-sm); font-size: 1.2rem;" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+                                <input type="text" maxlength="1" class="ref-digit" data-type="reserva" data-index="5" style="width: 15%; text-align; center; padding: 0.7rem; border: 1px solid var(--gray-300); border-radius: var(--radius-sm); font-size: 1.2rem;" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
                             </div>
                         </div>
                         
