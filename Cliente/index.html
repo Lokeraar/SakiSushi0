@@ -51,13 +51,12 @@
             --radius-md: 12px;
             --radius-lg: 16px;
             
-            /* Colores pastel para el modal de pago */
-            --pastel-blue: #e3f2fd;
-            --pastel-green: #e8f5e9;
-            --pastel-yellow: #fff9c4;
-            --pastel-orange: #fff3e0;
-            --pastel-pink: #fce4ec;
-            --pastel-purple: #f3e5f5;
+            /* Colores pastel para pago móvil */
+            --pastel-primary: #ffcdd2;
+            --pastel-accent: #fff3e0;
+            --pastel-success: #c8e6c9;
+            --pastel-info: #b3e5fc;
+            --pastel-warning: #ffe0b2;
         }
 
         body {
@@ -486,7 +485,7 @@
             font-weight: bold;
         }
 
-        /* Cart Sidebar - MODIFICADO para agrupar por instancias */
+        /* Cart Sidebar - MODIFICADO: Agrupación de items */
         .cart-sidebar {
             width: 320px;
             background: white;
@@ -598,180 +597,110 @@
             font-size: 1rem;
         }
 
-        /* Estilo para items agrupados en el carrito */
-        .cart-group {
-            background: white;
+        /* Estilo para items agrupados */
+        .cart-item-group {
+            background: var(--gray-50);
             border-radius: var(--radius-md);
             border: 1px solid var(--gray-200);
             overflow: hidden;
-            box-shadow: var(--shadow-sm);
+            animation: slideIn 0.3s ease;
         }
 
-        .cart-group-header {
-            background: var(--gray-100);
+        .cart-item-group-header {
+            background: linear-gradient(135deg, var(--primary), #b71c1c);
+            color: white;
             padding: 0.8rem 1rem;
-            border-bottom: 1px solid var(--gray-200);
             display: flex;
             align-items: center;
             justify-content: space-between;
             font-weight: 600;
-            cursor: pointer;
-            transition: background 0.2s;
         }
 
-        .cart-group-header:hover {
-            background: var(--gray-200);
-        }
-
-        .cart-group-header .group-info {
+        .cart-item-group-header .platillo-nombre {
             display: flex;
             align-items: center;
             gap: 0.5rem;
         }
 
-        .cart-group-header .group-count {
-            background: var(--primary);
-            color: white;
-            padding: 0.2rem 0.6rem;
+        .cart-item-group-header .platillo-nombre i {
+            font-size: 1rem;
+        }
+
+        .cart-item-group-header .platillo-cantidad-total {
+            background: rgba(255,255,255,0.2);
+            padding: 0.2rem 0.8rem;
             border-radius: 20px;
-            font-size: 0.8rem;
-            font-weight: 600;
+            font-size: 0.9rem;
         }
 
-        .cart-group-header i {
-            transition: transform 0.3s;
-            color: var(--gray-600);
+        .cart-item-variants {
+            padding: 0.5rem;
         }
 
-        .cart-group-header i.expanded {
-            transform: rotate(90deg);
-        }
-
-        .cart-group-items {
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.3s ease;
-            background: white;
-        }
-
-        .cart-group-items.expanded {
-            max-height: 500px;
-            overflow-y: auto;
-        }
-
-        .cart-item {
+        .cart-item-variant {
             display: flex;
-            gap: 0.8rem;
+            align-items: center;
+            justify-content: space-between;
             padding: 0.8rem;
-            background: var(--gray-50);
             border-bottom: 1px solid var(--gray-200);
-            animation: slideIn 0.3s ease;
-            position: relative;
-        }
-
-        .cart-item:last-child {
-            border-bottom: none;
-        }
-
-        @keyframes slideIn {
-            from {
-                opacity: 0;
-                transform: translateX(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateX(0);
-            }
-        }
-
-        .cart-item-image {
-            width: 50px;
-            height: 50px;
+            background: white;
+            margin-bottom: 0.3rem;
             border-radius: var(--radius-sm);
-            background-color: var(--gray-200);
-            background-size: cover;
-            background-position: center;
-            flex-shrink: 0;
         }
 
-        .cart-item-details {
+        .cart-item-variant:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+
+        .variant-info {
             flex: 1;
         }
 
-        .cart-item-header {
-            display: flex;
-            align-items: center;
-            gap: 0.3rem;
-            margin-bottom: 0.25rem;
-            flex-wrap: wrap;
-        }
-
-        .instance-number {
-            background: var(--primary);
-            color: white;
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.7rem;
+        .variant-info .cantidad {
             font-weight: 700;
-            flex-shrink: 0;
+            color: var(--primary);
+            margin-right: 0.5rem;
         }
 
-        .cart-item-name {
+        .variant-info .personalizacion {
+            font-size: 0.85rem;
+            color: var(--gray-600);
+            margin-top: 0.2rem;
+            font-style: italic;
+        }
+
+        .variant-info .personalizacion i {
+            color: var(--accent);
+            margin-right: 0.3rem;
+        }
+
+        .variant-precio {
             font-weight: 600;
             color: var(--secondary);
-            font-size: 0.95rem;
-            line-height: 1.2;
+            margin-right: 1rem;
         }
 
-        .cart-item-customization {
-            font-size: 0.75rem;
-            color: var(--gray-600);
-            margin-bottom: 0.25rem;
-            padding-left: 1.5rem;
-        }
-
-        .cart-item-price-info {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-size: 0.85rem;
-            padding-left: 1.5rem;
-            flex-wrap: wrap;
-        }
-
-        .cart-item-unit-price {
-            color: var(--gray-600);
-        }
-
-        .cart-item-subtotal {
-            font-weight: 600;
-            color: var(--primary);
-        }
-
-        .cart-item-actions {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-            gap: 0.3rem;
-        }
-
-        .btn-remove-item {
+        .btn-remove-variant {
             background: none;
             border: none;
             color: var(--danger);
             cursor: pointer;
-            font-size: 0.9rem;
-            padding: 0.2rem;
+            font-size: 1rem;
+            padding: 0.3rem;
             opacity: 0.6;
             transition: all 0.2s;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
-        .btn-remove-item:hover {
+        .btn-remove-variant:hover {
             opacity: 1;
+            background: var(--gray-100);
             transform: scale(1.1);
         }
 
@@ -1381,6 +1310,274 @@
             border-radius: 0 0 var(--radius-lg) var(--radius-lg);
         }
 
+        /* Footer */
+        .footer {
+            background: var(--secondary);
+            color: white;
+            padding: 2rem 1.5rem 1rem;
+            width: 100%;
+            margin-top: auto;
+            position: relative;
+            z-index: 100;
+        }
+
+        .footer::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            border-radius: 2px;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        @media (min-width: 993px) {
+            .footer-content {
+                max-width: calc(100% - 600px);
+                margin-left: auto;
+                margin-right: auto;
+                padding-left: 1rem;
+                padding-right: 1rem;
+            }
+        }
+
+        @media (max-width: 992px) {
+            .footer-content {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 1.5rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .footer-content {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+                text-align: center;
+            }
+        }
+
+        .footer-section {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .footer-section h4 {
+            color: var(--accent);
+            margin-bottom: 1.2rem;
+            font-size: 1.2rem;
+            position: relative;
+            display: inline-block;
+            padding-bottom: 0.5rem;
+        }
+
+        .footer-section h4::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            bottom: 0;
+            width: 40px;
+            height: 3px;
+            background: var(--primary);
+            border-radius: 2px;
+        }
+
+        @media (max-width: 768px) {
+            .footer-section h4::after {
+                left: 50%;
+                transform: translateX(-50%);
+            }
+        }
+
+        .footer-section p, .footer-section a {
+            color: var(--gray-400);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            margin-bottom: 0.8rem;
+            transition: color 0.2s, transform 0.2s;
+            font-size: 0.95rem;
+        }
+
+        @media (max-width: 768px) {
+            .footer-section p, .footer-section a {
+                justify-content: center;
+            }
+        }
+
+        .footer-section a:hover {
+            color: var(--accent);
+            transform: translateX(5px);
+        }
+
+        @media (max-width: 768px) {
+            .footer-section a:hover {
+                transform: translateY(-2px);
+            }
+        }
+
+        .footer-section i {
+            width: 20px;
+            color: var(--primary);
+            font-size: 1.1rem;
+        }
+
+        .whatsapp-link {
+            color: #25D366 !important;
+            font-weight: 600;
+        }
+        
+        .whatsapp-link:hover {
+            color: #1da851 !important;
+        }
+
+        .social-icons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 0.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .social-icons {
+                justify-content: center;
+            }
+        }
+
+        .social-icons a {
+            background: rgba(255,255,255,0.1);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            color: white;
+            font-size: 1.2rem;
+            margin-bottom: 0;
+        }
+
+        .social-icons a:hover {
+            background: var(--primary);
+            transform: translateY(-3px);
+        }
+
+        .footer-brand {
+            text-align: center;
+            padding-top: 1.5rem;
+            border-top: 1px solid var(--gray-800);
+        }
+
+        @media (min-width: 993px) {
+            .footer-brand {
+                max-width: calc(100% - 600px);
+                margin-left: auto;
+                margin-right: auto;
+            }
+        }
+
+        .footer-brand-logo {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid var(--accent);
+            margin-bottom: 0.5rem;
+        }
+
+        .footer-brand-slogan {
+            font-family: 'Playfair Display', serif;
+            font-style: italic;
+            color: var(--accent);
+            margin-bottom: 0.5rem;
+        }
+
+        .footer-copyright {
+            color: var(--gray-500);
+            font-size: 0.85rem;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            border: 3px solid rgba(211,47,47,0.2);
+            border-radius: 50%;
+            border-top-color: var(--primary);
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-container {
+            text-align: center;
+            padding: 2rem;
+        }
+        
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            padding: 0.8rem 1.5rem;
+            border-radius: 50px;
+            box-shadow: var(--shadow-lg);
+            z-index: 3000;
+            display: none;
+            animation: slideUp 0.3s ease;
+            font-family: 'Montserrat', sans-serif;
+            align-items: center;
+            gap: 0.8rem;
+            font-size: 0.9rem;
+            max-width: 90%;
+            text-align: center;
+        }
+        
+        .toast.show {
+            display: flex;
+        }
+        
+        .toast.success { background: var(--success); }
+        .toast.error { background: var(--danger); }
+        .toast.info { background: var(--info); }
+        .toast.warning { background: var(--warning); }
+        
+        @keyframes slideUp {
+            from { transform: translate(-50%, 20px); opacity: 0; }
+            to { transform: translate(-50%, 0); opacity: 1; }
+        }
+        
+        .payment-timer {
+            background: linear-gradient(135deg, var(--warning), #F57C00);
+            color: white;
+            padding: 1rem;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 1rem;
+            font-family: 'Montserrat', sans-serif;
+        }
+        
+        .timer-display {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-top: 5px;
+            font-family: monospace;
+        }
+
         /* Estilo mejorado para el selector de parroquia */
         .parroquia-selector {
             position: relative;
@@ -1459,7 +1656,7 @@
         
         /* Información de pago mejorada con colores pastel */
         .payment-info {
-            background: linear-gradient(135deg, var(--pastel-blue), var(--pastel-green));
+            background: linear-gradient(135deg, var(--pastel-primary), var(--pastel-accent));
             padding: 1.2rem;
             border-radius: var(--radius-md);
             margin-bottom: 1.5rem;
@@ -1478,94 +1675,79 @@
         
         .payment-info h4 i {
             font-size: 1.3rem;
-            color: var(--secondary);
         }
         
         .payment-details {
-            background: white;
+            background: rgba(255,255,255,0.9);
             padding: 1rem;
             border-radius: var(--radius-sm);
-            border: 1px solid var(--gray-200);
+            border: 1px solid var(--primary);
+            backdrop-filter: blur(5px);
         }
         
-        .payment-row {
+        .payment-details p {
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            padding: 0.8rem;
-            margin-bottom: 0.5rem;
+            gap: 0.5rem;
+            margin-bottom: 0.8rem;
+            font-size: 1rem;
+            padding: 0.3rem;
             border-radius: var(--radius-sm);
-            transition: all 0.2s;
+            transition: background 0.2s;
         }
         
-        .payment-row:hover {
-            transform: translateX(5px);
-            box-shadow: var(--shadow-sm);
+        .payment-details p:hover {
+            background: rgba(255,255,255,0.5);
         }
         
-        .payment-row.banco {
-            background: var(--pastel-blue);
+        .payment-details p:last-child {
+            margin-bottom: 0;
         }
         
-        .payment-row.telefono {
-            background: var(--pastel-green);
-        }
-        
-        .payment-row.rif {
-            background: var(--pastel-yellow);
-        }
-        
-        .payment-row i {
+        .payment-details i {
             width: 24px;
             color: var(--primary);
             font-size: 1.1rem;
         }
         
-        .payment-label {
-            flex: 1;
-            margin-left: 0.5rem;
-            font-weight: 500;
-            color: var(--gray-700);
-        }
-        
-        .payment-value {
-            font-weight: 600;
+        .payment-details strong {
             color: var(--secondary);
-            margin-right: 0.5rem;
+            min-width: 45px;
         }
         
-        .payment-value strong {
+        .payment-details .valor {
             color: var(--primary);
+            font-weight: 600;
+            font-family: monospace;
+            font-size: 1.1rem;
+            flex: 1;
         }
         
         .btn-copy {
-            background: none;
+            background: var(--pastel-success);
             border: none;
-            color: var(--gray-600);
-            cursor: pointer;
+            color: var(--success);
             width: 32px;
             height: 32px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
+            cursor: pointer;
             transition: all 0.2s;
+            font-size: 0.9rem;
+            margin-left: 0.5rem;
         }
         
         .btn-copy:hover {
-            background: var(--gray-200);
-            color: var(--primary);
+            background: var(--success);
+            color: white;
             transform: scale(1.1);
         }
         
         .btn-copy.copied {
-            color: var(--success);
-            animation: pulse 0.3s ease;
-        }
-        
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.2); }
+            background: var(--success);
+            color: white;
         }
 
         .delivery-price-display {
@@ -1822,34 +2004,31 @@
                         <i class="fas fa-exclamation-triangle"></i> Al confirmar, el timer se detiene.
                     </div>
                     
-                    <!-- Información de pago mejorada con colores pastel y botones copiar -->
+                    <!-- Información de pago con colores pastel y botones copiar -->
                     <div class="payment-info">
                         <h4><i class="fas fa-credit-card"></i> Pago Móvil</h4>
                         <div class="payment-details">
-                            <div class="payment-row banco">
+                            <p>
                                 <i class="fas fa-university"></i>
-                                <span class="payment-label">Banco:</span>
-                                <span class="payment-value"><strong>Banesco</strong></span>
-                                <button class="btn-copy" onclick="copiarAlPortapapeles('Banesco', this)" title="Copiar banco">
-                                    <i class="fas fa-copy"></i>
-                                </button>
-                            </div>
-                            <div class="payment-row telefono">
+                                <strong>Banco:</strong>
+                                <span class="valor"><strong>Banesco</strong></span>
+                            </p>
+                            <p>
                                 <i class="fas fa-phone-alt"></i>
-                                <span class="payment-label">Teléfono:</span>
-                                <span class="payment-value">0424-1525233</span>
-                                <button class="btn-copy" onclick="copiarAlPortapapeles('04241525233', this)" title="Copiar teléfono">
+                                <strong>Teléfono:</strong>
+                                <span class="valor" id="telefonoPago">0424-1525233</span>
+                                <button class="btn-copy" onclick="copiarAlPortapapeles('0424-1525233', this)" title="Copiar teléfono">
                                     <i class="fas fa-copy"></i>
                                 </button>
-                            </div>
-                            <div class="payment-row rif">
+                            </p>
+                            <p>
                                 <i class="fas fa-id-card"></i>
-                                <span class="payment-label">RIF:</span>
-                                <span class="payment-value">J-501519838</span>
+                                <strong>RIF:</strong>
+                                <span class="valor" id="rifPago">J-501519838</span>
                                 <button class="btn-copy" onclick="copiarAlPortapapeles('J-501519838', this)" title="Copiar RIF">
                                     <i class="fas fa-copy"></i>
                                 </button>
-                            </div>
+                            </p>
                         </div>
                     </div>
                     
@@ -1861,7 +2040,7 @@
                                     <span id="selectedParroquiaText">San Bernardino</span>
                                     <i class="fas fa-chevron-down" id="parroquiaChevron"></i>
                                 </div>
-                                <input type="text" id="parroquiaSearch" class="parroquia-search" placeholder="Buscar parroquia..." style="display: none;" oninput="filtrarParroquias()">
+                                <input type="text" id="parroquiaSearch" class="parroquia-search" placeholder="Buscar parroquia..." style="display: none;">
                                 <select id="parroquiaSelect" class="parroquia-select" size="5" style="display: none;" onchange="seleccionarParroquia(this)">
                                     <option value="Altagracia">Altagracia</option>
                                     <option value="Antímano">Antímano</option>
@@ -1919,19 +2098,19 @@
                         <div style="margin-bottom: 1.5rem;">
                             <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Referencia (6 dígitos):</label>
                             <div style="display: flex; gap: 0.5rem; justify-content: center;">
-                                <input type="text" maxlength="1" class="ref-digit" data-type="delivery" data-index="0" style="width: 50px; height: 50px; text-align: center; padding: 0.5rem; border: 2px solid var(--gray-200); border-radius: var(--radius-sm); font-size: 1.4rem; font-weight: 600;" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this, 'delivery', 0)">
-                                <input type="text" maxlength="1" class="ref-digit" data-type="delivery" data-index="1" style="width: 50px; height: 50px; text-align: center; padding: 0.5rem; border: 2px solid var(--gray-200); border-radius: var(--radius-sm); font-size: 1.4rem; font-weight: 600;" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this, 'delivery', 1)">
-                                <input type="text" maxlength="1" class="ref-digit" data-type="delivery" data-index="2" style="width: 50px; height: 50px; text-align: center; padding: 0.5rem; border: 2px solid var(--gray-200); border-radius: var(--radius-sm); font-size: 1.4rem; font-weight: 600;" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this, 'delivery', 2)">
-                                <input type="text" maxlength="1" class="ref-digit" data-type="delivery" data-index="3" style="width: 50px; height: 50px; text-align: center; padding: 0.5rem; border: 2px solid var(--gray-200); border-radius: var(--radius-sm); font-size: 1.4rem; font-weight: 600;" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this, 'delivery', 3)">
-                                <input type="text" maxlength="1" class="ref-digit" data-type="delivery" data-index="4" style="width: 50px; height: 50px; text-align: center; padding: 0.5rem; border: 2px solid var(--gray-200); border-radius: var(--radius-sm); font-size: 1.4rem; font-weight: 600;" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this, 'delivery', 4)">
-                                <input type="text" maxlength="1" class="ref-digit" data-type="delivery" data-index="5" style="width: 50px; height: 50px; text-align: center; padding: 0.5rem; border: 2px solid var(--gray-200); border-radius: var(--radius-sm); font-size: 1.4rem; font-weight: 600;" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this, 'delivery', 5)">
+                                <input type="text" maxlength="1" class="ref-digit" data-type="delivery" data-index="0" style="width: 50px; height: 50px; text-align: center; padding: 0.5rem; border: 2px solid var(--gray-200); border-radius: var(--radius-sm); font-size: 1.4rem; font-weight: 600;" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this, 'delivery', 0); validarFormularioDelivery()">
+                                <input type="text" maxlength="1" class="ref-digit" data-type="delivery" data-index="1" style="width: 50px; height: 50px; text-align: center; padding: 0.5rem; border: 2px solid var(--gray-200); border-radius: var(--radius-sm); font-size: 1.4rem; font-weight: 600;" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this, 'delivery', 1); validarFormularioDelivery()">
+                                <input type="text" maxlength="1" class="ref-digit" data-type="delivery" data-index="2" style="width: 50px; height: 50px; text-align: center; padding: 0.5rem; border: 2px solid var(--gray-200); border-radius: var(--radius-sm); font-size: 1.4rem; font-weight: 600;" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this, 'delivery', 2); validarFormularioDelivery()">
+                                <input type="text" maxlength="1" class="ref-digit" data-type="delivery" data-index="3" style="width: 50px; height: 50px; text-align: center; padding: 0.5rem; border: 2px solid var(--gray-200); border-radius: var(--radius-sm); font-size: 1.4rem; font-weight: 600;" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this, 'delivery', 3); validarFormularioDelivery()">
+                                <input type="text" maxlength="1" class="ref-digit" data-type="delivery" data-index="4" style="width: 50px; height: 50px; text-align: center; padding: 0.5rem; border: 2px solid var(--gray-200); border-radius: var(--radius-sm); font-size: 1.4rem; font-weight: 600;" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this, 'delivery', 4); validarFormularioDelivery()">
+                                <input type="text" maxlength="1" class="ref-digit" data-type="delivery" data-index="5" style="width: 50px; height: 50px; text-align: center; padding: 0.5rem; border: 2px solid var(--gray-200); border-radius: var(--radius-sm); font-size: 1.4rem; font-weight: 600;" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this, 'delivery', 5); validarFormularioDelivery()">
                             </div>
                         </div>
                         
                         <div style="margin-bottom: 1.5rem;">
                             <label for="comprobante" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Comprobante de pago:</label>
                             <div class="file-input-wrapper">
-                                <input type="file" id="comprobante" accept="image/*" style="display: none;" onchange="actualizarComprobante(this)">
+                                <input type="file" id="comprobante" accept="image/*" style="display: none;" onchange="actualizarComprobante(this); validarFormularioDelivery()">
                                 <label for="comprobante" class="file-input-label" id="comprobanteLabel">
                                     <i class="fas fa-cloud-upload-alt"></i>
                                     <span>Haz clic para seleccionar una imagen</span>
@@ -1974,34 +2153,31 @@
                         <i class="fas fa-exclamation-triangle"></i> Al confirmar, el timer se detiene.
                     </div>
                     
-                    <!-- Información de pago mejorada con colores pastel y botones copiar -->
+                    <!-- Información de pago con colores pastel y botones copiar -->
                     <div class="payment-info">
                         <h4><i class="fas fa-credit-card"></i> Pago Móvil</h4>
                         <div class="payment-details">
-                            <div class="payment-row banco">
+                            <p>
                                 <i class="fas fa-university"></i>
-                                <span class="payment-label">Banco:</span>
-                                <span class="payment-value"><strong>Banesco</strong></span>
-                                <button class="btn-copy" onclick="copiarAlPortapapeles('Banesco', this)" title="Copiar banco">
-                                    <i class="fas fa-copy"></i>
-                                </button>
-                            </div>
-                            <div class="payment-row telefono">
+                                <strong>Banco:</strong>
+                                <span class="valor"><strong>Banesco</strong></span>
+                            </p>
+                            <p>
                                 <i class="fas fa-phone-alt"></i>
-                                <span class="payment-label">Teléfono:</span>
-                                <span class="payment-value">0424-1525233</span>
-                                <button class="btn-copy" onclick="copiarAlPortapapeles('04241525233', this)" title="Copiar teléfono">
+                                <strong>Teléfono:</strong>
+                                <span class="valor" id="telefonoPagoReserva">0424-1525233</span>
+                                <button class="btn-copy" onclick="copiarAlPortapapeles('0424-1525233', this)" title="Copiar teléfono">
                                     <i class="fas fa-copy"></i>
                                 </button>
-                            </div>
-                            <div class="payment-row rif">
+                            </p>
+                            <p>
                                 <i class="fas fa-id-card"></i>
-                                <span class="payment-label">RIF:</span>
-                                <span class="payment-value">J-501519838</span>
+                                <strong>RIF:</strong>
+                                <span class="valor" id="rifPagoReserva">J-501519838</span>
                                 <button class="btn-copy" onclick="copiarAlPortapapeles('J-501519838', this)" title="Copiar RIF">
                                     <i class="fas fa-copy"></i>
                                 </button>
-                            </div>
+                            </p>
                         </div>
                     </div>
                     
@@ -2019,19 +2195,19 @@
                         <div style="margin-bottom: 1.5rem;">
                             <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Referencia (6 dígitos):</label>
                             <div style="display: flex; gap: 0.5rem; justify-content: center;">
-                                <input type="text" maxlength="1" class="ref-digit" data-type="reserva" data-index="0" style="width: 50px; height: 50px; text-align: center; padding: 0.5rem; border: 2px solid var(--gray-200); border-radius: var(--radius-sm); font-size: 1.4rem; font-weight: 600;" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this, 'reserva', 0)">
-                                <input type="text" maxlength="1" class="ref-digit" data-type="reserva" data-index="1" style="width: 50px; height: 50px; text-align: center; padding: 0.5rem; border: 2px solid var(--gray-200); border-radius: var(--radius-sm); font-size: 1.4rem; font-weight: 600;" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this, 'reserva', 1)">
-                                <input type="text" maxlength="1" class="ref-digit" data-type="reserva" data-index="2" style="width: 50px; height: 50px; text-align: center; padding: 0.5rem; border: 2px solid var(--gray-200); border-radius: var(--radius-sm); font-size: 1.4rem; font-weight: 600;" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this, 'reserva', 2)">
-                                <input type="text" maxlength="1" class="ref-digit" data-type="reserva" data-index="3" style="width: 50px; height: 50px; text-align: center; padding: 0.5rem; border: 2px solid var(--gray-200); border-radius: var(--radius-sm); font-size: 1.4rem; font-weight: 600;" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this, 'reserva', 3)">
-                                <input type="text" maxlength="1" class="ref-digit" data-type="reserva" data-index="4" style="width: 50px; height: 50px; text-align: center; padding: 0.5rem; border: 2px solid var(--gray-200); border-radius: var(--radius-sm); font-size: 1.4rem; font-weight: 600;" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this, 'reserva', 4)">
-                                <input type="text" maxlength="1" class="ref-digit" data-type="reserva" data-index="5" style="width: 50px; height: 50px; text-align: center; padding: 0.5rem; border: 2px solid var(--gray-200); border-radius: var(--radius-sm); font-size: 1.4rem; font-weight: 600;" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this, 'reserva', 5)">
+                                <input type="text" maxlength="1" class="ref-digit" data-type="reserva" data-index="0" style="width: 50px; height: 50px; text-align: center; padding: 0.5rem; border: 2px solid var(--gray-200); border-radius: var(--radius-sm); font-size: 1.4rem; font-weight: 600;" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this, 'reserva', 0); validarFormularioReserva()">
+                                <input type="text" maxlength="1" class="ref-digit" data-type="reserva" data-index="1" style="width: 50px; height: 50px; text-align: center; padding: 0.5rem; border: 2px solid var(--gray-200); border-radius: var(--radius-sm); font-size: 1.4rem; font-weight: 600;" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this, 'reserva', 1); validarFormularioReserva()">
+                                <input type="text" maxlength="1" class="ref-digit" data-type="reserva" data-index="2" style="width: 50px; height: 50px; text-align: center; padding: 0.5rem; border: 2px solid var(--gray-200); border-radius: var(--radius-sm); font-size: 1.4rem; font-weight: 600;" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this, 'reserva', 2); validarFormularioReserva()">
+                                <input type="text" maxlength="1" class="ref-digit" data-type="reserva" data-index="3" style="width: 50px; height: 50px; text-align: center; padding: 0.5rem; border: 2px solid var(--gray-200); border-radius: var(--radius-sm); font-size: 1.4rem; font-weight: 600;" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this, 'reserva', 3); validarFormularioReserva()">
+                                <input type="text" maxlength="1" class="ref-digit" data-type="reserva" data-index="4" style="width: 50px; height: 50px; text-align: center; padding: 0.5rem; border: 2px solid var(--gray-200); border-radius: var(--radius-sm); font-size: 1.4rem; font-weight: 600;" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this, 'reserva', 4); validarFormularioReserva()">
+                                <input type="text" maxlength="1" class="ref-digit" data-type="reserva" data-index="5" style="width: 50px; height: 50px; text-align: center; padding: 0.5rem; border: 2px solid var(--gray-200); border-radius: var(--radius-sm); font-size: 1.4rem; font-weight: 600;" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this, 'reserva', 5); validarFormularioReserva()">
                             </div>
                         </div>
                         
                         <div style="margin-bottom: 1.5rem;">
                             <label for="comprobanteReserva" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Comprobante de pago:</label>
                             <div class="file-input-wrapper">
-                                <input type="file" id="comprobanteReserva" accept="image/*" style="display: none;" onchange="actualizarComprobanteReserva(this)">
+                                <input type="file" id="comprobanteReserva" accept="image/*" style="display: none;" onchange="actualizarComprobanteReserva(this); validarFormularioReserva()">
                                 <label for="comprobanteReserva" class="file-input-label" id="comprobanteReservaLabel">
                                     <i class="fas fa-cloud-upload-alt"></i>
                                     <span>Haz clic para seleccionar una imagen</span>
@@ -2103,7 +2279,6 @@
         let menuItems = [];
         let inventario = [];
         let carrito = []; // Array de instancias individuales
-        let carritoAgrupado = []; // Array de grupos para mostrar
         let notificaciones = [];
         let currentCustomizeItem = null;
         let mesaId = null;
@@ -2833,40 +3008,8 @@
         }
 
         // ============================================
-        // FUNCIONES DEL CARRITO - MODIFICADAS PARA AGRUPAR
+        // FUNCIONES DEL CARRITO - MODIFICADO: Agrupación de items
         // ============================================
-        function agruparCarrito() {
-            const grupos = {};
-            
-            carrito.forEach(instancia => {
-                // Crear clave única basada en platilloId y personalización ordenada
-                const personalizacionKey = instancia.personalizacion.sort().join(',');
-                const key = `${instancia.platilloId}_${personalizacionKey}`;
-                
-                if (!grupos[key]) {
-                    grupos[key] = {
-                        platilloId: instancia.platilloId,
-                        nombre: instancia.nombre,
-                        personalizacion: instancia.personalizacion,
-                        imagen: instancia.imagen,
-                        precioUnitarioUSD: instancia.precioUnitarioUSD,
-                        precioUnitarioBs: instancia.precioUnitarioBs,
-                        instancias: [],
-                        expanded: true // Por defecto expandido
-                    };
-                }
-                
-                grupos[key].instancias.push(instancia);
-            });
-            
-            return Object.values(grupos);
-        }
-
-        function toggleGrupo(index) {
-            carritoAgrupado[index].expanded = !carritoAgrupado[index].expanded;
-            actualizarCarritoUI();
-        }
-
         async function agregarAlCarrito(platilloId) {
             const platillo = menuItems.find(p => p.id === platilloId);
             if (!platillo) return;
@@ -2886,13 +3029,14 @@
                 precioUnitarioUSD: platillo.precio,
                 precioUnitarioBs: usdToBs(platillo.precio),
                 subtotal: usdToBs(platillo.precio),
-                selectionType: 'completo',
-                instanceNumber: 1 // Se actualizará al agrupar
+                selectionType: 'completo'
+                // Ya no necesitamos instanceNumber
             };
             
             carrito.push(nuevaInstancia);
             
             guardarCarrito();
+            actualizarCarritoUI(); // Esto ahora usa agrupación
             window.stockCache.invalidate();
             
             // Actualizar stock de TODOS los platillos que comparten ingredientes
@@ -2912,7 +3056,6 @@
                 await actualizarStockPlatillo(pid);
             }
             
-            actualizarCarritoUI();
             mostrarToast('Agregado', 'success');
             
             if (window.innerWidth <= 992) {
@@ -2951,13 +3094,13 @@
                     precioUnitarioUSD: precioFinalUSD,
                     precioUnitarioBs: usdToBs(precioFinalUSD),
                     subtotal: usdToBs(precioFinalUSD),
-                    selectionType: currentCustomizeItem.selectionType,
-                    instanceNumber: 1 // Se actualizará al agrupar
+                    selectionType: currentCustomizeItem.selectionType
                 };
                 carrito.push(nuevaInstancia);
             }
             
             guardarCarrito();
+            actualizarCarritoUI(); // Esto ahora usa agrupación
             window.stockCache.invalidate();
             
             // Actualizar stock de TODOS los platillos que comparten ingredientes
@@ -2979,7 +3122,6 @@
             }
             
             cerrarModalPersonalizacion();
-            actualizarCarritoUI();
             mostrarToast(`${currentCustomizeItem.cantidad} agregado(s)`, 'success');
             
             if (window.innerWidth <= 992) {
@@ -2996,6 +3138,7 @@
             carrito = carrito.filter(i => i.id !== instanciaId);
             
             guardarCarrito();
+            actualizarCarritoUI(); // Esto ahora usa agrupación
             window.stockCache.invalidate();
             
             // Actualizar stock de TODOS los platillos que comparten ingredientes
@@ -3013,12 +3156,38 @@
                 }
                 platillosAActualizar.add(platilloId);
                 
-                platillosAActualizar.forEach(pid => {
+                for (const pid of platillosAActualizar) {
                     actualizarStockPlatillo(pid);
-                });
+                }
             }
+        }
+
+        function agruparItemsPorPlatilloYPersonalizacion() {
+            const grupos = {};
             
-            actualizarCarritoUI();
+            carrito.forEach(instancia => {
+                // Crear una clave única basada en platilloId y personalización ordenada
+                const personalizacionKey = instancia.personalizacion.sort().join('|');
+                const key = `${instancia.platilloId}_${personalizacionKey}`;
+                
+                if (!grupos[key]) {
+                    grupos[key] = {
+                        platilloId: instancia.platilloId,
+                        nombre: instancia.nombre,
+                        imagen: instancia.imagen,
+                        personalizacion: instancia.personalizacion,
+                        items: [],
+                        cantidad: 0,
+                        subtotal: 0
+                    };
+                }
+                
+                grupos[key].items.push(instancia);
+                grupos[key].cantidad++;
+                grupos[key].subtotal += instancia.subtotal;
+            });
+            
+            return Object.values(grupos);
         }
 
         function actualizarCarritoUI() {
@@ -3028,83 +3197,100 @@
             const cartButtons = document.getElementById('cartButtons');
             
             if (carrito.length === 0) {
-                cartItems.innerHTML = '<div class="cart-empty"><i class="fas fa-shopping-basket"></i><p>Tu carrito está vacío</p><small>¡Agrega algunos platillos!</small></div>';
+                cartItems.innerHTML = '<div class="cart-empty"><i class="fas fa-shopping-basket"></i><p>Tu carrito está vacío</p></div>';
                 cartFooter.style.display = 'none';
-                carritoAgrupado = [];
                 return;
             }
             
-            // Agrupar carrito
-            carritoAgrupado = agruparCarrito();
-            
             cartFooter.style.display = 'block';
             
+            const grupos = agruparItemsPorPlatilloYPersonalizacion();
             let totalGeneral = 0;
-            let gruposHtml = '';
             
-            carritoAgrupado.forEach((grupo, index) => {
-                const cantidad = grupo.instancias.length;
-                const subtotalGrupo = grupo.instancias.reduce((sum, inst) => sum + inst.subtotal, 0);
-                totalGeneral += subtotalGrupo;
+            let html = '';
+            
+            grupos.forEach(grupo => {
+                totalGeneral += grupo.subtotal;
                 
-                // Crear texto de personalización si existe
+                // Crear descripción de personalización
                 let personalizacionTexto = '';
                 if (grupo.personalizacion.length > 0) {
                     const ingredientesNombres = grupo.personalizacion.map(p => {
                         const ing = inventario.find(i => i.id === p);
                         return ing?.nombre || p;
                     }).join(', ');
-                    personalizacionTexto = `<div class="cart-item-customization"><i class="fas fa-utensil-spoon"></i> Sin: ${ingredientesNombres}</div>`;
+                    personalizacionTexto = `<div class="personalizacion"><i class="fas fa-utensil-spoon"></i> Sin: ${ingredientesNombres}</div>`;
                 }
                 
-                // Generar HTML para las instancias individuales (solo si el grupo está expandido)
-                let instanciasHtml = '';
-                if (grupo.expanded) {
-                    grupo.instancias.forEach(instancia => {
-                        instanciasHtml += `
-                            <div class="cart-item">
-                                <div class="cart-item-image" style="background-image: url('${instancia.imagen || 'https://via.placeholder.com/50'}')"></div>
-                                <div class="cart-item-details">
-                                    <div class="cart-item-header">
-                                        <span class="instance-number">${instancia.instanceNumber}</span>
-                                        <span class="cart-item-name">${instancia.nombre}</span>
-                                    </div>
-                                    ${personalizacionTexto}
-                                    <div class="cart-item-price-info">
-                                        <span class="cart-item-unit-price">${formatBs(instancia.precioUnitarioBs)} c/u</span>
-                                        <span class="cart-item-subtotal">${formatBs(instancia.subtotal)}</span>
-                                    </div>
+                // Si hay más de un item con la misma personalización, mostrar agrupado
+                if (grupo.cantidad > 1) {
+                    html += `
+                        <div class="cart-item-group">
+                            <div class="cart-item-group-header">
+                                <div class="platillo-nombre">
+                                    <i class="fas fa-utensils"></i>
+                                    ${grupo.nombre}
                                 </div>
-                                <div class="cart-item-actions">
-                                    <button class="btn-remove-item" onclick="eliminarInstancia('${instancia.id}')">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
+                                <div class="platillo-cantidad-total">
+                                    ${grupo.cantidad} unidad(es)
                                 </div>
+                            </div>
+                            <div class="cart-item-variants">
+                    `;
+                    
+                    // Mostrar cada item individual dentro del grupo
+                    grupo.items.forEach(item => {
+                        html += `
+                            <div class="cart-item-variant">
+                                <div class="variant-info">
+                                    <span class="cantidad">1x</span>
+                                    ${grupo.personalizacion.length > 0 ? `
+                                        <div class="personalizacion">
+                                            <i class="fas fa-utensil-spoon"></i> Sin: ${ingredientesNombres}
+                                        </div>
+                                    ` : ''}
+                                </div>
+                                <div class="variant-precio">
+                                    ${formatBs(item.subtotal)}
+                                </div>
+                                <button class="btn-remove-variant" onclick="eliminarInstancia('${item.id}')" title="Eliminar">
+                                    <i class="fas fa-times"></i>
+                                </button>
                             </div>
                         `;
                     });
+                    
+                    html += `
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    // Mostrar item individual normalmente
+                    const item = grupo.items[0];
+                    html += `
+                        <div class="cart-item">
+                            <div class="cart-item-image" style="background-image: url('${item.imagen || 'https://via.placeholder.com/50'}')"></div>
+                            <div class="cart-item-details">
+                                <div class="cart-item-header">
+                                    <span class="cart-item-name">${item.nombre}</span>
+                                </div>
+                                ${personalizacionTexto}
+                                <div class="cart-item-price-info">
+                                    <span class="cart-item-unit-price">${formatBs(item.precioUnitarioBs)} c/u</span>
+                                    <span class="cart-item-subtotal">${formatBs(item.subtotal)}</span>
+                                </div>
+                            </div>
+                            <div class="cart-item-actions">
+                                <button class="btn-remove-item" onclick="eliminarInstancia('${item.id}')">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `;
                 }
-                
-                gruposHtml += `
-                    <div class="cart-group">
-                        <div class="cart-group-header" onclick="toggleGrupo(${index})">
-                            <div class="group-info">
-                                <span class="group-count">${cantidad}</span>
-                                <span class="cart-item-name">${grupo.nombre}</span>
-                            </div>
-                            <div>
-                                <span style="margin-right: 0.5rem; color: var(--primary); font-weight: 600;">${formatBs(subtotalGrupo)}</span>
-                                <i class="fas fa-chevron-right ${grupo.expanded ? 'expanded' : ''}"></i>
-                            </div>
-                        </div>
-                        <div class="cart-group-items ${grupo.expanded ? 'expanded' : ''}">
-                            ${instanciasHtml}
-                        </div>
-                    </div>
-                `;
             });
             
-            cartItems.innerHTML = gruposHtml;
+            cartItems.innerHTML = html;
             cartTotal.textContent = formatBs(totalGeneral);
             
             cartButtons.innerHTML = '';
@@ -3138,14 +3324,6 @@
                     if (Date.now() - data.timestamp < 3600000) {
                         if (confirm('¿Continuar con pedido anterior?')) {
                             carrito = data.items;
-                            // Reasignar instance numbers después de restaurar
-                            const platillosUnicos = [...new Set(carrito.map(i => i.platilloId))];
-                            platillosUnicos.forEach(pid => {
-                                let contador = 1;
-                                carrito.filter(i => i.platilloId === pid).forEach(inst => {
-                                    inst.instanceNumber = contador++;
-                                });
-                            });
                         }
                     }
                 } catch (e) {}
@@ -3225,8 +3403,8 @@
                 precioUnitarioUSD: instancia.precioUnitarioUSD,
                 precioEnBs: instancia.precioUnitarioBs,
                 subtotal: instancia.subtotal,
-                tasaCambioAplicada: tasaActual,
-                instanceNumber: instancia.instanceNumber
+                tasaCambioAplicada: tasaActual
+                // Ya no necesitamos instanceNumber
             }));
             
             return {
@@ -3245,16 +3423,38 @@
         function abrirConfirmacionMesa() {
             const summary = document.getElementById('mesaOrderSummary');
             let total = 0;
-            summary.innerHTML = carrito.map(instancia => {
-                total += instancia.subtotal;
-                return `<div style="display: flex; justify-content: space-between; margin-bottom: 0.3rem;">
-                    <span>${instancia.nombre} ${instancia.personalizacion.length ? '(Personalizado)' : ''} #${instancia.instanceNumber}</span>
-                    <span style="color: var(--primary);">${formatBs(instancia.subtotal)}</span>
-                </div>`;
-            }).join('');
-            summary.innerHTML += `<div style="display: flex; justify-content: space-between; margin-top: 0.5rem; font-weight: 700;">
+            
+            const grupos = agruparItemsPorPlatilloYPersonalizacion();
+            
+            let html = '';
+            grupos.forEach(grupo => {
+                total += grupo.subtotal;
+                
+                let personalizacionTexto = '';
+                if (grupo.personalizacion.length > 0) {
+                    const ingredientesNombres = grupo.personalizacion.map(p => {
+                        const ing = inventario.find(i => i.id === p);
+                        return ing?.nombre || p;
+                    }).join(', ');
+                    personalizacionTexto = `<small style="display: block; color: var(--gray-600);">Sin: ${ingredientesNombres}</small>`;
+                }
+                
+                html += `
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+                        <div>
+                            <span>${grupo.nombre} x${grupo.cantidad}</span>
+                            ${personalizacionTexto}
+                        </div>
+                        <span style="color: var(--primary);">${formatBs(grupo.subtotal)}</span>
+                    </div>
+                `;
+            });
+            
+            summary.innerHTML = html;
+            summary.innerHTML += `<div style="display: flex; justify-content: space-between; margin-top: 1rem; padding-top: 0.5rem; border-top: 2px solid var(--gray-300); font-weight: 700;">
                 <span>Total:</span><span>${formatBs(total)}</span>
             </div>`;
+            
             document.getElementById('confirmMesaModal').classList.add('active');
         }
 
@@ -3267,6 +3467,7 @@
             if (resultado.success) {
                 carrito = [];
                 guardarCarrito();
+                actualizarCarritoUI();
                 document.getElementById('confirmMesaModal').classList.remove('active');
                 window.stockCache.invalidate();
                 
@@ -3275,7 +3476,6 @@
                     await actualizarStockPlatillo(item.id);
                 }
                 
-                actualizarCarritoUI();
                 mostrarToast('✅ Pedido enviado a cocina', 'success');
             } else {
                 mostrarToast('❌ Error: ' + resultado.error, 'error');
@@ -3337,8 +3537,7 @@
             if (input.value.length === 1 && index < 5) {
                 document.querySelector(`.ref-digit[data-type="${type}"][data-index="${index + 1}"]`).focus();
             }
-            if (type === 'delivery') validarFormularioDelivery();
-            else validarFormularioReserva();
+            // La validación se llama desde el evento oninput de cada campo
         }
 
         function actualizarComprobante(input) {
@@ -3387,13 +3586,11 @@
 
         function actualizarTotalDelivery() {
             const select = document.getElementById('parroquiaSelect');
-            if (select) {
-                const precioUSD = preciosPorParroquia[select.value] || 2;
-                const subtotalUSD = carrito.reduce((sum, item) => sum + item.precioUnitarioUSD, 0);
-                const totalUSD = subtotalUSD + precioUSD;
-                document.getElementById('deliveryTotal').textContent = formatBs(usdToBs(totalUSD));
-                document.getElementById('deliveryPriceDisplay').textContent = `Costo de envío: ${formatBs(usdToBs(precioUSD))}`;
-            }
+            const precioUSD = preciosPorParroquia[select.value] || 2;
+            const subtotalUSD = carrito.reduce((sum, item) => sum + item.precioUnitarioUSD, 0);
+            const totalUSD = subtotalUSD + precioUSD;
+            document.getElementById('deliveryTotal').textContent = formatBs(usdToBs(totalUSD));
+            document.getElementById('deliveryPriceDisplay').textContent = `Costo de envío: ${formatBs(usdToBs(precioUSD))}`;
         }
 
         function validarFormularioDelivery() {
@@ -3407,10 +3604,9 @@
             const referenciaValida = window.validarReferencia(referencia);
             const direccionValida = direccion.length >= 20;
             
-            const botonConfirmar = document.getElementById('confirmDelivery');
-            if (botonConfirmar) {
-                botonConfirmar.disabled = !(parroquia && direccionValida && telefonoValido && referenciaValida && comprobante);
-            }
+            console.log('Validando delivery:', { parroquia, direccionValida, telefonoValido, referenciaValida, comprobante });
+            
+            document.getElementById('confirmDelivery').disabled = !(parroquia && direccionValida && telefonoValido && referenciaValida && comprobante);
         }
 
         function getReferencia(type) {
@@ -3449,6 +3645,7 @@
             if (resultado.success) {
                 carrito = [];
                 guardarCarrito();
+                actualizarCarritoUI();
                 document.getElementById('deliveryModal').classList.remove('active');
                 window.stockCache.invalidate();
                 
@@ -3457,7 +3654,6 @@
                     await actualizarStockPlatillo(item.id);
                 }
                 
-                actualizarCarritoUI();
                 mostrarToast('✅ Pedido confirmado', 'success');
             } else {
                 mostrarToast('❌ Error: ' + resultado.error, 'error');
@@ -3473,10 +3669,9 @@
             
             const referenciaValida = window.validarReferencia(referencia);
             
-            const botonConfirmar = document.getElementById('confirmReserva');
-            if (botonConfirmar) {
-                botonConfirmar.disabled = !(fecha && nombre && referenciaValida && comprobante);
-            }
+            console.log('Validando reserva:', { fecha, nombre, referenciaValida, comprobante });
+            
+            document.getElementById('confirmReserva').disabled = !(fecha && nombre && referenciaValida && comprobante);
         }
 
         async function confirmarPedidoReserva() {
@@ -3502,6 +3697,7 @@
             if (resultado.success) {
                 carrito = [];
                 guardarCarrito();
+                actualizarCarritoUI();
                 document.getElementById('reservaModal').classList.remove('active');
                 window.stockCache.invalidate();
                 
@@ -3510,7 +3706,6 @@
                     await actualizarStockPlatillo(item.id);
                 }
                 
-                actualizarCarritoUI();
                 mostrarToast('✅ Reserva confirmada', 'success');
             } else {
                 mostrarToast('❌ Error: ' + resultado.error, 'error');
@@ -3523,18 +3718,20 @@
         // ============================================
         function copiarAlPortapapeles(texto, boton) {
             navigator.clipboard.writeText(texto).then(() => {
-                // Mostrar feedback visual
-                boton.classList.add('copied');
+                // Cambiar temporalmente el icono a check
                 const icono = boton.querySelector('i');
+                const claseOriginal = icono.className;
                 icono.className = 'fas fa-check';
+                boton.classList.add('copied');
                 
                 setTimeout(() => {
+                    icono.className = claseOriginal;
                     boton.classList.remove('copied');
-                    icono.className = 'fas fa-copy';
                 }, 1500);
                 
                 mostrarToast('✅ Copiado al portapapeles', 'success');
-            }).catch(() => {
+            }).catch(err => {
+                console.error('Error al copiar:', err);
                 mostrarToast('❌ Error al copiar', 'error');
             });
         }
