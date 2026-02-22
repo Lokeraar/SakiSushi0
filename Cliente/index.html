@@ -310,7 +310,7 @@
             background: white;
         }
 
-        /* Category Sidebar - AJUSTADO más abajo */
+        /* Category Sidebar */
         .category-sidebar {
             width: 280px;
             background: white;
@@ -478,7 +478,7 @@
             font-weight: bold;
         }
 
-        /* Cart Sidebar - AJUSTADO más abajo */
+        /* Cart Sidebar */
         .cart-sidebar {
             width: 320px;
             background: white;
@@ -1309,6 +1309,7 @@
             border-radius: 0 0 var(--radius-lg) var(--radius-lg);
         }
 
+        /* Footer - MODIFICADO para escritorio */
         .footer {
             background: var(--secondary);
             color: white;
@@ -1338,6 +1339,23 @@
             grid-template-columns: repeat(3, 1fr);
             gap: 2rem;
             margin-bottom: 2rem;
+        }
+
+        @media (min-width: 993px) {
+            .footer-content {
+                max-width: calc(100% - 600px);
+                margin-left: auto;
+                margin-right: auto;
+                padding-left: 1rem;
+                padding-right: 1rem;
+            }
+        }
+
+        @media (max-width: 992px) {
+            .footer-content {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 1.5rem;
+            }
         }
 
         @media (max-width: 768px) {
@@ -1458,6 +1476,14 @@
             text-align: center;
             padding-top: 1.5rem;
             border-top: 1px solid var(--gray-800);
+        }
+
+        @media (min-width: 993px) {
+            .footer-brand {
+                max-width: calc(100% - 600px);
+                margin-left: auto;
+                margin-right: auto;
+            }
         }
 
         .footer-brand-logo {
@@ -2090,7 +2116,6 @@
             'ejecutivo': 'fa-briefcase'
         };
 
-        // MODIFICADO: Eliminadas subcategorías de Entradas
         const categoriasPredefinidas = [
             { id: 'todos', nombre: 'Todos los platillos' },
             { id: 'entradas', nombre: 'Entradas' },
