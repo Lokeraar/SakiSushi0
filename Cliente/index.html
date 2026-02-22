@@ -50,6 +50,13 @@
             --radius-sm: 8px;
             --radius-md: 12px;
             --radius-lg: 16px;
+            
+            /* Tonos pasteles para el modal de pago */
+            --pastel-primary: #ffb3b3;
+            --pastel-secondary: #ffe0b2;
+            --pastel-accent: #fff3cd;
+            --pastel-success: #c8e6c9;
+            --pastel-info: #b3e5fc;
         }
 
         body {
@@ -634,20 +641,6 @@
             flex-wrap: wrap;
         }
 
-        .instance-number {
-            background: var(--primary);
-            color: white;
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.7rem;
-            font-weight: 700;
-            flex-shrink: 0;
-        }
-
         .cart-item-name {
             font-weight: 600;
             color: var(--secondary);
@@ -659,7 +652,16 @@
             font-size: 0.75rem;
             color: var(--gray-600);
             margin-bottom: 0.25rem;
-            padding-left: 1.5rem;
+        }
+
+        .cart-item-quantity {
+            background: var(--primary);
+            color: white;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 0.5rem;
         }
 
         .cart-item-price-info {
@@ -667,8 +669,8 @@
             align-items: center;
             gap: 0.5rem;
             font-size: 0.85rem;
-            padding-left: 1.5rem;
             flex-wrap: wrap;
+            margin-top: 0.3rem;
         }
 
         .cart-item-unit-price {
@@ -1653,10 +1655,10 @@
             border-bottom: none;
         }
         
-        /* Información de pago mejorada */
+        /* Información de pago mejorada - Estilo pastel */
         .payment-info {
-            background: linear-gradient(135deg, var(--gray-100), white);
-            padding: 1.2rem;
+            background: linear-gradient(135deg, var(--pastel-primary), var(--pastel-accent));
+            padding: 1.5rem;
             border-radius: var(--radius-md);
             margin-bottom: 1.5rem;
             border: 2px solid var(--primary);
@@ -1664,53 +1666,90 @@
         }
         
         .payment-info h4 {
-            color: var(--primary);
-            margin-bottom: 1rem;
-            font-size: 1.2rem;
+            color: var(--secondary);
+            margin-bottom: 1.2rem;
+            font-size: 1.3rem;
             display: flex;
             align-items: center;
             gap: 0.5rem;
         }
         
         .payment-info h4 i {
-            font-size: 1.3rem;
+            font-size: 1.4rem;
+            color: var(--primary);
         }
         
         .payment-details {
-            background: white;
-            padding: 1rem;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 1.2rem;
             border-radius: var(--radius-sm);
-            border: 1px solid var(--gray-200);
+            border: 1px solid var(--pastel-secondary);
         }
         
-        .payment-details p {
+        .payment-row {
             display: flex;
             align-items: center;
-            gap: 0.5rem;
-            margin-bottom: 0.5rem;
-            font-size: 1rem;
+            justify-content: space-between;
+            margin-bottom: 0.8rem;
+            padding: 0.5rem;
+            background: white;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--pastel-secondary);
         }
         
-        .payment-details p:last-child {
+        .payment-row:last-child {
             margin-bottom: 0;
         }
         
-        .payment-details i {
-            width: 24px;
-            color: var(--primary);
-            font-size: 1.1rem;
-        }
-        
-        .payment-details strong {
+        .payment-label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 600;
             color: var(--secondary);
-            min-width: 40px;
         }
         
-        .payment-details span {
+        .payment-label i {
+            color: var(--primary);
+            width: 20px;
+        }
+        
+        .payment-value {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .payment-value strong {
+            color: var(--secondary);
+            font-size: 1rem;
+        }
+        
+        .payment-value span {
             color: var(--primary);
             font-weight: 600;
             font-family: monospace;
-            font-size: 1.1rem;
+            font-size: 1rem;
+        }
+        
+        .btn-copy {
+            background: var(--pastel-success);
+            border: 1px solid var(--success);
+            color: var(--success);
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-copy:hover {
+            background: var(--success);
+            color: white;
+            transform: scale(1.1);
         }
 
         .delivery-price-display {
@@ -1950,7 +1989,7 @@
             </div>
         </div>
 
-        <!-- Delivery Modal -->
+        <!-- Delivery Modal - MEJORADO -->
         <div class="modal-overlay" id="deliveryModal">
             <div class="modal-container">
                 <div class="modal-header">
@@ -1967,31 +2006,49 @@
                         <i class="fas fa-exclamation-triangle"></i> Al confirmar, el timer se detiene.
                     </div>
                     
-                    <!-- Información de pago mejorada -->
+                    <!-- Información de pago MEJORADA - Estilo pastel -->
                     <div class="payment-info">
                         <h4><i class="fas fa-credit-card"></i> Pago Móvil</h4>
                         <div class="payment-details">
-                            <p>
-                                <i class="fas fa-university"></i>
-                                <strong>Banco:</strong>
-                                <span>Banesco</span>
-                            </p>
-                            <p>
-                                <i class="fas fa-phone-alt"></i>
-                                <strong>Teléfono:</strong>
-                                <span>0424-1525233</span>
-                            </p>
-                            <p>
-                                <i class="fas fa-id-card"></i>
-                                <strong>RIF:</strong>
-                                <span>J-501519838</span>
-                            </p>
+                            <div class="payment-row">
+                                <div class="payment-label">
+                                    <i class="fas fa-university"></i>
+                                    <span>Banco</span>
+                                </div>
+                                <div class="payment-value">
+                                    <strong>Banesco</strong>
+                                </div>
+                            </div>
+                            <div class="payment-row">
+                                <div class="payment-label">
+                                    <i class="fas fa-phone-alt"></i>
+                                    <span>Teléfono</span>
+                                </div>
+                                <div class="payment-value">
+                                    <span>0424-1525233</span>
+                                    <button class="btn-copy" onclick="copiarAlPortapapeles('0424-1525233')" title="Copiar teléfono">
+                                        <i class="fas fa-copy"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="payment-row">
+                                <div class="payment-label">
+                                    <i class="fas fa-id-card"></i>
+                                    <span>RIF</span>
+                                </div>
+                                <div class="payment-value">
+                                    <span>J-501519838</span>
+                                    <button class="btn-copy" onclick="copiarAlPortapapeles('J-501519838')" title="Copiar RIF">
+                                        <i class="fas fa-copy"></i>
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     
                     <form id="deliveryForm">
                         <div style="margin-bottom: 1.5rem;">
-                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Parroquia:</label>
+                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Parroquia <span style="color: var(--danger);">*</span></label>
                             <div class="parroquia-selector">
                                 <div class="selected-parroquia" onclick="toggleParroquiaSelect()">
                                     <span id="selectedParroquiaText">San Bernardino</span>
@@ -2040,7 +2097,7 @@
                         </div>
                         
                         <div style="margin-bottom: 1.5rem;">
-                            <label for="direccion" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Dirección completa:</label>
+                            <label for="direccion" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Dirección completa <span style="color: var(--danger);">*</span></label>
                             <textarea id="direccion" required minlength="20" placeholder="Av., Calle, Edificio, Piso, Apartamento" style="width: 100%; padding: 0.8rem; border: 2px solid var(--gray-200); border-radius: var(--radius-sm); font-size: 1rem; transition: border 0.2s;" rows="3" oninput="actualizarContadorDireccion()"></textarea>
                             <div style="display: flex; justify-content: flex-end; margin-top: 0.3rem;">
                                 <small id="direccionCounter" style="color: var(--gray-600); font-weight: 500;">0/20 caracteres</small>
@@ -2048,24 +2105,24 @@
                         </div>
                         
                         <div style="margin-bottom: 1.5rem;">
-                            <label for="telefono" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Teléfono (máx 14 dígitos):</label>
-                            <input type="tel" id="telefono" required pattern="[0-9]{11,14}" maxlength="14" placeholder="04121234567" style="width: 100%; padding: 0.8rem; border: 2px solid var(--gray-200); border-radius: var(--radius-sm); font-size: 1rem;" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+                            <label for="telefono" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Teléfono <span style="color: var(--danger);">*</span> (11-14 dígitos)</label>
+                            <input type="tel" id="telefono" required pattern="[0-9]{11,14}" maxlength="14" placeholder="04121234567" style="width: 100%; padding: 0.8rem; border: 2px solid var(--gray-200); border-radius: var(--radius-sm); font-size: 1rem;" oninput="this.value=this.value.replace(/[^0-9]/g,''); validarFormularioDelivery()">
                         </div>
                         
                         <div style="margin-bottom: 1.5rem;">
-                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Referencia (6 dígitos):</label>
+                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Referencia <span style="color: var(--danger);">*</span> (6 dígitos)</label>
                             <div style="display: flex; gap: 0.5rem; justify-content: center;">
-                                <input type="text" maxlength="1" class="ref-digit" data-type="delivery" data-index="0" style="width: 50px; height: 50px; text-align: center; padding: 0.5rem; border: 2px solid var(--gray-200); border-radius: var(--radius-sm); font-size: 1.4rem; font-weight: 600;" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this, 'delivery', 0)">
-                                <input type="text" maxlength="1" class="ref-digit" data-type="delivery" data-index="1" style="width: 50px; height: 50px; text-align: center; padding: 0.5rem; border: 2px solid var(--gray-200); border-radius: var(--radius-sm); font-size: 1.4rem; font-weight: 600;" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this, 'delivery', 1)">
-                                <input type="text" maxlength="1" class="ref-digit" data-type="delivery" data-index="2" style="width: 50px; height: 50px; text-align: center; padding: 0.5rem; border: 2px solid var(--gray-200); border-radius: var(--radius-sm); font-size: 1.4rem; font-weight: 600;" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this, 'delivery', 2)">
-                                <input type="text" maxlength="1" class="ref-digit" data-type="delivery" data-index="3" style="width: 50px; height: 50px; text-align: center; padding: 0.5rem; border: 2px solid var(--gray-200); border-radius: var(--radius-sm); font-size: 1.4rem; font-weight: 600;" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this, 'delivery', 3)">
-                                <input type="text" maxlength="1" class="ref-digit" data-type="delivery" data-index="4" style="width: 50px; height: 50px; text-align: center; padding: 0.5rem; border: 2px solid var(--gray-200); border-radius: var(--radius-sm); font-size: 1.4rem; font-weight: 600;" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this, 'delivery', 4)">
-                                <input type="text" maxlength="1" class="ref-digit" data-type="delivery" data-index="5" style="width: 50px; height: 50px; text-align: center; padding: 0.5rem; border: 2px solid var(--gray-200); border-radius: var(--radius-sm); font-size: 1.4rem; font-weight: 600;" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this, 'delivery', 5)">
+                                <input type="text" maxlength="1" class="ref-digit" data-type="delivery" data-index="0" style="width: 50px; height: 50px; text-align: center; padding: 0.5rem; border: 2px solid var(--gray-200); border-radius: var(--radius-sm); font-size: 1.4rem; font-weight: 600;" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this, 'delivery', 0)">
+                                <input type="text" maxlength="1" class="ref-digit" data-type="delivery" data-index="1" style="width: 50px; height: 50px; text-align: center; padding: 0.5rem; border: 2px solid var(--gray-200); border-radius: var(--radius-sm); font-size: 1.4rem; font-weight: 600;" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this, 'delivery', 1)">
+                                <input type="text" maxlength="1" class="ref-digit" data-type="delivery" data-index="2" style="width: 50px; height: 50px; text-align: center; padding: 0.5rem; border: 2px solid var(--gray-200); border-radius: var(--radius-sm); font-size: 1.4rem; font-weight: 600;" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this, 'delivery', 2)">
+                                <input type="text" maxlength="1" class="ref-digit" data-type="delivery" data-index="3" style="width: 50px; height: 50px; text-align: center; padding: 0.5rem; border: 2px solid var(--gray-200); border-radius: var(--radius-sm); font-size: 1.4rem; font-weight: 600;" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this, 'delivery', 3)">
+                                <input type="text" maxlength="1" class="ref-digit" data-type="delivery" data-index="4" style="width: 50px; height: 50px; text-align: center; padding: 0.5rem; border: 2px solid var(--gray-200); border-radius: var(--radius-sm); font-size: 1.4rem; font-weight: 600;" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this, 'delivery', 4)">
+                                <input type="text" maxlength="1" class="ref-digit" data-type="delivery" data-index="5" style="width: 50px; height: 50px; text-align: center; padding: 0.5rem; border: 2px solid var(--gray-200); border-radius: var(--radius-sm); font-size: 1.4rem; font-weight: 600;" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this, 'delivery', 5)">
                             </div>
                         </div>
                         
                         <div style="margin-bottom: 1.5rem;">
-                            <label for="comprobante" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Comprobante de pago:</label>
+                            <label for="comprobante" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Comprobante de pago <span style="color: var(--danger);">*</span></label>
                             <div class="file-input-wrapper">
                                 <input type="file" id="comprobante" accept="image/*" style="display: none;" onchange="actualizarComprobante(this)">
                                 <label for="comprobante" class="file-input-label" id="comprobanteLabel">
@@ -2093,7 +2150,7 @@
             </div>
         </div>
 
-        <!-- Reserva Modal -->
+        <!-- Reserva Modal - MEJORADO -->
         <div class="modal-overlay" id="reservaModal">
             <div class="modal-container">
                 <div class="modal-header">
@@ -2110,53 +2167,71 @@
                         <i class="fas fa-exclamation-triangle"></i> Al confirmar, el timer se detiene.
                     </div>
                     
-                    <!-- Información de pago mejorada -->
+                    <!-- Información de pago MEJORADA - Estilo pastel -->
                     <div class="payment-info">
                         <h4><i class="fas fa-credit-card"></i> Pago Móvil</h4>
                         <div class="payment-details">
-                            <p>
-                                <i class="fas fa-university"></i>
-                                <strong>Banco:</strong>
-                                <span>Banesco</span>
-                            </p>
-                            <p>
-                                <i class="fas fa-phone-alt"></i>
-                                <strong>Teléfono:</strong>
-                                <span>0424-1525233</span>
-                            </p>
-                            <p>
-                                <i class="fas fa-id-card"></i>
-                                <strong>RIF:</strong>
-                                <span>J-501519838</span>
-                            </p>
+                            <div class="payment-row">
+                                <div class="payment-label">
+                                    <i class="fas fa-university"></i>
+                                    <span>Banco</span>
+                                </div>
+                                <div class="payment-value">
+                                    <strong>Banesco</strong>
+                                </div>
+                            </div>
+                            <div class="payment-row">
+                                <div class="payment-label">
+                                    <i class="fas fa-phone-alt"></i>
+                                    <span>Teléfono</span>
+                                </div>
+                                <div class="payment-value">
+                                    <span>0424-1525233</span>
+                                    <button class="btn-copy" onclick="copiarAlPortapapeles('0424-1525233')" title="Copiar teléfono">
+                                        <i class="fas fa-copy"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="payment-row">
+                                <div class="payment-label">
+                                    <i class="fas fa-id-card"></i>
+                                    <span>RIF</span>
+                                </div>
+                                <div class="payment-value">
+                                    <span>J-501519838</span>
+                                    <button class="btn-copy" onclick="copiarAlPortapapeles('J-501519838')" title="Copiar RIF">
+                                        <i class="fas fa-copy"></i>
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     
                     <form id="reservaForm">
                         <div style="margin-bottom: 1.5rem;">
-                            <label for="fechaReserva" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Fecha de la reserva:</label>
-                            <input type="date" id="fechaReserva" required min="" style="width: 100%; padding: 0.8rem; border: 2px solid var(--gray-200); border-radius: var(--radius-sm); font-size: 1rem;">
+                            <label for="fechaReserva" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Fecha de la reserva <span style="color: var(--danger);">*</span></label>
+                            <input type="date" id="fechaReserva" required min="" style="width: 100%; padding: 0.8rem; border: 2px solid var(--gray-200); border-radius: var(--radius-sm); font-size: 1rem;" onchange="validarFormularioReserva()">
                         </div>
                         
                         <div style="margin-bottom: 1.5rem;">
-                            <label for="nombreReserva" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Nombre completo:</label>
-                            <input type="text" id="nombreReserva" required placeholder="Tu nombre" style="width: 100%; padding: 0.8rem; border: 2px solid var(--gray-200); border-radius: var(--radius-sm); font-size: 1rem;">
+                            <label for="nombreReserva" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Nombre completo <span style="color: var(--danger);">*</span></label>
+                            <input type="text" id="nombreReserva" required placeholder="Tu nombre" style="width: 100%; padding: 0.8rem; border: 2px solid var(--gray-200); border-radius: var(--radius-sm); font-size: 1rem;" oninput="validarFormularioReserva()">
                         </div>
                         
                         <div style="margin-bottom: 1.5rem;">
-                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Referencia (6 dígitos):</label>
+                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Referencia <span style="color: var(--danger);">*</span> (6 dígitos)</label>
                             <div style="display: flex; gap: 0.5rem; justify-content: center;">
-                                <input type="text" maxlength="1" class="ref-digit" data-type="reserva" data-index="0" style="width: 50px; height: 50px; text-align: center; padding: 0.5rem; border: 2px solid var(--gray-200); border-radius: var(--radius-sm); font-size: 1.4rem; font-weight: 600;" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this, 'reserva', 0)">
-                                <input type="text" maxlength="1" class="ref-digit" data-type="reserva" data-index="1" style="width: 50px; height: 50px; text-align: center; padding: 0.5rem; border: 2px solid var(--gray-200); border-radius: var(--radius-sm); font-size: 1.4rem; font-weight: 600;" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this, 'reserva', 1)">
-                                <input type="text" maxlength="1" class="ref-digit" data-type="reserva" data-index="2" style="width: 50px; height: 50px; text-align: center; padding: 0.5rem; border: 2px solid var(--gray-200); border-radius: var(--radius-sm); font-size: 1.4rem; font-weight: 600;" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this, 'reserva', 2)">
-                                <input type="text" maxlength="1" class="ref-digit" data-type="reserva" data-index="3" style="width: 50px; height: 50px; text-align: center; padding: 0.5rem; border: 2px solid var(--gray-200); border-radius: var(--radius-sm); font-size: 1.4rem; font-weight: 600;" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this, 'reserva', 3)">
-                                <input type="text" maxlength="1" class="ref-digit" data-type="reserva" data-index="4" style="width: 50px; height: 50px; text-align: center; padding: 0.5rem; border: 2px solid var(--gray-200); border-radius: var(--radius-sm); font-size: 1.4rem; font-weight: 600;" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this, 'reserva', 4)">
-                                <input type="text" maxlength="1" class="ref-digit" data-type="reserva" data-index="5" style="width: 50px; height: 50px; text-align: center; padding: 0.5rem; border: 2px solid var(--gray-200); border-radius: var(--radius-sm); font-size: 1.4rem; font-weight: 600;" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this, 'reserva', 5)">
+                                <input type="text" maxlength="1" class="ref-digit" data-type="reserva" data-index="0" style="width: 50px; height: 50px; text-align: center; padding: 0.5rem; border: 2px solid var(--gray-200); border-radius: var(--radius-sm); font-size: 1.4rem; font-weight: 600;" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this, 'reserva', 0)">
+                                <input type="text" maxlength="1" class="ref-digit" data-type="reserva" data-index="1" style="width: 50px; height: 50px; text-align: center; padding: 0.5rem; border: 2px solid var(--gray-200); border-radius: var(--radius-sm); font-size: 1.4rem; font-weight: 600;" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this, 'reserva', 1)">
+                                <input type="text" maxlength="1" class="ref-digit" data-type="reserva" data-index="2" style="width: 50px; height: 50px; text-align: center; padding: 0.5rem; border: 2px solid var(--gray-200); border-radius: var(--radius-sm); font-size: 1.4rem; font-weight: 600;" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this, 'reserva', 2)">
+                                <input type="text" maxlength="1" class="ref-digit" data-type="reserva" data-index="3" style="width: 50px; height: 50px; text-align: center; padding: 0.5rem; border: 2px solid var(--gray-200); border-radius: var(--radius-sm); font-size: 1.4rem; font-weight: 600;" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this, 'reserva', 3)">
+                                <input type="text" maxlength="1" class="ref-digit" data-type="reserva" data-index="4" style="width: 50px; height: 50px; text-align: center; padding: 0.5rem; border: 2px solid var(--gray-200); border-radius: var(--radius-sm); font-size: 1.4rem; font-weight: 600;" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this, 'reserva', 4)">
+                                <input type="text" maxlength="1" class="ref-digit" data-type="reserva" data-index="5" style="width: 50px; height: 50px; text-align: center; padding: 0.5rem; border: 2px solid var(--gray-200); border-radius: var(--radius-sm); font-size: 1.4rem; font-weight: 600;" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this, 'reserva', 5)">
                             </div>
                         </div>
                         
                         <div style="margin-bottom: 1.5rem;">
-                            <label for="comprobanteReserva" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Comprobante de pago:</label>
+                            <label for="comprobanteReserva" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Comprobante de pago <span style="color: var(--danger);">*</span></label>
                             <div class="file-input-wrapper">
                                 <input type="file" id="comprobanteReserva" accept="image/*" style="display: none;" onchange="actualizarComprobanteReserva(this)">
                                 <label for="comprobanteReserva" class="file-input-label" id="comprobanteReservaLabel">
@@ -2438,7 +2513,7 @@
         }
 
         // ============================================
-        // FUNCIONES DE STOCK - MEJORADAS
+        // FUNCIONES DE STOCK
         // ============================================
         async function getStockDisponible(ingredienteId) {
             try {
@@ -2448,13 +2523,11 @@
                 const ingrediente = inventario.find(i => i.id === ingredienteId);
                 if (!ingrediente) return 0;
                 
-                // Calcular reservado en carrito considerando personalizaciones
                 let reservadoEnCarrito = 0;
                 carrito.forEach(instancia => {
                     if (instancia.platilloId) {
                         const platillo = menuItems.find(p => p.id === instancia.platilloId);
                         if (platillo && platillo.ingredientes && platillo.ingredientes[ingredienteId]) {
-                            // Solo reservar si el ingrediente NO fue quitado en personalización
                             if (!instancia.personalizacion.includes(ingredienteId)) {
                                 reservadoEnCarrito += platillo.ingredientes[ingredienteId].cantidad || 1;
                             }
@@ -2480,7 +2553,6 @@
             }
             
             for (const [ingId, ingInfo] of Object.entries(platillo.ingredientes)) {
-                // Si el ingrediente fue quitado en personalización, no necesita stock
                 if (personalizacion.includes(ingId)) continue;
                 
                 const cantidadNecesaria = ingInfo.cantidad || 1;
@@ -2788,7 +2860,7 @@
         }
 
         // ============================================
-        // FUNCIONES DE PERSONALIZACIÓN - MEJORADAS
+        // FUNCIONES DE PERSONALIZACIÓN
         // ============================================
         function abrirPersonalizacion(platilloId) {
             const platillo = menuItems.find(p => p.id === platilloId);
@@ -2959,40 +3031,48 @@
         }
 
         // ============================================
-        // FUNCIONES DEL CARRITO - MEJORADAS
+        // FUNCIONES DEL CARRITO - MEJORADAS CON AGRUPACIÓN
         // ============================================
-        async function agregarAlCarrito(platilloId) {
-            const platillo = menuItems.find(p => p.id === platilloId);
-            if (!platillo) return;
+        function agruparCarrito() {
+            const grupos = {};
             
-            const verificado = await verificarStockDisponible(platilloId);
-            if (!verificado.disponible) {
-                mostrarToast(verificado.motivo || 'No hay stock', 'error');
-                return;
-            }
+            carrito.forEach(item => {
+                // Crear una clave única basada en platilloId y personalización
+                const personalizacionStr = item.personalizacion.sort().join(',');
+                const key = `${item.platilloId}_${personalizacionStr}`;
+                
+                if (!grupos[key]) {
+                    grupos[key] = {
+                        ...item,
+                        cantidad: 1,
+                        instancias: [item]
+                    };
+                } else {
+                    grupos[key].cantidad++;
+                    grupos[key].instancias.push(item);
+                    // Sumar subtotales
+                    grupos[key].subtotal += item.subtotal;
+                }
+            });
             
-            const nuevaInstancia = {
-                id: generarId('inst_'),
-                platilloId: platillo.id,
-                nombre: platillo.nombre,
-                personalizacion: [],
-                imagen: platillo.imagen,
-                precioUnitarioUSD: platillo.precio,
-                precioUnitarioBs: usdToBs(platillo.precio),
-                subtotal: usdToBs(platillo.precio),
-                selectionType: 'completo',
-                instanceNumber: carrito.filter(inst => inst.platilloId === platillo.id).length + 1
-            };
-            
-            carrito.push(nuevaInstancia);
+            return Object.values(grupos);
+        }
+
+        function eliminarGrupo(key, personalizacion, platilloId) {
+            // Eliminar todas las instancias de este grupo
+            carrito = carrito.filter(item => {
+                const itemKey = `${item.platilloId}_${item.personalizacion.sort().join(',')}`;
+                return itemKey !== key;
+            });
             
             guardarCarrito();
             actualizarCarritoUI();
             window.stockCache.invalidate();
             
-            // Actualizar stock de TODOS los platillos que comparten ingredientes
+            // Actualizar stock
             const platillosAActualizar = new Set();
-            if (platillo.ingredientes) {
+            const platillo = menuItems.find(p => p.id === platilloId);
+            if (platillo && platillo.ingredientes) {
                 Object.keys(platillo.ingredientes).forEach(ingId => {
                     menuItems.forEach(item => {
                         if (item.ingredientes && item.ingredientes[ingId]) {
@@ -3004,121 +3084,7 @@
             platillosAActualizar.add(platilloId);
             
             for (const pid of platillosAActualizar) {
-                await actualizarStockPlatillo(pid);
-            }
-            
-            mostrarToast('Agregado', 'success');
-            
-            if (window.innerWidth <= 992) {
-                document.getElementById('cartSidebar').classList.add('open');
-                document.getElementById('overlay').classList.add('active');
-                document.getElementById('categorySidebar').classList.remove('open');
-            }
-        }
-
-        async function agregarPersonalizadoAlCarrito() {
-            if (!currentCustomizeItem) return;
-            
-            const ingredientesQuitados = Array.from(document.querySelectorAll('.ingrediente-check:checked'))
-                .map(cb => cb.dataset.ingrediente);
-            
-            const verificado = await verificarStockDisponible(currentCustomizeItem.id, ingredientesQuitados);
-            if (!verificado.disponible) {
-                mostrarToast(verificado.motivo || 'No hay stock', 'error');
-                return;
-            }
-            
-            let descuento = 0;
-            document.querySelectorAll('.ingrediente-check:checked').forEach(cb => {
-                descuento += parseFloat(cb.dataset.precio) || 0;
-            });
-            
-            const precioFinalUSD = Math.max(0, currentCustomizeItem.precio - descuento);
-            
-            for (let i = 0; i < currentCustomizeItem.cantidad; i++) {
-                const nuevaInstancia = {
-                    id: generarId('inst_'),
-                    platilloId: currentCustomizeItem.id,
-                    nombre: currentCustomizeItem.nombre,
-                    personalizacion: ingredientesQuitados,
-                    imagen: currentCustomizeItem.imagen,
-                    precioUnitarioUSD: precioFinalUSD,
-                    precioUnitarioBs: usdToBs(precioFinalUSD),
-                    subtotal: usdToBs(precioFinalUSD),
-                    selectionType: currentCustomizeItem.selectionType,
-                    instanceNumber: carrito.filter(inst => inst.platilloId === currentCustomizeItem.id).length + 1
-                };
-                carrito.push(nuevaInstancia);
-            }
-            
-            guardarCarrito();
-            actualizarCarritoUI();
-            window.stockCache.invalidate();
-            
-            // Actualizar stock de TODOS los platillos que comparten ingredientes
-            const platillosAActualizar = new Set();
-            const platillo = menuItems.find(p => p.id === currentCustomizeItem.id);
-            if (platillo && platillo.ingredientes) {
-                Object.keys(platillo.ingredientes).forEach(ingId => {
-                    menuItems.forEach(item => {
-                        if (item.ingredientes && item.ingredientes[ingId]) {
-                            platillosAActualizar.add(item.id);
-                        }
-                    });
-                });
-            }
-            platillosAActualizar.add(currentCustomizeItem.id);
-            
-            for (const pid of platillosAActualizar) {
-                await actualizarStockPlatillo(pid);
-            }
-            
-            cerrarModalPersonalizacion();
-            mostrarToast(`${currentCustomizeItem.cantidad} agregado(s)`, 'success');
-            
-            if (window.innerWidth <= 992) {
-                document.getElementById('cartSidebar').classList.add('open');
-                document.getElementById('overlay').classList.add('active');
-                document.getElementById('categorySidebar').classList.remove('open');
-            }
-        }
-
-        function eliminarInstancia(instanciaId) {
-            const instancia = carrito.find(i => i.id === instanciaId);
-            const platilloId = instancia?.platilloId;
-            
-            carrito = carrito.filter(i => i.id !== instanciaId);
-            
-            const platillosUnicos = [...new Set(carrito.map(i => i.platilloId))];
-            platillosUnicos.forEach(pid => {
-                let contador = 1;
-                carrito.filter(i => i.platilloId === pid).forEach(inst => {
-                    inst.instanceNumber = contador++;
-                });
-            });
-            
-            guardarCarrito();
-            actualizarCarritoUI();
-            window.stockCache.invalidate();
-            
-            // Actualizar stock de TODOS los platillos que comparten ingredientes
-            if (platilloId) {
-                const platillosAActualizar = new Set();
-                const platillo = menuItems.find(p => p.id === platilloId);
-                if (platillo && platillo.ingredientes) {
-                    Object.keys(platillo.ingredientes).forEach(ingId => {
-                        menuItems.forEach(item => {
-                            if (item.ingredientes && item.ingredientes[ingId]) {
-                                platillosAActualizar.add(item.id);
-                            }
-                        });
-                    });
-                }
-                platillosAActualizar.add(platilloId);
-                
-                for (const pid of platillosAActualizar) {
-                    actualizarStockPlatillo(pid);
-                }
+                actualizarStockPlatillo(pid);
             }
         }
 
@@ -3136,35 +3102,39 @@
             
             cartFooter.style.display = 'block';
             
-            let total = 0;
-            cartItems.innerHTML = carrito.map(instancia => {
-                total += instancia.subtotal;
+            const grupos = agruparCarrito();
+            let totalGeneral = 0;
+            
+            cartItems.innerHTML = grupos.map(grupo => {
+                totalGeneral += grupo.subtotal;
                 
-                const ingredientesNombres = instancia.personalizacion.map(p => {
+                const ingredientesNombres = grupo.personalizacion.map(p => {
                     const ing = inventario.find(i => i.id === p);
                     return ing?.nombre || p;
                 }).join(', ');
                 
+                const key = `${grupo.platilloId}_${grupo.personalizacion.sort().join(',')}`;
+                
                 return `
                     <div class="cart-item">
-                        <div class="cart-item-image" style="background-image: url('${instancia.imagen || 'https://via.placeholder.com/50'}')"></div>
+                        <div class="cart-item-image" style="background-image: url('${grupo.imagen || 'https://via.placeholder.com/50'}')"></div>
                         <div class="cart-item-details">
                             <div class="cart-item-header">
-                                <span class="instance-number">${instancia.instanceNumber}</span>
-                                <span class="cart-item-name">${instancia.nombre}</span>
+                                <span class="cart-item-name">${grupo.nombre}</span>
+                                <span class="cart-item-quantity">x${grupo.cantidad}</span>
                             </div>
-                            ${instancia.personalizacion.length > 0 ? `
+                            ${grupo.personalizacion.length > 0 ? `
                                 <div class="cart-item-customization">
                                     <i class="fas fa-utensil-spoon"></i> Sin: ${ingredientesNombres}
                                 </div>
                             ` : ''}
                             <div class="cart-item-price-info">
-                                <span class="cart-item-unit-price">${formatBs(instancia.precioUnitarioBs)} c/u</span>
-                                <span class="cart-item-subtotal">${formatBs(instancia.subtotal)}</span>
+                                <span class="cart-item-unit-price">${formatBs(grupo.precioUnitarioBs)} c/u</span>
+                                <span class="cart-item-subtotal">${formatBs(grupo.subtotal)}</span>
                             </div>
                         </div>
                         <div class="cart-item-actions">
-                            <button class="btn-remove-item" onclick="eliminarInstancia('${instancia.id}')">
+                            <button class="btn-remove-item" onclick="eliminarGrupo('${key}', '${grupo.personalizacion}', '${grupo.platilloId}')" title="Eliminar grupo">
                                 <i class="fas fa-trash"></i>
                             </button>
                         </div>
@@ -3172,7 +3142,7 @@
                 `;
             }).join('');
             
-            cartTotal.textContent = formatBs(total);
+            cartTotal.textContent = formatBs(totalGeneral);
             
             cartButtons.innerHTML = '';
             if (mesaId) {
@@ -3303,14 +3273,17 @@
 
         function abrirConfirmacionMesa() {
             const summary = document.getElementById('mesaOrderSummary');
+            const grupos = agruparCarrito();
             let total = 0;
-            summary.innerHTML = carrito.map(instancia => {
-                total += instancia.subtotal;
+            
+            summary.innerHTML = grupos.map(grupo => {
+                total += grupo.subtotal;
                 return `<div style="display: flex; justify-content: space-between; margin-bottom: 0.3rem;">
-                    <span>${instancia.nombre} #${instancia.instanceNumber}</span>
-                    <span style="color: var(--primary);">${formatBs(instancia.subtotal)}</span>
+                    <span>${grupo.nombre} x${grupo.cantidad} ${grupo.personalizacion.length > 0 ? '(personalizado)' : ''}</span>
+                    <span style="color: var(--primary);">${formatBs(grupo.subtotal)}</span>
                 </div>`;
             }).join('');
+            
             summary.innerHTML += `<div style="display: flex; justify-content: space-between; margin-top: 0.5rem; font-weight: 700;">
                 <span>Total:</span><span>${formatBs(total)}</span>
             </div>`;
@@ -3330,7 +3303,6 @@
                 document.getElementById('confirmMesaModal').classList.remove('active');
                 window.stockCache.invalidate();
                 
-                // Actualizar stock de todos los platillos
                 for (const item of menuItems) {
                     await actualizarStockPlatillo(item.id);
                 }
@@ -3377,7 +3349,7 @@
         }
 
         // ============================================
-        // FUNCIONES DE DELIVERY Y RESERVA
+        // FUNCIONES DE DELIVERY Y RESERVA - CORREGIDAS
         // ============================================
         function actualizarContadorDireccion() {
             const direccion = document.getElementById('direccion');
@@ -3453,20 +3425,6 @@
             document.getElementById('deliveryPriceDisplay').textContent = `Costo de envío: ${formatBs(usdToBs(precioUSD))}`;
         }
 
-        function validarFormularioDelivery() {
-            const parroquia = document.getElementById('parroquiaSelect').value;
-            const direccion = document.getElementById('direccion').value;
-            const telefono = document.getElementById('telefono').value;
-            const referencia = getReferencia('delivery');
-            const comprobante = document.getElementById('comprobante').files.length > 0;
-            
-            const telefonoValido = window.validarTelefono(telefono);
-            const referenciaValida = window.validarReferencia(referencia);
-            const direccionValida = direccion.length >= 20;
-            
-            document.getElementById('confirmDelivery').disabled = !(parroquia && direccionValida && telefonoValido && referenciaValida && comprobante);
-        }
-
         function getReferencia(type) {
             let ref = '';
             for (let i = 0; i < 6; i++) {
@@ -3474,6 +3432,40 @@
                 if (input) ref += input.value;
             }
             return ref;
+        }
+
+        function validarFormularioDelivery() {
+            const parroquia = document.getElementById('parroquiaSelect');
+            const direccion = document.getElementById('direccion');
+            const telefono = document.getElementById('telefono');
+            const referencia = getReferencia('delivery');
+            const comprobante = document.getElementById('comprobante');
+            
+            const parroquiaValida = parroquia && parroquia.value ? true : false;
+            const direccionValida = direccion && direccion.value.length >= 20;
+            const telefonoValido = telefono && window.validarTelefono(telefono.value);
+            const referenciaValida = referencia && window.validarReferencia(referencia);
+            const comprobanteValido = comprobante && comprobante.files.length > 0;
+            
+            const formularioValido = parroquiaValida && direccionValida && telefonoValido && referenciaValida && comprobanteValido;
+            
+            document.getElementById('confirmDelivery').disabled = !formularioValido;
+        }
+
+        function validarFormularioReserva() {
+            const fecha = document.getElementById('fechaReserva');
+            const nombre = document.getElementById('nombreReserva');
+            const referencia = getReferencia('reserva');
+            const comprobante = document.getElementById('comprobanteReserva');
+            
+            const fechaValida = fecha && fecha.value ? true : false;
+            const nombreValido = nombre && nombre.value.trim().length > 0;
+            const referenciaValida = referencia && window.validarReferencia(referencia);
+            const comprobanteValido = comprobante && comprobante.files.length > 0;
+            
+            const formularioValido = fechaValida && nombreValido && referenciaValida && comprobanteValido;
+            
+            document.getElementById('confirmReserva').disabled = !formularioValido;
         }
 
         async function confirmarPedidoDelivery() {
@@ -3507,7 +3499,6 @@
                 document.getElementById('deliveryModal').classList.remove('active');
                 window.stockCache.invalidate();
                 
-                // Actualizar stock de todos los platillos
                 for (const item of menuItems) {
                     await actualizarStockPlatillo(item.id);
                 }
@@ -3517,17 +3508,6 @@
                 mostrarToast('❌ Error: ' + resultado.error, 'error');
                 iniciarTimerFrontend('delivery', 20);
             }
-        }
-
-        function validarFormularioReserva() {
-            const fecha = document.getElementById('fechaReserva').value;
-            const nombre = document.getElementById('nombreReserva').value;
-            const referencia = getReferencia('reserva');
-            const comprobante = document.getElementById('comprobanteReserva').files.length > 0;
-            
-            const referenciaValida = window.validarReferencia(referencia);
-            
-            document.getElementById('confirmReserva').disabled = !(fecha && nombre && referenciaValida && comprobante);
         }
 
         async function confirmarPedidoReserva() {
@@ -3557,7 +3537,6 @@
                 document.getElementById('reservaModal').classList.remove('active');
                 window.stockCache.invalidate();
                 
-                // Actualizar stock de todos los platillos
                 for (const item of menuItems) {
                     await actualizarStockPlatillo(item.id);
                 }
@@ -3567,6 +3546,17 @@
                 mostrarToast('❌ Error: ' + resultado.error, 'error');
                 iniciarTimerFrontend('reserva', 20);
             }
+        }
+
+        // ============================================
+        // FUNCIÓN PARA COPIAR AL PORTAPAPELES
+        // ============================================
+        function copiarAlPortapapeles(texto) {
+            navigator.clipboard.writeText(texto).then(() => {
+                mostrarToast('✅ Copiado al portapapeles', 'success');
+            }).catch(() => {
+                mostrarToast('❌ Error al copiar', 'error');
+            });
         }
 
         // ============================================
