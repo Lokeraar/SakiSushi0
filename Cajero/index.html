@@ -812,8 +812,8 @@
         <div class="login-box">
             <h2><i class="fas fa-user"></i> Cajero Saki Sushi</h2>
             <form class="login-form" id="loginForm">
-                <input type="text" id="username" placeholder="Usuario" required autocomplete="off">
-                <input type="password" id="password" placeholder="Contraseña" required autocomplete="off">
+                <input type="text" id="username" name="username" placeholder="Usuario" required autocomplete="off">
+                <input type="password" id="password" name="password" placeholder="Contraseña" required autocomplete="off">
                 <button type="submit" id="loginButton">Iniciar Sesión</button>
             </form>
         </div>
@@ -1849,80 +1849,65 @@
         // FUNCIONES DE EVENT LISTENERS
         // ============================================
         function setupEventListeners() {
-            // Login - VERSIÓN CORREGIDA Y MEJORADA
-			document.getElementById('loginForm').addEventListener('submit', async function(e) {
-				e.preventDefault(); // Esto evita que la página se recargue
-				
-				console.log('🔵 Iniciando proceso de login...');
-				
-				// Obtener los valores de los campos
-				const usernameInput = document.getElementById('username');
-				const passwordInput = document.getElementById('password');
-				const loginButton = document.getElementById('loginButton');
-				
-				const username = usernameInput.value.trim();
-				const password = passwordInput.value.trim();
-				
-				console.log('📝 Intentando login con:', { username, password });
-				
-				// Validar que no estén vacíos
-				if (!username || !password) {
-					mostrarToast('Por favor ingresa usuario y contraseña', 'error');
-					return;
-				}
-				
-				// Deshabilitar el botón para evitar múltiples envíos
-				loginButton.disabled = true;
-				const originalText = loginButton.innerHTML;
-				loginButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verificando...';
-				
-				try {
-					console.log('🔍 Consultando base de datos...');
-					
-					const { data, error } = await window.supabaseClient
-						.from('usuarios')
-						.select('*')
-						.eq('username', username)
-						.eq('password', password)
-						.eq('activo', true);
-					
-					if (error) {
-						console.error('❌ Error de Supabase:', error);
-						mostrarToast('Error al conectar con la base de datos', 'error');
-						return;
-					}
-					
-					console.log('📦 Resultado de la consulta:', data);
-					
-					if (!data || data.length === 0) {
-						console.log('❌ No se encontró el usuario');
-						mostrarToast('Usuario o contraseña incorrectos', 'error');
-						return;
-					}
-					
-					// Tomar el primer usuario (debería ser solo uno)
-					const usuario = data[0];
-					console.log('✅ Usuario encontrado:', usuario.nombre);
-					
-					// Login exitoso
-					currentUser = usuario;
-					sessionStorage.setItem('cajero_user', JSON.stringify(usuario));
-					
-					// Mostrar mensaje de bienvenida
-					mostrarToast('¡Bienvenido ' + usuario.nombre + '!', 'success');
-					
-					// Cambiar al panel principal
-					mostrarPanel();
-					
-				} catch (error) {
-					console.error('💥 Error en login:', error);
-					mostrarToast('Error al iniciar sesión: ' + error.message, 'error');
-				} finally {
-					// Restaurar el botón
-					loginButton.disabled = false;
-					loginButton.innerHTML = originalText;
-				}
-			});
+            // Login - VERSIÓN CORREGIDA
+            document.getElementById('loginForm').addEventListener('submit', async (e) => {
+                e.preventDefault(); // ¡ESTO ES CRUCIAL! Evita que la página se recargue
+                
+                console.log('🔵 Intentando iniciar sesión...');
+                
+                const username = document.getElementById('username').value.trim();
+                const password = document.getElementById('password').value.trim();
+                const loginButton = document.getElementById('loginButton');
+                
+                console.log('📝 Datos ingresados:', { username, password });
+                
+                // Deshabilitar el botón para evitar múltiples envíos
+                loginButton.disabled = true;
+                loginButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verificando...';
+                
+                try {
+                    console.log('🔍 Buscando usuario en la base de datos...');
+                    
+                    const { data, error } = await window.supabaseClient
+                        .from('usuarios')
+                        .select('*')
+                        .eq('username', username)
+                        .eq('password', password)
+                        .eq('activo', true)
+                        .maybeSingle();
+                    
+                    if (error) {
+                        console.error('❌ Error de Supabase:', error);
+                        mostrarToast('Error al conectar con la base de datos', 'error');
+                        return;
+                    }
+                    
+                    if (!data) {
+                        console.log('❌ Usuario no encontrado o credenciales incorrectas');
+                        mostrarToast('Credenciales inválidas o usuario inactivo', 'error');
+                        return;
+                    }
+                    
+                    console.log('✅ Login exitoso para:', data.nombre);
+                    
+                    // Login exitoso
+                    currentUser = data;
+                    sessionStorage.setItem('cajero_user', JSON.stringify(data));
+                    
+                    // Mostrar el panel
+                    mostrarPanel();
+                    
+                    mostrarToast('¡Bienvenido ' + data.nombre + '!', 'success');
+                    
+                } catch (error) {
+                    console.error('💥 Error en login:', error);
+                    mostrarToast('Error al iniciar sesión: ' + error.message, 'error');
+                } finally {
+                    // Restaurar el botón
+                    loginButton.disabled = false;
+                    loginButton.innerHTML = 'Iniciar Sesión';
+                }
+            });
             
             // Logout
             document.getElementById('logoutButton').addEventListener('click', () => {
