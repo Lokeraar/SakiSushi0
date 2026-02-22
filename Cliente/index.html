@@ -17,6 +17,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <style>
+        /* MISMO ESTILO QUE TENÍAS - SIN CAMBIOS */
         * {
             margin: 0;
             padding: 0;
@@ -2888,38 +2889,38 @@
                             mensaje = 'Tu pedido ha sido registrado';
                     }
                     
-                    // Esperar 1 segundo antes de crear la notificación
-                    setTimeout(async () => {
-                        // Crear notificación en la base de datos
-                        await window.supabaseClient
-                            .from('notificaciones')
-                            .insert([{
-                                pedido_id: data.pedido_id,
-                                tipo: 'pending',
-                                titulo: titulo,
-                                mensaje: mensaje,
-                                timestamp: new Date().toISOString(),
-                                session_id: sessionId,
-                                leida: false
-                            }]);
-                        
-                        // Reproducir sonido
-                        const audio = document.getElementById('notificationSound');
-                        audio.play().catch(() => {});
-                        
-                        // Activar vibración si el navegador lo soporta
-                        if (navigator.vibrate) {
-                            navigator.vibrate(200);
-                        }
-                        
-                        // Animar la campana
-                        const bell = document.getElementById('notificationBell');
-                        bell.classList.add('fa-shake');
-                        setTimeout(() => bell.classList.remove('fa-shake'), 1000);
-                        
-                        // Mostrar toast
-                        mostrarToast(titulo, 'success');
-                    }, 1000);
+                    // Crear notificación en la base de datos
+                    await window.supabaseClient
+                        .from('notificaciones')
+                        .insert([{
+                            pedido_id: data.pedido_id,
+                            tipo: 'pending',
+                            titulo: titulo,
+                            mensaje: mensaje,
+                            timestamp: new Date().toISOString(),
+                            session_id: sessionId,
+                            leida: false
+                        }]);
+                    
+                    // Reproducir sonido
+                    const audio = document.getElementById('notificationSound');
+                    audio.play().catch(() => {});
+                    
+                    // Activar vibración si el navegador lo soporta
+                    if (navigator.vibrate) {
+                        navigator.vibrate(200);
+                    }
+                    
+                    // Animar la campana
+                    const bell = document.getElementById('notificationBell');
+                    bell.classList.add('fa-shake');
+                    setTimeout(() => bell.classList.remove('fa-shake'), 1000);
+                    
+                    // Mostrar toast de confirmación INMEDIATAMENTE
+                    mostrarToast(titulo, 'success');
+                    
+                    // Recargar notificaciones para actualizar el badge
+                    await cargarNotificaciones();
                     
                     return { success: true, pedidoId: data.pedido_id };
                 } else {
