@@ -93,7 +93,6 @@
             display: block;
         }
 
-        /* Header - AHORA MÁS GRANDE (110px) */
         .header {
             background: linear-gradient(135deg, var(--primary), #b71c1c);
             color: white;
@@ -311,7 +310,7 @@
             background: white;
         }
 
-        /* Category Sidebar - AJUSTADO para comenzar debajo del header de 110px */
+        /* Category Sidebar - AJUSTADO más abajo */
         .category-sidebar {
             width: 280px;
             background: white;
@@ -320,7 +319,7 @@
             transition: transform 0.3s ease;
             box-shadow: 2px 0 8px rgba(0,0,0,0.05);
             position: fixed;
-            top: 110px;
+            top: 120px;
             left: 0;
             bottom: 0;
             z-index: 900;
@@ -330,7 +329,7 @@
 
         @media (max-width: 992px) {
             .category-sidebar {
-                top: 100px;
+                top: 110px;
                 transform: translateX(-100%);
             }
             .category-sidebar.open {
@@ -341,7 +340,7 @@
 
         @media (max-width: 768px) {
             .category-sidebar {
-                top: 100px;
+                top: 110px;
             }
         }
 
@@ -479,7 +478,7 @@
             font-weight: bold;
         }
 
-        /* Cart Sidebar - AJUSTADO para comenzar debajo del header de 110px */
+        /* Cart Sidebar - AJUSTADO más abajo */
         .cart-sidebar {
             width: 320px;
             background: white;
@@ -489,7 +488,7 @@
             transition: transform 0.3s ease;
             position: fixed;
             right: 0;
-            top: 110px;
+            top: 120px;
             bottom: 0;
             z-index: 900;
             box-shadow: -2px 0 8px rgba(0,0,0,0.05);
@@ -497,7 +496,7 @@
 
         @media (max-width: 992px) {
             .cart-sidebar {
-                top: 100px;
+                top: 110px;
                 transform: translateX(100%);
             }
             .cart-sidebar.open {
@@ -508,7 +507,7 @@
 
         @media (max-width: 768px) {
             .cart-sidebar {
-                top: 100px;
+                top: 110px;
             }
         }
 
@@ -1974,7 +1973,7 @@
                                 <input type="text" maxlength="1" class="ref-digit" data-type="reserva" data-index="2" style="width: 15%; text-align: center; padding: 0.7rem; border: 1px solid var(--gray-300); border-radius: var(--radius-sm); font-size: 1.2rem;" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
                                 <input type="text" maxlength="1" class="ref-digit" data-type="reserva" data-index="3" style="width: 15%; text-align: center; padding: 0.7rem; border: 1px solid var(--gray-300); border-radius: var(--radius-sm); font-size: 1.2rem;" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
                                 <input type="text" maxlength="1" class="ref-digit" data-type="reserva" data-index="4" style="width: 15%; text-align: center; padding: 0.7rem; border: 1px solid var(--gray-300); border-radius: var(--radius-sm); font-size: 1.2rem;" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
-                                <input type="text" maxlength="1" class="ref-digit" data-type="reserva" data-index="5" style="width: 15%; text-align; center; padding: 0.7rem; border: 1px solid var(--gray-300); border-radius: var(--radius-sm); font-size: 1.2rem;" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+                                <input type="text" maxlength="1" class="ref-digit" data-type="reserva" data-index="5" style="width: 15%; text-align: center; padding: 0.7rem; border: 1px solid var(--gray-300); border-radius: var(--radius-sm); font-size: 1.2rem;" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
                             </div>
                         </div>
                         
@@ -2091,9 +2090,10 @@
             'ejecutivo': 'fa-briefcase'
         };
 
+        // MODIFICADO: Eliminadas subcategorías de Entradas
         const categoriasPredefinidas = [
             { id: 'todos', nombre: 'Todos los platillos' },
-            { id: 'entradas', nombre: 'Entradas', subcategorias: ['Sashimi', 'Ensaladas', 'Entremeses'] },
+            { id: 'entradas', nombre: 'Entradas' },
             { id: 'sushi', nombre: 'Sushi' },
             { id: 'rolls', nombre: 'Rolls', subcategorias: ['Rolls Fríos de 10 piezas', 'Rolls Tempura de 12 piezas'] },
             { id: 'tragos', nombre: 'Tragos y bebidas' },
