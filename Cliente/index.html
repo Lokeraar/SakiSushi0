@@ -2300,8 +2300,8 @@
                         </div>
                         
                         <div style="margin-bottom: 1.5rem;">
-                            <label for="telefono" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Teléfono (máx 14 dígitos después del +):</label>
-                            <input type="tel" id="telefono" required pattern="\+[0-9]{11,14}" maxlength="15" placeholder="+5804121234567" inputmode="numeric" style="width: 100%; padding: 0.8rem; border: 2px solid var(--gray-200); border-radius: var(--radius-sm); font-size: 1rem;" oninput="this.value=this.value.replace(/[^0-9+]/g,''); if(this.value.indexOf('+') !== 0 && this.value.length > 0) { this.value = '+' + this.value.replace(/\+/g,''); } validarFormularioDelivery()">
+                            <label for="telefono" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Teléfono (máx 14 dígitos):</label>
+                            <input type="tel" id="telefono" required pattern="\+[0-9]{11,14}" maxlength="15" placeholder="Ej: +5804121234567" inputmode="numeric" style="width: 100%; padding: 0.8rem; border: 2px solid var(--gray-200); border-radius: var(--radius-sm); font-size: 1rem;" oninput="this.value=this.value.replace(/[^0-9+]/g,''); if(this.value.indexOf('+') !== 0 && this.value.length > 0) { this.value = '+' + this.value.replace(/\+/g,''); } validarFormularioDelivery()">
                         </div>
                         
                         <div style="margin-bottom: 1.5rem;">
@@ -2331,7 +2331,7 @@
                         <div style="padding: 1rem; background: var(--gray-100); border-radius: var(--radius-md); border: 2px solid var(--primary);">
                             <div style="display: flex; justify-content: space-between; align-items: center;">
                                 <span style="font-weight: 600; font-size: 1.1rem;">Total a pagar:</span>
-                                <span style="font-weight: 700; color: var(--primary); font-size: 1.4rem;" id="deliveryTotal">primero seleccione parroquia</span>
+                                <span style="font-weight: 700; color: var(--primary); font-size: 1.4rem;" id="deliveryTotal">Primero seleccione parroquia a enviar</span>
                             </div>
                         </div>
                     </form>
@@ -4156,7 +4156,7 @@
                     montoPago.textContent = formatBs(totalBs);
                 }
             } else {
-                document.getElementById('deliveryTotal').textContent = 'primero seleccione parroquia';
+                document.getElementById('deliveryTotal').textContent = 'Primero seleccione Parroquia';
                 document.getElementById('deliveryPriceDisplay').textContent = 'primero seleccione parroquia';
                 
                 const montoPago = document.getElementById('montoPago');
