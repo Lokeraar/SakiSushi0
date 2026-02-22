@@ -485,7 +485,7 @@
             font-weight: bold;
         }
 
-        /* Cart Sidebar - MODIFICADO: Agrupación de items */
+        /* Cart Sidebar - MODIFICADO: Estilo unificado para items */
         .cart-sidebar {
             width: 320px;
             background: white;
@@ -597,13 +597,18 @@
             font-size: 1rem;
         }
 
-        /* Estilo para items agrupados */
+        /* Estilo unificado para items del carrito */
         .cart-item-group {
-            background: var(--gray-50);
+            background: white;
             border-radius: var(--radius-md);
             border: 1px solid var(--gray-200);
             overflow: hidden;
-            animation: slideIn 0.3s ease;
+            box-shadow: var(--shadow-sm);
+            transition: all 0.2s;
+        }
+
+        .cart-item-group:hover {
+            box-shadow: var(--shadow-md);
         }
 
         .cart-item-group-header {
@@ -614,6 +619,28 @@
             align-items: center;
             justify-content: space-between;
             font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .cart-item-group-header:hover {
+            background: linear-gradient(135deg, #b71c1c, var(--primary));
+        }
+
+        .cart-item-group-header .header-left {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+        }
+
+        .cart-item-group-header .header-left i {
+            font-size: 1.1rem;
+            width: 20px;
+            transition: transform 0.3s;
+        }
+
+        .cart-item-group-header .header-left i.rotated {
+            transform: rotate(90deg);
         }
 
         .cart-item-group-header .platillo-nombre {
@@ -631,26 +658,50 @@
             padding: 0.2rem 0.8rem;
             border-radius: 20px;
             font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .cart-item-group-header .precio-total {
+            font-size: 1rem;
+            font-weight: 700;
         }
 
         .cart-item-variants {
-            padding: 0.5rem;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+            background: var(--gray-50);
+        }
+
+        .cart-item-variants.expanded {
+            max-height: 500px;
+            transition: max-height 0.5s ease-in;
         }
 
         .cart-item-variant {
             display: flex;
             align-items: center;
-            justify-content: space-between;
+            gap: 0.8rem;
             padding: 0.8rem;
             border-bottom: 1px solid var(--gray-200);
             background: white;
-            margin-bottom: 0.3rem;
+            margin: 0.5rem;
             border-radius: var(--radius-sm);
+            box-shadow: var(--shadow-sm);
         }
 
         .cart-item-variant:last-child {
             border-bottom: none;
-            margin-bottom: 0;
+        }
+
+        .variant-image {
+            width: 50px;
+            height: 50px;
+            border-radius: var(--radius-sm);
+            background-size: cover;
+            background-position: center;
+            background-color: var(--gray-200);
+            flex-shrink: 0;
         }
 
         .variant-info {
@@ -678,7 +729,9 @@
         .variant-precio {
             font-weight: 600;
             color: var(--secondary);
-            margin-right: 1rem;
+            margin-right: 0.5rem;
+            min-width: 80px;
+            text-align: right;
         }
 
         .btn-remove-variant {
@@ -690,15 +743,109 @@
             padding: 0.3rem;
             opacity: 0.6;
             transition: all 0.2s;
-            width: 30px;
-            height: 30px;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .btn-remove-variant:hover {
+            opacity: 1;
+            background: var(--gray-100);
+            transform: scale(1.1);
+        }
+
+        /* Estilo para item individual (también usa la misma estructura) */
+        .cart-item-single {
+            background: white;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--gray-200);
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .cart-item-single .cart-item-content {
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+            padding: 0.8rem;
+        }
+
+        .cart-item-single .item-image {
+            width: 50px;
+            height: 50px;
+            border-radius: var(--radius-sm);
+            background-size: cover;
+            background-position: center;
+            background-color: var(--gray-200);
+            flex-shrink: 0;
+        }
+
+        .cart-item-single .item-details {
+            flex: 1;
+        }
+
+        .cart-item-single .item-name {
+            font-weight: 600;
+            color: var(--secondary);
+            margin-bottom: 0.2rem;
+        }
+
+        .cart-item-single .item-customization {
+            font-size: 0.85rem;
+            color: var(--gray-600);
+            font-style: italic;
+        }
+
+        .cart-item-single .item-customization i {
+            color: var(--accent);
+            margin-right: 0.3rem;
+        }
+
+        .cart-item-single .item-price-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-top: 0.2rem;
+        }
+
+        .cart-item-single .item-unit-price {
+            font-size: 0.85rem;
+            color: var(--gray-600);
+        }
+
+        .cart-item-single .item-subtotal {
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .cart-item-single .item-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn-remove-single {
+            background: none;
+            border: none;
+            color: var(--danger);
+            cursor: pointer;
+            font-size: 1rem;
+            padding: 0.3rem;
+            opacity: 0.6;
+            transition: all 0.2s;
+            width: 32px;
+            height: 32px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
         }
 
-        .btn-remove-variant:hover {
+        .btn-remove-single:hover {
             opacity: 1;
             background: var(--gray-100);
             transform: scale(1.1);
@@ -1987,7 +2134,7 @@
             </div>
         </div>
 
-        <!-- Delivery Modal - CORREGIDO -->
+        <!-- Delivery Modal -->
         <div class="modal-overlay" id="deliveryModal">
             <div class="modal-container">
                 <div class="modal-header">
@@ -2136,7 +2283,7 @@
             </div>
         </div>
 
-        <!-- Reserva Modal - CORREGIDO -->
+        <!-- Reserva Modal -->
         <div class="modal-overlay" id="reservaModal">
             <div class="modal-container">
                 <div class="modal-header">
@@ -2278,7 +2425,7 @@
         
         let menuItems = [];
         let inventario = [];
-        let carrito = []; // Array de instancias individuales
+        let carrito = [];
         let notificaciones = [];
         let currentCustomizeItem = null;
         let mesaId = null;
@@ -2497,13 +2644,11 @@
                 const ingrediente = inventario.find(i => i.id === ingredienteId);
                 if (!ingrediente) return 0;
                 
-                // Calcular reservado en carrito considerando personalizaciones
                 let reservadoEnCarrito = 0;
                 carrito.forEach(instancia => {
                     if (instancia.platilloId) {
                         const platillo = menuItems.find(p => p.id === instancia.platilloId);
                         if (platillo && platillo.ingredientes && platillo.ingredientes[ingredienteId]) {
-                            // Solo reservar si el ingrediente NO fue quitado en personalización
                             if (!instancia.personalizacion.includes(ingredienteId)) {
                                 reservadoEnCarrito += platillo.ingredientes[ingredienteId].cantidad || 1;
                             }
@@ -2529,7 +2674,6 @@
             }
             
             for (const [ingId, ingInfo] of Object.entries(platillo.ingredientes)) {
-                // Si el ingrediente fue quitado en personalización, no necesita stock
                 if (personalizacion.includes(ingId)) continue;
                 
                 const cantidadNecesaria = ingInfo.cantidad || 1;
@@ -2837,13 +2981,12 @@
         }
 
         // ============================================
-        // FUNCIONES DE PERSONALIZACIÓN - CORREGIDAS
+        // FUNCIONES DE PERSONALIZACIÓN
         // ============================================
         function abrirPersonalizacion(platilloId) {
             const platillo = menuItems.find(p => p.id === platilloId);
             if (!platillo) return;
             
-            // Limpiar event listeners viejos del modal
             const modalBody = document.getElementById('customizeModalBody');
             
             currentCustomizeItem = {
@@ -2932,14 +3075,12 @@
                     </div>
                 `;
                 
-                // Remover event listeners viejos de los checkboxes
                 const viejosCheckboxes = document.querySelectorAll('.ingrediente-check');
                 viejosCheckboxes.forEach(cb => {
                     const nuevoCb = cb.cloneNode(true);
                     cb.parentNode.replaceChild(nuevoCb, cb);
                 });
                 
-                // Agregar nuevos event listeners
                 document.querySelectorAll('.ingrediente-check').forEach(cb => {
                     cb.addEventListener('change', function() {
                         if (this.checked) {
@@ -3017,7 +3158,7 @@
         }
 
         // ============================================
-        // FUNCIONES DEL CARRITO - MODIFICADO: Agrupación de items
+        // FUNCIONES DEL CARRITO - MODIFICADO: Agrupación con plegado
         // ============================================
         async function agregarAlCarrito(platilloId) {
             const platillo = menuItems.find(p => p.id === platilloId);
@@ -3047,7 +3188,6 @@
             actualizarCarritoUI();
             window.stockCache.invalidate();
             
-            // Actualizar stock de TODOS los platillos que comparten ingredientes
             const platillosAActualizar = new Set();
             if (platillo.ingredientes) {
                 Object.keys(platillo.ingredientes).forEach(ingId => {
@@ -3116,7 +3256,6 @@
             actualizarCarritoUI();
             window.stockCache.invalidate();
             
-            // Actualizar stock de TODOS los platillos que comparten ingredientes
             const platillosAActualizar = new Set();
             const platillo = menuItems.find(p => p.id === currentCustomizeItem.id);
             if (platillo && platillo.ingredientes) {
@@ -3134,7 +3273,6 @@
                 await actualizarStockPlatillo(pid);
             }
             
-            // Cerrar modal y limpiar
             document.getElementById('customizeModal').classList.remove('active');
             currentCustomizeItem = null;
             
@@ -3157,7 +3295,6 @@
             actualizarCarritoUI();
             window.stockCache.invalidate();
             
-            // Actualizar stock de TODOS los platillos que comparten ingredientes
             if (platilloId) {
                 const platillosAActualizar = new Set();
                 const platillo = menuItems.find(p => p.id === platilloId);
@@ -3178,6 +3315,18 @@
             }
         }
 
+        function toggleGrupo(grupoId) {
+            const variants = document.getElementById(`variants-${grupoId}`);
+            const icon = document.getElementById(`icon-${grupoId}`);
+            
+            if (variants) {
+                variants.classList.toggle('expanded');
+                if (icon) {
+                    icon.classList.toggle('rotated');
+                }
+            }
+        }
+
         function agruparItemsPorPlatilloYPersonalizacion() {
             const grupos = {};
             
@@ -3187,6 +3336,7 @@
                 
                 if (!grupos[key]) {
                     grupos[key] = {
+                        id: key.replace(/[^a-zA-Z0-9]/g, '_'),
                         platilloId: instancia.platilloId,
                         nombre: instancia.nombre,
                         imagen: instancia.imagen,
@@ -3227,36 +3377,38 @@
             grupos.forEach(grupo => {
                 totalGeneral += grupo.subtotal;
                 
-                let personalizacionTexto = '';
-                let ingredientesNombres = '';
-                if (grupo.personalizacion.length > 0) {
-                    ingredientesNombres = grupo.personalizacion.map(p => {
-                        const ing = inventario.find(i => i.id === p);
-                        return ing?.nombre || p;
-                    }).join(', ');
-                }
-                
                 if (grupo.cantidad > 1) {
+                    // Grupo con múltiples items (plegado por defecto)
                     html += `
                         <div class="cart-item-group">
-                            <div class="cart-item-group-header">
-                                <div class="platillo-nombre">
-                                    <i class="fas fa-utensils"></i>
-                                    ${grupo.nombre}
+                            <div class="cart-item-group-header" onclick="toggleGrupo('${grupo.id}')">
+                                <div class="header-left">
+                                    <i class="fas fa-chevron-right" id="icon-${grupo.id}"></i>
+                                    <div class="platillo-nombre">
+                                        <i class="fas fa-utensils"></i>
+                                        ${grupo.nombre}
+                                    </div>
                                 </div>
-                                <div class="platillo-cantidad-total">
-                                    ${grupo.cantidad} unidad(es)
+                                <div class="header-right">
+                                    <span class="platillo-cantidad-total">${grupo.cantidad} unid.</span>
+                                    <span class="precio-total">${formatBs(grupo.subtotal)}</span>
                                 </div>
                             </div>
-                            <div class="cart-item-variants">
+                            <div class="cart-item-variants" id="variants-${grupo.id}">
                     `;
                     
                     grupo.items.forEach(item => {
+                        const ingredientesNombres = item.personalizacion.map(p => {
+                            const ing = inventario.find(i => i.id === p);
+                            return ing?.nombre || p;
+                        }).join(', ');
+                        
                         html += `
                             <div class="cart-item-variant">
+                                <div class="variant-image" style="background-image: url('${item.imagen || 'https://via.placeholder.com/50'}')"></div>
                                 <div class="variant-info">
                                     <span class="cantidad">1x</span>
-                                    ${grupo.personalizacion.length > 0 ? `
+                                    ${item.personalizacion.length > 0 ? `
                                         <div class="personalizacion">
                                             <i class="fas fa-utensil-spoon"></i> Sin: ${ingredientesNombres}
                                         </div>
@@ -3277,28 +3429,34 @@
                         </div>
                     `;
                 } else {
+                    // Item individual (mismo estilo visual)
                     const item = grupo.items[0];
+                    const ingredientesNombres = item.personalizacion.map(p => {
+                        const ing = inventario.find(i => i.id === p);
+                        return ing?.nombre || p;
+                    }).join(', ');
+                    
                     html += `
-                        <div class="cart-item">
-                            <div class="cart-item-image" style="background-image: url('${item.imagen || 'https://via.placeholder.com/50'}')"></div>
-                            <div class="cart-item-details">
-                                <div class="cart-item-header">
-                                    <span class="cart-item-name">${item.nombre}</span>
-                                </div>
-                                ${grupo.personalizacion.length > 0 ? `
-                                    <div class="cart-item-customization">
-                                        <i class="fas fa-utensil-spoon"></i> Sin: ${ingredientesNombres}
+                        <div class="cart-item-single">
+                            <div class="cart-item-content">
+                                <div class="item-image" style="background-image: url('${item.imagen || 'https://via.placeholder.com/50'}')"></div>
+                                <div class="item-details">
+                                    <div class="item-name">${item.nombre}</div>
+                                    ${item.personalizacion.length > 0 ? `
+                                        <div class="item-customization">
+                                            <i class="fas fa-utensil-spoon"></i> Sin: ${ingredientesNombres}
+                                        </div>
+                                    ` : ''}
+                                    <div class="item-price-info">
+                                        <span class="item-unit-price">${formatBs(item.precioUnitarioBs)} c/u</span>
+                                        <span class="item-subtotal">${formatBs(item.subtotal)}</span>
                                     </div>
-                                ` : ''}
-                                <div class="cart-item-price-info">
-                                    <span class="cart-item-unit-price">${formatBs(item.precioUnitarioBs)} c/u</span>
-                                    <span class="cart-item-subtotal">${formatBs(item.subtotal)}</span>
                                 </div>
-                            </div>
-                            <div class="cart-item-actions">
-                                <button class="btn-remove-item" onclick="eliminarInstancia('${item.id}')">
-                                    <i class="fas fa-trash"></i>
-                                </button>
+                                <div class="item-actions">
+                                    <button class="btn-remove-single" onclick="eliminarInstancia('${item.id}')" title="Eliminar">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     `;
