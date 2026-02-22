@@ -1846,15 +1846,18 @@
 		// FUNCIONES DE EVENT LISTENERS
 		// ============================================
 		function setupEventListeners() {
-			// Login - NUEVA VERSIÓN (Escuchando el click del botón)
-			document.getElementById('loginButton').addEventListener('click', async (e) => {
-				// Ya no necesitamos e.preventDefault() porque el botón no es type="submit"
-
-				const username = document.getElementById('username').value;
-				const password = document.getElementById('password').value;
-
+			// Login - VERSIÓN MEJORADA (con soporte para Enter)
+			const loginButton = document.getElementById('loginButton');
+			const usernameInput = document.getElementById('username');
+			const passwordInput = document.getElementById('password');
+			
+			// Función para ejecutar el login (reutilizable)
+			async function ejecutarLogin() {
+				const username = usernameInput.value;
+				const password = passwordInput.value;
+				
 				console.log('🔐 Intentando login con:', username);
-
+				
 				try {
 					const { data, error } = await window.supabaseClient
 						.from('usuarios')
@@ -1863,91 +1866,111 @@
 						.eq('password', password)
 						.eq('activo', true)
 						.maybeSingle();
-
+					
 					if (error) {
 						console.error('Error de Supabase:', error);
 						mostrarToast('Error al conectar con la base de datos', 'error');
 						return;
 					}
-
+					
 					if (!data) {
 						console.log('❌ Usuario no encontrado o contraseña incorrecta');
 						mostrarToast('Credenciales inválidas o usuario inactivo', 'error');
 						return;
 					}
-
+					
 					console.log('✅ Login exitoso:', data.nombre);
 					currentUser = data;
 					sessionStorage.setItem('cajero_user', JSON.stringify(data));
 					mostrarPanel();
-
+					
 				} catch (error) {
 					console.error('Error en login:', error);
 					mostrarToast('Error al iniciar sesión: ' + error.message, 'error');
 				}
+			}
+			
+			// Evento para el clic del botón
+			loginButton.addEventListener('click', ejecutarLogin);
+			
+			// Evento para la tecla Enter en el campo de usuario
+			usernameInput.addEventListener('keypress', (e) => {
+				if (e.key === 'Enter') {
+					e.preventDefault(); // Evita comportamientos extraños
+					ejecutarLogin();
+				}
 			});
-            
-            // Logout
-            document.getElementById('logoutButton').addEventListener('click', () => {
-                sessionStorage.removeItem('cajero_user');
-                currentUser = null;
-                mostrarLogin();
-            });
-            
-            // Sincronizar
-            document.getElementById('syncButton').addEventListener('click', async () => {
-                await cargarConfiguracionInicial();
-                await cargarPedidos();
-                await cargarMenu();
-                mostrarToast('✅ Datos sincronizados', 'success');
-            });
-            
-            // Pestañas
-            document.querySelectorAll('.tab').forEach(tab => {
-                tab.addEventListener('click', () => {
-                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-                    tab.classList.add('active');
-                    
-                    const tabId = tab.dataset.tab;
-                    document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
-                    document.getElementById(tabId + 'Pane').classList.add('active');
-                });
-            });
-            
-            // Cerrar modales
-            document.getElementById('closeCobroModal').addEventListener('click', () => {
-                document.getElementById('cobroModal').classList.remove('active');
-            });
-            
-            document.getElementById('cancelCobro').addEventListener('click', () => {
-                document.getElementById('cobroModal').classList.remove('active');
-            });
-            
-            document.getElementById('closeDetalleModal').addEventListener('click', () => {
-                document.getElementById('detallePedidosModal').classList.remove('active');
-            });
-            
-            document.getElementById('closeDetalle').addEventListener('click', () => {
-                document.getElementById('detallePedidosModal').classList.remove('active');
-            });
-            
-            document.getElementById('closeComprobanteModal').addEventListener('click', () => {
-                document.getElementById('comprobanteModal').classList.remove('active');
-            });
-            
-            document.getElementById('closeComprobante').addEventListener('click', () => {
-                document.getElementById('comprobanteModal').classList.remove('active');
-            });
-            
-            // Cerrar modales al hacer clic fuera
-            document.querySelectorAll('.modal').forEach(modal => {
-                modal.addEventListener('click', (e) => {
-                    if (e.target === modal) {
-                        modal.classList.remove('active');
-                    }
-                });
-            });
-        }
+			
+			// Evento para la tecla Enter en el campo de contraseña
+			passwordInput.addEventListener('keypress', (e) => {
+				if (e.key === 'Enter') {
+					e.preventDefault(); // Evita comportamientos extraños
+					ejecutarLogin();
+				}
+			});
+			
+			// Logout
+			document.getElementById('logoutButton').addEventListener('click', () => {
+				sessionStorage.removeItem('cajero_user');
+				currentUser = null;
+				mostrarLogin();
+			});
+			
+			// Sincronizar
+			document.getElementById('syncButton').addEventListener('click', async () => {
+				await cargarConfiguracionInicial();
+				await cargarPedidos();
+				await cargarMenu();
+				mostrarToast('✅ Datos sincronizados', 'success');
+			});
+			
+			// Pestañas
+			document.querySelectorAll('.tab').forEach(tab => {
+				tab.addEventListener('click', () => {
+					document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+					tab.classList.add('active');
+					
+					const tabId = tab.dataset.tab;
+					document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+					document.getElementById(tabId + 'Pane').classList.add('active');
+				});
+			});
+			
+			// Cerrar modales
+			document.getElementById('closeCobroModal').addEventListener('click', () => {
+				document.getElementById('cobroModal').classList.remove('active');
+			});
+			
+			document.getElementById('cancelCobro').addEventListener('click', () => {
+				document.getElementById('cobroModal').classList.remove('active');
+			});
+			
+			document.getElementById('closeDetalleModal').addEventListener('click', () => {
+				document.getElementById('detallePedidosModal').classList.remove('active');
+			});
+			
+			document.getElementById('closeDetalle').addEventListener('click', () => {
+				document.getElementById('detallePedidosModal').classList.remove('active');
+			});
+			
+			document.getElementById('closeComprobanteModal').addEventListener('click', () => {
+				document.getElementById('comprobanteModal').classList.remove('active');
+			});
+			
+			document.getElementById('closeComprobante').addEventListener('click', () => {
+				document.getElementById('comprobanteModal').classList.remove('active');
+			});
+			
+			// Cerrar modales al hacer clic fuera
+			document.querySelectorAll('.modal').forEach(modal => {
+				modal.addEventListener('click', (e) => {
+					if (e.target === modal) {
+						modal.classList.remove('active');
+					}
+				});
+			});
+		}
+
 		// ============================================
 		// FUNCIÓN DE LOGIN DIRECTA (100% infalible)
 		// ============================================
