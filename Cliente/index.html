@@ -1813,7 +1813,7 @@
             border-bottom: none;
         }
         
-        /* Estilo para la información de pago - Con botones de copiar */
+        /* Estilo para la información de pago */
         .payment-info {
             background: white;
             padding: 1.5rem;
@@ -1888,6 +1888,14 @@
             margin-right: 0.5rem;
         }
         
+        .payment-details .valor-placeholder {
+            color: var(--gray-500);
+            font-weight: 400;
+            font-family: 'Roboto', sans-serif;
+            font-size: 0.95rem;
+            font-style: italic;
+        }
+        
         .btn-copy {
             background: var(--pastel-success);
             border: none;
@@ -1946,6 +1954,11 @@
             font-weight: 600;
             color: var(--success);
             font-size: 0.95rem;
+        }
+
+        .delivery-price-displace.placeholder {
+            color: var(--gray-500);
+            font-style: italic;
         }
 
         .file-input-wrapper {
@@ -2175,7 +2188,7 @@
             </div>
         </div>
 
-        <!-- Delivery Modal - CON BOTONES COPIAR -->
+        <!-- Delivery Modal - CON CAMPOS ACTUALIZADOS -->
         <div class="modal-overlay" id="deliveryModal">
             <div class="modal-container">
                 <div class="modal-header">
@@ -2188,10 +2201,6 @@
                         <div class="timer-display" id="deliveryTimerDisplay">20:00</div>
                     </div>
                     
-                    <div class="info-box delivery-pending">
-                        <i class="fas fa-exclamation-triangle"></i> Al confirmar, el timer se detiene.
-                    </div>
-                    
                     <!-- Información de pago con botones copiar -->
                     <div class="payment-info">
                         <h4><i class="fas fa-credit-card"></i> Datos de Pago - Pago Móvil</h4>
@@ -2200,7 +2209,6 @@
                                 <i class="fas fa-university"></i>
                                 <strong>Banco:</strong>
                                 <span class="valor">Banesco</span>
-                                <!-- Sin botón copiar para banco -->
                             </p>
                             <p>
                                 <i class="fas fa-phone-alt"></i>
@@ -2221,10 +2229,7 @@
                             <p>
                                 <i class="fas fa-dollar-sign"></i>
                                 <strong>Monto:</strong>
-                                <span class="valor" id="montoPago">Bs. 0,00</span>
-                                <button class="btn-copy" onclick="copiarAlPortapapeles(document.getElementById('montoPago').textContent.replace('Bs. ', ''), this)" title="Copiar monto">
-                                    <i class="fas fa-copy"></i>
-                                </button>
+                                <span class="valor-placeholder" id="montoPago">primero seleccione parroquia</span>
                             </p>
                         </div>
                         
@@ -2240,11 +2245,12 @@
                             <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Parroquia a enviar: *</label>
                             <div class="parroquia-selector">
                                 <div class="selected-parroquia" onclick="toggleParroquiaSelect()">
-                                    <span id="selectedParroquiaText">San Bernardino</span>
+                                    <span id="selectedParroquiaText">Seleccionar parroquia</span>
                                     <i class="fas fa-chevron-down" id="parroquiaChevron"></i>
                                 </div>
                                 <input type="text" id="parroquiaSearch" class="parroquia-search" placeholder="Buscar parroquia..." style="display: none;">
                                 <select id="parroquiaSelect" class="parroquia-select" size="5" style="display: none;" onchange="seleccionarParroquia(this)">
+                                    <option value="">Seleccionar parroquia</option>
                                     <option value="Altagracia">Altagracia</option>
                                     <option value="Antímano">Antímano</option>
                                     <option value="Candelaria">Candelaria</option>
@@ -2268,7 +2274,7 @@
                                     <option value="Nuestra Señora del Rosario">Nuestra Señora del Rosario</option>
                                     <option value="Petare">Petare</option>
                                     <option value="San Agustín">San Agustín</option>
-                                    <option value="San Bernardino" selected>San Bernardino</option>
+                                    <option value="San Bernardino">San Bernardino</option>
                                     <option value="San José">San José</option>
                                     <option value="San Juan">San Juan</option>
                                     <option value="San Pedro">San Pedro</option>
@@ -2282,7 +2288,7 @@
                         </div>
                         
                         <div class="delivery-price-display" id="deliveryPriceDisplay">
-                            Costo de envío: Bs. 0,00
+                            primero seleccione parroquia
                         </div>
                         
                         <div style="margin-bottom: 1.5rem;">
@@ -2294,8 +2300,8 @@
                         </div>
                         
                         <div style="margin-bottom: 1.5rem;">
-                            <label for="telefono" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Teléfono (máx 14 dígitos):</label>
-                            <input type="tel" id="telefono" required pattern="[0-9]{11,14}" maxlength="14" placeholder="04121234567" inputmode="numeric" style="width: 100%; padding: 0.8rem; border: 2px solid var(--gray-200); border-radius: var(--radius-sm); font-size: 1rem;" oninput="this.value=this.value.replace(/[^0-9]/g,''); validarFormularioDelivery()">
+                            <label for="telefono" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Teléfono (máx 14 dígitos después del +):</label>
+                            <input type="tel" id="telefono" required pattern="\+[0-9]{11,14}" maxlength="15" placeholder="+5804121234567" inputmode="numeric" style="width: 100%; padding: 0.8rem; border: 2px solid var(--gray-200); border-radius: var(--radius-sm); font-size: 1rem;" oninput="this.value=this.value.replace(/[^0-9+]/g,''); if(this.value.indexOf('+') !== 0 && this.value.length > 0) { this.value = '+' + this.value.replace(/\+/g,''); } validarFormularioDelivery()">
                         </div>
                         
                         <div style="margin-bottom: 1.5rem;">
@@ -2325,7 +2331,7 @@
                         <div style="padding: 1rem; background: var(--gray-100); border-radius: var(--radius-md); border: 2px solid var(--primary);">
                             <div style="display: flex; justify-content: space-between; align-items: center;">
                                 <span style="font-weight: 600; font-size: 1.1rem;">Total a pagar:</span>
-                                <span style="font-weight: 700; color: var(--primary); font-size: 1.4rem;" id="deliveryTotal">Bs. 0,00</span>
+                                <span style="font-weight: 700; color: var(--primary); font-size: 1.4rem;" id="deliveryTotal">primero seleccione parroquia</span>
                             </div>
                         </div>
                     </form>
@@ -2339,7 +2345,7 @@
             </div>
         </div>
 
-        <!-- Reserva Modal - CON BOTONES COPIAR -->
+        <!-- Reserva Modal - CON CAMPOS ACTUALIZADOS -->
         <div class="modal-overlay" id="reservaModal">
             <div class="modal-container">
                 <div class="modal-header">
@@ -2352,10 +2358,6 @@
                         <div class="timer-display" id="reservaTimerDisplay">20:00</div>
                     </div>
                     
-                    <div class="info-box delivery-pending">
-                        <i class="fas fa-exclamation-triangle"></i> Al confirmar, el timer se detiene.
-                    </div>
-                    
                     <!-- Información de pago con botones copiar -->
                     <div class="payment-info">
                         <h4><i class="fas fa-credit-card"></i> Datos de Pago - Pago Móvil</h4>
@@ -2364,7 +2366,6 @@
                                 <i class="fas fa-university"></i>
                                 <strong>Banco:</strong>
                                 <span class="valor">Banesco</span>
-                                <!-- Sin botón copiar para banco -->
                             </p>
                             <p>
                                 <i class="fas fa-phone-alt"></i>
@@ -3928,8 +3929,8 @@
 
         function iniciarProcesoDelivery() {
             iniciarTimerFrontend('delivery', 20);
-            document.getElementById('selectedParroquiaText').textContent = 'San Bernardino';
-            document.getElementById('parroquiaSelect').value = 'San Bernardino';
+            document.getElementById('selectedParroquiaText').textContent = 'Seleccionar parroquia';
+            document.getElementById('parroquiaSelect').value = '';
             actualizarTotalDelivery();
             document.getElementById('deliveryModal').classList.add('active');
         }
@@ -3938,6 +3939,7 @@
             iniciarTimerFrontend('reserva', 20);
             const subtotalUSD = carrito.reduce((sum, item) => sum + item.precioUnitarioUSD, 0);
             document.getElementById('reservaTotal').textContent = formatBs(usdToBs(subtotalUSD));
+            document.getElementById('montoReserva').textContent = formatBs(usdToBs(subtotalUSD));
             document.getElementById('reservaModal').classList.add('active');
         }
 
@@ -4055,7 +4057,11 @@
         }
 
         function seleccionarParroquia(select) {
-            document.getElementById('selectedParroquiaText').textContent = select.value;
+            if (select.value) {
+                document.getElementById('selectedParroquiaText').textContent = select.value;
+            } else {
+                document.getElementById('selectedParroquiaText').textContent = 'Seleccionar parroquia';
+            }
             toggleParroquiaSelect();
             actualizarTotalDelivery();
             validarFormularioDelivery();
@@ -4065,12 +4071,13 @@
             const term = document.getElementById('parroquiaSearch').value.toLowerCase();
             const select = document.getElementById('parroquiaSelect');
             Array.from(select.options).forEach(opt => {
+                if (opt.value === '') return;
                 opt.style.display = opt.text.toLowerCase().includes(term) ? '' : 'none';
             });
         }
 
         // ============================================
-        // FUNCIONES DE DELIVERY Y RESERVA
+        // FUNCIONES DE DELIVERY Y RESERVA - ACTUALIZADAS
         // ============================================
         function actualizarContadorDireccion() {
             const direccion = document.getElementById('direccion');
@@ -4133,23 +4140,33 @@
 
         function actualizarTotalDelivery() {
             const select = document.getElementById('parroquiaSelect');
-            const precioUSD = preciosPorParroquia[select.value] || 2;
             const subtotalUSD = carrito.reduce((sum, item) => sum + item.precioUnitarioUSD, 0);
-            const totalUSD = subtotalUSD + precioUSD;
-            const totalBs = usdToBs(totalUSD);
             
-            document.getElementById('deliveryTotal').textContent = formatBs(totalBs);
-            document.getElementById('deliveryPriceDisplay').textContent = `Costo de envío: ${formatBs(usdToBs(precioUSD))}`;
-            
-            const montoPago = document.getElementById('montoPago');
-            if (montoPago) {
-                montoPago.textContent = formatBs(totalBs);
+            if (select.value) {
+                const precioUSD = preciosPorParroquia[select.value] || 2;
+                const totalUSD = subtotalUSD + precioUSD;
+                const totalBs = usdToBs(totalUSD);
+                
+                document.getElementById('deliveryTotal').textContent = formatBs(totalBs);
+                document.getElementById('deliveryPriceDisplay').textContent = `Costo de envío: ${formatBs(usdToBs(precioUSD))}`;
+                
+                const montoPago = document.getElementById('montoPago');
+                if (montoPago) {
+                    montoPago.className = 'valor';
+                    montoPago.textContent = formatBs(totalBs);
+                }
+            } else {
+                document.getElementById('deliveryTotal').textContent = 'primero seleccione parroquia';
+                document.getElementById('deliveryPriceDisplay').textContent = 'primero seleccione parroquia';
+                
+                const montoPago = document.getElementById('montoPago');
+                if (montoPago) {
+                    montoPago.className = 'valor-placeholder';
+                    montoPago.textContent = 'primero seleccione parroquia';
+                }
             }
             
-            const montoReserva = document.getElementById('montoReserva');
-            if (montoReserva) {
-                montoReserva.textContent = formatBs(usdToBs(subtotalUSD));
-            }
+            validarFormularioDelivery();
         }
 
         function getReferencia(type) {
@@ -4168,7 +4185,8 @@
             const referencia = getReferencia('delivery');
             const comprobante = document.getElementById('comprobante').files.length > 0;
             
-            const telefonoValido = window.validarTelefono(telefono);
+            // Nueva validación para teléfono con formato +58
+            const telefonoValido = /^\+[0-9]{11,14}$/.test(telefono);
             const referenciaValida = window.validarReferencia(referencia);
             const direccionValida = direccion.length >= 20;
             
