@@ -1950,7 +1950,7 @@
             </div>
         </div>
 
-        <!-- Delivery Modal - CORREGIDO -->
+        <!-- Delivery Modal -->
         <div class="modal-overlay" id="deliveryModal">
             <div class="modal-container">
                 <div class="modal-header">
@@ -2093,7 +2093,7 @@
             </div>
         </div>
 
-        <!-- Reserva Modal - CORREGIDO -->
+        <!-- Reserva Modal -->
         <div class="modal-overlay" id="reservaModal">
             <div class="modal-container">
                 <div class="modal-header">
@@ -2438,7 +2438,7 @@
         }
 
         // ============================================
-        // FUNCIONES DE STOCK
+        // FUNCIONES DE STOCK - MEJORADAS
         // ============================================
         async function getStockDisponible(ingredienteId) {
             try {
@@ -2448,12 +2448,16 @@
                 const ingrediente = inventario.find(i => i.id === ingredienteId);
                 if (!ingrediente) return 0;
                 
+                // Calcular reservado en carrito considerando personalizaciones
                 let reservadoEnCarrito = 0;
                 carrito.forEach(instancia => {
-                    if (instancia.platilloId && !instancia.personalizacion.includes(ingredienteId)) {
+                    if (instancia.platilloId) {
                         const platillo = menuItems.find(p => p.id === instancia.platilloId);
                         if (platillo && platillo.ingredientes && platillo.ingredientes[ingredienteId]) {
-                            reservadoEnCarrito += platillo.ingredientes[ingredienteId].cantidad || 1;
+                            // Solo reservar si el ingrediente NO fue quitado en personalización
+                            if (!instancia.personalizacion.includes(ingredienteId)) {
+                                reservadoEnCarrito += platillo.ingredientes[ingredienteId].cantidad || 1;
+                            }
                         }
                     }
                 });
@@ -2476,6 +2480,7 @@
             }
             
             for (const [ingId, ingInfo] of Object.entries(platillo.ingredientes)) {
+                // Si el ingrediente fue quitado en personalización, no necesita stock
                 if (personalizacion.includes(ingId)) continue;
                 
                 const cantidadNecesaria = ingInfo.cantidad || 1;
@@ -2783,7 +2788,7 @@
         }
 
         // ============================================
-        // FUNCIONES DE PERSONALIZACIÓN - CORREGIDAS
+        // FUNCIONES DE PERSONALIZACIÓN - MEJORADAS
         // ============================================
         function abrirPersonalizacion(platilloId) {
             const platillo = menuItems.find(p => p.id === platilloId);
@@ -2954,7 +2959,7 @@
         }
 
         // ============================================
-        // FUNCIONES DEL CARRITO
+        // FUNCIONES DEL CARRITO - MEJORADAS
         // ============================================
         async function agregarAlCarrito(platilloId) {
             const platillo = menuItems.find(p => p.id === platilloId);
@@ -2985,7 +2990,22 @@
             actualizarCarritoUI();
             window.stockCache.invalidate();
             
-            await actualizarStockPlatillo(platilloId);
+            // Actualizar stock de TODOS los platillos que comparten ingredientes
+            const platillosAActualizar = new Set();
+            if (platillo.ingredientes) {
+                Object.keys(platillo.ingredientes).forEach(ingId => {
+                    menuItems.forEach(item => {
+                        if (item.ingredientes && item.ingredientes[ingId]) {
+                            platillosAActualizar.add(item.id);
+                        }
+                    });
+                });
+            }
+            platillosAActualizar.add(platilloId);
+            
+            for (const pid of platillosAActualizar) {
+                await actualizarStockPlatillo(pid);
+            }
             
             mostrarToast('Agregado', 'success');
             
@@ -3033,11 +3053,27 @@
             
             guardarCarrito();
             actualizarCarritoUI();
-            cerrarModalPersonalizacion();
             window.stockCache.invalidate();
             
-            await actualizarStockPlatillo(currentCustomizeItem.id);
+            // Actualizar stock de TODOS los platillos que comparten ingredientes
+            const platillosAActualizar = new Set();
+            const platillo = menuItems.find(p => p.id === currentCustomizeItem.id);
+            if (platillo && platillo.ingredientes) {
+                Object.keys(platillo.ingredientes).forEach(ingId => {
+                    menuItems.forEach(item => {
+                        if (item.ingredientes && item.ingredientes[ingId]) {
+                            platillosAActualizar.add(item.id);
+                        }
+                    });
+                });
+            }
+            platillosAActualizar.add(currentCustomizeItem.id);
             
+            for (const pid of platillosAActualizar) {
+                await actualizarStockPlatillo(pid);
+            }
+            
+            cerrarModalPersonalizacion();
             mostrarToast(`${currentCustomizeItem.cantidad} agregado(s)`, 'success');
             
             if (window.innerWidth <= 992) {
@@ -3065,8 +3101,24 @@
             actualizarCarritoUI();
             window.stockCache.invalidate();
             
+            // Actualizar stock de TODOS los platillos que comparten ingredientes
             if (platilloId) {
-                actualizarStockPlatillo(platilloId);
+                const platillosAActualizar = new Set();
+                const platillo = menuItems.find(p => p.id === platilloId);
+                if (platillo && platillo.ingredientes) {
+                    Object.keys(platillo.ingredientes).forEach(ingId => {
+                        menuItems.forEach(item => {
+                            if (item.ingredientes && item.ingredientes[ingId]) {
+                                platillosAActualizar.add(item.id);
+                            }
+                        });
+                    });
+                }
+                platillosAActualizar.add(platilloId);
+                
+                for (const pid of platillosAActualizar) {
+                    actualizarStockPlatillo(pid);
+                }
             }
         }
 
@@ -3278,7 +3330,10 @@
                 document.getElementById('confirmMesaModal').classList.remove('active');
                 window.stockCache.invalidate();
                 
-                menuItems.forEach(item => actualizarStockPlatillo(item.id));
+                // Actualizar stock de todos los platillos
+                for (const item of menuItems) {
+                    await actualizarStockPlatillo(item.id);
+                }
                 
                 mostrarToast('✅ Pedido enviado a cocina', 'success');
             } else {
@@ -3287,7 +3342,7 @@
         }
 
         // ============================================
-        // FUNCIONES DE PARROQUIA - MEJORADAS
+        // FUNCIONES DE PARROQUIA
         // ============================================
         function toggleParroquiaSelect() {
             const select = document.getElementById('parroquiaSelect');
@@ -3322,7 +3377,7 @@
         }
 
         // ============================================
-        // FUNCIONES DE DELIVERY Y RESERVA - CORREGIDAS
+        // FUNCIONES DE DELIVERY Y RESERVA
         // ============================================
         function actualizarContadorDireccion() {
             const direccion = document.getElementById('direccion');
@@ -3452,7 +3507,10 @@
                 document.getElementById('deliveryModal').classList.remove('active');
                 window.stockCache.invalidate();
                 
-                menuItems.forEach(item => actualizarStockPlatillo(item.id));
+                // Actualizar stock de todos los platillos
+                for (const item of menuItems) {
+                    await actualizarStockPlatillo(item.id);
+                }
                 
                 mostrarToast('✅ Pedido confirmado', 'success');
             } else {
@@ -3499,7 +3557,10 @@
                 document.getElementById('reservaModal').classList.remove('active');
                 window.stockCache.invalidate();
                 
-                menuItems.forEach(item => actualizarStockPlatillo(item.id));
+                // Actualizar stock de todos los platillos
+                for (const item of menuItems) {
+                    await actualizarStockPlatillo(item.id);
+                }
                 
                 mostrarToast('✅ Reserva confirmada', 'success');
             } else {
@@ -3665,7 +3726,6 @@
             
             document.getElementById('notificationBell').addEventListener('click', toggleNotifications);
             
-            // Event listeners para modales - CORREGIDOS
             document.getElementById('closeCustomizeModal').addEventListener('click', () => {
                 document.getElementById('customizeModal').classList.remove('active');
                 currentCustomizeItem = null;
