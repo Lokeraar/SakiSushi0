@@ -1813,7 +1813,7 @@
             border-bottom: none;
         }
         
-        /* NUEVO: Estilo para la información de pago - Diseño limpio con borde punteado */
+        /* Estilo para la información de pago - Con botones de copiar */
         .payment-info {
             background: white;
             padding: 1.5rem;
@@ -1852,8 +1852,13 @@
             gap: 0.8rem;
             margin-bottom: 0.8rem;
             font-size: 1rem;
-            padding: 0.3rem 0;
+            padding: 0.5rem;
             border-bottom: 1px solid var(--gray-200);
+            transition: background 0.2s;
+        }
+        
+        .payment-details p:hover {
+            background: var(--gray-100);
         }
         
         .payment-details p:last-child {
@@ -1880,6 +1885,35 @@
             font-size: 1.1rem;
             flex: 1;
             text-align: right;
+            margin-right: 0.5rem;
+        }
+        
+        .btn-copy {
+            background: var(--pastel-success);
+            border: none;
+            color: var(--success);
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+            margin-left: 0.3rem;
+            flex-shrink: 0;
+        }
+        
+        .btn-copy:hover {
+            background: var(--success);
+            color: white;
+            transform: scale(1.1);
+        }
+        
+        .btn-copy.copied {
+            background: var(--success);
+            color: white;
         }
         
         .payment-note {
@@ -2141,7 +2175,7 @@
             </div>
         </div>
 
-        <!-- Delivery Modal - NUEVO DISEÑO -->
+        <!-- Delivery Modal - CON BOTONES COPIAR -->
         <div class="modal-overlay" id="deliveryModal">
             <div class="modal-container">
                 <div class="modal-header">
@@ -2158,7 +2192,7 @@
                         <i class="fas fa-exclamation-triangle"></i> Al confirmar, el timer se detiene.
                     </div>
                     
-                    <!-- NUEVO: Información de pago con diseño limpio -->
+                    <!-- Información de pago con botones copiar -->
                     <div class="payment-info">
                         <h4><i class="fas fa-credit-card"></i> Datos de Pago - Pago Móvil</h4>
                         <div class="payment-details">
@@ -2166,21 +2200,31 @@
                                 <i class="fas fa-university"></i>
                                 <strong>Banco:</strong>
                                 <span class="valor">Banesco</span>
+                                <!-- Sin botón copiar para banco -->
                             </p>
                             <p>
                                 <i class="fas fa-phone-alt"></i>
                                 <strong>Teléfono:</strong>
-                                <span class="valor">0424-1525233</span>
+                                <span class="valor" id="telefonoPago">0424-1525233</span>
+                                <button class="btn-copy" onclick="copiarAlPortapapeles('0424-1525233', this)" title="Copiar teléfono">
+                                    <i class="fas fa-copy"></i>
+                                </button>
                             </p>
                             <p>
                                 <i class="fas fa-id-card"></i>
                                 <strong>RIF:</strong>
-                                <span class="valor">J-501519838</span>
+                                <span class="valor" id="rifPago">J-501519838</span>
+                                <button class="btn-copy" onclick="copiarAlPortapapeles('J-501519838', this)" title="Copiar RIF">
+                                    <i class="fas fa-copy"></i>
+                                </button>
                             </p>
                             <p>
                                 <i class="fas fa-dollar-sign"></i>
                                 <strong>Monto:</strong>
                                 <span class="valor" id="montoPago">Bs. 0,00</span>
+                                <button class="btn-copy" onclick="copiarAlPortapapeles(document.getElementById('montoPago').textContent.replace('Bs. ', ''), this)" title="Copiar monto">
+                                    <i class="fas fa-copy"></i>
+                                </button>
                             </p>
                         </div>
                         
@@ -2295,7 +2339,7 @@
             </div>
         </div>
 
-        <!-- Reserva Modal - Con el mismo nuevo diseño -->
+        <!-- Reserva Modal - CON BOTONES COPIAR -->
         <div class="modal-overlay" id="reservaModal">
             <div class="modal-container">
                 <div class="modal-header">
@@ -2312,7 +2356,7 @@
                         <i class="fas fa-exclamation-triangle"></i> Al confirmar, el timer se detiene.
                     </div>
                     
-                    <!-- NUEVO: Información de pago con diseño limpio -->
+                    <!-- Información de pago con botones copiar -->
                     <div class="payment-info">
                         <h4><i class="fas fa-credit-card"></i> Datos de Pago - Pago Móvil</h4>
                         <div class="payment-details">
@@ -2320,21 +2364,31 @@
                                 <i class="fas fa-university"></i>
                                 <strong>Banco:</strong>
                                 <span class="valor">Banesco</span>
+                                <!-- Sin botón copiar para banco -->
                             </p>
                             <p>
                                 <i class="fas fa-phone-alt"></i>
                                 <strong>Teléfono:</strong>
-                                <span class="valor">0424-1525233</span>
+                                <span class="valor" id="telefonoPagoReserva">0424-1525233</span>
+                                <button class="btn-copy" onclick="copiarAlPortapapeles('0424-1525233', this)" title="Copiar teléfono">
+                                    <i class="fas fa-copy"></i>
+                                </button>
                             </p>
                             <p>
                                 <i class="fas fa-id-card"></i>
                                 <strong>RIF:</strong>
-                                <span class="valor">J-501519838</span>
+                                <span class="valor" id="rifPagoReserva">J-501519838</span>
+                                <button class="btn-copy" onclick="copiarAlPortapapeles('J-501519838', this)" title="Copiar RIF">
+                                    <i class="fas fa-copy"></i>
+                                </button>
                             </p>
                             <p>
                                 <i class="fas fa-dollar-sign"></i>
                                 <strong>Monto:</strong>
                                 <span class="valor" id="montoReserva">Bs. 0,00</span>
+                                <button class="btn-copy" onclick="copiarAlPortapapeles(document.getElementById('montoReserva').textContent.replace('Bs. ', ''), this)" title="Copiar monto">
+                                    <i class="fas fa-copy"></i>
+                                </button>
                             </p>
                         </div>
                         
@@ -4087,10 +4141,14 @@
             document.getElementById('deliveryTotal').textContent = formatBs(totalBs);
             document.getElementById('deliveryPriceDisplay').textContent = `Costo de envío: ${formatBs(usdToBs(precioUSD))}`;
             
-            // Actualizar el monto en la sección de pago
             const montoPago = document.getElementById('montoPago');
             if (montoPago) {
                 montoPago.textContent = formatBs(totalBs);
+            }
+            
+            const montoReserva = document.getElementById('montoReserva');
+            if (montoReserva) {
+                montoReserva.textContent = formatBs(usdToBs(subtotalUSD));
             }
         }
 
@@ -4208,6 +4266,28 @@
                 mostrarToast('❌ Error: ' + resultado.error, 'error');
                 iniciarTimerFrontend('reserva', 20);
             }
+        }
+
+        // ============================================
+        // FUNCIÓN PARA COPIAR AL PORTAPAPELES
+        // ============================================
+        function copiarAlPortapapeles(texto, boton) {
+            navigator.clipboard.writeText(texto).then(() => {
+                const icono = boton.querySelector('i');
+                const claseOriginal = icono.className;
+                icono.className = 'fas fa-check';
+                boton.classList.add('copied');
+                
+                setTimeout(() => {
+                    icono.className = claseOriginal;
+                    boton.classList.remove('copied');
+                }, 1500);
+                
+                mostrarToast('✅ Copiado al portapapeles', 'success');
+            }).catch(err => {
+                console.error('Error al copiar:', err);
+                mostrarToast('❌ Error al copiar', 'error');
+            });
         }
 
         // ============================================
