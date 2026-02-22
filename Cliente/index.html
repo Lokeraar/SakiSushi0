@@ -2301,7 +2301,7 @@
                         
                         <div style="margin-bottom: 1.5rem;">
                             <label for="telefono" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Teléfono (máx 14 dígitos):</label>
-                            <input type="tel" id="telefono" required pattern="\+[0-9]{11,14}" maxlength="15" placeholder="Ej: +5804121234567" inputmode="numeric" style="width: 100%; padding: 0.8rem; border: 2px solid var(--gray-200); border-radius: var(--radius-sm); font-size: 1rem;" oninput="this.value=this.value.replace(/[^0-9+]/g,''); if(this.value.indexOf('+') !== 0 && this.value.length > 0) { this.value = '+' + this.value.replace(/\+/g,''); } validarFormularioDelivery()">
+                            <input type="tel" id="telefono" required pattern="\+[0-9]{11,14}" maxlength="15" placeholder="Ej: +5804121234567 o 04121234567" inputmode="numeric" style="width: 100%; padding: 0.8rem; border: 2px solid var(--gray-200); border-radius: var(--radius-sm); font-size: 1rem;" oninput="this.value=this.value.replace(/[^0-9+]/g,''); if(this.value.indexOf('+') !== 0 && this.value.length > 0) { this.value = '+' + this.value.replace(/\+/g,''); } validarFormularioDelivery()">
                         </div>
                         
                         <div style="margin-bottom: 1.5rem;">
