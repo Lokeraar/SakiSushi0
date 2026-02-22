@@ -812,8 +812,8 @@
         <div class="login-box">
             <h2><i class="fas fa-user"></i> Cajero Saki Sushi</h2>
             <form class="login-form" id="loginForm">
-                <input type="text" id="username" name="username" placeholder="Usuario" required autocomplete="off">
-                <input type="password" id="password" name="password" placeholder="Contraseña" required autocomplete="off">
+                <input type="text" id="username" placeholder="Usuario" required>
+                <input type="password" id="password" placeholder="Contraseña" required>
                 <button type="submit" id="loginButton">Iniciar Sesión</button>
             </form>
         </div>
@@ -1041,19 +1041,15 @@
 
         // Verificar sesión al cargar
         document.addEventListener('DOMContentLoaded', () => {
-            console.log('🔍 Verificando sesión de cajero...');
             const savedUser = sessionStorage.getItem('cajero_user');
             if (savedUser) {
                 try {
                     currentUser = JSON.parse(savedUser);
-                    console.log('👤 Sesión encontrada para:', currentUser.nombre);
                     mostrarPanel();
                 } catch {
-                    console.log('❌ Error al leer sesión guardada');
                     mostrarLogin();
                 }
             } else {
-                console.log('👤 No hay sesión guardada');
                 mostrarLogin();
             }
         });
@@ -1851,61 +1847,45 @@
         function setupEventListeners() {
             // Login - VERSIÓN CORREGIDA
             document.getElementById('loginForm').addEventListener('submit', async (e) => {
-                e.preventDefault(); // ¡ESTO ES CRUCIAL! Evita que la página se recargue
+                e.preventDefault(); // ¡Esto es CRUCIAL! Evita que la página se recargue
                 
-                console.log('🔵 Intentando iniciar sesión...');
+                const username = document.getElementById('username').value;
+                const password = document.getElementById('password').value;
                 
-                const username = document.getElementById('username').value.trim();
-                const password = document.getElementById('password').value.trim();
-                const loginButton = document.getElementById('loginButton');
-                
-                console.log('📝 Datos ingresados:', { username, password });
-                
-                // Deshabilitar el botón para evitar múltiples envíos
-                loginButton.disabled = true;
-                loginButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verificando...';
+                console.log('🔐 Intentando login con:', username);
                 
                 try {
-                    console.log('🔍 Buscando usuario en la base de datos...');
-                    
+                    // Usar maybeSingle() en lugar de single() para evitar errores
                     const { data, error } = await window.supabaseClient
                         .from('usuarios')
                         .select('*')
                         .eq('username', username)
                         .eq('password', password)
                         .eq('activo', true)
-                        .maybeSingle();
+                        .maybeSingle(); // CAMBIADO: .single() por .maybeSingle()
                     
                     if (error) {
-                        console.error('❌ Error de Supabase:', error);
+                        console.error('Error de Supabase:', error);
                         mostrarToast('Error al conectar con la base de datos', 'error');
                         return;
                     }
                     
                     if (!data) {
-                        console.log('❌ Usuario no encontrado o credenciales incorrectas');
+                        console.log('❌ Usuario no encontrado o contraseña incorrecta');
                         mostrarToast('Credenciales inválidas o usuario inactivo', 'error');
                         return;
                     }
                     
-                    console.log('✅ Login exitoso para:', data.nombre);
+                    console.log('✅ Login exitoso:', data.nombre);
                     
                     // Login exitoso
                     currentUser = data;
                     sessionStorage.setItem('cajero_user', JSON.stringify(data));
-                    
-                    // Mostrar el panel
                     mostrarPanel();
                     
-                    mostrarToast('¡Bienvenido ' + data.nombre + '!', 'success');
-                    
                 } catch (error) {
-                    console.error('💥 Error en login:', error);
+                    console.error('Error en login:', error);
                     mostrarToast('Error al iniciar sesión: ' + error.message, 'error');
-                } finally {
-                    // Restaurar el botón
-                    loginButton.disabled = false;
-                    loginButton.innerHTML = 'Iniciar Sesión';
                 }
             });
             
@@ -1914,7 +1894,6 @@
                 sessionStorage.removeItem('cajero_user');
                 currentUser = null;
                 mostrarLogin();
-                mostrarToast('👋 Sesión cerrada', 'info');
             });
             
             // Sincronizar
