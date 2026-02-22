@@ -17,6 +17,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <style>
+        /* MISMO ESTILO QUE TENÍAS - SIN CAMBIOS */
         * {
             margin: 0;
             padding: 0;
@@ -2301,7 +2302,7 @@
                         
                         <div style="margin-bottom: 1.5rem;">
                             <label for="telefono" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Teléfono (máx 14 dígitos):</label>
-                            <input type="tel" id="telefono" required pattern="\+[0-9]{11,14}" maxlength="15" placeholder="+5804121234567 o 04121234567" inputmode="numeric" style="width: 100%; padding: 0.8rem; border: 2px solid var(--gray-200); border-radius: var(--radius-sm); font-size: 1rem;" oninput="this.value=this.value.replace(/[^0-9+]/g,''); if(this.value.indexOf('+') !== 0 && this.value.length > 0) { this.value = '+' + this.value.replace(/\+/g,''); } validarFormularioDelivery()">
+                            <input type="tel" id="telefono" required pattern="\+[0-9]{11,14}" maxlength="15" placeholder="Ej: +5804121234567 o 04121234567" inputmode="numeric" style="width: 100%; padding: 0.8rem; border: 2px solid var(--gray-200); border-radius: var(--radius-sm); font-size: 1rem;" oninput="this.value=this.value.replace(/[^0-9+]/g,''); if(this.value.indexOf('+') !== 0 && this.value.length > 0) { this.value = '+' + this.value.replace(/\+/g,''); } validarFormularioDelivery()">
                         </div>
                         
                         <div style="margin-bottom: 1.5rem;">
@@ -2745,7 +2746,8 @@
                     }
                 });
                 
-                const disponible = (ingrediente.stock || 0) - reservadoEnCarrito;
+                // También considerar reservas en la base de datos (pedidos pendientes)
+                const disponible = (ingrediente.stock || 0) - (ingrediente.reservado || 0) - reservadoEnCarrito;
                 window.stockCache.set(ingredienteId, disponible);
                 return disponible;
             } catch (error) {
@@ -2836,7 +2838,7 @@
         }
 
         // ============================================
-        // FUNCIÓN MEJORADA: crearPedidoTransaccional (NOTIFICACIONES)
+        // FUNCIÓN CORREGIDA: crearPedidoTransaccional
         // ============================================
         async function crearPedidoTransaccional(pedido) {
             try {
@@ -2859,6 +2861,8 @@
                     costo_delivery_usd: pedido.costo_delivery_usd || 0
                 };
 
+                console.log('📤 Enviando pedido a RPC:', pedidoParaRPC);
+                
                 const { data, error } = await window.supabaseClient.rpc('crear_pedido_con_reserva', {
                     p_pedido: pedidoParaRPC,
                     p_items: pedido.items
@@ -2866,7 +2870,9 @@
 
                 if (error) throw error;
                 
-                if (data.success) {
+                console.log('📥 Respuesta RPC:', data);
+                
+                if (data && data.success) {
                     // Mensajes según el tipo de pedido
                     let titulo, mensaje;
                     
@@ -2888,42 +2894,46 @@
                             mensaje = 'Tu pedido ha sido registrado';
                     }
                     
-                    // Esperar 1 segundo antes de crear la notificación
-                    setTimeout(async () => {
-                        // Crear notificación en la base de datos
-                        await window.supabaseClient
-                            .from('notificaciones')
-                            .insert([{
-                                pedido_id: data.pedido_id,
-                                tipo: 'pending',
-                                titulo: titulo,
-                                mensaje: mensaje,
-                                timestamp: new Date().toISOString(),
-                                session_id: sessionId,
-                                leida: false
-                            }]);
-                        
-                        // Reproducir sonido
-                        const audio = document.getElementById('notificationSound');
-                        audio.play().catch(() => {});
-                        
-                        // Activar vibración si el navegador lo soporta
-                        if (navigator.vibrate) {
-                            navigator.vibrate(200);
-                        }
-                        
-                        // Animar la campana
-                        const bell = document.getElementById('notificationBell');
-                        bell.classList.add('fa-shake');
-                        setTimeout(() => bell.classList.remove('fa-shake'), 1000);
-                        
-                        // Mostrar toast
-                        mostrarToast(titulo, 'success');
-                    }, 1000);
+                    // Crear notificación en la base de datos (INMEDIATAMENTE)
+                    const { error: notifError } = await window.supabaseClient
+                        .from('notificaciones')
+                        .insert([{
+                            pedido_id: data.pedido_id,
+                            tipo: 'pending',
+                            titulo: titulo,
+                            mensaje: mensaje,
+                            timestamp: new Date().toISOString(),
+                            session_id: sessionId,
+                            leida: false
+                        }]);
+                    
+                    if (notifError) {
+                        console.error('Error creando notificación:', notifError);
+                    }
+                    
+                    // Recargar notificaciones para actualizar UI
+                    await cargarNotificaciones();
+                    
+                    // Reproducir sonido
+                    const audio = document.getElementById('notificationSound');
+                    audio.play().catch(() => {});
+                    
+                    // Activar vibración si el navegador lo soporta
+                    if (navigator.vibrate) {
+                        navigator.vibrate(200);
+                    }
+                    
+                    // Animar la campana
+                    const bell = document.getElementById('notificationBell');
+                    bell.classList.add('fa-shake');
+                    setTimeout(() => bell.classList.remove('fa-shake'), 1000);
+                    
+                    // Mostrar toast
+                    mostrarToast(titulo, 'success');
                     
                     return { success: true, pedidoId: data.pedido_id };
                 } else {
-                    return { success: false, error: data.error };
+                    return { success: false, error: data?.error || 'Error desconocido' };
                 }
             } catch (error) {
                 console.error('Error en crearPedidoTransaccional:', error);
