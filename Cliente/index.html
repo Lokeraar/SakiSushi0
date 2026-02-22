@@ -290,6 +290,21 @@
             20%, 40%, 60%, 80% { transform: scale(0.95); }
         }
 
+        .cart-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background-color: var(--accent);
+            color: white;
+            font-size: 0.7rem;
+            padding: 0.2rem 0.5rem;
+            border-radius: 20px;
+            min-width: 20px;
+            text-align: center;
+            font-weight: 600;
+            box-shadow: var(--shadow-sm);
+        }
+
         .table-badge {
             background: var(--accent);
             color: var(--secondary);
@@ -485,7 +500,7 @@
             font-weight: bold;
         }
 
-        /* Cart Sidebar - MODIFICADO: Estilo unificado para items */
+        /* Cart Sidebar - Estilo mejorado */
         .cart-sidebar {
             width: 320px;
             background: white;
@@ -616,9 +631,8 @@
             color: white;
             padding: 0.8rem 1rem;
             display: flex;
-            align-items: center;
-            justify-content: space-between;
-            font-weight: 600;
+            flex-direction: column;
+            gap: 0.3rem;
             cursor: pointer;
             transition: background 0.2s;
         }
@@ -627,43 +641,53 @@
             background: linear-gradient(135deg, #b71c1c, var(--primary));
         }
 
-        .cart-item-group-header .header-left {
+        .header-row {
             display: flex;
             align-items: center;
-            gap: 0.8rem;
+            justify-content: space-between;
+            width: 100%;
         }
 
-        .cart-item-group-header .header-left i {
-            font-size: 1.1rem;
+        .header-row .nombre {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .header-row .nombre i {
+            font-size: 1rem;
             width: 20px;
             transition: transform 0.3s;
         }
 
-        .cart-item-group-header .header-left i.rotated {
+        .header-row .nombre i.rotated {
             transform: rotate(90deg);
         }
 
-        .cart-item-group-header .platillo-nombre {
+        .header-row .toggle-icon {
+            font-size: 1rem;
+            color: rgba(255,255,255,0.8);
+        }
+
+        .header-details {
             display: flex;
             align-items: center;
-            gap: 0.5rem;
-        }
-
-        .cart-item-group-header .platillo-nombre i {
-            font-size: 1rem;
-        }
-
-        .cart-item-group-header .platillo-cantidad-total {
-            background: rgba(255,255,255,0.2);
-            padding: 0.2rem 0.8rem;
-            border-radius: 20px;
+            gap: 1rem;
             font-size: 0.9rem;
-            font-weight: 600;
+            color: rgba(255,255,255,0.9);
+            padding-left: 1.8rem;
         }
 
-        .cart-item-group-header .precio-total {
-            font-size: 1rem;
-            font-weight: 700;
+        .header-details span {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+        }
+
+        .header-details i {
+            font-size: 0.8rem;
         }
 
         .cart-item-variants {
@@ -758,7 +782,7 @@
             transform: scale(1.1);
         }
 
-        /* Estilo para item individual (también usa la misma estructura) */
+        /* Estilo para item individual (con botón eliminar) */
         .cart-item-single {
             background: white;
             border-radius: var(--radius-md);
@@ -1241,6 +1265,7 @@
         .stock-info i.low { color: var(--warning); }
         .stock-info i.sold-out { color: var(--danger); }
 
+        /* Notifications Panel - Mejorado */
         .notifications-panel {
             position: absolute;
             top: 60px;
@@ -1275,6 +1300,9 @@
             justify-content: space-between;
             background: var(--gray-50);
             border-radius: var(--radius-md) var(--radius-md) 0 0;
+            position: sticky;
+            top: 0;
+            z-index: 10;
         }
 
         .notifications-header h4 {
@@ -1288,6 +1316,7 @@
             padding: 0.2rem 0.6rem;
             border-radius: 20px;
             font-size: 0.75rem;
+            font-weight: 600;
         }
 
         .notifications-list {
@@ -2003,11 +2032,13 @@
                     <i class="fas fa-bell"></i>
                 </button>
                 <span class="notification-badge" id="notificationBadge" style="display: none;">0</span>
-                <div class="notifications-panel" id="notificationsPanel"></div>
             </div>
-            <button class="icon-button" id="cartToggle" title="Carrito">
-                <i class="fas fa-shopping-cart"></i>
-            </button>
+            <div style="position: relative;">
+                <button class="icon-button" id="cartToggle" title="Carrito">
+                    <i class="fas fa-shopping-cart"></i>
+                </button>
+                <span class="cart-badge" id="cartBadge" style="display: none;">0</span>
+            </div>
             <div class="table-badge" id="tableBadge" style="display: none;">Mesa <span id="tableNumber">--</span></div>
         </div>
     </header>
@@ -2381,6 +2412,17 @@
         </div>
     </div>
 
+    <!-- Notifications Panel (separado) -->
+    <div class="notifications-panel" id="notificationsPanel">
+        <div class="notifications-header">
+            <h4>Notificaciones</h4>
+            <span id="notificationsCount">0</span>
+        </div>
+        <div class="notifications-list" id="notificationsList">
+            <!-- Se llena dinámicamente -->
+        </div>
+    </div>
+
     <footer class="footer">
         <div class="footer-content">
             <div class="footer-section">
@@ -2427,8 +2469,10 @@
         let inventario = [];
         let carrito = [];
         let notificaciones = [];
+        let notificacionesNoLeidas = 0;
         let currentCustomizeItem = null;
         let mesaId = null;
+        let grupoActivo = null; // Para controlar qué grupo está desplegado
         
         let timersActivos = {};
         let intervalosTimer = {};
@@ -2576,6 +2620,7 @@
             restaurarCarrito();
             console.log('8️⃣ Carrito restaurado');
             actualizarUI();
+            actualizarCarritoBadge();
             
             const hoy = new Date().toISOString().split('T')[0];
             document.getElementById('fechaReserva').min = hoy;
@@ -2775,6 +2820,26 @@
                 if (error) throw error;
                 
                 if (data.success) {
+                    // Crear notificación de confirmación
+                    const titulo = pedido.tipo === 'mesa' ? '✅ Pedido enviado a cocina' :
+                                  pedido.tipo === 'delivery' ? '✅ Pedido de delivery confirmado' :
+                                  '✅ Reserva confirmada';
+                    
+                    const mensaje = pedido.tipo === 'mesa' ? 'Por favor, pasa a caja a cancelar' :
+                                   'Tu pedido ha sido recibido y está pendiente de confirmación';
+                    
+                    await window.supabaseClient
+                        .from('notificaciones')
+                        .insert([{
+                            pedido_id: data.pedido_id,
+                            tipo: 'approved',
+                            titulo: titulo,
+                            mensaje: mensaje,
+                            timestamp: new Date().toISOString(),
+                            session_id: sessionId,
+                            leida: false
+                        }]);
+                    
                     return { success: true, pedidoId: data.pedido_id };
                 } else {
                     return { success: false, error: data.error };
@@ -3158,8 +3223,20 @@
         }
 
         // ============================================
-        // FUNCIONES DEL CARRITO - MODIFICADO: Agrupación con plegado
+        // FUNCIONES DEL CARRITO
         // ============================================
+        function actualizarCarritoBadge() {
+            const cartBadge = document.getElementById('cartBadge');
+            const totalItems = carrito.length;
+            
+            if (totalItems > 0) {
+                cartBadge.textContent = totalItems;
+                cartBadge.style.display = 'block';
+            } else {
+                cartBadge.style.display = 'none';
+            }
+        }
+
         async function agregarAlCarrito(platilloId) {
             const platillo = menuItems.find(p => p.id === platilloId);
             if (!platillo) return;
@@ -3186,6 +3263,7 @@
             
             guardarCarrito();
             actualizarCarritoUI();
+            actualizarCarritoBadge();
             window.stockCache.invalidate();
             
             const platillosAActualizar = new Set();
@@ -3254,6 +3332,7 @@
             
             guardarCarrito();
             actualizarCarritoUI();
+            actualizarCarritoBadge();
             window.stockCache.invalidate();
             
             const platillosAActualizar = new Set();
@@ -3293,6 +3372,7 @@
             
             guardarCarrito();
             actualizarCarritoUI();
+            actualizarCarritoBadge();
             window.stockCache.invalidate();
             
             if (platilloId) {
@@ -3319,10 +3399,30 @@
             const variants = document.getElementById(`variants-${grupoId}`);
             const icon = document.getElementById(`icon-${grupoId}`);
             
+            // Si hay un grupo activo diferente, cerrarlo
+            if (grupoActivo && grupoActivo !== grupoId) {
+                const grupoAnterior = document.getElementById(`variants-${grupoActivo}`);
+                const iconoAnterior = document.getElementById(`icon-${grupoActivo}`);
+                if (grupoAnterior) {
+                    grupoAnterior.classList.remove('expanded');
+                }
+                if (iconoAnterior) {
+                    iconoAnterior.classList.remove('rotated');
+                }
+            }
+            
+            // Toggle del grupo actual
             if (variants) {
                 variants.classList.toggle('expanded');
                 if (icon) {
                     icon.classList.toggle('rotated');
+                }
+                
+                // Actualizar grupo activo
+                if (variants.classList.contains('expanded')) {
+                    grupoActivo = grupoId;
+                } else {
+                    grupoActivo = null;
                 }
             }
         }
@@ -3364,6 +3464,7 @@
             if (carrito.length === 0) {
                 cartItems.innerHTML = '<div class="cart-empty"><i class="fas fa-shopping-basket"></i><p>Tu carrito está vacío</p></div>';
                 cartFooter.style.display = 'none';
+                grupoActivo = null;
                 return;
             }
             
@@ -3379,22 +3480,26 @@
                 
                 if (grupo.cantidad > 1) {
                     // Grupo con múltiples items (plegado por defecto)
+                    const estaExpandido = grupoActivo === grupo.id;
+                    
                     html += `
                         <div class="cart-item-group">
                             <div class="cart-item-group-header" onclick="toggleGrupo('${grupo.id}')">
-                                <div class="header-left">
-                                    <i class="fas fa-chevron-right" id="icon-${grupo.id}"></i>
-                                    <div class="platillo-nombre">
-                                        <i class="fas fa-utensils"></i>
-                                        ${grupo.nombre}
+                                <div class="header-row">
+                                    <div class="nombre">
+                                        <i class="fas fa-chevron-right" id="icon-${grupo.id}" ${estaExpandido ? 'class="rotated"' : ''}></i>
+                                        <span>${grupo.nombre}</span>
+                                    </div>
+                                    <div class="toggle-icon">
+                                        <i class="fas fa-${estaExpandido ? 'chevron-up' : 'chevron-down'}"></i>
                                     </div>
                                 </div>
-                                <div class="header-right">
-                                    <span class="platillo-cantidad-total">${grupo.cantidad} unid.</span>
-                                    <span class="precio-total">${formatBs(grupo.subtotal)}</span>
+                                <div class="header-details">
+                                    <span><i class="fas fa-shopping-basket"></i> ${grupo.cantidad} unidades</span>
+                                    <span><i class="fas fa-tag"></i> ${formatBs(grupo.subtotal)}</span>
                                 </div>
                             </div>
-                            <div class="cart-item-variants" id="variants-${grupo.id}">
+                            <div class="cart-item-variants ${estaExpandido ? 'expanded' : ''}" id="variants-${grupo.id}">
                     `;
                     
                     grupo.items.forEach(item => {
@@ -3429,7 +3534,7 @@
                         </div>
                     `;
                 } else {
-                    // Item individual (mismo estilo visual)
+                    // Item individual (con botón eliminar)
                     const item = grupo.items[0];
                     const ingredientesNombres = item.personalizacion.map(p => {
                         const ing = inventario.find(i => i.id === p);
@@ -3500,6 +3605,176 @@
                         }
                     }
                 } catch (e) {}
+            }
+        }
+
+        // ============================================
+        // FUNCIONES DE NOTIFICACIONES - MEJORADAS
+        // ============================================
+        function setupRealtimeSubscriptions() {
+            window.supabaseClient.channel('notificaciones-cliente')
+                .on('postgres_changes', { 
+                    event: 'INSERT', 
+                    schema: 'public', 
+                    table: 'notificaciones',
+                    filter: `session_id=eq.${sessionId}`
+                }, (payload) => {
+                    const nuevaNotificacion = payload.new;
+                    notificaciones.unshift(nuevaNotificacion);
+                    if (!nuevaNotificacion.leida) {
+                        notificacionesNoLeidas++;
+                    }
+                    actualizarNotificacionesUI();
+                    document.getElementById('notificationSound').play().catch(() => {});
+                    
+                    // Animación en la campana
+                    const bell = document.getElementById('notificationBell');
+                    bell.classList.add('fa-shake');
+                    setTimeout(() => bell.classList.remove('fa-shake'), 1000);
+                    
+                    mostrarToast(nuevaNotificacion.titulo, 'info');
+                })
+                .subscribe();
+            
+            window.supabaseClient.channel('inventario-cliente')
+                .on('postgres_changes', { 
+                    event: 'UPDATE', 
+                    schema: 'public', 
+                    table: 'inventario' 
+                }, () => {
+                    window.stockCache.invalidate();
+                    cargarInventario();
+                })
+                .subscribe();
+            
+            window.supabaseClient.channel('menu-cliente')
+                .on('postgres_changes', { 
+                    event: '*', 
+                    schema: 'public', 
+                    table: 'menu' 
+                }, () => {
+                    cargarMenu();
+                })
+                .subscribe();
+            
+            window.supabaseClient.channel('pedidos-cliente')
+                .on('postgres_changes', { 
+                    event: 'UPDATE', 
+                    schema: 'public', 
+                    table: 'pedidos',
+                    filter: `session_id=eq.${sessionId}`
+                }, (payload) => {
+                    const pedido = payload.new;
+                    if (pedido.estado !== 'pendiente') {
+                        const mensajes = {
+                            'en_cocina': '🍳 Tu pedido está en preparación',
+                            'en_camino': '🚚 Tu pedido está en camino',
+                            'entregado': '✅ Tu pedido ha sido entregado',
+                            'rechazado': '❌ Tu pedido fue rechazado',
+                            'cancelado_timeout': '⏰ Tiempo agotado'
+                        };
+                        if (mensajes[pedido.estado]) {
+                            mostrarToast(mensajes[pedido.estado], 'info');
+                            
+                            // Crear notificación automática
+                            window.supabaseClient
+                                .from('notificaciones')
+                                .insert([{
+                                    pedido_id: pedido.id,
+                                    tipo: pedido.estado === 'rechazado' ? 'rejected' : 'approved',
+                                    titulo: mensajes[pedido.estado].split(' ')[0] + ' ' + mensajes[pedido.estado].split(' ')[1],
+                                    mensaje: mensajes[pedido.estado],
+                                    timestamp: new Date().toISOString(),
+                                    session_id: sessionId,
+                                    leida: false
+                                }])
+                                .then(() => cargarNotificaciones());
+                        }
+                    }
+                })
+                .subscribe();
+        }
+
+        function toggleNotifications() {
+            const panel = document.getElementById('notificationsPanel');
+            panel.classList.toggle('active');
+            if (panel.classList.contains('active')) {
+                cargarNotificaciones();
+                // Marcar todas como leídas al abrir
+                marcarTodasComoLeidas();
+            }
+        }
+
+        async function cargarNotificaciones() {
+            const { data } = await window.supabaseClient
+                .from('notificaciones')
+                .select('*')
+                .eq('session_id', sessionId)
+                .order('timestamp', { ascending: false })
+                .limit(20);
+            if (data) {
+                notificaciones = data;
+                notificacionesNoLeidas = notificaciones.filter(n => !n.leida).length;
+                actualizarNotificacionesUI();
+            }
+        }
+
+        async function marcarTodasComoLeidas() {
+            const idsNoLeidas = notificaciones.filter(n => !n.leida).map(n => n.id);
+            if (idsNoLeidas.length === 0) return;
+            
+            await window.supabaseClient
+                .from('notificaciones')
+                .update({ leida: true })
+                .in('id', idsNoLeidas);
+            
+            notificaciones = notificaciones.map(n => ({ ...n, leida: true }));
+            notificacionesNoLeidas = 0;
+            actualizarNotificacionesUI();
+        }
+
+        async function marcarNotificacionLeida(id) {
+            await window.supabaseClient.from('notificaciones').update({ leida: true }).eq('id', id);
+            notificaciones = notificaciones.map(n => n.id === id ? { ...n, leida: true } : n);
+            notificacionesNoLeidas = notificaciones.filter(n => !n.leida).length;
+            actualizarNotificacionesUI();
+        }
+
+        function actualizarNotificacionesUI() {
+            const badge = document.getElementById('notificationBadge');
+            const panel = document.getElementById('notificationsPanel');
+            const countSpan = document.getElementById('notificationsCount');
+            const listDiv = document.getElementById('notificationsList');
+            
+            // Actualizar badge
+            if (notificacionesNoLeidas > 0) {
+                badge.textContent = notificacionesNoLeidas;
+                badge.style.display = 'block';
+                badge.classList.add('has-unread');
+            } else {
+                badge.style.display = 'none';
+                badge.classList.remove('has-unread');
+            }
+            
+            if (countSpan) {
+                countSpan.textContent = notificacionesNoLeidas;
+            }
+            
+            if (listDiv) {
+                if (notificaciones.length === 0) {
+                    listDiv.innerHTML = '<div style="text-align: center; padding: 1rem; color: var(--gray-500);">No hay notificaciones</div>';
+                } else {
+                    listDiv.innerHTML = notificaciones.map(n => `
+                        <div class="notification-item ${n.tipo} ${!n.leida ? 'unread' : ''}" onclick="marcarNotificacionLeida('${n.id}')">
+                            <div class="notification-title">
+                                <i class="fas fa-${mensajesEstado[n.tipo]?.icono || 'bell'}"></i>
+                                ${n.titulo}
+                            </div>
+                            <div class="notification-message">${n.mensaje}</div>
+                            <div class="notification-time">${new Date(n.timestamp).toLocaleString()}</div>
+                        </div>
+                    `).join('');
+                }
             }
         }
 
@@ -3640,6 +3915,7 @@
                 carrito = [];
                 guardarCarrito();
                 actualizarCarritoUI();
+                actualizarCarritoBadge();
                 document.getElementById('confirmMesaModal').classList.remove('active');
                 window.stockCache.invalidate();
                 
@@ -3821,6 +4097,7 @@
                 carrito = [];
                 guardarCarrito();
                 actualizarCarritoUI();
+                actualizarCarritoBadge();
                 document.getElementById('deliveryModal').classList.remove('active');
                 window.stockCache.invalidate();
                 
@@ -3859,6 +4136,7 @@
                 carrito = [];
                 guardarCarrito();
                 actualizarCarritoUI();
+                actualizarCarritoBadge();
                 document.getElementById('reservaModal').classList.remove('active');
                 window.stockCache.invalidate();
                 
@@ -3893,125 +4171,6 @@
                 console.error('Error al copiar:', err);
                 mostrarToast('❌ Error al copiar', 'error');
             });
-        }
-
-        // ============================================
-        // FUNCIONES DE NOTIFICACIONES
-        // ============================================
-        function setupRealtimeSubscriptions() {
-            window.supabaseClient.channel('notificaciones-cliente')
-                .on('postgres_changes', { 
-                    event: 'INSERT', 
-                    schema: 'public', 
-                    table: 'notificaciones',
-                    filter: `session_id=eq.${sessionId}`
-                }, (payload) => {
-                    notificaciones.unshift(payload.new);
-                    actualizarNotificacionesUI();
-                    document.getElementById('notificationSound').play().catch(() => {});
-                    document.getElementById('notificationBell').classList.add('fa-shake');
-                    setTimeout(() => document.getElementById('notificationBell').classList.remove('fa-shake'), 1000);
-                })
-                .subscribe();
-            
-            window.supabaseClient.channel('inventario-cliente')
-                .on('postgres_changes', { 
-                    event: 'UPDATE', 
-                    schema: 'public', 
-                    table: 'inventario' 
-                }, () => {
-                    window.stockCache.invalidate();
-                    cargarInventario();
-                })
-                .subscribe();
-            
-            window.supabaseClient.channel('menu-cliente')
-                .on('postgres_changes', { 
-                    event: '*', 
-                    schema: 'public', 
-                    table: 'menu' 
-                }, () => {
-                    cargarMenu();
-                })
-                .subscribe();
-            
-            window.supabaseClient.channel('pedidos-cliente')
-                .on('postgres_changes', { 
-                    event: 'UPDATE', 
-                    schema: 'public', 
-                    table: 'pedidos',
-                    filter: `session_id=eq.${sessionId}`
-                }, (payload) => {
-                    const pedido = payload.new;
-                    if (pedido.estado !== 'pendiente') {
-                        const mensajes = {
-                            'en_cocina': '🍳 Tu pedido está en preparación',
-                            'en_camino': '🚚 Tu pedido está en camino',
-                            'entregado': '✅ Tu pedido ha sido entregado',
-                            'rechazado': '❌ Tu pedido fue rechazado',
-                            'cancelado_timeout': '⏰ Tiempo agotado'
-                        };
-                        if (mensajes[pedido.estado]) {
-                            mostrarToast(mensajes[pedido.estado], 'info');
-                        }
-                    }
-                })
-                .subscribe();
-        }
-
-        function toggleNotifications() {
-            const panel = document.getElementById('notificationsPanel');
-            panel.classList.toggle('active');
-            if (panel.classList.contains('active')) {
-                cargarNotificaciones();
-            }
-        }
-
-        async function cargarNotificaciones() {
-            const { data } = await window.supabaseClient
-                .from('notificaciones')
-                .select('*')
-                .eq('session_id', sessionId)
-                .order('timestamp', { ascending: false })
-                .limit(20);
-            if (data) {
-                notificaciones = data;
-                actualizarNotificacionesUI();
-            }
-        }
-
-        function actualizarNotificacionesUI() {
-            const panel = document.getElementById('notificationsPanel');
-            const badge = document.getElementById('notificationBadge');
-            const noLeidas = notificaciones.filter(n => !n.leida).length;
-            
-            badge.style.display = noLeidas > 0 ? 'block' : 'none';
-            if (noLeidas > 0) badge.textContent = noLeidas;
-            
-            panel.innerHTML = `
-                <div class="notifications-header">
-                    <h4>Notificaciones</h4>
-                    <span>${noLeidas}</span>
-                </div>
-                <div class="notifications-list">
-                    ${notificaciones.map(n => `
-                        <div class="notification-item ${n.tipo}" onclick="marcarNotificacionLeida('${n.id}')">
-                            <div class="notification-title">
-                                <i class="fas fa-${mensajesEstado[n.tipo]?.icono || 'bell'}"></i>
-                                ${n.titulo}
-                            </div>
-                            <div class="notification-message">${n.mensaje}</div>
-                            <div class="notification-time">${new Date(n.timestamp).toLocaleTimeString()}</div>
-                        </div>
-                    `).join('')}
-                </div>
-            `;
-        }
-
-        async function marcarNotificacionLeida(id) {
-            await window.supabaseClient.from('notificaciones').update({ leida: true }).eq('id', id);
-            notificaciones = notificaciones.map(n => n.id === id ? { ...n, leida: true } : n);
-            actualizarNotificacionesUI();
         }
 
         // ============================================
@@ -4120,6 +4279,15 @@
             });
             
             document.getElementById('parroquiaSearch').addEventListener('input', filtrarParroquias);
+            
+            // Cerrar notificaciones al hacer clic fuera
+            document.addEventListener('click', (e) => {
+                const panel = document.getElementById('notificationsPanel');
+                const bell = document.getElementById('notificationBell');
+                if (!panel.contains(e.target) && !bell.contains(e.target) && panel.classList.contains('active')) {
+                    panel.classList.remove('active');
+                }
+            });
             
             window.addEventListener('resize', function() {
                 if (window.innerWidth > 992) {
