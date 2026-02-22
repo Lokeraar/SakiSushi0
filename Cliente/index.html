@@ -1309,7 +1309,7 @@
             border-radius: 0 0 var(--radius-lg) var(--radius-lg);
         }
 
-        /* Footer - MODIFICADO para escritorio */
+        /* Footer */
         .footer {
             background: var(--secondary);
             color: white;
@@ -1577,40 +1577,142 @@
             font-family: monospace;
         }
 
+        /* Estilo mejorado para el selector de parroquia */
         .parroquia-selector {
             position: relative;
+            margin-bottom: 1rem;
         }
         
         .selected-parroquia {
-            background: var(--gray-100);
-            padding: 0.7rem;
-            border: 1px solid var(--gray-300);
-            border-radius: var(--radius-sm);
+            background: white;
+            padding: 0.8rem 1rem;
+            border: 2px solid var(--gray-200);
+            border-radius: var(--radius-md);
             display: flex;
             justify-content: space-between;
             align-items: center;
             cursor: pointer;
-            font-size: 0.95rem;
+            font-size: 1rem;
+            transition: all 0.2s;
+            box-shadow: var(--shadow-sm);
+        }
+        
+        .selected-parroquia:hover {
+            border-color: var(--primary);
+            box-shadow: var(--shadow-md);
+        }
+        
+        .selected-parroquia i {
+            transition: transform 0.3s;
+            color: var(--gray-600);
+        }
+        
+        .selected-parroquia i.fa-chevron-up {
+            transform: rotate(180deg);
         }
         
         .parroquia-search {
             width: 100%;
-            padding: 0.7rem;
-            border: 1px solid var(--gray-300);
-            border-radius: var(--radius-sm);
-            font-size: 0.95rem;
-            margin-top: 0.5rem;
+            padding: 0.8rem 1rem;
+            border: 2px solid var(--primary);
+            border-radius: var(--radius-md) var(--radius-md) 0 0;
+            font-size: 1rem;
+            outline: none;
+            border-bottom: none;
+        }
+        
+        .parroquia-search:focus {
+            box-shadow: 0 0 0 3px rgba(211,47,47,0.1);
         }
         
         .parroquia-select {
             width: 100%;
             padding: 0.5rem;
-            border: 1px solid var(--gray-300);
-            border-radius: var(--radius-sm);
-            margin-top: 0.5rem;
-            font-size: 0.95rem;
+            border: 2px solid var(--primary);
+            border-radius: 0 0 var(--radius-md) var(--radius-md);
+            font-size: 1rem;
+            background: white;
+            max-height: 200px;
+            overflow-y: auto;
         }
         
+        .parroquia-select option {
+            padding: 0.8rem 1rem;
+            border-bottom: 1px solid var(--gray-100);
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .parroquia-select option:hover,
+        .parroquia-select option:checked {
+            background: linear-gradient(135deg, var(--primary), #b71c1c);
+            color: white;
+        }
+        
+        .parroquia-select option:last-child {
+            border-bottom: none;
+        }
+        
+        /* Información de pago mejorada */
+        .payment-info {
+            background: linear-gradient(135deg, var(--gray-100), white);
+            padding: 1.2rem;
+            border-radius: var(--radius-md);
+            margin-bottom: 1.5rem;
+            border: 2px solid var(--primary);
+            box-shadow: var(--shadow-md);
+        }
+        
+        .payment-info h4 {
+            color: var(--primary);
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .payment-info h4 i {
+            font-size: 1.3rem;
+        }
+        
+        .payment-details {
+            background: white;
+            padding: 1rem;
+            border-radius: var(--radius-sm);
+            border: 1px solid var(--gray-200);
+        }
+        
+        .payment-details p {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+            font-size: 1rem;
+        }
+        
+        .payment-details p:last-child {
+            margin-bottom: 0;
+        }
+        
+        .payment-details i {
+            width: 24px;
+            color: var(--primary);
+            font-size: 1.1rem;
+        }
+        
+        .payment-details strong {
+            color: var(--secondary);
+            min-width: 40px;
+        }
+        
+        .payment-details span {
+            color: var(--primary);
+            font-weight: 600;
+            font-family: monospace;
+            font-size: 1.1rem;
+        }
+
         .delivery-price-display {
             background: #E8F5E9;
             border: 2px solid var(--success);
@@ -1629,23 +1731,37 @@
         
         .file-input-label {
             display: block;
-            padding: 0.8rem;
+            padding: 1rem;
             background: var(--gray-100);
             border: 2px dashed var(--primary);
             border-radius: var(--radius-sm);
             text-align: center;
             cursor: pointer;
             transition: all 0.3s;
-            font-size: 0.9rem;
+            font-size: 1rem;
         }
         
         .file-input-label:hover {
             background: var(--gray-200);
+            border-color: var(--accent);
         }
         
         .file-input-label.has-file {
             border-color: var(--success);
             background: #E8F5E9;
+        }
+        
+        .file-input-label i {
+            font-size: 2rem;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+        
+        .file-input-label span {
+            display: block;
+            font-size: 0.9rem;
+            color: var(--gray-600);
+            margin-top: 0.3rem;
         }
 
         .info-box {
@@ -1834,7 +1950,7 @@
             </div>
         </div>
 
-        <!-- Delivery Modal -->
+        <!-- Delivery Modal - CORREGIDO -->
         <div class="modal-overlay" id="deliveryModal">
             <div class="modal-container">
                 <div class="modal-header">
@@ -1851,22 +1967,38 @@
                         <i class="fas fa-exclamation-triangle"></i> Al confirmar, el timer se detiene.
                     </div>
                     
-                    <div class="payment-info" style="background: var(--gray-100); padding: 0.8rem; border-radius: var(--radius-sm); margin-bottom: 1rem;">
-                        <h4 style="margin-bottom: 0.5rem;"><i class="fas fa-credit-card"></i> Pago Móvil</h4>
-                        <p><strong>Banesco</strong> 0424-1525233</p>
-                        <p><strong>RIF</strong> J-501519838</p>
+                    <!-- Información de pago mejorada -->
+                    <div class="payment-info">
+                        <h4><i class="fas fa-credit-card"></i> Pago Móvil</h4>
+                        <div class="payment-details">
+                            <p>
+                                <i class="fas fa-university"></i>
+                                <strong>Banco:</strong>
+                                <span>Banesco</span>
+                            </p>
+                            <p>
+                                <i class="fas fa-phone-alt"></i>
+                                <strong>Teléfono:</strong>
+                                <span>0424-1525233</span>
+                            </p>
+                            <p>
+                                <i class="fas fa-id-card"></i>
+                                <strong>RIF:</strong>
+                                <span>J-501519838</span>
+                            </p>
+                        </div>
                     </div>
                     
                     <form id="deliveryForm">
-                        <div style="margin-bottom: 1rem;">
-                            <label style="display: block; margin-bottom: 0.3rem; font-weight: 600;">Parroquia:</label>
+                        <div style="margin-bottom: 1.5rem;">
+                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Parroquia:</label>
                             <div class="parroquia-selector">
                                 <div class="selected-parroquia" onclick="toggleParroquiaSelect()">
                                     <span id="selectedParroquiaText">San Bernardino</span>
                                     <i class="fas fa-chevron-down" id="parroquiaChevron"></i>
                                 </div>
-                                <input type="text" id="parroquiaSearch" class="parroquia-search" placeholder="Buscar..." style="display: none;">
-                                <select id="parroquiaSelect" class="parroquia-select" size="5" style="display: none;">
+                                <input type="text" id="parroquiaSearch" class="parroquia-search" placeholder="Buscar parroquia..." style="display: none;">
+                                <select id="parroquiaSelect" class="parroquia-select" size="5" style="display: none;" onchange="seleccionarParroquia(this)">
                                     <option value="Altagracia">Altagracia</option>
                                     <option value="Antímano">Antímano</option>
                                     <option value="Candelaria">Candelaria</option>
@@ -1907,43 +2039,47 @@
                             Envío: Bs. 0,00
                         </div>
                         
-                        <div style="margin-bottom: 1rem;">
-                            <label for="direccion" style="display: block; margin-bottom: 0.3rem; font-weight: 600;">Dirección:</label>
-                            <textarea id="direccion" required minlength="20" placeholder="Av., Edif., Piso, Apto" style="width: 100%; padding: 0.7rem; border: 1px solid var(--gray-300); border-radius: var(--radius-sm);" rows="2"></textarea>
-                            <small id="direccionCounter" style="color: var(--gray-600);">0/20</small>
-                        </div>
-                        
-                        <div style="margin-bottom: 1rem;">
-                            <label for="telefono" style="display: block; margin-bottom: 0.3rem; font-weight: 600;">Teléfono:</label>
-                            <input type="tel" id="telefono" required pattern="[0-9]{11,14}" placeholder="04121234567" style="width: 100%; padding: 0.7rem; border: 1px solid var(--gray-300); border-radius: var(--radius-sm);">
-                        </div>
-                        
-                        <div style="margin-bottom: 1rem;">
-                            <label style="display: block; margin-bottom: 0.3rem; font-weight: 600;">Referencia (solo números):</label>
-                            <div style="display: flex; gap: 0.3rem;">
-                                <input type="text" maxlength="1" class="ref-digit" data-type="delivery" data-index="0" style="width: 15%; text-align: center; padding: 0.7rem; border: 1px solid var(--gray-300); border-radius: var(--radius-sm); font-size: 1.2rem;" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
-                                <input type="text" maxlength="1" class="ref-digit" data-type="delivery" data-index="1" style="width: 15%; text-align: center; padding: 0.7rem; border: 1px solid var(--gray-300); border-radius: var(--radius-sm); font-size: 1.2rem;" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
-                                <input type="text" maxlength="1" class="ref-digit" data-type="delivery" data-index="2" style="width: 15%; text-align: center; padding: 0.7rem; border: 1px solid var(--gray-300); border-radius: var(--radius-sm); font-size: 1.2rem;" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
-                                <input type="text" maxlength="1" class="ref-digit" data-type="delivery" data-index="3" style="width: 15%; text-align: center; padding: 0.7rem; border: 1px solid var(--gray-300); border-radius: var(--radius-sm); font-size: 1.2rem;" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
-                                <input type="text" maxlength="1" class="ref-digit" data-type="delivery" data-index="4" style="width: 15%; text-align: center; padding: 0.7rem; border: 1px solid var(--gray-300); border-radius: var(--radius-sm); font-size: 1.2rem;" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
-                                <input type="text" maxlength="1" class="ref-digit" data-type="delivery" data-index="5" style="width: 15%; text-align: center; padding: 0.7rem; border: 1px solid var(--gray-300); border-radius: var(--radius-sm); font-size: 1.2rem;" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+                        <div style="margin-bottom: 1.5rem;">
+                            <label for="direccion" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Dirección completa:</label>
+                            <textarea id="direccion" required minlength="20" placeholder="Av., Calle, Edificio, Piso, Apartamento" style="width: 100%; padding: 0.8rem; border: 2px solid var(--gray-200); border-radius: var(--radius-sm); font-size: 1rem; transition: border 0.2s;" rows="3" oninput="actualizarContadorDireccion()"></textarea>
+                            <div style="display: flex; justify-content: flex-end; margin-top: 0.3rem;">
+                                <small id="direccionCounter" style="color: var(--gray-600); font-weight: 500;">0/20 caracteres</small>
                             </div>
                         </div>
                         
-                        <div style="margin-bottom: 1rem;">
-                            <label for="comprobante" style="display: block; margin-bottom: 0.3rem; font-weight: 600;">Comprobante:</label>
+                        <div style="margin-bottom: 1.5rem;">
+                            <label for="telefono" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Teléfono (máx 14 dígitos):</label>
+                            <input type="tel" id="telefono" required pattern="[0-9]{11,14}" maxlength="14" placeholder="04121234567" style="width: 100%; padding: 0.8rem; border: 2px solid var(--gray-200); border-radius: var(--radius-sm); font-size: 1rem;" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+                        </div>
+                        
+                        <div style="margin-bottom: 1.5rem;">
+                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Referencia (6 dígitos):</label>
+                            <div style="display: flex; gap: 0.5rem; justify-content: center;">
+                                <input type="text" maxlength="1" class="ref-digit" data-type="delivery" data-index="0" style="width: 50px; height: 50px; text-align: center; padding: 0.5rem; border: 2px solid var(--gray-200); border-radius: var(--radius-sm); font-size: 1.4rem; font-weight: 600;" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this, 'delivery', 0)">
+                                <input type="text" maxlength="1" class="ref-digit" data-type="delivery" data-index="1" style="width: 50px; height: 50px; text-align: center; padding: 0.5rem; border: 2px solid var(--gray-200); border-radius: var(--radius-sm); font-size: 1.4rem; font-weight: 600;" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this, 'delivery', 1)">
+                                <input type="text" maxlength="1" class="ref-digit" data-type="delivery" data-index="2" style="width: 50px; height: 50px; text-align: center; padding: 0.5rem; border: 2px solid var(--gray-200); border-radius: var(--radius-sm); font-size: 1.4rem; font-weight: 600;" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this, 'delivery', 2)">
+                                <input type="text" maxlength="1" class="ref-digit" data-type="delivery" data-index="3" style="width: 50px; height: 50px; text-align: center; padding: 0.5rem; border: 2px solid var(--gray-200); border-radius: var(--radius-sm); font-size: 1.4rem; font-weight: 600;" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this, 'delivery', 3)">
+                                <input type="text" maxlength="1" class="ref-digit" data-type="delivery" data-index="4" style="width: 50px; height: 50px; text-align: center; padding: 0.5rem; border: 2px solid var(--gray-200); border-radius: var(--radius-sm); font-size: 1.4rem; font-weight: 600;" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this, 'delivery', 4)">
+                                <input type="text" maxlength="1" class="ref-digit" data-type="delivery" data-index="5" style="width: 50px; height: 50px; text-align: center; padding: 0.5rem; border: 2px solid var(--gray-200); border-radius: var(--radius-sm); font-size: 1.4rem; font-weight: 600;" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this, 'delivery', 5)">
+                            </div>
+                        </div>
+                        
+                        <div style="margin-bottom: 1.5rem;">
+                            <label for="comprobante" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Comprobante de pago:</label>
                             <div class="file-input-wrapper">
-                                <input type="file" id="comprobante" accept="image/*" style="display: none;">
+                                <input type="file" id="comprobante" accept="image/*" style="display: none;" onchange="actualizarComprobante(this)">
                                 <label for="comprobante" class="file-input-label" id="comprobanteLabel">
-                                    <i class="fas fa-cloud-upload-alt" style="font-size: 1.5rem;"></i> Subir
+                                    <i class="fas fa-cloud-upload-alt"></i>
+                                    <span>Haz clic para seleccionar una imagen</span>
+                                    <small>JPG, PNG, GIF (max. 5MB)</small>
                                 </label>
                             </div>
                         </div>
                         
-                        <div style="padding: 0.8rem; background: var(--gray-100); border-radius: var(--radius-sm);">
-                            <div style="display: flex; justify-content: space-between;">
-                                <span>Total a pagar:</span>
-                                <span style="font-weight: 700; color: var(--primary);" id="deliveryTotal">Bs. 0,00</span>
+                        <div style="padding: 1rem; background: var(--gray-100); border-radius: var(--radius-md); border: 2px solid var(--primary);">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span style="font-weight: 600; font-size: 1.1rem;">Total a pagar:</span>
+                                <span style="font-weight: 700; color: var(--primary); font-size: 1.4rem;" id="deliveryTotal">Bs. 0,00</span>
                             </div>
                         </div>
                     </form>
@@ -1951,13 +2087,13 @@
                 <div class="modal-footer">
                     <button class="btn-secondary" id="cancelDelivery">Cancelar</button>
                     <button class="btn-primary" id="confirmDelivery" disabled>
-                        <i class="fas fa-check"></i> Confirmar
+                        <i class="fas fa-check"></i> Confirmar Pedido
                     </button>
                 </div>
             </div>
         </div>
 
-        <!-- Reserva Modal -->
+        <!-- Reserva Modal - CORREGIDO -->
         <div class="modal-overlay" id="reservaModal">
             <div class="modal-container">
                 <div class="modal-header">
@@ -1974,49 +2110,67 @@
                         <i class="fas fa-exclamation-triangle"></i> Al confirmar, el timer se detiene.
                     </div>
                     
-                    <div class="payment-info" style="background: var(--gray-100); padding: 0.8rem; border-radius: var(--radius-sm); margin-bottom: 1rem;">
-                        <h4 style="margin-bottom: 0.5rem;"><i class="fas fa-credit-card"></i> Pago Móvil</h4>
-                        <p><strong>Banesco</strong> 0424-1525233</p>
-                        <p><strong>RIF</strong> J-501519838</p>
+                    <!-- Información de pago mejorada -->
+                    <div class="payment-info">
+                        <h4><i class="fas fa-credit-card"></i> Pago Móvil</h4>
+                        <div class="payment-details">
+                            <p>
+                                <i class="fas fa-university"></i>
+                                <strong>Banco:</strong>
+                                <span>Banesco</span>
+                            </p>
+                            <p>
+                                <i class="fas fa-phone-alt"></i>
+                                <strong>Teléfono:</strong>
+                                <span>0424-1525233</span>
+                            </p>
+                            <p>
+                                <i class="fas fa-id-card"></i>
+                                <strong>RIF:</strong>
+                                <span>J-501519838</span>
+                            </p>
+                        </div>
                     </div>
                     
                     <form id="reservaForm">
-                        <div style="margin-bottom: 1rem;">
-                            <label for="fechaReserva" style="display: block; margin-bottom: 0.3rem; font-weight: 600;">Fecha:</label>
-                            <input type="date" id="fechaReserva" required min="" style="width: 100%; padding: 0.7rem; border: 1px solid var(--gray-300); border-radius: var(--radius-sm);">
+                        <div style="margin-bottom: 1.5rem;">
+                            <label for="fechaReserva" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Fecha de la reserva:</label>
+                            <input type="date" id="fechaReserva" required min="" style="width: 100%; padding: 0.8rem; border: 2px solid var(--gray-200); border-radius: var(--radius-sm); font-size: 1rem;">
                         </div>
                         
-                        <div style="margin-bottom: 1rem;">
-                            <label for="nombreReserva" style="display: block; margin-bottom: 0.3rem; font-weight: 600;">Nombre:</label>
-                            <input type="text" id="nombreReserva" required placeholder="Tu nombre" style="width: 100%; padding: 0.7rem; border: 1px solid var(--gray-300); border-radius: var(--radius-sm);">
+                        <div style="margin-bottom: 1.5rem;">
+                            <label for="nombreReserva" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Nombre completo:</label>
+                            <input type="text" id="nombreReserva" required placeholder="Tu nombre" style="width: 100%; padding: 0.8rem; border: 2px solid var(--gray-200); border-radius: var(--radius-sm); font-size: 1rem;">
                         </div>
                         
-                        <div style="margin-bottom: 1rem;">
-                            <label style="display: block; margin-bottom: 0.3rem; font-weight: 600;">Referencia (solo números):</label>
-                            <div style="display: flex; gap: 0.3rem;">
-                                <input type="text" maxlength="1" class="ref-digit" data-type="reserva" data-index="0" style="width: 15%; text-align: center; padding: 0.7rem; border: 1px solid var(--gray-300); border-radius: var(--radius-sm); font-size: 1.2rem;" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
-                                <input type="text" maxlength="1" class="ref-digit" data-type="reserva" data-index="1" style="width: 15%; text-align: center; padding: 0.7rem; border: 1px solid var(--gray-300); border-radius: var(--radius-sm); font-size: 1.2rem;" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
-                                <input type="text" maxlength="1" class="ref-digit" data-type="reserva" data-index="2" style="width: 15%; text-align: center; padding: 0.7rem; border: 1px solid var(--gray-300); border-radius: var(--radius-sm); font-size: 1.2rem;" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
-                                <input type="text" maxlength="1" class="ref-digit" data-type="reserva" data-index="3" style="width: 15%; text-align: center; padding: 0.7rem; border: 1px solid var(--gray-300); border-radius: var(--radius-sm); font-size: 1.2rem;" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
-                                <input type="text" maxlength="1" class="ref-digit" data-type="reserva" data-index="4" style="width: 15%; text-align: center; padding: 0.7rem; border: 1px solid var(--gray-300); border-radius: var(--radius-sm); font-size: 1.2rem;" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
-                                <input type="text" maxlength="1" class="ref-digit" data-type="reserva" data-index="5" style="width: 15%; text-align: center; padding: 0.7rem; border: 1px solid var(--gray-300); border-radius: var(--radius-sm); font-size: 1.2rem;" oninput="this.value=this.value.replace(/[^0-9]/g,'')">
+                        <div style="margin-bottom: 1.5rem;">
+                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Referencia (6 dígitos):</label>
+                            <div style="display: flex; gap: 0.5rem; justify-content: center;">
+                                <input type="text" maxlength="1" class="ref-digit" data-type="reserva" data-index="0" style="width: 50px; height: 50px; text-align: center; padding: 0.5rem; border: 2px solid var(--gray-200); border-radius: var(--radius-sm); font-size: 1.4rem; font-weight: 600;" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this, 'reserva', 0)">
+                                <input type="text" maxlength="1" class="ref-digit" data-type="reserva" data-index="1" style="width: 50px; height: 50px; text-align: center; padding: 0.5rem; border: 2px solid var(--gray-200); border-radius: var(--radius-sm); font-size: 1.4rem; font-weight: 600;" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this, 'reserva', 1)">
+                                <input type="text" maxlength="1" class="ref-digit" data-type="reserva" data-index="2" style="width: 50px; height: 50px; text-align: center; padding: 0.5rem; border: 2px solid var(--gray-200); border-radius: var(--radius-sm); font-size: 1.4rem; font-weight: 600;" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this, 'reserva', 2)">
+                                <input type="text" maxlength="1" class="ref-digit" data-type="reserva" data-index="3" style="width: 50px; height: 50px; text-align: center; padding: 0.5rem; border: 2px solid var(--gray-200); border-radius: var(--radius-sm); font-size: 1.4rem; font-weight: 600;" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this, 'reserva', 3)">
+                                <input type="text" maxlength="1" class="ref-digit" data-type="reserva" data-index="4" style="width: 50px; height: 50px; text-align: center; padding: 0.5rem; border: 2px solid var(--gray-200); border-radius: var(--radius-sm); font-size: 1.4rem; font-weight: 600;" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this, 'reserva', 4)">
+                                <input type="text" maxlength="1" class="ref-digit" data-type="reserva" data-index="5" style="width: 50px; height: 50px; text-align: center; padding: 0.5rem; border: 2px solid var(--gray-200); border-radius: var(--radius-sm); font-size: 1.4rem; font-weight: 600;" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this, 'reserva', 5)">
                             </div>
                         </div>
                         
-                        <div style="margin-bottom: 1rem;">
-                            <label for="comprobanteReserva" style="display: block; margin-bottom: 0.3rem; font-weight: 600;">Comprobante:</label>
+                        <div style="margin-bottom: 1.5rem;">
+                            <label for="comprobanteReserva" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Comprobante de pago:</label>
                             <div class="file-input-wrapper">
-                                <input type="file" id="comprobanteReserva" accept="image/*" style="display: none;">
+                                <input type="file" id="comprobanteReserva" accept="image/*" style="display: none;" onchange="actualizarComprobanteReserva(this)">
                                 <label for="comprobanteReserva" class="file-input-label" id="comprobanteReservaLabel">
-                                    <i class="fas fa-cloud-upload-alt" style="font-size: 1.5rem;"></i> Subir
+                                    <i class="fas fa-cloud-upload-alt"></i>
+                                    <span>Haz clic para seleccionar una imagen</span>
+                                    <small>JPG, PNG, GIF (max. 5MB)</small>
                                 </label>
                             </div>
                         </div>
                         
-                        <div style="padding: 0.8rem; background: var(--gray-100); border-radius: var(--radius-sm);">
-                            <div style="display: flex; justify-content: space-between;">
-                                <span>Total:</span>
-                                <span style="font-weight: 700; color: var(--primary);" id="reservaTotal">Bs. 0,00</span>
+                        <div style="padding: 1rem; background: var(--gray-100); border-radius: var(--radius-md); border: 2px solid var(--primary);">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span style="font-weight: 600; font-size: 1.1rem;">Total a pagar:</span>
+                                <span style="font-weight: 700; color: var(--primary); font-size: 1.4rem;" id="reservaTotal">Bs. 0,00</span>
                             </div>
                         </div>
                     </form>
@@ -2024,7 +2178,7 @@
                 <div class="modal-footer">
                     <button class="btn-secondary" id="cancelReserva">Cancelar</button>
                     <button class="btn-primary" id="confirmReserva" disabled>
-                        <i class="fas fa-check"></i> Confirmar
+                        <i class="fas fa-check"></i> Confirmar Reserva
                     </button>
                 </div>
             </div>
@@ -2629,7 +2783,7 @@
         }
 
         // ============================================
-        // FUNCIONES DE PERSONALIZACIÓN
+        // FUNCIONES DE PERSONALIZACIÓN - CORREGIDAS
         // ============================================
         function abrirPersonalizacion(platilloId) {
             const platillo = menuItems.find(p => p.id === platilloId);
@@ -3132,6 +3286,9 @@
             }
         }
 
+        // ============================================
+        // FUNCIONES DE PARROQUIA - MEJORADAS
+        // ============================================
         function toggleParroquiaSelect() {
             const select = document.getElementById('parroquiaSelect');
             const search = document.getElementById('parroquiaSearch');
@@ -3149,6 +3306,13 @@
             }
         }
 
+        function seleccionarParroquia(select) {
+            document.getElementById('selectedParroquiaText').textContent = select.value;
+            toggleParroquiaSelect();
+            actualizarTotalDelivery();
+            validarFormularioDelivery();
+        }
+
         function filtrarParroquias() {
             const term = document.getElementById('parroquiaSearch').value.toLowerCase();
             const select = document.getElementById('parroquiaSelect');
@@ -3157,14 +3321,73 @@
             });
         }
 
-        document.getElementById('parroquiaSelect')?.addEventListener('change', function() {
-            document.getElementById('selectedParroquiaText').textContent = this.value;
-            toggleParroquiaSelect();
-            actualizarTotalDelivery();
+        // ============================================
+        // FUNCIONES DE DELIVERY Y RESERVA - CORREGIDAS
+        // ============================================
+        function actualizarContadorDireccion() {
+            const direccion = document.getElementById('direccion');
+            const contador = document.getElementById('direccionCounter');
+            const longitud = direccion.value.length;
+            contador.textContent = `${longitud}/20 caracteres`;
+            if (longitud >= 20) {
+                contador.style.color = 'var(--success)';
+            } else {
+                contador.style.color = 'var(--gray-600)';
+            }
             validarFormularioDelivery();
-        });
-        
-        document.getElementById('parroquiaSearch')?.addEventListener('input', filtrarParroquias);
+        }
+
+        function moverSiguiente(input, type, index) {
+            if (input.value.length === 1 && index < 5) {
+                document.querySelector(`.ref-digit[data-type="${type}"][data-index="${index + 1}"]`).focus();
+            }
+            if (type === 'delivery') validarFormularioDelivery();
+            else validarFormularioReserva();
+        }
+
+        function actualizarComprobante(input) {
+            const label = document.getElementById('comprobanteLabel');
+            if (input.files && input.files[0]) {
+                const fileName = input.files[0].name;
+                const fileSize = (input.files[0].size / 1024 / 1024).toFixed(2);
+                label.innerHTML = `
+                    <i class="fas fa-check-circle" style="color: var(--success);"></i>
+                    <span style="color: var(--success); font-weight: 600;">${fileName}</span>
+                    <small>${fileSize} MB - Listo para subir</small>
+                `;
+                label.classList.add('has-file');
+            } else {
+                label.innerHTML = `
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <span>Haz clic para seleccionar una imagen</span>
+                    <small>JPG, PNG, GIF (max. 5MB)</small>
+                `;
+                label.classList.remove('has-file');
+            }
+            validarFormularioDelivery();
+        }
+
+        function actualizarComprobanteReserva(input) {
+            const label = document.getElementById('comprobanteReservaLabel');
+            if (input.files && input.files[0]) {
+                const fileName = input.files[0].name;
+                const fileSize = (input.files[0].size / 1024 / 1024).toFixed(2);
+                label.innerHTML = `
+                    <i class="fas fa-check-circle" style="color: var(--success);"></i>
+                    <span style="color: var(--success); font-weight: 600;">${fileName}</span>
+                    <small>${fileSize} MB - Listo para subir</small>
+                `;
+                label.classList.add('has-file');
+            } else {
+                label.innerHTML = `
+                    <i class="fas fa-cloud-upload-alt"></i>
+                    <span>Haz clic para seleccionar una imagen</span>
+                    <small>JPG, PNG, GIF (max. 5MB)</small>
+                `;
+                label.classList.remove('has-file');
+            }
+            validarFormularioReserva();
+        }
 
         function actualizarTotalDelivery() {
             const select = document.getElementById('parroquiaSelect');
@@ -3172,7 +3395,7 @@
             const subtotalUSD = carrito.reduce((sum, item) => sum + item.precioUnitarioUSD, 0);
             const totalUSD = subtotalUSD + precioUSD;
             document.getElementById('deliveryTotal').textContent = formatBs(usdToBs(totalUSD));
-            document.getElementById('deliveryPriceDisplay').textContent = `Envío: ${formatBs(usdToBs(precioUSD))}`;
+            document.getElementById('deliveryPriceDisplay').textContent = `Costo de envío: ${formatBs(usdToBs(precioUSD))}`;
         }
 
         function validarFormularioDelivery() {
@@ -3184,8 +3407,9 @@
             
             const telefonoValido = window.validarTelefono(telefono);
             const referenciaValida = window.validarReferencia(referencia);
+            const direccionValida = direccion.length >= 20;
             
-            document.getElementById('confirmDelivery').disabled = !(parroquia && direccion.length >= 20 && telefonoValido && referenciaValida && comprobante);
+            document.getElementById('confirmDelivery').disabled = !(parroquia && direccionValida && telefonoValido && referenciaValida && comprobante);
         }
 
         function getReferencia(type) {
@@ -3441,41 +3665,51 @@
             
             document.getElementById('notificationBell').addEventListener('click', toggleNotifications);
             
-            document.getElementById('closeCustomizeModal').addEventListener('click', cerrarModalPersonalizacion);
-            document.getElementById('cancelCustomize').addEventListener('click', cerrarModalPersonalizacion);
+            // Event listeners para modales - CORREGIDOS
+            document.getElementById('closeCustomizeModal').addEventListener('click', () => {
+                document.getElementById('customizeModal').classList.remove('active');
+                currentCustomizeItem = null;
+            });
+            
+            document.getElementById('cancelCustomize').addEventListener('click', () => {
+                document.getElementById('customizeModal').classList.remove('active');
+                currentCustomizeItem = null;
+            });
+            
             document.getElementById('addToCartFromModal').addEventListener('click', agregarPersonalizadoAlCarrito);
+            
+            document.getElementById('closeDeliveryModal').addEventListener('click', () => {
+                detenerTimer('delivery');
+                document.getElementById('deliveryModal').classList.remove('active');
+            });
+            
+            document.getElementById('cancelDelivery').addEventListener('click', () => {
+                detenerTimer('delivery');
+                document.getElementById('deliveryModal').classList.remove('active');
+            });
+            
+            document.getElementById('closeReservaModal').addEventListener('click', () => {
+                detenerTimer('reserva');
+                document.getElementById('reservaModal').classList.remove('active');
+            });
+            
+            document.getElementById('cancelReserva').addEventListener('click', () => {
+                detenerTimer('reserva');
+                document.getElementById('reservaModal').classList.remove('active');
+            });
             
             setupReferenceInputs();
             
-            document.getElementById('direccion').addEventListener('input', (e) => {
-                document.getElementById('direccionCounter').textContent = `${e.target.value.length}/20`;
-                validarFormularioDelivery();
-            });
+            document.getElementById('direccion').addEventListener('input', actualizarContadorDireccion);
             
             document.getElementById('telefono').addEventListener('input', validarFormularioDelivery);
             
             document.getElementById('comprobante').addEventListener('change', function(e) {
-                const label = document.getElementById('comprobanteLabel');
-                if (this.files[0]) {
-                    label.innerHTML = `<i class="fas fa-check-circle"></i> ${this.files[0].name}`;
-                    label.classList.add('has-file');
-                } else {
-                    label.innerHTML = '<i class="fas fa-cloud-upload-alt"></i> Subir';
-                    label.classList.remove('has-file');
-                }
-                validarFormularioDelivery();
+                actualizarComprobante(this);
             });
             
             document.getElementById('comprobanteReserva').addEventListener('change', function(e) {
-                const label = document.getElementById('comprobanteReservaLabel');
-                if (this.files[0]) {
-                    label.innerHTML = `<i class="fas fa-check-circle"></i> ${this.files[0].name}`;
-                    label.classList.add('has-file');
-                } else {
-                    label.innerHTML = '<i class="fas fa-cloud-upload-alt"></i> Subir';
-                    label.classList.remove('has-file');
-                }
-                validarFormularioReserva();
+                actualizarComprobanteReserva(this);
             });
             
             document.getElementById('fechaReserva').addEventListener('input', validarFormularioReserva);
@@ -3486,24 +3720,8 @@
             document.getElementById('confirmReserva').addEventListener('click', confirmarPedidoReserva);
             
             document.getElementById('cancelMesaOrder').addEventListener('click', () => document.getElementById('confirmMesaModal').classList.remove('active'));
-            document.getElementById('cancelDelivery').addEventListener('click', () => {
-                detenerTimer('delivery');
-                document.getElementById('deliveryModal').classList.remove('active');
-            });
-            document.getElementById('cancelReserva').addEventListener('click', () => {
-                detenerTimer('reserva');
-                document.getElementById('reservaModal').classList.remove('active');
-            });
             
             document.getElementById('closeConfirmMesaModal').addEventListener('click', () => document.getElementById('confirmMesaModal').classList.remove('active'));
-            document.getElementById('closeDeliveryModal').addEventListener('click', () => {
-                detenerTimer('delivery');
-                document.getElementById('deliveryModal').classList.remove('active');
-            });
-            document.getElementById('closeReservaModal').addEventListener('click', () => {
-                detenerTimer('reserva');
-                document.getElementById('reservaModal').classList.remove('active');
-            });
             
             document.querySelectorAll('.modal-overlay').forEach(modal => {
                 modal.addEventListener('click', (e) => {
@@ -3514,6 +3732,8 @@
                     }
                 });
             });
+            
+            document.getElementById('parroquiaSearch').addEventListener('input', filtrarParroquias);
             
             window.addEventListener('resize', function() {
                 if (window.innerWidth > 992) {
@@ -3549,6 +3769,11 @@
             toast.textContent = msg;
             toast.className = `toast show ${tipo}`;
             setTimeout(() => toast.classList.remove('show'), 3000);
+        }
+
+        function cerrarModalPersonalizacion() {
+            document.getElementById('customizeModal').classList.remove('active');
+            currentCustomizeItem = null;
         }
 
         function actualizarUI() {
