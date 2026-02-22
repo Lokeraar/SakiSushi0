@@ -2188,7 +2188,7 @@
             </div>
         </div>
 
-        <!-- Delivery Modal - CON CAMPOS ACTUALIZADOS -->
+        <!-- Delivery Modal -->
         <div class="modal-overlay" id="deliveryModal">
             <div class="modal-container">
                 <div class="modal-header">
@@ -2229,7 +2229,7 @@
                             <p>
                                 <i class="fas fa-dollar-sign"></i>
                                 <strong>Monto:</strong>
-                                <span class="valor-placeholder" id="montoPago">Primero seleccione Parroquia a enviar</span>
+                                <span class="valor-placeholder" id="montoPago">primero seleccione parroquia</span>
                             </p>
                         </div>
                         
@@ -2288,7 +2288,7 @@
                         </div>
                         
                         <div class="delivery-price-display" id="deliveryPriceDisplay">
-                            Precio del delivery: Primero seleccione Parroquia a enviar
+                            primero seleccione parroquia
                         </div>
                         
                         <div style="margin-bottom: 1.5rem;">
@@ -2300,8 +2300,8 @@
                         </div>
                         
                         <div style="margin-bottom: 1.5rem;">
-                            <label for="telefono" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Teléfono (máx 14 dígitos):</label>
-                            <input type="tel" id="telefono" required pattern="\+[0-9]{11,14}" maxlength="15" placeholder="Ej: +5804121234567 o 04121234567" inputmode="numeric" style="width: 100%; padding: 0.8rem; border: 2px solid var(--gray-200); border-radius: var(--radius-sm); font-size: 1rem;" oninput="this.value=this.value.replace(/[^0-9+]/g,''); if(this.value.indexOf('+') !== 0 && this.value.length > 0) { this.value = '+' + this.value.replace(/\+/g,''); } validarFormularioDelivery()">
+                            <label for="telefono" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Teléfono (máx 14 dígitos después del +):</label>
+                            <input type="tel" id="telefono" required pattern="\+[0-9]{11,14}" maxlength="15" placeholder="+5804121234567" inputmode="numeric" style="width: 100%; padding: 0.8rem; border: 2px solid var(--gray-200); border-radius: var(--radius-sm); font-size: 1rem;" oninput="this.value=this.value.replace(/[^0-9+]/g,''); if(this.value.indexOf('+') !== 0 && this.value.length > 0) { this.value = '+' + this.value.replace(/\+/g,''); } validarFormularioDelivery()">
                         </div>
                         
                         <div style="margin-bottom: 1.5rem;">
@@ -2331,7 +2331,7 @@
                         <div style="padding: 1rem; background: var(--gray-100); border-radius: var(--radius-md); border: 2px solid var(--primary);">
                             <div style="display: flex; justify-content: space-between; align-items: center;">
                                 <span style="font-weight: 600; font-size: 1.1rem;">Total a pagar:</span>
-                                <span style="font-weight: 700; color: var(--primary); font-size: 1.4rem;" id="deliveryTotal">Primero seleccione Parroquia a enviar</span>
+                                <span style="font-weight: 700; color: var(--primary); font-size: 1.4rem;" id="deliveryTotal">primero seleccione parroquia</span>
                             </div>
                         </div>
                     </form>
@@ -2345,7 +2345,7 @@
             </div>
         </div>
 
-        <!-- Reserva Modal - CON CAMPOS ACTUALIZADOS -->
+        <!-- Reserva Modal -->
         <div class="modal-overlay" id="reservaModal">
             <div class="modal-container">
                 <div class="modal-header">
@@ -2835,6 +2835,9 @@
             }
         }
 
+        // ============================================
+        // FUNCIÓN MEJORADA: crearPedidoTransaccional (NOTIFICACIONES)
+        // ============================================
         async function crearPedidoTransaccional(pedido) {
             try {
                 const pedidoParaRPC = {
@@ -2864,24 +2867,59 @@
                 if (error) throw error;
                 
                 if (data.success) {
-                    const titulo = pedido.tipo === 'mesa' ? '✅ Pedido enviado a cocina' :
-                                  pedido.tipo === 'delivery' ? '✅ Pedido de delivery confirmado' :
-                                  '✅ Reserva confirmada';
+                    // Mensajes según el tipo de pedido
+                    let titulo, mensaje;
                     
-                    const mensaje = pedido.tipo === 'mesa' ? 'Por favor, pasa a caja a cancelar' :
-                                   'Tu pedido ha sido recibido y está pendiente de confirmación';
+                    switch(pedido.tipo) {
+                        case 'mesa':
+                            titulo = '✅ Pedido recibido';
+                            mensaje = 'Por favor, pasa a caja a cancelar';
+                            break;
+                        case 'delivery':
+                            titulo = '✅ Pedido recibido';
+                            mensaje = 'Tu pago está siendo confirmado...';
+                            break;
+                        case 'reserva':
+                            titulo = '✅ Reserva recibida';
+                            mensaje = 'Confirmando pago...';
+                            break;
+                        default:
+                            titulo = '✅ Pedido recibido';
+                            mensaje = 'Tu pedido ha sido registrado';
+                    }
                     
-                    await window.supabaseClient
-                        .from('notificaciones')
-                        .insert([{
-                            pedido_id: data.pedido_id,
-                            tipo: 'approved',
-                            titulo: titulo,
-                            mensaje: mensaje,
-                            timestamp: new Date().toISOString(),
-                            session_id: sessionId,
-                            leida: false
-                        }]);
+                    // Esperar 1 segundo antes de crear la notificación
+                    setTimeout(async () => {
+                        // Crear notificación en la base de datos
+                        await window.supabaseClient
+                            .from('notificaciones')
+                            .insert([{
+                                pedido_id: data.pedido_id,
+                                tipo: 'pending',
+                                titulo: titulo,
+                                mensaje: mensaje,
+                                timestamp: new Date().toISOString(),
+                                session_id: sessionId,
+                                leida: false
+                            }]);
+                        
+                        // Reproducir sonido
+                        const audio = document.getElementById('notificationSound');
+                        audio.play().catch(() => {});
+                        
+                        // Activar vibración si el navegador lo soporta
+                        if (navigator.vibrate) {
+                            navigator.vibrate(200);
+                        }
+                        
+                        // Animar la campana
+                        const bell = document.getElementById('notificationBell');
+                        bell.classList.add('fa-shake');
+                        setTimeout(() => bell.classList.remove('fa-shake'), 1000);
+                        
+                        // Mostrar toast
+                        mostrarToast(titulo, 'success');
+                    }, 1000);
                     
                     return { success: true, pedidoId: data.pedido_id };
                 } else {
@@ -3733,7 +3771,12 @@
                         notificacionesNoLeidas++;
                     }
                     actualizarNotificacionesUI();
+                    
+                    // Sonido y vibración para notificaciones entrantes
                     document.getElementById('notificationSound').play().catch(() => {});
+                    if (navigator.vibrate) {
+                        navigator.vibrate(200);
+                    }
                     
                     const bell = document.getElementById('notificationBell');
                     bell.classList.add('fa-shake');
@@ -4026,11 +4069,12 @@
                 document.getElementById('confirmMesaModal').classList.remove('active');
                 window.stockCache.invalidate();
                 
+                // Actualizar stock visible (solo para reflejar las reservas)
                 for (const item of menuItems) {
                     await actualizarStockPlatillo(item.id);
                 }
                 
-                mostrarToast('✅ Pedido enviado a cocina', 'success');
+                // No mostramos toast aquí porque ya se mostrará con la notificación
             } else {
                 mostrarToast('❌ Error: ' + resultado.error, 'error');
             }
@@ -4077,7 +4121,7 @@
         }
 
         // ============================================
-        // FUNCIONES DE DELIVERY Y RESERVA - ACTUALIZADAS
+        // FUNCIONES DE DELIVERY Y RESERVA
         // ============================================
         function actualizarContadorDireccion() {
             const direccion = document.getElementById('direccion');
@@ -4156,13 +4200,13 @@
                     montoPago.textContent = formatBs(totalBs);
                 }
             } else {
-                document.getElementById('deliveryTotal').textContent = 'Primero seleccione Parroquia a enviar';
-                document.getElementById('deliveryPriceDisplay').textContent = 'Primero seleccione Parroquia a enviar';
+                document.getElementById('deliveryTotal').textContent = 'primero seleccione parroquia';
+                document.getElementById('deliveryPriceDisplay').textContent = 'primero seleccione parroquia';
                 
                 const montoPago = document.getElementById('montoPago');
                 if (montoPago) {
                     montoPago.className = 'valor-placeholder';
-                    montoPago.textContent = 'Primero seleccione Parroquia a enviar';
+                    montoPago.textContent = 'primero seleccione parroquia';
                 }
             }
             
@@ -4185,7 +4229,6 @@
             const referencia = getReferencia('delivery');
             const comprobante = document.getElementById('comprobante').files.length > 0;
             
-            // Nueva validación para teléfono con formato +58
             const telefonoValido = /^\+[0-9]{11,14}$/.test(telefono);
             const referenciaValida = window.validarReferencia(referencia);
             const direccionValida = direccion.length >= 20;
@@ -4240,7 +4283,7 @@
                     await actualizarStockPlatillo(item.id);
                 }
                 
-                mostrarToast('✅ Pedido confirmado', 'success');
+                // No mostramos toast aquí porque ya se mostrará con la notificación
             } else {
                 mostrarToast('❌ Error: ' + resultado.error, 'error');
                 iniciarTimerFrontend('delivery', 20);
@@ -4279,7 +4322,7 @@
                     await actualizarStockPlatillo(item.id);
                 }
                 
-                mostrarToast('✅ Reserva confirmada', 'success');
+                // No mostramos toast aquí porque ya se mostrará con la notificación
             } else {
                 mostrarToast('❌ Error: ' + resultado.error, 'error');
                 iniciarTimerFrontend('reserva', 20);
