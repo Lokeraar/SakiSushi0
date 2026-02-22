@@ -2837,11 +2837,14 @@
         }
 
         // ============================================
-        // FUNCIONES DE PERSONALIZACIÓN
+        // FUNCIONES DE PERSONALIZACIÓN - CORREGIDAS
         // ============================================
         function abrirPersonalizacion(platilloId) {
             const platillo = menuItems.find(p => p.id === platilloId);
             if (!platillo) return;
+            
+            // Limpiar event listeners viejos del modal
+            const modalBody = document.getElementById('customizeModalBody');
             
             currentCustomizeItem = {
                 ...platillo,
@@ -2849,8 +2852,6 @@
                 ingredientesQuitados: [],
                 selectionType: 'completo'
             };
-            
-            const modalBody = document.getElementById('customizeModalBody');
             
             Promise.all(Object.entries(platillo.ingredientes || {}).map(async ([ingId, ingInfo]) => {
                 const ingrediente = inventario.find(i => i.id === ingId);
@@ -2931,6 +2932,14 @@
                     </div>
                 `;
                 
+                // Remover event listeners viejos de los checkboxes
+                const viejosCheckboxes = document.querySelectorAll('.ingrediente-check');
+                viejosCheckboxes.forEach(cb => {
+                    const nuevoCb = cb.cloneNode(true);
+                    cb.parentNode.replaceChild(nuevoCb, cb);
+                });
+                
+                // Agregar nuevos event listeners
                 document.querySelectorAll('.ingrediente-check').forEach(cb => {
                     cb.addEventListener('change', function() {
                         if (this.checked) {
@@ -3030,13 +3039,12 @@
                 precioUnitarioBs: usdToBs(platillo.precio),
                 subtotal: usdToBs(platillo.precio),
                 selectionType: 'completo'
-                // Ya no necesitamos instanceNumber
             };
             
             carrito.push(nuevaInstancia);
             
             guardarCarrito();
-            actualizarCarritoUI(); // Esto ahora usa agrupación
+            actualizarCarritoUI();
             window.stockCache.invalidate();
             
             // Actualizar stock de TODOS los platillos que comparten ingredientes
@@ -3066,7 +3074,12 @@
         }
 
         async function agregarPersonalizadoAlCarrito() {
-            if (!currentCustomizeItem) return;
+            if (!currentCustomizeItem) {
+                console.error('No hay item para personalizar');
+                return;
+            }
+            
+            console.log('Agregando personalizado:', currentCustomizeItem);
             
             const ingredientesQuitados = Array.from(document.querySelectorAll('.ingrediente-check:checked'))
                 .map(cb => cb.dataset.ingrediente);
@@ -3100,7 +3113,7 @@
             }
             
             guardarCarrito();
-            actualizarCarritoUI(); // Esto ahora usa agrupación
+            actualizarCarritoUI();
             window.stockCache.invalidate();
             
             // Actualizar stock de TODOS los platillos que comparten ingredientes
@@ -3121,8 +3134,11 @@
                 await actualizarStockPlatillo(pid);
             }
             
-            cerrarModalPersonalizacion();
-            mostrarToast(`${currentCustomizeItem.cantidad} agregado(s)`, 'success');
+            // Cerrar modal y limpiar
+            document.getElementById('customizeModal').classList.remove('active');
+            currentCustomizeItem = null;
+            
+            mostrarToast(`${currentCustomizeItem?.cantidad || 1} agregado(s)`, 'success');
             
             if (window.innerWidth <= 992) {
                 document.getElementById('cartSidebar').classList.add('open');
@@ -3138,7 +3154,7 @@
             carrito = carrito.filter(i => i.id !== instanciaId);
             
             guardarCarrito();
-            actualizarCarritoUI(); // Esto ahora usa agrupación
+            actualizarCarritoUI();
             window.stockCache.invalidate();
             
             // Actualizar stock de TODOS los platillos que comparten ingredientes
@@ -3166,7 +3182,6 @@
             const grupos = {};
             
             carrito.forEach(instancia => {
-                // Crear una clave única basada en platilloId y personalización ordenada
                 const personalizacionKey = instancia.personalizacion.sort().join('|');
                 const key = `${instancia.platilloId}_${personalizacionKey}`;
                 
@@ -3212,17 +3227,15 @@
             grupos.forEach(grupo => {
                 totalGeneral += grupo.subtotal;
                 
-                // Crear descripción de personalización
                 let personalizacionTexto = '';
+                let ingredientesNombres = '';
                 if (grupo.personalizacion.length > 0) {
-                    const ingredientesNombres = grupo.personalizacion.map(p => {
+                    ingredientesNombres = grupo.personalizacion.map(p => {
                         const ing = inventario.find(i => i.id === p);
                         return ing?.nombre || p;
                     }).join(', ');
-                    personalizacionTexto = `<div class="personalizacion"><i class="fas fa-utensil-spoon"></i> Sin: ${ingredientesNombres}</div>`;
                 }
                 
-                // Si hay más de un item con la misma personalización, mostrar agrupado
                 if (grupo.cantidad > 1) {
                     html += `
                         <div class="cart-item-group">
@@ -3238,7 +3251,6 @@
                             <div class="cart-item-variants">
                     `;
                     
-                    // Mostrar cada item individual dentro del grupo
                     grupo.items.forEach(item => {
                         html += `
                             <div class="cart-item-variant">
@@ -3265,7 +3277,6 @@
                         </div>
                     `;
                 } else {
-                    // Mostrar item individual normalmente
                     const item = grupo.items[0];
                     html += `
                         <div class="cart-item">
@@ -3274,7 +3285,11 @@
                                 <div class="cart-item-header">
                                     <span class="cart-item-name">${item.nombre}</span>
                                 </div>
-                                ${personalizacionTexto}
+                                ${grupo.personalizacion.length > 0 ? `
+                                    <div class="cart-item-customization">
+                                        <i class="fas fa-utensil-spoon"></i> Sin: ${ingredientesNombres}
+                                    </div>
+                                ` : ''}
                                 <div class="cart-item-price-info">
                                     <span class="cart-item-unit-price">${formatBs(item.precioUnitarioBs)} c/u</span>
                                     <span class="cart-item-subtotal">${formatBs(item.subtotal)}</span>
@@ -3404,7 +3419,6 @@
                 precioEnBs: instancia.precioUnitarioBs,
                 subtotal: instancia.subtotal,
                 tasaCambioAplicada: tasaActual
-                // Ya no necesitamos instanceNumber
             }));
             
             return {
@@ -3471,7 +3485,6 @@
                 document.getElementById('confirmMesaModal').classList.remove('active');
                 window.stockCache.invalidate();
                 
-                // Actualizar stock de todos los platillos
                 for (const item of menuItems) {
                     await actualizarStockPlatillo(item.id);
                 }
@@ -3518,18 +3531,14 @@
         }
 
         // ============================================
-        // FUNCIONES DE DELIVERY Y RESERVA - CORREGIDAS
+        // FUNCIONES DE DELIVERY Y RESERVA
         // ============================================
         function actualizarContadorDireccion() {
             const direccion = document.getElementById('direccion');
             const contador = document.getElementById('direccionCounter');
             const longitud = direccion.value.length;
             contador.textContent = `${longitud}/20 caracteres`;
-            if (longitud >= 20) {
-                contador.style.color = 'var(--success)';
-            } else {
-                contador.style.color = 'var(--gray-600)';
-            }
+            contador.style.color = longitud >= 20 ? 'var(--success)' : 'var(--gray-600)';
             validarFormularioDelivery();
         }
 
@@ -3537,7 +3546,6 @@
             if (input.value.length === 1 && index < 5) {
                 document.querySelector(`.ref-digit[data-type="${type}"][data-index="${index + 1}"]`).focus();
             }
-            // La validación se llama desde el evento oninput de cada campo
         }
 
         function actualizarComprobante(input) {
@@ -3593,6 +3601,15 @@
             document.getElementById('deliveryPriceDisplay').textContent = `Costo de envío: ${formatBs(usdToBs(precioUSD))}`;
         }
 
+        function getReferencia(type) {
+            let ref = '';
+            for (let i = 0; i < 6; i++) {
+                const input = document.querySelector(`.ref-digit[data-type="${type}"][data-index="${i}"]`);
+                if (input) ref += input.value;
+            }
+            return ref;
+        }
+
         function validarFormularioDelivery() {
             const parroquia = document.getElementById('parroquiaSelect').value;
             const direccion = document.getElementById('direccion').value;
@@ -3604,18 +3621,18 @@
             const referenciaValida = window.validarReferencia(referencia);
             const direccionValida = direccion.length >= 20;
             
-            console.log('Validando delivery:', { parroquia, direccionValida, telefonoValido, referenciaValida, comprobante });
-            
             document.getElementById('confirmDelivery').disabled = !(parroquia && direccionValida && telefonoValido && referenciaValida && comprobante);
         }
 
-        function getReferencia(type) {
-            let ref = '';
-            for (let i = 0; i < 6; i++) {
-                const input = document.querySelector(`.ref-digit[data-type="${type}"][data-index="${i}"]`);
-                if (input) ref += input.value;
-            }
-            return ref;
+        function validarFormularioReserva() {
+            const fecha = document.getElementById('fechaReserva').value;
+            const nombre = document.getElementById('nombreReserva').value;
+            const referencia = getReferencia('reserva');
+            const comprobante = document.getElementById('comprobanteReserva').files.length > 0;
+            
+            const referenciaValida = window.validarReferencia(referencia);
+            
+            document.getElementById('confirmReserva').disabled = !(fecha && nombre && referenciaValida && comprobante);
         }
 
         async function confirmarPedidoDelivery() {
@@ -3649,7 +3666,6 @@
                 document.getElementById('deliveryModal').classList.remove('active');
                 window.stockCache.invalidate();
                 
-                // Actualizar stock de todos los platillos
                 for (const item of menuItems) {
                     await actualizarStockPlatillo(item.id);
                 }
@@ -3659,19 +3675,6 @@
                 mostrarToast('❌ Error: ' + resultado.error, 'error');
                 iniciarTimerFrontend('delivery', 20);
             }
-        }
-
-        function validarFormularioReserva() {
-            const fecha = document.getElementById('fechaReserva').value;
-            const nombre = document.getElementById('nombreReserva').value;
-            const referencia = getReferencia('reserva');
-            const comprobante = document.getElementById('comprobanteReserva').files.length > 0;
-            
-            const referenciaValida = window.validarReferencia(referencia);
-            
-            console.log('Validando reserva:', { fecha, nombre, referenciaValida, comprobante });
-            
-            document.getElementById('confirmReserva').disabled = !(fecha && nombre && referenciaValida && comprobante);
         }
 
         async function confirmarPedidoReserva() {
@@ -3701,7 +3704,6 @@
                 document.getElementById('reservaModal').classList.remove('active');
                 window.stockCache.invalidate();
                 
-                // Actualizar stock de todos los platillos
                 for (const item of menuItems) {
                     await actualizarStockPlatillo(item.id);
                 }
@@ -3718,7 +3720,6 @@
         // ============================================
         function copiarAlPortapapeles(texto, boton) {
             navigator.clipboard.writeText(texto).then(() => {
-                // Cambiar temporalmente el icono a check
                 const icono = boton.querySelector('i');
                 const claseOriginal = icono.className;
                 icono.className = 'fas fa-check';
