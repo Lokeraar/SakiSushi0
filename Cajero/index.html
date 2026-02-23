@@ -426,7 +426,7 @@
         .btn-confirmar-compact { background: linear-gradient(135deg, #9c27b0, #7b1fa2); color: white; }
         
         /* ============================================
-           MODALES - ESTILOS COMPACTOS PARA VENTAS
+           MODALES
         ============================================ */
         .modal-overlay { 
             position: fixed; 
@@ -502,62 +502,6 @@
         }
         
         /* ============================================
-           ESTILOS COMPACTOS PARA VENTAS
-        ============================================ */
-        .venta-item-compact {
-            background: #f8f8f8;
-            border-radius: 6px;
-            padding: 10px;
-            margin-bottom: 8px;
-            border-left: 3px solid var(--info);
-            font-size: 0.8rem;
-            line-height: 1.2;
-        }
-        .venta-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 5px;
-            color: #666;
-        }
-        .venta-hora {
-            font-weight: 600;
-            color: var(--secondary);
-        }
-        .venta-metodo {
-            padding: 2px 6px;
-            border-radius: 12px;
-            font-size: 0.7rem;
-            font-weight: 600;
-        }
-        .venta-metodo.efectivo { background: #E8F5E9; color: var(--success); }
-        .venta-metodo.efectivo_usd { background: #E3F2FD; color: var(--info); }
-        .venta-metodo.pago_movil { background: #F3E5F5; color: #9c27b0; }
-        .venta-metodo.punto_venta { background: #FFF3E0; color: var(--warning); }
-        
-        .venta-items {
-            margin: 5px 0;
-        }
-        .venta-item-row {
-            display: flex;
-            justify-content: space-between;
-            padding: 2px 0;
-            font-size: 0.75rem;
-            border-bottom: 1px dashed #eee;
-        }
-        .venta-item-row:last-child {
-            border-bottom: none;
-        }
-        .venta-total {
-            text-align: right;
-            font-weight: 600;
-            color: var(--primary);
-            margin-top: 3px;
-            padding-top: 3px;
-            border-top: 1px solid #ddd;
-        }
-        
-        /* ============================================
            PAGOS MIXTOS
         ============================================ */
         .payment-mix-container { 
@@ -618,51 +562,64 @@
         }
         
         /* ============================================
-           DETALLES MODAL (para otros usos)
+           DETALLES MODAL - COMPACTO
         ============================================ */
-        .detail-item { 
-            background: #f8f8f8; 
-            border-radius: 8px; 
-            padding: 15px; 
-            margin-bottom: 15px; 
-            border-left: 4px solid var(--info); 
+        .detail-item-compact {
+            background: #f8f8f8;
+            border-radius: 6px;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-left: 3px solid var(--info);
+            font-size: 0.8rem;
+            line-height: 1.2;
         }
-        .detail-row { 
-            display: flex; 
-            justify-content: space-between; 
-            padding: 6px 0; 
-            border-bottom: 1px solid #eee; 
-            font-size: 0.9rem;
+        .detail-header-compact {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+            color: #666;
+            font-weight: 500;
         }
-        .detail-row:last-child { 
-            border-bottom: none; 
+        .detail-time-compact {
+            background: #e0e0e0;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 0.7rem;
         }
-        .detail-label { 
-            font-weight: 600; 
-            color: #666; 
+        .detail-items-compact {
+            margin: 5px 0;
+            padding-left: 5px;
         }
-        .detail-value { 
-            font-weight: 500; 
-            color: var(--secondary); 
+        .detail-item-row-compact {
+            display: flex;
+            justify-content: space-between;
+            padding: 2px 0;
+            border-bottom: 1px dotted #ddd;
         }
-        
-        .payment-methods { 
-            display: flex; 
-            flex-wrap: wrap; 
-            gap: 8px; 
-            margin-top: 10px; 
+        .detail-item-row-compact:last-child {
+            border-bottom: none;
         }
-        .payment-tag { 
-            background: #E8F5E9; 
-            color: var(--success); 
-            padding: 4px 10px; 
-            border-radius: 20px; 
-            font-size: 0.75rem; 
-            font-weight: 600; 
-            display: inline-flex; 
-            align-items: center; 
-            gap: 4px; 
-            border: 1px solid #a5d6a7; 
+        .detail-total-compact {
+            font-weight: 700;
+            color: var(--primary);
+            text-align: right;
+            margin-top: 5px;
+            padding-top: 3px;
+            border-top: 1px dashed #ddd;
+            font-size: 0.85rem;
+        }
+        .detail-metodo-tag {
+            background: #E8F5E9;
+            color: var(--success);
+            padding: 2px 6px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            margin-right: 4px;
         }
         
         /* ============================================
@@ -855,7 +812,7 @@
     </style>
 </head>
 <body>
-    <!-- Elemento de audio para alarma - CONFIGURADO PARA SONAR EN SEGUNDO PLANO -->
+    <!-- Elemento de audio para alarma -->
     <audio id="alarmaSonido" loop preload="auto" style="display: none;">
         <source src="https://iqwwoihiiyrtypyqzhgy.supabase.co/storage/v1/object/public/alarma/Alarm%20Clock%20Effect%20Sound%20HD%20-%20Despertador%20Efecto%20D'%20Sonido.mp3" type="audio/mpeg">
     </audio>
@@ -1156,6 +1113,7 @@
         let alarmaAudio = document.getElementById('alarmaSonido');
         let alarmaActiva = false;
         let enProcesoDeCobro = false;
+        let pedidosPendientesActuales = 0;
 
         // Verificar sesión al cargar
         document.addEventListener('DOMContentLoaded', async () => {
@@ -1237,9 +1195,10 @@
         // FUNCIONES DE CONTROL DE ALARMA
         // ============================================
         function verificarYControlarAlarma() {
-            const hayPendientes = pedidos.some(p => p.estado === 'pendiente');
+            const nuevosPendientes = pedidos.filter(p => p.estado === 'pendiente').length;
+            pedidosPendientesActuales = nuevosPendientes;
             
-            if (hayPendientes && !enProcesoDeCobro) {
+            if (nuevosPendientes > 0 && !enProcesoDeCobro) {
                 iniciarAlarma();
             } else {
                 detenerAlarma();
@@ -1251,7 +1210,13 @@
                 alarmaAudio.play().then(() => {
                     alarmaActiva = true;
                     console.log('🔔 Alarma activada');
-                }).catch(e => console.log('Error reproduciendo alarma:', e));
+                }).catch(e => {
+                    console.log('Error reproduciendo alarma:', e);
+                    document.addEventListener('click', function iniciarAlarmaEnClick() {
+                        alarmaAudio.play().catch(() => {});
+                        document.removeEventListener('click', iniciarAlarmaEnClick);
+                    }, { once: true });
+                });
             }
         }
         
@@ -1278,6 +1243,7 @@
             actualizarEstadisticas();
             renderizarPedidos();
             renderizarMenu();
+            
             verificarYControlarAlarma();
         }
 
@@ -1297,6 +1263,7 @@
 
                 if (error) throw error;
                 pedidos = data || [];
+                
             } catch (error) {
                 console.error('Error cargando pedidos:', error);
                 mostrarToast('Error cargando pedidos', 'error');
@@ -1392,9 +1359,11 @@
         
         function cerrarCobroModal() {
             document.getElementById('cobroModal').classList.remove('active');
+            
             enProcesoDeCobro = false;
             currentPedido = null;
             pagosMixtos = [];
+            
             verificarYControlarAlarma();
         }
 
@@ -1433,7 +1402,6 @@
         // FUNCIÓN DE RENDERIZADO DE PEDIDOS
         // ============================================
         function renderizarPedidos() {
-            // Separar por tipo y estado
             const pendientesMesa = pedidos.filter(p => p.tipo === 'mesa' && p.estado === 'pendiente');
             const pendientesDelivery = pedidos.filter(p => p.tipo === 'delivery' && p.estado === 'pendiente');
             const pendientesReserva = pedidos.filter(p => p.tipo === 'reserva' && p.estado === 'pendiente');
@@ -1443,7 +1411,6 @@
             const reservaPendiente = pedidos.filter(p => p.tipo === 'reserva' && p.estado === 'reserva_pendiente');
             const reservaAtendida = pedidos.filter(p => p.tipo === 'reserva' && p.estado === 'reserva_atendida');
             
-            // Actualizar contadores
             document.getElementById('mesaPendientesCount').textContent = pendientesMesa.length;
             document.getElementById('deliveryPendientesCount').textContent = pendientesDelivery.length;
             document.getElementById('reservaPendientesCount').textContent = pendientesReserva.length;
@@ -1454,7 +1421,6 @@
             document.getElementById('reservaProcesoCount').textContent = reservaPendiente.length + reservaAtendida.length;
             document.getElementById('totalPreparacionBadge').textContent = cocinaMesa.length + caminoDelivery.length + reservaPendiente.length + reservaAtendida.length;
             
-            // Renderizar cada columna
             document.getElementById('mesaPendientesContainer').innerHTML = pendientesMesa.length ? pendientesMesa.map(p => crearTarjetaPedidoCompacta(p, 'pendiente')).join('') : '<div class="empty-state"><i class="fas fa-store"></i><p>No hay pedidos en mesa</p></div>';
             document.getElementById('deliveryPendientesContainer').innerHTML = pendientesDelivery.length ? pendientesDelivery.map(p => crearTarjetaPedidoCompacta(p, 'pendiente')).join('') : '<div class="empty-state"><i class="fas fa-motorcycle"></i><p>No hay pedidos delivery</p></div>';
             document.getElementById('reservaPendientesContainer').innerHTML = pendientesReserva.length ? pendientesReserva.map(p => crearTarjetaPedidoCompacta(p, 'pendiente')).join('') : '<div class="empty-state"><i class="fas fa-calendar-check"></i><p>No hay reservas</p></div>';
@@ -1471,7 +1437,6 @@
             const fecha = new Date(pedido.timestamp);
             const hora = fecha.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
 
-            // Información específica según tipo
             let infoEspecifica = '';
             if (pedido.tipo === 'mesa') {
                 infoEspecifica = `<div class="order-info-compact"><i class="fas fa-chair"></i> Mesa #${pedido.mesa || 'N/A'}</div>`;
@@ -1495,7 +1460,6 @@
                 `;
             }
 
-            // Items del pedido
             const itemsHtml = (pedido.items || []).map(item => {
                 const precioItem = usdToBs((item.precioUnitarioUSD || 0) * (item.cantidad || 1));
                 return `
@@ -1506,10 +1470,8 @@
                 `;
             }).join('');
 
-            // Total
             const totalBs = usdToBs(pedido.total || 0);
 
-            // Comprobante si existe
             let comprobanteHtml = '';
             if (pedido.comprobante_url && (pedido.tipo === 'delivery' || pedido.tipo === 'reserva')) {
                 comprobanteHtml = `
@@ -1519,7 +1481,6 @@
                 `;
             }
 
-            // Botones según estado y tipo
             let botonesHtml = '';
             if (tipoSeccion === 'pendiente') {
                 botonesHtml = `
@@ -1600,7 +1561,7 @@
                     if (enPreparacion.length === 0) {
                         contenido = '<div class="empty-state"><i class="fas fa-inbox"></i><p>No hay pedidos en preparación</p></div>';
                     } else {
-                        contenido = enPreparacion.map(p => crearDetallePedidoHTML(p)).join('');
+                        contenido = enPreparacion.map(p => crearDetallePedidoCompacto(p)).join('');
                     }
                     break;
                     
@@ -1610,44 +1571,8 @@
                         contenido = '<div class="empty-state"><i class="fas fa-inbox"></i><p>No hay cobros registrados hoy</p></div>';
                     } else {
                         contenido = ventasHoy.map(v => {
-                            const fecha = new Date(v.fecha);
-                            const hora = fecha.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-                            const totalBs = (v.total || 0) * tasaEfectiva;
-                            
-                            // Obtener el pedido completo para mostrar items
-                            const pedidoCompleto = pedidos.find(p => p.id === v.pedido_id);
-                            const items = pedidoCompleto?.items || [];
-                            
-                            let metodoClass = '';
-                            let metodoNombre = v.metodo_pago;
-                            
-                            if (v.metodo_pago === 'efectivo') metodoClass = 'efectivo';
-                            else if (v.metodo_pago === 'efectivo_usd') metodoClass = 'efectivo_usd';
-                            else if (v.metodo_pago === 'pago_movil') metodoClass = 'pago_movil';
-                            else if (v.metodo_pago === 'punto_venta') metodoClass = 'punto_venta';
-                            
-                            const itemsHtml = items.map(item => {
-                                const precioItem = usdToBs((item.precioUnitarioUSD || 0) * (item.cantidad || 1));
-                                return `
-                                    <div class="venta-item-row">
-                                        <span>${item.cantidad || 1}x ${item.nombre}</span>
-                                        <span>${formatBs(precioItem)}</span>
-                                    </div>
-                                `;
-                            }).join('');
-                            
-                            return `
-                                <div class="venta-item-compact">
-                                    <div class="venta-header">
-                                        <span class="venta-hora"><i class="far fa-clock"></i> ${hora}</span>
-                                        <span class="venta-metodo ${metodoClass}">${metodoNombre}</span>
-                                    </div>
-                                    <div class="venta-items">
-                                        ${itemsHtml}
-                                    </div>
-                                    <div class="venta-total">Total: ${formatBs(totalBs)}</div>
-                                </div>
-                            `;
+                            const pedidoOriginal = pedidos.find(p => p.id === v.pedido_id);
+                            return crearDetalleVentaCompacto(v, pedidoOriginal);
                         }).join('');
                     }
                     break;
@@ -1657,125 +1582,42 @@
                     const totalVentasUSD = ventasHoy.reduce((sum, v) => sum + (v.total || 0), 0);
                     const totalVentasBs = totalVentasUSD * tasaEfectiva;
                     
-                    // Desglose por método - SIN MIXTO
-                    let porEfectivoUSD = 0, porEfectivoUSDUDS = 0, porPagoMovilUSD = 0, porPuntoVentaUSD = 0;
+                    let porEfectivoBs = 0, porEfectivoUSD = 0, porPagoMovil = 0, porPuntoVenta = 0;
                     
                     ventasHoy.forEach(v => {
-                        if (v.metodo_pago === 'efectivo') {
-                            porEfectivoUSD += v.total;
-                        } else if (v.metodo_pago === 'efectivo_usd') {
-                            porEfectivoUSDUDS += v.total;
-                        } else if (v.metodo_pago === 'pago_movil') {
-                            porPagoMovilUSD += v.total;
-                        } else if (v.metodo_pago === 'punto_venta') {
-                            porPuntoVentaUSD += v.total;
+                        const pedido = pedidos.find(p => p.id === v.pedido_id);
+                        if (pedido && pedido.pagos_mixtos) {
+                            pedido.pagos_mixtos.forEach(pago => {
+                                const montoBs = pago.metodo === 'efectivo_usd' ? pago.monto * tasaEfectiva : pago.monto;
+                                if (pago.metodo === 'efectivo_bs') porEfectivoBs += montoBs;
+                                else if (pago.metodo === 'efectivo_usd') porEfectivoUSD += montoBs;
+                                else if (pago.metodo === 'pago_movil') porPagoMovil += montoBs;
+                                else if (pago.metodo === 'punto_venta') porPuntoVenta += montoBs;
+                            });
+                        } else {
+                            if (v.metodo_pago === 'efectivo_bs') porEfectivoBs += v.total * tasaEfectiva;
+                            else if (v.metodo_pago === 'efectivo_usd') porEfectivoUSD += v.total * tasaEfectiva;
+                            else if (v.metodo_pago === 'pago_movil') porPagoMovil += v.total * tasaEfectiva;
+                            else if (v.metodo_pago === 'punto_venta') porPuntoVenta += v.total * tasaEfectiva;
                         }
                     });
 
-                    const porEfectivoBs = porEfectivoUSD * tasaEfectiva;
-                    const porEfectivoUSDBs = porEfectivoUSDUDS * tasaEfectiva;
-                    const porPagoMovilBs = porPagoMovilUSD * tasaEfectiva;
-                    const porPuntoVentaBs = porPuntoVentaUSD * tasaEfectiva;
-
-                    // Totales para el desglose
-                    const totalDesgloseBs = porEfectivoBs + porEfectivoUSDBs + porPagoMovilBs + porPuntoVentaBs;
-
-                    // Desglose por método
-                    const desgloseHtml = `
-                        <div style="margin-bottom: 20px;">
-                            <h4 style="margin: 0 0 10px 0; color: var(--secondary); font-size: 1rem;">Desglose por método:</h4>
-                            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px;">
-                                <div style="background: #E8F5E9; padding: 8px; border-radius: 6px; font-size: 0.8rem;">
-                                    <div style="display: flex; justify-content: space-between;">
-                                        <span><i class="fas fa-money-bill-wave" style="color: var(--success);"></i> Efectivo Bs</span>
-                                        <span style="font-weight: 600;">${formatBs(porEfectivoBs)}</span>
-                                    </div>
-                                </div>
-                                <div style="background: #E3F2FD; padding: 8px; border-radius: 6px; font-size: 0.8rem;">
-                                    <div style="display: flex; justify-content: space-between;">
-                                        <span><i class="fas fa-dollar-sign" style="color: var(--info);"></i> Efectivo $</span>
-                                        <span style="font-weight: 600;">${formatBs(porEfectivoUSDBs)}</span>
-                                    </div>
-                                </div>
-                                <div style="background: #F3E5F5; padding: 8px; border-radius: 6px; font-size: 0.8rem;">
-                                    <div style="display: flex; justify-content: space-between;">
-                                        <span><i class="fas fa-mobile-alt" style="color: #9c27b0;"></i> Pago Móvil</span>
-                                        <span style="font-weight: 600;">${formatBs(porPagoMovilBs)}</span>
-                                    </div>
-                                </div>
-                                <div style="background: #FFF3E0; padding: 8px; border-radius: 6px; font-size: 0.8rem;">
-                                    <div style="display: flex; justify-content: space-between;">
-                                        <span><i class="fas fa-credit-card" style="color: var(--warning);"></i> Punto de Venta</span>
-                                        <span style="font-weight: 600;">${formatBs(porPuntoVentaBs)}</span>
-                                    </div>
-                                </div>
-                            </div>
-                            <div style="background: #f0f0f0; padding: 10px; border-radius: 6px; margin-top: 10px; font-size: 0.9rem;">
-                                <div style="display: flex; justify-content: space-between; font-weight: 700;">
-                                    <span>TOTAL VENTAS</span>
-                                    <span style="color: var(--primary);">${formatBs(totalVentasBs)}</span>
-                                </div>
-                                <div style="display: flex; justify-content: space-between; font-size: 0.8rem; color: #666; margin-top: 5px;">
-                                    <span>Cantidad de ventas:</span>
-                                    <span>${ventasHoy.length}</span>
-                                </div>
-                            </div>
+                    contenido = `
+                        <p style="margin-bottom: 15px;"><strong>Total del día:</strong> ${formatBs(totalVentasBs)}</p>
+                        <p style="margin-bottom: 15px;"><strong>Cantidad de ventas:</strong> ${ventasHoy.length}</p>
+                        <h4 style="margin: 15px 0 10px;">Desglose por método:</h4>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 20px;">
+                            <div class="payment-tag" style="justify-content: space-between; padding: 6px;"><span>Efectivo Bs</span> <span>${formatBs(porEfectivoBs)}</span></div>
+                            <div class="payment-tag" style="justify-content: space-between; padding: 6px;"><span>Efectivo USD</span> <span>${formatBs(porEfectivoUSD)}</span></div>
+                            <div class="payment-tag" style="justify-content: space-between; padding: 6px;"><span>Pago Móvil</span> <span>${formatBs(porPagoMovil)}</span></div>
+                            <div class="payment-tag" style="justify-content: space-between; padding: 6px;"><span>Punto de Venta</span> <span>${formatBs(porPuntoVenta)}</span></div>
                         </div>
+                        <h4 style="margin: 15px 0 10px;">Ventas del día:</h4>
+                        ${ventasHoy.map(v => {
+                            const pedidoOriginal = pedidos.find(p => p.id === v.pedido_id);
+                            return crearDetalleVentaCompacto(v, pedidoOriginal);
+                        }).join('')}
                     `;
-
-                    // Ventas del día - formato compacto
-                    const ventasHtml = ventasHoy.map(v => {
-                        const fecha = new Date(v.fecha);
-                        const hora = fecha.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-                        const totalBs = (v.total || 0) * tasaEfectiva;
-                        
-                        // Obtener el pedido completo para mostrar items
-                        const pedidoCompleto = pedidos.find(p => p.id === v.pedido_id);
-                        const items = pedidoCompleto?.items || [];
-                        
-                        let metodoClass = '';
-                        let metodoIcono = '';
-                        let metodoNombre = v.metodo_pago;
-                        
-                        if (v.metodo_pago === 'efectivo') {
-                            metodoClass = 'efectivo';
-                            metodoIcono = 'fa-money-bill-wave';
-                        } else if (v.metodo_pago === 'efectivo_usd') {
-                            metodoClass = 'efectivo_usd';
-                            metodoIcono = 'fa-dollar-sign';
-                        } else if (v.metodo_pago === 'pago_movil') {
-                            metodoClass = 'pago_movil';
-                            metodoIcono = 'fa-mobile-alt';
-                        } else if (v.metodo_pago === 'punto_venta') {
-                            metodoClass = 'punto_venta';
-                            metodoIcono = 'fa-credit-card';
-                        }
-                        
-                        const itemsHtml = items.map(item => {
-                            const precioItem = usdToBs((item.precioUnitarioUSD || 0) * (item.cantidad || 1));
-                            return `
-                                <div class="venta-item-row">
-                                    <span>${item.cantidad || 1}x ${item.nombre}</span>
-                                    <span>${formatBs(precioItem)}</span>
-                                </div>
-                            `;
-                        }).join('');
-                        
-                        return `
-                            <div class="venta-item-compact">
-                                <div class="venta-header">
-                                    <span class="venta-hora"><i class="far fa-clock"></i> ${hora}</span>
-                                    <span class="venta-metodo ${metodoClass}"><i class="fas ${metodoIcono}"></i> ${metodoNombre}</span>
-                                </div>
-                                <div class="venta-items">
-                                    ${itemsHtml}
-                                </div>
-                                <div class="venta-total">Total: ${formatBs(totalBs)}</div>
-                            </div>
-                        `;
-                    }).join('');
-
-                    contenido = desgloseHtml + (ventasHoy.length > 0 ? ventasHtml : '<div class="empty-state"><i class="fas fa-inbox"></i><p>No hay ventas registradas hoy</p></div>');
                     break;
                     
                 case 'platillos':
@@ -1829,42 +1671,73 @@
             modal.classList.add('active');
         }
 
-        function crearDetallePedidoHTML(pedido) {
+        function crearDetalleVentaCompacto(venta, pedidoOriginal) {
+            if (!pedidoOriginal) return '';
+            
+            const hora = new Date(pedidoOriginal.timestamp).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+            
+            const itemsHtml = (pedidoOriginal.items || []).map(item => {
+                const precioItem = usdToBs((item.precioUnitarioUSD || 0) * (item.cantidad || 1));
+                return `
+                    <div class="detail-item-row-compact">
+                        <span>${item.cantidad || 1}x ${item.nombre}</span>
+                        <span>${formatBs(precioItem)}</span>
+                    </div>
+                `;
+            }).join('');
+
             let metodosPagoHtml = '';
-            if (pedido.pagos_mixtos && pedido.pagos_mixtos.length > 0) {
-                metodosPagoHtml = '<div class="payment-methods">';
-                pedido.pagos_mixtos.forEach(p => {
-                    let nombreMetodo = p.metodo === 'efectivo_bs' ? 'Efectivo Bs' : p.metodo === 'efectivo_usd' ? 'Efectivo USD' : p.metodo === 'pago_movil' ? 'Pago Móvil' : 'Punto de Venta';
-                    metodosPagoHtml += `<span class="payment-tag"><i class="fas fa-${p.metodo === 'pago_movil' ? 'mobile-alt' : p.metodo === 'punto_venta' ? 'credit-card' : 'money-bill-wave'}"></i> ${nombreMetodo}: ${formatBs(p.monto)}</span>`;
+            if (pedidoOriginal.pagos_mixtos && pedidoOriginal.pagos_mixtos.length > 0) {
+                metodosPagoHtml = '<div style="margin-top: 3px;">';
+                pedidoOriginal.pagos_mixtos.forEach(p => {
+                    let nombreMetodo = p.metodo === 'efectivo_bs' ? 'Bs' : p.metodo === 'efectivo_usd' ? '$' : p.metodo === 'pago_movil' ? '📱' : '💳';
+                    metodosPagoHtml += `<span class="detail-metodo-tag">${nombreMetodo} ${formatBs(p.monto)}</span>`;
                 });
                 metodosPagoHtml += '</div>';
             }
 
+            return `
+                <div class="detail-item-compact">
+                    <div class="detail-header-compact">
+                        <span>${hora}</span>
+                        <span class="detail-metodo-tag">${venta.tipo}</span>
+                    </div>
+                    <div class="detail-items-compact">
+                        ${itemsHtml}
+                    </div>
+                    <div class="detail-total-compact">
+                        Total: ${formatBs(venta.total * tasaEfectiva)}
+                    </div>
+                    ${metodosPagoHtml}
+                </div>
+            `;
+        }
+
+        function crearDetallePedidoCompacto(pedido) {
+            const hora = new Date(pedido.timestamp).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+            
             const itemsHtml = (pedido.items || []).map(item => {
                 const precioItem = usdToBs((item.precioUnitarioUSD || 0) * (item.cantidad || 1));
                 return `
-                    <div class="detail-row">
-                        <span>${item.cantidad || 1}x ${item.nombre} ${item.personalizacion?.length ? '<span style="color: #666;">(sin ' + item.personalizacion.join(', ') + ')</span>' : ''}</span>
+                    <div class="detail-item-row-compact">
+                        <span>${item.cantidad || 1}x ${item.nombre}</span>
                         <span>${formatBs(precioItem)}</span>
                     </div>
                 `;
             }).join('');
 
             return `
-                <div class="detail-item">
-                    <div class="detail-row"><span class="detail-label">Pedido:</span> <span class="detail-value">${pedido.id}</span></div>
-                    <div class="detail-row"><span class="detail-label">Fecha/Hora:</span> <span class="detail-value">${new Date(pedido.timestamp).toLocaleString()}</span></div>
-                    <div class="detail-row"><span class="detail-label">Cliente:</span> <span class="detail-value">${pedido.cliente_nombre || 'N/A'}</span></div>
-                    <div class="detail-row"><span class="detail-label">Tipo:</span> <span class="detail-value">${pedido.tipo}</span></div>
-                    ${pedido.tipo === 'mesa' ? `<div class="detail-row"><span class="detail-label">Mesa:</span> <span class="detail-value">${pedido.mesa}</span></div>` : ''}
-                    ${pedido.tipo === 'delivery' ? `<div class="detail-row"><span class="detail-label">Dirección:</span> <span class="detail-value">${pedido.direccion}</span></div>` : ''}
-                    ${pedido.tipo === 'delivery' ? `<div class="detail-row"><span class="detail-label">Teléfono:</span> <span class="detail-value">${pedido.telefono}</span></div>` : ''}
-                    ${pedido.tipo === 'delivery' ? `<div class="detail-row"><span class="detail-label">Parroquia:</span> <span class="detail-value">${pedido.parroquia}</span></div>` : ''}
-                    ${pedido.referencia ? `<div class="detail-row"><span class="detail-label">Referencia:</span> <span class="detail-value">${pedido.referencia}</span></div>` : ''}
-                    <div class="detail-row"><span class="detail-label">Items:</span></div>
-                    ${itemsHtml}
-                    ${metodosPagoHtml ? `<div class="detail-row"><span class="detail-label">Pagos:</span></div>${metodosPagoHtml}` : ''}
-                    <div class="detail-row" style="font-weight: 700; color: var(--primary); margin-top: 10px;"><span>TOTAL</span> <span>${formatBs(usdToBs(pedido.total || 0))}</span></div>
+                <div class="detail-item-compact">
+                    <div class="detail-header-compact">
+                        <span>${hora}</span>
+                        <span class="detail-metodo-tag">${pedido.tipo}</span>
+                    </div>
+                    <div class="detail-items-compact">
+                        ${itemsHtml}
+                    </div>
+                    <div class="detail-total-compact">
+                        Total: ${formatBs(usdToBs(pedido.total || 0))}
+                    </div>
                 </div>
             `;
         }
@@ -2061,7 +1934,6 @@
                     }
                 }
                 
-                // Actualizar pedido
                 const { error: updateError } = await window.supabaseClient
                     .from('pedidos')
                     .update({
@@ -2075,7 +1947,6 @@
                 
                 if (updateError) throw updateError;
                 
-                // Insertar en ventas
                 const totalItems = currentPedido.items?.reduce((sum, i) => sum + (i.cantidad || 1), 0) || 0;
                 const { error: ventaError } = await window.supabaseClient
                     .from('ventas')
@@ -2090,7 +1961,6 @@
                 
                 if (ventaError) throw ventaError;
                 
-                // Notificar al cliente
                 await window.supabaseClient
                     .from('notificaciones')
                     .insert([{
@@ -2103,13 +1973,19 @@
                         leida: false
                     }]);
                 
-                cerrarCobroModal();
+                document.getElementById('cobroModal').classList.remove('active');
                 mostrarToast('✅ Cobro procesado exitosamente');
+                
+                enProcesoDeCobro = false;
+                currentPedido = null;
+                pagosMixtos = [];
                 
                 await cargarPedidos();
                 await cargarVentasHoy();
                 actualizarEstadisticas();
                 renderizarPedidos();
+                
+                verificarYControlarAlarma();
                 
             } catch (error) {
                 console.error('Error procesando cobro:', error);
@@ -2278,14 +2154,12 @@
                 btnRechazar.disabled = true;
                 btnRechazar.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
                 
-                // Liberar ingredientes
                 const { error: liberarError } = await window.supabaseClient.rpc('liberar_ingredientes', {
                     p_pedido_id: pedidoParaAccion.id
                 });
                 
                 if (liberarError) throw liberarError;
                 
-                // Actualizar estado del pedido
                 const { error: updateError } = await window.supabaseClient
                     .from('pedidos')
                     .update({ 
@@ -2295,7 +2169,6 @@
                 
                 if (updateError) throw updateError;
                 
-                // Notificar al cliente
                 await window.supabaseClient
                     .from('notificaciones')
                     .insert([{
@@ -2314,6 +2187,7 @@
                 await cargarPedidos();
                 actualizarEstadisticas();
                 renderizarPedidos();
+                
                 verificarYControlarAlarma();
                 
             } catch (error) {
@@ -2447,7 +2321,6 @@
         // EVENT LISTENERS
         // ============================================
         function setupEventListeners() {
-            // Atajos de teclado globales
             document.addEventListener('keydown', (e) => {
                 if (e.key === 'Escape') {
                     const modales = ['cobroModal', 'confirmModal', 'rechazoModal', 'detalleModal', 'mesaModal', 'comprobanteModal'];
@@ -2490,6 +2363,46 @@
 
         function usdToBs(usd) {
             return usd * (tasaEfectiva || 400);
+        }
+
+        function crearDetallePedidoHTML(pedido) {
+            let metodosPagoHtml = '';
+            if (pedido.pagos_mixtos && pedido.pagos_mixtos.length > 0) {
+                metodosPagoHtml = '<div class="payment-methods">';
+                pedido.pagos_mixtos.forEach(p => {
+                    let nombreMetodo = p.metodo === 'efectivo_bs' ? 'Efectivo Bs' : p.metodo === 'efectivo_usd' ? 'Efectivo USD' : p.metodo === 'pago_movil' ? 'Pago Móvil' : 'Punto de Venta';
+                    metodosPagoHtml += `<span class="payment-tag"><i class="fas fa-${p.metodo === 'pago_movil' ? 'mobile-alt' : p.metodo === 'punto_venta' ? 'credit-card' : 'money-bill-wave'}"></i> ${nombreMetodo}: ${formatBs(p.monto)}</span>`;
+                });
+                metodosPagoHtml += '</div>';
+            }
+
+            const itemsHtml = (pedido.items || []).map(item => {
+                const precioItem = usdToBs((item.precioUnitarioUSD || 0) * (item.cantidad || 1));
+                return `
+                    <div class="detail-row">
+                        <span>${item.cantidad || 1}x ${item.nombre} ${item.personalizacion?.length ? '<span style="color: #666;">(sin ' + item.personalizacion.join(', ') + ')</span>' : ''}</span>
+                        <span>${formatBs(precioItem)}</span>
+                    </div>
+                `;
+            }).join('');
+
+            return `
+                <div class="detail-item">
+                    <div class="detail-row"><span class="detail-label">Pedido:</span> <span class="detail-value">${pedido.id}</span></div>
+                    <div class="detail-row"><span class="detail-label">Fecha/Hora:</span> <span class="detail-value">${new Date(pedido.timestamp).toLocaleString()}</span></div>
+                    <div class="detail-row"><span class="detail-label">Cliente:</span> <span class="detail-value">${pedido.cliente_nombre || 'N/A'}</span></div>
+                    <div class="detail-row"><span class="detail-label">Tipo:</span> <span class="detail-value">${pedido.tipo}</span></div>
+                    ${pedido.tipo === 'mesa' ? `<div class="detail-row"><span class="detail-label">Mesa:</span> <span class="detail-value">${pedido.mesa}</span></div>` : ''}
+                    ${pedido.tipo === 'delivery' ? `<div class="detail-row"><span class="detail-label">Dirección:</span> <span class="detail-value">${pedido.direccion}</span></div>` : ''}
+                    ${pedido.tipo === 'delivery' ? `<div class="detail-row"><span class="detail-label">Teléfono:</span> <span class="detail-value">${pedido.telefono}</span></div>` : ''}
+                    ${pedido.tipo === 'delivery' ? `<div class="detail-row"><span class="detail-label">Parroquia:</span> <span class="detail-value">${pedido.parroquia}</span></div>` : ''}
+                    ${pedido.referencia ? `<div class="detail-row"><span class="detail-label">Referencia:</span> <span class="detail-value">${pedido.referencia}</span></div>` : ''}
+                    <div class="detail-row"><span class="detail-label">Items:</span></div>
+                    ${itemsHtml}
+                    ${metodosPagoHtml ? `<div class="detail-row"><span class="detail-label">Pagos:</span></div>${metodosPagoHtml}` : ''}
+                    <div class="detail-row" style="font-weight: 700; color: var(--primary); margin-top: 10px;"><span>TOTAL</span> <span>${formatBs(usdToBs(pedido.total || 0))}</span></div>
+                </div>
+            `;
         }
     </script>
 </body>
