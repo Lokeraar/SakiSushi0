@@ -799,7 +799,7 @@
     </style>
 </head>
 <body>
-    <!-- Elemento de audio para alarma - CONFIGURADO PARA SONAR CONSTANTEMENTE -->
+    <!-- Elemento de audio para alarma - CONFIGURADO PARA SONAR EN SEGUNDO PLANO -->
     <audio id="alarmaSonido" loop preload="auto" style="display: none;">
         <source src="https://iqwwoihiiyrtypyqzhgy.supabase.co/storage/v1/object/public/alarma/Alarm%20Clock%20Effect%20Sound%20HD%20-%20Despertador%20Efecto%20D'%20Sonido.mp3" type="audio/mpeg">
     </audio>
@@ -866,7 +866,7 @@
                     </div>
                 </div>
 
-                <!-- PEDIDOS PENDIENTES -->
+                <!-- PEDIDOS PENDIENTES - SIN CONTADOR DE TIEMPO -->
                 <div style="margin: 30px 0 20px 0;">
                     <h3 style="font-size: 1.5rem; color: var(--secondary); display: flex; align-items: center; gap: 10px;">
                         <i class="fas fa-clock" style="color: var(--warning);"></i> Pedidos Pendientes
@@ -959,11 +959,11 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h2><i class="fas fa-cash-register"></i> Procesar Cobro</h2>
-                <button class="modal-close" id="closeCobroModal" onclick="cerrarCobroModal()"><i class="fas fa-times"></i></button>
+                <button class="modal-close" onclick="cerrarCobroModal()"><i class="fas fa-times"></i></button>
             </div>
             <div class="modal-body" id="cobroModalBody"></div>
             <div class="modal-footer">
-                <button class="btn btn-secondary" id="cancelCobro" onclick="cerrarCobroModal()">Cancelar (ESC)</button>
+                <button class="btn btn-secondary" onclick="cerrarCobroModal()">Cancelar (ESC)</button>
                 <button class="btn btn-primary" id="confirmCobroBtn" onclick="confirmarCobro()" disabled>Confirmar Cobro (ENTER)</button>
             </div>
         </div>
@@ -1096,11 +1096,11 @@
         let pagosMixtos = [];
         let tasaEfectiva = 400;
         
-        // Variables para control de alarma - ESTILO CINTURÓN DE SEGURIDAD
+        // Variables para control de alarma - SISTEMA DE CINTURÓN DE SEGURIDAD
         let alarmaAudio = document.getElementById('alarmaSonido');
         let alarmaActiva = false;
-        let hayPedidosPendientes = false;
-        let modalCobroAbierto = false; // Indica si el modal de cobro está abierto
+        let enProcesoDeCobro = false; // Indica si el modal de cobro está abierto
+        let pedidosPendientesActuales = 0;
 
         // Verificar sesión al cargar
         document.addEventListener('DOMContentLoaded', async () => {
@@ -1179,24 +1179,41 @@
         };
 
         // ============================================
-        // FUNCIONES DE CONTROL DE ALARMA - ESTILO CINTURÓN DE SEGURIDAD
+        // FUNCIONES DE CONTROL DE ALARMA - CINTURÓN DE SEGURIDAD
         // ============================================
+        function verificarYControlarAlarma() {
+            // Contar cuántos pedidos pendientes hay
+            const nuevosPendientes = pedidos.filter(p => p.estado === 'pendiente').length;
+            pedidosPendientesActuales = nuevosPendientes;
+            
+            console.log('🔍 Verificando alarma - Pendientes:', nuevosPendientes, 'En proceso de cobro:', enProcesoDeCobro);
+            
+            // REGLAS DEL CINTURÓN DE SEGURIDAD:
+            // 1. La alarma DEBE sonar si hay pedidos pendientes Y NO estamos en proceso de cobro
+            // 2. La alarma NO debe sonar si NO hay pedidos pendientes
+            // 3. La alarma NO debe sonar si estamos en proceso de cobro (el cinturón está "abrochado")
+            
+            if (nuevosPendientes > 0 && !enProcesoDeCobro) {
+                iniciarAlarma();
+            } else {
+                detenerAlarma();
+            }
+        }
+        
         function iniciarAlarma() {
             if (!alarmaActiva && alarmaAudio) {
-                // Intentar reproducir con manejo de errores
-                alarmaAudio.play()
-                    .then(() => {
-                        alarmaActiva = true;
-                        console.log('🔔 Alarma activada (constante)');
-                    })
-                    .catch(e => {
-                        console.log('Error reproduciendo alarma:', e);
-                        // Si hay error por autoplay policy, intentar de nuevo con interacción del usuario
-                        document.addEventListener('click', function iniciarAlarmaEnClick() {
-                            alarmaAudio.play().catch(() => {});
-                            document.removeEventListener('click', iniciarAlarmaEnClick);
-                        }, { once: true });
-                    });
+                // Intentar reproducir en segundo plano
+                alarmaAudio.play().then(() => {
+                    alarmaActiva = true;
+                    console.log('🔔🔔🔔 ALARMA ACTIVADA - Cinturón desabrochado');
+                }).catch(e => {
+                    console.log('Error reproduciendo alarma:', e);
+                    // Si falla, intentar de nuevo después de una interacción del usuario
+                    document.addEventListener('click', function iniciarAlarmaEnClick() {
+                        alarmaAudio.play().catch(() => {});
+                        document.removeEventListener('click', iniciarAlarmaEnClick);
+                    }, { once: true });
+                });
             }
         }
         
@@ -1205,26 +1222,8 @@
                 alarmaAudio.pause();
                 alarmaAudio.currentTime = 0;
                 alarmaActiva = false;
-                console.log('🔕 Alarma detenida');
+                console.log('🔕🔕🔕 ALARMA DETENIDA - Cinturón abrochado');
             }
-        }
-        
-        function verificarYControlarAlarma() {
-            // Verificar si hay pedidos pendientes
-            const hayPendientes = pedidos.some(p => p.estado === 'pendiente');
-            
-            // La lógica es simple como el cinturón de seguridad:
-            // - Si hay pedidos pendientes, la alarma DEBE sonar SIEMPRE
-            // - No importa si el modal de cobro está abierto, la alarma sigue sonando
-            //   porque el peligro (pedido pendiente) sigue ahí
-            // - La única forma de detenerla es que no haya pedidos pendientes
-            if (hayPendientes) {
-                iniciarAlarma();
-            } else {
-                detenerAlarma();
-            }
-            
-            hayPedidosPendientes = hayPendientes;
         }
 
         // ============================================
@@ -1241,6 +1240,9 @@
             actualizarEstadisticas();
             renderizarPedidos();
             renderizarMenu();
+            
+            // Verificar alarma después de cargar datos
+            verificarYControlarAlarma();
         }
 
         async function cargarPedidos() {
@@ -1259,9 +1261,6 @@
 
                 if (error) throw error;
                 pedidos = data || [];
-                
-                // Verificar alarma después de cargar pedidos
-                verificarYControlarAlarma();
                 
             } catch (error) {
                 console.error('Error cargando pedidos:', error);
@@ -1354,17 +1353,19 @@
                 pedidoParaAccion = null;
                 accionPendiente = null;
             }
-            if (modalId === 'cobroModal') {
-                modalCobroAbierto = false;
-                // Al cerrar el modal de cobro, verificamos la alarma
-                // Si hay pedidos pendientes, la alarma se reactiva inmediatamente
-                verificarYControlarAlarma();
-            }
         }
         
-        // Función específica para cerrar el modal de cobro
+        // Función específica para cerrar el modal de cobro - CRUCIAL PARA LA ALARMA
         function cerrarCobroModal() {
-            cerrarModal('cobroModal');
+            document.getElementById('cobroModal').classList.remove('active');
+            
+            // Al cerrar el modal de cobro (cancelar), el cinturón se "desabrocha"
+            enProcesoDeCobro = false;
+            currentPedido = null;
+            pagosMixtos = [];
+            
+            // Verificar si hay pedidos pendientes para reactivar la alarma
+            verificarYControlarAlarma();
         }
 
         function showSection(sectionName) {
@@ -1388,7 +1389,6 @@
             ).length;
             
             const cobradosHoy = ventasHoy.length;
-            // Convertir USD a Bs usando la tasa efectiva
             const totalVentasUSD = ventasHoy.reduce((sum, v) => sum + (v.total || 0), 0);
             const totalVentasBs = totalVentasUSD * tasaEfectiva;
             const platillosVendidos = ventasHoy.reduce((sum, v) => sum + (v.items || 0), 0);
@@ -1735,13 +1735,9 @@
             currentPedido = pedidos.find(p => p.id === pedidoId);
             if (!currentPedido) return;
             
-            // Marcar que el modal de cobro está abierto
-            modalCobroAbierto = true;
-            
-            // NOTA: NO detenemos la alarma aquí. La alarma sigue sonando
-            // porque el pedido sigue pendiente hasta que se confirme el cobro.
-            // Esto es como el cinturón de seguridad: la alarma no se detiene
-            // hasta que efectivamente te abrochas el cinturón.
+            // Al abrir el modal de cobro, el cinturón se "abrocha" (la alarma se detiene)
+            enProcesoDeCobro = true;
+            detenerAlarma(); // Detener alarma inmediatamente
             
             pagosMixtos = [];
             const totalAPagar = usdToBs(currentPedido.total || 0);
@@ -1967,22 +1963,27 @@
                         leida: false
                     }]);
                 
-                cerrarModal('cobroModal');
+                // Cerrar el modal de cobro
+                document.getElementById('cobroModal').classList.remove('active');
                 mostrarToast('✅ Cobro procesado exitosamente');
                 
-                // Marcar que el modal de cobro se cerró
-                modalCobroAbierto = false;
+                // Al terminar el cobro, el cinturón se "desabrocha"
+                enProcesoDeCobro = false;
+                currentPedido = null;
+                pagosMixtos = [];
                 
                 await cargarPedidos();
                 await cargarVentasHoy();
                 actualizarEstadisticas();
                 renderizarPedidos();
                 
-                // La alarma se verificará automáticamente en cargarPedidos()
+                // Verificar si hay más pedidos pendientes para reactivar la alarma
+                verificarYControlarAlarma();
                 
             } catch (error) {
                 console.error('Error procesando cobro:', error);
                 mostrarToast('❌ Error al procesar el cobro: ' + error.message, 'error');
+                // Si hay error, el cinturón sigue "abrochado" (modal sigue abierto)
             }
         }
 
@@ -2184,6 +2185,9 @@
                 actualizarEstadisticas();
                 renderizarPedidos();
                 
+                // Verificar alarma después de rechazar
+                verificarYControlarAlarma();
+                
             } catch (error) {
                 console.error('Error rechazando pedido:', error);
                 mostrarToast('❌ Error al rechazar: ' + error.message, 'error');
@@ -2278,6 +2282,8 @@
                     await cargarPedidos();
                     actualizarEstadisticas();
                     renderizarPedidos();
+                    // Verificar alarma después de cambios en pedidos
+                    verificarYControlarAlarma();
                 })
                 .subscribe();
             
@@ -2321,7 +2327,11 @@
                     modales.forEach(id => {
                         const modal = document.getElementById(id);
                         if (modal.classList.contains('active')) {
-                            cerrarModal(id);
+                            if (id === 'cobroModal') {
+                                cerrarCobroModal(); // Usar función especial para cobro
+                            } else {
+                                cerrarModal(id);
+                            }
                         }
                     });
                 }
