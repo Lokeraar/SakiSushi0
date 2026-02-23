@@ -21,6 +21,71 @@
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Roboto', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); min-height: 100vh; padding: 20px; color: var(--secondary); }
         
+        /* Login */
+        .login-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 10000;
+        }
+        .login-container.hidden {
+            display: none;
+        }
+        .login-box {
+            background: white;
+            padding: 2.5rem;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+        .login-box h2 {
+            color: var(--primary);
+            margin-bottom: 1.5rem;
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 700;
+            font-size: 2rem;
+        }
+        .login-form input {
+            width: 100%;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border: 2px solid var(--gray-300);
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: var(--transition);
+        }
+        .login-form input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(211,47,47,0.2);
+        }
+        .login-form button {
+            width: 100%;
+            padding: 1rem;
+            background: linear-gradient(135deg, var(--primary), #b71c1c);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            font-family: 'Montserrat', sans-serif;
+        }
+        .login-form button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(211,47,47,0.4);
+        }
+        
         .tasa-bar { 
             background: linear-gradient(135deg, #b91c1c, var(--primary)); 
             padding: 1rem 2rem; 
@@ -46,31 +111,6 @@
             padding: 0.5rem 1rem; 
             border-radius: 0.5rem; 
         }
-        .tasa-input { 
-            width: 120px; 
-            padding: 0.5rem; 
-            border: 2px solid rgba(255,255,255,0.3); 
-            border-radius: 0.5rem; 
-            background: rgba(255,255,255,0.1); 
-            color: white; 
-            font-size: 1.1rem; 
-            font-weight: 600; 
-            text-align: center; 
-        }
-        .btn-tasa { 
-            background: rgba(255,255,255,0.2); 
-            border: 2px solid white; 
-            color: white; 
-            padding: 0.5rem 1rem; 
-            border-radius: 0.5rem; 
-            cursor: pointer; 
-            font-weight: 600; 
-            transition: var(--transition); 
-        }
-        .btn-tasa:hover { 
-            background: white; 
-            color: var(--primary); 
-        }
         
         .container { 
             max-width: 1400px; 
@@ -79,6 +119,9 @@
             border-radius: 15px; 
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3); 
             overflow: hidden; 
+        }
+        .container.hidden {
+            display: none;
         }
         .header { 
             background: linear-gradient(135deg, var(--primary), #B71C1C); 
@@ -784,26 +827,39 @@
     </style>
 </head>
 <body>
-    <div class="tasa-bar" id="tasaBar">
-        <div class="tasa-display">
-            <span>Tasa Base:</span>
-            <span class="tasa-value" id="tasaBase">400.00</span>
-        </div>
-        <div class="tasa-display">
-            <span>Aumento Diario:</span>
-            <span class="tasa-value" id="aumentoDiario">0%</span>
-        </div>
-        <div class="tasa-display">
-            <span>Aumento Activo:</span>
-            <span class="tasa-value" id="aumentoActivo">No</span>
-        </div>
-        <div class="tasa-display">
-            <span>Tasa Efectiva:</span>
-            <span class="tasa-value" id="tasaEfectiva">400.00</span>
+    <!-- Pantalla de Login -->
+    <div class="login-container" id="loginContainer">
+        <div class="login-box">
+            <h2><i class="fas fa-cash-register"></i> Cajero Saki Sushi</h2>
+            <form class="login-form" id="loginForm" onkeypress="if(event.key === 'Enter') { event.preventDefault(); hacerLogin(); }">
+                <input type="text" id="username" placeholder="Usuario" required autofocus>
+                <input type="password" id="password" placeholder="Contraseña" required>
+                <button type="button" onclick="hacerLogin()">Iniciar Sesión</button>
+            </form>
         </div>
     </div>
 
-    <div class="container">
+    <!-- Panel Principal -->
+    <div class="container hidden" id="panelContainer">
+        <div class="tasa-bar" id="tasaBar">
+            <div class="tasa-display">
+                <span>Tasa Base:</span>
+                <span class="tasa-value" id="tasaBase">400.00</span>
+            </div>
+            <div class="tasa-display">
+                <span>Aumento Diario:</span>
+                <span class="tasa-value" id="aumentoDiario">0%</span>
+            </div>
+            <div class="tasa-display">
+                <span>Aumento Activo:</span>
+                <span class="tasa-value" id="aumentoActivo">No</span>
+            </div>
+            <div class="tasa-display">
+                <span>Tasa Efectiva:</span>
+                <span class="tasa-value" id="tasaEfectiva">400.00</span>
+            </div>
+        </div>
+
         <div class="header">
             <div class="header-left">
                 <h1><i class="fas fa-cash-register"></i> Panel del Cajero</h1>
@@ -1040,13 +1096,14 @@
 
         // Mostrar login
         function mostrarLogin() {
-            window.location.href = 'login.html'; // Redirigir a página de login
+            document.getElementById('loginContainer').classList.remove('hidden');
+            document.getElementById('panelContainer').classList.add('hidden');
         }
 
         // Mostrar panel
         function mostrarPanel() {
-            document.querySelector('.container').style.display = 'block';
-            document.querySelector('.tasa-bar').style.display = 'flex';
+            document.getElementById('loginContainer').classList.add('hidden');
+            document.getElementById('panelContainer').classList.remove('hidden');
             setupEventListeners();
             setupRealtimeSubscriptions();
         }
@@ -1057,6 +1114,43 @@
             currentUser = null;
             mostrarLogin();
         }
+
+        // Función de login
+        window.hacerLogin = async function() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            if (!username || !password) {
+                mostrarToast('Ingresa usuario y contraseña', 'error');
+                return;
+            }
+
+            try {
+                const { data, error } = await window.supabaseClient
+                    .from('usuarios')
+                    .select('*')
+                    .eq('username', username)
+                    .eq('password', password)
+                    .eq('activo', true)
+                    .maybeSingle();
+
+                if (error) throw error;
+
+                if (!data) {
+                    mostrarToast('Credenciales inválidas', 'error');
+                    return;
+                }
+
+                currentUser = data;
+                sessionStorage.setItem('cajero_user', JSON.stringify(data));
+                await cargarDatosIniciales();
+                mostrarPanel();
+
+            } catch (error) {
+                console.error('Error en login:', error);
+                mostrarToast('Error al conectar', 'error');
+            }
+        };
 
         // Cargar datos iniciales
         async function cargarDatosIniciales() {
@@ -2083,7 +2177,7 @@
         }
 
         // ============================================
-        // FUNCIONES DE FORMATO (desde supabase-config)
+        // FUNCIONES DE FORMATO
         // ============================================
         function formatBs(monto) {
             return new Intl.NumberFormat('es-VE', {
