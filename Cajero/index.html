@@ -799,8 +799,8 @@
     </style>
 </head>
 <body>
-    <!-- Elemento de audio para alarma -->
-    <audio id="alarmaSonido" loop preload="auto">
+    <!-- Elemento de audio para alarma - CONFIGURADO PARA SONAR CONSTANTEMENTE -->
+    <audio id="alarmaSonido" loop preload="auto" style="display: none;">
         <source src="https://iqwwoihiiyrtypyqzhgy.supabase.co/storage/v1/object/public/alarma/Alarm%20Clock%20Effect%20Sound%20HD%20-%20Despertador%20Efecto%20D'%20Sonido.mp3" type="audio/mpeg">
     </audio>
 
@@ -866,7 +866,7 @@
                     </div>
                 </div>
 
-                <!-- PEDIDOS PENDIENTES - SIN CONTADOR DE TIEMPO -->
+                <!-- PEDIDOS PENDIENTES -->
                 <div style="margin: 30px 0 20px 0;">
                     <h3 style="font-size: 1.5rem; color: var(--secondary); display: flex; align-items: center; gap: 10px;">
                         <i class="fas fa-clock" style="color: var(--warning);"></i> Pedidos Pendientes
@@ -959,11 +959,11 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h2><i class="fas fa-cash-register"></i> Procesar Cobro</h2>
-                <button class="modal-close" onclick="cerrarModal('cobroModal')"><i class="fas fa-times"></i></button>
+                <button class="modal-close" id="closeCobroModal" onclick="cerrarCobroModal()"><i class="fas fa-times"></i></button>
             </div>
             <div class="modal-body" id="cobroModalBody"></div>
             <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="cerrarModal('cobroModal')">Cancelar (ESC)</button>
+                <button class="btn btn-secondary" id="cancelCobro" onclick="cerrarCobroModal()">Cancelar (ESC)</button>
                 <button class="btn btn-primary" id="confirmCobroBtn" onclick="confirmarCobro()" disabled>Confirmar Cobro (ENTER)</button>
             </div>
         </div>
@@ -1096,11 +1096,11 @@
         let pagosMixtos = [];
         let tasaEfectiva = 400;
         
-        // Variables para control de alarma
+        // Variables para control de alarma - ESTILO CINTURÓN DE SEGURIDAD
         let alarmaAudio = document.getElementById('alarmaSonido');
         let alarmaActiva = false;
         let hayPedidosPendientes = false;
-        let cobrandoActivo = false;
+        let modalCobroAbierto = false; // Indica si el modal de cobro está abierto
 
         // Verificar sesión al cargar
         document.addEventListener('DOMContentLoaded', async () => {
@@ -1179,30 +1179,24 @@
         };
 
         // ============================================
-        // FUNCIONES DE CONTROL DE ALARMA
+        // FUNCIONES DE CONTROL DE ALARMA - ESTILO CINTURÓN DE SEGURIDAD
         // ============================================
-        function verificarYControlarAlarma() {
-            // Verificar si hay pedidos pendientes
-            const hayPendientes = pedidos.some(p => p.estado === 'pendiente');
-            
-            // La alarma debe sonar si:
-            // 1. Hay pedidos pendientes
-            // 2. No se está cobrando actualmente
-            // 3. La alarma no está ya activa
-            if (hayPendientes && !cobrandoActivo) {
-                iniciarAlarma();
-            } else {
-                detenerAlarma();
-            }
-            
-            hayPedidosPendientes = hayPendientes;
-        }
-        
         function iniciarAlarma() {
             if (!alarmaActiva && alarmaAudio) {
-                alarmaAudio.play().catch(e => console.log('Error reproduciendo alarma:', e));
-                alarmaActiva = true;
-                console.log('🔔 Alarma activada');
+                // Intentar reproducir con manejo de errores
+                alarmaAudio.play()
+                    .then(() => {
+                        alarmaActiva = true;
+                        console.log('🔔 Alarma activada (constante)');
+                    })
+                    .catch(e => {
+                        console.log('Error reproduciendo alarma:', e);
+                        // Si hay error por autoplay policy, intentar de nuevo con interacción del usuario
+                        document.addEventListener('click', function iniciarAlarmaEnClick() {
+                            alarmaAudio.play().catch(() => {});
+                            document.removeEventListener('click', iniciarAlarmaEnClick);
+                        }, { once: true });
+                    });
             }
         }
         
@@ -1213,6 +1207,24 @@
                 alarmaActiva = false;
                 console.log('🔕 Alarma detenida');
             }
+        }
+        
+        function verificarYControlarAlarma() {
+            // Verificar si hay pedidos pendientes
+            const hayPendientes = pedidos.some(p => p.estado === 'pendiente');
+            
+            // La lógica es simple como el cinturón de seguridad:
+            // - Si hay pedidos pendientes, la alarma DEBE sonar SIEMPRE
+            // - No importa si el modal de cobro está abierto, la alarma sigue sonando
+            //   porque el peligro (pedido pendiente) sigue ahí
+            // - La única forma de detenerla es que no haya pedidos pendientes
+            if (hayPendientes) {
+                iniciarAlarma();
+            } else {
+                detenerAlarma();
+            }
+            
+            hayPedidosPendientes = hayPendientes;
         }
 
         // ============================================
@@ -1342,6 +1354,17 @@
                 pedidoParaAccion = null;
                 accionPendiente = null;
             }
+            if (modalId === 'cobroModal') {
+                modalCobroAbierto = false;
+                // Al cerrar el modal de cobro, verificamos la alarma
+                // Si hay pedidos pendientes, la alarma se reactiva inmediatamente
+                verificarYControlarAlarma();
+            }
+        }
+        
+        // Función específica para cerrar el modal de cobro
+        function cerrarCobroModal() {
+            cerrarModal('cobroModal');
         }
 
         function showSection(sectionName) {
@@ -1712,9 +1735,13 @@
             currentPedido = pedidos.find(p => p.id === pedidoId);
             if (!currentPedido) return;
             
-            // Activar estado de cobro (detiene la alarma)
-            cobrandoActivo = true;
-            detenerAlarma();
+            // Marcar que el modal de cobro está abierto
+            modalCobroAbierto = true;
+            
+            // NOTA: NO detenemos la alarma aquí. La alarma sigue sonando
+            // porque el pedido sigue pendiente hasta que se confirme el cobro.
+            // Esto es como el cinturón de seguridad: la alarma no se detiene
+            // hasta que efectivamente te abrochas el cinturón.
             
             pagosMixtos = [];
             const totalAPagar = usdToBs(currentPedido.total || 0);
@@ -1943,23 +1970,19 @@
                 cerrarModal('cobroModal');
                 mostrarToast('✅ Cobro procesado exitosamente');
                 
-                // Desactivar estado de cobro
-                cobrandoActivo = false;
+                // Marcar que el modal de cobro se cerró
+                modalCobroAbierto = false;
                 
                 await cargarPedidos();
                 await cargarVentasHoy();
                 actualizarEstadisticas();
                 renderizarPedidos();
                 
-                // Verificar si hay más pedidos pendientes para reactivar alarma
-                verificarYControlarAlarma();
+                // La alarma se verificará automáticamente en cargarPedidos()
                 
             } catch (error) {
                 console.error('Error procesando cobro:', error);
                 mostrarToast('❌ Error al procesar el cobro: ' + error.message, 'error');
-                // Si hay error, reactivar alarma si hay pendientes
-                cobrandoActivo = false;
-                verificarYControlarAlarma();
             }
         }
 
@@ -2255,8 +2278,6 @@
                     await cargarPedidos();
                     actualizarEstadisticas();
                     renderizarPedidos();
-                    // Verificar alarma después de cambios en pedidos
-                    verificarYControlarAlarma();
                 })
                 .subscribe();
             
