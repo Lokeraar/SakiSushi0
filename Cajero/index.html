@@ -585,6 +585,92 @@
         }
         
         /* ============================================
+           DETALLES MODAL
+        ============================================ */
+        .detail-item { 
+            background: #f8f8f8; 
+            border-radius: 8px; 
+            padding: 15px; 
+            margin-bottom: 15px; 
+            border-left: 4px solid var(--info); 
+        }
+        .detail-row { 
+            display: flex; 
+            justify-content: space-between; 
+            padding: 6px 0; 
+            border-bottom: 1px solid #eee; 
+            font-size: 0.9rem;
+        }
+        .detail-row:last-child { 
+            border-bottom: none; 
+        }
+        .detail-label { 
+            font-weight: 600; 
+            color: #666; 
+        }
+        .detail-value { 
+            font-weight: 500; 
+            color: var(--secondary); 
+        }
+        
+        .payment-methods { 
+            display: flex; 
+            flex-wrap: wrap; 
+            gap: 8px; 
+            margin-top: 10px; 
+        }
+        .payment-tag { 
+            background: #E8F5E9; 
+            color: var(--success); 
+            padding: 4px 10px; 
+            border-radius: 20px; 
+            font-size: 0.75rem; 
+            font-weight: 600; 
+            display: inline-flex; 
+            align-items: center; 
+            gap: 4px; 
+            border: 1px solid #a5d6a7; 
+        }
+        
+        /* ============================================
+           RANKING
+        ============================================ */
+        .ranking-bar { 
+            display: flex; 
+            align-items: center; 
+            gap: 10px; 
+            padding: 8px; 
+            border-bottom: 1px solid #eee; 
+        }
+        .ranking-position { 
+            width: 26px; 
+            height: 26px; 
+            background: var(--accent); 
+            color: white; 
+            border-radius: 50%; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-weight: 700; 
+            font-size: 0.85rem;
+        }
+        .ranking-info { flex: 1; }
+        .ranking-name { font-weight: 600; font-size: 0.9rem; }
+        .ranking-cantidad { color: #666; font-size: 0.8rem; }
+        .ranking-bar-container { 
+            width: 80px; 
+            height: 6px; 
+            background: #e0e0e0; 
+            border-radius: 4px; 
+            overflow: hidden; 
+        }
+        .ranking-bar-fill { 
+            height: 100%; 
+            background: var(--primary); 
+            border-radius: 4px; 
+        }
+        
+        /* ============================================
            SELECCIÓN DE MESA
         ============================================ */
         .mesa-grid { 
@@ -955,11 +1041,15 @@
                     </label>
                     <label style="display: flex; align-items: center; gap: 10px; padding: 12px; border: 1px solid #e0e0e0; border-radius: 6px; cursor: pointer;">
                         <input type="radio" name="rejectionReason" value="datos_incorrectos" style="width: 18px; height: 18px;">
-                        <span>Datos de contacto incorrectos</span>
+                        <span>Datos de contacto/dirección incorrectos</span>
                     </label>
                     <label style="display: flex; align-items: center; gap: 10px; padding: 12px; border: 1px solid #e0e0e0; border-radius: 6px; cursor: pointer;">
                         <input type="radio" name="rejectionReason" value="no_disponible" style="width: 18px; height: 18px;">
                         <span>Producto no disponible</span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 10px; padding: 12px; border: 1px solid #e0e0e0; border-radius: 6px; cursor: pointer;">
+                        <input type="radio" name="rejectionReason" value="fuera_horario" style="width: 18px; height: 18px;">
+                        <span>Fuera de horario de delivery</span>
                     </label>
                 </div>
             </div>
@@ -1993,7 +2083,7 @@
         }
 
         // ============================================
-        // FUNCIONES DE RECHAZO
+        // FUNCIONES DE RECHAZO (VERSIÓN CORREGIDA)
         // ============================================
         function mostrarRechazo(pedidoId) {
             pedidoParaAccion = pedidos.find(p => p.id === pedidoId);
@@ -2011,23 +2101,34 @@
             }
             
             try {
-                // Liberar ingredientes
+                // Mostrar indicador de carga
+                const btnRechazar = document.querySelector('#rechazoModal .btn-primary');
+                const textoOriginal = btnRechazar.textContent;
+                btnRechazar.disabled = true;
+                btnRechazar.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
+                
+                // Liberar ingredientes usando la función RPC
                 const { error: liberarError } = await window.supabaseClient.rpc('liberar_ingredientes', {
                     p_pedido_id: pedidoParaAccion.id
                 });
                 
-                if (liberarError) throw liberarError;
+                if (liberarError) {
+                    console.error('Error liberando ingredientes:', liberarError);
+                    throw liberarError;
+                }
                 
-                // Actualizar estado
-                const { error } = await window.supabaseClient
+                // Actualizar estado del pedido
+                const { error: updateError } = await window.supabaseClient
                     .from('pedidos')
-                    .update({ estado: 'rechazado' })
+                    .update({ 
+                        estado: 'rechazado'
+                    })
                     .eq('id', pedidoParaAccion.id);
                 
-                if (error) throw error;
+                if (updateError) throw updateError;
                 
                 // Notificar al cliente
-                await window.supabaseClient
+                const { error: notifError } = await window.supabaseClient
                     .from('notificaciones')
                     .insert([{
                         pedido_id: pedidoParaAccion.id,
@@ -2039,8 +2140,14 @@
                         leida: false
                     }]);
                 
+                if (notifError) {
+                    console.error('Error creando notificación:', notifError);
+                }
+                
                 cerrarModal('rechazoModal');
-                mostrarToast('✅ Pedido rechazado');
+                mostrarToast('✅ Pedido rechazado correctamente');
+                
+                // Recargar datos
                 await cargarPedidos();
                 actualizarEstadisticas();
                 renderizarPedidos();
@@ -2048,6 +2155,13 @@
             } catch (error) {
                 console.error('Error rechazando pedido:', error);
                 mostrarToast('❌ Error al rechazar: ' + error.message, 'error');
+            } finally {
+                // Restaurar botón
+                const btnRechazar = document.querySelector('#rechazoModal .btn-primary');
+                if (btnRechazar) {
+                    btnRechazar.disabled = false;
+                    btnRechazar.innerHTML = 'Confirmar Rechazo';
+                }
             }
         }
 
@@ -2055,7 +2169,7 @@
             const razones = {
                 'referencia_invalida': 'Referencia de pago inválida',
                 'monto_insuficiente': 'Monto insuficiente',
-                'datos_incorrectos': 'Datos incorrectos',
+                'datos_incorrectos': 'Datos de contacto incorrectos',
                 'no_disponible': 'Producto no disponible',
                 'fuera_horario': 'Fuera de horario'
             };
@@ -2162,24 +2276,13 @@
                     renderizarMenu();
                 })
                 .subscribe();
-            
-            window.supabaseClient
-                .channel('cajero-inventario')
-                .on('postgres_changes', {
-                    event: 'UPDATE',
-                    schema: 'public',
-                    table: 'inventario'
-                }, () => {
-                    // Actualizar stock en el menú del cliente (se maneja desde el cliente)
-                    console.log('Inventario actualizado');
-                })
-                .subscribe();
         }
 
         // ============================================
         // EVENT LISTENERS
         // ============================================
         function setupEventListeners() {
+            // Atajos de teclado globales
             document.addEventListener('keydown', (e) => {
                 if (e.key === 'Escape') {
                     const modales = ['cobroModal', 'confirmModal', 'rechazoModal', 'detalleModal', 'mesaModal', 'comprobanteModal'];
