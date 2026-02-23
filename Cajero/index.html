@@ -813,7 +813,7 @@
 </head>
 <body>
     <!-- Elemento de audio para alarma -->
-    <audio id="alarmaSonido" loop preload="auto" style="display: none;">
+    <audio id="alarmaSonido" loop preload="auto">
         <source src="https://iqwwoihiiyrtypyqzhgy.supabase.co/storage/v1/object/public/alarma/Alarm%20Clock%20Effect%20Sound%20HD%20-%20Despertador%20Efecto%20D'%20Sonido.mp3" type="audio/mpeg">
     </audio>
 
@@ -1113,7 +1113,8 @@
         let alarmaAudio = document.getElementById('alarmaSonido');
         let alarmaActiva = false;
         let enProcesoDeCobro = false;
-        let pedidosPendientesActuales = 0;
+        let alarmaIntentos = 0;
+        const MAX_INTENTOS = 5;
 
         // Verificar sesión al cargar
         document.addEventListener('DOMContentLoaded', async () => {
@@ -1144,6 +1145,11 @@
             document.getElementById('panelContainer').classList.remove('hidden');
             setupEventListeners();
             setupRealtimeSubscriptions();
+            
+            // Verificar alarma inmediatamente después de mostrar el panel
+            setTimeout(() => {
+                verificarYControlarAlarma(true); // true = forzar verificación
+            }, 100);
         }
 
         // Cerrar sesión
@@ -1192,11 +1198,17 @@
         };
 
         // ============================================
-        // FUNCIONES DE CONTROL DE ALARMA
+        // FUNCIONES DE CONTROL DE ALARMA - CORREGIDAS
         // ============================================
-        function verificarYControlarAlarma() {
+        function verificarYControlarAlarma(forzar = false) {
             const nuevosPendientes = pedidos.filter(p => p.estado === 'pendiente').length;
-            pedidosPendientesActuales = nuevosPendientes;
+            
+            console.log('🔍 Verificando alarma - Pendientes:', nuevosPendientes, 'En proceso de cobro:', enProcesoDeCobro, 'Alarma activa:', alarmaActiva);
+            
+            // REGLAS DEL CINTURÓN DE SEGURIDAD:
+            // 1. La alarma DEBE sonar si hay pedidos pendientes Y NO estamos en proceso de cobro
+            // 2. La alarma NO debe sonar si NO hay pedidos pendientes
+            // 3. La alarma NO debe sonar si estamos en proceso de cobro
             
             if (nuevosPendientes > 0 && !enProcesoDeCobro) {
                 iniciarAlarma();
@@ -1207,16 +1219,36 @@
         
         function iniciarAlarma() {
             if (!alarmaActiva && alarmaAudio) {
-                alarmaAudio.play().then(() => {
-                    alarmaActiva = true;
-                    console.log('🔔 Alarma activada');
-                }).catch(e => {
-                    console.log('Error reproduciendo alarma:', e);
-                    document.addEventListener('click', function iniciarAlarmaEnClick() {
-                        alarmaAudio.play().catch(() => {});
-                        document.removeEventListener('click', iniciarAlarmaEnClick);
-                    }, { once: true });
-                });
+                console.log('🔔 Intentando activar alarma...');
+                
+                // Configurar el audio para que pueda reproducirse automáticamente
+                alarmaAudio.load();
+                
+                // Intentar reproducir
+                const playPromise = alarmaAudio.play();
+                
+                if (playPromise !== undefined) {
+                    playPromise.then(() => {
+                        alarmaActiva = true;
+                        alarmaIntentos = 0;
+                        console.log('🔔🔔🔔 ALARMA ACTIVADA');
+                    }).catch(error => {
+                        console.log('Error reproduciendo alarma:', error);
+                        
+                        // Incrementar contador de intentos
+                        alarmaIntentos++;
+                        
+                        // Si no ha excedido el máximo de intentos, reintentar
+                        if (alarmaIntentos < MAX_INTENTOS) {
+                            console.log(`🔄 Reintento ${alarmaIntentos}/${MAX_INTENTOS}...`);
+                            setTimeout(() => {
+                                if (!alarmaActiva && !enProcesoDeCobro) {
+                                    iniciarAlarma();
+                                }
+                            }, 500);
+                        }
+                    });
+                }
             }
         }
         
@@ -1225,7 +1257,8 @@
                 alarmaAudio.pause();
                 alarmaAudio.currentTime = 0;
                 alarmaActiva = false;
-                console.log('🔕 Alarma detenida');
+                alarmaIntentos = 0;
+                console.log('🔕🔕🔕 ALARMA DETENIDA');
             }
         }
 
@@ -1243,8 +1276,6 @@
             actualizarEstadisticas();
             renderizarPedidos();
             renderizarMenu();
-            
-            verificarYControlarAlarma();
         }
 
         async function cargarPedidos() {
@@ -1364,7 +1395,10 @@
             currentPedido = null;
             pagosMixtos = [];
             
-            verificarYControlarAlarma();
+            // Verificar alarma después de cerrar el modal
+            setTimeout(() => {
+                verificarYControlarAlarma(true);
+            }, 100);
         }
 
         function showSection(sectionName) {
@@ -1544,7 +1578,7 @@
         }
 
         // ============================================
-        // FUNCIONES DE MODALES DE DETALLE - VERSIÓN COMPACTA
+        // FUNCIONES DE MODALES DE DETALLE
         // ============================================
         async function abrirModalDetalle(tipo) {
             await cargarVentasHoy();
@@ -1985,7 +2019,7 @@
                 actualizarEstadisticas();
                 renderizarPedidos();
                 
-                verificarYControlarAlarma();
+                verificarYControlarAlarma(true);
                 
             } catch (error) {
                 console.error('Error procesando cobro:', error);
@@ -2125,6 +2159,8 @@
                 actualizarEstadisticas();
                 renderizarPedidos();
                 
+                verificarYControlarAlarma(true);
+                
             } catch (error) {
                 console.error('Error actualizando estado:', error);
                 mostrarToast('❌ Error al actualizar', 'error');
@@ -2188,7 +2224,7 @@
                 actualizarEstadisticas();
                 renderizarPedidos();
                 
-                verificarYControlarAlarma();
+                verificarYControlarAlarma(true);
                 
             } catch (error) {
                 console.error('Error rechazando pedido:', error);
@@ -2281,10 +2317,11 @@
                     schema: 'public',
                     table: 'pedidos'
                 }, async () => {
+                    console.log('🔄 Cambio detectado en pedidos');
                     await cargarPedidos();
                     actualizarEstadisticas();
                     renderizarPedidos();
-                    verificarYControlarAlarma();
+                    verificarYControlarAlarma(true);
                 })
                 .subscribe();
             
@@ -2348,6 +2385,17 @@
                     }
                 }
             });
+            
+            // Agregar listener para el primer clic que ayude a la reproducción del audio
+            document.addEventListener('click', function primerClic() {
+                if (alarmaAudio && alarmaAudio.paused && !alarmaActiva) {
+                    const pendientes = pedidos.filter(p => p.estado === 'pendiente').length;
+                    if (pendientes > 0 && !enProcesoDeCobro) {
+                        iniciarAlarma();
+                    }
+                }
+                document.removeEventListener('click', primerClic);
+            }, { once: true });
         }
 
         // ============================================
