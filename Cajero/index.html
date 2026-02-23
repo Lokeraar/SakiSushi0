@@ -2072,55 +2072,78 @@
             document.getElementById('rechazoModal').classList.add('active');
         }
 
-        async function confirmarRechazo() {
-            if (!pedidoParaAccion) return;
-            
-            const razon = document.querySelector('input[name="rejectionReason"]:checked')?.value;
-            if (!razon) {
-                mostrarToast('Selecciona una razón de rechazo', 'error');
-                return;
-            }
-            
-            try {
-                // SOLUCIÓN OPCIÓN 1: Eliminamos la llamada a la función RPC que causaba el error
-                // y solo actualizamos el estado del pedido directamente.
-                
-                // Actualizar estado del pedido a 'rechazado'
-                const { error } = await window.supabaseClient
-                    .from('pedidos')
-                    .update({ 
-                        estado: 'rechazado',
-                        razon_rechazo: razon,
-                        fecha_rechazo: new Date().toISOString()
-                    })
-                    .eq('id', pedidoParaAccion.id);
-                
-                if (error) throw error;
-                
-                // Notificar al cliente
-                await window.supabaseClient
-                    .from('notificaciones')
-                    .insert([{
-                        pedido_id: pedidoParaAccion.id,
-                        tipo: 'rejected',
-                        titulo: '❌ Pedido rechazado',
-                        mensaje: `Motivo: ${traducirRazon(razon)}`,
-                        timestamp: new Date().toISOString(),
-                        session_id: pedidoParaAccion.session_id,
-                        leida: false
-                    }]);
-                
-                cerrarModal('rechazoModal');
-                mostrarToast('✅ Pedido rechazado');
-                await cargarPedidos();
-                actualizarEstadisticas();
-                renderizarPedidos();
-                
-            } catch (error) {
-                console.error('Error rechazando pedido:', error);
-                mostrarToast('❌ Error al rechazar: ' + error.message, 'error');
-            }
-        }
+        // ============================================
+		// FUNCIONES DE RECHAZO (VERSIÓN CORREGIDA)
+		// ============================================
+		function mostrarRechazo(pedidoId) {
+			pedidoParaAccion = pedidos.find(p => p.id === pedidoId);
+			if (!pedidoParaAccion) return;
+			document.getElementById('rechazoModal').classList.add('active');
+		}
+
+		async function confirmarRechazo() {
+			if (!pedidoParaAccion) return;
+			
+			const razon = document.querySelector('input[name="rejectionReason"]:checked')?.value;
+			if (!razon) {
+				mostrarToast('Selecciona una razón de rechazo', 'error');
+				return;
+			}
+			
+			try {
+				// PASO 1: Liberar ingredientes usando la función RPC (AHORA CORREGIDA)
+				const { error: liberarError } = await window.supabaseClient.rpc('liberar_ingredientes', {
+					p_pedido_id: pedidoParaAccion.id
+				});
+				
+				if (liberarError) throw liberarError;
+				
+				// PASO 2: Actualizar estado del pedido (SOLO 'estado', sin columnas extras)
+				const { error } = await window.supabaseClient
+					.from('pedidos')
+					.update({ 
+						estado: 'rechazado'
+						// ❌ Eliminamos 'razon_rechazo' y 'fecha_rechazo' porque no existen en la tabla
+					})
+					.eq('id', pedidoParaAccion.id);
+				
+				if (error) throw error;
+				
+				// PASO 3: Notificar al cliente
+				await window.supabaseClient
+					.from('notificaciones')
+					.insert([{
+						pedido_id: pedidoParaAccion.id,
+						tipo: 'rejected',
+						titulo: '❌ Pedido rechazado',
+						mensaje: `Motivo: ${traducirRazon(razon)}`,
+						timestamp: new Date().toISOString(),
+						session_id: pedidoParaAccion.session_id,
+						leida: false
+					}]);
+				
+				cerrarModal('rechazoModal');
+				mostrarToast('✅ Pedido rechazado');
+				await cargarPedidos();
+				actualizarEstadisticas();
+				renderizarPedidos();
+				
+			} catch (error) {
+				console.error('Error rechazando pedido:', error);
+				mostrarToast('❌ Error al rechazar: ' + error.message, 'error');
+			}
+		}
+
+		function traducirRazon(razon) {
+			const razones = {
+				'referencia_invalida': 'Referencia de pago inválida',
+				'monto_insuficiente': 'Monto insuficiente',
+				'datos_incorrectos': 'Datos incorrectos',
+				'no_disponible': 'Producto no disponible',
+				'fuera_horario': 'Fuera de horario'
+			};
+			return razones[razon] || razon;
+		}
 
         function traducirRazon(razon) {
             const razones = {
