@@ -2181,6 +2181,17 @@
 			const razones = {
 				'referencia_invalida': 'Referencia de pago inválida',
 				'monto_insuficiente': 'Monto insuficiente',
+				'datos_incorrectos': 'Datos de contacto incorrectos',
+				'no_disponible': 'Producto no disponible',
+				'fuera_horario': 'Fuera de horario'
+			};
+			return razones[razon] || razon;
+		}
+
+		function traducirRazon(razon) {
+			const razones = {
+				'referencia_invalida': 'Referencia de pago inválida',
+				'monto_insuficiente': 'Monto insuficiente',
 				'datos_incorrectos': 'Datos incorrectos',
 				'no_disponible': 'Producto no disponible',
 				'fuera_horario': 'Fuera de horario'
