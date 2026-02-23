@@ -2838,108 +2838,100 @@
         }
 
         // ============================================
-        // FUNCIÓN CORREGIDA: crearPedidoTransaccional
-        // ============================================
-        async function crearPedidoTransaccional(pedido) {
-            try {
-                const pedidoParaRPC = {
-                    id: pedido.id,
-                    timestamp: pedido.timestamp,
-                    estado: pedido.estado,
-                    tipo: pedido.tipo,
-                    total: pedido.total,
-                    session_id: pedido.session_id,
-                    mesa: pedido.mesa || null,
-                    cliente_nombre: pedido.cliente_nombre || null,
-                    parroquia: pedido.parroquia || null,
-                    direccion: pedido.direccion || null,
-                    telefono: pedido.telefono || null,
-                    referencia: pedido.referencia || null,
-                    fecha_reserva: pedido.fecha_reserva || null,
-                    comprobante_url: pedido.comprobante_url || null,
-                    costo_delivery: pedido.costo_delivery || 0,
-                    costo_delivery_usd: pedido.costo_delivery_usd || 0
-                };
+		// FUNCIÓN CORREGIDA: crearPedidoTransaccional
+		// ============================================
+		async function crearPedidoTransaccional(pedido) {
+			try {
+				const pedidoParaRPC = {
+					id: pedido.id,
+					timestamp: pedido.timestamp,
+					estado: pedido.estado,
+					tipo: pedido.tipo,
+					total: pedido.total,
+					session_id: pedido.session_id,
+					mesa: pedido.mesa || null,
+					cliente_nombre: pedido.cliente_nombre || null,
+					parroquia: pedido.parroquia || null,
+					direccion: pedido.direccion || null,
+					telefono: pedido.telefono || null,
+					referencia: pedido.referencia || null,
+					fecha_reserva: pedido.fecha_reserva || null,
+					comprobante_url: pedido.comprobante_url || null,
+					costo_delivery: pedido.costo_delivery || 0,
+					costo_delivery_usd: pedido.costo_delivery_usd || 0
+				};
 
-                console.log('📤 Enviando pedido a RPC:', pedidoParaRPC);
-                
-                const { data, error } = await window.supabaseClient.rpc('crear_pedido_con_reserva', {
-                    p_pedido: pedidoParaRPC,
-                    p_items: pedido.items
-                });
+				console.log('📤 Enviando pedido a RPC:', pedidoParaRPC);
+				console.log('📦 Items:', pedido.items);
 
-                if (error) throw error;
-                
-                console.log('📥 Respuesta RPC:', data);
-                
-                if (data && data.success) {
-                    // Mensajes según el tipo de pedido
-                    let titulo, mensaje;
-                    
-                    switch(pedido.tipo) {
-                        case 'mesa':
-                            titulo = '✅ Pedido recibido';
-                            mensaje = 'Por favor, pasa a caja a cancelar';
-                            break;
-                        case 'delivery':
-                            titulo = '✅ Pedido recibido';
-                            mensaje = 'Tu pago está siendo confirmado...';
-                            break;
-                        case 'reserva':
-                            titulo = '✅ Reserva recibida';
-                            mensaje = 'Confirmando pago...';
-                            break;
-                        default:
-                            titulo = '✅ Pedido recibido';
-                            mensaje = 'Tu pedido ha sido registrado';
-                    }
-                    
-                    // Crear notificación en la base de datos (INMEDIATAMENTE)
-                    const { error: notifError } = await window.supabaseClient
-                        .from('notificaciones')
-                        .insert([{
-                            pedido_id: data.pedido_id,
-                            tipo: 'pending',
-                            titulo: titulo,
-                            mensaje: mensaje,
-                            timestamp: new Date().toISOString(),
-                            session_id: sessionId,
-                            leida: false
-                        }]);
-                    
-                    if (notifError) {
-                        console.error('Error creando notificación:', notifError);
-                    }
-                    
-                    // Recargar notificaciones para actualizar UI
-                    await cargarNotificaciones();
-                    
-                    // Reproducir sonido
-                    const audio = document.getElementById('notificationSound');
-                    audio.play().catch(() => {});
-                    
-                    // Activar vibración si el navegador lo soporta
-                    if (navigator.vibrate) {
-                        navigator.vibrate(200);
-                    }
-                    
-                    // Animar la campana
-                    const bell = document.getElementById('notificationBell');
-                    bell.classList.add('fa-shake');
-                    setTimeout(() => bell.classList.remove('fa-shake'), 1000);
-                    
-                    // Mostrar toast
-                    mostrarToast(titulo, 'success');
-                    
-                    return { success: true, pedidoId: data.pedido_id };
-                } else {
-                    return { success: false, error: data?.error || 'Error desconocido' };
-                }
-            } catch (error) {
-                console.error('Error en crearPedidoTransaccional:', error);
-                return { success: false, error: error.message };
-            }
-        }
+				const { data, error } = await window.supabaseClient.rpc('crear_pedido_con_reserva', {
+					p_pedido: pedidoParaRPC,
+					p_items: pedido.items
+				});
+
+				if (error) {
+					console.error('❌ Error en RPC:', error);
+					throw error;
+				}
+				
+				console.log('📥 Respuesta RPC:', data);
+				
+				if (data && data.success) {
+					// Mensajes según el tipo de pedido
+					let titulo, mensaje;
+					
+					switch(pedido.tipo) {
+						case 'mesa':
+							titulo = '✅ Pedido recibido';
+							mensaje = 'Por favor, pasa a caja a cancelar';
+							break;
+						case 'delivery':
+							titulo = '✅ Pedido recibido';
+							mensaje = 'Tu pago está siendo confirmado...';
+							break;
+						case 'reserva':
+							titulo = '✅ Reserva recibida';
+							mensaje = 'Confirmando pago...';
+							break;
+						default:
+							titulo = '✅ Pedido recibido';
+							mensaje = 'Tu pedido ha sido registrado';
+					}
+					
+					// Mostrar toast inmediatamente
+					mostrarToast(titulo, 'success');
+					
+					// Reproducir sonido
+					const audio = document.getElementById('notificationSound');
+					if (audio) {
+						audio.play().catch(() => {});
+					}
+					
+					// Activar vibración
+					if (navigator.vibrate) {
+						navigator.vibrate(200);
+					}
+					
+					// Animar la campana
+					const bell = document.getElementById('notificationBell');
+					if (bell) {
+						bell.classList.add('fa-shake');
+						setTimeout(() => bell.classList.remove('fa-shake'), 1000);
+					}
+					
+					return { success: true, pedidoId: data.pedido_id };
+					
+				} else {
+					console.error('❌ Error en respuesta:', data);
+					return { success: false, error: data?.error || 'Error desconocido' };
+				}
+				
+			} catch (error) {
+				console.error('❌ Error en crearPedidoTransaccional:', error);
+				mostrarToast('Error al procesar el pedido: ' + error.message, 'error');
+				return { success: false, error: error.message };
+			}
+		}
 
         // ============================================
         // FUNCIONES DE RENDERIZADO
