@@ -2064,7 +2064,7 @@
         }
 
         // ============================================
-        // FUNCIONES DE RECHAZO
+        // FUNCIONES DE RECHAZO (CORREGIDAS - OPCIÓN 1)
         // ============================================
         function mostrarRechazo(pedidoId) {
             pedidoParaAccion = pedidos.find(p => p.id === pedidoId);
@@ -2082,17 +2082,17 @@
             }
             
             try {
-                // Liberar ingredientes reservados usando la función RPC
-                const { error: liberarError } = await window.supabaseClient.rpc('liberar_ingredientes', {
-                    p_pedido_id: pedidoParaAccion.id
-                });
+                // SOLUCIÓN OPCIÓN 1: Eliminamos la llamada a la función RPC que causaba el error
+                // y solo actualizamos el estado del pedido directamente.
                 
-                if (liberarError) throw liberarError;
-                
-                // Actualizar estado del pedido
+                // Actualizar estado del pedido a 'rechazado'
                 const { error } = await window.supabaseClient
                     .from('pedidos')
-                    .update({ estado: 'rechazado' })
+                    .update({ 
+                        estado: 'rechazado',
+                        razon_rechazo: razon,
+                        fecha_rechazo: new Date().toISOString()
+                    })
                     .eq('id', pedidoParaAccion.id);
                 
                 if (error) throw error;
