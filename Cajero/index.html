@@ -661,6 +661,36 @@
         }
         
         /* ============================================
+           BOTÓN DE ACTIVACIÓN DE SONIDO (AUTOPLAY)
+        ============================================ */
+        .sound-activation-btn {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: var(--warning);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 50px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            z-index: 10000;
+            font-weight: 600;
+            border: 2px solid white;
+            animation: pulse 2s infinite;
+            transition: var(--transition);
+        }
+        .sound-activation-btn:hover {
+            transform: scale(1.05);
+            background: var(--accent);
+        }
+        .sound-activation-btn.hidden {
+            display: none;
+        }
+        
+        /* ============================================
            SELECCIÓN DE MESA
         ============================================ */
         .mesa-grid { 
@@ -816,6 +846,12 @@
     <audio id="alarmaSonido" loop preload="auto">
         <source src="https://iqwwoihiiyrtypyqzhgy.supabase.co/storage/v1/object/public/alarma/Alarm%20Clock%20Effect%20Sound%20HD%20-%20Despertador%20Efecto%20D'%20Sonido.mp3" type="audio/mpeg">
     </audio>
+
+    <!-- Botón de activación de sonido (solo aparece si hay pedidos pendientes y el autoplay falla) -->
+    <div class="sound-activation-btn hidden" id="soundActivationBtn" onclick="activarSonidoManual()">
+        <i class="fas fa-volume-up"></i>
+        <span>🔔 Activar sonido de pedidos</span>
+    </div>
 
     <!-- Pantalla de Login -->
     <div class="login-container" id="loginContainer">
@@ -1114,7 +1150,12 @@
         let alarmaActiva = false;
         let enProcesoDeCobro = false;
         let alarmaIntentos = 0;
-        const MAX_INTENTOS = 5;
+        const MAX_INTENTOS = 3;
+        let autoplayBloqueado = false;
+        
+        // Variables para control de suscripciones
+        let suscripciones = [];
+        let paginaVisible = true;
 
         // Verificar sesión al cargar
         document.addEventListener('DOMContentLoaded', async () => {
@@ -1130,72 +1171,75 @@
             } else {
                 mostrarLogin();
             }
+            
+            // Configurar detección de visibilidad de la página
+            setupPageVisibility();
         });
 
-        // Mostrar login
-        function mostrarLogin() {
-            document.getElementById('loginContainer').classList.remove('hidden');
-            document.getElementById('panelContainer').classList.add('hidden');
-            detenerAlarma();
+        // ============================================
+        // DETECCIÓN DE VISIBILIDAD DE LA PÁGINA
+        // ============================================
+        function setupPageVisibility() {
+            document.addEventListener('visibilitychange', function() {
+                if (document.hidden) {
+                    // La página se ocultó
+                    paginaVisible = false;
+                    console.log('📱 Página oculta');
+                } else {
+                    // La página volvió a ser visible
+                    paginaVisible = true;
+                    console.log('📱 Página visible - Reconectando...');
+                    
+                    // Recargar datos y reconectar suscripciones
+                    recargarAlVolver();
+                }
+            });
         }
-
-        // Mostrar panel
-        function mostrarPanel() {
-            document.getElementById('loginContainer').classList.add('hidden');
-            document.getElementById('panelContainer').classList.remove('hidden');
-            setupEventListeners();
+        
+        async function recargarAlVolver() {
+            // Mostrar indicador de recarga
+            mostrarToast('🔄 Reconectando...', 'info');
+            
+            // Recargar datos
+            await cargarPedidos();
+            await cargarVentasHoy();
+            actualizarEstadisticas();
+            renderizarPedidos();
+            
+            // Reconfigurar suscripciones
             setupRealtimeSubscriptions();
             
-            // Verificar alarma inmediatamente después de mostrar el panel
-            setTimeout(() => {
-                verificarYControlarAlarma(true); // true = forzar verificación
-            }, 100);
+            // Verificar alarma
+            verificarYControlarAlarma(true);
+            
+            mostrarToast('✅ Conexión restablecida', 'success');
         }
 
-        // Cerrar sesión
-        function cerrarSesion() {
-            sessionStorage.removeItem('cajero_user');
-            currentUser = null;
-            detenerAlarma();
-            mostrarLogin();
-        }
-
-        // Función de login
-        window.hacerLogin = async function() {
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-
-            if (!username || !password) {
-                mostrarToast('Ingresa usuario y contraseña', 'error');
-                return;
-            }
-
-            try {
-                const { data, error } = await window.supabaseClient
-                    .from('usuarios')
-                    .select('*')
-                    .eq('username', username)
-                    .eq('password', password)
-                    .eq('activo', true)
-                    .maybeSingle();
-
-                if (error) throw error;
-
-                if (!data) {
-                    mostrarToast('Credenciales inválidas', 'error');
-                    return;
-                }
-
-                currentUser = data;
-                sessionStorage.setItem('cajero_user', JSON.stringify(data));
-                await cargarDatosIniciales();
-                mostrarPanel();
-
-            } catch (error) {
-                console.error('Error en login:', error);
-                mostrarToast('Error al conectar', 'error');
-            }
+        // ============================================
+        // FUNCIONES DE ACTIVACIÓN DE SONIDO (AUTOPLAY)
+        // ============================================
+        window.activarSonidoManual = function() {
+            const btn = document.getElementById('soundActivationBtn');
+            btn.classList.add('hidden');
+            
+            // Intentar reproducir el audio
+            alarmaAudio.play().then(() => {
+                alarmaActiva = true;
+                autoplayBloqueado = false;
+                console.log('🔔 Sonido activado manualmente');
+                
+                // Verificar si debe seguir sonando
+                verificarYControlarAlarma(true);
+            }).catch(error => {
+                console.log('Error al activar sonido:', error);
+                mostrarToast('❌ No se pudo activar el sonido', 'error');
+            });
         };
+        
+        function mostrarBotonActivacionSonido() {
+            const btn = document.getElementById('soundActivationBtn');
+            btn.classList.remove('hidden');
+        }
 
         // ============================================
         // FUNCIONES DE CONTROL DE ALARMA - CORREGIDAS
@@ -1205,11 +1249,14 @@
             
             console.log('🔍 Verificando alarma - Pendientes:', nuevosPendientes, 'En proceso de cobro:', enProcesoDeCobro, 'Alarma activa:', alarmaActiva);
             
-            // REGLAS DEL CINTURÓN DE SEGURIDAD:
-            // 1. La alarma DEBE sonar si hay pedidos pendientes Y NO estamos en proceso de cobro
-            // 2. La alarma NO debe sonar si NO hay pedidos pendientes
-            // 3. La alarma NO debe sonar si estamos en proceso de cobro
+            // Si hay pedidos pendientes, mostrar el botón de activación si el autoplay está bloqueado
+            if (nuevosPendientes > 0 && autoplayBloqueado && !alarmaActiva) {
+                mostrarBotonActivacionSonido();
+            } else {
+                document.getElementById('soundActivationBtn').classList.add('hidden');
+            }
             
+            // REGLAS DEL CINTURÓN DE SEGURIDAD:
             if (nuevosPendientes > 0 && !enProcesoDeCobro) {
                 iniciarAlarma();
             } else {
@@ -1221,9 +1268,6 @@
             if (!alarmaActiva && alarmaAudio) {
                 console.log('🔔 Intentando activar alarma...');
                 
-                // Configurar el audio para que pueda reproducirse automáticamente
-                alarmaAudio.load();
-                
                 // Intentar reproducir
                 const playPromise = alarmaAudio.play();
                 
@@ -1231,21 +1275,17 @@
                     playPromise.then(() => {
                         alarmaActiva = true;
                         alarmaIntentos = 0;
+                        autoplayBloqueado = false;
+                        document.getElementById('soundActivationBtn').classList.add('hidden');
                         console.log('🔔🔔🔔 ALARMA ACTIVADA');
                     }).catch(error => {
-                        console.log('Error reproduciendo alarma:', error);
+                        console.log('Autoplay bloqueado por el navegador:', error);
+                        autoplayBloqueado = true;
                         
-                        // Incrementar contador de intentos
-                        alarmaIntentos++;
-                        
-                        // Si no ha excedido el máximo de intentos, reintentar
-                        if (alarmaIntentos < MAX_INTENTOS) {
-                            console.log(`🔄 Reintento ${alarmaIntentos}/${MAX_INTENTOS}...`);
-                            setTimeout(() => {
-                                if (!alarmaActiva && !enProcesoDeCobro) {
-                                    iniciarAlarma();
-                                }
-                            }, 500);
+                        // Mostrar botón de activación manual
+                        const pendientes = pedidos.filter(p => p.estado === 'pendiente').length;
+                        if (pendientes > 0) {
+                            mostrarBotonActivacionSonido();
                         }
                     });
                 }
@@ -1257,7 +1297,6 @@
                 alarmaAudio.pause();
                 alarmaAudio.currentTime = 0;
                 alarmaActiva = false;
-                alarmaIntentos = 0;
                 console.log('🔕🔕🔕 ALARMA DETENIDA');
             }
         }
@@ -2310,8 +2349,13 @@
         // FUNCIONES DE SUSCRIPCIÓN EN TIEMPO REAL
         // ============================================
         function setupRealtimeSubscriptions() {
-            window.supabaseClient
-                .channel('cajero-pedidos')
+            // Limpiar suscripciones anteriores
+            suscripciones.forEach(sub => sub.unsubscribe());
+            suscripciones = [];
+            
+            // Nueva suscripción a pedidos
+            const pedidosSub = window.supabaseClient
+                .channel('cajero-pedidos-' + Date.now())
                 .on('postgres_changes', {
                     event: '*',
                     schema: 'public',
@@ -2324,9 +2368,11 @@
                     verificarYControlarAlarma(true);
                 })
                 .subscribe();
+            suscripciones.push(pedidosSub);
             
-            window.supabaseClient
-                .channel('cajero-ventas')
+            // Suscripción a ventas
+            const ventasSub = window.supabaseClient
+                .channel('cajero-ventas-' + Date.now())
                 .on('postgres_changes', {
                     event: '*',
                     schema: 'public',
@@ -2336,9 +2382,11 @@
                     actualizarEstadisticas();
                 })
                 .subscribe();
+            suscripciones.push(ventasSub);
             
-            window.supabaseClient
-                .channel('cajero-config')
+            // Suscripción a configuración
+            const configSub = window.supabaseClient
+                .channel('cajero-config-' + Date.now())
                 .on('postgres_changes', {
                     event: 'UPDATE',
                     schema: 'public',
@@ -2352,6 +2400,7 @@
                     actualizarEstadisticas();
                 })
                 .subscribe();
+            suscripciones.push(configSub);
         }
 
         // ============================================
@@ -2385,17 +2434,6 @@
                     }
                 }
             });
-            
-            // Agregar listener para el primer clic que ayude a la reproducción del audio
-            document.addEventListener('click', function primerClic() {
-                if (alarmaAudio && alarmaAudio.paused && !alarmaActiva) {
-                    const pendientes = pedidos.filter(p => p.estado === 'pendiente').length;
-                    if (pendientes > 0 && !enProcesoDeCobro) {
-                        iniciarAlarma();
-                    }
-                }
-                document.removeEventListener('click', primerClic);
-            }, { once: true });
         }
 
         // ============================================
