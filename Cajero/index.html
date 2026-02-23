@@ -2081,6 +2081,15 @@
 			document.getElementById('rechazoModal').classList.add('active');
 		}
 
+		// ============================================
+		// FUNCIONES DE RECHAZO (VERSIÓN FINAL CORREGIDA)
+		// ============================================
+		function mostrarRechazo(pedidoId) {
+			pedidoParaAccion = pedidos.find(p => p.id === pedidoId);
+			if (!pedidoParaAccion) return;
+			document.getElementById('rechazoModal').classList.add('active');
+		}
+
 		async function confirmarRechazo() {
 			if (!pedidoParaAccion) return;
 			
@@ -2091,26 +2100,35 @@
 			}
 			
 			try {
-				// PASO 1: Liberar ingredientes usando la función RPC (AHORA CORREGIDA)
+				// Mostrar indicador de carga
+				const btnRechazar = document.querySelector('#rechazoModal .btn-primary');
+				const textoOriginal = btnRechazar.textContent;
+				btnRechazar.disabled = true;
+				btnRechazar.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
+				
+				// PASO 1: Liberar ingredientes (AHORA FUNCIONA CORRECTAMENTE)
 				const { error: liberarError } = await window.supabaseClient.rpc('liberar_ingredientes', {
 					p_pedido_id: pedidoParaAccion.id
 				});
 				
-				if (liberarError) throw liberarError;
+				if (liberarError) {
+					console.error('Error liberando ingredientes:', liberarError);
+					throw liberarError;
+				}
 				
-				// PASO 2: Actualizar estado del pedido (SOLO 'estado', sin columnas extras)
-				const { error } = await window.supabaseClient
+				// PASO 2: Actualizar estado del pedido (SOLO 'estado')
+				const { error: updateError } = await window.supabaseClient
 					.from('pedidos')
 					.update({ 
 						estado: 'rechazado'
-						// ❌ Eliminamos 'razon_rechazo' y 'fecha_rechazo' porque no existen en la tabla
+						// Solo actualizamos estado, las otras columnas no existen
 					})
 					.eq('id', pedidoParaAccion.id);
 				
-				if (error) throw error;
+				if (updateError) throw updateError;
 				
 				// PASO 3: Notificar al cliente
-				await window.supabaseClient
+				const { error: notifError } = await window.supabaseClient
 					.from('notificaciones')
 					.insert([{
 						pedido_id: pedidoParaAccion.id,
@@ -2122,8 +2140,15 @@
 						leida: false
 					}]);
 				
+				if (notifError) {
+					console.error('Error creando notificación:', notifError);
+					// No interrumpimos el flujo si la notificación falla
+				}
+				
 				cerrarModal('rechazoModal');
-				mostrarToast('✅ Pedido rechazado');
+				mostrarToast('✅ Pedido rechazado correctamente');
+				
+				// Recargar datos
 				await cargarPedidos();
 				actualizarEstadisticas();
 				renderizarPedidos();
@@ -2131,7 +2156,25 @@
 			} catch (error) {
 				console.error('Error rechazando pedido:', error);
 				mostrarToast('❌ Error al rechazar: ' + error.message, 'error');
+			} finally {
+				// Restaurar botón
+				const btnRechazar = document.querySelector('#rechazoModal .btn-primary');
+				if (btnRechazar) {
+					btnRechazar.disabled = false;
+					btnRechazar.innerHTML = 'Confirmar Rechazo';
+				}
 			}
+		}
+
+		function traducirRazon(razon) {
+			const razones = {
+				'referencia_invalida': 'Referencia de pago inválida',
+				'monto_insuficiente': 'Monto insuficiente',
+				'datos_incorrectos': 'Datos de contacto incorrectos',
+				'no_disponible': 'Producto no disponible',
+				'fuera_horario': 'Fuera de horario'
+			};
+			return razones[razon] || razon;
 		}
 
 		function traducirRazon(razon) {
