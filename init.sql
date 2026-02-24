@@ -28,5 +28,15 @@ INSERT INTO public.usuarios(id,nombre,username,password,rol,activo)VALUES('user_
 INSERT INTO public.inventario(id,nombre,stock,minimo,unidad_base,precio_costo,precio_unitario)VALUES('ing_arroz','Arroz para sushi',5000,1000,'gramos',0.002,0.01),('ing_salmon','Salmón fresco',2000,500,'gramos',0.015,0.05),('ing_aguacate','Aguacate',10,5,'unidades',0.5,1.5),('ing_alga','Alga nori',100,20,'unidades',0.1,0.3)ON CONFLICT(id)DO NOTHING;
 INSERT INTO public.menu(id,nombre,categoria,precio,descripcion,ingredientes,disponible)VALUES('plat_001','Roll de Salmón','Rolls',8.50,'Delicioso roll con salmón fresco','{"ing_salmon":{"cantidad":50,"nombre":"Salmón fresco"},"ing_arroz":{"cantidad":100,"nombre":"Arroz"},"ing_alga":{"cantidad":1,"nombre":"Alga nori"}}'::jsonb,true),('plat_002','Sashimi de Salmón','Sushi',12.00,'Finas láminas de salmón','{"ing_salmon":{"cantidad":100,"nombre":"Salmón fresco"}}'::jsonb,true)ON CONFLICT(id)DO NOTHING;
 INSERT INTO public.mesoneros(nombre)VALUES('Juan Pérez'),('María García'),('Carlos López')ON CONFLICT DO NOTHING;
-SELECT 'Base de datos inicializada correctamente con sistema de reservas mejorado, tablas de propinas y QR WiFi'as mensaje;
-```
+INSERT INTO storage.buckets(id,name,public)VALUES('comprobantes','comprobantes',true)ON CONFLICT(id)DO UPDATE SET public=true;
+DROP POLICY IF EXISTS "Comprobantes insert público" ON storage.objects;
+DROP POLICY IF EXISTS "Comprobantes select público" ON storage.objects;
+DROP POLICY IF EXISTS "Comprobantes update público" ON storage.objects;
+DROP POLICY IF EXISTS "Comprobantes delete público" ON storage.objects;
+CREATE POLICY "Comprobantes insert público" ON storage.objects FOR INSERT TO anon WITH CHECK(bucket_id='comprobantes');
+CREATE POLICY "Comprobantes select público" ON storage.objects FOR SELECT TO anon USING(bucket_id='comprobantes');
+CREATE POLICY "Comprobantes update público" ON storage.objects FOR UPDATE TO anon USING(bucket_id='comprobantes');
+CREATE POLICY "Comprobantes delete público" ON storage.objects FOR DELETE TO anon USING(bucket_id='comprobantes');
+CREATE POLICY "Comprobantes insert autenticado" ON storage.objects FOR INSERT TO authenticated WITH CHECK(bucket_id='comprobantes');
+CREATE POLICY "Comprobantes select autenticado" ON storage.objects FOR SELECT TO authenticated USING(bucket_id='comprobantes');
+SELECT 'Base de datos inicializada correctamente con sistema de reservas mejorado, tablas de propinas, QR WiFi y bucket comprobantes'as mensaje;
