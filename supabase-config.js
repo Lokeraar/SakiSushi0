@@ -1,4 +1,3 @@
-// supabase-config.js
 window.SUPABASE_URL='https://iqwwoihiiyrtypyqzhgy.supabase.co';window.SUPABASE_ANON_KEY='sb_publishable_m4WcF4gmkj1olAj95HMLlA_4yKqPFXm';
 if(!window.supabaseClient){window.supabaseClient=window.supabase.createClient(window.SUPABASE_URL,window.SUPABASE_ANON_KEY,{auth:{persistSession:false}});console.log('✅ Cliente Supabase inicializado')}
 window.configGlobal={tasa_cambio:400,tasa_efectiva:400,aumento_diario:0,aumento_acumulado:0,aumento_activo:false,aumento_detenido:false,fecha_ultimo_aumento:null,ultima_actualizacion:null,admin_password:'654321',recovery_email:'admin@sakisushi.com',alerta_stock_minimo:5};
