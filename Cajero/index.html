@@ -8,722 +8,117 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root { --primary: #D32F2F; --secondary: #212121; --accent: #FF9800; --light: #F5F5F5; --dark: #121212; --warm: #FFC107; --success: #388E3C; --info: #1976D2; --warning: #F57C00; --danger: #ef4444; --tip: #9C27B0; --shadow: rgba(0,0,0,0.15); --transition: all 0.3s ease; }
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Roboto', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); min-height: 100vh; padding: 20px; color: var(--secondary); }
-        
-        .login-container { display: flex; align-items: center; justify-content: center; min-height: 100vh; background: linear-gradient(135deg, var(--primary), var(--secondary)); position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 10000; }
-        .login-container.hidden { display: none; }
-        .login-box { background: white; padding: 2.5rem; border-radius: 15px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); width: 100%; max-width: 400px; text-align: center; }
-        .login-box h2 { color: var(--primary); margin-bottom: 1.5rem; font-family: 'Montserrat', sans-serif; font-weight: 700; font-size: 2rem; }
-        .login-form input { width: 100%; padding: 1rem; margin-bottom: 1rem; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 1rem; transition: var(--transition); }
-        .login-form input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(211,47,47,0.2); }
-        .login-form button { width: 100%; padding: 1rem; background: linear-gradient(135deg, var(--primary), #b71c1c); color: white; border: none; border-radius: 10px; font-size: 1.1rem; font-weight: 600; cursor: pointer; transition: var(--transition); font-family: 'Montserrat', sans-serif; }
-        .login-form button:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(211,47,47,0.4); }
-        
-        .container { max-width: 1400px; margin: 0 auto; background: var(--light); border-radius: 15px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); overflow: hidden; }
-        .container.hidden { display: none; }
-        .header { background: linear-gradient(135deg, var(--primary), #B71C1C); color: white; padding: 25px 30px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; }
-        .header-left h1 { font-size: 2.5em; font-family: 'Montserrat', sans-serif; font-weight: 800; margin-bottom: 5px; }
-        .header-left p { opacity: 0.9; font-size: 1.1em; }
-        .header-right { display: flex; align-items: center; gap: 20px; }
-        
-        .nav-tabs { background: var(--secondary); display: flex; padding: 0 30px; gap: 10px; overflow-x: auto; }
-        .nav-tab { background: transparent; color: white; border: none; padding: 20px 30px; font-size: 1em; cursor: pointer; transition: var(--transition); font-family: 'Montserrat', sans-serif; font-weight: 500; border-bottom: 3px solid transparent; white-space: nowrap; }
-        .nav-tab:hover { background: rgba(255,255,255,0.1); }
-        .nav-tab.active { border-bottom-color: var(--accent); color: var(--accent); }
-        
-        .content { padding: 30px; }
-        .section { display: none; }
-        .section.active { display: block; }
-        .section-title { font-size: 2em; color: var(--secondary); margin-bottom: 25px; display: flex; align-items: center; gap: 15px; font-family: 'Montserrat', sans-serif; font-weight: 700; }
-        .section-title .badge { background: var(--primary); color: white; padding: 5px 15px; border-radius: 20px; font-size: 1rem; }
-        
-        .stats-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 20px; margin-bottom: 30px; }
-        @media (max-width: 1200px) { .stats-grid { grid-template-columns: repeat(3, 1fr); } }
-        @media (max-width: 768px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
-        @media (max-width: 480px) { .stats-grid { grid-template-columns: 1fr; } }
-        
-        .stat-card { background: white; padding: 25px; border-radius: 12px; box-shadow: 0 5px 20px var(--shadow); text-align: center; transition: var(--transition); border: 2px solid transparent; cursor: pointer; }
-        .stat-card:hover { transform: translateY(-5px); box-shadow: 0 10px 30px rgba(0,0,0,0.15); border-color: var(--accent); }
-        .stat-icon { width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 15px; font-size: 1.5em; color: white; }
-        .stat-icon.pendientes { background: var(--warning); }
-        .stat-icon.cobrados { background: var(--success); }
-        .stat-icon.ventas { background: var(--info); }
-        .stat-icon.platillos { background: var(--primary); }
-        .stat-icon.propinas { background: var(--tip); }
-        .stat-value { font-size: 2.5em; font-weight: 800; color: var(--secondary); font-family: 'Montserrat', sans-serif; }
-        .stat-label { color: #666; margin-top: 5px; font-size: 0.95em; }
-        
-        .pedidos-columns { display: grid; gap: 20px; margin: 20px 0 30px 0; }
-        @media (max-width: 768px) { .pedidos-columns { grid-template-columns: 1fr; } }
-        @media (min-width: 769px) and (max-width: 1199px) { .pedidos-columns { grid-template-columns: repeat(2, 1fr); } }
-        @media (min-width: 1200px) { .pedidos-columns { grid-template-columns: repeat(3, 1fr); } }
-        
-        .pedidos-column { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 5px 20px var(--shadow); height: fit-content; max-height: 600px; display: flex; flex-direction: column; }
-        .column-header { padding: 15px 20px; color: white; font-weight: 700; font-size: 1.1rem; display: flex; align-items: center; justify-content: space-between; font-family: 'Montserrat', sans-serif; }
-        .column-header.mesa { background: linear-gradient(135deg, var(--info), #1565C0); }
-        .column-header.delivery { background: linear-gradient(135deg, var(--success), #2E7D32); }
-        .column-header.reserva { background: linear-gradient(135deg, #9c27b0, #7b1fa2); }
-        .column-header .count-badge { background: rgba(255,255,255,0.3); padding: 5px 12px; border-radius: 20px; font-size: 0.9rem; }
-        .column-content { padding: 15px; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 15px; max-height: 500px; }
-        
-        .order-card-compact { background: #f8f8f8; border-radius: 8px; padding: 12px; border-left: 4px solid; font-size: 0.85rem; line-height: 1.3; transition: var(--transition); }
-        .order-card-compact:hover { transform: translateX(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
-        .order-card-compact.pendiente { border-left-color: var(--warning); }
-        .order-card-compact.en_cocina { border-left-color: var(--info); }
-        .order-card-compact.en_camino { border-left-color: var(--success); }
-        .order-card-compact.reserva_pendiente { border-left-color: #9c27b0; }
-        .order-card-compact.reserva_atendida { border-left-color: #ff5722; }
-        
-        .order-header-compact { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; font-size: 0.8rem; }
-        .order-time-compact { color: #666; background: #e0e0e0; padding: 3px 8px; border-radius: 12px; display: inline-flex; align-items: center; gap: 4px; }
-        .order-info-compact { margin-bottom: 8px; padding: 6px; background: white; border-radius: 6px; font-size: 0.8rem; }
-        .order-info-compact i { width: 16px; color: var(--info); margin-right: 4px; }
-        .order-items-compact { margin-bottom: 8px; padding: 6px; background: white; border-radius: 6px; }
-        .order-item-row-compact { display: flex; justify-content: space-between; padding: 3px 0; border-bottom: 1px dashed #ddd; }
-        .order-item-row-compact:last-child { border-bottom: none; }
-        .item-name-compact { font-weight: 500; }
-        .item-price-compact { font-weight: 600; color: var(--primary); }
-        .order-total-compact { font-weight: 700; color: var(--primary); text-align: right; margin: 8px 0; padding-top: 5px; border-top: 1px dashed #ddd; font-size: 0.9rem; }
-        .comprobante-thumbnail { margin: 8px 0; cursor: pointer; border: 1px solid #ddd; border-radius: 4px; overflow: hidden; max-width: 100px; }
-        .comprobante-thumbnail img { width: 100%; height: auto; display: block; }
-        .order-actions-compact { display: flex; gap: 8px; margin-top: 10px; }
-        .btn-compact { flex: 1; padding: 6px; border: none; border-radius: 4px; font-size: 0.75rem; font-weight: 600; cursor: pointer; transition: var(--transition); display: inline-flex; align-items: center; justify-content: center; gap: 4px; }
-        .btn-cobrar-compact { background: linear-gradient(135deg, var(--success), #2E7D32); color: white; }
-        .btn-rechazar-compact { background: linear-gradient(135deg, var(--danger), #B71C1C); color: white; }
-        .btn-entregar-compact { background: linear-gradient(135deg, var(--info), #1565C0); color: white; }
-        .btn-enviar-compact { background: linear-gradient(135deg, var(--success), #2E7D32); color: white; }
-        .btn-confirmar-compact { background: linear-gradient(135deg, #9c27b0, #7b1fa2); color: white; }
-        
-        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); z-index: 3000; display: none; justify-content: center; align-items: center; padding: 20px; backdrop-filter: blur(5px); }
-        .modal-overlay.active { display: flex; }
-        .modal-content { background: white; border-radius: 20px; max-width: 700px; width: 100%; max-height: 90vh; overflow-y: auto; animation: slideUp 0.3s ease; }
-        @keyframes slideUp { from { transform: translateY(50px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-        .modal-header { background: linear-gradient(135deg, var(--primary), #B71C1C); color: white; padding: 20px 25px; display: flex; justify-content: space-between; align-items: center; }
-        .modal-header h2 { font-family: 'Montserrat', sans-serif; font-size: 1.3rem; display: flex; align-items: center; gap: 10px; }
-        .modal-close { background: rgba(255,255,255,0.2); border: none; color: white; font-size: 1.3rem; cursor: pointer; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: var(--transition); }
-        .modal-close:hover { background: rgba(255,255,255,0.3); transform: scale(1.1); }
-        .modal-body { padding: 25px; }
-        .modal-footer { padding: 20px 25px; border-top: 2px solid #f0f0f0; display: flex; gap: 15px; }
-        
-        .payment-mix-container { margin-bottom: 20px; }
-        .pago-item { background: #f8f8f8; border-radius: 8px; padding: 15px; margin-bottom: 15px; border: 1px solid #e0e0e0; position: relative; }
-        .pago-item select, .pago-item input { width: 100%; padding: 8px; margin-bottom: 8px; border: 1px solid #e0e0e0; border-radius: 4px; font-size: 0.9rem; }
-        .pago-item select:focus, .pago-item input:focus { outline: none; border-color: var(--primary); }
-        .remove-pago { position: absolute; top: 8px; right: 8px; background: var(--danger); color: white; border: none; width: 24px; height: 24px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; transition: var(--transition); }
-        .remove-pago:hover { transform: scale(1.1); }
-        
-        .pagos-total { background: #f0f0f0; padding: 15px; border-radius: 8px; margin: 15px 0; }
-        .pagos-resumen { display: flex; justify-content: space-between; padding: 5px 0; font-size: 0.95rem; }
-        
-        .detail-item-compact { background: #f8f8f8; border-radius: 6px; padding: 10px; margin-bottom: 10px; border-left: 3px solid var(--info); font-size: 0.8rem; line-height: 1.2; }
-        .detail-header-compact { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; color: #666; font-weight: 500; }
-        .detail-time-compact { background: #e0e0e0; padding: 2px 6px; border-radius: 10px; font-size: 0.7rem; }
-        .detail-items-compact { margin: 5px 0; padding-left: 5px; }
-        .detail-item-row-compact { display: flex; justify-content: space-between; padding: 2px 0; border-bottom: 1px dotted #ddd; }
-        .detail-item-row-compact:last-child { border-bottom: none; }
-        .detail-total-compact { font-weight: 700; color: var(--primary); text-align: right; margin-top: 5px; padding-top: 3px; border-top: 1px dashed #ddd; font-size: 0.85rem; }
-        .detail-metodo-tag { background: #E8F5E9; color: var(--success); padding: 2px 6px; border-radius: 12px; font-size: 0.7rem; font-weight: 600; display: inline-flex; align-items: center; gap: 3px; margin-right: 4px; }
-        
-        .propina-metodo-tag { background: #F3E5F5; color: var(--tip); padding: 2px 6px; border-radius: 12px; font-size: 0.7rem; font-weight: 600; display: inline-flex; align-items: center; gap: 3px; margin-right: 4px; }
-        
-        .ranking-bar { display: flex; align-items: center; gap: 10px; padding: 8px; border-bottom: 1px solid #eee; }
-        .ranking-position { width: 26px; height: 26px; background: var(--accent); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; }
-        .ranking-info { flex: 1; }
-        .ranking-name { font-weight: 600; font-size: 0.9rem; }
-        .ranking-cantidad { color: #666; font-size: 0.8rem; }
-        .ranking-bar-container { width: 80px; height: 6px; background: #e0e0e0; border-radius: 4px; overflow: hidden; }
-        .ranking-bar-fill { height: 100%; background: var(--primary); border-radius: 4px; }
-        
-        .mesa-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 10px; margin-top: 15px; }
-        .mesa-btn { background: white; border: 2px solid #e0e0e0; border-radius: 8px; padding: 12px 5px; cursor: pointer; font-size: 0.9rem; font-weight: 600; color: var(--secondary); transition: var(--transition); display: flex; flex-direction: column; align-items: center; gap: 5px; }
-        .mesa-btn:hover { border-color: var(--primary); transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
-        .mesa-btn i { font-size: 1.5rem; color: var(--primary); }
-        
-        .menu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
-        .menu-card { background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 5px 20px var(--shadow); }
-        .menu-card-image { height: 140px; background-size: cover; background-position: center; background-color: #e0e0e0; }
-        .menu-card-content { padding: 15px; }
-        .menu-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-        .menu-card-title { font-weight: 700; font-size: 1rem; }
-        .menu-card-price { font-weight: 700; color: var(--primary); }
-        
-        .empty-state { text-align: center; padding: 30px 15px; color: #888; font-size: 0.9rem; }
-        .empty-state i { font-size: 2.5em; margin-bottom: 10px; color: #ddd; }
-        
-        .toast { position: fixed; top: 80px; right: 20px; background: white; padding: 15px 20px; border-radius: 8px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); display: none; align-items: center; gap: 12px; z-index: 5000; animation: slideIn 0.3s ease; border-left: 4px solid var(--success); }
-        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0%); opacity: 1; } }
-        .toast.show { display: flex; }
-        
-        .loading-spinner { display: inline-block; width: 30px; height: 30px; border: 3px solid rgba(211,47,47,0.2); border-radius: 50%; border-top-color: var(--primary); animation: spin 1s linear infinite; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        .loading-container { text-align: center; padding: 2rem; }
-        
-        .keyboard-hint { background: #f0f0f0; padding: 10px 15px; border-radius: 8px; font-size: 0.8rem; color: #666; margin-top: 15px; display: flex; justify-content: center; gap: 20px; }
-        .keyboard-hint kbd { background: white; padding: 3px 6px; border-radius: 4px; border: 1px solid #ccc; font-family: monospace; }
-        
-        .text-center { text-align: center; }
-        .mt-2 { margin-top: 0.5rem; }
-        .mb-2 { margin-bottom: 0.5rem; }
+        :root{--primary:#D32F2F;--secondary:#212121;--accent:#FF9800;--light:#F5F5F5;--dark:#121212;--warm:#FFC107;--success:#388E3C;--info:#1976D2;--warning:#F57C00;--danger:#ef4444;--propina:#9C27B0;--shadow:rgba(0,0,0,.15);--transition:all .3s ease}*{margin:0;padding:0;box-sizing:border-box;font-family:'Roboto','Segoe UI',Tahoma,Geneva,Verdana,sans-serif}body{background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%);min-height:100vh;padding:20px;color:var(--secondary)}.login-container{display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,var(--primary),var(--secondary));position:fixed;top:0;left:0;right:0;bottom:0;z-index:10000}.login-container.hidden{display:none}.login-box{background:white;padding:2.5rem;border-radius:15px;box-shadow:0 20px 60px rgba(0,0,0,.3);width:100%;max-width:400px;text-align:center}.login-box h2{color:var(--primary);margin-bottom:1.5rem;font-family:'Montserrat',sans-serif;font-weight:700;font-size:2rem}.login-form input{width:100%;padding:1rem;margin-bottom:1rem;border:2px solid #e0e0e0;border-radius:10px;font-size:1rem;transition:var(--transition)}.login-form input:focus{outline:none;border-color:var(--primary);box-shadow:0 0 0 3px rgba(211,47,47,.2)}.login-form button{width:100%;padding:1rem;background:linear-gradient(135deg,var(--primary),#b71c1c);color:white;border:none;border-radius:10px;font-size:1.1rem;font-weight:600;cursor:pointer;transition:var(--transition);font-family:'Montserrat',sans-serif}.login-form button:hover{transform:translateY(-2px);box-shadow:0 5px 15px rgba(211,47,47,.4)}.container{max-width:1400px;margin:0 auto;background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%);border-radius:15px;box-shadow:0 20px 60px rgba(0,0,0,.3);overflow:hidden}.container.hidden{display:none}.header{background:linear-gradient(135deg,var(--primary),#B71C1C);color:white;padding:25px 30px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:20px}.header-left h1{font-size:2.5em;font-family:'Montserrat',sans-serif;font-weight:800;margin-bottom:5px}.header-left p{opacity:.9;font-size:1.1em}.header-right{display:flex;align-items:center;gap:20px}.nav-tabs{background:rgba(0,0,0,.3);display:flex;padding:0 30px;gap:10px;overflow-x:auto}.nav-tab{background:transparent;color:white;border:none;padding:20px 30px;font-size:1em;cursor:pointer;transition:var(--transition);font-family:'Montserrat',sans-serif;font-weight:500;border-bottom:3px solid transparent;white-space:nowrap}.nav-tab:hover{background:rgba(255,255,255,.1)}.nav-tab.active{border-bottom-color:var(--accent);color:var(--accent)}.content{padding:30px}.section{display:none}.section.active{display:block}.section-title{font-size:2em;color:#fff;margin-bottom:25px;display:flex;align-items:center;gap:15px;font-family:'Montserrat',sans-serif;font-weight:700}.section-title .badge{background:var(--primary);color:white;padding:5px 15px;border-radius:20px;font-size:1rem}.stats-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:20px;margin-bottom:30px}@media (max-width:1200px){.stats-grid{grid-template-columns:repeat(3,1fr)}}@media (max-width:768px){.stats-grid{grid-template-columns:repeat(2,1fr)}}@media (max-width:480px){.stats-grid{grid-template-columns:1fr}}.stat-card{background:rgba(255,255,255,.05);padding:25px;border-radius:12px;box-shadow:0 5px 20px var(--shadow);text-align:center;transition:var(--transition);border:2px solid transparent;cursor:pointer;backdrop-filter:blur(10px)}.stat-card:hover{transform:translateY(-5px);box-shadow:0 10px 30px rgba(0,0,0,.15);border-color:var(--accent)}.stat-icon{width:60px;height:60px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 15px;font-size:1.5em;color:white}.stat-icon.pendientes{background:var(--warning)}.stat-icon.cobrados{background:var(--success)}.stat-icon.ventas{background:var(--info)}.stat-icon.platillos{background:var(--primary)}.stat-icon.propinas{background:var(--propina)}.stat-value{font-size:2.5em;font-weight:800;color:#fff;font-family:'Montserrat',sans-serif}.stat-label{color:var(--gray-400);margin-top:5px;font-size:.95em}.pedidos-columns{display:grid;gap:20px;margin:20px 0 30px 0}@media (max-width:768px){.pedidos-columns{grid-template-columns:1fr}}@media (min-width:769px)and (max-width:1199px){.pedidos-columns{grid-template-columns:repeat(2,1fr)}}@media (min-width:1200px){.pedidos-columns{grid-template-columns:repeat(3,1fr)}}.pedidos-column{background:rgba(255,255,255,.05);border-radius:12px;overflow:hidden;box-shadow:0 5px 20px var(--shadow);height:fit-content;max-height:600px;display:flex;flex-direction:column;backdrop-filter:blur(10px)}.column-header{padding:15px 20px;color:white;font-weight:700;font-size:1.1rem;display:flex;align-items:center;justify-content:space-between;font-family:'Montserrat',sans-serif}.column-header.mesa{background:linear-gradient(135deg,var(--info),#1565C0)}.column-header.delivery{background:linear-gradient(135deg,var(--success),#2E7D32)}.column-header.reserva{background:linear-gradient(135deg,#9c27b0,#7b1fa2)}.column-header .count-badge{background:rgba(255,255,255,.3);padding:5px 12px;border-radius:20px;font-size:.9rem}.column-content{padding:15px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:15px;max-height:500px}.order-card-compact{background:rgba(0,0,0,.3);border-radius:8px;padding:12px;border-left:4px solid;font-size:.85rem;line-height:1.3;transition:var(--transition);color:#fff}.order-card-compact:hover{transform:translateX(-3px);box-shadow:0 5px 15px rgba(0,0,0,.1)}.order-card-compact.pendiente{border-left-color:var(--warning)}.order-card-compact.en_cocina{border-left-color:var(--info)}.order-card-compact.en_camino{border-left-color:var(--success)}.order-card-compact.reserva_pendiente{border-left-color:#9c27b0}.order-card-compact.reserva_atendida{border-left-color:#ff5722}.order-header-compact{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-size:.8rem}.order-time-compact{color:#ccc;background:rgba(255,255,255,.1);padding:3px 8px;border-radius:12px;display:inline-flex;align-items:center;gap:4px}.order-info-compact{margin-bottom:8px;padding:6px;background:rgba(0,0,0,.2);border-radius:6px;font-size:.8rem}.order-info-compact i{width:16px;color:var(--accent);margin-right:4px}.order-items-compact{margin-bottom:8px;padding:6px;background:rgba(0,0,0,.2);border-radius:6px}.order-item-row-compact{display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px dashed rgba(255,255,255,.1)}.order-item-row-compact:last-child{border-bottom:none}.item-name-compact{font-weight:500}.item-price-compact{font-weight:600;color:var(--accent)}.order-total-compact{font-weight:700;color:var(--accent);text-align:right;margin:8px 0;padding-top:5px;border-top:1px dashed rgba(255,255,255,.1);font-size:.9rem}.comprobante-thumbnail{margin:8px 0;cursor:pointer;border:1px solid rgba(255,255,255,.1);border-radius:4px;overflow:hidden;max-width:100px}.comprobante-thumbnail img{width:100%;height:auto;display:block}.order-actions-compact{display:flex;gap:8px;margin-top:10px}.btn-compact{flex:1;padding:6px;border:none;border-radius:4px;font-size:.75rem;font-weight:600;cursor:pointer;transition:var(--transition);display:inline-flex;align-items:center;justify-content:center;gap:4px}.btn-cobrar-compact{background:linear-gradient(135deg,var(--success),#2E7D32);color:white}.btn-rechazar-compact{background:linear-gradient(135deg,var(--danger),#B71C1C);color:white}.btn-entregar-compact{background:linear-gradient(135deg,var(--info),#1565C0);color:white}.btn-enviar-compact{background:linear-gradient(135deg,var(--success),#2E7D32);color:white}.btn-confirmar-compact{background:linear-gradient(135deg,#9c27b0,#7b1fa2);color:white}.btn-propina-compact{background:linear-gradient(135deg,var(--propina),#7B1FA2);color:white}.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.8);z-index:3000;display:none;justify-content:center;align-items:center;padding:20px;backdrop-filter:blur(5px)}.modal-overlay.active{display:flex}.modal-content{background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%);border-radius:20px;max-width:700px;width:100%;max-height:90vh;overflow-y:auto;animation:slideUp .3s ease;border:1px solid rgba(255,255,255,.1)}@keyframes slideUp{from{transform:translateY(50px);opacity:0}to{transform:translateY(0);opacity:1}}.modal-header{background:linear-gradient(135deg,var(--primary),#B71C1C);color:white;padding:20px 25px;display:flex;justify-content:space-between;align-items:center}.modal-header.propina{background:linear-gradient(135deg,var(--propina),#7B1FA2)}.modal-header h2{font-family:'Montserrat',sans-serif;font-size:1.3rem;display:flex;align-items:center;gap:10px}.modal-close{background:rgba(255,255,255,.2);border:none;color:white;font-size:1.3rem;cursor:pointer;width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;transition:var(--transition)}.modal-close:hover{background:rgba(255,255,255,.3);transform:scale(1.1)}.modal-body{padding:25px;color:#fff}.modal-footer{padding:20px 25px;border-top:2px solid rgba(255,255,255,.1);display:flex;gap:15px}.payment-mix-container{margin-bottom:20px}.pago-item{background:rgba(0,0,0,.3);border-radius:8px;padding:15px;margin-bottom:15px;border:1px solid rgba(255,255,255,.1);position:relative}.pago-item select,.pago-item input{width:100%;padding:8px;margin-bottom:8px;border:1px solid rgba(255,255,255,.1);border-radius:4px;font-size:.9rem;background:rgba(0,0,0,.2);color:#fff}.pago-item select:focus,.pago-item input:focus{outline:none;border-color:var(--accent)}.remove-pago{position:absolute;top:8px;right:8px;background:var(--danger);color:white;border:none;width:24px;height:24px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.8rem;transition:var(--transition)}.remove-pago:hover{transform:scale(1.1)}.pagos-total{background:rgba(0,0,0,.2);padding:15px;border-radius:8px;margin:15px 0}.pagos-resumen{display:flex;justify-content:space-between;padding:5px 0;font-size:.95rem}.detail-item-compact{background:rgba(0,0,0,.2);border-radius:6px;padding:10px;margin-bottom:10px;border-left:3px solid var(--info);font-size:.8rem;line-height:1.2}.detail-header-compact{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;color:#ccc;font-weight:500}.detail-time-compact{background:rgba(255,255,255,.1);padding:2px 6px;border-radius:10px;font-size:.7rem}.detail-items-compact{margin:5px 0;padding-left:5px}.detail-item-row-compact{display:flex;justify-content:space-between;padding:2px 0;border-bottom:1px dotted rgba(255,255,255,.1)}.detail-item-row-compact:last-child{border-bottom:none}.detail-total-compact{font-weight:700;color:var(--accent);text-align:right;margin-top:5px;padding-top:3px;border-top:1px dashed rgba(255,255,255,.1);font-size:.85rem}.detail-metodo-tag{background:rgba(56,142,60,.2);color:var(--success);padding:2px 6px;border-radius:12px;font-size:.7rem;font-weight:600;display:inline-flex;align-items:center;gap:3px;margin-right:4px}.propina-tag{background:rgba(156,39,176,.2);color:var(--propina);padding:2px 8px;border-radius:12px;font-size:.7rem;font-weight:600;display:inline-flex;align-items:center;gap:3px}.ranking-bar{display:flex;align-items:center;gap:10px;padding:8px;border-bottom:1px solid rgba(255,255,255,.1)}.ranking-position{width:26px;height:26px;background:var(--accent);color:white;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.85rem}.ranking-info{flex:1}.ranking-name{font-weight:600;font-size:.9rem}.ranking-cantidad{color:#ccc;font-size:.8rem}.ranking-bar-container{width:80px;height:6px;background:rgba(255,255,255,.1);border-radius:4px;overflow:hidden}.ranking-bar-fill{height:100%;background:var(--primary);border-radius:4px}.mesa-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:10px;margin-top:15px}.mesa-btn{background:rgba(255,255,255,.05);border:2px solid rgba(255,255,255,.1);border-radius:8px;padding:12px 5px;cursor:pointer;font-size:.9rem;font-weight:600;color:#fff;transition:var(--transition);display:flex;flex-direction:column;align-items:center;gap:5px}.mesa-btn:hover{border-color:var(--accent);transform:translateY(-3px);box-shadow:0 5px 15px rgba(0,0,0,.1)}.mesa-btn i{font-size:1.5rem;color:var(--accent)}.menu-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:20px}.menu-card{background:rgba(255,255,255,.05);border-radius:10px;overflow:hidden;box-shadow:0 5px 20px var(--shadow);backdrop-filter:blur(10px)}.menu-card-image{height:140px;background-size:cover;background-position:center;background-color:rgba(0,0,0,.5)}.menu-card-content{padding:15px}.menu-card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}.menu-card-title{font-weight:700;font-size:1rem;color:#fff}.menu-card-price{font-weight:700;color:var(--accent)}.empty-state{text-align:center;padding:30px 15px;color:#aaa;font-size:.9rem}.empty-state i{font-size:2.5em;margin-bottom:10px;color:#333}.toast{position:fixed;top:80px;right:20px;background:white;padding:15px 20px;border-radius:8px;box-shadow:0 10px 40px rgba(0,0,0,.2);display:none;align-items:center;gap:12px;z-index:5000;animation:slideIn .3s ease;border-left:4px solid var(--success)}@keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0%);opacity:1}}.toast.show{display:flex}.loading-spinner{display:inline-block;width:30px;height:30px;border:3px solid rgba(211,47,47,.2);border-radius:50%;border-top-color:var(--primary);animation:spin 1s linear infinite}@keyframes spin{to{transform:rotate(360deg)}}.loading-container{text-align:center;padding:2rem}.keyboard-hint{background:rgba(0,0,0,.2);padding:10px 15px;border-radius:8px;font-size:.8rem;color:#ccc;margin-top:15px;display:flex;justify-content:center;gap:20px}.keyboard-hint kbd{background:rgba(255,255,255,.1);padding:3px 6px;border-radius:4px;border:1px solid rgba(255,255,255,.2);font-family:monospace}.text-center{text-align:center}.mt-2{margin-top:.5rem}.mb-2{margin-bottom:.5rem}.mesonero-selector,.mesa-selector{margin-bottom:20px}.mesonero-selector label,.mesa-selector label{display:block;margin-bottom:8px;font-weight:600;color:#fff}.mesonero-selector select,.mesa-selector select{width:100%;padding:10px;border:2px solid rgba(255,255,255,.1);border-radius:8px;font-size:1rem;background:rgba(0,0,0,.3);color:#fff}.mesonero-selector select:focus,.mesa-selector select:focus{outline:none;border-color:var(--accent)}.metodo-propina{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:20px}.metodo-propina label{display:flex;align-items:center;gap:8px;padding:10px;background:rgba(0,0,0,.2);border-radius:8px;border:2px solid transparent;cursor:pointer;color:#fff}.metodo-propina label.selected{border-color:var(--accent);background:rgba(255,152,0,.1)}.metodo-propina input[type=radio]{display:none}.monto-input input{width:100%;padding:10px;border:2px solid rgba(255,255,255,.1);border-radius:8px;font-size:1rem;background:rgba(0,0,0,.3);color:#fff;margin-bottom:10px}.monto-input input:focus{outline:none;border-color:var(--accent)}.referencia-input input{width:100%;padding:10px;border:2px solid rgba(255,255,255,.1);border-radius:8px;font-size:1rem;background:rgba(0,0,0,.3);color:#fff;text-align:center;letter-spacing:2px}.referencia-input input:focus{outline:none;border-color:var(--accent)}
     </style>
 </head>
 <body>
     <audio id="alarmaSonido" loop preload="auto"><source src="https://iqwwoihiiyrtypyqzhgy.supabase.co/storage/v1/object/public/alarma/Alarm%20Clock%20Effect%20Sound%20HD%20-%20Despertador%20Efecto%20D'%20Sonido.mp3" type="audio/mpeg"></audio>
-
-    <div class="login-container" id="loginContainer">
-        <div class="login-box">
-            <h2><i class="fas fa-cash-register"></i> Cajero Saki Sushi</h2>
-            <form class="login-form" id="loginForm" onsubmit="event.preventDefault(); hacerLogin();">
-                <input type="text" id="username" placeholder="Usuario" required autofocus>
-                <input type="password" id="password" placeholder="Contraseña" required>
-                <button type="submit">Iniciar Sesión</button>
-            </form>
-        </div>
-    </div>
-
+    <div class="login-container" id="loginContainer"><div class="login-box"><h2><i class="fas fa-cash-register"></i> Cajero Saki Sushi</h2><form class="login-form" id="loginForm" onsubmit="event.preventDefault();hacerLogin()"><input type="text" id="username" placeholder="Usuario" required autofocus><input type="password" id="password" placeholder="Contraseña" required><button type="submit">Iniciar Sesión</button></form></div></div>
     <div class="container hidden" id="panelContainer">
-        <div class="header">
-            <div class="header-left">
-                <h1><i class="fas fa-cash-register"></i> Panel del Cajero</h1>
-                <p>Saki Sushi - Gestión de pedidos y cobros</p>
-            </div>
-            <div class="header-right">
-                <button class="btn btn-primary" onclick="abrirSelectorMesa()" style="padding:12px25px;"><i class="fas fa-utensils"></i> Menú Cliente</button>
-                <button class="btn btn-secondary" onclick="cerrarSesion()" style="padding:12px25px;"><i class="fas fa-sign-out-alt"></i> Salir</button>
-            </div>
-        </div>
-
-        <div class="nav-tabs">
-            <button class="nav-tab active" onclick="showSection('pedidos')"><i class="fas fa-clipboard-list"></i> Pedidos</button>
-            <button class="nav-tab" onclick="showSection('menu')"><i class="fas fa-utensils"></i> Ver Menú</button>
-        </div>
-
+        <div class="header"><div class="header-left"><h1><i class="fas fa-cash-register"></i> Panel del Cajero</h1><p>Saki Sushi - Gestión de pedidos y cobros</p></div><div class="header-right"><button class="btn btn-primary" onclick="abrirSelectorMesa()" style="padding:12px 25px"><i class="fas fa-utensils"></i> Menú Cliente</button><button class="btn btn-secondary" onclick="cerrarSesion()" style="padding:12px 25px"><i class="fas fa-sign-out-alt"></i> Salir</button></div></div>
+        <div class="nav-tabs"><button class="nav-tab active" onclick="showSection('pedidos')"><i class="fas fa-clipboard-list"></i> Pedidos</button><button class="nav-tab" onclick="showSection('menu')"><i class="fas fa-utensils"></i> Ver Menú</button><button class="nav-tab" onclick="showSection('propinas')"><i class="fas fa-hand-holding-heart"></i> Propinas</button></div>
         <div class="content">
             <div class="section active" id="section-pedidos">
                 <h2 class="section-title"><i class="fas fa-clipboard-list"></i> Pedidos del Día</h2>
-                
                 <div class="stats-grid">
-                    <div class="stat-card" onclick="abrirModalDetalle('preparacion')">
-                        <div class="stat-icon pendientes"><i class="fas fa-fire"></i></div>
-                        <div class="stat-value" id="statPreparacion">0</div>
-                        <div class="stat-label">En Preparación</div>
-                    </div>
-                    <div class="stat-card" onclick="abrirModalDetalle('cobrados')">
-                        <div class="stat-icon cobrados"><i class="fas fa-check-circle"></i></div>
-                        <div class="stat-value" id="statCobrados">0</div>
-                        <div class="stat-label">Cobrados Hoy</div>
-                    </div>
-                    <div class="stat-card" onclick="abrirModalDetalle('propinas')">
-                        <div class="stat-icon propinas"><i class="fas fa-hand-holding-heart"></i></div>
-                        <div class="stat-value" id="statPropinas">Bs. 0</div>
-                        <div class="stat-label">Propinas</div>
-                    </div>
-                    <div class="stat-card" onclick="abrirModalDetalle('ventas')">
-                        <div class="stat-icon ventas"><i class="fas fa-dollar-sign"></i></div>
-                        <div class="stat-value" id="statVentas">Bs. 0</div>
-                        <div class="stat-label">Ventas Totales</div>
-                    </div>
-                    <div class="stat-card" onclick="abrirModalDetalle('platillos')">
-                        <div class="stat-icon platillos"><i class="fas fa-utensils"></i></div>
-                        <div class="stat-value" id="statPlatillos">0</div>
-                        <div class="stat-label">Platillos Vendidos</div>
-                    </div>
+                    <div class="stat-card" onclick="abrirModalDetalle('preparacion')"><div class="stat-icon pendientes"><i class="fas fa-fire"></i></div><div class="stat-value" id="statPreparacion">0</div><div class="stat-label">En Preparación</div></div>
+                    <div class="stat-card" onclick="abrirModalDetalle('cobrados')"><div class="stat-icon cobrados"><i class="fas fa-check-circle"></i></div><div class="stat-value" id="statCobrados">0</div><div class="stat-label">Cobrados Hoy</div></div>
+                    <div class="stat-card" onclick="abrirModalDetalle('ventas')"><div class="stat-icon ventas"><i class="fas fa-dollar-sign"></i></div><div class="stat-value" id="statVentas">Bs. 0</div><div class="stat-label">Ventas Totales</div></div>
+                    <div class="stat-card" onclick="abrirModalDetalle('platillos')"><div class="stat-icon platillos"><i class="fas fa-utensils"></i></div><div class="stat-value" id="statPlatillos">0</div><div class="stat-label">Platillos Vendidos</div></div>
+                    <div class="stat-card" onclick="abrirModalDetalle('propinas')"><div class="stat-icon propinas"><i class="fas fa-hand-holding-heart"></i></div><div class="stat-value" id="statPropinas">Bs. 0</div><div class="stat-label">Propinas Hoy</div></div>
                 </div>
-
-                <div style="margin:30px0 20px0;"><h3 style="font-size:1.5rem;color:var(--secondary);display:flex;align-items:center;gap:10px;"><i class="fas fa-clock" style="color:var(--warning);"></i> Pedidos Pendientes<span class="badge" style="background:var(--warning);" id="totalPendientesBadge">0</span></h3></div>
-                
+                <div style="margin:30px 0 20px 0"><h3 style="font-size:1.5rem;color:#fff;display:flex;align-items:center;gap:10px"><i class="fas fa-clock" style="color:var(--warning)"></i> Pedidos Pendientes<span class="badge" style="background:var(--warning)" id="totalPendientesBadge">0</span></h3></div>
                 <div class="pedidos-columns">
                     <div class="pedidos-column"><div class="column-header mesa"><span><i class="fas fa-store"></i> MESA</span><span class="count-badge" id="mesaPendientesCount">0</span></div><div class="column-content" id="mesaPendientesContainer"></div></div>
                     <div class="pedidos-column"><div class="column-header delivery"><span><i class="fas fa-motorcycle"></i> DELIVERY</span><span class="count-badge" id="deliveryPendientesCount">0</span></div><div class="column-content" id="deliveryPendientesContainer"></div></div>
                     <div class="pedidos-column"><div class="column-header reserva"><span><i class="fas fa-calendar-check"></i> RESERVA</span><span class="count-badge" id="reservaPendientesCount">0</span></div><div class="column-content" id="reservaPendientesContainer"></div></div>
                 </div>
-
-                <div style="margin:40px0 20px0;"><h3 style="font-size:1.5rem;color:var(--secondary);display:flex;align-items:center;gap:10px;"><i class="fas fa-fire" style="color:var(--warning);"></i> Pedidos en Preparación<span class="badge" style="background:var(--warning);" id="totalPreparacionBadge">0</span></h3></div>
-                
+                <div style="margin:40px 0 20px 0"><h3 style="font-size:1.5rem;color:#fff;display:flex;align-items:center;gap:10px"><i class="fas fa-fire" style="color:var(--warning)"></i> Pedidos en Preparación<span class="badge" style="background:var(--warning)" id="totalPreparacionBadge">0</span></h3></div>
                 <div class="pedidos-columns">
                     <div class="pedidos-column"><div class="column-header mesa"><span><i class="fas fa-fire"></i> MESA EN COCINA</span><span class="count-badge" id="mesaCocinaCount">0</span></div><div class="column-content" id="mesaCocinaContainer"></div></div>
                     <div class="pedidos-column"><div class="column-header delivery"><span><i class="fas fa-truck"></i> DELIVERY EN CAMINO</span><span class="count-badge" id="deliveryCaminoCount">0</span></div><div class="column-content" id="deliveryCaminoContainer"></div></div>
                     <div class="pedidos-column"><div class="column-header reserva"><span><i class="fas fa-clock"></i> RESERVAS PENDIENTES</span><span class="count-badge" id="reservaProcesoCount">0</span></div><div class="column-content" id="reservaProcesoContainer"></div></div>
                 </div>
             </div>
-
-            <div class="section" id="section-menu">
-                <h2 class="section-title"><i class="fas fa-utensils"></i> Menú Actual</h2>
-                <div class="menu-grid" id="menuGrid"><div class="loading-container"><div class="loading-spinner"></div><p>Cargando menú...</p></div></div>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal-overlay" id="cobroModal">
-        <div class="modal-content">
-            <div class="modal-header"><h2><i class="fas fa-cash-register"></i> Procesar Cobro</h2><button class="modal-close" onclick="cerrarCobroModal()"><i class="fas fa-times"></i></button></div>
-            <div class="modal-body" id="cobroModalBody"></div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="cerrarCobroModal()">Cancelar (ESC)</button>
-                <button class="btn btn-primary" id="confirmCobroBtn" onclick="confirmarCobro()" disabled>Confirmar Cobro (ENTER)</button>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal-overlay" id="propinaModal">
-        <div class="modal-content">
-            <div class="modal-header" style="background:linear-gradient(135deg,var(--tip),#7b1fa2);"><h2><i class="fas fa-hand-holding-heart"></i> Propina</h2><button class="modal-close" onclick="cerrarPropinaModal()"><i class="fas fa-times"></i></button></div>
-            <div class="modal-body" id="propinaModalBody"></div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="cerrarPropinaModal()">Cancelar (ESC)</button>
-                <button class="btn btn-primary" id="confirmPropinaBtn" onclick="confirmarPropina()" disabled>Guardar Propina (ENTER)</button>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal-overlay" id="confirmModal">
-        <div class="modal-content">
-            <div class="modal-header" id="confirmModalHeader"><h2 id="confirmModalTitle"><i class="fas fa-check-circle"></i> Confirmar Acción</h2><button class="modal-close" onclick="cerrarModal('confirmModal')"><i class="fas fa-times"></i></button></div>
-            <div class="modal-body" id="confirmModalBody"></div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="cerrarModal('confirmModal')">Cancelar (ESC)</button>
-                <button class="btn btn-primary" id="confirmActionBtn" onclick="ejecutarConfirmacion()">Confirmar (ENTER)</button>
-            </div>
-        </div>
-    </div>
-
-    <div class="modal-overlay" id="rechazoModal">
-        <div class="modal-content">
-            <div class="modal-header" style="background:linear-gradient(135deg,var(--danger),#B71C1C);"><h2><i class="fas fa-times-circle"></i> Rechazar Pedido</h2><button class="modal-close" onclick="cerrarModal('rechazoModal')"><i class="fas fa-times"></i></button></div>
-            <div class="modal-body">
-                <p style="margin-bottom:20px;color:#666;">Selecciona la razón del rechazo:</p>
-                <div style="display:flex;flex-direction:column;gap:10px;">
-                    <label style="display:flex;align-items:center;gap:10px;padding:12px;border:1px solid #e0e0e0;border-radius:6px;cursor:pointer;"><input type="radio" name="rejectionReason" value="referencia_invalida" style="width:18px;height:18px;"><span>Referencia de pago inválida o falsa</span></label>
-                    <label style="display:flex;align-items:center;gap:10px;padding:12px;border:1px solid #e0e0e0;border-radius:6px;cursor:pointer;"><input type="radio" name="rejectionReason" value="monto_insuficiente" style="width:18px;height:18px;"><span>Monto insuficiente</span></label>
-                    <label style="display:flex;align-items:center;gap:10px;padding:12px;border:1px solid #e0e0e0;border-radius:6px;cursor:pointer;"><input type="radio" name="rejectionReason" value="datos_incorrectos" style="width:18px;height:18px;"><span>Datos de contacto/dirección incorrectos</span></label>
-                    <label style="display:flex;align-items:center;gap:10px;padding:12px;border:1px solid #e0e0e0;border-radius:6px;cursor:pointer;"><input type="radio" name="rejectionReason" value="no_disponible" style="width:18px;height:18px;"><span>Producto no disponible</span></label>
-                    <label style="display:flex;align-items:center;gap:10px;padding:12px;border:1px solid #e0e0e0;border-radius:6px;cursor:pointer;"><input type="radio" name="rejectionReason" value="fuera_horario" style="width:18px;height:18px;"><span>Fuera de horario de delivery</span></label>
+            <div class="section" id="section-menu"><h2 class="section-title"><i class="fas fa-utensils"></i> Menú Actual</h2><div class="menu-grid" id="menuGrid"><div class="loading-container"><div class="loading-spinner"></div><p>Cargando menú...</p></div></div></div>
+            <div class="section" id="section-propinas">
+                <h2 class="section-title"><i class="fas fa-hand-holding-heart"></i> Propinas del Día</h2>
+                <div class="stats-grid" style="margin-bottom:30px">
+                    <div class="stat-card" onclick="abrirModalDetalle('propinasDetalle')"><div class="stat-icon propinas"><i class="fas fa-hand-holding-heart"></i></div><div class="stat-value" id="propinasTotal">Bs. 0</div><div class="stat-label">Total Propinas</div></div>
+                    <div class="stat-card" onclick="abrirModalDetalle('propinasCantidad')"><div class="stat-icon propinas"><i class="fas fa-hashtag"></i></div><div class="stat-value" id="propinasCantidad">0</div><div class="stat-label">Cantidad</div></div>
+                    <div class="stat-card" onclick="abrirModalDetalle('propinasPromedio')"><div class="stat-icon propinas"><i class="fas fa-chart-line"></i></div><div class="stat-value" id="propinasPromedio">Bs. 0</div><div class="stat-label">Promedio</div></div>
                 </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-secondary" onclick="cerrarModal('rechazoModal')">Cancelar</button>
-                <button class="btn btn-primary" style="background:linear-gradient(135deg,var(--danger),#B71C1C);" onclick="confirmarRechazo()">Confirmar Rechazo</button>
+                <div id="propinasContainer" class="pedidos-columns" style="grid-template-columns:1fr"><div class="pedidos-column" style="max-height:500px"><div class="column-header propina"><span><i class="fas fa-clock"></i> Últimas Propinas</span><span class="count-badge" id="propinasListCount">0</span></div><div class="column-content" id="propinasListContainer"></div></div></div>
             </div>
         </div>
     </div>
-
-    <div class="modal-overlay" id="detalleModal">
-        <div class="modal-content">
-            <div class="modal-header" style="background:linear-gradient(135deg,var(--info),#1565C0);"><h2 id="detalleModalTitle"><i class="fas fa-chart-bar"></i> Detalle</h2><button class="modal-close" onclick="cerrarModal('detalleModal')"><i class="fas fa-times"></i></button></div>
-            <div class="modal-body" id="detalleModalBody"></div>
-            <div class="modal-footer"><button class="btn btn-primary" onclick="cerrarModal('detalleModal')">Cerrar (ESC)</button></div>
-        </div>
-    </div>
-
-    <div class="modal-overlay" id="mesaModal">
-        <div class="modal-content">
-            <div class="modal-header" style="background:linear-gradient(135deg,var(--info),#1565C0);"><h2><i class="fas fa-chair"></i> Seleccionar Mesa</h2><button class="modal-close" onclick="cerrarModal('mesaModal')"><i class="fas fa-times"></i></button></div>
-            <div class="modal-body">
-                <p style="margin-bottom:20px;color:#666;">Elige la mesa para la cual quieres armar el pedido:</p>
-                <div id="mesaList" class="mesa-grid"><div class="loading-container"><div class="loading-spinner"></div><p>Cargando mesas...</p></div></div>
-            </div>
-            <div class="modal-footer"><button class="btn btn-secondary" onclick="cerrarModal('mesaModal')">Cancelar</button></div>
-        </div>
-    </div>
-
-    <div class="modal-overlay" id="comprobanteModal">
-        <div class="modal-content" style="max-width:500px;">
-            <div class="modal-header" style="background:linear-gradient(135deg,var(--info),#1565C0);"><h2><i class="fas fa-receipt"></i> Comprobante de Pago</h2><button class="modal-close" onclick="cerrarModal('comprobanteModal')"><i class="fas fa-times"></i></button></div>
-            <div class="modal-body text-center" id="comprobanteModalBody"></div>
-            <div class="modal-footer"><button class="btn btn-primary" onclick="cerrarModal('comprobanteModal')">Cerrar (ESC)</button></div>
-        </div>
-    </div>
-
-    <div class="toast" id="toast"><i class="fas fa-check-circle" style="color:var(--success);font-size:1.2rem;"></i><div><p id="toastText" style="margin:0;color:#333;">Operación completada</p></div></div>
-
+    <div class="modal-overlay" id="cobroModal"><div class="modal-content"><div class="modal-header"><h2><i class="fas fa-cash-register"></i> Procesar Cobro</h2><button class="modal-close" onclick="cerrarCobroModal()"><i class="fas fa-times"></i></button></div><div class="modal-body" id="cobroModalBody"></div><div class="modal-footer"><button class="btn btn-secondary" onclick="cerrarCobroModal()">Cancelar (ESC)</button><button class="btn btn-primary" id="confirmCobroBtn" onclick="confirmarCobro()" disabled>Confirmar Cobro (ENTER)</button></div></div></div>
+    <div class="modal-overlay" id="propinaModal"><div class="modal-content"><div class="modal-header propina"><h2><i class="fas fa-hand-holding-heart"></i> Registrar Propina</h2><button class="modal-close" onclick="cerrarPropinaModal()"><i class="fas fa-times"></i></button></div><div class="modal-body" id="propinaModalBody"></div><div class="modal-footer"><button class="btn btn-secondary" onclick="cerrarPropinaModal()">Cancelar (ESC)</button><button class="btn btn-primary" id="confirmPropinaBtn" style="background:linear-gradient(135deg,var(--propina),#7B1FA2)" onclick="confirmarPropina()" disabled>Guardar Propina</button></div></div></div>
+    <div class="modal-overlay" id="confirmModal"><div class="modal-content"><div class="modal-header" id="confirmModalHeader"><h2 id="confirmModalTitle"><i class="fas fa-check-circle"></i> Confirmar Acción</h2><button class="modal-close" onclick="cerrarModal('confirmModal')"><i class="fas fa-times"></i></button></div><div class="modal-body" id="confirmModalBody"></div><div class="modal-footer"><button class="btn btn-secondary" onclick="cerrarModal('confirmModal')">Cancelar (ESC)</button><button class="btn btn-primary" id="confirmActionBtn" onclick="ejecutarConfirmacion()">Confirmar (ENTER)</button></div></div></div>
+    <div class="modal-overlay" id="rechazoModal"><div class="modal-content"><div class="modal-header" style="background:linear-gradient(135deg,var(--danger),#B71C1C)"><h2><i class="fas fa-times-circle"></i> Rechazar Pedido</h2><button class="modal-close" onclick="cerrarModal('rechazoModal')"><i class="fas fa-times"></i></button></div><div class="modal-body"><p style="margin-bottom:20px;color:#ccc">Selecciona la razón del rechazo:</p><div style="display:flex;flex-direction:column;gap:10px"><label style="display:flex;align-items:center;gap:10px;padding:12px;border:1px solid rgba(255,255,255,.1);border-radius:6px;cursor:pointer;color:#fff"><input type="radio" name="rejectionReason" value="referencia_invalida" style="width:18px;height:18px"><span>Referencia de pago inválida o falsa</span></label><label style="display:flex;align-items:center;gap:10px;padding:12px;border:1px solid rgba(255,255,255,.1);border-radius:6px;cursor:pointer;color:#fff"><input type="radio" name="rejectionReason" value="monto_insuficiente" style="width:18px;height:18px"><span>Monto insuficiente</span></label><label style="display:flex;align-items:center;gap:10px;padding:12px;border:1px solid rgba(255,255,255,.1);border-radius:6px;cursor:pointer;color:#fff"><input type="radio" name="rejectionReason" value="datos_incorrectos" style="width:18px;height:18px"><span>Datos de contacto/dirección incorrectos</span></label><label style="display:flex;align-items:center;gap:10px;padding:12px;border:1px solid rgba(255,255,255,.1);border-radius:6px;cursor:pointer;color:#fff"><input type="radio" name="rejectionReason" value="no_disponible" style="width:18px;height:18px"><span>Producto no disponible</span></label><label style="display:flex;align-items:center;gap:10px;padding:12px;border:1px solid rgba(255,255,255,.1);border-radius:6px;cursor:pointer;color:#fff"><input type="radio" name="rejectionReason" value="fuera_horario" style="width:18px;height:18px"><span>Fuera de horario de delivery</span></label></div></div><div class="modal-footer"><button class="btn btn-secondary" onclick="cerrarModal('rechazoModal')">Cancelar</button><button class="btn btn-primary" style="background:linear-gradient(135deg,var(--danger),#B71C1C)" onclick="confirmarRechazo()">Confirmar Rechazo</button></div></div></div>
+    <div class="modal-overlay" id="detalleModal"><div class="modal-content"><div class="modal-header" style="background:linear-gradient(135deg,var(--info),#1565C0)"><h2 id="detalleModalTitle"><i class="fas fa-chart-bar"></i> Detalle</h2><button class="modal-close" onclick="cerrarModal('detalleModal')"><i class="fas fa-times"></i></button></div><div class="modal-body" id="detalleModalBody"></div><div class="modal-footer"><button class="btn btn-primary" onclick="cerrarModal('detalleModal')">Cerrar (ESC)</button></div></div></div>
+    <div class="modal-overlay" id="mesaModal"><div class="modal-content"><div class="modal-header" style="background:linear-gradient(135deg,var(--info),#1565C0)"><h2><i class="fas fa-chair"></i> Seleccionar Mesa</h2><button class="modal-close" onclick="cerrarModal('mesaModal')"><i class="fas fa-times"></i></button></div><div class="modal-body"><p style="margin-bottom:20px;color:#ccc">Elige la mesa para la cual quieres armar el pedido:</p><div id="mesaList" class="mesa-grid"><div class="loading-container"><div class="loading-spinner"></div><p>Cargando mesas...</p></div></div></div><div class="modal-footer"><button class="btn btn-secondary" onclick="cerrarModal('mesaModal')">Cancelar</button></div></div></div>
+    <div class="modal-overlay" id="comprobanteModal"><div class="modal-content" style="max-width:500px"><div class="modal-header" style="background:linear-gradient(135deg,var(--info),#1565C0)"><h2><i class="fas fa-receipt"></i> Comprobante de Pago</h2><button class="modal-close" onclick="cerrarModal('comprobanteModal')"><i class="fas fa-times"></i></button></div><div class="modal-body text-center" id="comprobanteModalBody"></div><div class="modal-footer"><button class="btn btn-primary" onclick="cerrarModal('comprobanteModal')">Cerrar (ESC)</button></div></div></div>
+    <div class="toast" id="toast"><i class="fas fa-check-circle" style="color:var(--success);font-size:1.2rem"></i><div><p id="toastText" style="margin:0;color:#333">Operación completada</p></div></div>
     <script src="../supabase-config.js"></script>
     <script>
-        let currentUser=null,pedidos=[],ventasHoy=[],menuItems=[],inventario=[],mesas=[],propinasHoy=[],currentPedido=null,pedidoParaAccion=null,accionPendiente=null,pagosMixtos=[],currentPropinaPedido=null,tasaEfectiva=400;
+        let currentUser=null,pedidos=[],ventasHoy=[],propinas=[],menuItems=[],inventario=[],mesas=[],currentPedido=null,pedidoParaAccion=null,accionPendiente=null,pagosMixtos=[],tasaEfectiva=400,currentPropinaPedido=null,mesoneros=[],currentPropinaData={mesoneroId:null,mesa:null,metodo:null,montoOriginal:0,monedaOriginal:'Bs',referencia:''};
         let alarmaAudio=document.getElementById('alarmaSonido'),alarmaActiva=false,enProcesoDeCobro=false,suscripciones=[],paginaVisible=true;
-
-        document.addEventListener('DOMContentLoaded',async()=>{
-            const savedUser=sessionStorage.getItem('cajero_user');
-            if(savedUser){try{currentUser=JSON.parse(savedUser);await cargarDatosIniciales();mostrarPanel();}catch{mostrarLogin();}}else mostrarLogin();
-            document.addEventListener('visibilitychange',function(){if(document.hidden)paginaVisible=false;else{paginaVisible=true;recargarAlVolver();}});
-        });
-
-        window.hacerLogin=async function(){
-            const username=document.getElementById('username').value,password=document.getElementById('password').value;
-            if(!username||!password){mostrarToast('Ingresa usuario y contraseña','error');return;}
-            try{
-                const {data,error}=await window.supabaseClient.from('usuarios').select('*').eq('username',username).eq('password',password).eq('activo',true).maybeSingle();
-                if(error)throw error;
-                if(!data){mostrarToast('Credenciales inválidas','error');return;}
-                currentUser=data;sessionStorage.setItem('cajero_user',JSON.stringify(data));
-                await cargarDatosIniciales();mostrarPanel();
-            }catch(error){console.error('Error en login:',error);mostrarToast('Error al conectar: '+error.message,'error');}
-        };
-
-        async function recargarAlVolver(){
-            mostrarToast('🔄 Reconectando...','info');
-            await cargarPedidos();await cargarVentasHoy();await cargarPropinasHoy();actualizarEstadisticas();renderizarPedidos();setupRealtimeSubscriptions();verificarYControlarAlarma(true);
-            mostrarToast('✅ Conexión restablecida','success');
-        }
-
-        function verificarYControlarAlarma(forzar=false){
-            const pendientes=pedidos.filter(p=>p.estado==='pendiente').length;
-            if(pendientes>0&&!enProcesoDeCobro){if(!alarmaActiva&&alarmaAudio)alarmaAudio.play().then(()=>{alarmaActiva=true;}).catch(()=>{});}
-            else if(alarmaActiva&&alarmaAudio){alarmaAudio.pause();alarmaAudio.currentTime=0;alarmaActiva=false;}
-        }
-
-        async function cargarDatosIniciales(){
-            await cargarConfiguracion();tasaEfectiva=configGlobal.tasa_efectiva||400;
-            await cargarPedidos();await cargarVentasHoy();await cargarPropinasHoy();await cargarMenu();await cargarInventario();await cargarMesas();
-            actualizarEstadisticas();renderizarPedidos();renderizarMenu();
-        }
-
-        async function cargarPedidos(){
-            try{
-                const hoy=new Date();hoy.setHours(0,0,0,0);const manana=new Date(hoy);manana.setDate(manana.getDate()+1);
-                const {data,error}=await window.supabaseClient.from('pedidos').select('*').gte('timestamp',hoy.toISOString()).lt('timestamp',manana.toISOString()).order('timestamp',{ascending:false});
-                if(error)throw error;pedidos=data||[];
-            }catch(error){console.error('Error cargando pedidos:',error);mostrarToast('Error cargando pedidos','error');}
-        }
-
-        async function cargarVentasHoy(){
-            try{
-                const hoy=new Date();hoy.setHours(0,0,0,0);const manana=new Date(hoy);manana.setDate(manana.getDate()+1);
-                const {data,error}=await window.supabaseClient.from('ventas').select('*').gte('fecha',hoy.toISOString()).lt('fecha',manana.toISOString()).order('fecha',{ascending:false});
-                if(error)throw error;ventasHoy=data||[];
-            }catch(error){console.error('Error cargando ventas:',error);}
-        }
-
-        async function cargarPropinasHoy(){
-            try{
-                const hoy=new Date();hoy.setHours(0,0,0,0);const manana=new Date(hoy);manana.setDate(manana.getDate()+1);
-                const {data,error}=await window.supabaseClient.from('propinas').select('*').gte('fecha',hoy.toISOString()).lt('fecha',manana.toISOString()).order('fecha',{ascending:false});
-                if(error)throw error;propinasHoy=data||[];
-            }catch(error){console.error('Error cargando propinas:',error);propinasHoy=[];}
-        }
-
-        async function cargarMenu(){
-            try{const {data,error}=await window.supabaseClient.from('menu').select('*').eq('disponible',true);if(error)throw error;menuItems=data||[];}
-            catch(error){console.error('Error cargando menú:',error);}
-        }
-
-        async function cargarInventario(){
-            try{const {data,error}=await window.supabaseClient.from('inventario').select('*');if(error)throw error;inventario=data||[];}
-            catch(error){console.error('Error cargando inventario:',error);}
-        }
-
-        async function cargarMesas(){
-            try{const {data,error}=await window.supabaseClient.from('codigos_qr').select('*').order('nombre');if(error)throw error;mesas=data||[];}
-            catch(error){console.error('Error cargando mesas:',error);}
-        }
-
-        function mostrarToast(mensaje,tipo='success'){
-            const toast=document.getElementById('toast');document.getElementById('toastText').textContent=mensaje;toast.className='toast show';
-            if(tipo==='error'){toast.querySelector('i').style.color='var(--danger)';toast.style.borderLeftColor='var(--danger)';}
-            else{toast.querySelector('i').style.color='var(--success)';toast.style.borderLeftColor='var(--success)';}
-            setTimeout(()=>toast.classList.remove('show'),3000);
-        }
-
-        function cerrarModal(modalId){document.getElementById(modalId).classList.remove('active');if(modalId==='confirmModal'){pedidoParaAccion=null;accionPendiente=null;}}
-        
-        function cerrarCobroModal(){document.getElementById('cobroModal').classList.remove('active');enProcesoDeCobro=false;currentPedido=null;pagosMixtos=[];setTimeout(()=>verificarYControlarAlarma(true),100);}
-        
-        function cerrarPropinaModal(){document.getElementById('propinaModal').classList.remove('active');currentPropinaPedido=null;}
-
-        function showSection(sectionName){
-            document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
-            document.getElementById(`section-${sectionName}`).classList.add('active');event.target.classList.add('active');
-            if(sectionName==='pedidos')renderizarPedidos();else if(sectionName==='menu')renderizarMenu();
-        }
-
-        function cerrarSesion(){sessionStorage.removeItem('cajero_user');currentUser=null;detenerAlarma();document.getElementById('loginContainer').classList.remove('hidden');document.getElementById('panelContainer').classList.add('hidden');}
-        function mostrarLogin(){document.getElementById('loginContainer').classList.remove('hidden');document.getElementById('panelContainer').classList.add('hidden');detenerAlarma();}
-        function mostrarPanel(){document.getElementById('loginContainer').classList.add('hidden');document.getElementById('panelContainer').classList.remove('hidden');setupEventListeners();setupRealtimeSubscriptions();setTimeout(()=>verificarYControlarAlarma(true),100);}
-        function detenerAlarma(){if(alarmaActiva&&alarmaAudio){alarmaAudio.pause();alarmaAudio.currentTime=0;alarmaActiva=false;}}
-
-        function actualizarEstadisticas(){
-            const enPreparacion=pedidos.filter(p=>['en_cocina','en_camino','reserva_pendiente','reserva_atendida'].includes(p.estado)).length;
-            const cobradosHoy=ventasHoy.length;const totalPropinas=propinasHoy.reduce((s,p)=>s+(p.monto||0),0);
-            const totalVentasBs=ventasHoy.reduce((s,v)=>s+(v.total||0),0)*tasaEfectiva;
-            const platillosVendidos=ventasHoy.reduce((s,v)=>s+(v.items||0),0);
-            document.getElementById('statPreparacion').textContent=enPreparacion;document.getElementById('statCobrados').textContent=cobradosHoy;
-            document.getElementById('statPropinas').textContent=formatBs(totalPropinas);document.getElementById('statVentas').textContent=formatBs(totalVentasBs);
-            document.getElementById('statPlatillos').textContent=platillosVendidos;
-        }
-
-        function renderizarPedidos(){
-            const pMesa=pedidos.filter(p=>p.tipo==='mesa'&&p.estado==='pendiente'),pDel=pedidos.filter(p=>p.tipo==='delivery'&&p.estado==='pendiente'),pRes=pedidos.filter(p=>p.tipo==='reserva'&&p.estado==='pendiente');
-            const cMesa=pedidos.filter(p=>p.tipo==='mesa'&&p.estado==='en_cocina'),cDel=pedidos.filter(p=>p.tipo==='delivery'&&p.estado==='en_camino'),rPen=pedidos.filter(p=>p.tipo==='reserva'&&p.estado==='reserva_pendiente'),rAte=pedidos.filter(p=>p.tipo==='reserva'&&p.estado==='reserva_atendida');
-            document.getElementById('mesaPendientesCount').textContent=pMesa.length;document.getElementById('deliveryPendientesCount').textContent=pDel.length;document.getElementById('reservaPendientesCount').textContent=pRes.length;
-            document.getElementById('totalPendientesBadge').textContent=pMesa.length+pDel.length+pRes.length;
-            document.getElementById('mesaCocinaCount').textContent=cMesa.length;document.getElementById('deliveryCaminoCount').textContent=cDel.length;document.getElementById('reservaProcesoCount').textContent=rPen.length+rAte.length;
-            document.getElementById('totalPreparacionBadge').textContent=cMesa.length+cDel.length+rPen.length+rAte.length;
-            document.getElementById('mesaPendientesContainer').innerHTML=pMesa.length?pMesa.map(p=>crearTarjetaPedidoCompacta(p,'pendiente')).join(''):'<div class="empty-state"><i class="fas fa-store"></i><p>No hay pedidos en mesa</p></div>';
-            document.getElementById('deliveryPendientesContainer').innerHTML=pDel.length?pDel.map(p=>crearTarjetaPedidoCompacta(p,'pendiente')).join(''):'<div class="empty-state"><i class="fas fa-motorcycle"></i><p>No hay pedidos delivery</p></div>';
-            document.getElementById('reservaPendientesContainer').innerHTML=pRes.length?pRes.map(p=>crearTarjetaPedidoCompacta(p,'pendiente')).join(''):'<div class="empty-state"><i class="fas fa-calendar-check"></i><p>No hay reservas</p></div>';
-            document.getElementById('mesaCocinaContainer').innerHTML=cMesa.length?cMesa.map(p=>crearTarjetaPedidoCompacta(p,'preparacion')).join(''):'<div class="empty-state"><i class="fas fa-fire"></i><p>No hay pedidos en cocina</p></div>';
-            document.getElementById('deliveryCaminoContainer').innerHTML=cDel.length?cDel.map(p=>crearTarjetaPedidoCompacta(p,'preparacion')).join(''):'<div class="empty-state"><i class="fas fa-truck"></i><p>No hay deliveries en camino</p></div>';
-            document.getElementById('reservaProcesoContainer').innerHTML=(rPen.length+rAte.length)?[...rPen,...rAte].map(p=>crearTarjetaPedidoCompacta(p,'preparacion')).join(''):'<div class="empty-state"><i class="fas fa-clock"></i><p>No hay reservas pendientes</p></div>';
-        }
-
-        function crearTarjetaPedidoCompacta(pedido,tipoSeccion){
-            const hora=new Date(pedido.timestamp).toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
-            let info=pedido.tipo==='mesa'?`<div class="order-info-compact"><i class="fas fa-chair"></i> Mesa #${pedido.mesa||'N/A'}</div>`:
-                pedido.tipo==='delivery'?`<div class="order-info-compact"><div><i class="fas fa-map-marker-alt"></i> ${pedido.direccion||'Dir. no especificada'}</div><div><i class="fas fa-phone"></i> ${pedido.telefono||'N/A'}</div>${pedido.parroquia?`<div><i class="fas fa-building"></i> ${pedido.parroquia}</div>`:''}${pedido.costo_delivery?`<div><i class="fas fa-truck"></i> Delivery: ${formatBs(pedido.costo_delivery)}</div>`:''}${pedido.referencia?`<div><i class="fas fa-receipt"></i> Ref: ${pedido.referencia}</div>`:''}</div>`:
-                `<div class="order-info-compact"><div><i class="fas fa-user"></i> ${pedido.cliente_nombre||'Cliente'}</div><div><i class="fas fa-calendar"></i> ${pedido.fecha_reserva?new Date(pedido.fecha_reserva).toLocaleDateString():'N/A'}</div>${pedido.referencia?`<div><i class="fas fa-receipt"></i> Ref: ${pedido.referencia}</div>`:''}</div>`;
-            const items=(pedido.items||[]).map(i=>`<div class="order-item-row-compact"><span class="item-name-compact">${i.cantidad||1}x ${i.nombre}</span><span class="item-price-compact">${formatBs(usdToBs((i.precioUnitarioUSD||0)*(i.cantidad||1)))}</span></div>`).join('');
-            const total=formatBs(usdToBs(pedido.total||0));
-            const comprobante=pedido.comprobante_url&&(pedido.tipo==='delivery'||pedido.tipo==='reserva')?`<div class="comprobante-thumbnail" onclick="verComprobante('${pedido.id}')"><img src="${pedido.comprobante_url}" style="max-width:100%;cursor:pointer;"></div>`:'';
-            let botones=tipoSeccion==='pendiente'?`<button class="btn-compact btn-cobrar-compact" onclick="mostrarCobro('${pedido.id}')"><i class="fas fa-cash-register"></i> Cobrar</button><button class="btn-compact btn-rechazar-compact" onclick="mostrarRechazo('${pedido.id}')"><i class="fas fa-times"></i> Rechazar</button>`:
-                pedido.tipo==='mesa'&&pedido.estado==='en_cocina'?`<button class="btn-compact btn-entregar-compact" onclick="mostrarConfirmacion('${pedido.id}','entregado')"><i class="fas fa-check"></i> Pedido Entregado</button>`:
-                pedido.tipo==='delivery'&&pedido.estado==='en_camino'?`<button class="btn-compact btn-enviar-compact" onclick="mostrarConfirmacion('${pedido.id}','enviado')"><i class="fas fa-check"></i> Pedido Enviado</button>`:
-                pedido.tipo==='reserva'&&pedido.estado==='reserva_pendiente'?`<button class="btn-compact btn-confirmar-compact" onclick="mostrarConfirmacion('${pedido.id}','reserva_atendida')"><i class="fas fa-user-check"></i> Reserva Confirmada</button>`:
-                pedido.tipo==='reserva'&&pedido.estado==='reserva_atendida'?`<button class="btn-compact btn-entregar-compact" onclick="mostrarConfirmacion('${pedido.id}','reserva_completada')"><i class="fas fa-check"></i> Pedido Entregado</button>`:'';
-            return `<div class="order-card-compact ${pedido.estado}"><div class="order-header-compact"><span class="order-time-compact"><i class="far fa-clock"></i> ${hora}</span><span style="font-weight:600;color:var(--${pedido.tipo==='mesa'?'info':pedido.tipo==='delivery'?'success':'accent'});font-size:0.7rem;text-transform:uppercase;">${pedido.tipo}</span></div>${info}<div class="order-items-compact">${items}</div><div class="order-total-compact">Total: ${total}</div>${comprobante}<div class="order-actions-compact">${botones}</div></div>`;
-        }
-
-        function renderizarMenu(){
-            const grid=document.getElementById('menuGrid');
-            if(!menuItems.length){grid.innerHTML='<div class="empty-state"><i class="fas fa-utensils"></i><p>No hay platillos disponibles</p></div>';return;}
-            grid.innerHTML=menuItems.map(i=>`<div class="menu-card"><div class="menu-card-image" style="background-image:url('${i.imagen||'https://via.placeholder.com/300x150?text=Saki+Sushi'}')"></div><div class="menu-card-content"><div class="menu-card-header"><span class="menu-card-title">${i.nombre}</span><span class="menu-card-price">${formatBs(usdToBs(i.precio||0))}</span></div><p style="font-size:0.85rem;color:#666;margin-bottom:0.5rem;">${i.descripcion||''}</p><div style="font-size:0.8rem;color:var(--info);"><i class="fas fa-box"></i> Stock: ${i.stock||0}</div></div></div>`).join('');
-        }
-
-        async function abrirModalDetalle(tipo){
-            await cargarVentasHoy();await cargarPropinasHoy();const modal=document.getElementById('detalleModal');const title=document.getElementById('detalleModalTitle');const body=document.getElementById('detalleModalBody');let contenido='';
-            switch(tipo){
-                case 'preparacion':
-                    title.innerHTML='<i class="fas fa-fire"></i> Pedidos en Preparación';
-                    const enPreparacion=pedidos.filter(p=>['en_cocina','en_camino','reserva_pendiente','reserva_atendida'].includes(p.estado));
-                    contenido=enPreparacion.length?enPreparacion.map(p=>crearDetallePedidoCompacto(p)).join(''):'<div class="empty-state"><i class="fas fa-inbox"></i><p>No hay pedidos en preparación</p></div>';
-                    break;
-                case 'cobrados':
-                    title.innerHTML='<i class="fas fa-check-circle"></i> Cobrados Hoy';
-                    if(!ventasHoy.length)contenido='<div class="empty-state"><i class="fas fa-inbox"></i><p>No hay cobros registrados hoy</p></div>';
-                    else contenido=ventasHoy.map(v=>{const p=pedidos.find(p=>p.id===v.pedido_id);return crearDetalleVentaCompacto(v,p);}).join('');
-                    break;
-                case 'propinas':
-                    title.innerHTML='<i class="fas fa-hand-holding-heart"></i> Propinas';
-                    if(!propinasHoy.length)contenido='<div class="empty-state"><i class="fas fa-hand-holding-heart"></i><p>No hay propinas registradas hoy</p></div>';
-                    else{
-                        const totalPropinas=propinasHoy.reduce((s,p)=>s+(p.monto||0),0);
-                        const porMesero={};propinasHoy.forEach(p=>{porMesero[p.mesero]=(porMesero[p.mesero]||0)+p.monto;});
-                        contenido=`<p><strong>Total propinas:</strong> ${formatBs(totalPropinas)}</p><p><strong>Cantidad:</strong> ${propinasHoy.length}</p><h4>Por mesero:</h4>`;
-                        Object.entries(porMesero).forEach(([m,monto])=>{contenido+=`<div class="detail-item-compact"><div class="detail-header-compact"><span>${m}</span><span class="propina-metodo-tag">${formatBs(monto)}</span></div></div>`;});
-                        contenido+='<h4>Últimas propinas:</h4>'+propinasHoy.slice(0,10).map(p=>`<div class="detail-item-compact"><div class="detail-header-compact"><span>${new Date(p.fecha).toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'})}</span><span class="propina-metodo-tag">${p.metodo}</span></div><div>Mesa: ${p.mesa||'N/A'} | Mesero: ${p.mesero}</div><div class="detail-total-compact">${formatBs(p.monto)}</div></div>`).join('');
-                    }
-                    break;
-                case 'ventas':
-                    title.innerHTML='<i class="fas fa-dollar-sign"></i> Ventas Totales';
-                    const totalUSD=ventasHoy.reduce((s,v)=>s+(v.total||0),0),totalBs=totalUSD*tasaEfectiva;
-                    let efBs=0,efUSD=0,pm=0,pv=0;
-                    ventasHoy.forEach(v=>{
-                        const ped=pedidos.find(p=>p.id===v.pedido_id);
-                        if(ped?.pagos_mixtos)ped.pagos_mixtos.forEach(p=>{const mb=p.metodo==='efectivo_usd'?p.monto*tasaEfectiva:p.monto;if(p.metodo==='efectivo_bs')efBs+=mb;else if(p.metodo==='efectivo_usd')efUSD+=mb;else if(p.metodo==='pago_movil')pm+=mb;else if(p.metodo==='punto_venta')pv+=mb;});
-                        else{if(v.metodo_pago==='efectivo_bs')efBs+=v.total*tasaEfectiva;else if(v.metodo_pago==='efectivo_usd')efUSD+=v.total*tasaEfectiva;else if(v.metodo_pago==='pago_movil')pm+=v.total*tasaEfectiva;else if(v.metodo_pago==='punto_venta')pv+=v.total*tasaEfectiva;}
-                    });
-                    contenido=`<p><strong>Total del día:</strong> ${formatBs(totalBs)}</p><p><strong>Cantidad de ventas:</strong> ${ventasHoy.length}</p><h4>Desglose por método:</h4><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:20px;"><div class="payment-tag" style="justify-content:space-between;padding:6px;"><span>Efectivo Bs</span><span>${formatBs(efBs)}</span></div><div class="payment-tag" style="justify-content:space-between;padding:6px;"><span>Efectivo USD</span><span>${formatBs(efUSD)}</span></div><div class="payment-tag" style="justify-content:space-between;padding:6px;"><span>Pago Móvil</span><span>${formatBs(pm)}</span></div><div class="payment-tag" style="justify-content:space-between;padding:6px;"><span>Punto de Venta</span><span>${formatBs(pv)}</span></div></div><h4>Ventas del día:</h4>${ventasHoy.map(v=>{const p=pedidos.find(p=>p.id===v.pedido_id);return crearDetalleVentaCompacto(v,p);}).join('')}`;
-                    break;
-                case 'platillos':
-                    title.innerHTML='<i class="fas fa-utensils"></i> Platillos Vendidos';
-                    const hoy=new Date().toDateString(),pedHoy=pedidos.filter(p=>['cobrado','entregado','enviado','reserva_completada'].includes(p.estado)&&new Date(p.timestamp).toDateString()===hoy);
-                    const conteo={};let total=0;
-                    pedHoy.forEach(p=>p.items?.forEach(i=>{const c=i.cantidad||1;conteo[i.nombre]=(conteo[i.nombre]||0)+c;total+=c;}));
-                    const ranking=Object.entries(conteo).sort((a,b)=>b[1]-a[1]),max=ranking[0]?.[1]||0;
-                    if(!ranking.length)contenido='<div class="empty-state"><i class="fas fa-utensils"></i><p>No hay platillos vendidos hoy</p></div>';
-                    else contenido=`<p><strong>Total unidades:</strong> ${total}</p><div style="max-height:400px;overflow-y:auto;">${ranking.map(([n,c],i)=>`<div class="ranking-bar"><div class="ranking-position">${i+1}</div><div class="ranking-info"><div class="ranking-name">${n}</div><div class="ranking-cantidad">${c} vendido(s)</div></div><div class="ranking-bar-container"><div class="ranking-bar-fill" style="width:${(c/max)*100}%;"></div></div></div>`).join('')}</div>`;
-                    break;
-            }
-            body.innerHTML=contenido;modal.classList.add('active');
-        }
-
-        function crearDetalleVentaCompacto(venta,pedido){
-            if(!pedido)return '';
-            const hora=new Date(pedido.timestamp).toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
-            const items=(pedido.items||[]).map(i=>`<div class="detail-item-row-compact"><span>${i.cantidad||1}x ${i.nombre}</span><span>${formatBs(usdToBs((i.precioUnitarioUSD||0)*(i.cantidad||1)))}</span></div>`).join('');
-            let metodos='';
-            if(pedido.pagos_mixtos?.length)metodos='<div style="margin-top:3px;">'+pedido.pagos_mixtos.map(p=>{const nom=p.metodo==='efectivo_bs'?'Bs':p.metodo==='efectivo_usd'?'$':p.metodo==='pago_movil'?'📱':'💳';return `<span class="detail-metodo-tag">${nom} ${formatBs(p.monto)}</span>`;}).join('')+'</div>';
-            return `<div class="detail-item-compact"><div class="detail-header-compact"><span>${hora}</span><span class="detail-metodo-tag">${venta.tipo}</span></div><div class="detail-items-compact">${items}</div><div class="detail-total-compact">Total: ${formatBs(venta.total*tasaEfectiva)}</div>${metodos}</div>`;
-        }
-
-        function crearDetallePedidoCompacto(pedido){
-            const hora=new Date(pedido.timestamp).toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
-            const items=(pedido.items||[]).map(i=>`<div class="detail-item-row-compact"><span>${i.cantidad||1}x ${i.nombre}</span><span>${formatBs(usdToBs((i.precioUnitarioUSD||0)*(i.cantidad||1)))}</span></div>`).join('');
-            return `<div class="detail-item-compact"><div class="detail-header-compact"><span>${hora}</span><span class="detail-metodo-tag">${pedido.tipo}</span></div><div class="detail-items-compact">${items}</div><div class="detail-total-compact">Total: ${formatBs(usdToBs(pedido.total||0))}</div></div>`;
-        }
-
-        function mostrarCobro(pedidoId){
-            currentPedido=pedidos.find(p=>p.id===pedidoId);if(!currentPedido)return;
-            enProcesoDeCobro=true;if(alarmaActiva){alarmaAudio.pause();alarmaAudio.currentTime=0;alarmaActiva=false;}
-            pagosMixtos=[];const totalAPagar=usdToBs(currentPedido.total||0);
-            const body=document.getElementById('cobroModalBody');
-            const items=(currentPedido.items||[]).map(i=>`<div style="display:flex;justify-content:space-between;padding:8px0;border-bottom:1px solid #eee;"><span>${i.cantidad||1}x ${i.nombre}</span><span style="font-weight:600;">${formatBs(usdToBs((i.precioUnitarioUSD||0)*(i.cantidad||1)))}</span></div>`).join('');
-            body.innerHTML=`<div style="background:#f8f8f8;padding:15px;border-radius:8px;margin-bottom:20px;"><h4>Resumen del Pedido</h4>${items}${currentPedido.costo_delivery?`<div style="display:flex;justify-content:space-between;margin-top:10px;padding-top:10px;border-top:2px solid #ddd;"><span>Costo delivery:</span><span>${formatBs(currentPedido.costo_delivery)}</span></div>`:''}<div style="display:flex;justify-content:space-between;margin-top:15px;padding-top:15px;border-top:2px solid var(--primary);font-weight:700;"><span>Total a pagar:</span><span id="totalPagarDisplay" style="color:var(--primary);">${formatBs(totalAPagar)}</span></div></div><div style="margin-bottom:20px;padding:12px;background:#FFF3E0;border-left:4px solid var(--warning);"><label style="display:flex;align-items:center;gap:10px;"><input type="checkbox" id="invitacionCheck" style="width:18px;height:18px;"><strong>Por parte de la casa (invitación)</strong></label></div><div id="pagosSection"><h4>Pagos Mixtos</h4><div id="pagosContainer" class="payment-mix-container"></div><button class="btn btn-secondary" onclick="agregarMetodoPago()" style="width:100%;margin-bottom:20px;"><i class="fas fa-plus"></i> Agregar Método de Pago</button><div class="pagos-total"><div class="pagos-resumen"><span>Total recibido:</span><span id="totalRecibido">Bs.0.00</span></div><div class="pagos-resumen"><span>Pendiente:</span><span id="pendiente" style="color:var(--danger);">Bs.0.00</span></div><div class="pagos-resumen"><span>Sobrante:</span><span id="sobrante" style="color:var(--success);">Bs.0.00</span></div></div></div><div class="keyboard-hint"><span><kbd>ENTER</kbd> confirmar</span><span><kbd>ESC</kbd> cancelar</span></div>`;
-            document.getElementById('invitacionCheck').addEventListener('change',function(e){
-                document.getElementById('pagosSection').style.opacity=e.target.checked?'0.5':'1';
-                document.getElementById('pagosSection').style.pointerEvents=e.target.checked?'none':'auto';
-                document.getElementById('confirmCobroBtn').disabled=!e.target.checked&&pagosMixtos.length===0;
-            });
-            document.getElementById('cobroModal').classList.add('active');recalcularTotales();
-        }
-
-        function agregarMetodoPago(){pagosMixtos.push({id:Date.now()+Math.random(),metodo:'efectivo_bs',monto:0,referencia:''});renderizarPagosMixtos();recalcularTotales();}
-        function renderizarPagosMixtos(){
-            const c=document.getElementById('pagosContainer');if(!c)return;
-            c.innerHTML=pagosMixtos.map((p,i)=>`<div class="pago-item" data-id="${p.id}">${pagosMixtos.length>1?`<button class="remove-pago" onclick="eliminarMetodoPago('${p.id}')"><i class="fas fa-times"></i></button>`:''}<select onchange="actualizarPago('${p.id}','metodo',this.value)"><option value="efectivo_bs" ${p.metodo==='efectivo_bs'?'selected':''}>Efectivo Bs</option><option value="efectivo_usd" ${p.metodo==='efectivo_usd'?'selected':''}>Efectivo Dólar</option><option value="pago_movil" ${p.metodo==='pago_movil'?'selected':''}>Pago Móvil</option><option value="punto_venta" ${p.metodo==='punto_venta'?'selected':''}>Punto de Venta</option></select><input type="number" step="0.01" placeholder="Monto ${p.metodo==='efectivo_usd'?'en USD':'en Bs'}" value="${p.monto||0}" oninput="actualizarPago('${p.id}','monto',this.value)">${p.metodo==='pago_movil'?`<input type="text" maxlength="6" placeholder="Referencia (6 dígitos)" value="${p.referencia||''}" oninput="actualizarPago('${p.id}','referencia',this.value)">`:''}</div>`).join('');
-        }
-        function actualizarPago(id,campo,valor){
-            const p=pagosMixtos.find(p=>p.id==id);if(!p)return;
-            if(campo==='monto')p.monto=parseFloat(valor)||0;
-            else if(campo==='metodo'){p.metodo=valor;if(valor!=='pago_movil')p.referencia='';}
-            else if(campo==='referencia')p.referencia=valor;
-            renderizarPagosMixtos();recalcularTotales();
-        }
-        function eliminarMetodoPago(id){pagosMixtos=pagosMixtos.filter(p=>p.id!=id);renderizarPagosMixtos();recalcularTotales();}
-        function recalcularTotales(){
-            const total=usdToBs(currentPedido?.total||0);
-            let recibido=pagosMixtos.reduce((s,p)=>s+(p.metodo==='efectivo_usd'?usdToBs(p.monto||0):(p.monto||0)),0);
-            document.getElementById('totalRecibido').textContent=formatBs(recibido);
-            document.getElementById('pendiente').textContent=formatBs(Math.max(0,total-recibido));
-            document.getElementById('sobrante').textContent=formatBs(Math.max(0,recibido-total));
-            const inv=document.getElementById('invitacionCheck');
-            document.getElementById('confirmCobroBtn').disabled=!inv.checked&&(pagosMixtos.length===0||(total-recibido)>0);
-        }
-
-        async function confirmarCobro(){
-            if(!currentPedido)return;
-            const inv=document.getElementById('invitacionCheck').checked;
-            try{
-                let nuevoEstado,metodoPago,pagos;
-                if(inv){
-                    nuevoEstado=currentPedido.tipo==='delivery'?'en_camino':(currentPedido.tipo==='reserva'?'reserva_pendiente':'en_cocina');
-                    metodoPago='invitacion';pagos=[{metodo:'invitacion',monto:0,montoBs:0}];
-                }else{
-                    nuevoEstado=currentPedido.tipo==='delivery'?'en_camino':(currentPedido.tipo==='reserva'?'reserva_pendiente':'en_cocina');
-                    pagos=pagosMixtos.map(p=>({metodo:p.metodo,monto:p.monto,montoBs:p.metodo==='efectivo_usd'?usdToBs(p.monto):p.monto,referencia:p.referencia||null}));
-                    metodoPago=pagosMixtos.length===1?pagosMixtos[0].metodo:'mixto';
-                }
-                await window.supabaseClient.from('pedidos').update({estado:nuevoEstado,metodo_pago:metodoPago,pagos_mixtos:pagos,cajero:currentUser?.nombre||'Cajero',fecha_cobro:new Date().toISOString()}).eq('id',currentPedido.id);
-                const totalItems=currentPedido.items?.reduce((s,i)=>s+(i.cantidad||1),0)||0;
-                await window.supabaseClient.from('ventas').insert([{pedido_id:currentPedido.id,total:currentPedido.total,items:totalItems,metodo_pago:metodoPago,tipo:currentPedido.tipo,fecha:new Date().toISOString()}]);
-                await window.supabaseClient.from('notificaciones').insert([{pedido_id:currentPedido.id,tipo:'approved',titulo:'✅ Pago confirmado',mensaje:'Tu pedido ha sido pagado y está en preparación',timestamp:new Date().toISOString(),session_id:currentPedido.session_id,leida:false}]);
-                document.getElementById('cobroModal').classList.remove('active');mostrarToast('✅ Cobro procesado');
-                enProcesoDeCobro=false;currentPedido=null;pagosMixtos=[];
-                await cargarPedidos();await cargarVentasHoy();await cargarPropinasHoy();actualizarEstadisticas();renderizarPedidos();
-                verificarYControlarAlarma(true);
-                if(!inv)mostrarPropina(currentPedidoActual);
-            }catch(error){console.error('Error:',error);mostrarToast('❌ Error al procesar','error');}
-        }
-
-        function mostrarPropina(pedido){
-            currentPropinaPedido=pedido;
-            const body=document.getElementById('propinaModalBody');
-            body.innerHTML=`<div style="text-align:center;margin-bottom:20px;"><i class="fas fa-hand-holding-heart" style="font-size:3rem;color:var(--tip);"></i><h3 style="margin:10px0;">¿El cliente quiere dejar propina?</h3></div><div style="display:flex;gap:10px;margin-bottom:20px;"><button class="btn btn-secondary" style="flex:1;" onclick="seleccionarPropina('efectivo_bs')"><i class="fas fa-money-bill-wave"></i> Efectivo Bs</button><button class="btn btn-secondary" style="flex:1;" onclick="seleccionarPropina('efectivo_usd')"><i class="fas fa-dollar-sign"></i> Efectivo USD</button></div><div style="display:flex;gap:10px;margin-bottom:20px;"><button class="btn btn-secondary" style="flex:1;" onclick="seleccionarPropina('pago_movil')"><i class="fas fa-mobile-alt"></i> Pago Móvil</button><button class="btn btn-secondary" style="flex:1;" onclick="seleccionarPropina('punto_venta')"><i class="fas fa-credit-card"></i> Punto de Venta</button></div><div style="margin-bottom:20px;"><button class="btn btn-secondary" style="width:100%;" onclick="cerrarPropinaModal()"><i class="fas fa-times"></i> No, gracias</button></div>`;
-            document.getElementById('propinaModal').classList.add('active');
-        }
-
-        window.seleccionarPropina=function(metodo){
-            const body=document.getElementById('propinaModalBody');
-            body.innerHTML=`<div style="margin-bottom:20px;"><label><strong>Monto de la propina (${metodo==='efectivo_usd'?'USD':'Bs'}):</strong></label><input type="number" step="0.01" id="propinaMonto" class="form-control" style="width:100%;padding:10px;margin-top:5px;border:2px solid #e0e0e0;border-radius:8px;" placeholder="0.00" autofocus></div><div class="keyboard-hint" style="margin-top:20px;"><span><kbd>ENTER</kbd> guardar</span><span><kbd>ESC</kbd> cancelar</span></div>`;
-            window.propinaMetodoSeleccionado=metodo;
-            document.getElementById('confirmPropinaBtn').disabled=false;
-            document.getElementById('propinaMonto').focus();
-        };
-
-        window.confirmarPropina=async function(){
-            if(!currentPropinaPedido)return;
-            const monto=parseFloat(document.getElementById('propinaMonto')?.value||0);
-            if(!monto||monto<=0){mostrarToast('Ingresa un monto válido','error');return;}
-            try{
-                await window.supabaseClient.from('propinas').insert([{
-                    pedido_id:currentPropinaPedido.id,
-                    monto:monto,
-                    metodo:window.propinaMetodoSeleccionado||'efectivo_bs',
-                    mesero:currentUser?.nombre||'Cajero',
-                    mesa:currentPropinaPedido.mesa||null,
-                    fecha:new Date().toISOString()
-                }]);
-                mostrarToast('✅ Propina registrada','success');
-                cerrarPropinaModal();
-                await cargarPropinasHoy();actualizarEstadisticas();
-            }catch(error){console.error('Error guardando propina:',error);mostrarToast('❌ Error al guardar propina','error');}
-        };
-
-        function mostrarConfirmacion(pedidoId,accion){
-            const pedido=pedidos.find(p=>p.id===pedidoId);if(!pedido)return;
-            pedidoParaAccion=pedido;accionPendiente=accion;
-            const modal=document.getElementById('confirmModal'),title=document.getElementById('confirmModalTitle'),body=document.getElementById('confirmModalBody'),header=document.getElementById('confirmModalHeader');
-            let titulo,mensaje,notif;
-            if(accion==='entregado'){titulo='Confirmar Entrega';mensaje='¿Pedido entregado?';header.style.background='linear-gradient(135deg,var(--success),#2E7D32)';notif={titulo:'🍽️ ¡Que aproveche!',mensaje:'Tu pedido ha sido entregado.'};}
-            else if(accion==='enviado'){titulo='Confirmar Envío';mensaje='¿Pedido enviado?';header.style.background='linear-gradient(135deg,var(--info),#1565C0)';notif={titulo:'🚚 Delivery en camino',mensaje:'El repartidor ya salió.'};}
-            else if(accion==='reserva_atendida'){titulo='Cliente Confirmado';mensaje='¿Cliente llegó?';header.style.background='linear-gradient(135deg,#9c27b0,#7b1fa2)';notif={titulo:'✅ Cliente confirmado',mensaje:'Estás siendo atendido.'};}
-            else{titulo='Confirmar';mensaje='¿Confirmar acción?';header.style.background='linear-gradient(135deg,var(--success),#2E7D32)';notif={titulo:'✅ Completado',mensaje:'Acción confirmada.'};}
-            title.innerHTML=`<i class="fas fa-check-circle"></i> ${titulo}`;
-            body.innerHTML=`<p>${mensaje}</p>${crearDetallePedidoHTML(pedido)}<div style="background:#E8F5E9;padding:15px;margin-top:20px;"><strong>Notificación:</strong><br>${notif.titulo}<br>${notif.mensaje}</div><div class="keyboard-hint"><span><kbd>ENTER</kbd> confirmar</span><span><kbd>ESC</kbd> cancelar</span></div>`;
-            modal.classList.add('active');
-        }
-
-        async function ejecutarConfirmacion(){
-            if(!pedidoParaAccion)return;
-            try{
-                await window.supabaseClient.from('pedidos').update({estado:accionPendiente}).eq('id',pedidoParaAccion.id);
-                await window.supabaseClient.from('notificaciones').insert([{pedido_id:pedidoParaAccion.id,tipo:'approved',titulo:'✅ Estado actualizado',mensaje:'Tu pedido ha sido actualizado',timestamp:new Date().toISOString(),session_id:pedidoParaAccion.session_id,leida:false}]);
-                cerrarModal('confirmModal');mostrarToast('✅ Estado actualizado');
-                await cargarPedidos();actualizarEstadisticas();renderizarPedidos();verificarYControlarAlarma(true);
-            }catch(error){console.error('Error:',error);mostrarToast('❌ Error','error');}
-        }
-
-        function mostrarRechazo(pedidoId){pedidoParaAccion=pedidos.find(p=>p.id===pedidoId);if(pedidoParaAccion)document.getElementById('rechazoModal').classList.add('active');}
-        async function confirmarRechazo(){
-            if(!pedidoParaAccion)return;
-            const razon=document.querySelector('input[name="rejectionReason"]:checked')?.value;
-            if(!razon){mostrarToast('Selecciona una razón','error');return;}
-            try{
-                await window.supabaseClient.rpc('liberar_ingredientes',{p_pedido_id:pedidoParaAccion.id});
-                await window.supabaseClient.from('pedidos').update({estado:'rechazado'}).eq('id',pedidoParaAccion.id);
-                await window.supabaseClient.from('notificaciones').insert([{pedido_id:pedidoParaAccion.id,tipo:'rejected',titulo:'❌ Pedido rechazado',mensaje:`Motivo: ${traducirRazon(razon)}`,timestamp:new Date().toISOString(),session_id:pedidoParaAccion.session_id,leida:false}]);
-                cerrarModal('rechazoModal');mostrarToast('✅ Pedido rechazado');
-                await cargarPedidos();actualizarEstadisticas();renderizarPedidos();verificarYControlarAlarma(true);
-            }catch(error){console.error('Error:',error);mostrarToast('❌ Error al rechazar','error');}
-        }
-        function traducirRazon(r){const rz={referencia_invalida:'Referencia inválida',monto_insuficiente:'Monto insuficiente',datos_incorrectos:'Datos incorrectos',no_disponible:'No disponible',fuera_horario:'Fuera de horario'};return rz[r]||r;}
-
-        async function verComprobante(pedidoId){
-            const pedido=pedidos.find(p=>p.id===pedidoId);
-            if(!pedido||!pedido.comprobante_url){mostrarToast('No hay comprobante','error');return;}
-            const modal=document.getElementById('comprobanteModal');
-            document.getElementById('comprobanteModalBody').innerHTML=`<div style="text-align:center;"><img src="${pedido.comprobante_url}" style="max-width:100%;max-height:400px;border-radius:8px;margin-bottom:15px;"><p><strong>Referencia:</strong> ${pedido.referencia||'N/A'}</p><p><strong>Teléfono:</strong> ${pedido.telefono||'N/A'}</p><p><strong>Total:</strong> ${formatBs(usdToBs(pedido.total||0))}</p></div><div class="keyboard-hint"><span><kbd>ESC</kbd> cerrar</span></div>`;
-            modal.classList.add('active');
-        }
-
-        async function abrirSelectorMesa(){await cargarMesas();const modal=document.getElementById('mesaModal'),lista=document.getElementById('mesaList');lista.innerHTML=mesas.length?mesas.map(m=>`<button class="mesa-btn" onclick="abrirMesa('${m.nombre}')"><i class="fas fa-chair"></i>${m.nombre}</button>`).join(''):'<p class="text-center">No hay mesas</p>';modal.classList.add('active');}
-        function abrirMesa(n){window.open(`${window.location.origin}/SakiSushi0/Cliente/index.html?mesa=${encodeURIComponent(n)}`,'_blank');cerrarModal('mesaModal');}
-
-        function setupRealtimeSubscriptions(){
-            suscripciones.forEach(s=>s.unsubscribe());suscripciones=[];
-            suscripciones.push(window.supabaseClient.channel('cajero-pedidos-'+Date.now()).on('postgres_changes',{event:'*',schema:'public',table:'pedidos'},async()=>{await cargarPedidos();actualizarEstadisticas();renderizarPedidos();verificarYControlarAlarma(true);}).subscribe());
-            suscripciones.push(window.supabaseClient.channel('cajero-ventas-'+Date.now()).on('postgres_changes',{event:'*',schema:'public',table:'ventas'},async()=>{await cargarVentasHoy();actualizarEstadisticas();}).subscribe());
-            suscripciones.push(window.supabaseClient.channel('cajero-propinas-'+Date.now()).on('postgres_changes',{event:'*',schema:'public',table:'propinas'},async()=>{await cargarPropinasHoy();actualizarEstadisticas();}).subscribe());
-            suscripciones.push(window.supabaseClient.channel('cajero-config-'+Date.now()).on('postgres_changes',{event:'UPDATE',schema:'public',table:'config',filter:'id=eq.1'},(p)=>{configGlobal={...configGlobal,...p.new};tasaEfectiva=configGlobal.tasa_efectiva||400;renderizarPedidos();renderizarMenu();actualizarEstadisticas();}).subscribe());
-        }
-
-        function setupEventListeners(){
-            document.addEventListener('keydown',(e)=>{
-                if(e.key==='Escape')['cobroModal','propinaModal','confirmModal','rechazoModal','detalleModal','mesaModal','comprobanteModal'].forEach(id=>{const m=document.getElementById(id);if(m.classList.contains('active')){if(id==='cobroModal')cerrarCobroModal();else if(id==='propinaModal')cerrarPropinaModal();else cerrarModal(id);}});
-                if(e.key==='Enter'){
-                    if(document.getElementById('confirmModal').classList.contains('active')){e.preventDefault();ejecutarConfirmacion();}
-                    if(document.getElementById('cobroModal').classList.contains('active')&&!document.getElementById('confirmCobroBtn').disabled){e.preventDefault();confirmarCobro();}
-                    if(document.getElementById('propinaModal').classList.contains('active')&&!document.getElementById('confirmPropinaBtn').disabled){e.preventDefault();confirmarPropina();}
-                }
-            });
-        }
-
-        function formatBs(m){return new Intl.NumberFormat('es-VE',{style:'currency',currency:'VES',minimumFractionDigits:2}).format(m).replace('VES','Bs.');}
-        function usdToBs(u){return u*(tasaEfectiva||400);}
-        function crearDetallePedidoHTML(pedido){
-            let metodos='';
-            if(pedido.pagos_mixtos)metodos='<div class="payment-methods">'+pedido.pagos_mixtos.map(p=>`<span class="payment-tag"><i class="fas fa-${p.metodo==='pago_movil'?'mobile-alt':p.metodo==='punto_venta'?'credit-card':'money-bill-wave'}"></i> ${p.metodo==='efectivo_bs'?'Bs':p.metodo==='efectivo_usd'?'$':p.metodo==='pago_movil'?'📱':'💳'} ${formatBs(p.monto)}</span>`).join('')+'</div>';
-            return `<div class="detail-item"><div class="detail-row"><span class="detail-label">Cliente:</span><span class="detail-value">${pedido.cliente_nombre||'N/A'}</span></div><div class="detail-row"><span class="detail-label">Tipo:</span><span class="detail-value">${pedido.tipo}</span></div>${pedido.tipo==='mesa'?`<div class="detail-row"><span class="detail-label">Mesa:</span><span class="detail-value">${pedido.mesa}</span></div>`:''}${pedido.tipo==='delivery'?`<div class="detail-row"><span class="detail-label">Dirección:</span><span class="detail-value">${pedido.direccion}</span></div><div class="detail-row"><span class="detail-label">Teléfono:</span><span class="detail-value">${pedido.telefono}</span></div>`:''}${pedido.referencia?`<div class="detail-row"><span class="detail-label">Ref:</span><span class="detail-value">${pedido.referencia}</span></div>`:''}<div class="detail-row"><span class="detail-label">Items:</span></div>${(pedido.items||[]).map(i=>`<div class="detail-row"><span>${i.cantidad||1}x ${i.nombre}</span><span>${formatBs(usdToBs(i.precioUnitarioUSD*(i.cantidad||1)))}</span></div>`).join('')}${metodos?`<div class="detail-row"><span class="detail-label">Pagos:</span></div>${metodos}`:''}<div class="detail-row" style="font-weight:700;"><span>TOTAL</span><span>${formatBs(usdToBs(pedido.total||0))}</span></div></div>`;
-        }
+        document.addEventListener('DOMContentLoaded',async()=>{const savedUser=sessionStorage.getItem('cajero_user');if(savedUser){try{currentUser=JSON.parse(savedUser);await cargarDatosIniciales();mostrarPanel()}catch{mostrarLogin()}}else mostrarLogin();document.addEventListener('visibilitychange',function(){if(document.hidden)paginaVisible=false;else{paginaVisible=true;recargarAlVolver()}})});
+        window.hacerLogin=async function(){const username=document.getElementById('username').value,password=document.getElementById('password').value;if(!username||!password){mostrarToast('Ingresa usuario y contraseña','error');return}try{const{data,error}=await window.supabaseClient.from('usuarios').select('*').eq('username',username).eq('password',password).eq('activo',true).maybeSingle();if(error)throw error;if(!data){mostrarToast('Credenciales inválidas','error');return}currentUser=data;sessionStorage.setItem('cajero_user',JSON.stringify(data));await cargarDatosIniciales();mostrarPanel()}catch(error){console.error('Error en login:',error);mostrarToast('Error al conectar: '+error.message,'error')}};
+        async function recargarAlVolver(){mostrarToast('🔄 Reconectando...','info');await cargarPedidos();await cargarVentasHoy();await cargarPropinas();await cargarMesoneros();actualizarEstadisticas();renderizarPedidos();renderizarPropinas();setupRealtimeSubscriptions();verificarYControlarAlarma(true);mostrarToast('✅ Conexión restablecida','success')}
+        function verificarYControlarAlarma(forzar=false){const pendientes=pedidos.filter(p=>p.estado==='pendiente').length;if(pendientes>0&&!enProcesoDeCobro){if(!alarmaActiva&&alarmaAudio)alarmaAudio.play().then(()=>{alarmaActiva=true}).catch(()=>{})}else if(alarmaActiva&&alarmaAudio){alarmaAudio.pause();alarmaAudio.currentTime=0;alarmaActiva=false}}
+        async function cargarDatosIniciales(){await cargarConfiguracion();tasaEfectiva=configGlobal.tasa_efectiva||400;await cargarPedidos();await cargarVentasHoy();await cargarPropinas();await cargarMenu();await cargarInventario();await cargarMesas();await cargarMesoneros();actualizarEstadisticas();renderizarPedidos();renderizarPropinas();renderizarMenu()}
+        async function cargarPedidos(){try{const hoy=new Date();hoy.setHours(0,0,0,0);const manana=new Date(hoy);manana.setDate(manana.getDate()+1);const{data,error}=await window.supabaseClient.from('pedidos').select('*').gte('timestamp',hoy.toISOString()).lt('timestamp',manana.toISOString()).order('timestamp',{ascending:false});if(error)throw error;pedidos=data||[]}catch(error){console.error('Error cargando pedidos:',error);mostrarToast('Error cargando pedidos','error')}}
+        async function cargarPropinas(){try{const hoy=new Date();hoy.setHours(0,0,0,0);const manana=new Date(hoy);manana.setDate(manana.getDate()+1);const{data,error}=await window.supabaseClient.from('propinas').select('*, pedidos(*)').gte('fecha',hoy.toISOString()).lt('fecha',manana.toISOString()).order('fecha',{ascending:false});if(error)throw error;propinas=data||[]}catch(error){console.error('Error cargando propinas:',error)}}
+        async function cargarVentasHoy(){try{const hoy=new Date();hoy.setHours(0,0,0,0);const manana=new Date(hoy);manana.setDate(manana.getDate()+1);const{data,error}=await window.supabaseClient.from('ventas').select('*').gte('fecha',hoy.toISOString()).lt('fecha',manana.toISOString()).order('fecha',{ascending:false});if(error)throw error;ventasHoy=data||[]}catch(error){console.error('Error cargando ventas:',error)}}
+        async function cargarMenu(){try{const{data,error}=await window.supabaseClient.from('menu').select('*').eq('disponible',true);if(error)throw error;menuItems=data||[]}catch(error){console.error('Error cargando menú:',error)}}
+        async function cargarInventario(){try{const{data,error}=await window.supabaseClient.from('inventario').select('*');if(error)throw error;inventario=data||[]}catch(error){console.error('Error cargando inventario:',error)}}
+        async function cargarMesas(){try{const{data,error}=await window.supabaseClient.from('codigos_qr').select('*').order('nombre');if(error)throw error;mesas=data||[]}catch(error){console.error('Error cargando mesas:',error)}}
+        async function cargarMesoneros(){try{const{data,error}=await window.supabaseClient.from('mesoneros').select('*').eq('activo',true).order('nombre');if(error)throw error;mesoneros=data||[]}catch(error){console.error('Error cargando mesoneros:',error)}}
+        function mostrarToast(mensaje,tipo='success'){const toast=document.getElementById('toast');document.getElementById('toastText').textContent=mensaje;toast.className='toast show';if(tipo==='error'){toast.querySelector('i').style.color='var(--danger)';toast.style.borderLeftColor='var(--danger)'}else{toast.querySelector('i').style.color='var(--success)';toast.style.borderLeftColor='var(--success)'}setTimeout(()=>toast.classList.remove('show'),3000)}
+        function cerrarModal(modalId){document.getElementById(modalId).classList.remove('active');if(modalId==='confirmModal'){pedidoParaAccion=null;accionPendiente=null}}
+        function cerrarCobroModal(){document.getElementById('cobroModal').classList.remove('active');enProcesoDeCobro=false;currentPedido=null;pagosMixtos=[];setTimeout(()=>verificarYControlarAlarma(true),100)}
+        function cerrarPropinaModal(){document.getElementById('propinaModal').classList.remove('active');currentPropinaPedido=null;currentPropinaData={mesoneroId:null,mesa:null,metodo:null,montoOriginal:0,monedaOriginal:'Bs',referencia:''}}
+        function showSection(sectionName){document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));document.getElementById(`section-${sectionName}`).classList.add('active');event.target.classList.add('active');if(sectionName==='pedidos')renderizarPedidos();else if(sectionName==='menu')renderizarMenu();else if(sectionName==='propinas')renderizarPropinas()}
+        function cerrarSesion(){sessionStorage.removeItem('cajero_user');currentUser=null;detenerAlarma();document.getElementById('loginContainer').classList.remove('hidden');document.getElementById('panelContainer').classList.add('hidden')}
+        function mostrarLogin(){document.getElementById('loginContainer').classList.remove('hidden');document.getElementById('panelContainer').classList.add('hidden');detenerAlarma()}
+        function mostrarPanel(){document.getElementById('loginContainer').classList.add('hidden');document.getElementById('panelContainer').classList.remove('hidden');setupEventListeners();setupRealtimeSubscriptions();setTimeout(()=>verificarYControlarAlarma(true),100)}
+        function detenerAlarma(){if(alarmaActiva&&alarmaAudio){alarmaAudio.pause();alarmaAudio.currentTime=0;alarmaActiva=false}}
+        function actualizarEstadisticas(){const enPreparacion=pedidos.filter(p=>['en_cocina','en_camino','reserva_pendiente','reserva_atendida'].includes(p.estado)).length;const cobradosHoy=ventasHoy.length;const totalVentasBs=ventasHoy.reduce((s,v)=>s+(v.total||0),0)*tasaEfectiva;const platillosVendidos=ventasHoy.reduce((s,v)=>s+(v.items||0),0);const totalPropinas=propinas.reduce((s,p)=>s+(p.monto_bs||0),0);document.getElementById('statPreparacion').textContent=enPreparacion;document.getElementById('statCobrados').textContent=cobradosHoy;document.getElementById('statVentas').textContent=formatBs(totalVentasBs);document.getElementById('statPlatillos').textContent=platillosVendidos;document.getElementById('statPropinas').textContent=formatBs(totalPropinas)}
+        function renderizarPropinas(){const total=propinas.reduce((s,p)=>s+(p.monto_bs||0),0),cantidad=propinas.length,promedio=cantidad>0?total/cantidad:0;document.getElementById('propinasTotal').textContent=formatBs(total);document.getElementById('propinasCantidad').textContent=cantidad;document.getElementById('propinasPromedio').textContent=formatBs(promedio);document.getElementById('propinasListCount').textContent=cantidad;document.getElementById('propinasListContainer').innerHTML=cantidad?propinas.map(p=>crearTarjetaPropina(p)).join(''):'<div class="empty-state"><i class="fas fa-hand-holding-heart"></i><p>No hay propinas hoy</p></div>'}
+        function crearTarjetaPropina(propina){const fecha=new Date(propina.fecha),hora=fecha.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'}),mesonero=mesoneros.find(m=>m.id===propina.mesonero_id)?.nombre||'Mesonero';return`<div class="order-card-compact" style="border-left-color:var(--propina)"><div class="order-header-compact"><span class="order-time-compact"><i class="far fa-clock"></i> ${hora}</span><span class="propina-tag"><i class="fas fa-hand-holding-heart"></i> Propina</span></div><div class="order-info-compact"><div><i class="fas fa-user"></i> ${mesonero}</div><div><i class="fas fa-chair"></i> ${propina.mesa||'Mesa no especificada'}</div><div><i class="fas fa-${propina.metodo==='efectivo_bs'||propina.metodo==='efectivo_usd'?'money-bill-wave':propina.metodo==='pago_movil'?'mobile-alt':'credit-card'}"></i> ${propina.metodo}</div></div><div class="order-total-compact" style="color:var(--propina)">${formatBs(propina.monto_bs)}</div></div>`}
+        function renderizarPedidos(){const pMesa=pedidos.filter(p=>p.tipo==='mesa'&&p.estado==='pendiente'),pDel=pedidos.filter(p=>p.tipo==='delivery'&&p.estado==='pendiente'),pRes=pedidos.filter(p=>p.tipo==='reserva'&&p.estado==='pendiente'),cMesa=pedidos.filter(p=>p.tipo==='mesa'&&p.estado==='en_cocina'),cDel=pedidos.filter(p=>p.tipo==='delivery'&&p.estado==='en_camino'),rPen=pedidos.filter(p=>p.tipo==='reserva'&&p.estado==='reserva_pendiente'),rAte=pedidos.filter(p=>p.tipo==='reserva'&&p.estado==='reserva_atendida');document.getElementById('mesaPendientesCount').textContent=pMesa.length;document.getElementById('deliveryPendientesCount').textContent=pDel.length;document.getElementById('reservaPendientesCount').textContent=pRes.length;document.getElementById('totalPendientesBadge').textContent=pMesa.length+pDel.length+pRes.length;document.getElementById('mesaCocinaCount').textContent=cMesa.length;document.getElementById('deliveryCaminoCount').textContent=cDel.length;document.getElementById('reservaProcesoCount').textContent=rPen.length+rAte.length;document.getElementById('totalPreparacionBadge').textContent=cMesa.length+cDel.length+rPen.length+rAte.length;document.getElementById('mesaPendientesContainer').innerHTML=pMesa.length?pMesa.map(p=>crearTarjetaPedidoCompacta(p,'pendiente')).join(''):'<div class="empty-state"><i class="fas fa-store"></i><p>No hay pedidos en mesa</p></div>';document.getElementById('deliveryPendientesContainer').innerHTML=pDel.length?pDel.map(p=>crearTarjetaPedidoCompacta(p,'pendiente')).join(''):'<div class="empty-state"><i class="fas fa-motorcycle"></i><p>No hay pedidos delivery</p></div>';document.getElementById('reservaPendientesContainer').innerHTML=pRes.length?pRes.map(p=>crearTarjetaPedidoCompacta(p,'pendiente')).join(''):'<div class="empty-state"><i class="fas fa-calendar-check"></i><p>No hay reservas</p></div>';document.getElementById('mesaCocinaContainer').innerHTML=cMesa.length?cMesa.map(p=>crearTarjetaPedidoCompacta(p,'preparacion')).join(''):'<div class="empty-state"><i class="fas fa-fire"></i><p>No hay pedidos en cocina</p></div>';document.getElementById('deliveryCaminoContainer').innerHTML=cDel.length?cDel.map(p=>crearTarjetaPedidoCompacta(p,'preparacion')).join(''):'<div class="empty-state"><i class="fas fa-truck"></i><p>No hay deliveries en camino</p></div>';document.getElementById('reservaProcesoContainer').innerHTML=(rPen.length+rAte.length)?[...rPen,...rAte].map(p=>crearTarjetaPedidoCompacta(p,'preparacion')).join(''):'<div class="empty-state"><i class="fas fa-clock"></i><p>No hay reservas pendientes</p></div>'}
+        function crearTarjetaPedidoCompacta(pedido,tipoSeccion){const hora=new Date(pedido.timestamp).toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});let info=pedido.tipo==='mesa'?`<div class="order-info-compact"><i class="fas fa-chair"></i> Mesa #${pedido.mesa||'N/A'}</div>`:pedido.tipo==='delivery'?`<div class="order-info-compact"><div><i class="fas fa-map-marker-alt"></i> ${pedido.direccion||'Dir. no especificada'}</div><div><i class="fas fa-phone"></i> ${pedido.telefono||'N/A'}</div>${pedido.parroquia?`<div><i class="fas fa-building"></i> ${pedido.parroquia}</div>`:''}${pedido.costo_delivery?`<div><i class="fas fa-truck"></i> Delivery: ${formatBs(pedido.costo_delivery)}</div>`:''}${pedido.referencia?`<div><i class="fas fa-receipt"></i> Ref: ${pedido.referencia}</div>`:''}</div>`:`<div class="order-info-compact"><div><i class="fas fa-user"></i> ${pedido.cliente_nombre||'Cliente'}</div><div><i class="fas fa-calendar"></i> ${pedido.fecha_reserva?new Date(pedido.fecha_reserva).toLocaleDateString():'N/A'}</div>${pedido.referencia?`<div><i class="fas fa-receipt"></i> Ref: ${pedido.referencia}</div>`:''}</div>`;const items=(pedido.items||[]).map(i=>`<div class="order-item-row-compact"><span class="item-name-compact">${i.cantidad||1}x ${i.nombre}</span><span class="item-price-compact">${formatBs(usdToBs((i.precioUnitarioUSD||0)*(i.cantidad||1)))}</span></div>`).join('');const total=formatBs(usdToBs(pedido.total||0));const comprobante=pedido.comprobante_url&&(pedido.tipo==='delivery'||pedido.tipo==='reserva')?`<div class="comprobante-thumbnail" onclick="verComprobante('${pedido.id}')"><img src="${pedido.comprobante_url}" style="max-width:100%;cursor:pointer"></div>`:'';let botones=tipoSeccion==='pendiente'?`<button class="btn-compact btn-cobrar-compact" onclick="mostrarCobro('${pedido.id}')"><i class="fas fa-cash-register"></i> Cobrar</button><button class="btn-compact btn-rechazar-compact" onclick="mostrarRechazo('${pedido.id}')"><i class="fas fa-times"></i> Rechazar</button>`:pedido.tipo==='mesa'&&pedido.estado==='en_cocina'?`<button class="btn-compact btn-entregar-compact" onclick="mostrarConfirmacion('${pedido.id}','entregado')"><i class="fas fa-check"></i> Pedido Entregado</button>`:pedido.tipo==='delivery'&&pedido.estado==='en_camino'?`<button class="btn-compact btn-enviar-compact" onclick="mostrarConfirmacion('${pedido.id}','enviado')"><i class="fas fa-check"></i> Pedido Enviado</button>`:pedido.tipo==='reserva'&&pedido.estado==='reserva_pendiente'?`<button class="btn-compact btn-confirmar-compact" onclick="mostrarConfirmacion('${pedido.id}','reserva_atendida')"><i class="fas fa-user-check"></i> Reserva Confirmada</button>`:pedido.tipo==='reserva'&&pedido.estado==='reserva_atendida'?`<button class="btn-compact btn-entregar-compact" onclick="mostrarConfirmacion('${pedido.id}','reserva_completada')"><i class="fas fa-check"></i> Pedido Entregado</button>`:'';return`<div class="order-card-compact ${pedido.estado}"><div class="order-header-compact"><span class="order-time-compact"><i class="far fa-clock"></i> ${hora}</span><span style="font-weight:600;color:var(--${pedido.tipo==='mesa'?'info':pedido.tipo==='delivery'?'success':'accent'});font-size:.7rem;text-transform:uppercase">${pedido.tipo}</span></div>${info}<div class="order-items-compact">${items}</div><div class="order-total-compact">Total: ${total}</div>${comprobante}<div class="order-actions-compact">${botones}</div></div>`}
+        function renderizarMenu(){const grid=document.getElementById('menuGrid');if(!menuItems.length){grid.innerHTML='<div class="empty-state"><i class="fas fa-utensils"></i><p>No hay platillos disponibles</p></div>';return}grid.innerHTML=menuItems.map(i=>`<div class="menu-card"><div class="menu-card-image" style="background-image:url('${i.imagen||'https://via.placeholder.com/300x150?text=Saki+Sushi'}')"></div><div class="menu-card-content"><div class="menu-card-header"><span class="menu-card-title">${i.nombre}</span><span class="menu-card-price">${formatBs(usdToBs(i.precio||0))}</span></div><p style="font-size:.85rem;color:var(--gray-400);margin-bottom:.5rem">${i.descripcion||''}</p><div style="font-size:.8rem;color:var(--info)"><i class="fas fa-box"></i> Stock: ${i.stock||0}</div></div></div>`).join('')}
+        async function abrirModalDetalle(tipo){await cargarVentasHoy();await cargarPropinas();const modal=document.getElementById('detalleModal'),title=document.getElementById('detalleModalTitle'),body=document.getElementById('detalleModalBody');let contenido='';switch(tipo){case'preparacion':title.innerHTML='<i class="fas fa-fire"></i> Pedidos en Preparación';const enPreparacion=pedidos.filter(p=>['en_cocina','en_camino','reserva_pendiente','reserva_atendida'].includes(p.estado));contenido=enPreparacion.length?enPreparacion.map(p=>crearDetallePedidoCompacto(p)).join(''):'<div class="empty-state"><i class="fas fa-inbox"></i><p>No hay pedidos en preparación</p></div>';break;case'cobrados':title.innerHTML='<i class="fas fa-check-circle"></i> Cobrados Hoy';if(!ventasHoy.length)contenido='<div class="empty-state"><i class="fas fa-inbox"></i><p>No hay cobros registrados hoy</p></div>';else contenido=ventasHoy.map(v=>{const p=pedidos.find(p=>p.id===v.pedido_id);return crearDetalleVentaCompacto(v,p)}).join('');break;case'ventas':title.innerHTML='<i class="fas fa-dollar-sign"></i> Ventas Totales';const totalUSD=ventasHoy.reduce((s,v)=>s+(v.total||0),0),totalBs=totalUSD*tasaEfectiva;let efBs=0,efUSD=0,pm=0,pv=0;ventasHoy.forEach(v=>{const ped=pedidos.find(p=>p.id===v.pedido_id);if(ped?.pagos_mixtos)ped.pagos_mixtos.forEach(p=>{const mb=p.metodo==='efectivo_usd'?p.monto*tasaEfectiva:p.monto;if(p.metodo==='efectivo_bs')efBs+=mb;else if(p.metodo==='efectivo_usd')efUSD+=mb;else if(p.metodo==='pago_movil')pm+=mb;else if(p.metodo==='punto_venta')pv+=mb});else{if(v.metodo_pago==='efectivo_bs')efBs+=v.total*tasaEfectiva;else if(v.metodo_pago==='efectivo_usd')efUSD+=v.total*tasaEfectiva;else if(v.metodo_pago==='pago_movil')pm+=v.total*tasaEfectiva;else if(v.metodo_pago==='punto_venta')pv+=v.total*tasaEfectiva}});contenido=`<p><strong>Total del día:</strong> ${formatBs(totalBs)}</p><p><strong>Cantidad de ventas:</strong> ${ventasHoy.length}</p><h4>Desglose por método:</h4><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:20px"><div class="payment-tag" style="justify-content:space-between;padding:6px"><span>Efectivo Bs</span><span>${formatBs(efBs)}</span></div><div class="payment-tag" style="justify-content:space-between;padding:6px"><span>Efectivo USD</span><span>${formatBs(efUSD)}</span></div><div class="payment-tag" style="justify-content:space-between;padding:6px"><span>Pago Móvil</span><span>${formatBs(pm)}</span></div><div class="payment-tag" style="justify-content:space-between;padding:6px"><span>Punto de Venta</span><span>${formatBs(pv)}</span></div></div><h4>Ventas del día:</h4>${ventasHoy.map(v=>{const p=pedidos.find(p=>p.id===v.pedido_id);return crearDetalleVentaCompacto(v,p)}).join('')}`;break;case'platillos':title.innerHTML='<i class="fas fa-utensils"></i> Platillos Vendidos';const hoy=new Date().toDateString(),pedHoy=pedidos.filter(p=>['cobrado','entregado','enviado','reserva_completada'].includes(p.estado)&&new Date(p.timestamp).toDateString()===hoy),conteo={};let total=0;pedHoy.forEach(p=>p.items?.forEach(i=>{const c=i.cantidad||1;conteo[i.nombre]=(conteo[i.nombre]||0)+c;total+=c}));const ranking=Object.entries(conteo).sort((a,b)=>b[1]-a[1]),max=ranking[0]?.[1]||0;if(!ranking.length)contenido='<div class="empty-state"><i class="fas fa-utensils"></i><p>No hay platillos vendidos hoy</p></div>';else contenido=`<p><strong>Total unidades:</strong> ${total}</p><div style="max-height:400px;overflow-y:auto">${ranking.map(([n,c],i)=>`<div class="ranking-bar"><div class="ranking-position">${i+1}</div><div class="ranking-info"><div class="ranking-name">${n}</div><div class="ranking-cantidad">${c} vendido(s)</div></div><div class="ranking-bar-container"><div class="ranking-bar-fill" style="width:${(c/max)*100}%"></div></div></div>`).join('')}</div>`;break;case'propinas':case'propinasDetalle':title.innerHTML='<i class="fas fa-hand-holding-heart"></i> Propinas del Día';const totalProp=propinas.reduce((s,p)=>s+(p.monto_bs||0),0),cantidadProp=propinas.length,promedioProp=cantidadProp>0?totalProp/cantidadProp:0;contenido=`<p><strong>Total propinas:</strong> ${formatBs(totalProp)}</p><p><strong>Cantidad:</strong> ${cantidadProp}</p><p><strong>Promedio:</strong> ${formatBs(promedioProp)}</p><h4>Detalle por propina:</h4>${propinas.length?propinas.map(p=>`<div class="detail-item-compact"><div class="detail-header-compact"><span>${new Date(p.fecha).toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'})}</span><span class="propina-tag">${p.metodo}</span></div><div><i class="fas fa-user"></i> ${p.mesonero_nombre||'Mesonero'}</div><div><i class="fas fa-chair"></i> ${p.mesa||'Mesa'}</div><div><i class="fas fa-${p.pedidos?.tipo==='mesa'?'store':p.pedidos?.tipo==='delivery'?'motorcycle':'calendar-check'}"></i> ${p.pedidos?.tipo||'Mesa'} - ${p.pedidos?.mesa||p.pedidos?.cliente_nombre||'Cliente'}</div><div class="detail-total-compact" style="color:var(--propina)">${formatBs(p.monto_bs)}</div></div>`).join(''):'<div class="empty-state"><i class="fas fa-hand-holding-heart"></i><p>No hay propinas hoy</p></div>'}`;break;case'propinasCantidad':title.innerHTML='<i class="fas fa-hashtag"></i> Cantidad de Propinas';contenido=`<p style="font-size:2em;text-align:center;color:var(--propina)">${propinas.length}</p><p style="text-align:center">propinas recibidas hoy</p>`;break;case'propinasPromedio':title.innerHTML='<i class="fas fa-chart-line"></i> Promedio de Propinas';const prom=propinas.length?propinas.reduce((s,p)=>s+(p.monto_bs||0),0)/propinas.length:0;contenido=`<p style="font-size:2em;text-align:center;color:var(--propina)">${formatBs(prom)}</p><p style="text-align:center">promedio por propina</p>`;break}body.innerHTML=contenido;modal.classList.add('active')}
+        function crearDetalleVentaCompacto(venta,pedido){if(!pedido)return'';const hora=new Date(pedido.timestamp).toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'}),items=(pedido.items||[]).map(i=>`<div class="detail-item-row-compact"><span>${i.cantidad||1}x ${i.nombre}</span><span>${formatBs(usdToBs((i.precioUnitarioUSD||0)*(i.cantidad||1)))}</span></div>`).join('');let metodos='';if(pedido.pagos_mixtos?.length)metodos='<div style="margin-top:3px">'+pedido.pagos_mixtos.map(p=>{const nom=p.metodo==='efectivo_bs'?'Bs':p.metodo==='efectivo_usd'?'$':p.metodo==='pago_movil'?'📱':'💳';return`<span class="detail-metodo-tag">${nom} ${formatBs(p.monto)}</span>`}).join('')+'</div>';return`<div class="detail-item-compact"><div class="detail-header-compact"><span>${hora}</span><span class="detail-metodo-tag">${venta.tipo}</span></div><div class="detail-items-compact">${items}</div><div class="detail-total-compact">Total: ${formatBs(venta.total*tasaEfectiva)}</div>${metodos}</div>`}
+        function crearDetallePedidoCompacto(pedido){const hora=new Date(pedido.timestamp).toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'}),items=(pedido.items||[]).map(i=>`<div class="detail-item-row-compact"><span>${i.cantidad||1}x ${i.nombre}</span><span>${formatBs(usdToBs((i.precioUnitarioUSD||0)*(i.cantidad||1)))}</span></div>`).join('');return`<div class="detail-item-compact"><div class="detail-header-compact"><span>${hora}</span><span class="detail-metodo-tag">${pedido.tipo}</span></div><div class="detail-items-compact">${items}</div><div class="detail-total-compact">Total: ${formatBs(usdToBs(pedido.total||0))}</div></div>`}
+        function mostrarCobro(pedidoId){currentPedido=pedidos.find(p=>p.id===pedidoId);if(!currentPedido)return;enProcesoDeCobro=true;if(alarmaActiva){alarmaAudio.pause();alarmaAudio.currentTime=0;alarmaActiva=false}pagosMixtos=[];const totalAPagar=usdToBs(currentPedido.total||0),body=document.getElementById('cobroModalBody'),items=(currentPedido.items||[]).map(i=>`<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.1)"><span>${i.cantidad||1}x ${i.nombre}</span><span style="font-weight:600">${formatBs(usdToBs((i.precioUnitarioUSD||0)*(i.cantidad||1)))}</span></div>`).join('');body.innerHTML=`<div style="background:rgba(0,0,0,.2);padding:15px;border-radius:8px;margin-bottom:20px"><h4>Resumen del Pedido</h4>${items}${currentPedido.costo_delivery?`<div style="display:flex;justify-content:space-between;margin-top:10px;padding-top:10px;border-top:2px solid rgba(255,255,255,.1)"><span>Costo delivery:</span><span>${formatBs(currentPedido.costo_delivery)}</span></div>`:''}<div style="display:flex;justify-content:space-between;margin-top:15px;padding-top:15px;border-top:2px solid var(--primary);font-weight:700"><span>Total a pagar:</span><span id="totalPagarDisplay" style="color:var(--accent)">${formatBs(totalAPagar)}</span></div></div><div style="margin-bottom:20px;padding:12px;background:rgba(245,124,0,.1);border-left:4px solid var(--warning)"><label style="display:flex;align-items:center;gap:10px"><input type="checkbox" id="invitacionCheck" style="width:18px;height:18px"><strong style="color:#fff">Por parte de la casa (invitación)</strong></label></div><div id="pagosSection"><h4>Pagos Mixtos</h4><div id="pagosContainer" class="payment-mix-container"></div><button class="btn btn-secondary" onclick="agregarMetodoPago()" style="width:100%;margin-bottom:20px"><i class="fas fa-plus"></i> Agregar Método de Pago</button><div class="pagos-total"><div class="pagos-resumen"><span>Total recibido:</span><span id="totalRecibido">Bs. 0.00</span></div><div class="pagos-resumen"><span>Pendiente:</span><span id="pendiente" style="color:var(--danger)">Bs. 0.00</span></div><div class="pagos-resumen"><span>Sobrante:</span><span id="sobrante" style="color:var(--success)">Bs. 0.00</span></div></div></div><div class="keyboard-hint"><span><kbd>ENTER</kbd> confirmar</span><span><kbd>ESC</kbd> cancelar</span></div>`;document.getElementById('invitacionCheck').addEventListener('change',function(e){document.getElementById('pagosSection').style.opacity=e.target.checked?'0.5':'1';document.getElementById('pagosSection').style.pointerEvents=e.target.checked?'none':'auto';document.getElementById('confirmCobroBtn').disabled=!e.target.checked&&pagosMixtos.length===0});document.getElementById('cobroModal').classList.add('active');recalcularTotales()}
+        function agregarMetodoPago(){pagosMixtos.push({id:Date.now()+Math.random(),metodo:'efectivo_bs',monto:0,referencia:''});renderizarPagosMixtos();recalcularTotales()}
+        function renderizarPagosMixtos(){const c=document.getElementById('pagosContainer');if(!c)return;c.innerHTML=pagosMixtos.map((p,i)=>`<div class="pago-item" data-id="${p.id}">${pagosMixtos.length>1?`<button class="remove-pago" onclick="eliminarMetodoPago('${p.id}')"><i class="fas fa-times"></i></button>`:''}<select onchange="actualizarPago('${p.id}','metodo',this.value)"><option value="efectivo_bs" ${p.metodo==='efectivo_bs'?'selected':''}>Efectivo Bs</option><option value="efectivo_usd" ${p.metodo==='efectivo_usd'?'selected':''}>Efectivo Dólar</option><option value="pago_movil" ${p.metodo==='pago_movil'?'selected':''}>Pago Móvil</option><option value="punto_venta" ${p.metodo==='punto_venta'?'selected':''}>Punto de Venta</option></select><input type="number" step="0.01" placeholder="Monto ${p.metodo==='efectivo_usd'?'en USD':'en Bs'}" value="${p.monto||0}" oninput="actualizarPago('${p.id}','monto',this.value)">${p.metodo==='pago_movil'?`<input type="text" maxlength="6" placeholder="Referencia (6 dígitos)" value="${p.referencia||''}" oninput="actualizarPago('${p.id}','referencia',this.value)">`:''}</div>`).join('')}
+        function actualizarPago(id,campo,valor){const p=pagosMixtos.find(p=>p.id==id);if(!p)return;if(campo==='monto')p.monto=parseFloat(valor)||0;else if(campo==='metodo'){p.metodo=valor;if(valor!=='pago_movil')p.referencia=''}else if(campo==='referencia')p.referencia=valor;renderizarPagosMixtos();recalcularTotales()}
+        function eliminarMetodoPago(id){pagosMixtos=pagosMixtos.filter(p=>p.id!=id);renderizarPagosMixtos();recalcularTotales()}
+        function recalcularTotales(){const total=usdToBs(currentPedido?.total||0),recibido=pagosMixtos.reduce((s,p)=>s+(p.metodo==='efectivo_usd'?usdToBs(p.monto||0):(p.monto||0)),0);document.getElementById('totalRecibido').textContent=formatBs(recibido);document.getElementById('pendiente').textContent=formatBs(Math.max(0,total-recibido));document.getElementById('sobrante').textContent=formatBs(Math.max(0,recibido-total));const inv=document.getElementById('invitacionCheck');document.getElementById('confirmCobroBtn').disabled=!inv.checked&&(pagosMixtos.length===0||(total-recibido)>0)}
+        async function confirmarCobro(){if(!currentPedido)return;const inv=document.getElementById('invitacionCheck').checked;try{let nuevoEstado,metodoPago,pagos;if(inv){nuevoEstado=currentPedido.tipo==='delivery'?'en_camino':(currentPedido.tipo==='reserva'?'reserva_pendiente':'en_cocina');metodoPago='invitacion';pagos=[{metodo:'invitacion',monto:0,montoBs:0}]}else{nuevoEstado=currentPedido.tipo==='delivery'?'en_camino':(currentPedido.tipo==='reserva'?'reserva_pendiente':'en_cocina');pagos=pagosMixtos.map(p=>({metodo:p.metodo,monto:p.monto,montoBs:p.metodo==='efectivo_usd'?usdToBs(p.monto):p.monto,referencia:p.referencia||null}));metodoPago=pagosMixtos.length===1?pagosMixtos[0].metodo:'mixto'}await window.supabaseClient.from('pedidos').update({estado:nuevoEstado,metodo_pago:metodoPago,pagos_mixtos:pagos,cajero:currentUser?.nombre||'Cajero',fecha_cobro:new Date().toISOString()}).eq('id',currentPedido.id);const totalItems=currentPedido.items?.reduce((s,i)=>s+(i.cantidad||1),0)||0;await window.supabaseClient.from('ventas').insert([{pedido_id:currentPedido.id,total:currentPedido.total,items:totalItems,metodo_pago:metodoPago,tipo:currentPedido.tipo,fecha:new Date().toISOString()}]);await window.supabaseClient.from('notificaciones').insert([{pedido_id:currentPedido.id,tipo:'approved',titulo:'✅ Pago confirmado',mensaje:'Tu pedido ha sido pagado y está en preparación',timestamp:new Date().toISOString(),session_id:currentPedido.session_id,leida:false}]);document.getElementById('cobroModal').classList.remove('active');mostrarToast('✅ Cobro procesado');enProcesoDeCobro=false;currentPedido=null;pagosMixtos=[];await cargarPedidos();await cargarVentasHoy();await cargarPropinas();actualizarEstadisticas();renderizarPedidos();renderizarPropinas();setTimeout(()=>mostrarPropinaModal(currentPedido),500)}catch(error){console.error('Error:',error);mostrarToast('❌ Error al procesar','error')}}
+        function mostrarPropinaModal(pedido){if(!pedido)return;currentPropinaPedido=pedido;const body=document.getElementById('propinaModalBody');body.innerHTML=`<div class="mesonero-selector"><label>Mesonero que atendió:</label><select id="propinaMesonero" onchange="actualizarPropinaData('mesoneroId',this.value)"><option value="">Seleccionar mesonero...</option>${mesoneros.map(m=>`<option value="${m.id}">${m.nombre}</option>`).join('')}</select></div><div class="mesa-selector"><label>Mesa atendida:</label><select id="propinaMesa" onchange="actualizarPropinaData('mesa',this.value)"><option value="">Seleccionar mesa...</option><option value="Mesa 1">Mesa 1</option><option value="Mesa 2">Mesa 2</option><option value="Mesa 3">Mesa 3</option><option value="Mesa 4">Mesa 4</option><option value="Mesa 5">Mesa 5</option><option value="Delivery">Delivery</option><option value="Reserva">Reserva</option></select></div><div class="metodo-propina"><label class="${currentPropinaData.metodo==='efectivo_bs'?'selected':''}"><input type="radio" name="metodoPropina" value="efectivo_bs" onchange="actualizarPropinaData('metodo','efectivo_bs');actualizarMoneda('Bs')"> <i class="fas fa-money-bill-wave"></i> Efectivo Bs</label><label class="${currentPropinaData.metodo==='efectivo_usd'?'selected':''}"><input type="radio" name="metodoPropina" value="efectivo_usd" onchange="actualizarPropinaData('metodo','efectivo_usd');actualizarMoneda('USD')"> <i class="fas fa-dollar-sign"></i> Efectivo USD</label><label class="${currentPropinaData.metodo==='pago_movil'?'selected':''}"><input type="radio" name="metodoPropina" value="pago_movil" onchange="actualizarPropinaData('metodo','pago_movil');actualizarMoneda('Bs')"> <i class="fas fa-mobile-alt"></i> Pago Móvil</label><label class="${currentPropinaData.metodo==='punto_venta'?'selected':''}"><input type="radio" name="metodoPropina" value="punto_venta" onchange="actualizarPropinaData('metodo','punto_venta');actualizarMoneda('Bs')"> <i class="fas fa-credit-card"></i> Punto de Venta</label></div><div class="monto-input" id="montoInputContainer"><input type="number" step="0.01" id="propinaMontoOriginal" placeholder="Monto en ${currentPropinaData.monedaOriginal||'Bs'}" oninput="actualizarPropinaData('montoOriginal',this.value)"></div><div id="referenciaInputContainer" style="display:${currentPropinaData.metodo==='pago_movil'?'block':'none'}" class="referencia-input"><input type="text" maxlength="6" placeholder="Referencia (6 dígitos)" oninput="actualizarPropinaData('referencia',this.value)"></div><div style="margin-top:20px;padding:15px;background:rgba(0,0,0,.2);border-radius:8px"><div style="display:flex;justify-content:space-between"><span>Monto en Bs (final):</span><span id="propinaMontoBsDisplay" style="color:var(--accent);font-weight:700">Bs. 0.00</span></div></div><div class="keyboard-hint"><span><kbd>ENTER</kbd> guardar</span><span><kbd>ESC</kbd> cancelar</span></div>`;document.querySelectorAll('input[name="metodoPropina"]').forEach(r=>{r.addEventListener('change',function(){document.querySelectorAll('.metodo-propina label').forEach(l=>l.classList.remove('selected'));this.closest('label').classList.add('selected')})});document.getElementById('propinaModal').classList.add('active')}
+        function actualizarPropinaData(campo,valor){currentPropinaData[campo]=valor;if(campo==='metodo'){currentPropinaData.monedaOriginal=(valor==='efectivo_usd')?'USD':'Bs';currentPropinaData.referencia=''}if(campo==='montoOriginal')currentPropinaData.montoOriginal=parseFloat(valor)||0;const montoBs=currentPropinaData.monedaOriginal==='USD'?usdToBs(currentPropinaData.montoOriginal):currentPropinaData.montoOriginal;document.getElementById('propinaMontoBsDisplay').textContent=formatBs(montoBs);validarPropina()}
+        function actualizarMoneda(moneda){currentPropinaData.monedaOriginal=moneda;const input=document.getElementById('propinaMontoOriginal');if(input)input.placeholder=`Monto en ${moneda}`;const refContainer=document.getElementById('referenciaInputContainer');if(refContainer)refContainer.style.display=currentPropinaData.metodo==='pago_movil'?'block':'none'}
+        function validarPropina(){const valido=currentPropinaData.mesoneroId&&currentPropinaData.mesa&&currentPropinaData.metodo&&currentPropinaData.montoOriginal>0&&(currentPropinaData.metodo!=='pago_movil'||(currentPropinaData.referencia&&currentPropinaData.referencia.length===6));document.getElementById('confirmPropinaBtn').disabled=!valido}
+        async function confirmarPropina(){if(!currentPropinaPedido||!currentUser)return;if(!currentPropinaData.mesoneroId||!currentPropinaData.mesa||!currentPropinaData.metodo||!currentPropinaData.montoOriginal)return;const montoBs=currentPropinaData.monedaOriginal==='USD'?usdToBs(currentPropinaData.montoOriginal):currentPropinaData.montoOriginal;try{await window.supabaseClient.from('propinas').insert([{pedido_id:currentPropinaPedido.id,mesonero_id:currentPropinaData.mesoneroId,mesa:currentPropinaData.mesa,metodo:currentPropinaData.metodo,monto_original:currentPropinaData.montoOriginal,moneda_original:currentPropinaData.monedaOriginal,tasa_aplicada:currentPropinaData.monedaOriginal==='USD'?tasaEfectiva:null,monto_bs:montoBs,referencia:currentPropinaData.referencia||null,fecha:new Date().toISOString(),entregado:false}]);cerrarPropinaModal();mostrarToast('✅ Propina registrada','success');await cargarPropinas();actualizarEstadisticas();renderizarPropinas()}catch(error){console.error('Error:',error);mostrarToast('❌ Error al registrar propina','error')}}
+        function mostrarConfirmacion(pedidoId,accion){const pedido=pedidos.find(p=>p.id===pedidoId);if(!pedido)return;pedidoParaAccion=pedido;accionPendiente=accion;const modal=document.getElementById('confirmModal'),title=document.getElementById('confirmModalTitle'),body=document.getElementById('confirmModalBody'),header=document.getElementById('confirmModalHeader');let titulo,mensaje,notif;if(accion==='entregado'){titulo='Confirmar Entrega';mensaje='¿Pedido entregado?';header.style.background='linear-gradient(135deg,var(--success),#2E7D32)';notif={titulo:'🍽️ ¡Que aproveche!',mensaje:'Tu pedido ha sido entregado.'}}else if(accion==='enviado'){titulo='Confirmar Envío';mensaje='¿Pedido enviado?';header.style.background='linear-gradient(135deg,var(--info),#1565C0)';notif={titulo:'🚚 Delivery en camino',mensaje:'El repartidor ya salió.'}}else if(accion==='reserva_atendida'){titulo='Cliente Confirmado';mensaje='¿Cliente llegó?';header.style.background='linear-gradient(135deg,#9c27b0,#7b1fa2)';notif={titulo:'✅ Cliente confirmado',mensaje:'Estás siendo atendido.'}}else{titulo='Confirmar';mensaje='¿Confirmar acción?';header.style.background='linear-gradient(135deg,var(--success),#2E7D32)';notif={titulo:'✅ Completado',mensaje:'Acción confirmada.'}}title.innerHTML=`<i class="fas fa-check-circle"></i> ${titulo}`;body.innerHTML=`<p>${mensaje}</p>${crearDetallePedidoHTML(pedido)}<div style="background:rgba(56,142,60,.1);padding:15px;margin-top:20px"><strong>Notificación:</strong><br>${notif.titulo}<br>${notif.mensaje}</div><div class="keyboard-hint"><span><kbd>ENTER</kbd> confirmar</span><span><kbd>ESC</kbd> cancelar</span></div>`;modal.classList.add('active')}
+        async function ejecutarConfirmacion(){if(!pedidoParaAccion)return;try{await window.supabaseClient.from('pedidos').update({estado:accionPendiente}).eq('id',pedidoParaAccion.id);await window.supabaseClient.from('notificaciones').insert([{pedido_id:pedidoParaAccion.id,tipo:'approved',titulo:'✅ Estado actualizado',mensaje:'Tu pedido ha sido actualizado',timestamp:new Date().toISOString(),session_id:pedidoParaAccion.session_id,leida:false}]);cerrarModal('confirmModal');mostrarToast('✅ Estado actualizado');await cargarPedidos();actualizarEstadisticas();renderizarPedidos();verificarYControlarAlarma(true)}catch(error){console.error('Error:',error);mostrarToast('❌ Error','error')}}
+        function mostrarRechazo(pedidoId){pedidoParaAccion=pedidos.find(p=>p.id===pedidoId);if(pedidoParaAccion)document.getElementById('rechazoModal').classList.add('active')}
+        async function confirmarRechazo(){if(!pedidoParaAccion)return;const razon=document.querySelector('input[name="rejectionReason"]:checked')?.value;if(!razon){mostrarToast('Selecciona una razón','error');return}try{await window.supabaseClient.rpc('liberar_ingredientes',{p_pedido_id:pedidoParaAccion.id});await window.supabaseClient.from('pedidos').update({estado:'rechazado'}).eq('id',pedidoParaAccion.id);await window.supabaseClient.from('notificaciones').insert([{pedido_id:pedidoParaAccion.id,tipo:'rejected',titulo:'❌ Pedido rechazado',mensaje:`Motivo: ${traducirRazon(razon)}`,timestamp:new Date().toISOString(),session_id:pedidoParaAccion.session_id,leida:false}]);cerrarModal('rechazoModal');mostrarToast('✅ Pedido rechazado');await cargarPedidos();actualizarEstadisticas();renderizarPedidos();verificarYControlarAlarma(true)}catch(error){console.error('Error:',error);mostrarToast('❌ Error al rechazar','error')}}
+        function traducirRazon(r){const rz={referencia_invalida:'Referencia inválida',monto_insuficiente:'Monto insuficiente',datos_incorrectos:'Datos incorrectos',no_disponible:'No disponible',fuera_horario:'Fuera de horario'};return rz[r]||r}
+        async function verComprobante(pedidoId){const pedido=pedidos.find(p=>p.id===pedidoId);if(!pedido||!pedido.comprobante_url){mostrarToast('No hay comprobante','error');return}const modal=document.getElementById('comprobanteModal');document.getElementById('comprobanteModalBody').innerHTML=`<div style="text-align:center"><img src="${pedido.comprobante_url}" style="max-width:100%;max-height:400px;border-radius:8px;margin-bottom:15px"><p><strong>Referencia:</strong> ${pedido.referencia||'N/A'}</p><p><strong>Teléfono:</strong> ${pedido.telefono||'N/A'}</p><p><strong>Total:</strong> ${formatBs(usdToBs(pedido.total||0))}</p></div><div class="keyboard-hint"><span><kbd>ESC</kbd> cerrar</span></div>`;modal.classList.add('active')}
+        async function abrirSelectorMesa(){await cargarMesas();const modal=document.getElementById('mesaModal'),lista=document.getElementById('mesaList');lista.innerHTML=mesas.length?mesas.map(m=>`<button class="mesa-btn" onclick="abrirMesa('${m.nombre}')"><i class="fas fa-chair"></i>${m.nombre}</button>`).join(''):'<p class="text-center">No hay mesas</p>';modal.classList.add('active')}
+        function abrirMesa(n){window.open(`${window.location.origin}/Cliente/index.html?mesa=${encodeURIComponent(n)}`,'_blank');cerrarModal('mesaModal')}
+        function setupRealtimeSubscriptions(){suscripciones.forEach(s=>s.unsubscribe());suscripciones=[];suscripciones.push(window.supabaseClient.channel('cajero-pedidos-'+Date.now()).on('postgres_changes',{event:'*',schema:'public',table:'pedidos'},async()=>{await cargarPedidos();actualizarEstadisticas();renderizarPedidos();verificarYControlarAlarma(true)}).subscribe());suscripciones.push(window.supabaseClient.channel('cajero-ventas-'+Date.now()).on('postgres_changes',{event:'*',schema:'public',table:'ventas'},async()=>{await cargarVentasHoy();actualizarEstadisticas()}).subscribe());suscripciones.push(window.supabaseClient.channel('cajero-propinas-'+Date.now()).on('postgres_changes',{event:'*',schema:'public',table:'propinas'},async()=>{await cargarPropinas();actualizarEstadisticas();renderizarPropinas()}).subscribe());suscripciones.push(window.supabaseClient.channel('cajero-config-'+Date.now()).on('postgres_changes',{event:'UPDATE',schema:'public',table:'config',filter:'id=eq.1'},(p)=>{configGlobal={...configGlobal,...p.new};tasaEfectiva=configGlobal.tasa_efectiva||400;renderizarPedidos();renderizarMenu();actualizarEstadisticas()}).subscribe());suscripciones.push(window.supabaseClient.channel('cajero-mesoneros-'+Date.now()).on('postgres_changes',{event:'*',schema:'public',table:'mesoneros'},async()=>{await cargarMesoneros()}).subscribe())}
+        function setupEventListeners(){document.addEventListener('keydown',(e)=>{if(e.key==='Escape')['cobroModal','propinaModal','confirmModal','rechazoModal','detalleModal','mesaModal','comprobanteModal'].forEach(id=>{const m=document.getElementById(id);if(m.classList.contains('active'))id==='cobroModal'?cerrarCobroModal():id==='propinaModal'?cerrarPropinaModal():cerrarModal(id)});if(e.key==='Enter'){if(document.getElementById('confirmModal').classList.contains('active')){e.preventDefault();ejecutarConfirmacion()}if(document.getElementById('cobroModal').classList.contains('active')&&!document.getElementById('confirmCobroBtn').disabled){e.preventDefault();confirmarCobro()}if(document.getElementById('propinaModal').classList.contains('active')&&!document.getElementById('confirmPropinaBtn').disabled){e.preventDefault();confirmarPropina()}}});}
+        function formatBs(m){return new Intl.NumberFormat('es-VE',{style:'currency',currency:'VES',minimumFractionDigits:2}).format(m).replace('VES','Bs.')}
+        function usdToBs(u){return u*(tasaEfectiva||400)}
+        function crearDetallePedidoHTML(pedido){let metodos='';if(pedido.pagos_mixtos)metodos='<div class="payment-methods">'+pedido.pagos_mixtos.map(p=>`<span class="payment-tag"><i class="fas fa-${p.metodo==='pago_movil'?'mobile-alt':p.metodo==='punto_venta'?'credit-card':'money-bill-wave'}"></i> ${p.metodo==='efectivo_bs'?'Bs':p.metodo==='efectivo_usd'?'$':p.metodo==='pago_movil'?'📱':'💳'} ${formatBs(p.monto)}</span>`).join('')+'</div>';return`<div class="detail-item"><div class="detail-row"><span class="detail-label">Cliente:</span><span class="detail-value">${pedido.cliente_nombre||'N/A'}</span></div><div class="detail-row"><span class="detail-label">Tipo:</span><span class="detail-value">${pedido.tipo}</span></div>${pedido.tipo==='mesa'?`<div class="detail-row"><span class="detail-label">Mesa:</span><span class="detail-value">${pedido.mesa}</span></div>`:''}${pedido.tipo==='delivery'?`<div class="detail-row"><span class="detail-label">Dirección:</span><span class="detail-value">${pedido.direccion}</span></div><div class="detail-row"><span class="detail-label">Teléfono:</span><span class="detail-value">${pedido.telefono}</span></div>`:''}${pedido.referencia?`<div class="detail-row"><span class="detail-label">Ref:</span><span class="detail-value">${pedido.referencia}</span></div>`:''}<div class="detail-row"><span class="detail-label">Items:</span></div>${(pedido.items||[]).map(i=>`<div class="detail-row"><span>${i.cantidad||1}x ${i.nombre}</span><span>${formatBs(usdToBs(i.precioUnitarioUSD*(i.cantidad||1)))}</span></div>`).join('')}${metodos?`<div class="detail-row"><span class="detail-label">Pagos:</span></div>${metodos}`:''}<div class="detail-row" style="font-weight:700"><span>TOTAL</span><span>${formatBs(usdToBs(pedido.total||0))}</span></div></div>`}
     </script>
 </body>
 </html>
