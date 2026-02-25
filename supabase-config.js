@@ -1,8 +1,6 @@
 // supabase-config.js
 window.SUPABASE_URL = 'https://iqwwoihiiyrtypyqzhgy.supabase.co';
-
-// IMPORTANTE: Esta es la clave anónima correcta (reemplázala con la de tu proyecto)
-window.SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlxd3dvaWhpaXlydHlweXF6aGd5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTAyNzY4MDAsImV4cCI6MjAyNTg1MjgwMH0.3aZ0Ls1hK5QkH7kX8cY9tU2vW4xN6mP8qR9sT3uV5yI';
+window.SUPABASE_ANON_KEY = 'sb_publishable_m4WcF4gmkj1olAj95HMLlA_4yKqPFXm';
 
 if (!window.supabaseClient) {
     window.supabaseClient = window.supabase.createClient(
@@ -136,6 +134,9 @@ window.subirComprobante = async function(file, tipo, onProgress) {
         const ruta = `${tipo}/${nombreArchivo}`;
 
         console.log('Subiendo archivo a:', ruta);
+        console.log('Bucket:', 'comprobantes');
+        console.log('Tamaño:', file.size, 'bytes');
+        console.log('Tipo:', file.type);
 
         // Usar el cliente de Supabase directamente
         const { data, error } = await window.supabaseClient.storage
@@ -151,12 +152,16 @@ window.subirComprobante = async function(file, tipo, onProgress) {
             throw new Error(error.message || 'Error al subir el archivo');
         }
 
+        console.log('Archivo subido exitosamente:', data);
+
         // Obtener URL pública
         const { data: urlData } = window.supabaseClient.storage
             .from('comprobantes')
             .getPublicUrl(ruta);
 
-        // Simular progreso ya que Supabase no proporciona eventos de progreso nativos
+        console.log('URL pública:', urlData.publicUrl);
+
+        // Simular progreso
         if (onProgress) {
             onProgress({ loaded: file.size, total: file.size, percent: 100 });
         }
@@ -287,3 +292,4 @@ window.categoriasMenu = {
 };
 
 console.log('✅ supabase-config.js cargado correctamente');
+console.log('🔑 Usando URL:', window.SUPABASE_URL);
