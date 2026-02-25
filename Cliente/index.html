@@ -406,8 +406,8 @@
             max-width:1400px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);
             gap:2rem;margin-bottom:2rem;width:100%;
         }
-        @media (max-width:992px){.footer-content{grid-template-columns:repeat(2,1fr);gap:1.5rem}}
-        @media (max-width:768px){.footer-content{grid-template-columns:1fr;gap:1.5rem;text-align:center}}
+        @media (max-width:992px) and (min-width:769px){.footer-content{grid-template-columns:repeat(4,1fr);gap:1.5rem}}
+		@media (max-width:768px){.footer-content{grid-template-columns:1fr;gap:1.5rem;text-align:center}}
         .footer-section{display:flex;flex-direction:column;align-items:center;text-align:center}
         .footer-section h4{
             color:var(--accent);margin-bottom:1.2rem;font-size:1.2rem;
@@ -1145,6 +1145,47 @@
             });
         }
 
+		/* Flecha animada para incitar scroll */
+		.scroll-indicator {
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+			margin: 1rem 0 0.5rem 0;
+			animation: bounce 2s infinite;
+			cursor: pointer;
+			opacity: 0.8;
+			transition: opacity 0.3s;
+		}
+
+		.scroll-indicator:hover {
+			opacity: 1;
+		}
+
+		.scroll-indicator i {
+			font-size: 1.8rem;
+			color: var(--accent);
+			filter: drop-shadow(0 0 5px rgba(255, 152, 0, 0.5));
+		}
+
+		.scroll-indicator span {
+			font-size: 0.8rem;
+			color: var(--gray-300);
+			margin-top: 0.2rem;
+			font-weight: 500;
+		}
+
+		@keyframes bounce {
+			0%, 20%, 50%, 80%, 100% {transform: translateY(0);}
+			40% {transform: translateY(-10px);}
+			60% {transform: translateY(-5px);}
+		}
+
+		/* Clase para ocultar el indicador cuando sea necesario */
+		.scroll-indicator.hidden {
+			display: none;
+		}
+
         // ==================== PERSONALIZACIÓN (sin cambios) ====================
         function abrirPersonalizacion(platilloId) {
             const platillo = menuItems.find(p => p.id === platilloId);
@@ -1309,33 +1350,60 @@
             return resultado;
         }
         function actualizarCarritoUI() {
-            const cartItems = document.getElementById('cartItems'), cartFooter = document.getElementById('cartFooter'), cartTotal = document.getElementById('cartTotal'), cartButtons = document.getElementById('cartButtons');
-            if (carrito.length === 0) { cartItems.innerHTML = '<div class="cart-empty"><i class="fas fa-shopping-basket"></i><p>Tu carrito está vacío</p></div>'; cartFooter.style.display = 'none'; nivel1Activo = null; nivel2Activo = null; return; }
-            cartFooter.style.display = 'block';
-            const grupos = agruparItemsJerarquicamente();
-            let totalGeneral = 0, html = '';
-            grupos.forEach(grupo => {
-                totalGeneral += grupo.subtotal;
-                const nivel1Expandido = nivel1Activo === grupo.id;
-                html += `<div class="nivel1-group"><div class="nivel1-header" onclick="toggleNivel1('${grupo.id}')"><div class="header-row"><div class="nombre"><i class="fas fa-chevron-right" id="icon1-${grupo.id}" ${nivel1Expandido ? 'class="rotated"' : ''}></i><span>🍣 ${grupo.nombre}</span></div><span class="cantidad-total">${grupo.cantidad} unid.</span></div><div class="header-details"><span><i class="fas fa-tag"></i> Total: ${formatBs(grupo.subtotal)}</span></div></div><div class="nivel2-container ${nivel1Expandido ? 'expanded' : ''}" id="nivel1-${grupo.id}">`;
-                grupo.subgrupos.forEach(subgrupo => {
-                    const subgrupoId = `${grupo.id}_${subgrupo.id}`, nivel2Expandido = nivel2Activo === subgrupoId;
-                    let descripcionPersonalizacion = 'Completo';
-                    if (subgrupo.personalizacion.length > 0) { const ingredientesNombres = subgrupo.personalizacion.map(p => { const ing = inventario.find(i => i.id === p); return ing?.nombre || p; }).join(', '); descripcionPersonalizacion = `Sin: ${ingredientesNombres}`; }
-                    html += `<div class="nivel2-group"><div class="nivel2-header" onclick="toggleNivel2('${subgrupoId}','${grupo.id}')"><div class="header-row"><div class="nombre"><i class="fas fa-chevron-right" id="icon2-${subgrupoId}" ${nivel2Expandido ? 'class="rotated"' : ''}></i><span>🔹 ${descripcionPersonalizacion}</span></div><span class="cantidad-subtotal">${subgrupo.cantidad} unid.</span></div><div class="header-details"><span><i class="fas fa-tag"></i> Subtotal: ${formatBs(subgrupo.subtotal)}</span></div></div><div class="nivel3-container ${nivel2Expandido ? 'expanded' : ''}" id="nivel2-${subgrupoId}">`;
-                    subgrupo.items.forEach((item, index) => {
-                        const ingredientesNombres = item.personalizacion.map(p => { const ing = inventario.find(i => i.id === p); return ing?.nombre || p; }).join(', ');
-                        html += `<div class="nivel3-item"><div class="item-image" style="background-image:url('${item.imagen || 'https://via.placeholder.com/40'}')"></div><div class="item-info"><span class="item-number">#${index + 1}</span><span class="item-name">${item.nombre}</span>${item.personalizacion.length > 0 ? `<div class="personalizacion"><i class="fas fa-utensil-spoon"></i> ${ingredientesNombres}</div>` : ''}</div><div class="item-precio">${formatBs(item.subtotal)}</div><button class="btn-remove-item" onclick="eliminarInstancia('${item.id}')" title="Eliminar"><i class="fas fa-trash"></i></button></div>`;
-                    });
-                    html += `</div></div>`;
-                });
-                html += `</div></div>`;
-            });
-            cartItems.innerHTML = html; cartTotal.textContent = formatBs(totalGeneral);
-            cartButtons.innerHTML = '';
-            if (mesaId) cartButtons.innerHTML = `<button class="btn-primary" onclick="abrirConfirmacionMesa()"><i class="fas fa-check"></i> Pedir en Mesa</button>`;
-            else cartButtons.innerHTML = `<button class="btn-primary" onclick="iniciarProcesoDelivery()"><i class="fas fa-motorcycle"></i> Delivery</button><button class="btn-secondary" onclick="iniciarProcesoReserva()"><i class="fas fa-calendar-alt"></i> Reserva</button>`;
-        }
+			const cartItems = document.getElementById('cartItems'), 
+				  cartFooter = document.getElementById('cartFooter'), 
+				  cartTotal = document.getElementById('cartTotal'), 
+				  cartButtons = document.getElementById('cartButtons');
+			
+			if (carrito.length === 0) { 
+				cartItems.innerHTML = '<div class="cart-empty"><i class="fas fa-shopping-basket"></i><p>Tu carrito está vacío</p></div>'; 
+				cartFooter.style.display = 'none'; 
+				nivel1Activo = null; 
+				nivel2Activo = null; 
+				return; 
+			}
+			
+			cartFooter.style.display = 'block';
+			const grupos = agruparItemsJerarquicamente();
+			let totalGeneral = 0, html = '';
+			
+			grupos.forEach(grupo => {
+				totalGeneral += grupo.subtotal;
+				const nivel1Expandido = nivel1Activo === grupo.id;
+				html += `<div class="nivel1-group"><div class="nivel1-header" onclick="toggleNivel1('${grupo.id}')"><div class="header-row"><div class="nombre"><i class="fas fa-chevron-right" id="icon1-${grupo.id}" ${nivel1Expandido ? 'class="rotated"' : ''}></i><span>🍣 ${grupo.nombre}</span></div><span class="cantidad-total">${grupo.cantidad} unid.</span></div><div class="header-details"><span><i class="fas fa-tag"></i> Total: ${formatBs(grupo.subtotal)}</span></div></div><div class="nivel2-container ${nivel1Expandido ? 'expanded' : ''}" id="nivel1-${grupo.id}">`;
+				grupo.subgrupos.forEach(subgrupo => {
+					const subgrupoId = `${grupo.id}_${subgrupo.id}`, nivel2Expandido = nivel2Activo === subgrupoId;
+					let descripcionPersonalizacion = 'Completo';
+					if (subgrupo.personalizacion.length > 0) { const ingredientesNombres = subgrupo.personalizacion.map(p => { const ing = inventario.find(i => i.id === p); return ing?.nombre || p; }).join(', '); descripcionPersonalizacion = `Sin: ${ingredientesNombres}`; }
+					html += `<div class="nivel2-group"><div class="nivel2-header" onclick="toggleNivel2('${subgrupoId}','${grupo.id}')"><div class="header-row"><div class="nombre"><i class="fas fa-chevron-right" id="icon2-${subgrupoId}" ${nivel2Expandido ? 'class="rotated"' : ''}></i><span>🔹 ${descripcionPersonalizacion}</span></div><span class="cantidad-subtotal">${subgrupo.cantidad} unid.</span></div><div class="header-details"><span><i class="fas fa-tag"></i> Subtotal: ${formatBs(subgrupo.subtotal)}</span></div></div><div class="nivel3-container ${nivel2Expandido ? 'expanded' : ''}" id="nivel2-${subgrupoId}">`;
+					subgrupo.items.forEach((item, index) => {
+						const ingredientesNombres = item.personalizacion.map(p => { const ing = inventario.find(i => i.id === p); return ing?.nombre || p; }).join(', ');
+						html += `<div class="nivel3-item"><div class="item-image" style="background-image:url('${item.imagen || 'https://via.placeholder.com/40'}')"></div><div class="item-info"><span class="item-number">#${index + 1}</span><span class="item-name">${item.nombre}</span>${item.personalizacion.length > 0 ? `<div class="personalizacion"><i class="fas fa-utensil-spoon"></i> ${ingredientesNombres}</div>` : ''}</div><div class="item-precio">${formatBs(item.subtotal)}</div><button class="btn-remove-item" onclick="eliminarInstancia('${item.id}')" title="Eliminar"><i class="fas fa-trash"></i></button></div>`;
+					});
+					html += `</div></div>`;
+				});
+				html += `</div></div>`;
+			});
+			
+			// Verificar si el contenido del carrito necesita scroll
+			const cartItemsElement = document.getElementById('cartItems');
+			const necesitaScroll = cartItemsElement.scrollHeight > cartItemsElement.clientHeight;
+			
+			// Añadir indicador de scroll si hay items y NO necesita scroll
+			if (carrito.length > 0 && !necesitaScroll) {
+				html += `<div class="scroll-indicator" onclick="document.getElementById('cartFooter').scrollIntoView({behavior: 'smooth'})">
+							<i class="fas fa-chevron-down"></i>
+							<span>Desliza para pedir</span>
+						</div>`;
+			}
+			
+			cartItems.innerHTML = html; 
+			cartTotal.textContent = formatBs(totalGeneral);
+			
+			cartButtons.innerHTML = '';
+			if (mesaId) cartButtons.innerHTML = `<button class="btn-primary" onclick="abrirConfirmacionMesa()"><i class="fas fa-check"></i> Pedir en Mesa</button>`;
+			else cartButtons.innerHTML = `<button class="btn-primary" onclick="iniciarProcesoDelivery()"><i class="fas fa-motorcycle"></i> Delivery</button><button class="btn-secondary" onclick="iniciarProcesoReserva()"><i class="fas fa-calendar-alt"></i> Reserva</button>`;
+		}
         function guardarCarrito() {
 			localStorage.setItem('saki_carrito', JSON.stringify({ 
 				items: carrito, 
@@ -1832,6 +1900,9 @@
                 if (!panel.contains(e.target) && !bell.contains(e.target) && panel.classList.contains('active')) panel.classList.remove('active');
             });
             window.addEventListener('resize', function() { if (window.innerWidth > 992) { document.getElementById('categorySidebar').classList.remove('open'); document.getElementById('cartSidebar').classList.remove('open'); document.getElementById('overlay').classList.remove('active'); } });
+			window.addEventListener('resize', function() {
+				if (carrito.length > 0) actualizarCarritoUI();
+			});
         }
 
         // ==================== FUNCIONES AUXILIARES (sin cambios) ====================
