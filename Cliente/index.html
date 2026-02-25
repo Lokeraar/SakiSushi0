@@ -645,7 +645,7 @@
             <div class="footer-section"><h4>Horario</h4><p><i class="fas fa-clock"></i> Lunes a Domingo: 11:00 AM - 10:00 PM</p></div>
             <div class="footer-section"><h4>Av Universidad</h4><a href="https://wa.me/5804242884773" class="whatsapp-link" target="_blank"><i class="fab fa-whatsapp"></i> +58 0424-2884773</a><a href="https://wa.me/5804242884772" class="whatsapp-link" target="_blank"><i class="fab fa-whatsapp"></i> +58 0424-2884772</a><p><i class="fas fa-map-marker-alt"></i> Caracas</p></div>
             <div class="footer-section"><h4>San Bernardino</h4><a href="https://wa.me/5804241722322" class="whatsapp-link" target="_blank"><i class="fab fa-whatsapp"></i> +58 0424-1722322</a><a href="https://wa.me/5804241722339" class="whatsapp-link" target="_blank"><i class="fab fa-whatsapp"></i> +58 0424-1722339</a><p><i class="fas fa-map-marker-alt"></i> Caracas</p></div>
-            <div class="footer-section"><img src="https://lh3.googleusercontent.com/pw/AP1GczPrZAoWxmsOGRD9xl1hO5Q65JXuwUZzoR6gUk-cw5lVmarxQe_-lwqpA60tTKLlXfpvIjAJlKC6jFls-xETJOPkebLIIPhbGlUkknmhrRbdhMUll2UViGSUj3WmHKg2YEsZlAfxBPPTjIHhScjD0jfe=w1439-h1439-s-no-gm" alt="Saki Sushi" class="footer-brand-logo" style="width:180px; height:200px;"><div class="footer-brand-slogan">"Adictos al universo saki"</div></div>
+            <div class="footer-section"><img src="https://lh3.googleusercontent.com/pw/AP1GczPrZAoWxmsOGRD9xl1hO5Q65JXuwUZzoR6gUk-cw5lVmarxQe_-lwqpA60tTKLlXfpvIjAJlKC6jFls-xETJOPkebLIIPhbGlUkknmhrRbdhMUll2UViGSUj3WmHKg2YEsZlAfxBPPTjIHhScjD0jfe=w1439-h1439-s-no-gm" alt="Saki Sushi" class="footer-brand-logo" style="width:150px; height:166px;"><div class="footer-brand-slogan">"Adictos al universo saki"</div></div>
         </div>
         <div class="footer-brand"><div class="footer-copyright">© 2021 Saki Sushi. Todos los derechos reservados.</div></div>
     </footer>
@@ -749,18 +749,63 @@
         }
 
         function mostrarDialogoContinuar() {
-            const overlay = document.createElement('div');
-            overlay.className = 'modal-overlay active';
-            overlay.id = 'continuarDialogo';
-            overlay.innerHTML = `<div class="confirm-dialog"><i class="fas fa-shopping-basket"></i><h3>¿Continuar con pedido anterior?</h3><p>Parece que tienes un pedido sin finalizar de hace menos de una hora. ¿Deseas continuar donde lo dejaste?</p><div class="confirm-dialog-buttons"><button class="btn-cancel" id="cancelarPedidoAnterior">Cancelar</button><button class="btn-confirm" id="confirmarPedidoAnterior">Continuar</button></div></div>`;
-            document.body.appendChild(overlay);
-            document.getElementById('cancelarPedidoAnterior').addEventListener('click', () => {
-                document.getElementById('continuarDialogo').remove();
-                carrito = []; guardarCarrito(); actualizarCarritoUI(); actualizarCarritoBadge(); limpiarDatosFormulario();
-                limpiarReferencias('delivery'); limpiarReferencias('reserva');
-            });
-            document.getElementById('confirmarPedidoAnterior').addEventListener('click', () => { document.getElementById('continuarDialogo').remove(); });
-        }
+			const overlay = document.createElement('div');
+			overlay.className = 'modal-overlay active';
+			overlay.id = 'continuarDialogo';
+			overlay.innerHTML = `<div class="confirm-dialog"><i class="fas fa-shopping-basket"></i><h3>¿Continuar con pedido anterior?</h3><p>Parece que tienes un pedido sin finalizar de hace menos de una hora. ¿Deseas continuar donde lo dejaste?</p><div class="confirm-dialog-buttons"><button class="btn-cancel" id="cancelarPedidoAnterior">Cancelar</button><button class="btn-confirm" id="confirmarPedidoAnterior">Continuar</button></div></div>`;
+			document.body.appendChild(overlay);
+			
+			document.getElementById('cancelarPedidoAnterior').addEventListener('click', () => {
+				document.getElementById('continuarDialogo').remove();
+				carrito = []; 
+				guardarCarrito(); 
+				actualizarCarritoUI(); 
+				actualizarCarritoBadge(); 
+				limpiarDatosFormulario();
+				limpiarReferencias('delivery'); 
+				limpiarReferencias('reserva');
+				window.pedidoAnterior = null;
+			});
+			
+			document.getElementById('confirmarPedidoAnterior').addEventListener('click', () => { 
+				// RESTAURAR EL CARRITO CON LOS ITEMS DEL PEDIDO ANTERIOR
+				if (window.pedidoAnterior && window.pedidoAnterior.length > 0) {
+					carrito = window.pedidoAnterior;
+					guardarCarrito();
+					actualizarCarritoUI();
+					actualizarCarritoBadge();
+					
+					// Actualizar stock de todos los platillos
+					window.stockCache.invalidate();
+					
+					// Actualizar stock visualmente
+					const platillosAActualizar = new Set();
+					carrito.forEach(instancia => {
+						if (instancia.platilloId) {
+							platillosAActualizar.add(instancia.platilloId);
+							const platillo = menuItems.find(p => p.id === instancia.platilloId);
+							if (platillo && platillo.ingredientes) {
+								Object.keys(platillo.ingredientes).forEach(ingId => {
+									menuItems.forEach(item => {
+										if (item.ingredientes && item.ingredientes[ingId]) {
+											platillosAActualizar.add(item.id);
+										}
+									});
+								});
+							}
+						}
+					});
+					
+					// Actualizar stock de todos los platillos afectados
+					platillosAActualizar.forEach(pid => actualizarStockPlatillo(pid));
+					
+					mostrarToast('🔄 Pedido anterior restaurado', 'success');
+				}
+				
+				document.getElementById('continuarDialogo').remove();
+				window.pedidoAnterior = null;
+			});
+		}
 
         // ==================== FUNCIONES DE UI/UX (sin cambios) ====================
         function toggleMenuCategorias() {
@@ -1291,36 +1336,31 @@
             if (mesaId) cartButtons.innerHTML = `<button class="btn-primary" onclick="abrirConfirmacionMesa()"><i class="fas fa-check"></i> Pedir en Mesa</button>`;
             else cartButtons.innerHTML = `<button class="btn-primary" onclick="iniciarProcesoDelivery()"><i class="fas fa-motorcycle"></i> Delivery</button><button class="btn-secondary" onclick="iniciarProcesoReserva()"><i class="fas fa-calendar-alt"></i> Reserva</button>`;
         }
-        function guardarCarrito() { localStorage.setItem('saki_carrito', JSON.stringify({ items: carrito, timestamp: Date.now() })); }
+        function guardarCarrito() {
+			localStorage.setItem('saki_carrito', JSON.stringify({ 
+				items: carrito, 
+				timestamp: Date.now() 
+			}));
+		}
         function restaurarCarrito() {
-            const saved = localStorage.getItem('saki_carrito');
-            if (saved) { try { const data = JSON.parse(saved); if (Date.now() - data.timestamp < 3600000) mostrarDialogoContinuar(); } catch (e) {} }
-        }
-        function restaurarDatosFormulario() {
-            const savedDelivery = localStorage.getItem('saki_delivery_data');
-            if (savedDelivery) {
-                try {
-                    deliveryFormData = JSON.parse(savedDelivery);
-                    if (deliveryFormData.parroquia) document.getElementById('selectedParroquiaText').textContent = deliveryFormData.parroquia;
-                    if (deliveryFormData.parroquia) { const select = document.getElementById('parroquiaSelect'); select.value = deliveryFormData.parroquia; }
-                    if (deliveryFormData.direccion) document.getElementById('direccion').value = deliveryFormData.direccion;
-                    if (deliveryFormData.telefono) document.getElementById('telefono').value = deliveryFormData.telefono;
-                    if (deliveryFormData.referencia) { for (let i = 0; i < 6; i++) { const input = document.querySelector(`.ref-digit[data-type="delivery"][data-index="${i}"]`); if (input) input.value = deliveryFormData.referencia[i] || ''; } }
-                    if (deliveryFormData.parroquia) actualizarTotalDelivery();
-                    validarFormularioDelivery();
-                } catch (e) {}
-            }
-            const savedReserva = localStorage.getItem('saki_reserva_data');
-            if (savedReserva) {
-                try {
-                    reservaFormData = JSON.parse(savedReserva);
-                    if (reservaFormData.fecha) document.getElementById('fechaReserva').value = reservaFormData.fecha;
-                    if (reservaFormData.nombre) document.getElementById('nombreReserva').value = reservaFormData.nombre;
-                    if (reservaFormData.referencia) { for (let i = 0; i < 6; i++) { const input = document.querySelector(`.ref-digit[data-type="reserva"][data-index="${i}"]`); if (input) input.value = reservaFormData.referencia[i] || ''; } }
-                    validarFormularioReserva();
-                } catch (e) {}
-            }
-        }
+			const saved = localStorage.getItem('saki_carrito');
+			if (saved) {
+				try {
+					const data = JSON.parse(saved);
+					// Solo mostrar diálogo si hay items y el timestamp es reciente (menos de 1 hora)
+					if (data.items && data.items.length > 0 && Date.now() - data.timestamp < 3600000) {
+						// Guardar los items temporalmente para usarlos si el usuario elige "Continuar"
+						window.pedidoAnterior = data.items;
+						mostrarDialogoContinuar();
+					} else if (data.items && data.items.length > 0) {
+						// Si pasó más de 1 hora, limpiar el carrito antiguo
+						localStorage.removeItem('saki_carrito');
+					}
+				} catch (e) {
+					console.error('Error restaurando carrito:', e);
+				}
+			}
+		}
         function guardarDatosDelivery() {
             deliveryFormData.parroquia = document.getElementById('parroquiaSelect').value;
             deliveryFormData.direccion = document.getElementById('direccion').value;
