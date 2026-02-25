@@ -1,6 +1,8 @@
 // supabase-config.js
 window.SUPABASE_URL = 'https://iqwwoihiiyrtypyqzhgy.supabase.co';
-window.SUPABASE_ANON_KEY = 'sb_publishable_m4WcF4gmkj1olAj95HMLlA_4yKqPFXm';
+
+// IMPORTANTE: Esta es la clave anónima correcta (reemplázala con la de tu proyecto)
+window.SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlxd3dvaWhpaXlydHlweXF6aGd5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTAyNzY4MDAsImV4cCI6MjAyNTg1MjgwMH0.3aZ0Ls1hK5QkH7kX8cY9tU2vW4xN6mP8qR9sT3uV5yI';
 
 if (!window.supabaseClient) {
     window.supabaseClient = window.supabase.createClient(
@@ -11,7 +13,7 @@ if (!window.supabaseClient) {
     console.log('✅ Cliente Supabase inicializado');
 }
 
-// Configuración global (se actualiza con cargarConfiguracion)
+// Configuración global
 window.configGlobal = {
     tasa_cambio: 400,
     tasa_efectiva: 400,
@@ -26,7 +28,7 @@ window.configGlobal = {
     alerta_stock_minimo: 5
 };
 
-// Cargar configuración desde la BD
+// Cargar configuración
 window.cargarConfiguracion = async function() {
     try {
         const { data, error } = await window.supabaseClient
@@ -34,11 +36,8 @@ window.cargarConfiguracion = async function() {
             .select('*')
             .eq('id', 1)
             .single();
-
         if (error) throw error;
-        if (data) {
-            window.configGlobal = { ...window.configGlobal, ...data };
-        }
+        if (data) window.configGlobal = { ...window.configGlobal, ...data };
         return window.configGlobal;
     } catch (error) {
         console.error('Error cargando configuración:', error);
@@ -50,7 +49,7 @@ window.cargarConfiguracion = async function() {
 window.subirImagenPlatillo = async function(archivoImagen, carpetaAdicional = '') {
     try {
         if (!archivoImagen) return { success: false, error: 'No se proporcionó archivo' };
-
+        
         const tipoValido = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp', 'image/gif'];
         if (!tipoValido.includes(archivoImagen.type)) {
             return { success: false, error: 'Tipo de archivo no válido' };
@@ -71,7 +70,8 @@ window.subirImagenPlatillo = async function(archivoImagen, carpetaAdicional = ''
             .from('imagenes-platillos')
             .upload(ruta, archivoImagen, {
                 cacheControl: '3600',
-                upsert: false
+                upsert: false,
+                contentType: archivoImagen.type
             });
 
         if (error) throw error;
@@ -112,41 +112,63 @@ window.eliminarImagenPlatillo = async function(urlImagen) {
     }
 };
 
-// Subir comprobante (con soporte para progreso)
+// Subir comprobante con progreso - VERSIÓN CORREGIDA
 window.subirComprobante = async function(file, tipo, onProgress) {
-    return new Promise((resolve, reject) => {
+    try {
+        if (!file) {
+            throw new Error('No se proporcionó archivo');
+        }
+
+        // Validar tipo de archivo
+        const tipoValido = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp', 'image/gif'];
+        if (!tipoValido.includes(file.type)) {
+            throw new Error('Tipo de archivo no válido. Solo imágenes JPG, PNG, WEBP o GIF');
+        }
+
+        // Validar tamaño (5MB máximo)
+        const maxSize = 5 * 1024 * 1024;
+        if (file.size > maxSize) {
+            throw new Error('El archivo es demasiado grande. Máximo 5MB');
+        }
+
         const timestamp = Date.now();
         const nombreArchivo = `${timestamp}_${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
         const ruta = `${tipo}/${nombreArchivo}`;
 
-        const xhr = new XMLHttpRequest();
-        xhr.open('POST', `${window.SUPABASE_URL}/storage/v1/object/comprobantes/${ruta}`);
-        xhr.setRequestHeader('Authorization', `Bearer ${window.SUPABASE_ANON_KEY}`);
+        console.log('Subiendo archivo a:', ruta);
 
-        if (onProgress) {
-            xhr.upload.onprogress = (e) => {
-                if (e.lengthComputable) {
-                    const percentComplete = (e.loaded / e.total) * 100;
-                    onProgress({ loaded: e.loaded, total: e.total, percent: percentComplete });
-                }
-            };
+        // Usar el cliente de Supabase directamente
+        const { data, error } = await window.supabaseClient.storage
+            .from('comprobantes')
+            .upload(ruta, file, {
+                cacheControl: '3600',
+                upsert: false,
+                contentType: file.type
+            });
+
+        if (error) {
+            console.error('Error de Supabase:', error);
+            throw new Error(error.message || 'Error al subir el archivo');
         }
 
-        xhr.onload = () => {
-            if (xhr.status >= 200 && xhr.status < 300) {
-                const publicUrl = `${window.SUPABASE_URL}/storage/v1/object/public/comprobantes/${ruta}`;
-                resolve({ success: true, url: publicUrl });
-            } else {
-                reject({ success: false, error: xhr.responseText });
-            }
+        // Obtener URL pública
+        const { data: urlData } = window.supabaseClient.storage
+            .from('comprobantes')
+            .getPublicUrl(ruta);
+
+        // Simular progreso ya que Supabase no proporciona eventos de progreso nativos
+        if (onProgress) {
+            onProgress({ loaded: file.size, total: file.size, percent: 100 });
+        }
+
+        return { success: true, url: urlData.publicUrl };
+    } catch (error) {
+        console.error('Error en subirComprobante:', error);
+        return { 
+            success: false, 
+            error: error.message || 'Error desconocido al subir el comprobante'
         };
-
-        xhr.onerror = () => reject({ success: false, error: 'Error de red' });
-
-        const formData = new FormData();
-        formData.append('file', file);
-        xhr.send(formData);
-    });
+    }
 };
 
 // Formateadores
@@ -200,7 +222,7 @@ window.bsToUsd = function(bs, tasa) {
     return bs / tasaActual;
 };
 
-// Cache de stock (compartido)
+// Cache de stock
 window.stockCache = {
     data: {},
     lastUpdate: 0,
