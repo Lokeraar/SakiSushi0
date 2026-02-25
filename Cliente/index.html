@@ -81,24 +81,21 @@
             width:100%;flex:1;display:flex;flex-direction:column;background:transparent;
         }
         .main-layout{
-            display:flex;flex:1;position:relative;background:transparent;
+            display:flex;flex:1;position:relative;background:transparent;overflow:hidden; /* Contiene a los hijos absolutos */
         }
 
-        /* Nuevo contenedor para los sidebars, posicionado entre header y footer */
+        /* Contenedor para los sidebars - AHORA ABSOLUTO DENTRO DE MAIN-LAYOUT */
         #sidebarContainer{
-            position:fixed;
-            top:110px; /* Altura del header en desktop */
-            bottom:0;
+            position:absolute;
+            top:0;          /* Se alinea con la parte superior de main-layout */
             left:0;
             right:0;
+            bottom:0;       /* Ocupa toda la altura de main-layout */
             pointer-events:none; /* Permite hacer clic a través del contenedor */
             z-index:900;
-            margin-bottom:250px; /* Espacio para el footer (ajustar según altura del footer) */
         }
-        @media (max-width:992px){#sidebarContainer{top:100px;margin-bottom:300px}} /* Ajuste para móvil/tablet */
-        @media (max-width:768px){#sidebarContainer{top:100px;margin-bottom:350px}}
 
-        /* Sidebar de categorías - ahora dentro del contenedor */
+        /* Sidebar de categorías - dentro del contenedor */
         .category-sidebar{
             width:280px;
             background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%);
@@ -109,12 +106,12 @@
             position:absolute;
             left:0;
             top:0;
-            bottom:0;
+            bottom:0;        /* Ocupa toda la altura del contenedor padre (#sidebarContainer) */
             display:flex;
             flex-direction:column;
             backdrop-filter:blur(10px);
-            pointer-events:auto; /* Reactiva los clics para este elemento */
-            height:100%; /* Ocupa toda la altura del contenedor padre */
+            pointer-events:auto; /* Reactiva los clics */
+            height:100%;       /* Ocupa toda la altura disponible */
         }
         @media (max-width:992px){
             .category-sidebar{transform:translateX(-100%)}
@@ -157,7 +154,7 @@
         .subcategory-item.active{color:var(--accent);font-weight:500}
         .subcategory-item.active::before{content:'•';position:absolute;left:2.5rem;color:var(--accent);font-weight:700}
 
-        /* Sidebar del carrito - dentro del mismo contenedor */
+        /* Sidebar del carrito - dentro del contenedor */
         .cart-sidebar{
             width:320px;
             background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%);
@@ -168,11 +165,11 @@
             position:absolute;
             right:0;
             top:0;
-            bottom:0;
+            bottom:0;        /* Ocupa toda la altura del contenedor padre (#sidebarContainer) */
             box-shadow:-2px 0 8px rgba(0,0,0,.5);
             backdrop-filter:blur(10px);
             pointer-events:auto; /* Reactiva los clics */
-            height:100%; /* Ocupa toda la altura del contenedor padre */
+            height:100%;       /* Ocupa toda la altura disponible */
         }
         @media (max-width:992px){.cart-sidebar{transform:translateX(100%)}.cart-sidebar.open{transform:translateX(0);box-shadow:var(--shadow-lg)}}
         @media (min-width:993px){.cart-sidebar{transform:translateX(0)!important}}
@@ -256,6 +253,7 @@
         .main-content{
             flex:1;padding:0;transition:margin-left .3s,margin-right .3s;
             margin-left:0;margin-right:0;width:100%;max-width:100%;background:transparent;
+            overflow-y:auto; /* Permite scroll en el contenido principal */
         }
         @media (min-width:993px){.main-content{margin-left:280px;margin-right:320px;width:calc(100% - 600px)}}
 
@@ -394,7 +392,7 @@
             border-radius:0 0 var(--radius-lg) var(--radius-lg);
         }
 
-        /* Footer - altura aproximada para el margin-bottom del contenedor */
+        /* Footer - sin cambios */
         .footer{
             background:var(--secondary);color:white;padding:2rem 1.5rem 1rem;
             width:100%;margin-top:auto;position:relative;z-index:100;flex-shrink:0;
@@ -564,7 +562,7 @@
     </header>
     <div class="content-wrapper">
         <div class="main-layout">
-            <!-- Contenedor padre para los sidebars, posicionado entre header y footer -->
+            <!-- Contenedor padre para los sidebars, AHORA ABSOLUTO DENTRO DE MAIN-LAYOUT -->
             <div id="sidebarContainer">
                 <div class="category-sidebar" id="categorySidebar">
                     <div class="category-header">
@@ -759,7 +757,7 @@
             document.getElementById('cancelarPedidoAnterior').addEventListener('click', () => {
                 document.getElementById('continuarDialogo').remove();
                 carrito = []; guardarCarrito(); actualizarCarritoUI(); actualizarCarritoBadge(); limpiarDatosFormulario();
-                limpiarReferencias('delivery'); limpiarReferencias('reserva'); // <-- Limpieza añadida
+                limpiarReferencias('delivery'); limpiarReferencias('reserva');
             });
             document.getElementById('confirmarPedidoAnterior').addEventListener('click', () => { document.getElementById('continuarDialogo').remove(); });
         }
