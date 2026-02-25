@@ -82,22 +82,33 @@
         .table-badge{background:var(--accent);color:var(--secondary);padding:.4rem 1rem;border-radius:25px;font-weight:700;font-family:'Montserrat',sans-serif;font-size:1rem;display:inline-block;white-space:nowrap}
         .content-wrapper{width:100%;flex:1;display:flex;flex-direction:column;background:transparent}
         .main-layout{display:flex;flex:1;position:relative;background:transparent}
-        .category-sidebar{
-            width:280px;background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%);
-            border-right:1px solid rgba(255,255,255,.1);overflow-y:hidden;
-            transition:transform .3s ease;box-shadow:2px 0 8px rgba(0,0,0,.5);
-            position:fixed;left:0;z-index:900;display:flex;flex-direction:column;
-            backdrop-filter:blur(10px);top:0;height:100vh;max-height:100vh;
-            transform:translateX(-100%)
-        }
+        .category-sidebar {
+			width:280px;
+			background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%);
+			border-right:1px solid rgba(255,255,255,.1);
+			overflow-y:hidden;
+			transition:transform .3s ease;
+			box-shadow:2px 0 8px rgba(0,0,0,.5);
+			position:fixed;
+			left:0;
+			z-index:900;
+			display:flex;
+			flex-direction:column;
+			backdrop-filter:blur(10px);
+			/* 👇 CAMBIA ESTOS DOS VALORES: */
+			top: auto;        /* Antes era: top: 0; */
+			height: auto;     /* Antes era: height: 100vh; */
+			max-height: none; /* Antes era: max-height: 100vh; */
+			transform:translateX(-100%)
+		}
         @media(min-width:993px){.category-sidebar{transform:translateX(0)!important}}
-        .cart-sidebar{
-            width:320px;background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%);
-            border-left:1px solid rgba(255,255,255,.1);display:flex;flex-direction:column;
-            transition:transform .3s ease;position:fixed;right:0;z-index:900;
-            box-shadow:-2px 0 8px rgba(0,0,0,.5);backdrop-filter:blur(10px);
-            top:0;height:100vh;max-height:100vh;transform:translateX(100%)
-        }
+        .cart-sidebar {
+			/* ... todo lo demás igual ... */
+			top: auto;        /* Cambia de top:0 a top:auto */
+			height: auto;     /* Cambia de height:100vh a height:auto */
+			max-height: none; /* Cambia de max-height:100vh a max-height:none */
+			transform:translateX(100%)
+		}
         @media(min-width:993px){.cart-sidebar{transform:translateX(0)!important}}
         .category-sidebar.open,.cart-sidebar.open{transform:translateX(0)}
         .category-header{
@@ -849,30 +860,38 @@
         let isUploading = false, uploadComplete = false;
 
         // ==================== FUNCIÓN DE AJUSTE DE SIDEBARS ====================
-        function ajustarAlturaSidebars() {
-            const header = document.getElementById('mainHeader');
-            const footer = document.getElementById('mainFooter');
-            const categorySidebar = document.getElementById('categorySidebar');
-            const cartSidebar = document.getElementById('cartSidebar');
-            
-            if (!header || !footer || !categorySidebar || !cartSidebar) return;
+        // DESPUÉS - Reemplaza con esta función completa
+		function ajustarAlturaSidebars() {
+			const header = document.getElementById('mainHeader');
+			const footer = document.getElementById('mainFooter');
+			const categorySidebar = document.getElementById('categorySidebar');
+			const cartSidebar = document.getElementById('cartSidebar');
+			
+			if (!header || !footer || !categorySidebar || !cartSidebar) return;
 
-            const headerHeight = header.offsetHeight;
-            const footerRect = footer.getBoundingClientRect();
-            const footerTop = footerRect.top + window.scrollY;
-            
-            const topPos = headerHeight;
-            const bottomPos = footerTop;
-            const maxHeight = bottomPos - topPos;
+			// Obtener alturas y posiciones
+			const headerHeight = header.offsetHeight;
+			const footerTop = footer.getBoundingClientRect().top + window.scrollY;
+			const windowHeight = window.innerHeight;
+			
+			// Calcular el top (justo debajo del header)
+			const topPos = headerHeight;
+			
+			// Calcular el bottom (justo antes del footer)
+			// Si el footer está visible en pantalla, usamos su posición
+			// Si no, usamos el final de la ventana
+			const bottomPos = Math.min(footerTop, windowHeight + window.scrollY);
+			
+			// La altura máxima es desde topPos hasta bottomPos
+			const maxHeight = bottomPos - topPos;
 
-            categorySidebar.style.top = topPos + 'px';
-            categorySidebar.style.height = maxHeight + 'px';
-            categorySidebar.style.maxHeight = maxHeight + 'px';
-
-            cartSidebar.style.top = topPos + 'px';
-            cartSidebar.style.height = maxHeight + 'px';
-            cartSidebar.style.maxHeight = maxHeight + 'px';
-        }
+			// Aplicar a ambos sidebars
+			[categorySidebar, cartSidebar].forEach(sidebar => {
+				sidebar.style.top = topPos + 'px';
+				sidebar.style.height = maxHeight + 'px';
+				sidebar.style.maxHeight = maxHeight + 'px';
+			});
+		}
 
         // ==================== EVENTOS Y VISIBILIDAD ====================
         document.addEventListener('visibilitychange', function() {
@@ -996,14 +1015,16 @@
             console.log('🎉 Cliente listo!');
         });
 
-        window.addEventListener('resize', function() {
-            ajustarAlturaSidebars(); // Recalcular al redimensionar
-            if(window.innerWidth>992){
-                document.getElementById('categorySidebar').classList.remove('open');
-                document.getElementById('cartSidebar').classList.remove('open');
-                document.getElementById('overlay').classList.remove('active');
-            }
-        });
+        // DESPUÉS - Asegúrate de que llame a la función
+		window.addEventListener('resize', function() {
+			ajustarAlturaSidebars(); // ← Agrega esta línea
+			
+			if(window.innerWidth > 992) {
+				document.getElementById('categorySidebar').classList.remove('open');
+				document.getElementById('cartSidebar').classList.remove('open');
+				document.getElementById('overlay').classList.remove('active');
+			}
+		});
 
         // ==================== CARGA DE DATOS ====================
         async function cargarMenu() {
