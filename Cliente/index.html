@@ -869,23 +869,14 @@
 			
 			if (!header || !footer || !categorySidebar || !cartSidebar) return;
 
-			// Obtener alturas y posiciones
 			const headerHeight = header.offsetHeight;
 			const footerTop = footer.getBoundingClientRect().top + window.scrollY;
 			const windowHeight = window.innerHeight;
 			
-			// Calcular el top (justo debajo del header)
 			const topPos = headerHeight;
-			
-			// Calcular el bottom (justo antes del footer)
-			// Si el footer está visible en pantalla, usamos su posición
-			// Si no, usamos el final de la ventana
 			const bottomPos = Math.min(footerTop, windowHeight + window.scrollY);
-			
-			// La altura máxima es desde topPos hasta bottomPos
 			const maxHeight = bottomPos - topPos;
 
-			// Aplicar a ambos sidebars
 			[categorySidebar, cartSidebar].forEach(sidebar => {
 				sidebar.style.top = topPos + 'px';
 				sidebar.style.height = maxHeight + 'px';
@@ -1017,7 +1008,7 @@
 
         // DESPUÉS - Asegúrate de que llame a la función
 		window.addEventListener('resize', function() {
-			ajustarAlturaSidebars(); // ← Agrega esta línea
+			ajustarAlturaSidebars(); // ← Esta línea es NUEVA
 			
 			if(window.innerWidth > 992) {
 				document.getElementById('categorySidebar').classList.remove('open');
