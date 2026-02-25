@@ -1342,48 +1342,162 @@
         }
 
         // ==================== MANEJO DE COMPROBANTES CON PROGRESO (sin cambios) ====================
-        async function handleComprobanteSelect(input) {
-            const file = input.files[0];
-            if (!file) { deliveryFormData.comprobante = null; uploadComplete = false; validarFormularioDelivery(); return; }
-            if (file.size > 5 * 1024 * 1024) { mostrarToast('El archivo es demasiado grande (máx 5MB)', 'error'); input.value = ''; return; }
-            const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
-            if (!validTypes.includes(file.type)) { mostrarToast('Tipo de archivo no válido', 'error'); input.value = ''; return; }
-            const progressBar = document.getElementById('uploadProgress'), progressBarFill = document.getElementById('uploadProgressBar');
-            progressBar.style.display = 'block'; progressBarFill.style.width = '0%'; isUploading = true; uploadComplete = false; document.getElementById('confirmDelivery').disabled = true;
-            try {
-                const result = await window.subirComprobante(file, 'delivery', (progress) => { const percent = progress.percent || 0; progressBarFill.style.width = `${percent}%`; });
-                if (result.success) {
-                    deliveryFormData.comprobante = result.url; uploadComplete = true; progressBarFill.style.width = '100%'; mostrarToast('✅ Comprobante subido', 'success');
-                    const label = document.getElementById('comprobanteLabel');
-                    label.innerHTML = `<i class="fas fa-check-circle" style="color:var(--success)"></i><span style="color:var(--success); font-weight:600">${file.name}</span><small>Listo para enviar</small>`;
-                    label.classList.add('has-file');
-                } else { throw new Error(result.error); }
-            } catch (error) {
-                console.error('Error subiendo comprobante:', error); mostrarToast('❌ Error al subir el comprobante', 'error');
-                deliveryFormData.comprobante = null; progressBarFill.style.width = '0%';
-            } finally { isUploading = false; setTimeout(() => progressBar.style.display = 'none', 1000); validarFormularioDelivery(); }
-        }
-        async function handleComprobanteReservaSelect(input) {
-            const file = input.files[0];
-            if (!file) { reservaFormData.comprobante = null; uploadComplete = false; validarFormularioReserva(); return; }
-            if (file.size > 5 * 1024 * 1024) { mostrarToast('El archivo es demasiado grande (máx 5MB)', 'error'); input.value = ''; return; }
-            const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
-            if (!validTypes.includes(file.type)) { mostrarToast('Tipo de archivo no válido', 'error'); input.value = ''; return; }
-            const progressBar = document.getElementById('uploadProgressReserva'), progressBarFill = document.getElementById('uploadProgressBarReserva');
-            progressBar.style.display = 'block'; progressBarFill.style.width = '0%'; isUploading = true; uploadComplete = false; document.getElementById('confirmReserva').disabled = true;
-            try {
-                const result = await window.subirComprobante(file, 'reserva', (progress) => { const percent = progress.percent || 0; progressBarFill.style.width = `${percent}%`; });
-                if (result.success) {
-                    reservaFormData.comprobante = result.url; uploadComplete = true; progressBarFill.style.width = '100%'; mostrarToast('✅ Comprobante subido', 'success');
-                    const label = document.getElementById('comprobanteReservaLabel');
-                    label.innerHTML = `<i class="fas fa-check-circle" style="color:var(--success)"></i><span style="color:var(--success); font-weight:600">${file.name}</span><small>Listo para enviar</small>`;
-                    label.classList.add('has-file');
-                } else { throw new Error(result.error); }
-            } catch (error) {
-                console.error('Error subiendo comprobante reserva:', error); mostrarToast('❌ Error al subir el comprobante', 'error');
-                reservaFormData.comprobante = null; progressBarFill.style.width = '0%';
-            } finally { isUploading = false; setTimeout(() => progressBar.style.display = 'none', 1000); validarFormularioReserva(); }
-        }
+        // Reemplaza la función handleComprobanteSelect en cliente 2.0.html con esta:
+
+		async function handleComprobanteSelect(input) {
+			const file = input.files[0];
+			if (!file) {
+				deliveryFormData.comprobante = null;
+				uploadComplete = false;
+				validarFormularioDelivery();
+				return;
+			}
+
+			// Validar tamaño
+			if (file.size > 5 * 1024 * 1024) {
+				mostrarToast('El archivo es demasiado grande (máx 5MB)', 'error');
+				input.value = '';
+				return;
+			}
+
+			// Validar tipo
+			const validTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp', 'image/gif'];
+			if (!validTypes.includes(file.type)) {
+				mostrarToast('Tipo de archivo no válido. Solo imágenes JPG, PNG, WEBP o GIF', 'error');
+				input.value = '';
+				return;
+			}
+
+			const progressBar = document.getElementById('uploadProgress');
+			const progressBarFill = document.getElementById('uploadProgressBar');
+			progressBar.style.display = 'block';
+			progressBarFill.style.width = '0%';
+			
+			isUploading = true;
+			uploadComplete = false;
+			document.getElementById('confirmDelivery').disabled = true;
+
+			try {
+				// Mostrar progreso simulado mientras se sube
+				let progress = 0;
+				const interval = setInterval(() => {
+					if (progress < 90) {
+						progress += 10;
+						progressBarFill.style.width = `${progress}%`;
+					}
+				}, 200);
+
+				const result = await window.subirComprobante(file, 'delivery');
+				
+				clearInterval(interval);
+				
+				if (result.success) {
+					deliveryFormData.comprobante = result.url;
+					uploadComplete = true;
+					progressBarFill.style.width = '100%';
+					mostrarToast('✅ Comprobante subido correctamente', 'success');
+
+					const label = document.getElementById('comprobanteLabel');
+					label.innerHTML = `<i class="fas fa-check-circle" style="color:var(--success)"></i><span style="color:var(--success); font-weight:600">${file.name}</span><small>Listo para enviar</small>`;
+					label.classList.add('has-file');
+				} else {
+					throw new Error(result.error || 'Error al subir el archivo');
+				}
+			} catch (error) {
+				console.error('Error subiendo comprobante:', error);
+				mostrarToast('❌ Error al subir el comprobante: ' + (error.message || 'Error desconocido'), 'error');
+				deliveryFormData.comprobante = null;
+				progressBarFill.style.width = '0%';
+				
+				// Resetear el input
+				input.value = '';
+				const label = document.getElementById('comprobanteLabel');
+				label.innerHTML = '<i class="fas fa-cloud-upload-alt"></i><span>Haz clic para seleccionar una imagen</span><small>JPG, PNG, GIF (max. 5MB)</small>';
+				label.classList.remove('has-file');
+			} finally {
+				isUploading = false;
+				setTimeout(() => {
+					progressBar.style.display = 'none';
+				}, 1000);
+				validarFormularioDelivery();
+			}
+		}
+
+		// También mejora la función para reserva
+		async function handleComprobanteReservaSelect(input) {
+			const file = input.files[0];
+			if (!file) {
+				reservaFormData.comprobante = null;
+				uploadComplete = false;
+				validarFormularioReserva();
+				return;
+			}
+
+			if (file.size > 5 * 1024 * 1024) {
+				mostrarToast('El archivo es demasiado grande (máx 5MB)', 'error');
+				input.value = '';
+				return;
+			}
+
+			const validTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp', 'image/gif'];
+			if (!validTypes.includes(file.type)) {
+				mostrarToast('Tipo de archivo no válido. Solo imágenes JPG, PNG, WEBP o GIF', 'error');
+				input.value = '';
+				return;
+			}
+
+			const progressBar = document.getElementById('uploadProgressReserva');
+			const progressBarFill = document.getElementById('uploadProgressBarReserva');
+			progressBar.style.display = 'block';
+			progressBarFill.style.width = '0%';
+			
+			isUploading = true;
+			uploadComplete = false;
+			document.getElementById('confirmReserva').disabled = true;
+
+			try {
+				let progress = 0;
+				const interval = setInterval(() => {
+					if (progress < 90) {
+						progress += 10;
+						progressBarFill.style.width = `${progress}%`;
+					}
+				}, 200);
+
+				const result = await window.subirComprobante(file, 'reserva');
+				
+				clearInterval(interval);
+				
+				if (result.success) {
+					reservaFormData.comprobante = result.url;
+					uploadComplete = true;
+					progressBarFill.style.width = '100%';
+					mostrarToast('✅ Comprobante subido correctamente', 'success');
+
+					const label = document.getElementById('comprobanteReservaLabel');
+					label.innerHTML = `<i class="fas fa-check-circle" style="color:var(--success)"></i><span style="color:var(--success); font-weight:600">${file.name}</span><small>Listo para enviar</small>`;
+					label.classList.add('has-file');
+				} else {
+					throw new Error(result.error || 'Error al subir el archivo');
+				}
+			} catch (error) {
+				console.error('Error subiendo comprobante reserva:', error);
+				mostrarToast('❌ Error al subir el comprobante: ' + (error.message || 'Error desconocido'), 'error');
+				reservaFormData.comprobante = null;
+				progressBarFill.style.width = '0%';
+				
+				input.value = '';
+				const label = document.getElementById('comprobanteReservaLabel');
+				label.innerHTML = '<i class="fas fa-cloud-upload-alt"></i><span>Haz clic para seleccionar una imagen</span><small>JPG, PNG, GIF (max. 5MB)</small>';
+				label.classList.remove('has-file');
+			} finally {
+				isUploading = false;
+				setTimeout(() => {
+					progressBar.style.display = 'none';
+				}, 1000);
+				validarFormularioReserva();
+			}
+		}
 
         // ==================== SUSCRIPCIONES EN TIEMPO REAL (sin cambios) ====================
         function setupRealtimeSubscriptions() {
