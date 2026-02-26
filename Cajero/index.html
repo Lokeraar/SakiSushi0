@@ -262,76 +262,7 @@
         function actualizarPago(id,campo,valor){const p=pagosMixtos.find(p=>p.id==id);if(!p)return;if(campo==='monto')p.monto=parseFloat(valor)||0;else if(campo==='metodo'){p.metodo=valor;if(valor!=='pago_movil')p.referencia=''}else if(campo==='referencia')p.referencia=valor;renderizarPagosMixtos();recalcularTotales()}
         function eliminarMetodoPago(id){pagosMixtos=pagosMixtos.filter(p=>p.id!=id);renderizarPagosMixtos();recalcularTotales()}
         function recalcularTotales(){const total=usdToBs(currentPedido?.total||0);let recibido=pagosMixtos.reduce((s,p)=>s+(p.metodo==='efectivo_usd'?usdToBs(p.monto||0):(p.monto||0)),0);document.getElementById('totalRecibido').textContent=formatBs(recibido);document.getElementById('pendiente').textContent=formatBs(Math.max(0,total-recibido));document.getElementById('sobrante').textContent=formatBs(Math.max(0,recibido-total));const inv=document.getElementById('invitacionCheck');document.getElementById('confirmCobroBtn').disabled=!inv.checked&&(pagosMixtos.length===0||(total-recibido)>0)}
-        async function confirmarCobro() {
-			if (!currentPedido) return;
-			const inv = document.getElementById('invitacionCheck').checked;
-			try {
-				let nuevoEstado, metodoPago, pagos;
-				if (inv) {
-					nuevoEstado = currentPedido.tipo === 'delivery' ? 'en_camino' : (currentPedido.tipo === 'reserva' ? 'reserva_pendiente' : 'en_cocina');
-					metodoPago = 'invitacion';
-					pagos = [{ metodo: 'invitacion', monto: 0, montoBs: 0 }];
-				} else {
-					nuevoEstado = currentPedido.tipo === 'delivery' ? 'en_camino' : (currentPedido.tipo === 'reserva' ? 'reserva_pendiente' : 'en_cocina');
-					pagos = pagosMixtos.map(p => ({
-						metodo: p.metodo,
-						monto: p.monto,
-						montoBs: p.metodo === 'efectivo_usd' ? usdToBs(p.monto) : p.monto,
-						referencia: p.referencia || null
-					}));
-					metodoPago = pagosMixtos.length === 1 ? pagosMixtos[0].metodo : 'mixto';
-				}
-				
-				await window.supabaseClient.from('pedidos').update({
-					estado: nuevoEstado,
-					metodo_pago: metodoPago,
-					pagos_mixtos: pagos,
-					cajero: currentUser?.nombre || 'Cajero',
-					fecha_cobro: new Date().toISOString()
-				}).eq('id', currentPedido.id);
-				
-				const totalItems = currentPedido.items?.reduce((s, i) => s + (i.cantidad || 1), 0) || 0;
-				
-				await window.supabaseClient.from('ventas').insert([{
-					pedido_id: currentPedido.id,
-					total: currentPedido.total,
-					items: totalItems,
-					metodo_pago: metodoPago,
-					tipo: currentPedido.tipo,
-					fecha: new Date().toISOString()
-				}]);
-				
-				// INSERTAR NOTIFICACIÓN DIRECTAMENTE (ASEGURA QUE LLEGUE)
-				await window.supabaseClient.from('notificaciones').insert([{
-					pedido_id: currentPedido.id,
-					tipo: 'approved',
-					titulo: '✅ Pago confirmado',
-					mensaje: 'Tu pedido ha sido pagado y está en preparación',
-					timestamp: new Date().toISOString(),
-					session_id: currentPedido.session_id,
-					leida: false
-				}]);
-				
-				document.getElementById('cobroModal').classList.remove('active');
-				mostrarToast('✅ Cobro procesado');
-				enProcesoDeCobro = false;
-				currentPedido = null;
-				pagosMixtos = [];
-				
-				await cargarPedidos();
-				await cargarVentasHoy();
-				await cargarPropinas();
-				await cargarMenu();
-				actualizarEstadisticas();
-				renderizarPedidos();
-				renderizarPropinas();
-				
-				setTimeout(() => mostrarPropinaModal(currentPedido), 500);
-			} catch (error) {
-				console.error('Error:', error);
-				mostrarToast('❌ Error al procesar: ' + error.message, 'error');
-			}
-		}
+        async function confirmarCobro(){if(!currentPedido)return;const inv=document.getElementById('invitacionCheck').checked;try{let nuevoEstado,metodoPago,pagos;if(inv){nuevoEstado=currentPedido.tipo==='delivery'?'en_camino':(currentPedido.tipo==='reserva'?'reserva_pendiente':'en_cocina');metodoPago='invitacion';pagos=[{metodo:'invitacion',monto:0,montoBs:0}]}else{nuevoEstado=currentPedido.tipo==='delivery'?'en_camino':(currentPedido.tipo==='reserva'?'reserva_pendiente':'en_cocina');pagos=pagosMixtos.map(p=>({metodo:p.metodo,monto:p.monto,montoBs:p.metodo==='efectivo_usd'?usdToBs(p.monto):p.monto,referencia:p.referencia||null}));metodoPago=pagosMixtos.length===1?pagosMixtos[0].metodo:'mixto'}await window.supabaseClient.from('pedidos').update({estado:nuevoEstado,metodo_pago:metodoPago,pagos_mixtos:pagos,cajero:currentUser?.nombre||'Cajero',fecha_cobro:new Date().toISOString()}).eq('id',currentPedido.id);const totalItems=currentPedido.items?.reduce((s,i)=>s+(i.cantidad||1),0)||0;await window.supabaseClient.from('ventas').insert([{pedido_id:currentPedido.id,total:currentPedido.total,items:totalItems,metodo_pago:metodoPago,tipo:currentPedido.tipo,fecha:new Date().toISOString()}]);await window.supabaseClient.from('notificaciones').insert([{pedido_id:currentPedido.id,tipo:'approved',titulo:'? Pago confirmado',mensaje:'Tu pedido ha sido pagado y está en preparación',timestamp:new Date().toISOString(),session_id:currentPedido.session_id,leida:false}]);document.getElementById('cobroModal').classList.remove('active');mostrarToast('? Cobro procesado');enProcesoDeCobro=false;currentPedido=null;pagosMixtos=[];await cargarPedidos();await cargarVentasHoy();await cargarPropinas();await cargarMenu();actualizarEstadisticas();renderizarPedidos();renderizarPropinas();setTimeout(()=>mostrarPropinaModal(currentPedido),500)}catch(error){console.error('Error:',error);mostrarToast('? Error al procesar','error')}}
         function mostrarPropinaModal(pedido){if(!pedido)return;currentPropinaPedido=pedido;currentPropinaData={mesonero:'',mesa:pedido.tipo==='mesa'?`Mesa ${pedido.mesa||''}`:pedido.tipo==='delivery'?'Delivery':'Reserva',metodo:'efectivo_bs',montoBs:0,montoUsd:0,referencia:'',tasaAplicada:tasaEfectiva};const body=document.getElementById('propinaModalBody');const mesonerosOptions=mesoneros.map(m=>`<option value="${m.id}">${m.nombre}</option>`).join('');body.innerHTML=`<div style="margin-bottom:20px"><div class="mesonero-selector"><label>?? Mesonero</label><select id="propinaMesonero"><option value="">Seleccionar mesonero...</option>${mesonerosOptions}</select></div><div class="mesa-selector"><label>?? Mesa Atendida</label><select id="propinaMesa"><option value="Mesa 1">Mesa 1</option><option value="Mesa 2">Mesa 2</option><option value="Mesa 3">Mesa 3</option><option value="Mesa 4">Mesa 4</option><option value="Mesa 5">Mesa 5</option><option value="Mesa 6">Mesa 6</option><option value="Mesa 7">Mesa 7</option><option value="Mesa 8">Mesa 8</option><option value="Mesa 9">Mesa 9</option><option value="Mesa 10">Mesa 10</option><option value="Delivery">Delivery</option><option value="Reserva">Reserva</option></select></div><div style="margin-bottom:20px"><label>?? Método de Pago</label><div style="display:flex;gap:10px;margin-top:8px"><label style="flex:1;background:rgba(0,0,0,.3);padding:10px;border-radius:8px;text-align:center;cursor:pointer"><input type="radio" name="propinaMetodo" value="efectivo_bs" checked onchange="cambiarMetodoPropina('efectivo_bs')"> Efectivo Bs</label><label style="flex:1;background:rgba(0,0,0,.3);padding:10px;border-radius:8px;text-align:center;cursor:pointer"><input type="radio" name="propinaMetodo" value="efectivo_usd" onchange="cambiarMetodoPropina('efectivo_usd')"> Efectivo USD</label><label style="flex:1;background:rgba(0,0,0,.3);padding:10px;border-radius:8px;text-align:center;cursor:pointer"><input type="radio" name="propinaMetodo" value="pago_movil" onchange="cambiarMetodoPropina('pago_movil')"> Pago Móvil</label><label style="flex:1;background:rgba(0,0,0,.3);padding:10px;border-radius:8px;text-align:center;cursor:pointer"><input type="radio" name="propinaMetodo" value="punto_venta" onchange="cambiarMetodoPropina('punto_venta')"> Punto Venta</label></div></div><div class="propina-monto-group" id="propinaMontoGroup"><input type="number" id="propinaMontoBs" step="0.01" placeholder="Monto en Bs" oninput="calcularMontoPropina('bs')"><input type="number" id="propinaMontoUsd" step="0.01" placeholder="Monto en USD" disabled oninput="calcularMontoPropina('usd')"></div><div id="propinaReferenciaGroup" style="display:none;margin-bottom:20px"><label>?? Referencia (6 dígitos)</label><div class="referencia-input"><input type="text" maxlength="1" class="ref-propina" data-index="0" oninput="moverRefPropina(this,0)"><input type="text" maxlength="1" class="ref-propina" data-index="1" oninput="moverRefPropina(this,1)"><input type="text" maxlength="1" class="ref-propina" data-index="2" oninput="moverRefPropina(this,2)"><input type="text" maxlength="1" class="ref-propina" data-index="3" oninput="moverRefPropina(this,3)"><input type="text" maxlength="1" class="ref-propina" data-index="4" oninput="moverRefPropina(this,4)"><input type="text" maxlength="1" class="ref-propina" data-index="5" oninput="moverRefPropina(this,5)"></div></div><div style="background:rgba(0,0,0,.3);padding:15px;border-radius:8px"><div style="display:flex;justify-content:space-between"><span><strong>Total a registrar:</strong></span><span id="propinaTotalDisplay" style="color:var(--accent);font-size:1.2rem">Bs. 0.00</span></div><div style="font-size:.85rem;color:rgba(255,255,255,.7);margin-top:5px">Tasa aplicada: ${tasaEfectiva} Bs/USD</div></div></div><div class="keyboard-hint"><span><kbd>ENTER</kbd> guardar</span><span><kbd>ESC</kbd> cancelar</span></div>`;document.querySelectorAll('.ref-propina').forEach(input=>{input.addEventListener('input',function(){const ref=Array.from(document.querySelectorAll('.ref-propina')).map(i=>i.value).join('');currentPropinaData.referencia=ref;validarPropina()})});document.getElementById('propinaModal').classList.add('active')}
         function cambiarMetodoPropina(metodo){currentPropinaData.metodo=metodo;const bsInput=document.getElementById('propinaMontoBs'),usdInput=document.getElementById('propinaMontoUsd'),refGroup=document.getElementById('propinaReferenciaGroup');if(metodo==='efectivo_usd'){bsInput.disabled=true;usdInput.disabled=false;refGroup.style.display='none'}else if(metodo==='pago_movil'){bsInput.disabled=false;usdInput.disabled=true;refGroup.style.display='block'}else{bsInput.disabled=false;usdInput.disabled=true;refGroup.style.display='none'}validarPropina()}
         function calcularMontoPropina(tipo){if(tipo==='bs'){currentPropinaData.montoBs=parseFloat(document.getElementById('propinaMontoBs').value)||0;if(currentPropinaData.metodo==='efectivo_usd')currentPropinaData.montoUsd=currentPropinaData.montoBs/tasaEfectiva;document.getElementById('propinaTotalDisplay').textContent=formatBs(currentPropinaData.montoBs)}else{currentPropinaData.montoUsd=parseFloat(document.getElementById('propinaMontoUsd').value)||0;currentPropinaData.montoBs=currentPropinaData.montoUsd*tasaEfectiva;document.getElementById('propinaTotalDisplay').textContent=formatBs(currentPropinaData.montoBs)}validarPropina()}
@@ -339,82 +270,9 @@
         function validarPropina(){const mesonero=document.getElementById('propinaMesonero')?.value;const mesa=document.getElementById('propinaMesa')?.value;if(!mesonero||!mesa){document.getElementById('confirmPropinaBtn').disabled=true;return}if(currentPropinaData.metodo==='pago_movil'){const refValida=currentPropinaData.referencia&&currentPropinaData.referencia.length===6;document.getElementById('confirmPropinaBtn').disabled=!(currentPropinaData.montoBs>0&&refValida)}else if(currentPropinaData.metodo==='efectivo_usd')document.getElementById('confirmPropinaBtn').disabled=!(currentPropinaData.montoUsd>0);else document.getElementById('confirmPropinaBtn').disabled=!(currentPropinaData.montoBs>0)}
         async function confirmarPropina(){if(!currentPropinaPedido||!currentUser)return;const mesoneroId=document.getElementById('propinaMesonero').value;const mesa=document.getElementById('propinaMesa').value;const mesonero=mesoneros.find(m=>m.id===mesoneroId);if(!mesonero){mostrarToast('Selecciona un mesonero','error');return}try{const propina={pedido_id:currentPropinaPedido.id,mesonero_id:mesoneroId,mesa:mesa,metodo:currentPropinaData.metodo,monto_original:currentPropinaData.metodo==='efectivo_usd'?currentPropinaData.montoUsd:currentPropinaData.montoBs,moneda_original:currentPropinaData.metodo==='efectivo_usd'?'USD':'Bs',tasa_aplicada:currentPropinaData.metodo==='efectivo_usd'?tasaEfectiva:null,monto_bs:currentPropinaData.montoBs,referencia:currentPropinaData.referencia||null,cajero:currentUser.nombre,fecha:new Date().toISOString(),entregado:false};await window.supabaseClient.from('propinas').insert([propina]);cerrarPropinaModal();mostrarToast('? Propina registrada','success');await cargarPropinas();actualizarEstadisticas();renderizarPropinas()}catch(error){console.error('Error:',error);mostrarToast('? Error al registrar propina','error')}}
         function mostrarConfirmacion(pedidoId,accion){const pedido=pedidos.find(p=>p.id===pedidoId);if(!pedido)return;pedidoParaAccion=pedido;accionPendiente=accion;const modal=document.getElementById('confirmModal'),title=document.getElementById('confirmModalTitle'),body=document.getElementById('confirmModalBody'),header=document.getElementById('confirmModalHeader');let titulo,mensaje,notif;if(accion==='entregado'){titulo='Confirmar Entrega';mensaje='?Pedido entregado?';header.style.background='linear-gradient(135deg,var(--success),#2E7D32)';notif={titulo:'??? ?Que aproveche!',mensaje:'Tu pedido ha sido entregado.'}}else if(accion==='enviado'){titulo='Confirmar Envío';mensaje='?Pedido enviado?';header.style.background='linear-gradient(135deg,var(--info),#1565C0)';notif={titulo:'?? Delivery en camino',mensaje:'El repartidor ya salió.'}}else if(accion==='reserva_atendida'){titulo='Cliente Confirmado';mensaje='?Cliente llegó?';header.style.background='linear-gradient(135deg,#9c27b0,#7b1fa2)';notif={titulo:'? Cliente confirmado',mensaje:'Estás siendo atendido.'}}else{titulo='Confirmar';mensaje='?Confirmar acción?';header.style.background='linear-gradient(135deg,var(--success),#2E7D32)';notif={titulo:'? Completado',mensaje:'Acción confirmada.'}}title.innerHTML=`<i class="fas fa-check-circle"></i> ${titulo}`;body.innerHTML=`<p>${mensaje}</p>${crearDetallePedidoHTML(pedido)}<div style="background:rgba(56,142,60,.1);padding:15px;margin-top:20px"><strong>Notificación:</strong><br>${notif.titulo}<br>${notif.mensaje}</div><div class="keyboard-hint"><span><kbd>ENTER</kbd> confirmar</span><span><kbd>ESC</kbd> cancelar</span></div>`;modal.classList.add('active')}
-        async function ejecutarConfirmacion() {
-			if (!pedidoParaAccion) return;
-			try {
-				await window.supabaseClient.from('pedidos').update({ estado: accionPendiente }).eq('id', pedidoParaAccion.id);
-				
-				// INSERTAR NOTIFICACIÓN DIRECTAMENTE
-				let titulo, mensaje;
-				if (accionPendiente === 'entregado') {
-					titulo = '✅ Pedido entregado';
-					mensaje = 'Tu pedido ha sido entregado. ¡Que aproveche!';
-				} else if (accionPendiente === 'enviado') {
-					titulo = '🚚 En camino';
-					mensaje = 'Tu delivery está en camino';
-				} else if (accionPendiente === 'reserva_atendida') {
-					titulo = '👤 Cliente confirmado';
-					mensaje = 'Tu reserva ha sido confirmada';
-				} else {
-					titulo = '✅ Actualizado';
-					mensaje = 'Tu pedido ha sido actualizado';
-				}
-				
-				await window.supabaseClient.from('notificaciones').insert([{
-					pedido_id: pedidoParaAccion.id,
-					tipo: 'approved',
-					titulo: titulo,
-					mensaje: mensaje,
-					timestamp: new Date().toISOString(),
-					session_id: pedidoParaAccion.session_id,
-					leida: false
-				}]);
-				
-				cerrarModal('confirmModal');
-				mostrarToast('✅ Estado actualizado');
-				await cargarPedidos();
-				actualizarEstadisticas();
-				renderizarPedidos();
-				verificarYControlarAlarma(true);
-			} catch (error) {
-				console.error('Error:', error);
-				mostrarToast('❌ Error', 'error');
-			}
-		}
+        async function ejecutarConfirmacion(){if(!pedidoParaAccion)return;try{await window.supabaseClient.from('pedidos').update({estado:accionPendiente}).eq('id',pedidoParaAccion.id);await window.supabaseClient.from('notificaciones').insert([{pedido_id:pedidoParaAccion.id,tipo:'approved',titulo:'? Estado actualizado',mensaje:'Tu pedido ha sido actualizado',timestamp:new Date().toISOString(),session_id:pedidoParaAccion.session_id,leida:false}]);cerrarModal('confirmModal');mostrarToast('? Estado actualizado');await cargarPedidos();actualizarEstadisticas();renderizarPedidos();verificarYControlarAlarma(true)}catch(error){console.error('Error:',error);mostrarToast('? Error','error')}}
         function mostrarRechazo(pedidoId){pedidoParaAccion=pedidos.find(p=>p.id===pedidoId);if(pedidoParaAccion)document.getElementById('rechazoModal').classList.add('active')}
-        async function confirmarRechazo() {
-			if (!pedidoParaAccion) return;
-			const razon = document.querySelector('input[name="rejectionReason"]:checked')?.value;
-			if (!razon) {
-				mostrarToast('Selecciona una razón', 'error');
-				return;
-			}
-			try {
-				await window.supabaseClient.rpc('liberar_ingredientes', { p_pedido_id: pedidoParaAccion.id });
-				await window.supabaseClient.from('pedidos').update({ estado: 'rechazado' }).eq('id', pedidoParaAccion.id);
-				
-				// INSERTAR NOTIFICACIÓN DIRECTAMENTE
-				await window.supabaseClient.from('notificaciones').insert([{
-					pedido_id: pedidoParaAccion.id,
-					tipo: 'rejected',
-					titulo: '❌ Pedido rechazado',
-					mensaje: `Motivo: ${traducirRazon(razon)}`,
-					timestamp: new Date().toISOString(),
-					session_id: pedidoParaAccion.session_id,
-					leida: false
-				}]);
-				
-				cerrarModal('rechazoModal');
-				mostrarToast('✅ Pedido rechazado');
-				await cargarPedidos();
-				actualizarEstadisticas();
-				renderizarPedidos();
-				verificarYControlarAlarma(true);
-			} catch (error) {
-				console.error('Error:', error);
-				mostrarToast('❌ Error al rechazar', 'error');
-			}
-		}
+        async function confirmarRechazo(){if(!pedidoParaAccion)return;const razon=document.querySelector('input[name="rejectionReason"]:checked')?.value;if(!razon){mostrarToast('Selecciona una razón','error');return}try{await window.supabaseClient.rpc('liberar_ingredientes',{p_pedido_id:pedidoParaAccion.id});await window.supabaseClient.from('pedidos').update({estado:'rechazado'}).eq('id',pedidoParaAccion.id);await window.supabaseClient.from('notificaciones').insert([{pedido_id:pedidoParaAccion.id,tipo:'rejected',titulo:'? Pedido rechazado',mensaje:`Motivo: ${traducirRazon(razon)}`,timestamp:new Date().toISOString(),session_id:pedidoParaAccion.session_id,leida:false}]);cerrarModal('rechazoModal');mostrarToast('? Pedido rechazado');await cargarPedidos();actualizarEstadisticas();renderizarPedidos();verificarYControlarAlarma(true)}catch(error){console.error('Error:',error);mostrarToast('? Error al rechazar','error')}}
         function traducirRazon(r){const rz={referencia_invalida:'Referencia inválida',monto_insuficiente:'Monto insuficiente',datos_incorrectos:'Datos incorrectos',no_disponible:'No disponible',fuera_horario:'Fuera de horario'};return rz[r]||r}
         async function verComprobante(pedidoId){const pedido=pedidos.find(p=>p.id===pedidoId);if(!pedido||!pedido.comprobante_url){mostrarToast('No hay comprobante','error');return}const modal=document.getElementById('comprobanteModal');document.getElementById('comprobanteModalBody').innerHTML=`<div style="text-align:center"><img src="${pedido.comprobante_url}" style="max-width:100%;max-height:400px;border-radius:8px;margin-bottom:15px"><p><strong>Referencia:</strong> ${pedido.referencia||'N/A'}</p><p><strong>Teléfono:</strong> ${pedido.telefono||'N/A'}</p><p><strong>Total:</strong> ${formatBs(usdToBs(pedido.total||0))}</p></div><div class="keyboard-hint"><span><kbd>ESC</kbd> cerrar</span></div>`;modal.classList.add('active')}
         async function abrirSelectorMesa(){await cargarMesas();const modal=document.getElementById('mesaModal'),lista=document.getElementById('mesaList');lista.innerHTML=mesas.length?mesas.map(m=>`<button class="mesa-btn" onclick="abrirMesa('${m.nombre}')"><i class="fas fa-chair"></i>${m.nombre}</button>`).join(''):'<p class="text-center">No hay mesas</p>';modal.classList.add('active')}
