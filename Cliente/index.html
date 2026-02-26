@@ -385,7 +385,75 @@
         </div>
         <div class="modal-overlay" id="customizeModal"><div class="modal-container"><div class="modal-header"><h3><i class="fas fa-star text-accent"></i> Personalizar</h3><button class="modal-close" id="closeCustomizeModal">&times;</button></div><div class="modal-body" id="customizeModalBody"></div><div class="modal-footer"><button class="btn-secondary" id="cancelCustomize">Cancelar</button><button class="btn-primary" id="addToCartFromModal"><i class="fas fa-cart-plus"></i> Añadir</button></div></div></div>
         <div class="modal-overlay" id="confirmMesaModal"><div class="modal-container"><div class="modal-header"><h3><i class="fas fa-store"></i> Confirmar Pedido</h3><button class="modal-close" id="closeConfirmMesaModal">&times;</button></div><div class="modal-body"><div class="info-box mesa"><i class="fas fa-info-circle"></i> Pedido para <strong>Mesa <span id="confirmTableNumber">#--</span></strong></div><div style="margin:1rem 0"><h4 style="margin-bottom:.8rem">Resumen:</h4><div id="mesaOrderSummary" style="background:rgba(0,0,0,.2); padding:.8rem; border-radius:var(--radius-sm)"></div></div><div class="info-box mesa" style="margin-top:.5rem"><i class="fas fa-clock"></i> Por favor, pasa a caja a cancelar.</div><div style="margin:1rem 0"><label for="clienteNombre" style="display:block; margin-bottom:.3rem; font-weight:600; color:#fff">Tu nombre (opcional):</label><input type="text" id="clienteNombre" placeholder="Ej: Juan" style="width:100%; padding:.7rem; border:1px solid rgba(255,255,255,.1); border-radius:var(--radius-sm); background:rgba(0,0,0,.3); color:#fff"></div></div><div class="modal-footer"><button class="btn-secondary" id="cancelMesaOrder">Cancelar</button><button class="btn-primary" id="confirmMesaOrder"><i class="fas fa-check"></i> Hacer Pedido</button></div></div></div>
-        <div class="modal-overlay" id="deliveryModal"><div class="modal-container"><div class="modal-header"><h3><i class="fas fa-motorcycle"></i> Delivery</h3><button class="modal-close" id="closeDeliveryModal">&times;</button></div><div class="modal-body"><div class="payment-timer" id="deliveryTimer" style="display:block"><i class="fas fa-hourglass-half"></i> 20 min para pagar<div class="timer-display" id="deliveryTimerDisplay">20:00</div></div><div class="payment-info"><h4><i class="fas fa-credit-card"></i> Datos de Pago - Pago Móvil</h4><div class="payment-details"><p><i class="fas fa-university"></i><strong>Banco:</strong><span class="valor">Banesco</span></p><p><i class="fas fa-phone-alt"></i><strong>Teléfono:</strong><span class="valor" id="telefonoPago">0424-1525233</span><button class="btn-copy" onclick="copiarAlPortapapeles('0424-1525233', this)" title="Copiar teléfono"><i class="fas fa-copy"></i></button></p><p><i class="fas fa-id-card"></i><strong>RIF:</strong><span class="valor" id="rifPago">J-501519838</span><button class="btn-copy" onclick="copiarAlPortapapeles('J-501519838', this)" title="Copiar RIF"><i class="fas fa-copy"></i></button></p><p><i class="fas fa-dollar-sign"></i><strong>Monto:</strong><span class="valor-placeholder" id="montoPago">Primero seleccione Parroquia a enviar</span></p></div><div class="payment-note"><i class="fas fa-info-circle"></i><strong>Sólo se aceptan pagos por Pago Móvil</strong><p>Por favor, asegúrese de que su dirección y teléfono sean los correctos para garantizar que su pedido llegue a sus manos sin inconvenientes.</p></div></div><form id="deliveryForm"><div style="margin-bottom:1.5rem"><label style="display:block; margin-bottom:.5rem; font-weight:600; color:#fff">Parroquia a enviar: <span class="asterisk">*</span></label><div class="parroquia-selector"><div class="selected-parroquia" onclick="toggleParroquiaSelect()"><span id="selectedParroquiaText">Seleccionar parroquia</span><i class="fas fa-chevron-down" id="parroquiaChevron"></i></div><input type="text" id="parroquiaSearch" class="parroquia-search" placeholder="Buscar parroquia..." style="display:none"><select id="parroquiaSelect" class="parroquia-select" size="5" style="display:none" onchange="seleccionarParroquia(this)"><option value="">Seleccionar parroquia</option><option value="Altagracia">Altagracia</option><option value="Antímano">Antímano</option><option value="Candelaria">Candelaria</option><option value="Caricuao">Caricuao</option><option value="Caucagüita">Caucagüita</option><option value="Catedral">Catedral</option><option value="Chacao">Chacao</option><option value="Coche">Coche</option><option value="El Cafetal">El Cafetal</option><option value="El Junquito">El Junquito</option><option value="El Paraíso">El Paraíso</option><option value="El Recreo">El Recreo</option><option value="El Valle">El Valle</option><option value="Fila de Mariches">Fila de Mariches</option><option value="La Dolorita">La Dolorita</option><option value="La Pastora">La Pastora</option><option value="La Vega">La Vega</option><option value="Las Minas">Las Minas</option><option value="Leoncio Martínez">Leoncio Martínez</option><option value="Macarao">Macarao</option><option value="Nuestra Señora del Rosario">Nuestra Señora del Rosario</option><option value="Petare">Petare</option><option value="San Agustín">San Agustín</option><option value="San Bernardino">San Bernardino</option><option value="San José">San José</option><option value="San Juan">San Juan</option><option value="San Pedro">San Pedro</option><option value="Santa Rosalía">Santa Rosalía</option><option value="Santa Rosalía de Palermo">Santa Rosalía de Palermo</option><option value="Santa Teresa">Santa Teresa</option><option value="Sucre">Sucre</option><option value="23 de Enero">23 de Enero</option></select></div></div><div class="delivery-price-display" id="deliveryPriceDisplay">Primero seleccione Parroquia a enviar</div><div style="margin-bottom:1.5rem"><label for="direccion" style="display:block; margin-bottom:.5rem; font-weight:600; color:#fff">Dirección completa <span class="asterisk">*</span></label><textarea id="direccion" required minlength="20" placeholder="Introduce tu dirección completa (mínimo 20 caracteres)" style="width:100%; padding:.8rem; border:2px solid rgba(255,255,255,.1); border-radius:var(--radius-sm); font-size:1rem; transition:border .2s; background:rgba(0,0,0,.3); color:#fff" rows="3" oninput="actualizarContadorDireccion()"></textarea><div style="display:flex; justify-content:flex-end; margin-top:.3rem"><small id="direccionCounter" style="color:var(--gray-400); font-weight:500">0/20 caracteres</small></div></div><div style="margin-bottom:1.5rem"><label for="telefono" style="display:block; margin-bottom:.5rem; font-weight:600; color:#fff">Teléfono (máx 14 dígitos) <span class="asterisk">*</span></label><input type="tel" id="telefono" required pattern="\+[0-9]{11,14}" maxlength="15" placeholder="Ej: +5804121234567 o 04121234567" inputmode="numeric" style="width:100%; padding:.8rem; border:2px solid rgba(255,255,255,.1); border-radius:var(--radius-sm); font-size:1rem; background:rgba(0,0,0,.3); color:#fff" oninput="this.value=this.value.replace(/[^0-9+]/g,''); if(this.value.indexOf('+')!==0&&this.value.length>0){this.value='+'+this.value.replace(/\+/g,'')} validarFormularioDelivery()"></div><div style="margin-bottom:1.5rem"><label style="display:block; margin-bottom:.5rem; font-weight:600; color:#fff">Referencia (6 dígitos) <span class="asterisk">*</span></label><div style="display:flex; gap:.5rem; justify-content:center"><input type="text" maxlength="1" class="ref-digit" data-type="delivery" data-index="0" style="width:50px; height:50px; text-align:center; padding:.5rem; border:2px solid rgba(255,255,255,.1); border-radius:var(--radius-sm); font-size:1.4rem; font-weight:600; background:rgba(0,0,0,.3); color:#fff" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this,'delivery',0); validarFormularioDelivery()"><input type="text" maxlength="1" class="ref-digit" data-type="delivery" data-index="1" style="width:50px; height:50px; text-align:center; padding:.5rem; border:2px solid rgba(255,255,255,.1); border-radius:var(--radius-sm); font-size:1.4rem; font-weight:600; background:rgba(0,0,0,.3); color:#fff" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this,'delivery',1); validarFormularioDelivery()"><input type="text" maxlength="1" class="ref-digit" data-type="delivery" data-index="2" style="width:50px; height:50px; text-align:center; padding:.5rem; border:2px solid rgba(255,255,255,.1); border-radius:var(--radius-sm); font-size:1.4rem; font-weight:600; background:rgba(0,0,0,.3); color:#fff" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this,'delivery',2); validarFormularioDelivery()"><input type="text" maxlength="1" class="ref-digit" data-type="delivery" data-index="3" style="width:50px; height:50px; text-align:center; padding:.5rem; border:2px solid rgba(255,255,255,.1); border-radius:var(--radius-sm); font-size:1.4rem; font-weight:600; background:rgba(0,0,0,.3); color:#fff" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this,'delivery',3); validarFormularioDelivery()"><input type="text" maxlength="1" class="ref-digit" data-type="delivery" data-index="4" style="width:50px; height:50px; text-align:center; padding:.5rem; border:2px solid rgba(255,255,255,.1); border-radius:var(--radius-sm); font-size:1.4rem; font-weight:600; background:rgba(0,0,0,.3); color:#fff" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this,'delivery',4); validarFormularioDelivery()"><input type="text" maxlength="1" class="ref-digit" data-type="delivery" data-index="5" style="width:50px; height:50px; text-align:center; padding:.5rem; border:2px solid rgba(255,255,255,.1); border-radius:var(--radius-sm); font-size:1.4rem; font-weight:600; background:rgba(0,0,0,.3); color:#fff" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this,'delivery',5); validarFormularioDelivery()"></div></div><div style="margin-bottom:1.5rem"><label for="comprobante" style="display:block; margin-bottom:.5rem; font-weight:600; color:#fff">Comprobante de pago <span class="asterisk">*</span></label><div class="file-input-wrapper"><input type="file" id="comprobante" accept="image/*" style="display:none" onchange="handleComprobanteSelect(this)"><label for="comprobante" class="file-input-label" id="comprobanteLabel"><i class="fas fa-cloud-upload-alt"></i><span>Haz clic para seleccionar una imagen</span><small>JPG, PNG, GIF (max. 5MB)</small></label><div class="upload-progress" id="uploadProgress" style="display:none"><div class="upload-progress-bar" id="uploadProgressBar" style="width:0%"></div></div></div></div><div style="padding:1rem; background:rgba(0,0,0,.2); border-radius:var(--radius-md); border:2px solid var(--primary)"><div style="display:flex; justify-content:space-between; align-items:center"><span style="font-weight:600; font-size:1.1rem; color:#fff">Total a pagar:</span><span style="font-weight:700; color:var(--accent); font-size:1.4rem" id="deliveryTotal">Primero seleccione parroquia a enviar</span></div></div></form></div><div class="modal-footer"><button class="btn-secondary" id="cancelDelivery">Cancelar</button><button class="btn-primary" id="confirmDelivery" disabled><i class="fas fa-check"></i> Confirmar Pedido</button></div></div></div>
+            <!-- MODAL DELIVERY - CORREGIDO -->
+    <div class="modal-overlay" id="deliveryModal">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3><i class="fas fa-motorcycle"></i> Delivery</h3>
+                <button class="modal-close" id="closeDeliveryModal" onclick="cerrarDeliveryModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="deliveryModalBody">
+                <!-- El contenido se llena dinámicamente con JS -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="cancelDelivery" onclick="cerrarDeliveryModal()">Cancelar</button>
+                <button class="btn-primary" id="confirmDelivery" onclick="confirmarPedidoDelivery()" disabled>
+                    <i class="fas fa-check"></i> Confirmar Pedido
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL RESERVA - CORREGIDO -->
+    <div class="modal-overlay" id="reservaModal">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3><i class="fas fa-calendar-alt"></i> Reserva</h3>
+                <button class="modal-close" id="closeReservaModal" onclick="cerrarReservaModal()">&times;</button>
+            </div>
+            <div class="modal-body" id="reservaModalBody">
+                <!-- El contenido se llena dinámicamente con JS -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="cancelReserva" onclick="cerrarReservaModal()">Cancelar</button>
+                <button class="btn-primary" id="confirmReserva" onclick="confirmarPedidoReserva()" disabled>
+                    <i class="fas fa-check"></i> Confirmar Reserva
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL MESA - CORREGIDO -->
+    <div class="modal-overlay" id="confirmMesaModal">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3><i class="fas fa-store"></i> Confirmar Pedido</h3>
+                <button class="modal-close" id="closeConfirmMesaModal" onclick="cerrarMesaModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="info-box mesa">
+                    <i class="fas fa-info-circle"></i> Pedido para <strong>Mesa <span id="confirmTableNumber">#--</span></strong>
+                </div>
+                <div style="margin:1rem 0">
+                    <h4 style="margin-bottom:.8rem">Resumen:</h4>
+                    <div id="mesaOrderSummary" style="background:rgba(0,0,0,.2); padding:.8rem; border-radius:var(--radius-sm)"></div>
+                </div>
+                <div class="info-box mesa" style="margin-top:.5rem">
+                    <i class="fas fa-clock"></i> Por favor, pasa a caja a cancelar.
+                </div>
+                <div style="margin:1rem 0">
+                    <label for="clienteNombre" style="display:block; margin-bottom:.3rem; font-weight:600; color:#fff">Tu nombre (opcional):</label>
+                    <input type="text" id="clienteNombre" placeholder="Ej: Juan" style="width:100%; padding:.7rem; border:1px solid rgba(255,255,255,.1); border-radius:var(--radius-sm); background:rgba(0,0,0,.3); color:#fff">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="cancelMesaOrder" onclick="cerrarMesaModal()">Cancelar</button>
+                <button class="btn-primary" id="confirmMesaOrder" onclick="confirmarPedidoMesa()">
+                    <i class="fas fa-check"></i> Hacer Pedido
+                </button>
+            </div>
+        </div>
+    </div>
         <div class="modal-overlay" id="reservaModal"><div class="modal-container"><div class="modal-header"><h3><i class="fas fa-calendar-alt"></i> Reserva</h3><button class="modal-close" id="closeReservaModal">&times;</button></div><div class="modal-body"><div class="payment-timer" id="reservaTimer" style="display:block"><i class="fas fa-hourglass-half"></i> 20 min para pagar<div class="timer-display" id="reservaTimerDisplay">20:00</div></div><div class="payment-info"><h4><i class="fas fa-credit-card"></i> Datos de Pago - Pago Móvil</h4><div class="payment-details"><p><i class="fas fa-university"></i><strong>Banco:</strong><span class="valor">Banesco</span></p><p><i class="fas fa-phone-alt"></i><strong>Teléfono:</strong><span class="valor" id="telefonoPagoReserva">0424-1525233</span><button class="btn-copy" onclick="copiarAlPortapapeles('0424-1525233', this)" title="Copiar teléfono"><i class="fas fa-copy"></i></button></p><p><i class="fas fa-id-card"></i><strong>RIF:</strong><span class="valor" id="rifPagoReserva">J-501519838</span><button class="btn-copy" onclick="copiarAlPortapapeles('J-501519838', this)" title="Copiar RIF"><i class="fas fa-copy"></i></button></p><p><i class="fas fa-dollar-sign"></i><strong>Monto:</strong><span class="valor" id="montoReserva">Bs. 0,00</span><button class="btn-copy" onclick="copiarAlPortapapeles(document.getElementById('montoReserva').textContent.replace('Bs. ', ''), this)" title="Copiar monto"><i class="fas fa-copy"></i></button></p></div><div class="payment-note"><i class="fas fa-info-circle"></i><strong>Sólo se aceptan pagos por Pago Móvil</strong><p>Por favor, asegúrese de que su dirección y teléfono sean los correctos para garantizar que su pedido llegue a sus manos sin inconvenientes.</p></div></div><form id="reservaForm"><div style="margin-bottom:1.5rem"><label for="fechaReserva" style="display:block; margin-bottom:.5rem; font-weight:600; color:#fff">Fecha de la reserva <span class="asterisk">*</span></label><input type="date" id="fechaReserva" required min="" style="width:100%; padding:.8rem; border:2px solid rgba(255,255,255,.1); border-radius:var(--radius-sm); font-size:1rem; background:rgba(0,0,0,.3); color:#fff" onchange="validarFormularioReserva()"></div><div style="margin-bottom:1.5rem"><label for="nombreReserva" style="display:block; margin-bottom:.5rem; font-weight:600; color:#fff">Nombre completo <span class="asterisk">*</span></label><input type="text" id="nombreReserva" required placeholder="Tu nombre" style="width:100%; padding:.8rem; border:2px solid rgba(255,255,255,.1); border-radius:var(--radius-sm); font-size:1rem; background:rgba(0,0,0,.3); color:#fff" oninput="validarFormularioReserva()"></div><div style="margin-bottom:1.5rem"><label style="display:block; margin-bottom:.5rem; font-weight:600; color:#fff">Referencia (6 dígitos) <span class="asterisk">*</span></label><div style="display:flex; gap:.5rem; justify-content:center"><input type="text" maxlength="1" class="ref-digit" data-type="reserva" data-index="0" style="width:50px; height:50px; text-align:center; padding:.5rem; border:2px solid rgba(255,255,255,.1); border-radius:var(--radius-sm); font-size:1.4rem; font-weight:600; background:rgba(0,0,0,.3); color:#fff" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this,'reserva',0); validarFormularioReserva()"><input type="text" maxlength="1" class="ref-digit" data-type="reserva" data-index="1" style="width:50px; height:50px; text-align:center; padding:.5rem; border:2px solid rgba(255,255,255,.1); border-radius:var(--radius-sm); font-size:1.4rem; font-weight:600; background:rgba(0,0,0,.3); color:#fff" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this,'reserva',1); validarFormularioReserva()"><input type="text" maxlength="1" class="ref-digit" data-type="reserva" data-index="2" style="width:50px; height:50px; text-align:center; padding:.5rem; border:2px solid rgba(255,255,255,.1); border-radius:var(--radius-sm); font-size:1.4rem; font-weight:600; background:rgba(0,0,0,.3); color:#fff" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this,'reserva',2); validarFormularioReserva()"><input type="text" maxlength="1" class="ref-digit" data-type="reserva" data-index="3" style="width:50px; height:50px; text-align:center; padding:.5rem; border:2px solid rgba(255,255,255,.1); border-radius:var(--radius-sm); font-size:1.4rem; font-weight:600; background:rgba(0,0,0,.3); color:#fff" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this,'reserva',3); validarFormularioReserva()"><input type="text" maxlength="1" class="ref-digit" data-type="reserva" data-index="4" style="width:50px; height:50px; text-align:center; padding:.5rem; border:2px solid rgba(255,255,255,.1); border-radius:var(--radius-sm); font-size:1.4rem; font-weight:600; background:rgba(0,0,0,.3); color:#fff" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this,'reserva',4); validarFormularioReserva()"><input type="text" maxlength="1" class="ref-digit" data-type="reserva" data-index="5" style="width:50px; height:50px; text-align:center; padding:.5rem; border:2px solid rgba(255,255,255,.1); border-radius:var(--radius-sm); font-size:1.4rem; font-weight:600; background:rgba(0,0,0,.3); color:#fff" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this,'reserva',5); validarFormularioReserva()"></div></div><div style="margin-bottom:1.5rem"><label for="comprobanteReserva" style="display:block; margin-bottom:.5rem; font-weight:600; color:#fff">Comprobante de pago <span class="asterisk">*</span></label><div class="file-input-wrapper"><input type="file" id="comprobanteReserva" accept="image/*" style="display:none" onchange="handleComprobanteReservaSelect(this)"><label for="comprobanteReserva" class="file-input-label" id="comprobanteReservaLabel"><i class="fas fa-cloud-upload-alt"></i><span>Haz clic para seleccionar una imagen</span><small>JPG, PNG, GIF (max. 5MB)</small></label><div class="upload-progress" id="uploadProgressReserva" style="display:none"><div class="upload-progress-bar" id="uploadProgressBarReserva" style="width:0%"></div></div></div></div><div style="padding:1rem; background:rgba(0,0,0,.2); border-radius:var(--radius-md); border:2px solid var(--primary)"><div style="display:flex; justify-content:space-between; align-items:center"><span style="font-weight:600; font-size:1.1rem; color:#fff">Total a pagar:</span><span style="font-weight:700; color:var(--accent); font-size:1.4rem" id="reservaTotal">Bs. 0,00</span></div></div></form></div><div class="modal-footer"><button class="btn-secondary" id="cancelReserva">Cancelar</button><button class="btn-primary" id="confirmReserva" disabled><i class="fas fa-check"></i> Confirmar Reserva</button></div></div></div>
     </div>
     <div class="notifications-panel" id="notificationsPanel">
@@ -2278,6 +2346,223 @@
             procesarNotificacion(notifPrueba);
             console.log('🧪 Notificación de prueba enviada');
         };
+		
+		// ============ FUNCIONES AUXILIARES PARA CERRAR MODALES ============
+		function cerrarDeliveryModal() {
+			detenerTimer('delivery');
+			document.getElementById('deliveryModal').classList.remove('active');
+		}
+
+		function cerrarReservaModal() {
+			detenerTimer('reserva');
+			document.getElementById('reservaModal').classList.remove('active');
+		}
+
+		function cerrarMesaModal() {
+			document.getElementById('confirmMesaModal').classList.remove('active');
+		}
+
+		// Modificar las funciones existentes para usar los bodies correctos
+		function iniciarProcesoDelivery() {
+			iniciarTimerFrontend('delivery', 20);
+			
+			// Construir el contenido del modal
+			const body = document.getElementById('deliveryModalBody');
+			body.innerHTML = `
+				<div class="payment-timer" id="deliveryTimer" style="display:block">
+					<i class="fas fa-hourglass-half"></i> 20 min para pagar
+					<div class="timer-display" id="deliveryTimerDisplay">20:00</div>
+				</div>
+				<div class="payment-info">
+					<h4><i class="fas fa-credit-card"></i> Datos de Pago - Pago Móvil</h4>
+					<div class="payment-details">
+						<p><i class="fas fa-university"></i><strong>Banco:</strong><span class="valor">Banesco</span></p>
+						<p><i class="fas fa-phone-alt"></i><strong>Teléfono:</strong><span class="valor" id="telefonoPago">0424-1525233</span><button class="btn-copy" onclick="copiarAlPortapapeles('0424-1525233', this)" title="Copiar teléfono"><i class="fas fa-copy"></i></button></p>
+						<p><i class="fas fa-id-card"></i><strong>RIF:</strong><span class="valor" id="rifPago">J-501519838</span><button class="btn-copy" onclick="copiarAlPortapapeles('J-501519838', this)" title="Copiar RIF"><i class="fas fa-copy"></i></button></p>
+						<p><i class="fas fa-dollar-sign"></i><strong>Monto:</strong><span class="valor-placeholder" id="montoPago">Primero seleccione Parroquia a enviar</span></p>
+					</div>
+					<div class="payment-note">
+						<i class="fas fa-info-circle"></i><strong>Sólo se aceptan pagos por Pago Móvil</strong>
+						<p>Por favor, asegúrese de que su dirección y teléfono sean los correctos para garantizar que su pedido llegue a sus manos sin inconvenientes.</p>
+					</div>
+				</div>
+				<form id="deliveryForm">
+					<div style="margin-bottom:1.5rem">
+						<label style="display:block; margin-bottom:.5rem; font-weight:600; color:#fff">Parroquia a enviar: <span class="asterisk">*</span></label>
+						<div class="parroquia-selector">
+							<div class="selected-parroquia" onclick="toggleParroquiaSelect()">
+								<span id="selectedParroquiaText">Seleccionar parroquia</span>
+								<i class="fas fa-chevron-down" id="parroquiaChevron"></i>
+							</div>
+							<input type="text" id="parroquiaSearch" class="parroquia-search" placeholder="Buscar parroquia..." style="display:none">
+							<select id="parroquiaSelect" class="parroquia-select" size="5" style="display:none" onchange="seleccionarParroquia(this)">
+								<option value="">Seleccionar parroquia</option>
+								<option value="Altagracia">Altagracia</option>
+								<option value="Antímano">Antímano</option>
+								<option value="Candelaria">Candelaria</option>
+								<option value="Caricuao">Caricuao</option>
+								<option value="Caucagüita">Caucagüita</option>
+								<option value="Catedral">Catedral</option>
+								<option value="Chacao">Chacao</option>
+								<option value="Coche">Coche</option>
+								<option value="El Cafetal">El Cafetal</option>
+								<option value="El Junquito">El Junquito</option>
+								<option value="El Paraíso">El Paraíso</option>
+								<option value="El Recreo">El Recreo</option>
+								<option value="El Valle">El Valle</option>
+								<option value="Fila de Mariches">Fila de Mariches</option>
+								<option value="La Dolorita">La Dolorita</option>
+								<option value="La Pastora">La Pastora</option>
+								<option value="La Vega">La Vega</option>
+								<option value="Las Minas">Las Minas</option>
+								<option value="Leoncio Martínez">Leoncio Martínez</option>
+								<option value="Macarao">Macarao</option>
+								<option value="Nuestra Señora del Rosario">Nuestra Señora del Rosario</option>
+								<option value="Petare">Petare</option>
+								<option value="San Agustín">San Agustín</option>
+								<option value="San Bernardino">San Bernardino</option>
+								<option value="San José">San José</option>
+								<option value="San Juan">San Juan</option>
+								<option value="San Pedro">San Pedro</option>
+								<option value="Santa Rosalía">Santa Rosalía</option>
+								<option value="Santa Rosalía de Palermo">Santa Rosalía de Palermo</option>
+								<option value="Santa Teresa">Santa Teresa</option>
+								<option value="Sucre">Sucre</option>
+								<option value="23 de Enero">23 de Enero</option>
+							</select>
+						</div>
+					</div>
+					<div class="delivery-price-display" id="deliveryPriceDisplay">Primero seleccione Parroquia a enviar</div>
+					<div style="margin-bottom:1.5rem">
+						<label for="direccion" style="display:block; margin-bottom:.5rem; font-weight:600; color:#fff">Dirección completa <span class="asterisk">*</span></label>
+						<textarea id="direccion" required minlength="20" placeholder="Introduce tu dirección completa (mínimo 20 caracteres)" style="width:100%; padding:.8rem; border:2px solid rgba(255,255,255,.1); border-radius:var(--radius-sm); font-size:1rem; transition:border .2s; background:rgba(0,0,0,.3); color:#fff" rows="3" oninput="actualizarContadorDireccion()"></textarea>
+						<div style="display:flex; justify-content:flex-end; margin-top:.3rem"><small id="direccionCounter" style="color:var(--gray-400); font-weight:500">0/20 caracteres</small></div>
+					</div>
+					<div style="margin-bottom:1.5rem">
+						<label for="telefono" style="display:block; margin-bottom:.5rem; font-weight:600; color:#fff">Teléfono (máx 14 dígitos) <span class="asterisk">*</span></label>
+						<input type="tel" id="telefono" required pattern="\+[0-9]{11,14}" maxlength="15" placeholder="Ej: +5804121234567 o 04121234567" inputmode="numeric" style="width:100%; padding:.8rem; border:2px solid rgba(255,255,255,.1); border-radius:var(--radius-sm); font-size:1rem; background:rgba(0,0,0,.3); color:#fff" oninput="this.value=this.value.replace(/[^0-9+]/g,''); if(this.value.indexOf('+')!==0&&this.value.length>0){this.value='+'+this.value.replace(/\+/g,'')} validarFormularioDelivery()">
+					</div>
+					<div style="margin-bottom:1.5rem">
+						<label style="display:block; margin-bottom:.5rem; font-weight:600; color:#fff">Referencia (6 dígitos) <span class="asterisk">*</span></label>
+						<div style="display:flex; gap:.5rem; justify-content:center">
+							<input type="text" maxlength="1" class="ref-digit" data-type="delivery" data-index="0" style="width:50px; height:50px; text-align:center; padding:.5rem; border:2px solid rgba(255,255,255,.1); border-radius:var(--radius-sm); font-size:1.4rem; font-weight:600; background:rgba(0,0,0,.3); color:#fff" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this,'delivery',0); validarFormularioDelivery()">
+							<input type="text" maxlength="1" class="ref-digit" data-type="delivery" data-index="1" style="width:50px; height:50px; text-align:center; padding:.5rem; border:2px solid rgba(255,255,255,.1); border-radius:var(--radius-sm); font-size:1.4rem; font-weight:600; background:rgba(0,0,0,.3); color:#fff" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this,'delivery',1); validarFormularioDelivery()">
+							<input type="text" maxlength="1" class="ref-digit" data-type="delivery" data-index="2" style="width:50px; height:50px; text-align:center; padding:.5rem; border:2px solid rgba(255,255,255,.1); border-radius:var(--radius-sm); font-size:1.4rem; font-weight:600; background:rgba(0,0,0,.3); color:#fff" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this,'delivery',2); validarFormularioDelivery()">
+							<input type="text" maxlength="1" class="ref-digit" data-type="delivery" data-index="3" style="width:50px; height:50px; text-align:center; padding:.5rem; border:2px solid rgba(255,255,255,.1); border-radius:var(--radius-sm); font-size:1.4rem; font-weight:600; background:rgba(0,0,0,.3); color:#fff" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this,'delivery',3); validarFormularioDelivery()">
+							<input type="text" maxlength="1" class="ref-digit" data-type="delivery" data-index="4" style="width:50px; height:50px; text-align:center; padding:.5rem; border:2px solid rgba(255,255,255,.1); border-radius:var(--radius-sm); font-size:1.4rem; font-weight:600; background:rgba(0,0,0,.3); color:#fff" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this,'delivery',4); validarFormularioDelivery()">
+							<input type="text" maxlength="1" class="ref-digit" data-type="delivery" data-index="5" style="width:50px; height:50px; text-align:center; padding:.5rem; border:2px solid rgba(255,255,255,.1); border-radius:var(--radius-sm); font-size:1.4rem; font-weight:600; background:rgba(0,0,0,.3); color:#fff" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this,'delivery',5); validarFormularioDelivery()">
+						</div>
+					</div>
+					<div style="margin-bottom:1.5rem">
+						<label for="comprobante" style="display:block; margin-bottom:.5rem; font-weight:600; color:#fff">Comprobante de pago <span class="asterisk">*</span></label>
+						<div class="file-input-wrapper">
+							<input type="file" id="comprobante" accept="image/*" style="display:none" onchange="handleComprobanteSelect(this)">
+							<label for="comprobante" class="file-input-label" id="comprobanteLabel"><i class="fas fa-cloud-upload-alt"></i><span>Haz clic para seleccionar una imagen</span><small>JPG, PNG, GIF (max. 5MB)</small></label>
+							<div class="upload-progress" id="uploadProgress" style="display:none"><div class="upload-progress-bar" id="uploadProgressBar" style="width:0%"></div></div>
+						</div>
+					</div>
+					<div style="padding:1rem; background:rgba(0,0,0,.2); border-radius:var(--radius-md); border:2px solid var(--primary)">
+						<div style="display:flex; justify-content:space-between; align-items:center">
+							<span style="font-weight:600; font-size:1.1rem; color:#fff">Total a pagar:</span>
+							<span style="font-weight:700; color:var(--accent); font-size:1.4rem" id="deliveryTotal">Primero seleccione parroquia a enviar</span>
+						</div>
+					</div>
+				</form>
+			`;
+			
+			// Restaurar valores guardados
+			document.getElementById('selectedParroquiaText').textContent = deliveryFormData.parroquia || 'Seleccionar parroquia';
+			document.getElementById('parroquiaSelect').value = deliveryFormData.parroquia || '';
+			document.getElementById('direccion').value = deliveryFormData.direccion || '';
+			document.getElementById('telefono').value = deliveryFormData.telefono || '';
+			
+			if (deliveryFormData.referencia) { 
+				for (let i = 0; i < 6; i++) { 
+					const input = document.querySelector(`.ref-digit[data-type="delivery"][data-index="${i}"]`); 
+					if (input) input.value = deliveryFormData.referencia[i] || ''; 
+				} 
+			}
+			
+			actualizarTotalDelivery();
+			setupReferenceInputs(); // Re-configurar los inputs de referencia
+			document.getElementById('deliveryModal').classList.add('active');
+		}
+
+		function iniciarProcesoReserva() {
+			iniciarTimerFrontend('reserva', 20);
+			
+			const body = document.getElementById('reservaModalBody');
+			const subtotalUSD = carrito.reduce((sum, item) => sum + item.precioUnitarioUSD, 0);
+			
+			body.innerHTML = `
+				<div class="payment-timer" id="reservaTimer" style="display:block">
+					<i class="fas fa-hourglass-half"></i> 20 min para pagar
+					<div class="timer-display" id="reservaTimerDisplay">20:00</div>
+				</div>
+				<div class="payment-info">
+					<h4><i class="fas fa-credit-card"></i> Datos de Pago - Pago Móvil</h4>
+					<div class="payment-details">
+						<p><i class="fas fa-university"></i><strong>Banco:</strong><span class="valor">Banesco</span></p>
+						<p><i class="fas fa-phone-alt"></i><strong>Teléfono:</strong><span class="valor" id="telefonoPagoReserva">0424-1525233</span><button class="btn-copy" onclick="copiarAlPortapapeles('0424-1525233', this)" title="Copiar teléfono"><i class="fas fa-copy"></i></button></p>
+						<p><i class="fas fa-id-card"></i><strong>RIF:</strong><span class="valor" id="rifPagoReserva">J-501519838</span><button class="btn-copy" onclick="copiarAlPortapapeles('J-501519838', this)" title="Copiar RIF"><i class="fas fa-copy"></i></button></p>
+						<p><i class="fas fa-dollar-sign"></i><strong>Monto:</strong><span class="valor" id="montoReserva">${formatBs(usdToBs(subtotalUSD))}</span><button class="btn-copy" onclick="copiarAlPortapapeles('${formatBs(usdToBs(subtotalUSD)).replace('Bs. ', '')}', this)" title="Copiar monto"><i class="fas fa-copy"></i></button></p>
+					</div>
+					<div class="payment-note">
+						<i class="fas fa-info-circle"></i><strong>Sólo se aceptan pagos por Pago Móvil</strong>
+						<p>Por favor, asegúrese de que su dirección y teléfono sean los correctos para garantizar que su pedido llegue a sus manos sin inconvenientes.</p>
+					</div>
+				</div>
+				<form id="reservaForm">
+					<div style="margin-bottom:1.5rem">
+						<label for="fechaReserva" style="display:block; margin-bottom:.5rem; font-weight:600; color:#fff">Fecha de la reserva <span class="asterisk">*</span></label>
+						<input type="date" id="fechaReserva" required min="" style="width:100%; padding:.8rem; border:2px solid rgba(255,255,255,.1); border-radius:var(--radius-sm); font-size:1rem; background:rgba(0,0,0,.3); color:#fff" onchange="validarFormularioReserva()">
+					</div>
+					<div style="margin-bottom:1.5rem">
+						<label for="nombreReserva" style="display:block; margin-bottom:.5rem; font-weight:600; color:#fff">Nombre completo <span class="asterisk">*</span></label>
+						<input type="text" id="nombreReserva" required placeholder="Tu nombre" style="width:100%; padding:.8rem; border:2px solid rgba(255,255,255,.1); border-radius:var(--radius-sm); font-size:1rem; background:rgba(0,0,0,.3); color:#fff" oninput="validarFormularioReserva()">
+					</div>
+					<div style="margin-bottom:1.5rem">
+						<label style="display:block; margin-bottom:.5rem; font-weight:600; color:#fff">Referencia (6 dígitos) <span class="asterisk">*</span></label>
+						<div style="display:flex; gap:.5rem; justify-content:center">
+							<input type="text" maxlength="1" class="ref-digit" data-type="reserva" data-index="0" style="width:50px; height:50px; text-align:center; padding:.5rem; border:2px solid rgba(255,255,255,.1); border-radius:var(--radius-sm); font-size:1.4rem; font-weight:600; background:rgba(0,0,0,.3); color:#fff" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this,'reserva',0); validarFormularioReserva()">
+							<input type="text" maxlength="1" class="ref-digit" data-type="reserva" data-index="1" style="width:50px; height:50px; text-align:center; padding:.5rem; border:2px solid rgba(255,255,255,.1); border-radius:var(--radius-sm); font-size:1.4rem; font-weight:600; background:rgba(0,0,0,.3); color:#fff" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this,'reserva',1); validarFormularioReserva()">
+							<input type="text" maxlength="1" class="ref-digit" data-type="reserva" data-index="2" style="width:50px; height:50px; text-align:center; padding:.5rem; border:2px solid rgba(255,255,255,.1); border-radius:var(--radius-sm); font-size:1.4rem; font-weight:600; background:rgba(0,0,0,.3); color:#fff" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this,'reserva',2); validarFormularioReserva()">
+							<input type="text" maxlength="1" class="ref-digit" data-type="reserva" data-index="3" style="width:50px; height:50px; text-align:center; padding:.5rem; border:2px solid rgba(255,255,255,.1); border-radius:var(--radius-sm); font-size:1.4rem; font-weight:600; background:rgba(0,0,0,.3); color:#fff" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this,'reserva',3); validarFormularioReserva()">
+							<input type="text" maxlength="1" class="ref-digit" data-type="reserva" data-index="4" style="width:50px; height:50px; text-align:center; padding:.5rem; border:2px solid rgba(255,255,255,.1); border-radius:var(--radius-sm); font-size:1.4rem; font-weight:600; background:rgba(0,0,0,.3); color:#fff" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this,'reserva',4); validarFormularioReserva()">
+							<input type="text" maxlength="1" class="ref-digit" data-type="reserva" data-index="5" style="width:50px; height:50px; text-align:center; padding:.5rem; border:2px solid rgba(255,255,255,.1); border-radius:var(--radius-sm); font-size:1.4rem; font-weight:600; background:rgba(0,0,0,.3); color:#fff" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this,'reserva',5); validarFormularioReserva()">
+						</div>
+					</div>
+					<div style="margin-bottom:1.5rem">
+						<label for="comprobanteReserva" style="display:block; margin-bottom:.5rem; font-weight:600; color:#fff">Comprobante de pago <span class="asterisk">*</span></label>
+						<div class="file-input-wrapper">
+							<input type="file" id="comprobanteReserva" accept="image/*" style="display:none" onchange="handleComprobanteReservaSelect(this)">
+							<label for="comprobanteReserva" class="file-input-label" id="comprobanteReservaLabel"><i class="fas fa-cloud-upload-alt"></i><span>Haz clic para seleccionar una imagen</span><small>JPG, PNG, GIF (max. 5MB)</small></label>
+							<div class="upload-progress" id="uploadProgressReserva" style="display:none"><div class="upload-progress-bar" id="uploadProgressBarReserva" style="width:0%"></div></div>
+						</div>
+					</div>
+					<div style="padding:1rem; background:rgba(0,0,0,.2); border-radius:var(--radius-md); border:2px solid var(--primary)">
+						<div style="display:flex; justify-content:space-between; align-items:center">
+							<span style="font-weight:600; font-size:1.1rem; color:#fff">Total a pagar:</span>
+							<span style="font-weight:700; color:var(--accent); font-size:1.4rem" id="reservaTotal">${formatBs(usdToBs(subtotalUSD))}</span>
+						</div>
+					</div>
+				</form>
+			`;
+			
+			document.getElementById('fechaReserva').value = reservaFormData.fecha || '';
+			document.getElementById('nombreReserva').value = reservaFormData.nombre || '';
+			
+			if (reservaFormData.referencia) { 
+				for (let i = 0; i < 6; i++) { 
+					const input = document.querySelector(`.ref-digit[data-type="reserva"][data-index="${i}"]`); 
+					if (input) input.value = reservaFormData.referencia[i] || ''; 
+				} 
+			}
+			
+			validarFormularioReserva();
+			setupReferenceInputs(); // Re-configurar los inputs de referencia
+			document.getElementById('reservaModal').classList.add('active');
+		}
     </script>
 </body>
 </html>
