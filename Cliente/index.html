@@ -418,8 +418,8 @@
         let paginaVisible = true, suscripcionesCliente = [];
         let notificacionesPendientes = new Map(), intervaloReintentos = null, canalNotificaciones = null;
         let currentPage = 1, itemsPerPage = 6, filteredMenuItems = [];
-        let primeraNotificacionRecibida = false;
-        let badgePendiente = { ultimoValor: 0, reintentos: 0, maxReintentos: 3 };
+let primeraNotificacionRecibida = false;
+let pendingNotificationSound = false; // Para manejar permisos de audio
         let intervaloBadge = null;
         
         const preciosPorParroquia = {
@@ -464,140 +464,146 @@
 
         // ==================== FUNCIONES DE VERIFICACIÓN DE AUDIO ====================
         function verificarPermisosAudio() {
-            const audio = document.getElementById('notificationSound');
-            if (!audio) return;
-            
-            audio.load();
-            audio.volume = 0.01;
-            const testPlay = audio.play();
-            
-            if (testPlay !== undefined) {
-                testPlay
-                    .then(() => {
-                        console.log('✅ Permisos de audio OK');
-                        audio.pause();
-                        audio.currentTime = 0;
-                        audio.volume = 1;
-                    })
-                    .catch(error => {
-                        console.log('⚠️ Sin permisos de audio automático:', error);
-                        mostrarToast('🔊 Haz clic en cualquier lugar para activar sonidos', 'info');
-                        
-                        document.addEventListener('click', function activarAudio() {
-                            audio.volume = 0.01;
-                            audio.play()
-                                .then(() => {
-                                    audio.pause();
-                                    audio.currentTime = 0;
-                                    audio.volume = 1;
-                                    console.log('✅ Audio activado por interacción del usuario');
-                                })
-                                .catch(e => console.log('❌ No se pudo activar audio:', e));
-                            document.removeEventListener('click', activarAudio);
-                        }, { once: true });
-                    });
-            }
+    const audio = document.getElementById('notificationSound');
+    if (!audio) return;
+    
+    audio.load();
+    audio.volume = 1; // Volumen normal
+    
+    // Precargar el audio
+    console.log('🔊 Audio precargado');
+    
+    // Escuchar interacción del usuario para activar audio si es necesario
+    document.addEventListener('click', function activarAudio() {
+        if (window.pendingNotificationSound) {
+            audio.play()
+                .then(() => {
+                    audio.pause();
+                    audio.currentTime = 0;
+                    console.log('✅ Audio activado por interacción del usuario');
+                    window.pendingNotificationSound = false;
+                })
+                .catch(e => console.log('❌ No se pudo activar audio:', e));
         }
+    }, { once: true });
+}
 
         // ==================== FUNCIONES DE NOTIFICACIONES UI ====================
         function actualizarNotificacionesUI() {
-            const badge = document.getElementById('notificationBadge');
-            const panel = document.getElementById('notificationsPanel');
-            const countSpan = document.getElementById('notificationsCount');
-            const listDiv = document.getElementById('notificationsList');
-            
-            if (!badge) {
-                console.error('❌ Elemento badge no encontrado');
-                return;
-            }
-            
-            if (notificacionesNoLeidas > 0) {
-                badge.textContent = notificacionesNoLeidas;
-                badge.style.display = 'block';
-                badge.classList.add('has-unread');
-                
-                badge.style.animation = 'none';
-                badge.offsetHeight;
-                badge.style.animation = 'vibrate .3s ease';
-                
-                console.log(`🔔 Badge actualizado: ${notificacionesNoLeidas} no leídas`);
-            } else {
-                badge.style.display = 'none';
-                badge.classList.remove('has-unread');
-                console.log('🔕 Badge ocultado (0 no leídas)');
-            }
-            
-            if (countSpan) {
-                countSpan.textContent = notificacionesNoLeidas;
-            }
-            
-            if (listDiv) {
-                if (notificaciones.length === 0) {
-                    listDiv.innerHTML = '<div style="text-align:center; padding:1rem; color:var(--gray-400)">No hay notificaciones</div>';
-                } else {
-                    listDiv.innerHTML = notificaciones.map(n => `
-                        <div class="notification-item ${n.tipo} ${!n.leida ? 'unread' : ''}" 
-                             onclick="marcarNotificacionLeida('${n.id}')">
-                            <div class="notification-title">
-                                <i class="fas fa-${mensajesEstado[n.tipo]?.icono || 'bell'}"></i> 
-                                ${n.titulo}
-                            </div>
-                            <div class="notification-message">${n.mensaje}</div>
-                            <div class="notification-time">${new Date(n.timestamp).toLocaleString()}</div>
-                        </div>
-                    `).join('');
-                }
-            }
+    const badge = document.getElementById('notificationBadge');
+    const panel = document.getElementById('notificationsPanel');
+    const countSpan = document.getElementById('notificationsCount');
+    const listDiv = document.getElementById('notificationsList');
+    
+    if (!badge) {
+        console.error('❌ Elemento badge no encontrado');
+        return;
+    }
+    
+    // ACTUALIZAR BADGE INMEDIATAMENTE
+    if (notificacionesNoLeidas > 0) {
+        badge.textContent = notificacionesNoLeidas;
+        badge.style.display = 'block';
+        badge.classList.add('has-unread');
+        
+        // Forzar vibración del badge (SIEMPRE que haya no leídas)
+        badge.style.animation = 'none';
+        badge.offsetHeight; // Trigger reflow
+        badge.style.animation = 'vibrate .3s ease';
+        
+        console.log(`🔔 Badge actualizado automáticamente: ${notificacionesNoLeidas} no leídas`);
+    } else {
+        badge.style.display = 'none';
+        badge.classList.remove('has-unread');
+        console.log('🔕 Badge ocultado (0 no leídas)');
+    }
+    
+    // Actualizar contador en el panel (solo si el panel está visible)
+    if (countSpan) {
+        countSpan.textContent = notificacionesNoLeidas;
+    }
+    
+    // Actualizar lista de notificaciones (solo si el panel está visible)
+    if (listDiv && panel && panel.classList.contains('active')) {
+        if (notificaciones.length === 0) {
+            listDiv.innerHTML = '<div style="text-align:center; padding:1rem; color:var(--gray-400)">No hay notificaciones</div>';
+        } else {
+            listDiv.innerHTML = notificaciones.map(n => `
+                <div class="notification-item ${n.tipo} ${!n.leida ? 'unread' : ''}" 
+                     onclick="marcarNotificacionLeida('${n.id}')">
+                    <div class="notification-title">
+                        <i class="fas fa-${mensajesEstado[n.tipo]?.icono || 'bell'}"></i> 
+                        ${n.titulo}
+                    </div>
+                    <div class="notification-message">${n.mensaje}</div>
+                    <div class="notification-time">${new Date(n.timestamp).toLocaleString()}</div>
+                </div>
+            `).join('');
         }
+    }
+}
 
         function procesarNotificacion(notif) {
-            console.log('🎯 Procesando notificación:', notif);
-            
-            notificaciones.unshift(notif);
-            if (!notif.leida) {
-                notificacionesNoLeidas++;
-            }
-            
-            actualizarNotificacionesUI();
-            
-            const audio = document.getElementById('notificationSound');
-            if (audio) {
-                audio.pause();
-                audio.currentTime = 0;
-                const playPromise = audio.play();
-                if (playPromise !== undefined) {
-                    playPromise
-                        .then(() => console.log('🔊 Sonido reproducido'))
-                        .catch(error => console.log('⚠️ Error al reproducir audio:', error));
-                }
-            }
-            
-            if (navigator.vibrate) {
-                navigator.vibrate(200);
-                console.log('📳 Vibración activada');
-            }
-            
-            const bell = document.getElementById('notificationBell');
-            if (bell) {
-                bell.classList.add('fa-shake');
-                setTimeout(() => bell.classList.remove('fa-shake'), 1000);
-            }
-            
-            mostrarToast(notif.titulo, notif.tipo === 'rejected' ? 'error' : 'success');
-            
-            const dialogo = document.getElementById('dialogoRecarga');
-            if (dialogo) dialogo.remove();
-            
-            if (!primeraNotificacionRecibida) {
-                primeraNotificacionRecibida = true;
-                setTimeout(() => {
-                    const panel = document.getElementById('notificationsPanel');
-                    if (panel) panel.classList.add('active');
-                }, 500);
-            }
-            
-            console.log(`✅ Notificación procesada. Total no leídas: ${notificacionesNoLeidas}`);
+    console.log('🎯 Procesando notificación:', notif);
+    
+    // 1. Actualizar arrays ANTES de cualquier otra cosa
+    notificaciones.unshift(notif);
+    if (!notif.leida) {
+        notificacionesNoLeidas++;
+    }
+    
+    // 2. FORZAR actualización UI inmediata (esto activa badge y vibración)
+    actualizarNotificacionesUI();
+    
+    // 3. Reproducir sonido SIEMPRE (sin esperar interacción)
+    const audio = document.getElementById('notificationSound');
+    if (audio) {
+        audio.pause();
+        audio.currentTime = 0;
+        const playPromise = audio.play();
+        if (playPromise !== undefined) {
+            playPromise
+                .then(() => console.log('🔊 Sonido reproducido automáticamente'))
+                .catch(error => {
+                    console.log('⚠️ Error al reproducir audio (políticas del navegador):', error);
+                    // Guardar para cuando el usuario interactúe
+                    window.pendingNotificationSound = true;
+                });
         }
+    }
+    
+    // 4. Vibrar SIEMPRE (si el navegador lo soporta)
+    if (navigator.vibrate) {
+        navigator.vibrate(200);
+        console.log('📳 Vibración activada automáticamente');
+    }
+    
+    // 5. Animación de la campana
+    const bell = document.getElementById('notificationBell');
+    if (bell) {
+        bell.classList.add('fa-shake');
+        setTimeout(() => bell.classList.remove('fa-shake'), 1000);
+    }
+    
+    // 6. Mostrar toast (opcional, no interfiere)
+    mostrarToast(notif.titulo, notif.tipo === 'rejected' ? 'error' : 'success');
+    
+    // 7. Cerrar diálogo de recarga si existe
+    const dialogo = document.getElementById('dialogoRecarga');
+    if (dialogo) dialogo.remove();
+    
+    // 8. Si es primera notificación, desplegar panel (OPCIONAL, no afecta badge)
+    if (!primeraNotificacionRecibida) {
+        primeraNotificacionRecibida = true;
+        // NO desplegar automáticamente, dejar que el usuario haga clic
+        // setTimeout(() => {
+        //     const panel = document.getElementById('notificationsPanel');
+        //     if (panel) panel.classList.add('active');
+        // }, 500);
+    }
+    
+    console.log(`✅ Notificación procesada. Total no leídas: ${notificacionesNoLeidas}`);
+}
 
         function probarNotificacion() {
             const notifPrueba = {
@@ -1565,95 +1571,108 @@
         }
 
         function setupRealtimeSubscriptions() {
-            suscripcionesCliente.forEach(s => s.unsubscribe());
-            suscripcionesCliente = [];
-            canalNotificaciones = window.supabaseClient
-                .channel('notificaciones-cliente-' + Date.now())
-                .on('postgres_changes', { 
-                    event: 'INSERT', 
-                    schema: 'public', 
-                    table: 'notificaciones', 
-                    filter: `session_id=eq.${sessionId}` 
-                }, (payload) => {
-                    const notif = payload.new;
-                    console.log('⚡ NOTIFICACIÓN INSTANTÁNEA RECIBIDA:', notif.titulo);
-                    
-                    if (notificacionesPendientes.has(notif.id)) {
-                        notificacionesPendientes.delete(notif.id);
-                    }
-                    
-                    procesarNotificacion(notif);
-                    
-                    if (!primeraNotificacionRecibida) {
-                        primeraNotificacionRecibida = true;
-                    }
-                })
-                .subscribe((status) => {
-                    console.log('📡 Estado canal notificaciones:', status);
-                    if (status === 'CLOSED' || status === 'CHANNEL_ERROR') {
-                        console.log('⚠️ Canal caído - reintentos activados');
-                    }
-                });
-            suscripcionesCliente.push(canalNotificaciones);
-            suscripcionesCliente.push(window.supabaseClient.channel('inventario-cliente-' + Date.now()).on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'inventario' }, () => { window.stockCache.invalidate(); cargarInventario(); }).subscribe());
-            suscripcionesCliente.push(window.supabaseClient.channel('menu-cliente-' + Date.now()).on('postgres_changes', { event: '*', schema: 'public', table: 'menu' }, () => { cargarMenu(); }).subscribe());
-            suscripcionesCliente.push(window.supabaseClient.channel('pedidos-cliente-' + Date.now())
-                .on('postgres_changes', { 
-                    event: 'UPDATE', 
-                    schema: 'public', 
-                    table: 'pedidos', 
-                    filter: `session_id=eq.${sessionId}` 
-                }, (payload) => {
-                    const pedido = payload.new;
-                    if (pedido.estado !== 'pendiente') {
-                        let titulo, mensaje, tipo;
-                        switch(pedido.estado) {
-                            case 'en_camino':
-                                titulo = '🚚 Pedido enviado';
-                                mensaje = 'El delivery ya salió';
-                                tipo = 'approved';
-                                break;
-                            case 'entregado':
-                                titulo = '✅ Pedido entregado';
-                                mensaje = '¡Buen Provecho! Gracias por elegir Saki Sushi';
-                                tipo = 'approved';
-                                break;
-                            case 'reserva_completada':
-                                titulo = '✅ Reserva Confirmada';
-                                mensaje = 'En breve tu pedido te será entregado, ¡Gracias por preferirnos!';
-                                tipo = 'approved';
-                                break;
-                            case 'rechazado':
-                                titulo = '❌ Pedido rechazado';
-                                mensaje = 'Tu pedido fue rechazado';
-                                tipo = 'rejected';
-                                break;
-                            case 'cancelado_timeout':
-                                titulo = '⏰ Tiempo agotado';
-                                mensaje = 'El tiempo para pagar ha expirado';
-                                tipo = 'rejected';
-                                break;
-                            default:
-                                titulo = '✅ Estado actualizado';
-                                mensaje = `Tu pedido está ${pedido.estado}`;
-                                tipo = 'approved';
-                        }
-                        
-                        window.supabaseClient
-                            .from('notificaciones')
-                            .insert([{ 
-                                pedido_id: pedido.id, 
-                                tipo: tipo,
-                                titulo: titulo, 
-                                mensaje: mensaje, 
-                                timestamp: new Date().toISOString(), 
-                                session_id: sessionId, 
-                                leida: false 
-                            }])
-                            .then(() => console.log('📝 Notificación insertada desde pedido'));
-                    }
-                }).subscribe());
-        }
+    suscripcionesCliente.forEach(s => s.unsubscribe());
+    suscripcionesCliente = [];
+    
+    canalNotificaciones = window.supabaseClient
+        .channel('notificaciones-cliente-' + Date.now())
+        .on('postgres_changes', { 
+            event: 'INSERT', 
+            schema: 'public', 
+            table: 'notificaciones', 
+            filter: `session_id=eq.${sessionId}` 
+        }, (payload) => {
+            const notif = payload.new;
+            console.log('⚡ NOTIFICACIÓN INSTANTÁNEA RECIBIDA:', notif.titulo);
+            
+            if (notificacionesPendientes.has(notif.id)) {
+                notificacionesPendientes.delete(notif.id);
+            }
+            
+            // PROCESAR INMEDIATAMENTE - esto activa badge, sonido y vibración
+            procesarNotificacion(notif);
+            
+            if (!primeraNotificacionRecibida) {
+                primeraNotificacionRecibida = true;
+            }
+        })
+        .subscribe((status) => {
+            console.log('📡 Estado canal notificaciones:', status);
+            if (status === 'CLOSED' || status === 'CHANNEL_ERROR') {
+                console.log('⚠️ Canal caído - reintentos activados');
+            }
+        });
+    
+    suscripcionesCliente.push(canalNotificaciones);
+    
+    suscripcionesCliente.push(window.supabaseClient.channel('inventario-cliente-' + Date.now())
+        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'inventario' }, () => { 
+            window.stockCache.invalidate(); cargarInventario(); 
+        }).subscribe());
+    
+    suscripcionesCliente.push(window.supabaseClient.channel('menu-cliente-' + Date.now())
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'menu' }, () => { 
+            cargarMenu(); 
+        }).subscribe());
+    
+    suscripcionesCliente.push(window.supabaseClient.channel('pedidos-cliente-' + Date.now())
+        .on('postgres_changes', { 
+            event: 'UPDATE', 
+            schema: 'public', 
+            table: 'pedidos', 
+            filter: `session_id=eq.${sessionId}` 
+        }, (payload) => {
+            const pedido = payload.new;
+            if (pedido.estado !== 'pendiente') {
+                let titulo, mensaje, tipo;
+                switch(pedido.estado) {
+                    case 'en_camino':
+                        titulo = '🚚 Pedido enviado';
+                        mensaje = 'El delivery ya salió';
+                        tipo = 'approved';
+                        break;
+                    case 'entregado':
+                        titulo = '✅ Pedido entregado';
+                        mensaje = '¡Buen Provecho! Gracias por elegir Saki Sushi';
+                        tipo = 'approved';
+                        break;
+                    case 'reserva_completada':
+                        titulo = '✅ Reserva Confirmada';
+                        mensaje = 'En breve tu pedido te será entregado, ¡Gracias por preferirnos!';
+                        tipo = 'approved';
+                        break;
+                    case 'rechazado':
+                        titulo = '❌ Pedido rechazado';
+                        mensaje = 'Tu pedido fue rechazado';
+                        tipo = 'rejected';
+                        break;
+                    case 'cancelado_timeout':
+                        titulo = '⏰ Tiempo agotado';
+                        mensaje = 'El tiempo para pagar ha expirado';
+                        tipo = 'rejected';
+                        break;
+                    default:
+                        titulo = '✅ Estado actualizado';
+                        mensaje = `Tu pedido está ${pedido.estado}`;
+                        tipo = 'approved';
+                }
+                
+                // Insertar notificación (esto activará el canal de notificaciones)
+                window.supabaseClient
+                    .from('notificaciones')
+                    .insert([{ 
+                        pedido_id: pedido.id, 
+                        tipo: tipo,
+                        titulo: titulo, 
+                        mensaje: mensaje, 
+                        timestamp: new Date().toISOString(), 
+                        session_id: sessionId, 
+                        leida: false 
+                    }])
+                    .then(() => console.log('📝 Notificación insertada desde pedido'));
+            }
+        }).subscribe());
+}
 
         function iniciarSistemaReintentos() {
             if (intervaloReintentos) return;
