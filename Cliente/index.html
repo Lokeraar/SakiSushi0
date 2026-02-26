@@ -1577,98 +1577,15 @@ let badgePendiente = { ultimoValor: 0, reintentos: 0, maxReintentos: 3 }; // <--
             event: 'INSERT', 
             schema: 'public', 
             table: 'notificaciones', 
-            filter: `session_id=eq.${sessionId}` 
+            filter: `session_id=eq.${sessionId}`   // <--- VERIFICAR ESTO
         }, (payload) => {
             const notif = payload.new;
-            console.log('⚡ NOTIFICACIÓN INSTANTÁNEA RECIBIDA:', notif.titulo);
-            
-            if (notificacionesPendientes.has(notif.id)) {
-                notificacionesPendientes.delete(notif.id);
-            }
-            
-            // PROCESAR INMEDIATAMENTE - esto activa badge, sonido y vibración
+            console.log('⚡ NOTIFICACIÓN INSTANTÁNEA RECIBIDA:', notif.titulo);  // <--- ¿APARECE ESTO?
             procesarNotificacion(notif);
-            
-            if (!primeraNotificacionRecibida) {
-                primeraNotificacionRecibida = true;
-            }
         })
         .subscribe((status) => {
-            console.log('📡 Estado canal notificaciones:', status);
-            if (status === 'CLOSED' || status === 'CHANNEL_ERROR') {
-                console.log('⚠️ Canal caído - reintentos activados');
-            }
+            console.log('📡 Estado canal notificaciones:', status);  // <--- DEBE DECIR 'SUBSCRIBED'
         });
-    
-    suscripcionesCliente.push(canalNotificaciones);
-    
-    suscripcionesCliente.push(window.supabaseClient.channel('inventario-cliente-' + Date.now())
-        .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'inventario' }, () => { 
-            window.stockCache.invalidate(); cargarInventario(); 
-        }).subscribe());
-    
-    suscripcionesCliente.push(window.supabaseClient.channel('menu-cliente-' + Date.now())
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'menu' }, () => { 
-            cargarMenu(); 
-        }).subscribe());
-    
-    suscripcionesCliente.push(window.supabaseClient.channel('pedidos-cliente-' + Date.now())
-        .on('postgres_changes', { 
-            event: 'UPDATE', 
-            schema: 'public', 
-            table: 'pedidos', 
-            filter: `session_id=eq.${sessionId}` 
-        }, (payload) => {
-            const pedido = payload.new;
-            if (pedido.estado !== 'pendiente') {
-                let titulo, mensaje, tipo;
-                switch(pedido.estado) {
-                    case 'en_camino':
-                        titulo = '🚚 Pedido enviado';
-                        mensaje = 'El delivery ya salió';
-                        tipo = 'approved';
-                        break;
-                    case 'entregado':
-                        titulo = '✅ Pedido entregado';
-                        mensaje = '¡Buen Provecho! Gracias por elegir Saki Sushi';
-                        tipo = 'approved';
-                        break;
-                    case 'reserva_completada':
-                        titulo = '✅ Reserva Confirmada';
-                        mensaje = 'En breve tu pedido te será entregado, ¡Gracias por preferirnos!';
-                        tipo = 'approved';
-                        break;
-                    case 'rechazado':
-                        titulo = '❌ Pedido rechazado';
-                        mensaje = 'Tu pedido fue rechazado';
-                        tipo = 'rejected';
-                        break;
-                    case 'cancelado_timeout':
-                        titulo = '⏰ Tiempo agotado';
-                        mensaje = 'El tiempo para pagar ha expirado';
-                        tipo = 'rejected';
-                        break;
-                    default:
-                        titulo = '✅ Estado actualizado';
-                        mensaje = `Tu pedido está ${pedido.estado}`;
-                        tipo = 'approved';
-                }
-                
-                // Insertar notificación (esto activará el canal de notificaciones)
-                window.supabaseClient
-                    .from('notificaciones')
-                    .insert([{ 
-                        pedido_id: pedido.id, 
-                        tipo: tipo,
-                        titulo: titulo, 
-                        mensaje: mensaje, 
-                        timestamp: new Date().toISOString(), 
-                        session_id: sessionId, 
-                        leida: false 
-                    }])
-                    .then(() => console.log('📝 Notificación insertada desde pedido'));
-            }
-        }).subscribe());
 }
 
         function iniciarSistemaReintentos() {
