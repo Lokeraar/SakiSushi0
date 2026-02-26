@@ -408,19 +408,21 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="../supabase-config.js"></script>
     <script>
+    
         // ==================== VARIABLES GLOBALES ====================
-        let sessionId = localStorage.getItem('saki_session_id') || generarId('session_');
-        localStorage.setItem('saki_session_id', sessionId);
-        let menuItems = [], inventario = [], carrito = [], notificaciones = [], notificacionesNoLeidas = 0;
-        let currentCustomizeItem = null, mesaId = null;
-        let nivel1Activo = null, nivel2Activo = null;
-        let timersActivos = {}, intervalosTimer = {}, pedidosActivos = [];
-        let paginaVisible = true, suscripcionesCliente = [];
-        let notificacionesPendientes = new Map(), intervaloReintentos = null, canalNotificaciones = null;
-        let currentPage = 1, itemsPerPage = 6, filteredMenuItems = [];
+let sessionId = localStorage.getItem('saki_session_id') || generarId('session_');
+localStorage.setItem('saki_session_id', sessionId);
+let menuItems = [], inventario = [], carrito = [], notificaciones = [], notificacionesNoLeidas = 0;
+let currentCustomizeItem = null, mesaId = null;
+let nivel1Activo = null, nivel2Activo = null;
+let timersActivos = {}, intervalosTimer = {}, pedidosActivos = [];
+let paginaVisible = true, suscripcionesCliente = [];
+let notificacionesPendientes = new Map(), intervaloReintentos = null, canalNotificaciones = null;
+let currentPage = 1, itemsPerPage = 6, filteredMenuItems = [];
 let primeraNotificacionRecibida = false;
 let pendingNotificationSound = false; // Para manejar permisos de audio
-        let intervaloBadge = null;
+let intervaloBadge = null;
+let badgePendiente = { ultimoValor: 0, reintentos: 0, maxReintentos: 3 }; // <--- AÑADIR ESTA LÍNEA
         
         const preciosPorParroquia = {
             "Altagracia": 3, "Antímano": 7, "Candelaria": 2, "Caricuao": 7, "Caucagüita": 7,
