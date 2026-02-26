@@ -420,9 +420,9 @@ let paginaVisible = true, suscripcionesCliente = [];
 let notificacionesPendientes = new Map(), intervaloReintentos = null, canalNotificaciones = null;
 let currentPage = 1, itemsPerPage = 6, filteredMenuItems = [];
 let primeraNotificacionRecibida = false;
-let pendingNotificationSound = false; // Para manejar permisos de audio
+let pendingNotificationSound = false;
 let intervaloBadge = null;
-let badgePendiente = { ultimoValor: 0, reintentos: 0, maxReintentos: 3 }; // <--- AÑADIR ESTA LÍNEA
+let badgePendiente = { ultimoValor: 0, reintentos: 0, maxReintentos: 3 };
         
         const preciosPorParroquia = {
             "Altagracia": 3, "Antímano": 7, "Candelaria": 2, "Caricuao": 7, "Caucagüita": 7,
@@ -464,143 +464,140 @@ let badgePendiente = { ultimoValor: 0, reintentos: 0, maxReintentos: 3 }; // <--
         let reservaFormData = { fecha: '', nombre: '', referencia: '', comprobante: null };
         let isUploading = false, uploadComplete = false;
 
-        // ==================== FUNCIONES DE VERIFICACIÓN DE AUDIO ====================
-        function verificarPermisosAudio() {
-    const audio = document.getElementById('notificationSound');
-    if (!audio) return;
-    
-    audio.load();
-    audio.volume = 1; // Volumen normal
-    
-    // Precargar el audio
-    console.log('🔊 Audio precargado');
-    
-    // Escuchar interacción del usuario para activar audio si es necesario
-    document.addEventListener('click', function activarAudio() {
-        if (window.pendingNotificationSound) {
-            audio.play()
-                .then(() => {
-                    audio.pause();
-                    audio.currentTime = 0;
-                    console.log('✅ Audio activado por interacción del usuario');
-                    window.pendingNotificationSound = false;
-                })
-                .catch(e => console.log('❌ No se pudo activar audio:', e));
-        }
-    }, { once: true });
-}
-
-        // ==================== FUNCIONES DE NOTIFICACIONES UI ====================
-    function actualizarNotificacionesUI() {
-    const badge = document.getElementById('notificationBadge');
-    const panel = document.getElementById('notificationsPanel');
-    const countSpan = document.getElementById('notificationsCount');
-    const listDiv = document.getElementById('notificationsList');
-    
-    if (!badge) {
-        console.error('❌ Elemento badge no encontrado');
-        return;
-    }
-    
-    // ============ ACTUALIZAR BADGE SIEMPRE ============
-    if (notificacionesNoLeidas > 0) {
-        badge.textContent = notificacionesNoLeidas;
-        badge.style.display = 'block';
-        badge.classList.add('has-unread');
-        
-        // Forzar vibración del badge SIEMPRE
-        badge.style.animation = 'none';
-        badge.offsetHeight; // Trigger reflow
-        badge.style.animation = 'vibrate .3s ease';
-        
-        console.log(`🔔 Badge actualizado automáticamente: ${notificacionesNoLeidas} no leídas`);
-    } else {
-        badge.style.display = 'none';
-        badge.classList.remove('has-unread');
-        console.log('🔕 Badge ocultado (0 no leídas)');
-    }
-    
-    // ============ ACTUALIZAR CONTADOR SIEMPRE ============
-    if (countSpan) {
-        countSpan.textContent = notificacionesNoLeidas;
-    }
-    
-    // ============ ACTUALIZAR LISTA SOLO SI EL PANEL ESTÁ VISIBLE ============
-    if (listDiv) {
-        if (notificaciones.length === 0) {
-            listDiv.innerHTML = '<div style="text-align:center; padding:1rem; color:var(--gray-400)">No hay notificaciones</div>';
-        } else {
-            listDiv.innerHTML = notificaciones.map(n => `
-                <div class="notification-item ${n.tipo} ${!n.leida ? 'unread' : ''}" 
-                     onclick="marcarNotificacionLeida('${n.id}')">
-                    <div class="notification-title">
-                        <i class="fas fa-${mensajesEstado[n.tipo]?.icono || 'bell'}"></i> 
-                        ${n.titulo}
-                    </div>
-                    <div class="notification-message">${n.mensaje}</div>
-                    <div class="notification-time">${new Date(n.timestamp).toLocaleString()}</div>
-                </div>
-            `).join('');
-        }
-    }
-    
-    // ============ FORZAR ACTUALIZACIÓN DEL SISTEMA DE BADGE ============
-    if (badgePendiente) {
-        badgePendiente.ultimoValor = notificacionesNoLeidas;
-        badgePendiente.reintentos = 0;
-    }
-}
-
+        // ==================== FUNCIÓN PRINCIPAL DE NOTIFICACIONES (CORREGIDA) ====================
         function procesarNotificacion(notif) {
-    console.log('🎯 Procesando notificación:', notif);
-    
-    // 1. Actualizar arrays ANTES de cualquier otra cosa
-    notificaciones.unshift(notif);
-    if (!notif.leida) {
-        notificacionesNoLeidas++;
-    }
-    
-    // 2. FORZAR actualización UI inmediata (esto activa badge y vibración AHORA)
-    actualizarNotificacionesUI();
-    
-    // 3. Reproducir sonido SIEMPRE (sin esperar interacción)
-    const audio = document.getElementById('notificationSound');
-    if (audio) {
-        audio.pause();
-        audio.currentTime = 0;
-        const playPromise = audio.play();
-        if (playPromise !== undefined) {
-            playPromise
-                .then(() => console.log('🔊 Sonido reproducido automáticamente'))
-                .catch(error => {
-                    console.log('⚠️ Error al reproducir audio (políticas del navegador):', error);
-                    window.pendingNotificationSound = true;
-                });
+            console.log('🎯 Procesando notificación:', notif);
+            
+            // 1. Actualizar arrays ANTES de cualquier otra cosa
+            notificaciones.unshift(notif);
+            if (!notif.leida) {
+                notificacionesNoLeidas++;
+            }
+            
+            // 2. FORZAR actualización UI inmediata (esto activa badge y vibración AHORA)
+            actualizarNotificacionesUI();
+            
+            // 3. Reproducir sonido SIEMPRE (sin esperar interacción)
+            const audio = document.getElementById('notificationSound');
+            if (audio) {
+                audio.pause();
+                audio.currentTime = 0;
+                const playPromise = audio.play();
+                if (playPromise !== undefined) {
+                    playPromise
+                        .then(() => console.log('🔊 Sonido reproducido automáticamente'))
+                        .catch(error => {
+                            console.log('⚠️ Error al reproducir audio (políticas del navegador):', error);
+                            window.pendingNotificationSound = true;
+                        });
+                }
+            }
+            
+            // 4. Vibrar SIEMPRE (si el navegador lo soporta)
+            if (navigator.vibrate) {
+                navigator.vibrate([200, 100, 200]);
+                console.log('📳 Vibración activada automáticamente');
+            }
+            
+            // 5. Animación de la campana
+            const bell = document.getElementById('notificationBell');
+            if (bell) {
+                bell.classList.add('fa-shake');
+                setTimeout(() => bell.classList.remove('fa-shake'), 1000);
+            }
+            
+            // 6. Mostrar toast (opcional, no interfiere)
+            mostrarToast(notif.titulo, notif.tipo === 'rejected' ? 'error' : 'success');
+            
+            // 7. Cerrar diálogo de recarga si existe
+            const dialogo = document.getElementById('dialogoRecarga');
+            if (dialogo) dialogo.remove();
+            
+            console.log(`✅ Notificación procesada. Total no leídas: ${notificacionesNoLeidas}`);
         }
-    }
-    
-    // 4. Vibrar SIEMPRE (si el navegador lo soporta)
-    if (navigator.vibrate) {
-        navigator.vibrate([200, 100, 200]); // Patrón de vibración más notorio
-        console.log('📳 Vibración activada automáticamente');
-    }
-    
-    // 5. Animación de la campana
-    const bell = document.getElementById('notificationBell');
-    if (bell) {
-        bell.classList.add('fa-shake');
-        setTimeout(() => bell.classList.remove('fa-shake'), 1000);
-    }
-    
-    // 6. Mostrar toast (opcional, no interfiere)
-    mostrarToast(notif.titulo, notif.tipo === 'rejected' ? 'error' : 'success');
-    
-    // 7. Cerrar diálogo de recarga si existe
-    const dialogo = document.getElementById('dialogoRecarga');
-    if (dialogo) dialogo.remove();
-    
-    console.log(`✅ Notificación procesada. Total no leídas: ${notificacionesNoLeidas}`);
-}
+
+        function actualizarNotificacionesUI() {
+            const badge = document.getElementById('notificationBadge');
+            const panel = document.getElementById('notificationsPanel');
+            const countSpan = document.getElementById('notificationsCount');
+            const listDiv = document.getElementById('notificationsList');
+            
+            if (!badge) {
+                console.error('❌ Elemento badge no encontrado');
+                return;
+            }
+            
+            // ACTUALIZAR BADGE SIEMPRE
+            if (notificacionesNoLeidas > 0) {
+                badge.textContent = notificacionesNoLeidas;
+                badge.style.display = 'block';
+                badge.classList.add('has-unread');
+                
+                // Forzar vibración del badge SIEMPRE (reiniciando animación)
+                badge.style.animation = 'none';
+                badge.offsetHeight; // Trigger reflow
+                badge.style.animation = 'vibrate .3s ease';
+                
+                console.log(`🔔 Badge actualizado automáticamente: ${notificacionesNoLeidas} no leídas`);
+            } else {
+                badge.style.display = 'none';
+                badge.classList.remove('has-unread');
+                console.log('🔕 Badge ocultado (0 no leídas)');
+            }
+            
+            // ACTUALIZAR CONTADOR SIEMPRE
+            if (countSpan) {
+                countSpan.textContent = notificacionesNoLeidas;
+            }
+            
+            // ACTUALIZAR LISTA SOLO SI EL PANEL ESTÁ VISIBLE
+            if (listDiv) {
+                if (notificaciones.length === 0) {
+                    listDiv.innerHTML = '<div style="text-align:center; padding:1rem; color:var(--gray-400)">No hay notificaciones</div>';
+                } else {
+                    listDiv.innerHTML = notificaciones.map(n => `
+                        <div class="notification-item ${n.tipo} ${!n.leida ? 'unread' : ''}" 
+                             onclick="marcarNotificacionLeida('${n.id}')">
+                            <div class="notification-title">
+                                <i class="fas fa-${mensajesEstado[n.tipo]?.icono || 'bell'}"></i> 
+                                ${n.titulo}
+                            </div>
+                            <div class="notification-message">${n.mensaje}</div>
+                            <div class="notification-time">${new Date(n.timestamp).toLocaleString()}</div>
+                        </div>
+                    `).join('');
+                }
+            }
+            
+            // ACTUALIZAR SISTEMA DE BADGE
+            if (badgePendiente) {
+                badgePendiente.ultimoValor = notificacionesNoLeidas;
+                badgePendiente.reintentos = 0;
+            }
+        }
+
+        function verificarPermisosAudio() {
+            const audio = document.getElementById('notificationSound');
+            if (!audio) return;
+            
+            audio.load();
+            audio.volume = 1;
+            
+            console.log('🔊 Audio precargado');
+            
+            document.addEventListener('click', function activarAudio() {
+                if (window.pendingNotificationSound) {
+                    audio.play()
+                        .then(() => {
+                            audio.pause();
+                            audio.currentTime = 0;
+                            console.log('✅ Audio activado por interacción del usuario');
+                            window.pendingNotificationSound = false;
+                        })
+                        .catch(e => console.log('❌ No se pudo activar audio:', e));
+                }
+            }, { once: true });
+        }
 
         function probarNotificacion() {
             const notifPrueba = {
@@ -616,7 +613,6 @@ let badgePendiente = { ultimoValor: 0, reintentos: 0, maxReintentos: 3 }; // <--
         }
         window.probarNotificacion = probarNotificacion;
 
-        // ==================== SISTEMA DE REINTENTOS PARA BADGE ====================
         function iniciarSistemaBadge() {
             if (intervaloBadge) clearInterval(intervaloBadge);
             
@@ -747,13 +743,6 @@ let badgePendiente = { ultimoValor: 0, reintentos: 0, maxReintentos: 3 }; // <--
             
             mostrarDialogoBadge();
         }
-
-        // ==================== FUNCIONES EXISTENTES (SIN CAMBIOS) ====================
-        // [Aquí van todas las funciones que ya estaban en el código original:
-        //  toggleMenuCategorias, cerrarMenuCategorias, toggleCarrito, cerrarCarrito,
-        //  cargarMenu, cargarInventario, getStockDisponible, verificarStockDisponible,
-        //  actualizarStockPlatillo, crearPedidoTransaccional, renderizarMenuPaginado,
-        //  etc. - Se mantienen exactamente igual]
 
         document.addEventListener('visibilitychange', function() {
             if (document.hidden) paginaVisible = false;
@@ -1568,25 +1557,25 @@ let badgePendiente = { ultimoValor: 0, reintentos: 0, maxReintentos: 3 }; // <--
         }
 
         function setupRealtimeSubscriptions() {
-    suscripcionesCliente.forEach(s => s.unsubscribe());
-    suscripcionesCliente = [];
-    
-    canalNotificaciones = window.supabaseClient
-        .channel('notificaciones-cliente-' + Date.now())
-        .on('postgres_changes', { 
-            event: 'INSERT', 
-            schema: 'public', 
-            table: 'notificaciones', 
-            filter: `session_id=eq.${sessionId}`   // <--- VERIFICAR ESTO
-        }, (payload) => {
-            const notif = payload.new;
-            console.log('⚡ NOTIFICACIÓN INSTANTÁNEA RECIBIDA:', notif.titulo);  // <--- ¿APARECE ESTO?
-            procesarNotificacion(notif);
-        })
-        .subscribe((status) => {
-            console.log('📡 Estado canal notificaciones:', status);  // <--- DEBE DECIR 'SUBSCRIBED'
-        });
-}
+            suscripcionesCliente.forEach(s => s.unsubscribe());
+            suscripcionesCliente = [];
+            
+            canalNotificaciones = window.supabaseClient
+                .channel('notificaciones-cliente-' + Date.now())
+                .on('postgres_changes', { 
+                    event: 'INSERT', 
+                    schema: 'public', 
+                    table: 'notificaciones', 
+                    filter: `session_id=eq.${sessionId}`
+                }, (payload) => {
+                    const notif = payload.new;
+                    console.log('⚡ NOTIFICACIÓN INSTANTÁNEA RECIBIDA:', notif.titulo);
+                    procesarNotificacion(notif);
+                })
+                .subscribe((status) => {
+                    console.log('📡 Estado canal notificaciones:', status);
+                });
+        }
 
         function iniciarSistemaReintentos() {
             if (intervaloReintentos) return;
