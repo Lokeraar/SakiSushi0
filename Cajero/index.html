@@ -302,15 +302,16 @@
         }]);
         
         // ============ VERIFICAR QUE ESTE INSERT EXISTA ============
-        await window.supabaseClient.from('notificaciones').insert([{
-            pedido_id: currentPedido.id,
-            tipo: 'approved',
-            titulo: '✅ Pago confirmado',
-            mensaje: 'Tu pedido ha sido pagado y está en preparación',
-            timestamp: new Date().toISOString(),
-            session_id: currentPedido.session_id,
-            leida: false
-        }]);
+        console.log('💰 Insertando notificación de cobro para session:', currentPedido.session_id); // <--- AGREGAR
+await window.supabaseClient.from('notificaciones').insert([{
+    pedido_id: currentPedido.id,
+    tipo: 'approved',
+    titulo: '✅ Pago confirmado',
+    mensaje: 'Tu pedido ha sido pagado y está en preparación',
+    timestamp: new Date().toISOString(),
+    session_id: currentPedido.session_id,  // <--- VERIFICAR QUE NO SEA null
+    leida: false
+}]);
         
         document.getElementById('cobroModal').classList.remove('active');
         mostrarToast('✅ Cobro procesado');
@@ -364,15 +365,16 @@
         await window.supabaseClient.from('pedidos').update({ estado: accionPendiente }).eq('id', pedidoParaAccion.id);
         
         // ============ VERIFICAR QUE ESTE INSERT EXISTA ============
-        await window.supabaseClient.from('notificaciones').insert([{
-            pedido_id: pedidoParaAccion.id,
-            tipo: 'approved',
-            titulo: notifTitulo,
-            mensaje: notifMensaje,
-            timestamp: new Date().toISOString(),
-            session_id: pedidoParaAccion.session_id,
-            leida: false
-        }]);
+        console.log('🚚 Insertando notificación de estado para session:', pedidoParaAccion.session_id); // <--- AGREGAR
+await window.supabaseClient.from('notificaciones').insert([{
+    pedido_id: pedidoParaAccion.id,
+    tipo: 'approved',
+    titulo: notifTitulo,
+    mensaje: notifMensaje,
+    timestamp: new Date().toISOString(),
+    session_id: pedidoParaAccion.session_id,  // <--- VERIFICAR
+    leida: false
+}]);
         
         cerrarModal('confirmModal');
         mostrarToast('✅ Estado actualizado');
@@ -398,15 +400,16 @@
         await window.supabaseClient.from('pedidos').update({ estado: 'rechazado' }).eq('id', pedidoParaAccion.id);
         
         // ============ VERIFICAR QUE ESTE INSERT EXISTA ============
-        await window.supabaseClient.from('notificaciones').insert([{
-            pedido_id: pedidoParaAccion.id,
-            tipo: 'rejected',
-            titulo: '❌ Pedido rechazado',
-            mensaje: `Motivo: ${traducirRazon(razon)}`,
-            timestamp: new Date().toISOString(),
-            session_id: pedidoParaAccion.session_id,
-            leida: false
-        }]);
+console.log('❌ Insertando notificación de rechazo para session:', pedidoParaAccion.session_id); // <--- AGREGAR
+await window.supabaseClient.from('notificaciones').insert([{
+    pedido_id: pedidoParaAccion.id,
+    tipo: 'rejected',
+    titulo: '❌ Pedido rechazado',
+    mensaje: `Motivo: ${traducirRazon(razon)}`,
+    timestamp: new Date().toISOString(),
+    session_id: pedidoParaAccion.session_id,  // <--- VERIFICAR
+    leida: false
+}]);
         
         cerrarModal('rechazoModal');
         mostrarToast('✅ Pedido rechazado');
