@@ -10,7 +10,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* Mismo CSS que antes - sin cambios */
         *{margin:0;padding:0;box-sizing:border-box}
         :root{--primary:#D32F2F;--secondary:#212121;--accent:#FF9800;--light-bg:#F5F5F5;--dark-bg:#121212;--success:#388E3C;--info:#1976D2;--warning:#F57C00;--danger:#ef4444;--text-light:#ffffff;--text-dark:#333333;--gray-100:#f8f9fa;--gray-200:#e9ecef;--gray-300:#dee2e6;--gray-400:#ced4da;--gray-500:#adb5bd;--gray-600:#6c757d;--gray-700:#495057;--gray-800:#343a40;--gray-900:#212529;--shadow-sm:0 2px 4px rgba(0,0,0,0.1);--shadow-md:0 4px 8px rgba(0,0,0,0.15);--shadow-lg:0 8px 16px rgba(0,0,0,0.2);--radius-sm:8px;--radius-md:12px;--radius-lg:16px;--nivel1-bg:linear-gradient(135deg,var(--primary),#b71c1c);--nivel1-text:white;--nivel2-bg:#FFF3E0;--nivel2-border:#FFB74D;--nivel2-text:#E65100;--nivel3-bg:white;--nivel3-border:var(--gray-200)}
         body{font-family:'Roboto',sans-serif;background-image:url('https://userscontent2.emaze.com/images/28851f51-ec90-466c-ad3a-51e653c9f058/c862bd8c3df982859d9f75ed46af72e1.jpg');background-size:cover;background-attachment:fixed;background-position:center;color:var(--text-dark);min-height:100vh;display:flex;flex-direction:column}
@@ -418,7 +417,9 @@
         let paginaVisible = true, suscripcionesCliente = [];
         let notificacionesPendientes = new Map(), intervaloReintentos = null, canalNotificaciones = null;
         let currentPage = 1, itemsPerPage = 6, filteredMenuItems = [];
-        let primeraNotificacionRecibida = false; // <-- NUEVA VARIABLE
+        let primeraNotificacionRecibida = false;
+        let badgePendiente = { ultimoValor: 0, reintentos: 0, maxReintentos: 3 };
+        let intervaloBadge = null;
         
         const preciosPorParroquia = {
             "Altagracia": 3, "Antímano": 7, "Candelaria": 2, "Caricuao": 7, "Caucagüita": 7,
@@ -592,8 +593,13 @@
             setupRealtimeSubscriptions(); console.log('7️⃣ Suscripciones configuradas');
             restaurarCarrito(); console.log('8️⃣ Carrito restaurado');
             actualizarUI(); actualizarCarritoBadge(); restaurarDatosFormulario();
+            
+            iniciarSistemaReintentos();
+            iniciarSistemaBadge();
+            
             const hoy = new Date().toISOString().split('T')[0];
             document.getElementById('fechaReserva').min = hoy;
+            
             if (mesaId) {
                 document.getElementById('tableNumber').textContent = mesaId;
                 document.getElementById('tableBadge').style.display = 'inline-block';
@@ -608,10 +614,11 @@
                 headerIcons.appendChild(badge);
                 headerIcons.classList.add('left-aligned');
             }
+            
             resetToAllCategories();
             cerrarTodosLosPaneles();
             console.log('🎉 Cliente listo!');
-            iniciarSistemaReintentos();
+            
             setTimeout(() => {
                 if (notificaciones.length === 0) cargarPedidosCliente();
             }, 1000);
@@ -619,6 +626,7 @@
 
         window.addEventListener('beforeunload', () => {
             if (intervaloReintentos) clearInterval(intervaloReintentos);
+            if (intervaloBadge) clearInterval(intervaloBadge);
             Object.values(intervalosTimer).forEach(clearInterval);
         });
 
@@ -746,7 +754,6 @@
                     if (pedido.tipo === 'delivery') mostrarToastPersonalizado(titulo, mensaje, pedido.parroquia);
                     else mostrarToast(titulo, 'success');
                     
-                    // PLEGAR CARRITO DESPUÉS DE CONFIRMAR PEDIDO
                     if (window.innerWidth <= 992) {
                         document.getElementById('cartSidebar').classList.remove('open');
                         document.getElementById('overlay').classList.remove('active');
@@ -1281,12 +1288,11 @@
                     if (notificacionesPendientes.has(notif.id)) notificacionesPendientes.delete(notif.id);
                     procesarNotificacion(notif);
                     
-                    // SI ES LA PRIMERA NOTIFICACIÓN, DESPLEGAR EL PANEL
                     if (!primeraNotificacionRecibida) {
                         primeraNotificacionRecibida = true;
                         setTimeout(() => {
                             document.getElementById('notificationsPanel').classList.add('active');
-                        }, 500); // Pequeño delay para que el usuario vea la animación
+                        }, 500);
                     }
                 })
                 .subscribe((status) => {
@@ -1371,6 +1377,137 @@
                     verificarNotificacionManual(id, datos.notificacion);
                 });
             }, 5000);
+        }
+
+        function iniciarSistemaBadge() {
+            if (intervaloBadge) clearInterval(intervaloBadge);
+            
+            intervaloBadge = setInterval(() => {
+                if (!paginaVisible) return;
+                
+                const badge = document.getElementById('notificationBadge');
+                const notificacionesNoLeidasActual = notificaciones.filter(n => !n.leida).length;
+                const numeroEnBadge = badge.style.display !== 'none' ? parseInt(badge.textContent) : 0;
+                
+                if (numeroEnBadge !== notificacionesNoLeidasActual) {
+                    console.log(`⚠️ Badge incorrecto: muestra ${numeroEnBadge}, debería ser ${notificacionesNoLeidasActual}`);
+                    
+                    if (badgePendiente.reintentos < badgePendiente.maxReintentos) {
+                        badgePendiente.reintentos++;
+                        console.log(`🔄 Reintento ${badgePendiente.reintentos} de ${badgePendiente.maxReintentos} para badge`);
+                        actualizarBadgeForzado();
+                    } else {
+                        console.log('❌ Badge sigue incorrecto después de 3 reintentos');
+                        badgePendiente.reintentos = 0;
+                        verificarConexionBadge();
+                    }
+                } else {
+                    badgePendiente.reintentos = 0;
+                    badgePendiente.ultimoValor = notificacionesNoLeidasActual;
+                }
+                
+                const tieneVibracion = badge.classList.contains('has-unread');
+                const deberiaTenerVibracion = notificacionesNoLeidasActual > 0;
+                
+                if (tieneVibracion !== deberiaTenerVibracion) {
+                    console.log(`⚠️ Vibración incorrecta: ${tieneVibracion ? 'activada' : 'desactivada'}, debería ser ${deberiaTenerVibracion ? 'activada' : 'desactivada'}`);
+                    
+                    if (deberiaTenerVibracion) {
+                        badge.classList.add('has-unread');
+                    } else {
+                        badge.classList.remove('has-unread');
+                    }
+                }
+                
+            }, 5000);
+        }
+
+        function actualizarBadgeForzado() {
+            const badge = document.getElementById('notificationBadge');
+            const notificacionesNoLeidasActual = notificaciones.filter(n => !n.leida).length;
+            
+            if (notificacionesNoLeidasActual > 0) {
+                badge.textContent = notificacionesNoLeidasActual;
+                badge.style.display = 'block';
+                badge.classList.add('has-unread');
+                
+                badge.style.animation = 'none';
+                badge.offsetHeight;
+                badge.style.animation = 'vibrate .3s ease';
+            } else {
+                badge.style.display = 'none';
+                badge.classList.remove('has-unread');
+            }
+        }
+
+        function verificarConexionBadge() {
+            window.supabaseClient
+                .from('notificaciones')
+                .select('count', { count: 'exact', head: true })
+                .eq('session_id', sessionId)
+                .then(({ count, error }) => {
+                    if (error) {
+                        mostrarDialogoBadge();
+                    } else {
+                        actualizarBadgeForzado();
+                    }
+                })
+                .catch(() => {
+                    mostrarDialogoBadge();
+                });
+        }
+
+        function mostrarDialogoBadge() {
+            if (document.getElementById('dialogoBadge')) return;
+            
+            const overlay = document.createElement('div');
+            overlay.className = 'modal-overlay active';
+            overlay.id = 'dialogoBadge';
+            overlay.innerHTML = `
+                <div class="confirm-dialog" style="max-width: 400px;">
+                    <i class="fas fa-exclamation-triangle" style="color: var(--warning); font-size: 3rem;"></i>
+                    <h3 style="color: #fff; margin: 1rem 0;">🔔 Problema con notificaciones</h3>
+                    <p style="color: var(--gray-300); margin-bottom: 1.5rem;">
+                        El contador de notificaciones no se actualiza correctamente.<br>
+                        Puede deberse a problemas de conexión.
+                    </p>
+                    <div style="display: flex; gap: 1rem; justify-content: center;">
+                        <button class="btn-secondary" onclick="document.getElementById('dialogoBadge').remove()">
+                            Seguir esperando
+                        </button>
+                        <button class="btn-primary" onclick="recargarBadge()">
+                            <i class="fas fa-sync-alt"></i> Recargar ahora
+                        </button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+        }
+
+        async function recargarBadge() {
+            const overlay = document.getElementById('dialogoBadge');
+            if (overlay) overlay.remove();
+            
+            mostrarToast('🔄 Reintentando...', 'info');
+            
+            for (let i = 1; i <= 3; i++) {
+                console.log(`Intento ${i} de recarga de badge...`);
+                await cargarNotificaciones();
+                actualizarBadgeForzado();
+                
+                const badge = document.getElementById('notificationBadge');
+                const notificacionesNoLeidasActual = notificaciones.filter(n => !n.leida).length;
+                const numeroEnBadge = badge.style.display !== 'none' ? parseInt(badge.textContent) : 0;
+                
+                if (numeroEnBadge === notificacionesNoLeidasActual) {
+                    mostrarToast('✅ Badge actualizado', 'success');
+                    return;
+                }
+                
+                if (i < 3) await new Promise(resolve => setTimeout(resolve, 2000));
+            }
+            
+            mostrarDialogoBadge();
         }
 
         async function verificarNotificacionManual(notifId, notificacion) {
@@ -1487,21 +1624,63 @@
             notificaciones.unshift(notif);
             if (!notif.leida) notificacionesNoLeidas++;
             
-            // REPRODUCIR SONIDO Y VIBRAR EN CADA NOTIFICACIÓN
             const audio = document.getElementById('notificationSound');
             if (audio) {
-                audio.currentTime = 0; // Reiniciar audio para que suene aunque esté reproduciéndose
+                audio.currentTime = 0;
                 audio.play().catch(() => {});
             }
             if (navigator.vibrate) navigator.vibrate(200);
             
+            actualizarNotificacionesUI();
+            
             const bell = document.getElementById('notificationBell');
             bell.classList.add('fa-shake');
             setTimeout(() => bell.classList.remove('fa-shake'), 1000);
-            actualizarNotificacionesUI();
+            
             mostrarToast(notif.titulo, notif.tipo === 'rejected' ? 'error' : 'success');
+            
             const dialogo = document.getElementById('dialogoRecarga');
             if (dialogo) dialogo.remove();
+        }
+
+        function actualizarNotificacionesUI() {
+            const badge = document.getElementById('notificationBadge');
+            const panel = document.getElementById('notificationsPanel');
+            const countSpan = document.getElementById('notificationsCount');
+            const listDiv = document.getElementById('notificationsList');
+            
+            if (notificacionesNoLeidas > 0) {
+                badge.textContent = notificacionesNoLeidas;
+                badge.style.display = 'block';
+                badge.classList.add('has-unread');
+                
+                badge.style.animation = 'none';
+                badge.offsetHeight;
+                badge.style.animation = 'vibrate .3s ease';
+            } else {
+                badge.style.display = 'none';
+                badge.classList.remove('has-unread');
+            }
+            
+            if (countSpan) countSpan.textContent = notificacionesNoLeidas;
+            
+            if (listDiv) {
+                if (notificaciones.length === 0) {
+                    listDiv.innerHTML = '<div style="text-align:center; padding:1rem; color:var(--gray-400)">No hay notificaciones</div>';
+                } else {
+                    listDiv.innerHTML = notificaciones.map(n => `
+                        <div class="notification-item ${n.tipo} ${!n.leida ? 'unread' : ''}" 
+                             onclick="marcarNotificacionLeida('${n.id}')">
+                            <div class="notification-title">
+                                <i class="fas fa-${mensajesEstado[n.tipo]?.icono || 'bell'}"></i> 
+                                ${n.titulo}
+                            </div>
+                            <div class="notification-message">${n.mensaje}</div>
+                            <div class="notification-time">${new Date(n.timestamp).toLocaleString()}</div>
+                        </div>
+                    `).join('');
+                }
+            }
         }
 
         async function cargarPedidosCliente() {
@@ -1579,16 +1758,6 @@
             await window.supabaseClient.from('notificaciones').update({ leida: true }).eq('id', id);
             notificaciones = notificaciones.map(n => n.id === id ? { ...n, leida: true } : n);
             notificacionesNoLeidas = notificaciones.filter(n => !n.leida).length; actualizarNotificacionesUI();
-        }
-        function actualizarNotificacionesUI() {
-            const badge = document.getElementById('notificationBadge'), panel = document.getElementById('notificationsPanel'), countSpan = document.getElementById('notificationsCount'), listDiv = document.getElementById('notificationsList');
-            if (notificacionesNoLeidas > 0) { badge.textContent = notificacionesNoLeidas; badge.style.display = 'block'; badge.classList.add('has-unread'); }
-            else { badge.style.display = 'none'; badge.classList.remove('has-unread'); }
-            if (countSpan) countSpan.textContent = notificacionesNoLeidas;
-            if (listDiv) {
-                if (notificaciones.length === 0) listDiv.innerHTML = '<div style="text-align:center; padding:1rem; color:var(--gray-400)">No hay notificaciones</div>';
-                else listDiv.innerHTML = notificaciones.map(n => `<div class="notification-item ${n.tipo} ${!n.leida ? 'unread' : ''}" onclick="marcarNotificacionLeida('${n.id}')"><div class="notification-title"><i class="fas fa-${mensajesEstado[n.tipo]?.icono || 'bell'}"></i> ${n.titulo}</div><div class="notification-message">${n.mensaje}</div><div class="notification-time">${new Date(n.timestamp).toLocaleString()}</div></div>`).join('');
-            }
         }
 
         function iniciarTimerFrontend(tipo, minutos) {
