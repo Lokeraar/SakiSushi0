@@ -489,7 +489,7 @@ let pendingNotificationSound = false; // Para manejar permisos de audio
 }
 
         // ==================== FUNCIONES DE NOTIFICACIONES UI ====================
-        function actualizarNotificacionesUI() {
+    function actualizarNotificacionesUI() {
     const badge = document.getElementById('notificationBadge');
     const panel = document.getElementById('notificationsPanel');
     const countSpan = document.getElementById('notificationsCount');
@@ -500,13 +500,13 @@ let pendingNotificationSound = false; // Para manejar permisos de audio
         return;
     }
     
-    // ACTUALIZAR BADGE INMEDIATAMENTE
+    // ============ ACTUALIZAR BADGE SIEMPRE ============
     if (notificacionesNoLeidas > 0) {
         badge.textContent = notificacionesNoLeidas;
         badge.style.display = 'block';
         badge.classList.add('has-unread');
         
-        // Forzar vibración del badge (SIEMPRE que haya no leídas)
+        // Forzar vibración del badge SIEMPRE
         badge.style.animation = 'none';
         badge.offsetHeight; // Trigger reflow
         badge.style.animation = 'vibrate .3s ease';
@@ -518,13 +518,13 @@ let pendingNotificationSound = false; // Para manejar permisos de audio
         console.log('🔕 Badge ocultado (0 no leídas)');
     }
     
-    // Actualizar contador en el panel (solo si el panel está visible)
+    // ============ ACTUALIZAR CONTADOR SIEMPRE ============
     if (countSpan) {
         countSpan.textContent = notificacionesNoLeidas;
     }
     
-    // Actualizar lista de notificaciones (solo si el panel está visible)
-    if (listDiv && panel && panel.classList.contains('active')) {
+    // ============ ACTUALIZAR LISTA SOLO SI EL PANEL ESTÁ VISIBLE ============
+    if (listDiv) {
         if (notificaciones.length === 0) {
             listDiv.innerHTML = '<div style="text-align:center; padding:1rem; color:var(--gray-400)">No hay notificaciones</div>';
         } else {
@@ -541,6 +541,12 @@ let pendingNotificationSound = false; // Para manejar permisos de audio
             `).join('');
         }
     }
+    
+    // ============ FORZAR ACTUALIZACIÓN DEL SISTEMA DE BADGE ============
+    if (badgePendiente) {
+        badgePendiente.ultimoValor = notificacionesNoLeidas;
+        badgePendiente.reintentos = 0;
+    }
 }
 
         function procesarNotificacion(notif) {
@@ -552,7 +558,7 @@ let pendingNotificationSound = false; // Para manejar permisos de audio
         notificacionesNoLeidas++;
     }
     
-    // 2. FORZAR actualización UI inmediata (esto activa badge y vibración)
+    // 2. FORZAR actualización UI inmediata (esto activa badge y vibración AHORA)
     actualizarNotificacionesUI();
     
     // 3. Reproducir sonido SIEMPRE (sin esperar interacción)
@@ -566,7 +572,6 @@ let pendingNotificationSound = false; // Para manejar permisos de audio
                 .then(() => console.log('🔊 Sonido reproducido automáticamente'))
                 .catch(error => {
                     console.log('⚠️ Error al reproducir audio (políticas del navegador):', error);
-                    // Guardar para cuando el usuario interactúe
                     window.pendingNotificationSound = true;
                 });
         }
@@ -574,7 +579,7 @@ let pendingNotificationSound = false; // Para manejar permisos de audio
     
     // 4. Vibrar SIEMPRE (si el navegador lo soporta)
     if (navigator.vibrate) {
-        navigator.vibrate(200);
+        navigator.vibrate([200, 100, 200]); // Patrón de vibración más notorio
         console.log('📳 Vibración activada automáticamente');
     }
     
@@ -591,16 +596,6 @@ let pendingNotificationSound = false; // Para manejar permisos de audio
     // 7. Cerrar diálogo de recarga si existe
     const dialogo = document.getElementById('dialogoRecarga');
     if (dialogo) dialogo.remove();
-    
-    // 8. Si es primera notificación, desplegar panel (OPCIONAL, no afecta badge)
-    if (!primeraNotificacionRecibida) {
-        primeraNotificacionRecibida = true;
-        // NO desplegar automáticamente, dejar que el usuario haga clic
-        // setTimeout(() => {
-        //     const panel = document.getElementById('notificationsPanel');
-        //     if (panel) panel.classList.add('active');
-        // }, 500);
-    }
     
     console.log(`✅ Notificación procesada. Total no leídas: ${notificacionesNoLeidas}`);
 }
