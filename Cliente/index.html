@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
+        /* Mismo CSS que antes - sin cambios */
         *{margin:0;padding:0;box-sizing:border-box}
         :root{--primary:#D32F2F;--secondary:#212121;--accent:#FF9800;--light-bg:#F5F5F5;--dark-bg:#121212;--success:#388E3C;--info:#1976D2;--warning:#F57C00;--danger:#ef4444;--text-light:#ffffff;--text-dark:#333333;--gray-100:#f8f9fa;--gray-200:#e9ecef;--gray-300:#dee2e6;--gray-400:#ced4da;--gray-500:#adb5bd;--gray-600:#6c757d;--gray-700:#495057;--gray-800:#343a40;--gray-900:#212529;--shadow-sm:0 2px 4px rgba(0,0,0,0.1);--shadow-md:0 4px 8px rgba(0,0,0,0.15);--shadow-lg:0 8px 16px rgba(0,0,0,0.2);--radius-sm:8px;--radius-md:12px;--radius-lg:16px;--nivel1-bg:linear-gradient(135deg,var(--primary),#b71c1c);--nivel1-text:white;--nivel2-bg:#FFF3E0;--nivel2-border:#FFB74D;--nivel2-text:#E65100;--nivel3-bg:white;--nivel3-border:var(--gray-200)}
         body{font-family:'Roboto',sans-serif;background-image:url('https://userscontent2.emaze.com/images/28851f51-ec90-466c-ad3a-51e653c9f058/c862bd8c3df982859d9f75ed46af72e1.jpg');background-size:cover;background-attachment:fixed;background-position:center;color:var(--text-dark);min-height:100vh;display:flex;flex-direction:column}
@@ -417,6 +418,8 @@
         let paginaVisible = true, suscripcionesCliente = [];
         let notificacionesPendientes = new Map(), intervaloReintentos = null, canalNotificaciones = null;
         let currentPage = 1, itemsPerPage = 6, filteredMenuItems = [];
+        let primeraNotificacionRecibida = false; // <-- NUEVA VARIABLE
+        
         const preciosPorParroquia = {
             "Altagracia": 3, "Antímano": 7, "Candelaria": 2, "Caricuao": 7, "Caucagüita": 7,
             "Catedral": 3, "Chacao": 5, "Coche": 5, "El Cafetal": 6, "El Junquito": 7,
@@ -742,6 +745,13 @@
                     }
                     if (pedido.tipo === 'delivery') mostrarToastPersonalizado(titulo, mensaje, pedido.parroquia);
                     else mostrarToast(titulo, 'success');
+                    
+                    // PLEGAR CARRITO DESPUÉS DE CONFIRMAR PEDIDO
+                    if (window.innerWidth <= 992) {
+                        document.getElementById('cartSidebar').classList.remove('open');
+                        document.getElementById('overlay').classList.remove('active');
+                    }
+                    
                     const audio = document.getElementById('notificationSound'); if (audio) audio.play().catch(() => {});
                     if (navigator.vibrate) navigator.vibrate(200);
                     const bell = document.getElementById('notificationBell');
@@ -1270,6 +1280,14 @@
                     console.log('⚡ NOTIFICACIÓN INSTANTÁNEA:', notif.titulo);
                     if (notificacionesPendientes.has(notif.id)) notificacionesPendientes.delete(notif.id);
                     procesarNotificacion(notif);
+                    
+                    // SI ES LA PRIMERA NOTIFICACIÓN, DESPLEGAR EL PANEL
+                    if (!primeraNotificacionRecibida) {
+                        primeraNotificacionRecibida = true;
+                        setTimeout(() => {
+                            document.getElementById('notificationsPanel').classList.add('active');
+                        }, 500); // Pequeño delay para que el usuario vea la animación
+                    }
                 })
                 .subscribe((status) => {
                     console.log('📡 Estado canal notificaciones:', status);
@@ -1468,8 +1486,15 @@
             console.log('🎯 Procesando notificación:', notif);
             notificaciones.unshift(notif);
             if (!notif.leida) notificacionesNoLeidas++;
-            document.getElementById('notificationSound').play().catch(() => {});
+            
+            // REPRODUCIR SONIDO Y VIBRAR EN CADA NOTIFICACIÓN
+            const audio = document.getElementById('notificationSound');
+            if (audio) {
+                audio.currentTime = 0; // Reiniciar audio para que suene aunque esté reproduciéndose
+                audio.play().catch(() => {});
+            }
             if (navigator.vibrate) navigator.vibrate(200);
+            
             const bell = document.getElementById('notificationBell');
             bell.classList.add('fa-shake');
             setTimeout(() => bell.classList.remove('fa-shake'), 1000);
