@@ -10,7 +10,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* (MISMO CSS QUE EN LA VERSIÓN ANTERIOR - SIN CAMBIOS) */
         *{margin:0;padding:0;box-sizing:border-box}
         :root{--primary:#D32F2F;--secondary:#212121;--accent:#FF9800;--light-bg:#F5F5F5;--dark-bg:#121212;--success:#388E3C;--info:#1976D2;--warning:#F57C00;--danger:#ef4444;--text-light:#ffffff;--text-dark:#333333;--gray-100:#f8f9fa;--gray-200:#e9ecef;--gray-300:#dee2e6;--gray-400:#ced4da;--gray-500:#adb5bd;--gray-600:#6c757d;--gray-700:#495057;--gray-800:#343a40;--gray-900:#212529;--shadow-sm:0 2px 4px rgba(0,0,0,0.1);--shadow-md:0 4px 8px rgba(0,0,0,0.15);--shadow-lg:0 8px 16px rgba(0,0,0,0.2);--radius-sm:8px;--radius-md:12px;--radius-lg:16px;--nivel1-bg:linear-gradient(135deg,var(--primary),#b71c1c);--nivel1-text:white;--nivel2-bg:#FFF3E0;--nivel2-border:#FFB74D;--nivel2-text:#E65100;--nivel3-bg:white;--nivel3-border:var(--gray-200)}
         body{font-family:'Roboto',sans-serif;background-image:url('https://userscontent2.emaze.com/images/28851f51-ec90-466c-ad3a-51e653c9f058/c862bd8c3df982859d9f75ed46af72e1.jpg');background-size:cover;background-attachment:fixed;background-position:center;color:var(--text-dark);min-height:100vh;display:flex;flex-direction:column}
@@ -1256,111 +1255,88 @@
             }
         }
 
-		// ==================== SUSCRIPCIONES EN TIEMPO REAL (CORREGIDO) ====================
-		function setupRealtimeSubscriptions() {
-			suscripcionesCliente.forEach(s => s.unsubscribe());
-			suscripcionesCliente = [];
-			
-			canalNotificaciones = window.supabaseClient
-				.channel('notificaciones-cliente-' + Date.now())
-				.on('postgres_changes', { 
-					event: 'INSERT', 
-					schema: 'public', 
-					table: 'notificaciones', 
-					filter: `session_id=eq.${sessionId}` 
-				}, (payload) => {
-					const notif = payload.new;
-					console.log('⚡ NOTIFICACIÓN INSTANTÁNEA:', notif.titulo);
-					if (notificacionesPendientes.has(notif.id)) notificacionesPendientes.delete(notif.id);
-					procesarNotificacion(notif);
-				})
-				.subscribe((status) => {
-					console.log('📡 Estado canal notificaciones:', status);
-					if (status === 'CLOSED' || status === 'CHANNEL_ERROR') {
-						console.log('⚠️ Canal caído - reintentos activados');
-					}
-				});
-			suscripcionesCliente.push(canalNotificaciones);
-
-			suscripcionesCliente.push(window.supabaseClient.channel('inventario-cliente-' + Date.now())
-				.on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'inventario' }, () => { 
-					window.stockCache.invalidate(); cargarInventario(); 
-				}).subscribe());
-
-			suscripcionesCliente.push(window.supabaseClient.channel('menu-cliente-' + Date.now())
-				.on('postgres_changes', { event: '*', schema: 'public', table: 'menu' }, () => { 
-					cargarMenu(); 
-				}).subscribe());
-
-			// CANAL DE PEDIDOS CORREGIDO
-			suscripcionesCliente.push(window.supabaseClient.channel('pedidos-cliente-' + Date.now())
-				.on('postgres_changes', { 
-					event: 'UPDATE', 
-					schema: 'public', 
-					table: 'pedidos', 
-					filter: `session_id=eq.${sessionId}` 
-				}, (payload) => {
-					const pedido = payload.new;
-					if (pedido.estado !== 'pendiente') {
-						let titulo, mensaje, tipo;
-						
-						// Mapeo de estados a mensajes personalizados
-						switch(pedido.estado) {
-							case 'en_camino':
-								titulo = '🚚 Pedido enviado';
-								mensaje = 'El delivery ya salió';
-								tipo = 'approved';
-								break;
-							case 'entregado':
-								titulo = '✅ Pedido entregado';
-								mensaje = '¡Buen Provecho! Gracias por elegir Saki Sushi';
-								tipo = 'approved';
-								break;
-							case 'reserva_completada':
-								titulo = '✅ Reserva Confirmada';
-								mensaje = 'En breve tu pedido te será entregado, ¡Gracias por preferirnos!';
-								tipo = 'approved';
-								break;
-							case 'en_cocina':
-								titulo = '🍳 En preparación';
-								mensaje = 'Tu pedido ya está en cocina';
-								tipo = 'approved';
-								break;
-							case 'rechazado':
-								titulo = '❌ Pedido rechazado';
-								mensaje = 'Tu pedido fue rechazado';
-								tipo = 'rejected';
-								break;
-							case 'cancelado_timeout':
-								titulo = '⏰ Tiempo agotado';
-								mensaje = 'El tiempo para pagar ha expirado (20 minutos)';
-								tipo = 'rejected';
-								break;
-							default:
-								titulo = '✅ Estado actualizado';
-								mensaje = `Tu pedido está ${pedido.estado}`;
-								tipo = 'approved';
-						}
-						
-						console.log('📦 Evento de pedido:', pedido.estado, titulo);
-						mostrarToast(mensaje, tipo === 'rejected' ? 'error' : 'success');
-						
-						// Insertar notificación con el mensaje correcto
-						window.supabaseClient
-							.from('notificaciones')
-							.insert([{ 
-								pedido_id: pedido.id, 
-								tipo: tipo,
-								titulo: titulo, 
-								mensaje: mensaje, 
-								timestamp: new Date().toISOString(), 
-								session_id: sessionId, 
-								leida: false 
-							}])
-							.then(() => cargarNotificaciones());
-					}
-				}).subscribe());
-		}
+        function setupRealtimeSubscriptions() {
+            suscripcionesCliente.forEach(s => s.unsubscribe());
+            suscripcionesCliente = [];
+            canalNotificaciones = window.supabaseClient
+                .channel('notificaciones-cliente-' + Date.now())
+                .on('postgres_changes', { 
+                    event: 'INSERT', 
+                    schema: 'public', 
+                    table: 'notificaciones', 
+                    filter: `session_id=eq.${sessionId}` 
+                }, (payload) => {
+                    const notif = payload.new;
+                    console.log('⚡ NOTIFICACIÓN INSTANTÁNEA:', notif.titulo);
+                    if (notificacionesPendientes.has(notif.id)) notificacionesPendientes.delete(notif.id);
+                    procesarNotificacion(notif);
+                })
+                .subscribe((status) => {
+                    console.log('📡 Estado canal notificaciones:', status);
+                    if (status === 'CLOSED' || status === 'CHANNEL_ERROR') {
+                        console.log('⚠️ Canal caído - reintentos activados');
+                    }
+                });
+            suscripcionesCliente.push(canalNotificaciones);
+            suscripcionesCliente.push(window.supabaseClient.channel('inventario-cliente-' + Date.now()).on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'inventario' }, () => { window.stockCache.invalidate(); cargarInventario(); }).subscribe());
+            suscripcionesCliente.push(window.supabaseClient.channel('menu-cliente-' + Date.now()).on('postgres_changes', { event: '*', schema: 'public', table: 'menu' }, () => { cargarMenu(); }).subscribe());
+            suscripcionesCliente.push(window.supabaseClient.channel('pedidos-cliente-' + Date.now())
+                .on('postgres_changes', { 
+                    event: 'UPDATE', 
+                    schema: 'public', 
+                    table: 'pedidos', 
+                    filter: `session_id=eq.${sessionId}` 
+                }, (payload) => {
+                    const pedido = payload.new;
+                    if (pedido.estado !== 'pendiente') {
+                        let titulo, mensaje, tipo;
+                        switch(pedido.estado) {
+                            case 'en_camino':
+                                titulo = '🚚 Pedido enviado';
+                                mensaje = 'El delivery ya salió';
+                                tipo = 'approved';
+                                break;
+                            case 'entregado':
+                                titulo = '✅ Pedido entregado';
+                                mensaje = '¡Buen Provecho! Gracias por elegir Saki Sushi';
+                                tipo = 'approved';
+                                break;
+                            case 'reserva_completada':
+                                titulo = '✅ Reserva Confirmada';
+                                mensaje = 'En breve tu pedido te será entregado, ¡Gracias por preferirnos!';
+                                tipo = 'approved';
+                                break;
+                            case 'rechazado':
+                                titulo = '❌ Pedido rechazado';
+                                mensaje = 'Tu pedido fue rechazado';
+                                tipo = 'rejected';
+                                break;
+                            case 'cancelado_timeout':
+                                titulo = '⏰ Tiempo agotado';
+                                mensaje = 'El tiempo para pagar ha expirado';
+                                tipo = 'rejected';
+                                break;
+                            default:
+                                titulo = '✅ Estado actualizado';
+                                mensaje = `Tu pedido está ${pedido.estado}`;
+                                tipo = 'approved';
+                        }
+                        mostrarToast(mensaje, tipo === 'rejected' ? 'error' : 'success');
+                        window.supabaseClient
+                            .from('notificaciones')
+                            .insert([{ 
+                                pedido_id: pedido.id, 
+                                tipo: tipo,
+                                titulo: titulo, 
+                                mensaje: mensaje, 
+                                timestamp: new Date().toISOString(), 
+                                session_id: sessionId, 
+                                leida: false 
+                            }])
+                            .then(() => cargarNotificaciones());
+                    }
+                }).subscribe());
+        }
 
         function iniciarSistemaReintentos() {
             if (intervaloReintentos) return;
