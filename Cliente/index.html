@@ -408,6 +408,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="../supabase-config.js"></script>
     <script>
+        // ==================== VARIABLES GLOBALES ====================
         let sessionId = localStorage.getItem('saki_session_id') || generarId('session_');
         localStorage.setItem('saki_session_id', sessionId);
         let menuItems = [], inventario = [], carrito = [], notificaciones = [], notificacionesNoLeidas = 0;
@@ -460,6 +461,296 @@
         let deliveryFormData = { parroquia: '', direccion: '', telefono: '', referencia: '', comprobante: null };
         let reservaFormData = { fecha: '', nombre: '', referencia: '', comprobante: null };
         let isUploading = false, uploadComplete = false;
+
+        // ==================== FUNCIONES DE VERIFICACIÓN DE AUDIO ====================
+        function verificarPermisosAudio() {
+            const audio = document.getElementById('notificationSound');
+            if (!audio) return;
+            
+            audio.load();
+            audio.volume = 0.01;
+            const testPlay = audio.play();
+            
+            if (testPlay !== undefined) {
+                testPlay
+                    .then(() => {
+                        console.log('✅ Permisos de audio OK');
+                        audio.pause();
+                        audio.currentTime = 0;
+                        audio.volume = 1;
+                    })
+                    .catch(error => {
+                        console.log('⚠️ Sin permisos de audio automático:', error);
+                        mostrarToast('🔊 Haz clic en cualquier lugar para activar sonidos', 'info');
+                        
+                        document.addEventListener('click', function activarAudio() {
+                            audio.volume = 0.01;
+                            audio.play()
+                                .then(() => {
+                                    audio.pause();
+                                    audio.currentTime = 0;
+                                    audio.volume = 1;
+                                    console.log('✅ Audio activado por interacción del usuario');
+                                })
+                                .catch(e => console.log('❌ No se pudo activar audio:', e));
+                            document.removeEventListener('click', activarAudio);
+                        }, { once: true });
+                    });
+            }
+        }
+
+        // ==================== FUNCIONES DE NOTIFICACIONES UI ====================
+        function actualizarNotificacionesUI() {
+            const badge = document.getElementById('notificationBadge');
+            const panel = document.getElementById('notificationsPanel');
+            const countSpan = document.getElementById('notificationsCount');
+            const listDiv = document.getElementById('notificationsList');
+            
+            if (!badge) {
+                console.error('❌ Elemento badge no encontrado');
+                return;
+            }
+            
+            if (notificacionesNoLeidas > 0) {
+                badge.textContent = notificacionesNoLeidas;
+                badge.style.display = 'block';
+                badge.classList.add('has-unread');
+                
+                badge.style.animation = 'none';
+                badge.offsetHeight;
+                badge.style.animation = 'vibrate .3s ease';
+                
+                console.log(`🔔 Badge actualizado: ${notificacionesNoLeidas} no leídas`);
+            } else {
+                badge.style.display = 'none';
+                badge.classList.remove('has-unread');
+                console.log('🔕 Badge ocultado (0 no leídas)');
+            }
+            
+            if (countSpan) {
+                countSpan.textContent = notificacionesNoLeidas;
+            }
+            
+            if (listDiv) {
+                if (notificaciones.length === 0) {
+                    listDiv.innerHTML = '<div style="text-align:center; padding:1rem; color:var(--gray-400)">No hay notificaciones</div>';
+                } else {
+                    listDiv.innerHTML = notificaciones.map(n => `
+                        <div class="notification-item ${n.tipo} ${!n.leida ? 'unread' : ''}" 
+                             onclick="marcarNotificacionLeida('${n.id}')">
+                            <div class="notification-title">
+                                <i class="fas fa-${mensajesEstado[n.tipo]?.icono || 'bell'}"></i> 
+                                ${n.titulo}
+                            </div>
+                            <div class="notification-message">${n.mensaje}</div>
+                            <div class="notification-time">${new Date(n.timestamp).toLocaleString()}</div>
+                        </div>
+                    `).join('');
+                }
+            }
+        }
+
+        function procesarNotificacion(notif) {
+            console.log('🎯 Procesando notificación:', notif);
+            
+            notificaciones.unshift(notif);
+            if (!notif.leida) {
+                notificacionesNoLeidas++;
+            }
+            
+            actualizarNotificacionesUI();
+            
+            const audio = document.getElementById('notificationSound');
+            if (audio) {
+                audio.pause();
+                audio.currentTime = 0;
+                const playPromise = audio.play();
+                if (playPromise !== undefined) {
+                    playPromise
+                        .then(() => console.log('🔊 Sonido reproducido'))
+                        .catch(error => console.log('⚠️ Error al reproducir audio:', error));
+                }
+            }
+            
+            if (navigator.vibrate) {
+                navigator.vibrate(200);
+                console.log('📳 Vibración activada');
+            }
+            
+            const bell = document.getElementById('notificationBell');
+            if (bell) {
+                bell.classList.add('fa-shake');
+                setTimeout(() => bell.classList.remove('fa-shake'), 1000);
+            }
+            
+            mostrarToast(notif.titulo, notif.tipo === 'rejected' ? 'error' : 'success');
+            
+            const dialogo = document.getElementById('dialogoRecarga');
+            if (dialogo) dialogo.remove();
+            
+            if (!primeraNotificacionRecibida) {
+                primeraNotificacionRecibida = true;
+                setTimeout(() => {
+                    const panel = document.getElementById('notificationsPanel');
+                    if (panel) panel.classList.add('active');
+                }, 500);
+            }
+            
+            console.log(`✅ Notificación procesada. Total no leídas: ${notificacionesNoLeidas}`);
+        }
+
+        function probarNotificacion() {
+            const notifPrueba = {
+                id: 'test_' + Date.now(),
+                titulo: '🔔 Notificación de prueba',
+                mensaje: 'Esto es una prueba del sistema de notificaciones',
+                tipo: 'approved',
+                timestamp: new Date().toISOString(),
+                leida: false
+            };
+            procesarNotificacion(notifPrueba);
+            console.log('🧪 Notificación de prueba enviada');
+        }
+        window.probarNotificacion = probarNotificacion;
+
+        // ==================== SISTEMA DE REINTENTOS PARA BADGE ====================
+        function iniciarSistemaBadge() {
+            if (intervaloBadge) clearInterval(intervaloBadge);
+            
+            intervaloBadge = setInterval(() => {
+                if (!paginaVisible) return;
+                
+                const badge = document.getElementById('notificationBadge');
+                const notificacionesNoLeidasActual = notificaciones.filter(n => !n.leida).length;
+                const numeroEnBadge = badge.style.display !== 'none' ? parseInt(badge.textContent) : 0;
+                
+                if (numeroEnBadge !== notificacionesNoLeidasActual) {
+                    console.log(`⚠️ Badge incorrecto: muestra ${numeroEnBadge}, debería ser ${notificacionesNoLeidasActual}`);
+                    
+                    if (badgePendiente.reintentos < badgePendiente.maxReintentos) {
+                        badgePendiente.reintentos++;
+                        console.log(`🔄 Reintento ${badgePendiente.reintentos} de ${badgePendiente.maxReintentos} para badge`);
+                        actualizarBadgeForzado();
+                    } else {
+                        console.log('❌ Badge sigue incorrecto después de 3 reintentos');
+                        badgePendiente.reintentos = 0;
+                        verificarConexionBadge();
+                    }
+                } else {
+                    badgePendiente.reintentos = 0;
+                    badgePendiente.ultimoValor = notificacionesNoLeidasActual;
+                }
+                
+                const tieneVibracion = badge.classList.contains('has-unread');
+                const deberiaTenerVibracion = notificacionesNoLeidasActual > 0;
+                
+                if (tieneVibracion !== deberiaTenerVibracion) {
+                    console.log(`⚠️ Vibración incorrecta: ${tieneVibracion ? 'activada' : 'desactivada'}, debería ser ${deberiaTenerVibracion ? 'activada' : 'desactivada'}`);
+                    
+                    if (deberiaTenerVibracion) {
+                        badge.classList.add('has-unread');
+                    } else {
+                        badge.classList.remove('has-unread');
+                    }
+                }
+                
+            }, 5000);
+        }
+
+        function actualizarBadgeForzado() {
+            const badge = document.getElementById('notificationBadge');
+            const notificacionesNoLeidasActual = notificaciones.filter(n => !n.leida).length;
+            
+            if (notificacionesNoLeidasActual > 0) {
+                badge.textContent = notificacionesNoLeidasActual;
+                badge.style.display = 'block';
+                badge.classList.add('has-unread');
+                
+                badge.style.animation = 'none';
+                badge.offsetHeight;
+                badge.style.animation = 'vibrate .3s ease';
+            } else {
+                badge.style.display = 'none';
+                badge.classList.remove('has-unread');
+            }
+        }
+
+        function verificarConexionBadge() {
+            window.supabaseClient
+                .from('notificaciones')
+                .select('count', { count: 'exact', head: true })
+                .eq('session_id', sessionId)
+                .then(({ count, error }) => {
+                    if (error) {
+                        mostrarDialogoBadge();
+                    } else {
+                        actualizarBadgeForzado();
+                    }
+                })
+                .catch(() => {
+                    mostrarDialogoBadge();
+                });
+        }
+
+        function mostrarDialogoBadge() {
+            if (document.getElementById('dialogoBadge')) return;
+            
+            const overlay = document.createElement('div');
+            overlay.className = 'modal-overlay active';
+            overlay.id = 'dialogoBadge';
+            overlay.innerHTML = `
+                <div class="confirm-dialog" style="max-width: 400px;">
+                    <i class="fas fa-exclamation-triangle" style="color: var(--warning); font-size: 3rem;"></i>
+                    <h3 style="color: #fff; margin: 1rem 0;">🔔 Problema con notificaciones</h3>
+                    <p style="color: var(--gray-300); margin-bottom: 1.5rem;">
+                        El contador de notificaciones no se actualiza correctamente.<br>
+                        Puede deberse a problemas de conexión.
+                    </p>
+                    <div style="display: flex; gap: 1rem; justify-content: center;">
+                        <button class="btn-secondary" onclick="document.getElementById('dialogoBadge').remove()">
+                            Seguir esperando
+                        </button>
+                        <button class="btn-primary" onclick="recargarBadge()">
+                            <i class="fas fa-sync-alt"></i> Recargar ahora
+                        </button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+        }
+
+        async function recargarBadge() {
+            const overlay = document.getElementById('dialogoBadge');
+            if (overlay) overlay.remove();
+            
+            mostrarToast('🔄 Reintentando...', 'info');
+            
+            for (let i = 1; i <= 3; i++) {
+                console.log(`Intento ${i} de recarga de badge...`);
+                await cargarNotificaciones();
+                actualizarBadgeForzado();
+                
+                const badge = document.getElementById('notificationBadge');
+                const notificacionesNoLeidasActual = notificaciones.filter(n => !n.leida).length;
+                const numeroEnBadge = badge.style.display !== 'none' ? parseInt(badge.textContent) : 0;
+                
+                if (numeroEnBadge === notificacionesNoLeidasActual) {
+                    mostrarToast('✅ Badge actualizado', 'success');
+                    return;
+                }
+                
+                if (i < 3) await new Promise(resolve => setTimeout(resolve, 2000));
+            }
+            
+            mostrarDialogoBadge();
+        }
+
+        // ==================== FUNCIONES EXISTENTES (SIN CAMBIOS) ====================
+        // [Aquí van todas las funciones que ya estaban en el código original:
+        //  toggleMenuCategorias, cerrarMenuCategorias, toggleCarrito, cerrarCarrito,
+        //  cargarMenu, cargarInventario, getStockDisponible, verificarStockDisponible,
+        //  actualizarStockPlatillo, crearPedidoTransaccional, renderizarMenuPaginado,
+        //  etc. - Se mantienen exactamente igual]
 
         document.addEventListener('visibilitychange', function() {
             if (document.hidden) paginaVisible = false;
@@ -596,6 +887,7 @@
             
             iniciarSistemaReintentos();
             iniciarSistemaBadge();
+            verificarPermisosAudio();
             
             const hoy = new Date().toISOString().split('T')[0];
             document.getElementById('fechaReserva').min = hoy;
@@ -1284,15 +1576,16 @@
                     filter: `session_id=eq.${sessionId}` 
                 }, (payload) => {
                     const notif = payload.new;
-                    console.log('⚡ NOTIFICACIÓN INSTANTÁNEA:', notif.titulo);
-                    if (notificacionesPendientes.has(notif.id)) notificacionesPendientes.delete(notif.id);
+                    console.log('⚡ NOTIFICACIÓN INSTANTÁNEA RECIBIDA:', notif.titulo);
+                    
+                    if (notificacionesPendientes.has(notif.id)) {
+                        notificacionesPendientes.delete(notif.id);
+                    }
+                    
                     procesarNotificacion(notif);
                     
                     if (!primeraNotificacionRecibida) {
                         primeraNotificacionRecibida = true;
-                        setTimeout(() => {
-                            document.getElementById('notificationsPanel').classList.add('active');
-                        }, 500);
                     }
                 })
                 .subscribe((status) => {
@@ -1345,7 +1638,7 @@
                                 mensaje = `Tu pedido está ${pedido.estado}`;
                                 tipo = 'approved';
                         }
-                        mostrarToast(mensaje, tipo === 'rejected' ? 'error' : 'success');
+                        
                         window.supabaseClient
                             .from('notificaciones')
                             .insert([{ 
@@ -1357,7 +1650,7 @@
                                 session_id: sessionId, 
                                 leida: false 
                             }])
-                            .then(() => cargarNotificaciones());
+                            .then(() => console.log('📝 Notificación insertada desde pedido'));
                     }
                 }).subscribe());
         }
@@ -1377,137 +1670,6 @@
                     verificarNotificacionManual(id, datos.notificacion);
                 });
             }, 5000);
-        }
-
-        function iniciarSistemaBadge() {
-            if (intervaloBadge) clearInterval(intervaloBadge);
-            
-            intervaloBadge = setInterval(() => {
-                if (!paginaVisible) return;
-                
-                const badge = document.getElementById('notificationBadge');
-                const notificacionesNoLeidasActual = notificaciones.filter(n => !n.leida).length;
-                const numeroEnBadge = badge.style.display !== 'none' ? parseInt(badge.textContent) : 0;
-                
-                if (numeroEnBadge !== notificacionesNoLeidasActual) {
-                    console.log(`⚠️ Badge incorrecto: muestra ${numeroEnBadge}, debería ser ${notificacionesNoLeidasActual}`);
-                    
-                    if (badgePendiente.reintentos < badgePendiente.maxReintentos) {
-                        badgePendiente.reintentos++;
-                        console.log(`🔄 Reintento ${badgePendiente.reintentos} de ${badgePendiente.maxReintentos} para badge`);
-                        actualizarBadgeForzado();
-                    } else {
-                        console.log('❌ Badge sigue incorrecto después de 3 reintentos');
-                        badgePendiente.reintentos = 0;
-                        verificarConexionBadge();
-                    }
-                } else {
-                    badgePendiente.reintentos = 0;
-                    badgePendiente.ultimoValor = notificacionesNoLeidasActual;
-                }
-                
-                const tieneVibracion = badge.classList.contains('has-unread');
-                const deberiaTenerVibracion = notificacionesNoLeidasActual > 0;
-                
-                if (tieneVibracion !== deberiaTenerVibracion) {
-                    console.log(`⚠️ Vibración incorrecta: ${tieneVibracion ? 'activada' : 'desactivada'}, debería ser ${deberiaTenerVibracion ? 'activada' : 'desactivada'}`);
-                    
-                    if (deberiaTenerVibracion) {
-                        badge.classList.add('has-unread');
-                    } else {
-                        badge.classList.remove('has-unread');
-                    }
-                }
-                
-            }, 5000);
-        }
-
-        function actualizarBadgeForzado() {
-            const badge = document.getElementById('notificationBadge');
-            const notificacionesNoLeidasActual = notificaciones.filter(n => !n.leida).length;
-            
-            if (notificacionesNoLeidasActual > 0) {
-                badge.textContent = notificacionesNoLeidasActual;
-                badge.style.display = 'block';
-                badge.classList.add('has-unread');
-                
-                badge.style.animation = 'none';
-                badge.offsetHeight;
-                badge.style.animation = 'vibrate .3s ease';
-            } else {
-                badge.style.display = 'none';
-                badge.classList.remove('has-unread');
-            }
-        }
-
-        function verificarConexionBadge() {
-            window.supabaseClient
-                .from('notificaciones')
-                .select('count', { count: 'exact', head: true })
-                .eq('session_id', sessionId)
-                .then(({ count, error }) => {
-                    if (error) {
-                        mostrarDialogoBadge();
-                    } else {
-                        actualizarBadgeForzado();
-                    }
-                })
-                .catch(() => {
-                    mostrarDialogoBadge();
-                });
-        }
-
-        function mostrarDialogoBadge() {
-            if (document.getElementById('dialogoBadge')) return;
-            
-            const overlay = document.createElement('div');
-            overlay.className = 'modal-overlay active';
-            overlay.id = 'dialogoBadge';
-            overlay.innerHTML = `
-                <div class="confirm-dialog" style="max-width: 400px;">
-                    <i class="fas fa-exclamation-triangle" style="color: var(--warning); font-size: 3rem;"></i>
-                    <h3 style="color: #fff; margin: 1rem 0;">🔔 Problema con notificaciones</h3>
-                    <p style="color: var(--gray-300); margin-bottom: 1.5rem;">
-                        El contador de notificaciones no se actualiza correctamente.<br>
-                        Puede deberse a problemas de conexión.
-                    </p>
-                    <div style="display: flex; gap: 1rem; justify-content: center;">
-                        <button class="btn-secondary" onclick="document.getElementById('dialogoBadge').remove()">
-                            Seguir esperando
-                        </button>
-                        <button class="btn-primary" onclick="recargarBadge()">
-                            <i class="fas fa-sync-alt"></i> Recargar ahora
-                        </button>
-                    </div>
-                </div>
-            `;
-            document.body.appendChild(overlay);
-        }
-
-        async function recargarBadge() {
-            const overlay = document.getElementById('dialogoBadge');
-            if (overlay) overlay.remove();
-            
-            mostrarToast('🔄 Reintentando...', 'info');
-            
-            for (let i = 1; i <= 3; i++) {
-                console.log(`Intento ${i} de recarga de badge...`);
-                await cargarNotificaciones();
-                actualizarBadgeForzado();
-                
-                const badge = document.getElementById('notificationBadge');
-                const notificacionesNoLeidasActual = notificaciones.filter(n => !n.leida).length;
-                const numeroEnBadge = badge.style.display !== 'none' ? parseInt(badge.textContent) : 0;
-                
-                if (numeroEnBadge === notificacionesNoLeidasActual) {
-                    mostrarToast('✅ Badge actualizado', 'success');
-                    return;
-                }
-                
-                if (i < 3) await new Promise(resolve => setTimeout(resolve, 2000));
-            }
-            
-            mostrarDialogoBadge();
         }
 
         async function verificarNotificacionManual(notifId, notificacion) {
@@ -1617,70 +1779,6 @@
                 if (i < 3) await new Promise(resolve => setTimeout(resolve, 2000));
             }
             mostrarDialogoRecarga({ titulo: 'Error de conexión persistente' });
-        }
-
-        function procesarNotificacion(notif) {
-            console.log('🎯 Procesando notificación:', notif);
-            notificaciones.unshift(notif);
-            if (!notif.leida) notificacionesNoLeidas++;
-            
-            const audio = document.getElementById('notificationSound');
-            if (audio) {
-                audio.currentTime = 0;
-                audio.play().catch(() => {});
-            }
-            if (navigator.vibrate) navigator.vibrate(200);
-            
-            actualizarNotificacionesUI();
-            
-            const bell = document.getElementById('notificationBell');
-            bell.classList.add('fa-shake');
-            setTimeout(() => bell.classList.remove('fa-shake'), 1000);
-            
-            mostrarToast(notif.titulo, notif.tipo === 'rejected' ? 'error' : 'success');
-            
-            const dialogo = document.getElementById('dialogoRecarga');
-            if (dialogo) dialogo.remove();
-        }
-
-        function actualizarNotificacionesUI() {
-            const badge = document.getElementById('notificationBadge');
-            const panel = document.getElementById('notificationsPanel');
-            const countSpan = document.getElementById('notificationsCount');
-            const listDiv = document.getElementById('notificationsList');
-            
-            if (notificacionesNoLeidas > 0) {
-                badge.textContent = notificacionesNoLeidas;
-                badge.style.display = 'block';
-                badge.classList.add('has-unread');
-                
-                badge.style.animation = 'none';
-                badge.offsetHeight;
-                badge.style.animation = 'vibrate .3s ease';
-            } else {
-                badge.style.display = 'none';
-                badge.classList.remove('has-unread');
-            }
-            
-            if (countSpan) countSpan.textContent = notificacionesNoLeidas;
-            
-            if (listDiv) {
-                if (notificaciones.length === 0) {
-                    listDiv.innerHTML = '<div style="text-align:center; padding:1rem; color:var(--gray-400)">No hay notificaciones</div>';
-                } else {
-                    listDiv.innerHTML = notificaciones.map(n => `
-                        <div class="notification-item ${n.tipo} ${!n.leida ? 'unread' : ''}" 
-                             onclick="marcarNotificacionLeida('${n.id}')">
-                            <div class="notification-title">
-                                <i class="fas fa-${mensajesEstado[n.tipo]?.icono || 'bell'}"></i> 
-                                ${n.titulo}
-                            </div>
-                            <div class="notification-message">${n.mensaje}</div>
-                            <div class="notification-time">${new Date(n.timestamp).toLocaleString()}</div>
-                        </div>
-                    `).join('');
-                }
-            }
         }
 
         async function cargarPedidosCliente() {
