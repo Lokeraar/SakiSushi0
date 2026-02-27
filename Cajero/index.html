@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
-    <title>🔧 Panel del Cajero - Saki Sushi (Verificado)</title>
+    <title>🔧 Panel del Cajero - Saki Sushi</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -1212,7 +1212,7 @@
             document.getElementById('confirmCobroBtn').disabled = !inv.checked && (pagosMixtos.length === 0 || (total - recibido) > 0);
         }
 
-        // ==================== FUNCIÓN DE COBRO CORREGIDA ====================
+        // ==================== FUNCIÓN DE COBRO MEJORADA ====================
         async function confirmarCobro() {
             if (!currentPedido) return;
             
@@ -1266,7 +1266,7 @@
                         fecha: new Date().toISOString()
                     }]);
                 
-                // ============ INSERTAR NOTIFICACIÓN (VERIFICADO) ============
+                // ============ INSERTAR NOTIFICACIÓN CON TODOS LOS CAMPOS ============
                 console.log('📢 Insertando notificación de cobro para session:', currentPedido.session_id);
                 
                 let tituloNotif, mensajeNotif;
@@ -1327,7 +1327,7 @@
             }
         }
 
-        // ==================== FUNCIÓN DE RECHAZO CORREGIDA ====================
+        // ==================== FUNCIÓN DE RECHAZO MEJORADA ====================
         async function confirmarRechazo() {
             if (!pedidoParaAccion) return;
             
@@ -1347,7 +1347,7 @@
                     .update({ estado: 'rechazado' })
                     .eq('id', pedidoParaAccion.id);
                 
-                // ============ INSERTAR NOTIFICACIÓN DE RECHAZO (VERIFICADO) ============
+                // ============ INSERTAR NOTIFICACIÓN DE RECHAZO ============
                 console.log('📢 Insertando notificación de rechazo para session:', pedidoParaAccion.session_id);
                 
                 const razones = {
@@ -1390,7 +1390,7 @@
             }
         }
 
-        // ==================== FUNCIÓN DE CONFIRMACIÓN CORREGIDA ====================
+        // ==================== FUNCIÓN DE CONFIRMACIÓN MEJORADA ====================
         async function ejecutarConfirmacion() {
             if (!pedidoParaAccion) return;
             
@@ -1420,7 +1420,7 @@
                     .update({ estado: accionPendiente })
                     .eq('id', pedidoParaAccion.id);
                 
-                // ============ INSERTAR NOTIFICACIÓN DE ESTADO (VERIFICADO) ============
+                // ============ INSERTAR NOTIFICACIÓN DE ESTADO ============
                 console.log('📢 Insertando notificación de estado para session:', pedidoParaAccion.session_id);
                 
                 const { error: notifError } = await window.supabaseClient
