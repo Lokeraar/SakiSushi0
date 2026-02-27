@@ -481,9 +481,38 @@
             }
         }
 
+        // ==================== FUNCIÓN DE VERIFICACIÓN CON REINTENTOS (OPCIÓN 1) ====================
+        function verificarBadgeConReintentos(notificacion, intento = 1) {
+            setTimeout(() => {
+                const badge = document.getElementById('notificationBadge');
+                const enBadge = badge.style.display !== 'none' ? parseInt(badge.textContent) : 0;
+                
+                if (enBadge !== notificacionesNoLeidas) {
+                    console.log(`⚠️ Badge incorrecto en intento ${intento}/5: muestra ${enBadge}, debería ser ${notificacionesNoLeidas}`);
+                    
+                    actualizarNotificacionesUI();
+                    
+                    if (intento < 5) {
+                        const tiempoEspera = 500 * Math.pow(1.5, intento);
+                        console.log(`🔄 Reintentando en ${tiempoEspera}ms...`);
+                        verificarBadgeConReintentos(notificacion, intento + 1);
+                    } else {
+                        console.log('❌ Máximos reintentos alcanzados, recargando notificaciones...');
+                        cargarNotificaciones();
+                    }
+                } else {
+                    console.log('✅ Badge verificado correctamente');
+                }
+            }, 100);
+        }
+
         // ==================== FUNCIÓN PRINCIPAL DE NOTIFICACIONES ====================
         function procesarNotificacion(notif) {
             console.log('🎯 Procesando notificación:', notif);
+            
+            if (notif.leida === undefined) {
+                notif.leida = false;
+            }
             
             const existe = notificaciones.some(n => n.id === notif.id);
             if (existe) {
@@ -502,6 +531,8 @@
             reproducirAlertaNotificacion();
             
             console.log(`✅ Notificación procesada. Total no leídas: ${notificacionesNoLeidas}`);
+            
+            verificarBadgeConReintentos(notif);
         }
 
         function actualizarNotificacionesUI() {
@@ -559,7 +590,7 @@
             }
         }
 
-        // ==================== CARGA DE NOTIFICACIONES MEJORADA ====================
+        // ==================== CARGA DE NOTIFICACIONES ====================
         async function cargarNotificaciones() {
             try {
                 const { data, error } = await window.supabaseClient
@@ -588,7 +619,7 @@
             }
         }
 
-        // ==================== MARCADO DE LECTURA CORREGIDO ====================
+        // ==================== MARCADO DE LECTURA ====================
         async function marcarTodasComoLeidas() {
             const idsNoLeidas = notificaciones.filter(n => !n.leida).map(n => n.id);
             if (idsNoLeidas.length === 0) return;
@@ -633,7 +664,7 @@
             }
         }
 
-        // ==================== TOGGLE NOTIFICACIONES CORREGIDO ====================
+        // ==================== TOGGLE NOTIFICACIONES ====================
         function toggleNotifications() {
             const panel = document.getElementById('notificationsPanel');
             
@@ -690,7 +721,7 @@
             }, 2000);
         }
 
-        // ==================== SETUP REALTIME CORREGIDO ====================
+        // ==================== SETUP REALTIME ====================
         function setupRealtimeSubscriptions() {
             suscripcionesCliente.forEach(s => s.unsubscribe());
             suscripcionesCliente = [];
@@ -705,7 +736,14 @@
                 }, (payload) => {
                     const notif = payload.new;
                     console.log('⚡ NUEVA NOTIFICACIÓN RECIBIDA:', notif.titulo);
-                    procesarNotificacion(notif);
+                    
+                    const notifProcesada = {
+                        ...notif,
+                        leida: notif.leida || false,
+                        timestamp: notif.timestamp || new Date().toISOString()
+                    };
+                    
+                    procesarNotificacion(notifProcesada);
                 })
                 .subscribe((status) => {
                     console.log('📡 Estado canal notificaciones:', status);
@@ -819,11 +857,6 @@
         }
         window.probarNotificacion = probarNotificacion;
 
-        // ==================== RESTO DE FUNCIONES EXISTENTES (SIN CAMBIOS) ====================
-        // [Aquí van todas las demás funciones: cargarMenu, cargarInventario, getStockDisponible,
-        //  renderizarMenuPaginado, agregarAlCarrito, toggleCarrito, toggleMenuCategorias,
-        //  etc. Se mantienen exactamente igual al código original]
-        
         function limpiarCampoComprobante(tipo) {
             if (tipo === 'delivery') {
                 document.getElementById('comprobante').value = ''; deliveryFormData.comprobante = null;
