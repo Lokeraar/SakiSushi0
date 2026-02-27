@@ -401,7 +401,6 @@
 </div>
 
 <footer class="footer">
-    <footer class="footer">
         <div class="footer-content">
             <div class="footer-section"><img src="https://lh3.googleusercontent.com/pw/AP1GczPrZAoWxmsOGRD9xl1hO5Q65JXuwUZzoR6gUk-cw5lVmarxQe_-lwqpA60tTKLlXfpvIjAJlKC6jFls-xETJOPkebLIIPhbGlUkknmhrRbdhMUll2UViGSUj3WmHKg2YEsZlAfxBPPTjIHhScjD0jfe=w1439-h1439-s-no-gm" alt="Saki Sushi" class="footer-brand-logo" style="width:140px; height:155px;"><div class="footer-brand-slogan">"Adictos al universo saki"</div></div>
             <div class="footer-section"><h4>Av Universidad</h4><p><i class="fas fa-clock"></i> Lunes a Domingo: 11:00 AM - 10:00 PM</p><a href="https://wa.me/5804242884773" class="whatsapp-link" target="_blank"><i class="fab fa-whatsapp"></i> +58 0424-2884773</a><a href="https://wa.me/5804242884772" class="whatsapp-link" target="_blank"><i class="fab fa-whatsapp"></i> +58 0424-2884772</a><p><i class="fas fa-map-marker-alt"></i> Caracas</p></div>
@@ -998,6 +997,10 @@ function toggleScrollIndicator() {
     
     if (carrito.length > 0) {
         indicator.classList.remove('hidden');
+        // Opcional: hacer scroll suave hacia el indicador
+        setTimeout(() => {
+            indicator.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }, 100);
     } else {
         indicator.classList.add('hidden');
     }
