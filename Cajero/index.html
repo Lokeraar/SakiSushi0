@@ -276,6 +276,8 @@
         let suscripciones = [];
         let paginaVisible = true;
         let reconectando = false;
+        let intervaloVerificacion = null;
+        let ultimaActualizacion = Date.now();
 
         // ==================== FUNCIONES DE LOGIN ====================
         document.addEventListener('DOMContentLoaded', async () => {
@@ -297,7 +299,7 @@
                     paginaVisible = false;
                 } else {
                     paginaVisible = true;
-                    recargarSilencioso();
+                    verificarCambiosPedidos();
                 }
             });
         });
@@ -338,35 +340,73 @@
             }
         };
 
-        async function recargarSilencioso() {
-            if (reconectando) return;
-            reconectando = true;
+        // ==================== NUEVO SISTEMA DE VERIFICACIÓN PERIÓDICA ====================
+        async function verificarCambiosPedidos() {
+            if (reconectando || enProcesoDeCobro) return;
+            
+            try {
+                const hoy = new Date();
+                hoy.setHours(0, 0, 0, 0);
+                const manana = new Date(hoy);
+                manana.setDate(manana.getDate() + 2);
+                
+                // Solo traer IDs y estados para comparación rápida
+                const { data, error } = await window.supabaseClient
+                    .from('pedidos')
+                    .select('id, estado, timestamp')
+                    .gte('timestamp', hoy.toISOString())
+                    .lt('timestamp', manana.toISOString());
+                    
+                if (error) throw error;
+                
+                if (data) {
+                    // Verificar si hubo cambios
+                    let hayCambios = false;
+                    
+                    if (data.length !== pedidos.length) {
+                        hayCambios = true;
+                    } else {
+                        // Comparar estado de cada pedido
+                        const mapaActual = new Map(pedidos.map(p => [p.id, p.estado]));
+                        for (const p of data) {
+                            if (mapaActual.get(p.id) !== p.estado) {
+                                hayCambios = true;
+                                break;
+                            }
+                        }
+                    }
+                    
+                    if (hayCambios) {
+                        console.log('🔄 Cambios detectados en pedidos, recargando...');
+                        await recargarPedidosCompletos();
+                        ultimaActualizacion = Date.now();
+                    }
+                }
+            } catch (error) {
+                console.error('Error verificando cambios:', error);
+            }
+        }
+
+        async function recargarPedidosCompletos() {
             try {
                 await cargarPedidos();
+                await cargarVentasHoy();
                 actualizarEstadisticas();
                 renderizarPedidos();
                 verificarYControlarAlarma(true);
             } catch (error) {
-                console.error('Error:', error);
-            } finally {
-                reconectando = false;
+                console.error('Error recargando pedidos:', error);
             }
         }
 
-        function verificarYControlarAlarma(forzar = false) {
-            const pendientes = pedidos.filter(p => p.estado === 'pendiente').length;
+        function iniciarVerificacionPeriodica() {
+            if (intervaloVerificacion) clearInterval(intervaloVerificacion);
             
-            if (pendientes > 0 && !enProcesoDeCobro) {
-                if (!alarmaActiva && alarmaAudio) {
-                    alarmaAudio.play().then(() => {
-                        alarmaActiva = true;
-                    }).catch(() => {});
+            intervaloVerificacion = setInterval(async () => {
+                if (paginaVisible && !enProcesoDeCobro) {
+                    await verificarCambiosPedidos();
                 }
-            } else if (alarmaActiva && alarmaAudio && (pendientes === 0 || enProcesoDeCobro)) {
-                alarmaAudio.pause();
-                alarmaAudio.currentTime = 0;
-                alarmaActiva = false;
-            }
+            }, 3000); // Cada 3 segundos (vs 1 segundo antes)
         }
 
         // ==================== CARGA DE DATOS ====================
@@ -385,6 +425,8 @@
             actualizarEstadisticas();
             renderizarPedidos();
             renderizarPropinas();
+            
+            iniciarVerificacionPeriodica();
         }
 
         async function getStockDisponible(ingredienteId) {
@@ -626,15 +668,26 @@
             setupRealtimeSubscriptions();
             
             setTimeout(() => verificarYControlarAlarma(true), 100);
-            setInterval(() => {
-                if (!enProcesoDeCobro && !reconectando) {
-                    recargarSilencioso();
-                }
-            }, 1000);
         }
 
         function detenerAlarma() {
             if (alarmaActiva && alarmaAudio) {
+                alarmaAudio.pause();
+                alarmaAudio.currentTime = 0;
+                alarmaActiva = false;
+            }
+        }
+
+        function verificarYControlarAlarma(forzar = false) {
+            const pendientes = pedidos.filter(p => p.estado === 'pendiente').length;
+            
+            if (pendientes > 0 && !enProcesoDeCobro) {
+                if (!alarmaActiva && alarmaAudio) {
+                    alarmaAudio.play().then(() => {
+                        alarmaActiva = true;
+                    }).catch(() => {});
+                }
+            } else if (alarmaActiva && alarmaAudio && (pendientes === 0 || enProcesoDeCobro)) {
                 alarmaAudio.pause();
                 alarmaAudio.currentTime = 0;
                 alarmaActiva = false;
@@ -1212,7 +1265,6 @@
             document.getElementById('confirmCobroBtn').disabled = !inv.checked && (pagosMixtos.length === 0 || (total - recibido) > 0);
         }
 
-        // ==================== FUNCIÓN DE COBRO MEJORADA ====================
         async function confirmarCobro() {
             if (!currentPedido) return;
             
@@ -1240,7 +1292,6 @@
                     metodoPago = pagosMixtos.length === 1 ? pagosMixtos[0].metodo : 'mixto';
                 }
                 
-                // Actualizar pedido
                 await window.supabaseClient
                     .from('pedidos')
                     .update({
@@ -1252,7 +1303,6 @@
                     })
                     .eq('id', currentPedido.id);
                 
-                // Insertar venta
                 const totalItems = currentPedido.items?.reduce((s, i) => s + (i.cantidad || 1), 0) || 0;
                 
                 await window.supabaseClient
@@ -1266,7 +1316,6 @@
                         fecha: new Date().toISOString()
                     }]);
                 
-                // ============ INSERTAR NOTIFICACIÓN CON TODOS LOS CAMPOS ============
                 console.log('📢 Insertando notificación de cobro para session:', currentPedido.session_id);
                 
                 let tituloNotif, mensajeNotif;
@@ -1303,20 +1352,14 @@
                     console.log('✅ Notificación insertada correctamente');
                 }
                 
-                // Cerrar modal
                 document.getElementById('cobroModal').classList.remove('active');
                 mostrarToast('✅ Cobro procesado');
                 enProcesoDeCobro = false;
                 currentPedido = null;
                 pagosMixtos = [];
                 
-                // Recargar datos
-                await cargarPedidos();
-                await cargarVentasHoy();
-                await cargarPropinas();
+                await recargarPedidosCompletos();
                 await cargarMenu();
-                actualizarEstadisticas();
-                renderizarPedidos();
                 renderizarPropinas();
                 
                 setTimeout(() => mostrarPropinaModal(currentPedido), 500);
@@ -1327,7 +1370,6 @@
             }
         }
 
-        // ==================== FUNCIÓN DE RECHAZO MEJORADA ====================
         async function confirmarRechazo() {
             if (!pedidoParaAccion) return;
             
@@ -1338,16 +1380,13 @@
             }
             
             try {
-                // Liberar ingredientes
                 await window.supabaseClient.rpc('liberar_ingredientes', { p_pedido_id: pedidoParaAccion.id });
                 
-                // Actualizar pedido
                 await window.supabaseClient
                     .from('pedidos')
                     .update({ estado: 'rechazado' })
                     .eq('id', pedidoParaAccion.id);
                 
-                // ============ INSERTAR NOTIFICACIÓN DE RECHAZO ============
                 console.log('📢 Insertando notificación de rechazo para session:', pedidoParaAccion.session_id);
                 
                 const razones = {
@@ -1379,9 +1418,7 @@
                 cerrarModal('rechazoModal');
                 mostrarToast('❌ Pedido rechazado');
                 
-                await cargarPedidos();
-                actualizarEstadisticas();
-                renderizarPedidos();
+                await recargarPedidosCompletos();
                 verificarYControlarAlarma(true);
                 
             } catch (error) {
@@ -1390,7 +1427,6 @@
             }
         }
 
-        // ==================== FUNCIÓN DE CONFIRMACIÓN MEJORADA ====================
         async function ejecutarConfirmacion() {
             if (!pedidoParaAccion) return;
             
@@ -1414,13 +1450,11 @@
                     notifMensaje = 'Tu pedido ha sido actualizado';
                 }
                 
-                // Actualizar pedido
                 await window.supabaseClient
                     .from('pedidos')
                     .update({ estado: accionPendiente })
                     .eq('id', pedidoParaAccion.id);
                 
-                // ============ INSERTAR NOTIFICACIÓN DE ESTADO ============
                 console.log('📢 Insertando notificación de estado para session:', pedidoParaAccion.session_id);
                 
                 const { error: notifError } = await window.supabaseClient
@@ -1444,9 +1478,7 @@
                 cerrarModal('confirmModal');
                 mostrarToast('✅ Estado actualizado');
                 
-                await cargarPedidos();
-                actualizarEstadisticas();
-                renderizarPedidos();
+                await recargarPedidosCompletos();
                 verificarYControlarAlarma(true);
                 
             } catch (error) {
@@ -1794,10 +1826,7 @@
                 window.supabaseClient
                     .channel('cajero-pedidos-' + Date.now())
                     .on('postgres_changes', { event: '*', schema: 'public', table: 'pedidos' }, async () => {
-                        await cargarPedidos();
-                        actualizarEstadisticas();
-                        renderizarPedidos();
-                        verificarYControlarAlarma(true);
+                        await verificarCambiosPedidos();
                     })
                     .subscribe()
             );
