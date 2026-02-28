@@ -284,6 +284,9 @@
     <div class="toast" id="toast"><i class="fas fa-check-circle" style="color:var(--success);font-size:1.2rem"></i><div><p id="toastText" style="margin:0;color:#fff">Operación completada</p></div></div>
     <script src="../supabase-config.js"></script>
     <script>
+    console.log('supabaseClient:', window.supabaseClient);
+console.log('SUPABASE_URL:', window.SUPABASE_URL);
+console.log('SUPABASE_ANON_KEY:', window.SUPABASE_ANON_KEY);
         let currentUser=null,pedidos=[],ventasHoy=[],propinas=[],menuItems=[],inventario=[],mesas=[],currentPedido=null,pedidoParaAccion=null,accionPendiente=null,pagosMixtos=[],tasaEfectiva=400,currentPropinaPedido=null,mesoneros=[],deliverys=[],currentPropinaData={mesonero:'',mesa:'Delivery',metodo:'efectivo_bs',montoBs:0,montoUsd:0,referencia:'',tasaAplicada:400},stockCache={data:{},lastUpdate:0,duration:5000,get:function(id){const ahora=Date.now();if(ahora-this.lastUpdate>this.duration)this.clear();return this.data[id]},set:function(id,val){this.data[id]=val;this.lastUpdate=Date.now()},clear:function(){this.data={};this.lastUpdate=Date.now()},invalidate:function(){this.data={};this.lastUpdate=0}},alarmaAudio=document.getElementById('alarmaSonido'),alarmaActiva=false,enProcesoDeCobro=false,suscripciones=[],paginaVisible=true,reconectando=false,intervaloVerificacion=null,ultimaActualizacion=Date.now(),montosCondonados=[],montosFavorCaja=[],totalCondonadoHoy=0,totalFavorHoy=0;
 
         async function cargarConfiguracion() {
@@ -308,7 +311,46 @@
 
         document.addEventListener('DOMContentLoaded',async()=>{const savedUser=sessionStorage.getItem('cajero_user');if(savedUser){try{currentUser=JSON.parse(savedUser);await cargarDatosIniciales();mostrarPanel();}catch{mostrarLogin();}}else mostrarLogin();document.addEventListener('visibilitychange',function(){if(document.hidden)paginaVisible=false;else{paginaVisible=true;verificarCambiosPedidos();}});});
 
-        window.hacerLogin=async function(){const username=document.getElementById('username').value,password=document.getElementById('password').value;if(!username||!password){mostrarToast('Ingresa usuario y contraseña','error');return;}try{const{data,error}=await window.supabaseClient.from('usuarios').select('*').eq('username',username).eq('password',password).eq('activo',true).maybeSingle();if(error)throw error;if(!data){mostrarToast('Credenciales inválidas','error');return;}currentUser=data;sessionStorage.setItem('cajero_user',JSON.stringify(data));await cargarDatosIniciales();mostrarPanel();}catch(error){console.error('Error en login:',error);mostrarToast('Error al conectar: '+error.message,'error');}};
+        window.hacerLogin = async function() {
+    const username = document.getElementById('username').value;
+    const password = document.getElementById('password').value;
+    
+    console.log('1️⃣ Intentando login con:', { username, password });
+    console.log('2️⃣ SupabaseClient existe?:', !!window.supabaseClient);
+    
+    if (!window.supabaseClient) {
+        console.error('❌ supabaseClient no está inicializado');
+        mostrarToast('Error de configuración', 'error');
+        return;
+    }
+    
+    try {
+        const { data, error } = await window.supabaseClient
+            .from('usuarios')
+            .select('*')
+            .eq('username', username)
+            .eq('password', password)
+            .eq('activo', true)
+            .maybeSingle();
+        
+        console.log('3️⃣ Respuesta:', { data, error });
+        
+        if (error) throw error;
+        if (!data) {
+            mostrarToast('Credenciales inválidas', 'error');
+            return;
+        }
+        
+        currentUser = data;
+        sessionStorage.setItem('cajero_user', JSON.stringify(data));
+        await cargarDatosIniciales();
+        mostrarPanel();
+        
+    } catch (error) {
+        console.error('❌ Error en login:', error);
+        mostrarToast('Error al conectar: ' + error.message, 'error');
+    }
+};
 
         async function verificarCambiosPedidos(){if(reconectando||enProcesoDeCobro)return;try{const hoy=new Date();hoy.setHours(0,0,0,0);const manana=new Date(hoy);manana.setDate(manana.getDate()+2);const{data,error}=await window.supabaseClient.from('pedidos').select('id, estado, timestamp').gte('timestamp',hoy.toISOString()).lt('timestamp',manana.toISOString());if(error)throw error;if(data){let hayCambios=false;if(data.length!==pedidos.length)hayCambios=true;else{const mapaActual=new Map(pedidos.map(p=>[p.id,p.estado]));for(const p of data){if(mapaActual.get(p.id)!==p.estado){hayCambios=true;break;}}}if(hayCambios){console.log('📦 Cambios detectados en pedidos, recargando...');await recargarPedidosCompletos();ultimaActualizacion=Date.now();}}}catch(error){console.error('Error verificando cambios:',error);}}
 
