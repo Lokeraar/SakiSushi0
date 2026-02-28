@@ -8,7 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
-    <!-- FUNCIONES BÁSICAS Y VARIABLES GLOBALES (DEFINIDAS PRIMERO) -->
+    <!-- FUNCIONES BÁSICAS Y VARIABLES GLOBALES -->
     <script>
         // ==================== VARIABLES GLOBALES ====================
         window.currentUser = null;
@@ -32,7 +32,7 @@
             clear: function() { this.data = {}; this.lastUpdate = Date.now(); },
             invalidate: function() { this.data = {}; this.lastUpdate = 0; }
         };
-        window.currentPropinaData = { mesonero: '', mesa: 'Delivery', metodo: 'efectivo_bs', montoBs: 0, montoUsd: 0, referencia: '', tasaAplicada: 400 };
+        window.currentPropinaData = { mesonero: '', mesa: 'Mesa 1', metodo: 'efectivo_bs', montoBs: 0, montoUsd: 0, referencia: '', tasaAplicada: 400 };
         window.alarmaAudio = null;
         window.alarmaActiva = false;
         window.enProcesoDeCobro = false;
@@ -95,6 +95,12 @@
         };
 
         window.mostrarLogin = function() {
+            // Limpiar campos de login
+            const userInput = document.getElementById('username');
+            const passInput = document.getElementById('password');
+            if (userInput) userInput.value = '';
+            if (passInput) passInput.value = '';
+            
             document.getElementById('loginContainer').classList.remove('hidden');
             document.getElementById('panelContainer').classList.add('hidden');
             window.detenerAlarma();
@@ -121,7 +127,7 @@
         };
     </script>
     
-    <!-- FUNCIÓN HACER LOGIN (AHORA CON ACCESO A MOSTRARTOAST) -->
+    <!-- FUNCIÓN HACER LOGIN -->
     <script>
         window.hacerLogin = async function() {
             console.log('🔑 Intentando login...');
@@ -394,8 +400,8 @@
         <div class="login-box">
             <h2><i class="fas fa-cash-register"></i> Cajero Saki Sushi</h2>
             <form class="login-form" id="loginForm" onsubmit="event.preventDefault(); window.hacerLogin()">
-                <input type="text" id="username" placeholder="Usuario" value="cajero1" required autofocus>
-                <input type="password" id="password" placeholder="Contraseña" value="123456" required>
+                <input type="text" id="username" placeholder="Usuario" autofocus>
+                <input type="password" id="password" placeholder="Contraseña">
                 <button type="submit">Iniciar Sesión</button>
             </form>
         </div>
@@ -457,7 +463,12 @@
                     <button class="stat-button cuatro" onclick="window.abrirModalDetalle('propinasCantidad')"><span class="stat-icon propinas"><i class="fas fa-hashtag"></i></span><span class="stat-value" id="propinasCantidad">0</span><span class="stat-label">Cantidad</span></button>
                     <button class="stat-button cuatro" onclick="window.abrirModalDetalle('propinasPromedio')"><span class="stat-icon propinas"><i class="fas fa-chart-line"></i></span><span class="stat-value" id="propinasPromedio">Bs. 0</span><span class="stat-label">Promedio</span></button>
                 </div>
-                <div id="propinasContainer" class="pedidos-columns" style="grid-template-columns:1fr"><div class="pedidos-column" style="max-height:500px"><div class="column-header propina"><span><i class="fas fa-clock"></i> Últimas Propinas</span><span class="count-badge" id="propinasListCount">0</span></div><div class="column-content" id="propinasListContainer"></div></div></div>
+                <div id="propinasContainer" class="pedidos-columns" style="grid-template-columns:1fr">
+                    <div class="pedidos-column" style="max-height:500px">
+                        <div class="column-header propina"><span><i class="fas fa-clock"></i> Últimas Propinas</span><span class="count-badge" id="propinasListCount">0</span></div>
+                        <div class="column-content" id="propinasListContainer"></div>
+                    </div>
+                </div>
             </div>
             <div class="section" id="section-deliverys">
                 <h2 class="section-title"><i class="fas fa-motorcycle" style="color:var(--delivery)"></i> Estadísticas de Deliverys</h2>
@@ -503,7 +514,7 @@
             sessionStorage.removeItem('cajero_user');
             window.currentUser = null;
             window.detenerAlarma();
-            window.mostrarLogin();
+            window.mostrarLogin(); // Esto ya limpia los campos
         };
 
         window.showSection = function(s) {
@@ -550,7 +561,7 @@
                 window.tasaEfectiva = (window.configGlobal && window.configGlobal.tasa_efectiva) || 400;
                 await window.cargarPedidos();
                 await window.cargarVentasHoy();
-                await window.cargarPropinas();
+                await window.cargarPropinas();  // Carga propinas SIN relación con pedidos
                 await window.cargarMenu();
                 await window.cargarInventario();
                 await window.cargarMesas();
@@ -558,7 +569,7 @@
                 await window.cargarDeliverys();
                 window.actualizarEstadisticas();
                 window.renderizarPedidos();
-                window.renderizarPropinas();
+                window.renderizarPropinas();    // Renderiza propinas como entidades independientes
                 window.renderizarDeliverysStats();
                 window.iniciarVerificacionPeriodica();
             } catch (e) {
@@ -600,16 +611,216 @@
             } catch (e) { console.error('Error cargando ventas:', e); }
         };
 
+        // ==================== FUNCIONES DE PROPINAS (INDEPENDIENTES) ====================
         window.cargarPropinas = async function() {
             try {
                 const h = new Date(); h.setHours(0, 0, 0, 0);
                 const m = new Date(h); m.setDate(m.getDate() + 1);
-                const { data, error } = await window.supabaseClient.from('propinas').select('*, pedidos(*)').gte('fecha', h.toISOString()).lt('fecha', m.toISOString()).order('fecha', { ascending: false });
+                // Sin relación con pedidos - solo datos de propinas
+                const { data, error } = await window.supabaseClient
+                    .from('propinas')
+                    .select('*')
+                    .gte('fecha', h.toISOString())
+                    .lt('fecha', m.toISOString())
+                    .order('fecha', { ascending: false });
                 if (error) throw error;
                 window.propinas = data || [];
             } catch (e) { console.error('Error cargando propinas:', e); }
         };
 
+        window.renderizarPropinas = function() {
+            const total = (window.propinas || []).reduce((s, p) => s + (p.monto_bs || p.monto || 0), 0);
+            const cantidad = (window.propinas || []).length;
+            const promedio = cantidad > 0 ? total / cantidad : 0;
+            
+            document.getElementById('propinasTotal').textContent = window.formatBs(total);
+            document.getElementById('propinasCantidad').textContent = cantidad;
+            document.getElementById('propinasPromedio').textContent = window.formatBs(promedio);
+            document.getElementById('propinasListCount').textContent = cantidad;
+            
+            document.getElementById('propinasListContainer').innerHTML = cantidad 
+                ? window.propinas.map(p => window.crearTarjetaPropina(p)).join('') 
+                : '<div class="empty-state"><i class="fas fa-hand-holding-heart"></i><p>No hay propinas hoy</p></div>';
+        };
+
+        window.crearTarjetaPropina = function(p) {
+            try {
+                const f = new Date(p.fecha);
+                const h = f.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+                
+                // Buscar el nombre del mesonero
+                const mesonero = (window.mesoneros || []).find(m => m.id === p.mesonero_id);
+                const nombreMesonero = mesonero ? mesonero.nombre : 'N/A';
+                
+                return `<div class="order-card-compact" style="border-left-color:var(--propina)">
+                    <div class="order-header-compact">
+                        <span class="order-time-compact"><i class="far fa-clock"></i> ${h}</span>
+                        <span class="propina-tag"><i class="fas fa-hand-holding-heart"></i> Propina</span>
+                    </div>
+                    <div class="order-info-compact">
+                        <div><i class="fas fa-user"></i> Mesonero: ${nombreMesonero}</div>
+                        <div><i class="fas fa-chair"></i> Mesa: ${p.mesa || 'N/A'}</div>
+                        <div><i class="fas fa-${p.metodo === 'efectivo_bs' ? 'money-bill-wave' : p.metodo === 'efectivo_usd' ? 'dollar-sign' : p.metodo === 'pago_movil' ? 'mobile-alt' : 'credit-card'}"></i> Método: ${p.metodo}</div>
+                        <div><i class="fas fa-user-tie"></i> Cajero: ${p.cajero || 'Cajero'}</div>
+                    </div>
+                    <div class="order-total-compact" style="color:var(--propina)">${window.formatBs(p.monto_bs || p.monto)}</div>
+                </div>`;
+            } catch (e) { 
+                console.error('Error creando tarjeta de propina:', e);
+                return ''; 
+            }
+        };
+
+        window.mostrarPropinaModal = function(pedido) {
+            // Ya no necesitamos el pedido, pero mantenemos el parámetro por compatibilidad
+            window.currentPropinaData = {
+                mesonero: '', 
+                mesa: 'Mesa 1', 
+                metodo: 'efectivo_bs', 
+                montoBs: 0, 
+                montoUsd: 0, 
+                referencia: '', 
+                tasaAplicada: window.tasaEfectiva
+            };
+            
+            const b = document.getElementById('propinaModalBody');
+            const mo = (window.mesoneros || []).map(m => `<option value="${m.id}">${m.nombre}</option>`).join('');
+            
+            // Generar opciones de mesa (1-10)
+            let mesaOptions = '';
+            for (let i = 1; i <= 10; i++) {
+                mesaOptions += `<option value="Mesa ${i}">Mesa ${i}</option>`;
+            }
+            mesaOptions += `<option value="Delivery">Delivery</option><option value="Reserva">Reserva</option>`;
+            
+            b.innerHTML = `<div style="margin-bottom:20px">
+                <div class="mesonero-selector"><label>🧑‍🍳 Mesonero</label><select id="propinaMesonero"><option value="">Seleccionar mesonero...</option>${mo}</select></div>
+                <div class="mesa-selector"><label>🪑 Mesa Atendida</label><select id="propinaMesa">${mesaOptions}</select></div>
+                <div style="margin-bottom:20px"><label>💳 Método de Pago</label>
+                    <div style="display:flex;gap:10px;margin-top:8px">
+                        <label style="flex:1;background:rgba(0,0,0,.3);padding:10px;border-radius:8px;text-align:center;cursor:pointer"><input type="radio" name="propinaMetodo" value="efectivo_bs" checked onchange="window.cambiarMetodoPropina('efectivo_bs')"> Efectivo Bs</label>
+                        <label style="flex:1;background:rgba(0,0,0,.3);padding:10px;border-radius:8px;text-align:center;cursor:pointer"><input type="radio" name="propinaMetodo" value="efectivo_usd" onchange="window.cambiarMetodoPropina('efectivo_usd')"> Efectivo USD</label>
+                        <label style="flex:1;background:rgba(0,0,0,.3);padding:10px;border-radius:8px;text-align:center;cursor:pointer"><input type="radio" name="propinaMetodo" value="pago_movil" onchange="window.cambiarMetodoPropina('pago_movil')"> Pago Móvil</label>
+                        <label style="flex:1;background:rgba(0,0,0,.3);padding:10px;border-radius:8px;text-align:center;cursor:pointer"><input type="radio" name="propinaMetodo" value="punto_venta" onchange="window.cambiarMetodoPropina('punto_venta')"> Punto Venta</label>
+                    </div>
+                </div>
+                <div class="propina-monto-group" id="propinaMontoGroup">
+                    <input type="number" id="propinaMontoBs" step="0.01" placeholder="Monto en Bs" oninput="window.calcularMontoPropina('bs')">
+                    <input type="number" id="propinaMontoUsd" step="0.01" placeholder="Monto en USD" disabled oninput="window.calcularMontoPropina('usd')">
+                </div>
+                <div id="propinaReferenciaGroup" style="display:none;margin-bottom:20px">
+                    <label>🔢 Referencia (6 dígitos)</label>
+                    <div class="referencia-input">
+                        <input type="text" maxlength="1" class="ref-propina" data-index="0" oninput="window.moverRefPropina(this,0)">
+                        <input type="text" maxlength="1" class="ref-propina" data-index="1" oninput="window.moverRefPropina(this,1)">
+                        <input type="text" maxlength="1" class="ref-propina" data-index="2" oninput="window.moverRefPropina(this,2)">
+                        <input type="text" maxlength="1" class="ref-propina" data-index="3" oninput="window.moverRefPropina(this,3)">
+                        <input type="text" maxlength="1" class="ref-propina" data-index="4" oninput="window.moverRefPropina(this,4)">
+                        <input type="text" maxlength="1" class="ref-propina" data-index="5" oninput="window.moverRefPropina(this,5)">
+                    </div>
+                </div>
+                <div style="background:rgba(0,0,0,.3);padding:15px;border-radius:8px">
+                    <div style="display:flex;justify-content:space-between"><span><strong>Total a registrar:</strong></span><span id="propinaTotalDisplay" style="color:var(--accent);font-size:1.2rem">Bs. 0.00</span></div>
+                    <div style="font-size:.85rem;color:rgba(255,255,255,.7);margin-top:5px">Tasa aplicada: ${window.tasaEfectiva} Bs/USD</div>
+                </div>
+            </div>
+            <div class="keyboard-hint"><span><kbd>ENTER</kbd> guardar</span><span><kbd>ESC</kbd> cancelar</span></div>`;
+            
+            document.querySelectorAll('.ref-propina').forEach(i => {
+                i.addEventListener('input', function() {
+                    const r = Array.from(document.querySelectorAll('.ref-propina')).map(i => i.value).join('');
+                    window.currentPropinaData.referencia = r;
+                    window.validarPropina();
+                });
+            });
+            
+            document.getElementById('propinaModal').classList.add('active');
+        };
+
+        window.cambiarMetodoPropina = function(m) {
+            window.currentPropinaData.metodo = m;
+            const bs = document.getElementById('propinaMontoBs');
+            const usd = document.getElementById('propinaMontoUsd');
+            const rg = document.getElementById('propinaReferenciaGroup');
+            if (m === 'efectivo_usd') { bs.disabled = true; usd.disabled = false; rg.style.display = 'none'; }
+            else if (m === 'pago_movil') { bs.disabled = false; usd.disabled = true; rg.style.display = 'block'; }
+            else { bs.disabled = false; usd.disabled = true; rg.style.display = 'none'; }
+            window.validarPropina();
+        };
+
+        window.calcularMontoPropina = function(t) {
+            if (t === 'bs') {
+                window.currentPropinaData.montoBs = parseFloat(document.getElementById('propinaMontoBs').value) || 0;
+                if (window.currentPropinaData.metodo === 'efectivo_usd') 
+                    window.currentPropinaData.montoUsd = window.currentPropinaData.montoBs / window.tasaEfectiva;
+                document.getElementById('propinaTotalDisplay').textContent = window.formatBs(window.currentPropinaData.montoBs);
+            } else {
+                window.currentPropinaData.montoUsd = parseFloat(document.getElementById('propinaMontoUsd').value) || 0;
+                window.currentPropinaData.montoBs = window.currentPropinaData.montoUsd * window.tasaEfectiva;
+                document.getElementById('propinaTotalDisplay').textContent = window.formatBs(window.currentPropinaData.montoBs);
+            }
+            window.validarPropina();
+        };
+
+        window.moverRefPropina = function(i, idx) {
+            if (i.value.length === 1 && idx < 5) 
+                document.querySelector(`.ref-propina[data-index="${idx + 1}"]`).focus();
+            const r = Array.from(document.querySelectorAll('.ref-propina')).map(i => i.value).join('');
+            window.currentPropinaData.referencia = r;
+            window.validarPropina();
+        };
+
+        window.validarPropina = function() {
+            const mes = document.getElementById('propinaMesonero')?.value;
+            const ms = document.getElementById('propinaMesa')?.value;
+            if (!mes || !ms) { document.getElementById('confirmPropinaBtn').disabled = true; return; }
+            if (window.currentPropinaData.metodo === 'pago_movil') {
+                const rv = window.currentPropinaData.referencia && window.currentPropinaData.referencia.length === 6;
+                document.getElementById('confirmPropinaBtn').disabled = !(window.currentPropinaData.montoBs > 0 && rv);
+            } else if (window.currentPropinaData.metodo === 'efectivo_usd') {
+                document.getElementById('confirmPropinaBtn').disabled = !(window.currentPropinaData.montoUsd > 0);
+            } else {
+                document.getElementById('confirmPropinaBtn').disabled = !(window.currentPropinaData.montoBs > 0);
+            }
+        };
+
+        window.confirmarPropina = async function() {
+            if (!window.currentUser) return;
+            
+            const mid = document.getElementById('propinaMesonero').value;
+            const ms = document.getElementById('propinaMesa').value;
+            const mes = (window.mesoneros || []).find(m => m.id === mid);
+            
+            if (!mes) { window.mostrarToast('Selecciona un mesonero', 'error'); return; }
+            
+            try {
+                const prop = {
+                    mesonero_id: mid,
+                    mesa: ms,
+                    metodo: window.currentPropinaData.metodo,
+                    monto_original: window.currentPropinaData.metodo === 'efectivo_usd' ? window.currentPropinaData.montoUsd : window.currentPropinaData.montoBs,
+                    moneda_original: window.currentPropinaData.metodo === 'efectivo_usd' ? 'USD' : 'Bs',
+                    tasa_aplicada: window.currentPropinaData.metodo === 'efectivo_usd' ? window.tasaEfectiva : null,
+                    monto_bs: window.currentPropinaData.montoBs,
+                    referencia: window.currentPropinaData.referencia || null,
+                    cajero: window.currentUser.nombre,
+                    fecha: new Date().toISOString(),
+                    entregado: false
+                };
+                
+                await window.supabaseClient.from('propinas').insert([prop]);
+                window.cerrarPropinaModal();
+                window.mostrarToast('💰 Propina registrada', 'success');
+                await window.cargarPropinas();
+                window.actualizarEstadisticas();
+                window.renderizarPropinas();
+            } catch (e) { 
+                console.error('Error:', e); 
+                window.mostrarToast('❌ Error al registrar propina', 'error'); 
+            }
+        };
+
+        // ==================== FUNCIONES DE MENÚ ====================
         window.cargarMenu = async function() {
             try {
                 const { data, error } = await window.supabaseClient.from('menu').select('*').eq('disponible', true);
@@ -653,7 +864,6 @@
             } catch (e) { console.error('Error cargando deliverys:', e); }
         };
 
-        // ==================== FUNCIONES DE STOCK ====================
         window.getStockDisponible = async function(i) {
             try {
                 const c = window.stockCache.get(i);
@@ -689,14 +899,58 @@
             return sd;
         };
 
+        window.renderizarMenu = async function() {
+            const g = document.getElementById('menuGrid');
+            const cl = document.getElementById('categoryList');
+            if (!window.menuItems || !window.menuItems.length) {
+                g.innerHTML = '<div class="empty-state"><i class="fas fa-utensils"></i><p>No hay platillos disponibles</p></div>';
+                return;
+            }
+            const cu = [...new Set(window.menuItems.map(i => i.categoria).filter(Boolean))];
+            let ch = '<li class="category-item active" data-categoria="todos"><i class="fas fa-utensils"></i> Todos</li>';
+            cu.forEach(c => {
+                ch += `<li class="category-item" data-categoria="${c}"><i class="fas fa-${c === 'entradas' ? 'fa-leaf' : c === 'sushi' ? 'fa-fish' : c === 'rolls' ? 'fa-egg' : c === 'tragos' ? 'fa-wine-glass-alt' : c === 'pokes' ? 'fa-bowl-food' : c === 'ensaladas' ? 'fa-carrot' : c === 'china' ? 'fa-dragon' : c === 'japonesa' ? 'fa-sun' : c === 'ofertas' ? 'fa-fire' : 'fa-utensils'}"></i> ${c}</li>`;
+            });
+            cl.innerHTML = ch;
+            document.querySelectorAll('.category-item').forEach(i => {
+                i.addEventListener('click', function() {
+                    document.querySelectorAll('.category-item').forEach(c => c.classList.remove('active'));
+                    this.classList.add('active');
+                    window.filtrarMenuPorCategoria(this.dataset.categoria);
+                });
+            });
+            window.filtrarMenuPorCategoria('todos');
+        };
+
+        window.filtrarMenuPorCategoria = function(c) {
+            let f = [];
+            if (c === 'todos') f = window.menuItems;
+            else f = window.menuItems.filter(i => i.categoria === c);
+            window.renderizarMenuItems(f);
+        };
+
+        window.renderizarMenuItems = async function(i) {
+            const g = document.getElementById('menuGrid');
+            const ics = await Promise.all(i.map(async it => {
+                const s = await window.calcularStockPlatillo(it);
+                let sc = 'available', st = 'Disponible';
+                if (s <= 0) { sc = 'sold-out'; st = 'Agotado'; }
+                else if (s < 5) { sc = 'low'; st = `Últimas ${s} unidades`; }
+                else st = `${s} disponibles`;
+                return { ...it, stock: s, stockClass: sc, stockText: st };
+            }));
+            g.innerHTML = ics.map(i => `<div class="menu-card"><div class="menu-card-image" style="background-image:url('${i.imagen || 'https://via.placeholder.com/300x150?text=Saki+Sushi'}')"></div><div class="menu-card-content"><div class="menu-card-header"><span class="menu-card-title">${i.nombre}</span><span class="menu-card-price">${window.formatBs(window.usdToBs(i.precio || 0))}</span></div><p style="font-size:.85rem;color:rgba(255,255,255,.6);margin-bottom:.5rem">${i.descripcion || ''}</p><div class="menu-card-stock ${i.stockClass}"><i class="fas fa-box"></i> ${i.stockText}</div></div></div>`).join('');
+        };
+
         // ==================== FUNCIONES DE PEDIDOS ====================
         window.actualizarEstadisticas = function() {
             const ep = (window.pedidos || []).filter(p => ['en_cocina', 'en_camino', 'reserva_pendiente', 'reserva_atendida'].includes(p.estado)).length;
             const ch = (window.ventasHoy || []).length;
             const tvb = (window.ventasHoy || []).reduce((s, v) => s + (v.subtotal_platillos || 0), 0);
             const pv = (window.ventasHoy || []).reduce((s, v) => s + (v.items || 0), 0);
-            const tp = (window.propinas || []).reduce((s, p) => s + (p.monto || 0), 0);
+            const tp = (window.propinas || []).reduce((s, p) => s + (p.monto_bs || p.monto || 0), 0);
             const tdh = window.calcularTotalDeliverysHoy();
+            
             document.getElementById('statPreparacion').textContent = ep;
             document.getElementById('statCobrados').textContent = ch;
             document.getElementById('statVentas').textContent = window.formatBs(tvb);
@@ -798,6 +1052,123 @@
                 console.error('Error abriendo modal deliverys:', e);
                 window.mostrarToast('Error al cargar datos de deliverys', 'error');
             }
+        };
+
+        window.renderizarDeliverysStats = function() {
+            const eh = (window.pedidos || []).filter(p => p.tipo === 'delivery' && p.estado === 'enviado' && new Date(p.timestamp).toDateString() === new Date().toDateString());
+            const td = eh.reduce((s, p) => s + (p.costo_delivery_bs || 0), 0);
+            const c = eh.length;
+            const pr = c > 0 ? td / c : 0;
+            document.getElementById('deliverysTotalStats').textContent = window.formatBs(td);
+            document.getElementById('deliverysCantidadStats').textContent = c;
+            document.getElementById('deliverysPromedioStats').textContent = window.formatBs(pr);
+            document.getElementById('deliverysListCount').textContent = c;
+            document.getElementById('deliverysListContainer').innerHTML = c ? eh.map(p => window.crearTarjetaDelivery(p)).join('') : '<div class="empty-state"><i class="fas fa-motorcycle"></i><p>No hay entregas hoy</p></div>';
+        };
+
+        window.crearTarjetaDelivery = function(p) {
+            try {
+                const f = new Date(p.timestamp);
+                const h = f.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+                return `<div class="order-card-compact" style="border-left-color:var(--delivery)"><div class="order-header-compact"><span class="order-time-compact"><i class="far fa-clock"></i> ${h}</span><span class="delivery-tag"><i class="fas fa-motorcycle"></i> Delivery</span></div><div class="order-info-compact"><div><i class="fas fa-map-marker-alt"></i> ${(p.direccion || '').substring(0, 20)}...</div><div><i class="fas fa-phone"></i> ${p.telefono || 'N/A'}</div><div><i class="fas fa-tag"></i> Pedido: ${p.id.substring(0, 8)}</div></div><div class="order-total-compact" style="color:var(--delivery)">${window.formatBs(p.costo_delivery_bs || 0)}</div></div>`;
+            } catch (e) { return ''; }
+        };
+
+        // ==================== FUNCIONES DE CONFIRMACIÓN ====================
+        window.mostrarConfirmacionDelivery = function(pid) {
+            const p = (window.pedidos || []).find(p => p.id === pid);
+            if (!p) return;
+            window.pedidoParaAccion = p;
+            const m = document.getElementById('confirmModal');
+            const t = document.getElementById('confirmModalTitle');
+            const b = document.getElementById('confirmModalBody');
+            const h = document.getElementById('confirmModalHeader');
+            t.innerHTML = '<i class="fas fa-truck"></i> Asignar Delivery';
+            h.style.background = 'linear-gradient(135deg,var(--delivery),#00838F)';
+            const dop = (window.deliverys || []).map(d => `<option value="${d.id}">${d.nombre}</option>`).join('');
+            b.innerHTML = `<p>Selecciona el motorizado que realizará el envío:</p><div class="delivery-selector" style="margin:20px 0"><select id="deliverySelector" style="width:100%;padding:10px;background:rgba(0,0,0,.5);color:#fff;border:2px solid rgba(255,255,255,.2);border-radius:8px;"><option value="">-- Seleccionar motorizado --</option>${dop}</select></div>${window.crearDetallePedidoHTML(p)}<div class="keyboard-hint" style="margin-top:20px"><span><kbd>ENTER</kbd> confirmar</span><span><kbd>ESC</kbd> cancelar</span></div>`;
+            document.getElementById('confirmActionBtn').disabled = true;
+            setTimeout(() => {
+                const s = document.getElementById('deliverySelector');
+                if (s) {
+                    s.addEventListener('change', function() {
+                        document.getElementById('confirmActionBtn').disabled = !this.value;
+                    });
+                }
+            }, 100);
+            m.classList.add('active');
+        };
+
+        window.mostrarConfirmacion = function(pid, acc) {
+            const p = (window.pedidos || []).find(p => p.id === pid);
+            if (!p) return;
+            window.pedidoParaAccion = p;
+            window.accionPendiente = acc;
+            const m = document.getElementById('confirmModal');
+            const t = document.getElementById('confirmModalTitle');
+            const b = document.getElementById('confirmModalBody');
+            const h = document.getElementById('confirmModalHeader');
+            let tit, msg, not;
+            if (acc === 'entregado') {
+                tit = 'Confirmar Entrega'; msg = '¿Pedido entregado?';
+                h.style.background = 'linear-gradient(135deg,var(--success),#2E7D32)';
+                not = { titulo: '🍽️ ¡Que aproveche!', mensaje: 'Tu pedido ha sido entregado.' };
+            } else if (acc === 'enviado') {
+                tit = 'Confirmar Envío'; msg = '¿Pedido enviado?';
+                h.style.background = 'linear-gradient(135deg,var(--info),#1565C0)';
+                not = { titulo: '🚚 Delivery en camino', mensaje: 'El repartidor ya salió.' };
+            } else if (acc === 'reserva_atendida') {
+                tit = 'Cliente Confirmado'; msg = '¿Cliente llegó?';
+                h.style.background = 'linear-gradient(135deg,#9c27b0,#7b1fa2)';
+                not = { titulo: '✅ Cliente confirmado', mensaje: 'Estás siendo atendido.' };
+            } else {
+                tit = 'Confirmar'; msg = '¿Confirmar acción?';
+                h.style.background = 'linear-gradient(135deg,var(--success),#2E7D32)';
+                not = { titulo: '✅ Completado', mensaje: 'Acción confirmada.' };
+            }
+            t.innerHTML = `<i class="fas fa-check-circle"></i> ${tit}`;
+            b.innerHTML = `<p>${msg}</p>${window.crearDetallePedidoHTML(p)}<div style="background:rgba(56,142,60,.1);padding:15px;margin-top:20px"><strong>Notificación:</strong><br>${not.titulo}<br>${not.mensaje}</div><div class="keyboard-hint"><span><kbd>ENTER</kbd> confirmar</span><span><kbd>ESC</kbd> cancelar</span></div>`;
+            m.classList.add('active');
+        };
+
+        window.ejecutarConfirmacion = async function() {
+            if (!window.pedidoParaAccion) return;
+            try {
+                let nt, nm;
+                if (window.accionPendiente === 'entregado') {
+                    nt = '🍽️ Pedido entregado';
+                    nm = '¡Buen Provecho! Gracias por elegir Saki Sushi';
+                } else if (window.accionPendiente === 'enviado') {
+                    const did = document.getElementById('deliverySelector')?.value;
+                    if (!did) { window.mostrarToast('Selecciona un motorizado', 'error'); return; }
+                    const del = (window.deliverys || []).find(d => d.id === did);
+                    await window.supabaseClient.from('entregas_delivery').insert([{
+                        pedido_id: window.pedidoParaAccion.id, delivery_id: did,
+                        monto_bs: window.pedidoParaAccion.costo_delivery_bs || 0,
+                        fecha_entrega: new Date().toISOString()
+                    }]);
+                    nt = '🚚 Delivery en camino';
+                    nm = del ? `Tu pedido está siendo entregado por ${del.nombre}` : 'El repartidor ya salió';
+                } else if (window.accionPendiente === 'reserva_atendida') {
+                    nt = '✅ Reserva Confirmada';
+                    nm = 'En breve tu pedido te será entregado, ¡Gracias por preferirnos!';
+                } else if (window.accionPendiente === 'reserva_completada') {
+                    nt = '🍽️ Pedido entregado';
+                    nm = '¡Buen Provecho! Gracias por elegir Saki Sushi';
+                } else {
+                    nt = '🔄 Estado actualizado';
+                    nm = 'Tu pedido ha sido actualizado';
+                }
+                await window.supabaseClient.from('pedidos').update({ estado: window.accionPendiente }).eq('id', window.pedidoParaAccion.id);
+                await window.supabaseClient.from('notificaciones').insert([{
+                    pedido_id: window.pedidoParaAccion.id, tipo: 'approved', titulo: nt, mensaje: nm,
+                    timestamp: new Date().toISOString(), session_id: window.pedidoParaAccion.session_id, leida: false
+                }]);
+                window.cerrarModal('confirmModal');
+                window.mostrarToast('✅ Estado actualizado');
+                await window.recargarPedidosCompletos();
+                window.verificarYControlarAlarma();
+            } catch (e) { console.error('Error:', e); window.mostrarToast('❌ Error', 'error'); }
         };
 
         // ==================== FUNCIONES DE COBRO ====================
@@ -1022,293 +1393,6 @@
             }
         };
 
-        // ==================== FUNCIONES DE MENÚ ====================
-        window.renderizarMenu = async function() {
-            const g = document.getElementById('menuGrid');
-            const cl = document.getElementById('categoryList');
-            if (!window.menuItems || !window.menuItems.length) {
-                g.innerHTML = '<div class="empty-state"><i class="fas fa-utensils"></i><p>No hay platillos disponibles</p></div>';
-                return;
-            }
-            const cu = [...new Set(window.menuItems.map(i => i.categoria).filter(Boolean))];
-            let ch = '<li class="category-item active" data-categoria="todos"><i class="fas fa-utensils"></i> Todos</li>';
-            cu.forEach(c => {
-                ch += `<li class="category-item" data-categoria="${c}"><i class="fas fa-${c === 'entradas' ? 'fa-leaf' : c === 'sushi' ? 'fa-fish' : c === 'rolls' ? 'fa-egg' : c === 'tragos' ? 'fa-wine-glass-alt' : c === 'pokes' ? 'fa-bowl-food' : c === 'ensaladas' ? 'fa-carrot' : c === 'china' ? 'fa-dragon' : c === 'japonesa' ? 'fa-sun' : c === 'ofertas' ? 'fa-fire' : 'fa-utensils'}"></i> ${c}</li>`;
-            });
-            cl.innerHTML = ch;
-            document.querySelectorAll('.category-item').forEach(i => {
-                i.addEventListener('click', function() {
-                    document.querySelectorAll('.category-item').forEach(c => c.classList.remove('active'));
-                    this.classList.add('active');
-                    window.filtrarMenuPorCategoria(this.dataset.categoria);
-                });
-            });
-            window.filtrarMenuPorCategoria('todos');
-        };
-
-        window.filtrarMenuPorCategoria = function(c) {
-            let f = [];
-            if (c === 'todos') f = window.menuItems;
-            else f = window.menuItems.filter(i => i.categoria === c);
-            window.renderizarMenuItems(f);
-        };
-
-        window.renderizarMenuItems = async function(i) {
-            const g = document.getElementById('menuGrid');
-            const ics = await Promise.all(i.map(async it => {
-                const s = await window.calcularStockPlatillo(it);
-                let sc = 'available', st = 'Disponible';
-                if (s <= 0) { sc = 'sold-out'; st = 'Agotado'; }
-                else if (s < 5) { sc = 'low'; st = `Últimas ${s} unidades`; }
-                else st = `${s} disponibles`;
-                return { ...it, stock: s, stockClass: sc, stockText: st };
-            }));
-            g.innerHTML = ics.map(i => `<div class="menu-card"><div class="menu-card-image" style="background-image:url('${i.imagen || 'https://via.placeholder.com/300x150?text=Saki+Sushi'}')"></div><div class="menu-card-content"><div class="menu-card-header"><span class="menu-card-title">${i.nombre}</span><span class="menu-card-price">${window.formatBs(window.usdToBs(i.precio || 0))}</span></div><p style="font-size:.85rem;color:rgba(255,255,255,.6);margin-bottom:.5rem">${i.descripcion || ''}</p><div class="menu-card-stock ${i.stockClass}"><i class="fas fa-box"></i> ${i.stockText}</div></div></div>`).join('');
-        };
-
-        // ==================== FUNCIONES DE PROPINAS ====================
-        window.renderizarPropinas = function() {
-            const total = (window.propinas || []).reduce((s, p) => s + (p.monto || 0), 0);
-            const cantidad = (window.propinas || []).length;
-            const promedio = cantidad > 0 ? total / cantidad : 0;
-            document.getElementById('propinasTotal').textContent = window.formatBs(total);
-            document.getElementById('propinasCantidad').textContent = cantidad;
-            document.getElementById('propinasPromedio').textContent = window.formatBs(promedio);
-            document.getElementById('propinasListCount').textContent = cantidad;
-            document.getElementById('propinasListContainer').innerHTML = cantidad ? window.propinas.map(p => window.crearTarjetaPropina(p)).join('') : '<div class="empty-state"><i class="fas fa-hand-holding-heart"></i><p>No hay propinas hoy</p></div>';
-        };
-
-        window.crearTarjetaPropina = function(p) {
-            try {
-                const f = new Date(p.fecha);
-                const h = f.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-                const pd = p.pedidos || {};
-                const t = pd.tipo || 'mesa';
-                const ref = pd.mesa || pd.cliente_nombre || 'Cliente';
-                return `<div class="order-card-compact" style="border-left-color:var(--propina)"><div class="order-header-compact"><span class="order-time-compact"><i class="far fa-clock"></i> ${h}</span><span class="propina-tag"><i class="fas fa-hand-holding-heart"></i> Propina</span></div><div class="order-info-compact"><div><i class="fas fa-${t === 'mesa' ? 'store' : t === 'delivery' ? 'motorcycle' : 'calendar-check'}"></i> ${t.toUpperCase()} - ${ref}</div><div><i class="fas fa-user"></i> ${p.cajero || 'Cajero'}</div><div><i class="fas fa-${p.metodo === 'efectivo_bs' ? 'money-bill-wave' : p.metodo === 'efectivo_usd' ? 'dollar-sign' : p.metodo === 'pago_movil' ? 'mobile-alt' : 'credit-card'}"></i> ${p.metodo}</div><div><i class="fas fa-chair"></i> Mesa: ${p.mesa || 'N/A'}</div></div><div class="order-total-compact" style="color:var(--propina)">${window.formatBs(p.monto_bs || p.monto)}</div></div>`;
-            } catch (e) { return ''; }
-        };
-
-        window.mostrarPropinaModal = function(pedido) {
-            if (!pedido) return;
-            window.currentPropinaPedido = pedido;
-            window.currentPropinaData = {
-                mesonero: '', mesa: pedido.tipo === 'mesa' ? `Mesa ${pedido.mesa || ''}` : pedido.tipo === 'delivery' ? 'Delivery' : 'Reserva',
-                metodo: 'efectivo_bs', montoBs: 0, montoUsd: 0, referencia: '', tasaAplicada: window.tasaEfectiva
-            };
-            const b = document.getElementById('propinaModalBody');
-            const mo = (window.mesoneros || []).map(m => `<option value="${m.id}">${m.nombre}</option>`).join('');
-            b.innerHTML = `<div style="margin-bottom:20px"><div class="mesonero-selector"><label>🧑‍🍳 Mesonero</label><select id="propinaMesonero"><option value="">Seleccionar mesonero...</option>${mo}</select></div><div class="mesa-selector"><label>🪑 Mesa Atendida</label><select id="propinaMesa"><option value="Mesa 1">Mesa 1</option><option value="Mesa 2">Mesa 2</option><option value="Mesa 3">Mesa 3</option><option value="Mesa 4">Mesa 4</option><option value="Mesa 5">Mesa 5</option><option value="Mesa 6">Mesa 6</option><option value="Mesa 7">Mesa 7</option><option value="Mesa 8">Mesa 8</option><option value="Mesa 9">Mesa 9</option><option value="Mesa 10">Mesa 10</option><option value="Delivery">Delivery</option><option value="Reserva">Reserva</option></select></div><div style="margin-bottom:20px"><label>💳 Método de Pago</label><div style="display:flex;gap:10px;margin-top:8px"><label style="flex:1;background:rgba(0,0,0,.3);padding:10px;border-radius:8px;text-align:center;cursor:pointer"><input type="radio" name="propinaMetodo" value="efectivo_bs" checked onchange="window.cambiarMetodoPropina('efectivo_bs')"> Efectivo Bs</label><label style="flex:1;background:rgba(0,0,0,.3);padding:10px;border-radius:8px;text-align:center;cursor:pointer"><input type="radio" name="propinaMetodo" value="efectivo_usd" onchange="window.cambiarMetodoPropina('efectivo_usd')"> Efectivo USD</label><label style="flex:1;background:rgba(0,0,0,.3);padding:10px;border-radius:8px;text-align:center;cursor:pointer"><input type="radio" name="propinaMetodo" value="pago_movil" onchange="window.cambiarMetodoPropina('pago_movil')"> Pago Móvil</label><label style="flex:1;background:rgba(0,0,0,.3);padding:10px;border-radius:8px;text-align:center;cursor:pointer"><input type="radio" name="propinaMetodo" value="punto_venta" onchange="window.cambiarMetodoPropina('punto_venta')"> Punto Venta</label></div></div><div class="propina-monto-group" id="propinaMontoGroup"><input type="number" id="propinaMontoBs" step="0.01" placeholder="Monto en Bs" oninput="window.calcularMontoPropina('bs')"><input type="number" id="propinaMontoUsd" step="0.01" placeholder="Monto en USD" disabled oninput="window.calcularMontoPropina('usd')"></div><div id="propinaReferenciaGroup" style="display:none;margin-bottom:20px"><label>🔢 Referencia (6 dígitos)</label><div class="referencia-input"><input type="text" maxlength="1" class="ref-propina" data-index="0" oninput="window.moverRefPropina(this,0)"><input type="text" maxlength="1" class="ref-propina" data-index="1" oninput="window.moverRefPropina(this,1)"><input type="text" maxlength="1" class="ref-propina" data-index="2" oninput="window.moverRefPropina(this,2)"><input type="text" maxlength="1" class="ref-propina" data-index="3" oninput="window.moverRefPropina(this,3)"><input type="text" maxlength="1" class="ref-propina" data-index="4" oninput="window.moverRefPropina(this,4)"><input type="text" maxlength="1" class="ref-propina" data-index="5" oninput="window.moverRefPropina(this,5)"></div></div><div style="background:rgba(0,0,0,.3);padding:15px;border-radius:8px"><div style="display:flex;justify-content:space-between"><span><strong>Total a registrar:</strong></span><span id="propinaTotalDisplay" style="color:var(--accent);font-size:1.2rem">Bs. 0.00</span></div><div style="font-size:.85rem;color:rgba(255,255,255,.7);margin-top:5px">Tasa aplicada: ${window.tasaEfectiva} Bs/USD</div></div></div><div class="keyboard-hint"><span><kbd>ENTER</kbd> guardar</span><span><kbd>ESC</kbd> cancelar</span></div>`;
-            document.querySelectorAll('.ref-propina').forEach(i => {
-                i.addEventListener('input', function() {
-                    const r = Array.from(document.querySelectorAll('.ref-propina')).map(i => i.value).join('');
-                    window.currentPropinaData.referencia = r;
-                    window.validarPropina();
-                });
-            });
-            document.getElementById('propinaModal').classList.add('active');
-        };
-
-        window.cambiarMetodoPropina = function(m) {
-            window.currentPropinaData.metodo = m;
-            const bs = document.getElementById('propinaMontoBs');
-            const usd = document.getElementById('propinaMontoUsd');
-            const rg = document.getElementById('propinaReferenciaGroup');
-            if (m === 'efectivo_usd') { bs.disabled = true; usd.disabled = false; rg.style.display = 'none'; }
-            else if (m === 'pago_movil') { bs.disabled = false; usd.disabled = true; rg.style.display = 'block'; }
-            else { bs.disabled = false; usd.disabled = true; rg.style.display = 'none'; }
-            window.validarPropina();
-        };
-
-        window.calcularMontoPropina = function(t) {
-            if (t === 'bs') {
-                window.currentPropinaData.montoBs = parseFloat(document.getElementById('propinaMontoBs').value) || 0;
-                if (window.currentPropinaData.metodo === 'efectivo_usd') window.currentPropinaData.montoUsd = window.currentPropinaData.montoBs / window.tasaEfectiva;
-                document.getElementById('propinaTotalDisplay').textContent = window.formatBs(window.currentPropinaData.montoBs);
-            } else {
-                window.currentPropinaData.montoUsd = parseFloat(document.getElementById('propinaMontoUsd').value) || 0;
-                window.currentPropinaData.montoBs = window.currentPropinaData.montoUsd * window.tasaEfectiva;
-                document.getElementById('propinaTotalDisplay').textContent = window.formatBs(window.currentPropinaData.montoBs);
-            }
-            window.validarPropina();
-        };
-
-        window.moverRefPropina = function(i, idx) {
-            if (i.value.length === 1 && idx < 5) document.querySelector(`.ref-propina[data-index="${idx + 1}"]`).focus();
-            const r = Array.from(document.querySelectorAll('.ref-propina')).map(i => i.value).join('');
-            window.currentPropinaData.referencia = r;
-            window.validarPropina();
-        };
-
-        window.validarPropina = function() {
-            const mes = document.getElementById('propinaMesonero')?.value;
-            const ms = document.getElementById('propinaMesa')?.value;
-            if (!mes || !ms) { document.getElementById('confirmPropinaBtn').disabled = true; return; }
-            if (window.currentPropinaData.metodo === 'pago_movil') {
-                const rv = window.currentPropinaData.referencia && window.currentPropinaData.referencia.length === 6;
-                document.getElementById('confirmPropinaBtn').disabled = !(window.currentPropinaData.montoBs > 0 && rv);
-            } else if (window.currentPropinaData.metodo === 'efectivo_usd') {
-                document.getElementById('confirmPropinaBtn').disabled = !(window.currentPropinaData.montoUsd > 0);
-            } else {
-                document.getElementById('confirmPropinaBtn').disabled = !(window.currentPropinaData.montoBs > 0);
-            }
-        };
-
-        window.confirmarPropina = async function() {
-            if (!window.currentPropinaPedido || !window.currentUser) return;
-            const mid = document.getElementById('propinaMesonero').value;
-            const ms = document.getElementById('propinaMesa').value;
-            const mes = (window.mesoneros || []).find(m => m.id === mid);
-            if (!mes) { window.mostrarToast('Selecciona un mesonero', 'error'); return; }
-            try {
-                const prop = {
-                    pedido_id: window.currentPropinaPedido.id, mesonero_id: mid, mesa: ms,
-                    metodo: window.currentPropinaData.metodo,
-                    monto_original: window.currentPropinaData.metodo === 'efectivo_usd' ? window.currentPropinaData.montoUsd : window.currentPropinaData.montoBs,
-                    moneda_original: window.currentPropinaData.metodo === 'efectivo_usd' ? 'USD' : 'Bs',
-                    tasa_aplicada: window.currentPropinaData.metodo === 'efectivo_usd' ? window.tasaEfectiva : null,
-                    monto_bs: window.currentPropinaData.montoBs,
-                    referencia: window.currentPropinaData.referencia || null,
-                    cajero: window.currentUser.nombre,
-                    fecha: new Date().toISOString(),
-                    entregado: false
-                };
-                await window.supabaseClient.from('propinas').insert([prop]);
-                window.cerrarPropinaModal();
-                window.mostrarToast('💰 Propina registrada', 'success');
-                await window.cargarPropinas();
-                window.actualizarEstadisticas();
-                window.renderizarPropinas();
-            } catch (e) { console.error('Error:', e); window.mostrarToast('❌ Error al registrar propina', 'error'); }
-        };
-
-        // ==================== FUNCIONES DE DELIVERYS STATS ====================
-        window.renderizarDeliverysStats = function() {
-            const eh = (window.pedidos || []).filter(p => p.tipo === 'delivery' && p.estado === 'enviado' && new Date(p.timestamp).toDateString() === new Date().toDateString());
-            const td = eh.reduce((s, p) => s + (p.costo_delivery_bs || 0), 0);
-            const c = eh.length;
-            const pr = c > 0 ? td / c : 0;
-            document.getElementById('deliverysTotalStats').textContent = window.formatBs(td);
-            document.getElementById('deliverysCantidadStats').textContent = c;
-            document.getElementById('deliverysPromedioStats').textContent = window.formatBs(pr);
-            document.getElementById('deliverysListCount').textContent = c;
-            document.getElementById('deliverysListContainer').innerHTML = c ? eh.map(p => window.crearTarjetaDelivery(p)).join('') : '<div class="empty-state"><i class="fas fa-motorcycle"></i><p>No hay entregas hoy</p></div>';
-        };
-
-        window.crearTarjetaDelivery = function(p) {
-            try {
-                const f = new Date(p.timestamp);
-                const h = f.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-                return `<div class="order-card-compact" style="border-left-color:var(--delivery)"><div class="order-header-compact"><span class="order-time-compact"><i class="far fa-clock"></i> ${h}</span><span class="delivery-tag"><i class="fas fa-motorcycle"></i> Delivery</span></div><div class="order-info-compact"><div><i class="fas fa-map-marker-alt"></i> ${(p.direccion || '').substring(0, 20)}...</div><div><i class="fas fa-phone"></i> ${p.telefono || 'N/A'}</div><div><i class="fas fa-tag"></i> Pedido: ${p.id.substring(0, 8)}</div></div><div class="order-total-compact" style="color:var(--delivery)">${window.formatBs(p.costo_delivery_bs || 0)}</div></div>`;
-            } catch (e) { return ''; }
-        };
-
-        // ==================== FUNCIONES DE CONFIRMACIÓN ====================
-        window.mostrarConfirmacionDelivery = function(pid) {
-            const p = (window.pedidos || []).find(p => p.id === pid);
-            if (!p) return;
-            window.pedidoParaAccion = p;
-            const m = document.getElementById('confirmModal');
-            const t = document.getElementById('confirmModalTitle');
-            const b = document.getElementById('confirmModalBody');
-            const h = document.getElementById('confirmModalHeader');
-            t.innerHTML = '<i class="fas fa-truck"></i> Asignar Delivery';
-            h.style.background = 'linear-gradient(135deg,var(--delivery),#00838F)';
-            const dop = (window.deliverys || []).map(d => `<option value="${d.id}">${d.nombre}</option>`).join('');
-            b.innerHTML = `<p>Selecciona el motorizado que realizará el envío:</p><div class="delivery-selector" style="margin:20px 0"><select id="deliverySelector" style="width:100%;padding:10px;background:rgba(0,0,0,.5);color:#fff;border:2px solid rgba(255,255,255,.2);border-radius:8px;"><option value="">-- Seleccionar motorizado --</option>${dop}</select></div>${window.crearDetallePedidoHTML(p)}<div class="keyboard-hint" style="margin-top:20px"><span><kbd>ENTER</kbd> confirmar</span><span><kbd>ESC</kbd> cancelar</span></div>`;
-            document.getElementById('confirmActionBtn').disabled = true;
-            setTimeout(() => {
-                const s = document.getElementById('deliverySelector');
-                if (s) {
-                    s.addEventListener('change', function() {
-                        document.getElementById('confirmActionBtn').disabled = !this.value;
-                    });
-                }
-            }, 100);
-            m.classList.add('active');
-        };
-
-        window.mostrarConfirmacion = function(pid, acc) {
-            const p = (window.pedidos || []).find(p => p.id === pid);
-            if (!p) return;
-            window.pedidoParaAccion = p;
-            window.accionPendiente = acc;
-            const m = document.getElementById('confirmModal');
-            const t = document.getElementById('confirmModalTitle');
-            const b = document.getElementById('confirmModalBody');
-            const h = document.getElementById('confirmModalHeader');
-            let tit, msg, not;
-            if (acc === 'entregado') {
-                tit = 'Confirmar Entrega'; msg = '¿Pedido entregado?';
-                h.style.background = 'linear-gradient(135deg,var(--success),#2E7D32)';
-                not = { titulo: '🍽️ ¡Que aproveche!', mensaje: 'Tu pedido ha sido entregado.' };
-            } else if (acc === 'enviado') {
-                tit = 'Confirmar Envío'; msg = '¿Pedido enviado?';
-                h.style.background = 'linear-gradient(135deg,var(--info),#1565C0)';
-                not = { titulo: '🚚 Delivery en camino', mensaje: 'El repartidor ya salió.' };
-            } else if (acc === 'reserva_atendida') {
-                tit = 'Cliente Confirmado'; msg = '¿Cliente llegó?';
-                h.style.background = 'linear-gradient(135deg,#9c27b0,#7b1fa2)';
-                not = { titulo: '✅ Cliente confirmado', mensaje: 'Estás siendo atendido.' };
-            } else {
-                tit = 'Confirmar'; msg = '¿Confirmar acción?';
-                h.style.background = 'linear-gradient(135deg,var(--success),#2E7D32)';
-                not = { titulo: '✅ Completado', mensaje: 'Acción confirmada.' };
-            }
-            t.innerHTML = `<i class="fas fa-check-circle"></i> ${tit}`;
-            b.innerHTML = `<p>${msg}</p>${window.crearDetallePedidoHTML(p)}<div style="background:rgba(56,142,60,.1);padding:15px;margin-top:20px"><strong>Notificación:</strong><br>${not.titulo}<br>${not.mensaje}</div><div class="keyboard-hint"><span><kbd>ENTER</kbd> confirmar</span><span><kbd>ESC</kbd> cancelar</span></div>`;
-            m.classList.add('active');
-        };
-
-        window.ejecutarConfirmacion = async function() {
-            if (!window.pedidoParaAccion) return;
-            try {
-                let nt, nm;
-                if (window.accionPendiente === 'entregado') {
-                    nt = '🍽️ Pedido entregado';
-                    nm = '¡Buen Provecho! Gracias por elegir Saki Sushi';
-                } else if (window.accionPendiente === 'enviado') {
-                    const did = document.getElementById('deliverySelector')?.value;
-                    if (!did) { window.mostrarToast('Selecciona un motorizado', 'error'); return; }
-                    const del = (window.deliverys || []).find(d => d.id === did);
-                    await window.supabaseClient.from('entregas_delivery').insert([{
-                        pedido_id: window.pedidoParaAccion.id, delivery_id: did,
-                        monto_bs: window.pedidoParaAccion.costo_delivery_bs || 0,
-                        fecha_entrega: new Date().toISOString()
-                    }]);
-                    nt = '🚚 Delivery en camino';
-                    nm = del ? `Tu pedido está siendo entregado por ${del.nombre}` : 'El repartidor ya salió';
-                } else if (window.accionPendiente === 'reserva_atendida') {
-                    nt = '✅ Reserva Confirmada';
-                    nm = 'En breve tu pedido te será entregado, ¡Gracias por preferirnos!';
-                } else if (window.accionPendiente === 'reserva_completada') {
-                    nt = '🍽️ Pedido entregado';
-                    nm = '¡Buen Provecho! Gracias por elegir Saki Sushi';
-                } else {
-                    nt = '🔄 Estado actualizado';
-                    nm = 'Tu pedido ha sido actualizado';
-                }
-                await window.supabaseClient.from('pedidos').update({ estado: window.accionPendiente }).eq('id', window.pedidoParaAccion.id);
-                await window.supabaseClient.from('notificaciones').insert([{
-                    pedido_id: window.pedidoParaAccion.id, tipo: 'approved', titulo: nt, mensaje: nm,
-                    timestamp: new Date().toISOString(), session_id: window.pedidoParaAccion.session_id, leida: false
-                }]);
-                window.cerrarModal('confirmModal');
-                window.mostrarToast('✅ Estado actualizado');
-                await window.recargarPedidosCompletos();
-                window.verificarYControlarAlarma();
-            } catch (e) { console.error('Error:', e); window.mostrarToast('❌ Error', 'error'); }
-        };
-
-        // ==================== FUNCIONES DE COMPROBANTE ====================
-        window.verComprobante = async function(pid) {
-            const p = (window.pedidos || []).find(p => p.id === pid);
-            if (!p || !p.comprobante_url) { window.mostrarToast('No hay comprobante', 'error'); return; }
-            const m = document.getElementById('comprobanteModal');
-            document.getElementById('comprobanteModalBody').innerHTML = `<div style="text-align:center"><img src="${p.comprobante_url}" style="max-width:100%;max-height:400px;border-radius:8px;margin-bottom:15px"><p><strong>Referencia:</strong> ${p.referencia || 'N/A'}</p><p><strong>Teléfono:</strong> ${p.telefono || 'N/A'}</p><p><strong>Total:</strong> ${window.formatBs(window.usdToBs(p.total || 0))}</p></div><div class="keyboard-hint"><span><kbd>ESC</kbd> cerrar</span></div>`;
-            m.classList.add('active');
-        };
-
         // ==================== FUNCIONES DE DETALLE ====================
         window.crearDetallePedidoHTML = function(p) {
             try {
@@ -1352,6 +1436,14 @@
                 const its = (p.items || []).map(i => `<div class="detail-item-row-compact"><span>${i.cantidad || 1}x ${i.nombre}</span><span>${window.formatBs(window.usdToBs((i.precioUnitarioUSD || 0) * (i.cantidad || 1)))}</span></div>`).join('');
                 return `<div class="detail-item-compact"><div class="detail-header-compact"><span>${h}</span><span class="detail-metodo-tag">${p.tipo}</span></div><div class="detail-items-compact">${its}</div><div class="detail-total-compact">Total: ${window.formatBs(window.usdToBs(p.total || 0))}</div></div>`;
             } catch (e) { return ''; }
+        };
+
+        window.verComprobante = async function(pid) {
+            const p = (window.pedidos || []).find(p => p.id === pid);
+            if (!p || !p.comprobante_url) { window.mostrarToast('No hay comprobante', 'error'); return; }
+            const m = document.getElementById('comprobanteModal');
+            document.getElementById('comprobanteModalBody').innerHTML = `<div style="text-align:center"><img src="${p.comprobante_url}" style="max-width:100%;max-height:400px;border-radius:8px;margin-bottom:15px"><p><strong>Referencia:</strong> ${p.referencia || 'N/A'}</p><p><strong>Teléfono:</strong> ${p.telefono || 'N/A'}</p><p><strong>Total:</strong> ${window.formatBs(window.usdToBs(p.total || 0))}</p></div><div class="keyboard-hint"><span><kbd>ESC</kbd> cerrar</span></div>`;
+            m.classList.add('active');
         };
 
         window.abrirModalDetalle = async function(t) {
@@ -1414,7 +1506,7 @@
                         const tp = (window.propinas || []).reduce((s, p) => s + (p.monto_bs || p.monto || 0), 0);
                         const cp = (window.propinas || []).length;
                         const pp = cp > 0 ? tp / cp : 0;
-                        c = `<p><strong>Total propinas:</strong> ${window.formatBs(tp)}</p><p><strong>Cantidad:</strong> ${cp}</p><p><strong>Promedio:</strong> ${window.formatBs(pp)}</p><h4>Detalle por propina:</h4>${cp ? window.propinas.map(p => `<div class="detail-item-compact"><div class="detail-header-compact"><span>${new Date(p.fecha).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}</span><span class="propina-tag">${p.metodo}</span></div><div><i class="fas fa-user"></i> ${p.cajero || 'Cajero'}</div><div><i class="fas fa-${p.pedidos?.tipo === 'mesa' ? 'store' : p.pedidos?.tipo === 'delivery' ? 'motorcycle' : 'calendar-check'}"></i> ${p.pedidos?.tipo || 'Mesa'} - ${p.pedidos?.mesa || p.pedidos?.cliente_nombre || 'Cliente'}</div><div><i class="fas fa-chair"></i> Mesa: ${p.mesa || 'N/A'}</div><div class="detail-total-compact" style="color:var(--propina)">${window.formatBs(p.monto_bs || p.monto)}</div></div>`).join('') : '<div class="empty-state"><i class="fas fa-hand-holding-heart"></i><p>No hay propinas hoy</p></div>'}`;
+                        c = `<p><strong>Total propinas:</strong> ${window.formatBs(tp)}</p><p><strong>Cantidad:</strong> ${cp}</p><p><strong>Promedio:</strong> ${window.formatBs(pp)}</p><h4>Detalle por propina:</h4>${cp ? window.propinas.map(p => window.crearTarjetaPropina(p)).join('') : '<div class="empty-state"><i class="fas fa-hand-holding-heart"></i><p>No hay propinas hoy</p></div>'}`;
                         break;
                     case 'propinasCantidad':
                         tle.innerHTML = '<i class="fas fa-hashtag"></i> Cantidad de Propinas';
