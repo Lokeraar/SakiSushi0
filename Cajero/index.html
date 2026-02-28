@@ -213,7 +213,7 @@
     <div class="login-container" id="loginContainer">
         <div class="login-box">
             <h2><i class="fas fa-cash-register"></i> Cajero Saki Sushi</h2>
-            <form class="login-form" id="loginForm" onsubmit="event.preventDefault(); hacerLogin()">
+            <form class="login-form" id="loginForm" onsubmit="event.preventDefault(); window.hacerLogin()">
                 <input type="text" id="username" placeholder="Usuario" required autofocus>
                 <input type="password" id="password" placeholder="Contraseña" required>
                 <button type="submit">Iniciar Sesión</button>
@@ -227,26 +227,26 @@
                 <p>Saki Sushi - Gestión de pedidos y cobros</p>
             </div>
             <div class="header-right">
-                <button class="btn btn-primary" onclick="abrirSelectorMesa()" style="padding:12px 25px"><i class="fas fa-utensils"></i> Menú Cliente</button>
-                <button class="btn btn-secondary" onclick="cerrarSesion()" style="padding:12px 25px"><i class="fas fa-sign-out-alt"></i> Salir</button>
+                <button class="btn btn-primary" onclick="window.abrirSelectorMesa()" style="padding:12px 25px"><i class="fas fa-utensils"></i> Menú Cliente</button>
+                <button class="btn btn-secondary" onclick="window.cerrarSesion()" style="padding:12px 25px"><i class="fas fa-sign-out-alt"></i> Salir</button>
             </div>
         </div>
         <div class="nav-tabs">
-            <button class="nav-tab active" onclick="showSection('pedidos')"><i class="fas fa-clipboard-list"></i> Pedidos</button>
-            <button class="nav-tab" onclick="showSection('menu')"><i class="fas fa-utensils"></i> Ver Menú</button>
-            <button class="nav-tab" onclick="showSection('propinas')"><i class="fas fa-hand-holding-heart"></i> Propinas</button>
-            <button class="nav-tab" onclick="showSection('deliverys')"><i class="fas fa-motorcycle"></i> Deliverys</button>
+            <button class="nav-tab active" onclick="window.showSection('pedidos')"><i class="fas fa-clipboard-list"></i> Pedidos</button>
+            <button class="nav-tab" onclick="window.showSection('menu')"><i class="fas fa-utensils"></i> Ver Menú</button>
+            <button class="nav-tab" onclick="window.showSection('propinas')"><i class="fas fa-hand-holding-heart"></i> Propinas</button>
+            <button class="nav-tab" onclick="window.showSection('deliverys')"><i class="fas fa-motorcycle"></i> Deliverys</button>
         </div>
         <div class="content">
             <div class="section active" id="section-pedidos">
                 <h2 class="section-title"><i class="fas fa-clipboard-list"></i> Pedidos del Día</h2>
                 <div class="stats-grid-modern">
-                    <button class="stat-button cuatro" onclick="abrirModalDetalle('preparacion')"><span class="stat-icon pendientes"><i class="fas fa-fire"></i></span><span class="stat-value" id="statPreparacion">0</span><span class="stat-label">En Preparación</span></button>
-                    <button class="stat-button cuatro" onclick="abrirModalDetalle('cobrados')"><span class="stat-icon cobrados"><i class="fas fa-check-circle"></i></span><span class="stat-value" id="statCobrados">0</span><span class="stat-label">Cobrados Hoy</span></button>
-                    <button class="stat-button cuatro" onclick="abrirModalDetalle('ventas')"><span class="stat-icon ventas"><i class="fas fa-dollar-sign"></i></span><span class="stat-value" id="statVentas">Bs. 0</span><span class="stat-label">Ventas Totales</span></button>
-                    <button class="stat-button cuatro" onclick="abrirModalDetalle('platillos')"><span class="stat-icon platillos"><i class="fas fa-utensils"></i></span><span class="stat-value" id="statPlatillos">0</span><span class="stat-label">Platillos Vend.</span></button>
-                    <button class="stat-button cuatro" onclick="abrirModalDetalle('propinas')"><span class="stat-icon propinas"><i class="fas fa-hand-holding-heart"></i></span><span class="stat-value" id="statPropinas">Bs. 0</span><span class="stat-label">Propinas Hoy</span></button>
-                    <button class="stat-button cuatro" onclick="abrirModalDeliverys()"><span class="stat-icon delivery-total"><i class="fas fa-motorcycle"></i></span><span class="stat-value" id="statDeliverysTotal">Bs. 0</span><span class="stat-label">Deliverys</span></button>
+                    <button class="stat-button cuatro" onclick="window.abrirModalDetalle('preparacion')"><span class="stat-icon pendientes"><i class="fas fa-fire"></i></span><span class="stat-value" id="statPreparacion">0</span><span class="stat-label">En Preparación</span></button>
+                    <button class="stat-button cuatro" onclick="window.abrirModalDetalle('cobrados')"><span class="stat-icon cobrados"><i class="fas fa-check-circle"></i></span><span class="stat-value" id="statCobrados">0</span><span class="stat-label">Cobrados Hoy</span></button>
+                    <button class="stat-button cuatro" onclick="window.abrirModalDetalle('ventas')"><span class="stat-icon ventas"><i class="fas fa-dollar-sign"></i></span><span class="stat-value" id="statVentas">Bs. 0</span><span class="stat-label">Ventas Totales</span></button>
+                    <button class="stat-button cuatro" onclick="window.abrirModalDetalle('platillos')"><span class="stat-icon platillos"><i class="fas fa-utensils"></i></span><span class="stat-value" id="statPlatillos">0</span><span class="stat-label">Platillos Vend.</span></button>
+                    <button class="stat-button cuatro" onclick="window.abrirModalDetalle('propinas')"><span class="stat-icon propinas"><i class="fas fa-hand-holding-heart"></i></span><span class="stat-value" id="statPropinas">Bs. 0</span><span class="stat-label">Propinas Hoy</span></button>
+                    <button class="stat-button cuatro" onclick="window.abrirModalDeliverys()"><span class="stat-icon delivery-total"><i class="fas fa-motorcycle"></i></span><span class="stat-value" id="statDeliverysTotal">Bs. 0</span><span class="stat-label">Deliverys</span></button>
                 </div>
                 <div style="margin:30px 0 20px 0"><h3 style="font-size:1.5rem;color:#fff;display:flex;align-items:center;gap:10px"><i class="fas fa-clock" style="color:var(--warning)"></i> Pedidos Pendientes<span class="badge" style="background:var(--warning)" id="totalPendientesBadge">0</span></h3></div>
                 <div class="pedidos-columns">
@@ -272,18 +272,18 @@
             <div class="section" id="section-propinas">
                 <h2 class="section-title"><i class="fas fa-hand-holding-heart"></i> Propinas del Día</h2>
                 <div class="stats-grid-modern" style="margin-bottom:30px">
-                    <button class="stat-button cuatro" onclick="abrirModalDetalle('propinasDetalle')"><span class="stat-icon propinas"><i class="fas fa-hand-holding-heart"></i></span><span class="stat-value" id="propinasTotal">Bs. 0</span><span class="stat-label">Total Propinas</span></button>
-                    <button class="stat-button cuatro" onclick="abrirModalDetalle('propinasCantidad')"><span class="stat-icon propinas"><i class="fas fa-hashtag"></i></span><span class="stat-value" id="propinasCantidad">0</span><span class="stat-label">Cantidad</span></button>
-                    <button class="stat-button cuatro" onclick="abrirModalDetalle('propinasPromedio')"><span class="stat-icon propinas"><i class="fas fa-chart-line"></i></span><span class="stat-value" id="propinasPromedio">Bs. 0</span><span class="stat-label">Promedio</span></button>
+                    <button class="stat-button cuatro" onclick="window.abrirModalDetalle('propinasDetalle')"><span class="stat-icon propinas"><i class="fas fa-hand-holding-heart"></i></span><span class="stat-value" id="propinasTotal">Bs. 0</span><span class="stat-label">Total Propinas</span></button>
+                    <button class="stat-button cuatro" onclick="window.abrirModalDetalle('propinasCantidad')"><span class="stat-icon propinas"><i class="fas fa-hashtag"></i></span><span class="stat-value" id="propinasCantidad">0</span><span class="stat-label">Cantidad</span></button>
+                    <button class="stat-button cuatro" onclick="window.abrirModalDetalle('propinasPromedio')"><span class="stat-icon propinas"><i class="fas fa-chart-line"></i></span><span class="stat-value" id="propinasPromedio">Bs. 0</span><span class="stat-label">Promedio</span></button>
                 </div>
                 <div id="propinasContainer" class="pedidos-columns" style="grid-template-columns:1fr"><div class="pedidos-column" style="max-height:500px"><div class="column-header propina"><span><i class="fas fa-clock"></i> Últimas Propinas</span><span class="count-badge" id="propinasListCount">0</span></div><div class="column-content" id="propinasListContainer"></div></div></div>
             </div>
             <div class="section" id="section-deliverys">
                 <h2 class="section-title"><i class="fas fa-motorcycle" style="color:var(--delivery)"></i> Estadísticas de Deliverys</h2>
                 <div class="stats-grid-modern" style="margin-bottom:30px">
-                    <button class="stat-button cuatro" onclick="abrirModalDetalle('deliverysTotal')"><span class="stat-icon delivery-total"><i class="fas fa-motorcycle"></i></span><span class="stat-value" id="deliverysTotalStats">Bs. 0</span><span class="stat-label">Total Deliverys</span></button>
-                    <button class="stat-button cuatro" onclick="abrirModalDetalle('deliverysCantidad')"><span class="stat-icon delivery-total"><i class="fas fa-hashtag"></i></span><span class="stat-value" id="deliverysCantidadStats">0</span><span class="stat-label">Entregas Hoy</span></button>
-                    <button class="stat-button cuatro" onclick="abrirModalDetalle('deliverysPromedio')"><span class="stat-icon delivery-total"><i class="fas fa-chart-line"></i></span><span class="stat-value" id="deliverysPromedioStats">Bs. 0</span><span class="stat-label">Promedio por entrega</span></button>
+                    <button class="stat-button cuatro" onclick="window.abrirModalDetalle('deliverysTotal')"><span class="stat-icon delivery-total"><i class="fas fa-motorcycle"></i></span><span class="stat-value" id="deliverysTotalStats">Bs. 0</span><span class="stat-label">Total Deliverys</span></button>
+                    <button class="stat-button cuatro" onclick="window.abrirModalDetalle('deliverysCantidad')"><span class="stat-icon delivery-total"><i class="fas fa-hashtag"></i></span><span class="stat-value" id="deliverysCantidadStats">0</span><span class="stat-label">Entregas Hoy</span></button>
+                    <button class="stat-button cuatro" onclick="window.abrirModalDetalle('deliverysPromedio')"><span class="stat-icon delivery-total"><i class="fas fa-chart-line"></i></span><span class="stat-value" id="deliverysPromedioStats">Bs. 0</span><span class="stat-label">Promedio por entrega</span></button>
                 </div>
                 <div id="deliverysContainer" class="pedidos-columns" style="grid-template-columns:1fr">
                     <div class="pedidos-column" style="max-height:500px">
@@ -294,14 +294,14 @@
             </div>
         </div>
     </div>
-    <div class="modal-overlay" id="cobroModal"><div class="modal-content"><div class="modal-header"><h2><i class="fas fa-cash-register"></i> Procesar Cobro</h2><button class="modal-close" onclick="cerrarCobroModal()"><i class="fas fa-times"></i></button></div><div class="modal-body" id="cobroModalBody"></div><div class="modal-footer"><button class="btn btn-secondary" onclick="cerrarCobroModal()">Cancelar (ESC)</button><button class="btn btn-primary" id="confirmCobroBtn" onclick="confirmarCobro()" disabled>Confirmar Cobro (ENTER)</button></div></div></div>
-    <div class="modal-overlay" id="propinaModal"><div class="modal-content"><div class="modal-header propina"><h2><i class="fas fa-hand-holding-heart"></i> Registrar Propina</h2><button class="modal-close" onclick="cerrarPropinaModal()"><i class="fas fa-times"></i></button></div><div class="modal-body" id="propinaModalBody"></div><div class="modal-footer"><button class="btn btn-secondary" onclick="cerrarPropinaModal()">Cancelar (ESC)</button><button class="btn btn-primary" id="confirmPropinaBtn" style="background:linear-gradient(135deg,var(--propina),#7B1FA2)" onclick="confirmarPropina()" disabled>Guardar Propina</button></div></div></div>
-    <div class="modal-overlay" id="confirmModal"><div class="modal-content"><div class="modal-header" id="confirmModalHeader"><h2 id="confirmModalTitle"><i class="fas fa-check-circle"></i> Confirmar Acción</h2><button class="modal-close" onclick="cerrarModal('confirmModal')"><i class="fas fa-times"></i></button></div><div class="modal-body" id="confirmModalBody"></div><div class="modal-footer"><button class="btn btn-secondary" onclick="cerrarModal('confirmModal')">Cancelar (ESC)</button><button class="btn btn-primary" id="confirmActionBtn" onclick="ejecutarConfirmacion()">Confirmar (ENTER)</button></div></div></div>
-    <div class="modal-overlay" id="rechazoModal"><div class="modal-content"><div class="modal-header" style="background:linear-gradient(135deg,var(--danger),#B71C1C)"><h2><i class="fas fa-times-circle"></i> Rechazar Pedido</h2><button class="modal-close" onclick="cerrarModal('rechazoModal')"><i class="fas fa-times"></i></button></div><div class="modal-body"><p style="margin-bottom:20px;color:#fff">Selecciona la razón del rechazo:</p><div style="display:flex;flex-direction:column;gap:10px"><label style="display:flex;align-items:center;gap:10px;padding:12px;border:1px solid rgba(255,255,255,.2);border-radius:6px;cursor:pointer"><input type="radio" name="rejectionReason" value="referencia_invalida" style="width:18px;height:18px"><span>Referencia de pago inválida o falsa</span></label><label style="display:flex;align-items:center;gap:10px;padding:12px;border:1px solid rgba(255,255,255,.2);border-radius:6px;cursor:pointer"><input type="radio" name="rejectionReason" value="monto_insuficiente" style="width:18px;height:18px"><span>Monto insuficiente</span></label><label style="display:flex;align-items:center;gap:10px;padding:12px;border:1px solid rgba(255,255,255,.2);border-radius:6px;cursor:pointer"><input type="radio" name="rejectionReason" value="datos_incorrectos" style="width:18px;height:18px"><span>Datos de contacto/dirección incorrectos</span></label><label style="display:flex;align-items:center;gap:10px;padding:12px;border:1px solid rgba(255,255,255,.2);border-radius:6px;cursor:pointer"><input type="radio" name="rejectionReason" value="no_disponible" style="width:18px;height:18px"><span>Producto no disponible</span></label><label style="display:flex;align-items:center;gap:10px;padding:12px;border:1px solid rgba(255,255,255,.2);border-radius:6px;cursor:pointer"><input type="radio" name="rejectionReason" value="fuera_horario" style="width:18px;height:18px"><span>Fuera de horario de delivery</span></label></div></div><div class="modal-footer"><button class="btn btn-secondary" onclick="cerrarModal('rechazoModal')">Cancelar</button><button class="btn btn-primary" style="background:linear-gradient(135deg,var(--danger),#B71C1C)" onclick="confirmarRechazo()">Confirmar Rechazo</button></div></div></div>
-    <div class="modal-overlay" id="detalleModal"><div class="modal-content"><div class="modal-header" style="background:linear-gradient(135deg,var(--info),#1565C0)"><h2 id="detalleModalTitle"><i class="fas fa-chart-bar"></i> Detalle</h2><button class="modal-close" onclick="cerrarModal('detalleModal')"><i class="fas fa-times"></i></button></div><div class="modal-body" id="detalleModalBody"></div><div class="modal-footer"><button class="btn btn-primary" onclick="cerrarModal('detalleModal')">Cerrar (ESC)</button></div></div></div>
-    <div class="modal-overlay" id="mesaModal"><div class="modal-content"><div class="modal-header" style="background:linear-gradient(135deg,var(--info),#1565C0)"><h2><i class="fas fa-chair"></i> Seleccionar Mesa</h2><button class="modal-close" onclick="cerrarModal('mesaModal')"><i class="fas fa-times"></i></button></div><div class="modal-body"><p style="margin-bottom:20px;color:#fff">Elige la mesa para la cual quieres armar el pedido:</p><div id="mesaList" class="mesa-grid"><div class="loading-container"><div class="loading-spinner"></div><p>Cargando mesas...</p></div></div></div><div class="modal-footer"><button class="btn btn-secondary" onclick="cerrarModal('mesaModal')">Cancelar</button></div></div></div>
-    <div class="modal-overlay" id="comprobanteModal"><div class="modal-content" style="max-width:500px"><div class="modal-header" style="background:linear-gradient(135deg,var(--info),#1565C0)"><h2><i class="fas fa-receipt"></i> Comprobante de Pago</h2><button class="modal-close" onclick="cerrarModal('comprobanteModal')"><i class="fas fa-times"></i></button></div><div class="modal-body text-center" id="comprobanteModalBody"></div><div class="modal-footer"><button class="btn btn-primary" onclick="cerrarModal('comprobanteModal')">Cerrar (ESC)</button></div></div></div>
-    <div class="modal-overlay" id="deliveryModal"><div class="modal-content"><div class="modal-header delivery"><h2><i class="fas fa-motorcycle"></i> Acumulado Deliverys (Hoy)</h2><button class="modal-close" onclick="cerrarModal('deliveryModal')"><i class="fas fa-times"></i></button></div><div class="modal-body" id="deliveryModalBody"></div><div class="modal-footer"><button class="btn btn-primary" onclick="cerrarModal('deliveryModal')">Cerrar (ESC)</button></div></div></div>
+    <div class="modal-overlay" id="cobroModal"><div class="modal-content"><div class="modal-header"><h2><i class="fas fa-cash-register"></i> Procesar Cobro</h2><button class="modal-close" onclick="window.cerrarCobroModal()"><i class="fas fa-times"></i></button></div><div class="modal-body" id="cobroModalBody"></div><div class="modal-footer"><button class="btn btn-secondary" onclick="window.cerrarCobroModal()">Cancelar (ESC)</button><button class="btn btn-primary" id="confirmCobroBtn" onclick="window.confirmarCobro()" disabled>Confirmar Cobro (ENTER)</button></div></div></div>
+    <div class="modal-overlay" id="propinaModal"><div class="modal-content"><div class="modal-header propina"><h2><i class="fas fa-hand-holding-heart"></i> Registrar Propina</h2><button class="modal-close" onclick="window.cerrarPropinaModal()"><i class="fas fa-times"></i></button></div><div class="modal-body" id="propinaModalBody"></div><div class="modal-footer"><button class="btn btn-secondary" onclick="window.cerrarPropinaModal()">Cancelar (ESC)</button><button class="btn btn-primary" id="confirmPropinaBtn" style="background:linear-gradient(135deg,var(--propina),#7B1FA2)" onclick="window.confirmarPropina()" disabled>Guardar Propina</button></div></div></div>
+    <div class="modal-overlay" id="confirmModal"><div class="modal-content"><div class="modal-header" id="confirmModalHeader"><h2 id="confirmModalTitle"><i class="fas fa-check-circle"></i> Confirmar Acción</h2><button class="modal-close" onclick="window.cerrarModal('confirmModal')"><i class="fas fa-times"></i></button></div><div class="modal-body" id="confirmModalBody"></div><div class="modal-footer"><button class="btn btn-secondary" onclick="window.cerrarModal('confirmModal')">Cancelar (ESC)</button><button class="btn btn-primary" id="confirmActionBtn" onclick="window.ejecutarConfirmacion()">Confirmar (ENTER)</button></div></div></div>
+    <div class="modal-overlay" id="rechazoModal"><div class="modal-content"><div class="modal-header" style="background:linear-gradient(135deg,var(--danger),#B71C1C)"><h2><i class="fas fa-times-circle"></i> Rechazar Pedido</h2><button class="modal-close" onclick="window.cerrarModal('rechazoModal')"><i class="fas fa-times"></i></button></div><div class="modal-body"><p style="margin-bottom:20px;color:#fff">Selecciona la razón del rechazo:</p><div style="display:flex;flex-direction:column;gap:10px"><label style="display:flex;align-items:center;gap:10px;padding:12px;border:1px solid rgba(255,255,255,.2);border-radius:6px;cursor:pointer"><input type="radio" name="rejectionReason" value="referencia_invalida" style="width:18px;height:18px"><span>Referencia de pago inválida o falsa</span></label><label style="display:flex;align-items:center;gap:10px;padding:12px;border:1px solid rgba(255,255,255,.2);border-radius:6px;cursor:pointer"><input type="radio" name="rejectionReason" value="monto_insuficiente" style="width:18px;height:18px"><span>Monto insuficiente</span></label><label style="display:flex;align-items:center;gap:10px;padding:12px;border:1px solid rgba(255,255,255,.2);border-radius:6px;cursor:pointer"><input type="radio" name="rejectionReason" value="datos_incorrectos" style="width:18px;height:18px"><span>Datos de contacto/dirección incorrectos</span></label><label style="display:flex;align-items:center;gap:10px;padding:12px;border:1px solid rgba(255,255,255,.2);border-radius:6px;cursor:pointer"><input type="radio" name="rejectionReason" value="no_disponible" style="width:18px;height:18px"><span>Producto no disponible</span></label><label style="display:flex;align-items:center;gap:10px;padding:12px;border:1px solid rgba(255,255,255,.2);border-radius:6px;cursor:pointer"><input type="radio" name="rejectionReason" value="fuera_horario" style="width:18px;height:18px"><span>Fuera de horario de delivery</span></label></div></div><div class="modal-footer"><button class="btn btn-secondary" onclick="window.cerrarModal('rechazoModal')">Cancelar</button><button class="btn btn-primary" style="background:linear-gradient(135deg,var(--danger),#B71C1C)" onclick="window.confirmarRechazo()">Confirmar Rechazo</button></div></div></div>
+    <div class="modal-overlay" id="detalleModal"><div class="modal-content"><div class="modal-header" style="background:linear-gradient(135deg,var(--info),#1565C0)"><h2 id="detalleModalTitle"><i class="fas fa-chart-bar"></i> Detalle</h2><button class="modal-close" onclick="window.cerrarModal('detalleModal')"><i class="fas fa-times"></i></button></div><div class="modal-body" id="detalleModalBody"></div><div class="modal-footer"><button class="btn btn-primary" onclick="window.cerrarModal('detalleModal')">Cerrar (ESC)</button></div></div></div>
+    <div class="modal-overlay" id="mesaModal"><div class="modal-content"><div class="modal-header" style="background:linear-gradient(135deg,var(--info),#1565C0)"><h2><i class="fas fa-chair"></i> Seleccionar Mesa</h2><button class="modal-close" onclick="window.cerrarModal('mesaModal')"><i class="fas fa-times"></i></button></div><div class="modal-body"><p style="margin-bottom:20px;color:#fff">Elige la mesa para la cual quieres armar el pedido:</p><div id="mesaList" class="mesa-grid"><div class="loading-container"><div class="loading-spinner"></div><p>Cargando mesas...</p></div></div></div><div class="modal-footer"><button class="btn btn-secondary" onclick="window.cerrarModal('mesaModal')">Cancelar</button></div></div></div>
+    <div class="modal-overlay" id="comprobanteModal"><div class="modal-content" style="max-width:500px"><div class="modal-header" style="background:linear-gradient(135deg,var(--info),#1565C0)"><h2><i class="fas fa-receipt"></i> Comprobante de Pago</h2><button class="modal-close" onclick="window.cerrarModal('comprobanteModal')"><i class="fas fa-times"></i></button></div><div class="modal-body text-center" id="comprobanteModalBody"></div><div class="modal-footer"><button class="btn btn-primary" onclick="window.cerrarModal('comprobanteModal')">Cerrar (ESC)</button></div></div></div>
+    <div class="modal-overlay" id="deliveryModal"><div class="modal-content"><div class="modal-header delivery"><h2><i class="fas fa-motorcycle"></i> Acumulado Deliverys (Hoy)</h2><button class="modal-close" onclick="window.cerrarModal('deliveryModal')"><i class="fas fa-times"></i></button></div><div class="modal-body" id="deliveryModalBody"></div><div class="modal-footer"><button class="btn btn-primary" onclick="window.cerrarModal('deliveryModal')">Cerrar (ESC)</button></div></div></div>
     <div class="toast" id="toast"><i class="fas fa-check-circle" style="color:var(--success);font-size:1.2rem"></i><div><p id="toastText" style="margin:0;color:#fff">Operación completada</p></div></div>
     <script src="../supabase-config.js"></script>
     <script>
@@ -332,13 +332,13 @@
         let intervaloVerificacion = null;
         let ultimaActualizacion = Date.now();
 
-        // ==================== FUNCIÓN HACER LOGIN (GLOBAL) ====================
-        async function hacerLogin() {
+        // ==================== FUNCIÓN HACER LOGIN ====================
+        window.hacerLogin = async function() {
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
             
             if (!username || !password) {
-                mostrarToast('Ingresa usuario y contraseña', 'error');
+                window.mostrarToast('Ingresa usuario y contraseña', 'error');
                 return;
             }
             
@@ -354,23 +354,23 @@
                 if (error) throw error;
                 
                 if (!data) {
-                    mostrarToast('Credenciales inválidas', 'error');
+                    window.mostrarToast('Credenciales inválidas', 'error');
                     return;
                 }
                 
                 currentUser = data;
                 sessionStorage.setItem('cajero_user', JSON.stringify(data));
                 
-                await cargarDatosIniciales();
-                mostrarPanel();
+                await window.cargarDatosIniciales();
+                window.mostrarPanel();
             } catch (error) {
                 console.error('Error en login:', error);
-                mostrarToast('Error al conectar: ' + error.message, 'error');
+                window.mostrarToast('Error al conectar: ' + error.message, 'error');
             }
-        }
+        };
 
         // ==================== VERIFICAR USUARIOS ====================
-        async function verificarUsuarios() {
+        window.verificarUsuarios = async function() {
             try {
                 const { data, error } = await window.supabaseClient
                     .from('usuarios')
@@ -394,28 +394,28 @@
                     if (insertError) throw insertError;
                     
                     console.log('✅ Usuarios creados correctamente');
-                    mostrarToast('Usuarios creados: cajero1 / 123456', 'success');
+                    window.mostrarToast('Usuarios creados: cajero1 / 123456', 'success');
                 } else {
                     console.log('✅ Ya existen usuarios en la base de datos');
                 }
             } catch (error) {
                 console.error('Error verificando usuarios:', error);
-                mostrarToast('Error al verificar usuarios: ' + error.message, 'error');
+                window.mostrarToast('Error al verificar usuarios: ' + error.message, 'error');
             }
-        }
+        };
 
         document.addEventListener('DOMContentLoaded', async () => {
             const savedUser = sessionStorage.getItem('cajero_user');
             if (savedUser) {
                 try {
                     currentUser = JSON.parse(savedUser);
-                    await cargarDatosIniciales();
-                    mostrarPanel();
+                    await window.cargarDatosIniciales();
+                    window.mostrarPanel();
                 } catch {
-                    mostrarLogin();
+                    window.mostrarLogin();
                 }
             } else {
-                mostrarLogin();
+                window.mostrarLogin();
             }
             
             document.addEventListener('visibilitychange', function() {
@@ -423,13 +423,13 @@
                     paginaVisible = false;
                 } else {
                     paginaVisible = true;
-                    verificarCambiosPedidos();
+                    window.verificarCambiosPedidos();
                 }
             });
         });
 
         // ==================== FUNCIONES DE VERIFICACIÓN ====================
-        async function verificarCambiosPedidos() {
+        window.verificarCambiosPedidos = async function() {
             if (reconectando || enProcesoDeCobro) return;
             try {
                 const hoy = new Date();
@@ -456,54 +456,54 @@
                     }
                     if (hayCambios) {
                         console.log('📦 Cambios detectados en pedidos, recargando...');
-                        await recargarPedidosCompletos();
+                        await window.recargarPedidosCompletos();
                         ultimaActualizacion = Date.now();
                     }
                 }
             } catch (error) {
                 console.error('Error verificando cambios:', error);
             }
-        }
+        };
 
-        async function recargarPedidosCompletos() {
+        window.recargarPedidosCompletos = async function() {
             try {
-                await cargarPedidos();
-                await cargarVentasHoy();
-                actualizarEstadisticas();
-                renderizarPedidos();
-                verificarYControlarAlarma(true);
+                await window.cargarPedidos();
+                await window.cargarVentasHoy();
+                window.actualizarEstadisticas();
+                window.renderizarPedidos();
+                window.verificarYControlarAlarma(true);
             } catch (error) {
                 console.error('Error recargando pedidos:', error);
             }
-        }
+        };
 
-        function iniciarVerificacionPeriodica() {
+        window.iniciarVerificacionPeriodica = function() {
             if (intervaloVerificacion) clearInterval(intervaloVerificacion);
             intervaloVerificacion = setInterval(async () => {
-                if (paginaVisible && !enProcesoDeCobro) await verificarCambiosPedidos();
+                if (paginaVisible && !enProcesoDeCobro) await window.verificarCambiosPedidos();
             }, 3000);
-        }
+        };
 
-        async function cargarDatosIniciales() {
-            await cargarConfiguracion();
-            await verificarUsuarios();
+        window.cargarDatosIniciales = async function() {
+            await window.cargarConfiguracion();
+            await window.verificarUsuarios();
             tasaEfectiva = configGlobal.tasa_efectiva || 400;
-            await cargarPedidos();
-            await cargarVentasHoy();
-            await cargarPropinas();
-            await cargarMenu();
-            await cargarInventario();
-            await cargarMesas();
-            await cargarMesoneros();
-            await cargarDeliverys();
-            actualizarEstadisticas();
-            renderizarPedidos();
-            renderizarPropinas();
-            renderizarDeliverysStats();
-            iniciarVerificacionPeriodica();
-        }
+            await window.cargarPedidos();
+            await window.cargarVentasHoy();
+            await window.cargarPropinas();
+            await window.cargarMenu();
+            await window.cargarInventario();
+            await window.cargarMesas();
+            await window.cargarMesoneros();
+            await window.cargarDeliverys();
+            window.actualizarEstadisticas();
+            window.renderizarPedidos();
+            window.renderizarPropinas();
+            window.renderizarDeliverysStats();
+            window.iniciarVerificacionPeriodica();
+        };
 
-        async function getStockDisponible(ingredienteId) {
+        window.getStockDisponible = async function(ingredienteId) {
             try {
                 const cache = stockCache.get(ingredienteId);
                 if (cache !== undefined) return cache;
@@ -516,13 +516,13 @@
                 console.error('Error obteniendo stock:', error);
                 return 0;
             }
-        }
+        };
 
-        async function calcularStockPlatillo(platillo) {
+        window.calcularStockPlatillo = async function(platillo) {
             let stockDisponible = Infinity;
             if (platillo.ingredientes && Object.keys(platillo.ingredientes).length > 0) {
                 for (const [ingId, ingInfo] of Object.entries(platillo.ingredientes)) {
-                    const stockDisp = await getStockDisponible(ingId);
+                    const stockDisp = await window.getStockDisponible(ingId);
                     const cantidadNecesaria = ingInfo.cantidad || 1;
                     const posible = Math.floor(stockDisp / cantidadNecesaria);
                     stockDisponible = Math.min(stockDisponible, posible);
@@ -531,9 +531,9 @@
                 stockDisponible = platillo.stock_maximo || 999;
             }
             return stockDisponible;
-        }
+        };
 
-        async function cargarPedidos() {
+        window.cargarPedidos = async function() {
             try {
                 const hoy = new Date();
                 hoy.setHours(0, 0, 0, 0);
@@ -549,11 +549,11 @@
                 pedidos = data || [];
             } catch (error) {
                 console.error('Error cargando pedidos:', error);
-                mostrarToast('Error cargando pedidos', 'error');
+                window.mostrarToast('Error cargando pedidos', 'error');
             }
-        }
+        };
 
-        async function cargarPropinas() {
+        window.cargarPropinas = async function() {
             try {
                 const hoy = new Date();
                 hoy.setHours(0, 0, 0, 0);
@@ -570,9 +570,9 @@
             } catch (error) {
                 console.error('Error cargando propinas:', error);
             }
-        }
+        };
 
-        async function cargarMesoneros() {
+        window.cargarMesoneros = async function() {
             try {
                 const { data, error } = await window.supabaseClient
                     .from('mesoneros')
@@ -584,9 +584,9 @@
             } catch (error) {
                 console.error('Error cargando mesoneros:', error);
             }
-        }
+        };
 
-        async function cargarDeliverys() {
+        window.cargarDeliverys = async function() {
             try {
                 const { data, error } = await window.supabaseClient
                     .from('deliverys')
@@ -598,9 +598,9 @@
             } catch (error) {
                 console.error('Error cargando deliverys:', error);
             }
-        }
+        };
 
-        async function cargarVentasHoy() {
+        window.cargarVentasHoy = async function() {
             try {
                 const hoy = new Date();
                 hoy.setHours(0, 0, 0, 0);
@@ -617,9 +617,9 @@
             } catch (error) {
                 console.error('Error cargando ventas:', error);
             }
-        }
+        };
 
-        async function cargarMenu() {
+        window.cargarMenu = async function() {
             try {
                 const { data, error } = await window.supabaseClient
                     .from('menu')
@@ -627,13 +627,13 @@
                     .eq('disponible', true);
                 if (error) throw error;
                 menuItems = data || [];
-                renderizarMenu();
+                window.renderizarMenu();
             } catch (error) {
                 console.error('Error cargando menú:', error);
             }
-        }
+        };
 
-        async function cargarInventario() {
+        window.cargarInventario = async function() {
             try {
                 const { data, error } = await window.supabaseClient
                     .from('inventario')
@@ -641,13 +641,13 @@
                 if (error) throw error;
                 inventario = data || [];
                 stockCache.invalidate();
-                renderizarMenu();
+                window.renderizarMenu();
             } catch (error) {
                 console.error('Error cargando inventario:', error);
             }
-        }
+        };
 
-        async function cargarMesas() {
+        window.cargarMesas = async function() {
             try {
                 const { data, error } = await window.supabaseClient
                     .from('codigos_qr')
@@ -658,9 +658,9 @@
             } catch (error) {
                 console.error('Error cargando mesas:', error);
             }
-        }
+        };
 
-        function mostrarToast(mensaje, tipo = 'success') {
+        window.mostrarToast = function(mensaje, tipo = 'success') {
             const toast = document.getElementById('toast');
             document.getElementById('toastText').textContent = mensaje;
             toast.className = 'toast show';
@@ -672,71 +672,71 @@
                 toast.style.borderLeftColor = 'var(--success)';
             }
             setTimeout(() => toast.classList.remove('show'), 3000);
-        }
+        };
 
-        function cerrarModal(modalId) {
+        window.cerrarModal = function(modalId) {
             document.getElementById(modalId).classList.remove('active');
             if (modalId === 'confirmModal') {
                 pedidoParaAccion = null;
                 accionPendiente = null;
             }
-        }
+        };
 
-        function cerrarCobroModal() {
+        window.cerrarCobroModal = function() {
             document.getElementById('cobroModal').classList.remove('active');
             enProcesoDeCobro = false;
             currentPedido = null;
             pagosMixtos = [];
-            setTimeout(() => verificarYControlarAlarma(true), 100);
-        }
+            setTimeout(() => window.verificarYControlarAlarma(true), 100);
+        };
 
-        function cerrarPropinaModal() {
+        window.cerrarPropinaModal = function() {
             document.getElementById('propinaModal').classList.remove('active');
             currentPropinaPedido = null;
-        }
+        };
 
-        function showSection(sectionName) {
+        window.showSection = function(sectionName) {
             document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
             document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
             document.getElementById(`section-${sectionName}`).classList.add('active');
             event.target.classList.add('active');
-            if (sectionName === 'pedidos') renderizarPedidos();
-            else if (sectionName === 'menu') renderizarMenu();
-            else if (sectionName === 'propinas') renderizarPropinas();
-            else if (sectionName === 'deliverys') renderizarDeliverysStats();
-        }
+            if (sectionName === 'pedidos') window.renderizarPedidos();
+            else if (sectionName === 'menu') window.renderizarMenu();
+            else if (sectionName === 'propinas') window.renderizarPropinas();
+            else if (sectionName === 'deliverys') window.renderizarDeliverysStats();
+        };
 
-        function cerrarSesion() {
+        window.cerrarSesion = function() {
             sessionStorage.removeItem('cajero_user');
             currentUser = null;
-            detenerAlarma();
+            window.detenerAlarma();
             document.getElementById('loginContainer').classList.remove('hidden');
             document.getElementById('panelContainer').classList.add('hidden');
-        }
+        };
 
-        function mostrarLogin() {
+        window.mostrarLogin = function() {
             document.getElementById('loginContainer').classList.remove('hidden');
             document.getElementById('panelContainer').classList.add('hidden');
-            detenerAlarma();
-        }
+            window.detenerAlarma();
+        };
 
-        function mostrarPanel() {
+        window.mostrarPanel = function() {
             document.getElementById('loginContainer').classList.add('hidden');
             document.getElementById('panelContainer').classList.remove('hidden');
-            setupEventListeners();
-            setupRealtimeSubscriptions();
-            setTimeout(() => verificarYControlarAlarma(true), 100);
-        }
+            window.setupEventListeners();
+            window.setupRealtimeSubscriptions();
+            setTimeout(() => window.verificarYControlarAlarma(true), 100);
+        };
 
-        function detenerAlarma() {
+        window.detenerAlarma = function() {
             if (alarmaActiva && alarmaAudio) {
                 alarmaAudio.pause();
                 alarmaAudio.currentTime = 0;
                 alarmaActiva = false;
             }
-        }
+        };
 
-        function verificarYControlarAlarma(forzar = false) {
+        window.verificarYControlarAlarma = function(forzar = false) {
             const pendientes = pedidos.filter(p => p.estado === 'pendiente').length;
             if (pendientes > 0 && !enProcesoDeCobro) {
                 if (!alarmaActiva && alarmaAudio) {
@@ -749,9 +749,9 @@
                 alarmaAudio.currentTime = 0;
                 alarmaActiva = false;
             }
-        }
+        };
 
-        function calcularTotalDeliverysHoy() {
+        window.calcularTotalDeliverysHoy = function() {
             const hoy = new Date();
             hoy.setHours(0, 0, 0, 0);
             const manana = new Date(hoy);
@@ -759,9 +759,9 @@
             return pedidos
                 .filter(p => p.tipo === 'delivery' && p.estado === 'enviado' && new Date(p.timestamp) >= hoy && new Date(p.timestamp) < manana)
                 .reduce((sum, p) => sum + (p.costo_delivery_bs || 0), 0);
-        }
+        };
 
-        async function obtenerAcumuladoDeliverysHoy() {
+        window.obtenerAcumuladoDeliverysHoy = async function() {
             try {
                 const hoy = new Date();
                 hoy.setHours(0, 0, 0, 0);
@@ -782,54 +782,54 @@
                 console.error('Error obteniendo acumulado deliverys:', error);
                 return {};
             }
-        }
+        };
 
-        function actualizarEstadisticas() {
+        window.actualizarEstadisticas = function() {
             const enPreparacion = pedidos.filter(p => ['en_cocina', 'en_camino', 'reserva_pendiente', 'reserva_atendida'].includes(p.estado)).length;
             const cobradosHoy = ventasHoy.length;
             const totalVentasBs = ventasHoy.reduce((s, v) => s + (v.subtotal_platillos || 0), 0);
             const platillosVendidos = ventasHoy.reduce((s, v) => s + (v.items || 0), 0);
             const totalPropinas = propinas.reduce((s, p) => s + (p.monto || 0), 0);
-            const totalDeliverysHoy = calcularTotalDeliverysHoy();
+            const totalDeliverysHoy = window.calcularTotalDeliverysHoy();
             
             document.getElementById('statPreparacion').textContent = enPreparacion;
             document.getElementById('statCobrados').textContent = cobradosHoy;
-            document.getElementById('statVentas').textContent = formatBs(totalVentasBs);
+            document.getElementById('statVentas').textContent = window.formatBs(totalVentasBs);
             document.getElementById('statPlatillos').textContent = platillosVendidos;
-            document.getElementById('statPropinas').textContent = formatBs(totalPropinas);
-            document.getElementById('statDeliverysTotal').textContent = formatBs(totalDeliverysHoy);
-        }
+            document.getElementById('statPropinas').textContent = window.formatBs(totalPropinas);
+            document.getElementById('statDeliverysTotal').textContent = window.formatBs(totalDeliverysHoy);
+        };
 
-        function renderizarPropinas() {
+        window.renderizarPropinas = function() {
             const total = propinas.reduce((s, p) => s + (p.monto || 0), 0);
             const cantidad = propinas.length;
             const promedio = cantidad > 0 ? total / cantidad : 0;
             
-            document.getElementById('propinasTotal').textContent = formatBs(total);
+            document.getElementById('propinasTotal').textContent = window.formatBs(total);
             document.getElementById('propinasCantidad').textContent = cantidad;
-            document.getElementById('propinasPromedio').textContent = formatBs(promedio);
+            document.getElementById('propinasPromedio').textContent = window.formatBs(promedio);
             document.getElementById('propinasListCount').textContent = cantidad;
             document.getElementById('propinasListContainer').innerHTML = cantidad 
-                ? propinas.map(p => crearTarjetaPropina(p)).join('') 
+                ? propinas.map(p => window.crearTarjetaPropina(p)).join('') 
                 : '<div class="empty-state"><i class="fas fa-hand-holding-heart"></i><p>No hay propinas hoy</p></div>';
-        }
+        };
 
-        function renderizarDeliverysStats() {
+        window.renderizarDeliverysStats = function() {
             const entregasHoy = pedidos.filter(p => p.tipo === 'delivery' && p.estado === 'enviado' && new Date(p.timestamp).toDateString() === new Date().toDateString());
             const totalDeliverys = entregasHoy.reduce((sum, p) => sum + (p.costo_delivery_bs || 0), 0);
             const cantidad = entregasHoy.length;
             const promedio = cantidad > 0 ? totalDeliverys / cantidad : 0;
             
-            document.getElementById('deliverysTotalStats').textContent = formatBs(totalDeliverys);
+            document.getElementById('deliverysTotalStats').textContent = window.formatBs(totalDeliverys);
             document.getElementById('deliverysCantidadStats').textContent = cantidad;
-            document.getElementById('deliverysPromedioStats').textContent = formatBs(promedio);
+            document.getElementById('deliverysPromedioStats').textContent = window.formatBs(promedio);
             document.getElementById('deliverysListCount').textContent = cantidad;
             document.getElementById('deliverysListContainer').innerHTML = cantidad 
-                ? entregasHoy.map(p => crearTarjetaDelivery(p)).join('') 
+                ? entregasHoy.map(p => window.crearTarjetaDelivery(p)).join('') 
                 : '<div class="empty-state"><i class="fas fa-motorcycle"></i><p>No hay entregas hoy</p></div>';
-        }
+        };
 
-        function crearTarjetaPropina(propina) {
+        window.crearTarjetaPropina = function(propina) {
             const fecha = new Date(propina.fecha);
             const hora = fecha.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
             const pedido = propina.pedidos || {};
@@ -839,22 +839,22 @@
             return `<div class="order-card-compact" style="border-left-color:var(--propina)">
                 <div class="order-header-compact"><span class="order-time-compact"><i class="far fa-clock"></i> ${hora}</span><span class="propina-tag"><i class="fas fa-hand-holding-heart"></i> Propina</span></div>
                 <div class="order-info-compact"><div><i class="fas fa-${tipo === 'mesa' ? 'store' : tipo === 'delivery' ? 'motorcycle' : 'calendar-check'}"></i> ${tipo.toUpperCase()} - ${referencia}</div><div><i class="fas fa-user"></i> ${propina.cajero || 'Cajero'}</div><div><i class="fas fa-${propina.metodo === 'efectivo_bs' ? 'money-bill-wave' : propina.metodo === 'efectivo_usd' ? 'dollar-sign' : propina.metodo === 'pago_movil' ? 'mobile-alt' : 'credit-card'}"></i> ${propina.metodo}</div><div><i class="fas fa-chair"></i> Mesa: ${propina.mesa || 'N/A'}</div></div>
-                <div class="order-total-compact" style="color:var(--propina)">${formatBs(propina.monto_bs || propina.monto)}</div>
+                <div class="order-total-compact" style="color:var(--propina)">${window.formatBs(propina.monto_bs || propina.monto)}</div>
             </div>`;
-        }
+        };
 
-        function crearTarjetaDelivery(pedido) {
+        window.crearTarjetaDelivery = function(pedido) {
             const fecha = new Date(pedido.timestamp);
             const hora = fecha.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
             
             return `<div class="order-card-compact" style="border-left-color:var(--delivery)">
                 <div class="order-header-compact"><span class="order-time-compact"><i class="far fa-clock"></i> ${hora}</span><span class="delivery-tag"><i class="fas fa-motorcycle"></i> Delivery</span></div>
                 <div class="order-info-compact"><div><i class="fas fa-map-marker-alt"></i> ${(pedido.direccion || '').substring(0, 20)}...</div><div><i class="fas fa-phone"></i> ${pedido.telefono || 'N/A'}</div><div><i class="fas fa-tag"></i> Pedido: ${pedido.id.substring(0, 8)}</div></div>
-                <div class="order-total-compact" style="color:var(--delivery)">${formatBs(pedido.costo_delivery_bs || 0)}</div>
+                <div class="order-total-compact" style="color:var(--delivery)">${window.formatBs(pedido.costo_delivery_bs || 0)}</div>
             </div>`;
-        }
+        };
 
-        async function renderizarMenu() {
+        window.renderizarMenu = async function() {
             const grid = document.getElementById('menuGrid');
             const categoryList = document.getElementById('categoryList');
             
@@ -876,25 +876,25 @@
                 item.addEventListener('click', function() {
                     document.querySelectorAll('.category-item').forEach(c => c.classList.remove('active'));
                     this.classList.add('active');
-                    filtrarMenuPorCategoria(this.dataset.categoria);
+                    window.filtrarMenuPorCategoria(this.dataset.categoria);
                 });
             });
             
-            filtrarMenuPorCategoria('todos');
-        }
+            window.filtrarMenuPorCategoria('todos');
+        };
 
-        function filtrarMenuPorCategoria(categoria) {
+        window.filtrarMenuPorCategoria = function(categoria) {
             let itemsFiltrados = [];
             if (categoria === 'todos') itemsFiltrados = menuItems;
             else itemsFiltrados = menuItems.filter(item => item.categoria === categoria);
-            renderizarMenuItems(itemsFiltrados);
-        }
+            window.renderizarMenuItems(itemsFiltrados);
+        };
 
-        async function renderizarMenuItems(items) {
+        window.renderizarMenuItems = async function(items) {
             const grid = document.getElementById('menuGrid');
             
             const itemsConStock = await Promise.all(items.map(async item => {
-                const stock = await calcularStockPlatillo(item);
+                const stock = await window.calcularStockPlatillo(item);
                 let stockClass = 'available';
                 let stockText = 'Disponible';
                 
@@ -915,15 +915,15 @@
                 <div class="menu-card">
                     <div class="menu-card-image" style="background-image:url('${i.imagen || 'https://via.placeholder.com/300x150?text=Saki+Sushi'}')"></div>
                     <div class="menu-card-content">
-                        <div class="menu-card-header"><span class="menu-card-title">${i.nombre}</span><span class="menu-card-price">${formatBs(usdToBs(i.precio || 0))}</span></div>
+                        <div class="menu-card-header"><span class="menu-card-title">${i.nombre}</span><span class="menu-card-price">${window.formatBs(window.usdToBs(i.precio || 0))}</span></div>
                         <p style="font-size:.85rem;color:rgba(255,255,255,.6);margin-bottom:.5rem">${i.descripcion || ''}</p>
                         <div class="menu-card-stock ${i.stockClass}"><i class="fas fa-box"></i> ${i.stockText}</div>
                     </div>
                 </div>
             `).join('');
-        }
+        };
 
-        function renderizarPedidos() {
+        window.renderizarPedidos = function() {
             const pMesa = pedidos.filter(p => p.tipo === 'mesa' && p.estado === 'pendiente');
             const pDel = pedidos.filter(p => p.tipo === 'delivery' && p.estado === 'pendiente');
             const pRes = pedidos.filter(p => p.tipo === 'reserva' && p.estado === 'pendiente');
@@ -943,50 +943,50 @@
             document.getElementById('totalPreparacionBadge').textContent = cMesa.length + cDel.length + rPen.length + rAte.length;
             
             document.getElementById('mesaPendientesContainer').innerHTML = pMesa.length 
-                ? pMesa.map(p => crearTarjetaPedidoCompacta(p, 'pendiente')).join('') 
+                ? pMesa.map(p => window.crearTarjetaPedidoCompacta(p, 'pendiente')).join('') 
                 : '<div class="empty-state"><i class="fas fa-store"></i><p>No hay pedidos en mesa</p></div>';
             document.getElementById('deliveryPendientesContainer').innerHTML = pDel.length 
-                ? pDel.map(p => crearTarjetaPedidoCompacta(p, 'pendiente')).join('') 
+                ? pDel.map(p => window.crearTarjetaPedidoCompacta(p, 'pendiente')).join('') 
                 : '<div class="empty-state"><i class="fas fa-motorcycle"></i><p>No hay pedidos delivery</p></div>';
             document.getElementById('reservaPendientesContainer').innerHTML = pRes.length 
-                ? pRes.map(p => crearTarjetaPedidoCompacta(p, 'pendiente')).join('') 
+                ? pRes.map(p => window.crearTarjetaPedidoCompacta(p, 'pendiente')).join('') 
                 : '<div class="empty-state"><i class="fas fa-calendar-check"></i><p>No hay reservas</p></div>';
             document.getElementById('mesaCocinaContainer').innerHTML = cMesa.length 
-                ? cMesa.map(p => crearTarjetaPedidoCompacta(p, 'preparacion')).join('') 
+                ? cMesa.map(p => window.crearTarjetaPedidoCompacta(p, 'preparacion')).join('') 
                 : '<div class="empty-state"><i class="fas fa-fire"></i><p>No hay pedidos en cocina</p></div>';
             document.getElementById('deliveryCaminoContainer').innerHTML = cDel.length 
-                ? cDel.map(p => crearTarjetaPedidoCompacta(p, 'preparacion')).join('') 
+                ? cDel.map(p => window.crearTarjetaPedidoCompacta(p, 'preparacion')).join('') 
                 : '<div class="empty-state"><i class="fas fa-truck"></i><p>No hay deliveries en camino</p></div>';
             document.getElementById('reservaProcesoContainer').innerHTML = (rPen.length + rAte.length) 
-                ? [...rPen, ...rAte].map(p => crearTarjetaPedidoCompacta(p, 'preparacion')).join('') 
+                ? [...rPen, ...rAte].map(p => window.crearTarjetaPedidoCompacta(p, 'preparacion')).join('') 
                 : '<div class="empty-state"><i class="fas fa-clock"></i><p>No hay reservas pendientes</p></div>';
-        }
+        };
 
-        function crearTarjetaPedidoCompacta(pedido, tipoSeccion) {
+        window.crearTarjetaPedidoCompacta = function(pedido, tipoSeccion) {
             const hora = new Date(pedido.timestamp).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
             
             let info = '';
             if (pedido.tipo === 'mesa') info = `<div class="order-info-compact"><i class="fas fa-chair"></i> Mesa #${pedido.mesa || 'N/A'}</div>`;
-            else if (pedido.tipo === 'delivery') info = `<div class="order-info-compact"><div><i class="fas fa-map-marker-alt"></i> ${(pedido.direccion || '').substring(0, 20)}...</div><div><i class="fas fa-phone"></i> ${pedido.telefono || 'N/A'}</div>${pedido.costo_delivery_bs ? `<div><i class="fas fa-truck"></i> Delivery: ${formatBs(pedido.costo_delivery_bs)}</div>` : ''}</div>`;
+            else if (pedido.tipo === 'delivery') info = `<div class="order-info-compact"><div><i class="fas fa-map-marker-alt"></i> ${(pedido.direccion || '').substring(0, 20)}...</div><div><i class="fas fa-phone"></i> ${pedido.telefono || 'N/A'}</div>${pedido.costo_delivery_bs ? `<div><i class="fas fa-truck"></i> Delivery: ${window.formatBs(pedido.costo_delivery_bs)}</div>` : ''}</div>`;
             else info = `<div class="order-info-compact"><div><i class="fas fa-user"></i> ${pedido.cliente_nombre || 'Cliente'}</div><div><i class="fas fa-calendar"></i> ${pedido.fecha_reserva ? new Date(pedido.fecha_reserva).toLocaleDateString() : 'N/A'}</div></div>`;
             
-            const items = (pedido.items || []).slice(0, 2).map(i => `<div class="order-item-row-compact"><span class="item-name-compact">${i.cantidad || 1}x ${i.nombre}</span><span class="item-price-compact">${formatBs(usdToBs((i.precioUnitarioUSD || 0) * (i.cantidad || 1)))}</span></div>`).join('');
+            const items = (pedido.items || []).slice(0, 2).map(i => `<div class="order-item-row-compact"><span class="item-name-compact">${i.cantidad || 1}x ${i.nombre}</span><span class="item-price-compact">${window.formatBs(window.usdToBs((i.precioUnitarioUSD || 0) * (i.cantidad || 1)))}</span></div>`).join('');
             const itemsCount = (pedido.items || []).length;
             const moreItems = itemsCount > 2 ? `<div class="order-item-row-compact" style="justify-content:center;color:var(--gray-400)">+${itemsCount - 2} más</div>` : '';
-            const total = formatBs(usdToBs(pedido.total || 0));
-            const comprobante = pedido.comprobante_url && (pedido.tipo === 'delivery' || pedido.tipo === 'reserva') ? `<div class="comprobante-thumbnail" onclick="verComprobante('${pedido.id}')"><img src="${pedido.comprobante_url}" style="max-width:100%;cursor:pointer"></div>` : '';
+            const total = window.formatBs(window.usdToBs(pedido.total || 0));
+            const comprobante = pedido.comprobante_url && (pedido.tipo === 'delivery' || pedido.tipo === 'reserva') ? `<div class="comprobante-thumbnail" onclick="window.verComprobante('${pedido.id}')"><img src="${pedido.comprobante_url}" style="max-width:100%;cursor:pointer"></div>` : '';
             
             let botones = '';
             if (tipoSeccion === 'pendiente') {
-                botones = `<button class="btn-compact btn-cobrar-compact" onclick="mostrarCobro('${pedido.id}')">Cobrar</button><button class="btn-compact btn-rechazar-compact" onclick="mostrarRechazo('${pedido.id}')">Rechazar</button>`;
+                botones = `<button class="btn-compact btn-cobrar-compact" onclick="window.mostrarCobro('${pedido.id}')">Cobrar</button><button class="btn-compact btn-rechazar-compact" onclick="window.mostrarRechazo('${pedido.id}')">Rechazar</button>`;
             } else if (pedido.tipo === 'mesa' && pedido.estado === 'en_cocina') {
-                botones = `<button class="btn-compact btn-entregar-compact" onclick="mostrarConfirmacion('${pedido.id}','entregado')"><i class="fas fa-check"></i> Entregado</button>`;
+                botones = `<button class="btn-compact btn-entregar-compact" onclick="window.mostrarConfirmacion('${pedido.id}','entregado')"><i class="fas fa-check"></i> Entregado</button>`;
             } else if (pedido.tipo === 'delivery' && pedido.estado === 'en_camino') {
-                botones = `<button class="btn-compact btn-enviar-compact" onclick="mostrarConfirmacionDelivery('${pedido.id}')"><i class="fas fa-truck"></i> Enviar</button>`;
+                botones = `<button class="btn-compact btn-enviar-compact" onclick="window.mostrarConfirmacionDelivery('${pedido.id}')"><i class="fas fa-truck"></i> Enviar</button>`;
             } else if (pedido.tipo === 'reserva' && pedido.estado === 'reserva_pendiente') {
-                botones = `<button class="btn-compact btn-confirmar-compact" onclick="mostrarConfirmacion('${pedido.id}','reserva_atendida')"><i class="fas fa-user-check"></i> Confirmar</button>`;
+                botones = `<button class="btn-compact btn-confirmar-compact" onclick="window.mostrarConfirmacion('${pedido.id}','reserva_atendida')"><i class="fas fa-user-check"></i> Confirmar</button>`;
             } else if (pedido.tipo === 'reserva' && pedido.estado === 'reserva_atendida') {
-                botones = `<button class="btn-compact btn-entregar-compact" onclick="mostrarConfirmacion('${pedido.id}','reserva_completada')"><i class="fas fa-check"></i> Entregado</button>`;
+                botones = `<button class="btn-compact btn-entregar-compact" onclick="window.mostrarConfirmacion('${pedido.id}','reserva_completada')"><i class="fas fa-check"></i> Entregado</button>`;
             }
             
             return `<div class="order-card-compact ${pedido.estado}">
@@ -997,9 +997,9 @@
                 ${comprobante}
                 <div class="order-actions-compact">${botones}</div>
             </div>`;
-        }
+        };
 
-        function mostrarConfirmacionDelivery(pedidoId) {
+        window.mostrarConfirmacionDelivery = function(pedidoId) {
             const pedido = pedidos.find(p => p.id === pedidoId);
             if (!pedido) return;
             
@@ -1022,7 +1022,7 @@
                         ${deliveryOptions}
                     </select>
                 </div>
-                ${crearDetallePedidoHTML(pedido)}
+                ${window.crearDetallePedidoHTML(pedido)}
                 <div class="keyboard-hint" style="margin-top:20px"><span><kbd>ENTER</kbd> confirmar</span><span><kbd>ESC</kbd> cancelar</span></div>
             `;
             
@@ -1038,11 +1038,11 @@
             }, 100);
             
             modal.classList.add('active');
-        }
+        };
 
-        async function abrirModalDetalle(tipo) {
-            await cargarVentasHoy();
-            await cargarPropinas();
+        window.abrirModalDetalle = async function(tipo) {
+            await window.cargarVentasHoy();
+            await window.cargarPropinas();
             
             const modal = document.getElementById('detalleModal');
             const title = document.getElementById('detalleModalTitle');
@@ -1053,13 +1053,13 @@
                 case 'preparacion':
                     title.innerHTML = '<i class="fas fa-fire"></i> Pedidos en Preparación';
                     const enPreparacion = pedidos.filter(p => ['en_cocina', 'en_camino', 'reserva_pendiente', 'reserva_atendida'].includes(p.estado));
-                    contenido = enPreparacion.length ? enPreparacion.map(p => crearDetallePedidoCompacto(p)).join('') : '<div class="empty-state"><i class="fas fa-inbox"></i><p>No hay pedidos en preparación</p></div>';
+                    contenido = enPreparacion.length ? enPreparacion.map(p => window.crearDetallePedidoCompacto(p)).join('') : '<div class="empty-state"><i class="fas fa-inbox"></i><p>No hay pedidos en preparación</p></div>';
                     break;
                     
                 case 'cobrados':
                     title.innerHTML = '<i class="fas fa-check-circle"></i> Cobrados Hoy';
                     if (!ventasHoy.length) contenido = '<div class="empty-state"><i class="fas fa-inbox"></i><p>No hay cobros registrados hoy</p></div>';
-                    else contenido = ventasHoy.map(v => { const p = pedidos.find(p => p.id === v.pedido_id); return crearDetalleVentaCompacto(v, p); }).join('');
+                    else contenido = ventasHoy.map(v => { const p = pedidos.find(p => p.id === v.pedido_id); return window.crearDetalleVentaCompacto(v, p); }).join('');
                     break;
                     
                 case 'ventas':
@@ -1081,7 +1081,7 @@
                         }
                     });
                     
-                    contenido = `<p><strong>Total del día (platillos):</strong> ${formatBs(totalBs)}</p><p><strong>Cantidad de ventas:</strong> ${ventasHoy.length}</p>${condonado > 0 ? `<p><strong class="condonar-tag">Condonado:</strong> ${formatBs(condonado)}</p>` : ''}${favor > 0 ? `<p><strong class="favor-tag">A favor de caja:</strong> ${formatBs(favor)}</p>` : ''}<h4>Desglose por método:</h4><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:20px"><div class="payment-tag" style="justify-content:space-between;padding:6px"><span>Efectivo Bs</span><span>${formatBs(efBs)}</span></div><div class="payment-tag" style="justify-content:space-between;padding:6px"><span>Efectivo USD</span><span>${formatBs(efUSD)}</span></div><div class="payment-tag" style="justify-content:space-between;padding:6px"><span>Pago Móvil</span><span>${formatBs(pm)}</span></div><div class="payment-tag" style="justify-content:space-between;padding:6px"><span>Punto de Venta</span><span>${formatBs(pv)}</span></div></div><h4>Ventas del día:</h4>${ventasHoy.map(v => { const p = pedidos.find(p => p.id === v.pedido_id); return crearDetalleVentaCompacto(v, p); }).join('')}`;
+                    contenido = `<p><strong>Total del día (platillos):</strong> ${window.formatBs(totalBs)}</p><p><strong>Cantidad de ventas:</strong> ${ventasHoy.length}</p>${condonado > 0 ? `<p><strong class="condonar-tag">Condonado:</strong> ${window.formatBs(condonado)}</p>` : ''}${favor > 0 ? `<p><strong class="favor-tag">A favor de caja:</strong> ${window.formatBs(favor)}</p>` : ''}<h4>Desglose por método:</h4><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:20px"><div class="payment-tag" style="justify-content:space-between;padding:6px"><span>Efectivo Bs</span><span>${window.formatBs(efBs)}</span></div><div class="payment-tag" style="justify-content:space-between;padding:6px"><span>Efectivo USD</span><span>${window.formatBs(efUSD)}</span></div><div class="payment-tag" style="justify-content:space-between;padding:6px"><span>Pago Móvil</span><span>${window.formatBs(pm)}</span></div><div class="payment-tag" style="justify-content:space-between;padding:6px"><span>Punto de Venta</span><span>${window.formatBs(pv)}</span></div></div><h4>Ventas del día:</h4>${ventasHoy.map(v => { const p = pedidos.find(p => p.id === v.pedido_id); return window.crearDetalleVentaCompacto(v, p); }).join('')}`;
                     break;
                     
                 case 'platillos':
@@ -1113,7 +1113,7 @@
                     const cantidadProp = propinas.length;
                     const promedioProp = cantidadProp > 0 ? totalProp / cantidadProp : 0;
                     
-                    contenido = `<p><strong>Total propinas:</strong> ${formatBs(totalProp)}</p><p><strong>Cantidad:</strong> ${cantidadProp}</p><p><strong>Promedio:</strong> ${formatBs(promedioProp)}</p><h4>Detalle por propina:</h4>${propinas.length ? propinas.map(p => `<div class="detail-item-compact"><div class="detail-header-compact"><span>${new Date(p.fecha).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}</span><span class="propina-tag">${p.metodo}</span></div><div><i class="fas fa-user"></i> ${p.cajero || 'Cajero'}</div><div><i class="fas fa-${p.pedidos?.tipo === 'mesa' ? 'store' : p.pedidos?.tipo === 'delivery' ? 'motorcycle' : 'calendar-check'}"></i> ${p.pedidos?.tipo || 'Mesa'} - ${p.pedidos?.mesa || p.pedidos?.cliente_nombre || 'Cliente'}</div><div><i class="fas fa-chair"></i> Mesa: ${p.mesa || 'N/A'}</div><div class="detail-total-compact" style="color:var(--propina)">${formatBs(p.monto_bs || p.monto)}</div></div>`).join('') : '<div class="empty-state"><i class="fas fa-hand-holding-heart"></i><p>No hay propinas hoy</p></div>'};
+                    contenido = `<p><strong>Total propinas:</strong> ${window.formatBs(totalProp)}</p><p><strong>Cantidad:</strong> ${cantidadProp}</p><p><strong>Promedio:</strong> ${window.formatBs(promedioProp)}</p><h4>Detalle por propina:</h4>${propinas.length ? propinas.map(p => `<div class="detail-item-compact"><div class="detail-header-compact"><span>${new Date(p.fecha).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}</span><span class="propina-tag">${p.metodo}</span></div><div><i class="fas fa-user"></i> ${p.cajero || 'Cajero'}</div><div><i class="fas fa-${p.pedidos?.tipo === 'mesa' ? 'store' : p.pedidos?.tipo === 'delivery' ? 'motorcycle' : 'calendar-check'}"></i> ${p.pedidos?.tipo || 'Mesa'} - ${p.pedidos?.mesa || p.pedidos?.cliente_nombre || 'Cliente'}</div><div><i class="fas fa-chair"></i> Mesa: ${p.mesa || 'N/A'}</div><div class="detail-total-compact" style="color:var(--propina)">${window.formatBs(p.monto_bs || p.monto)}</div></div>`).join('') : '<div class="empty-state"><i class="fas fa-hand-holding-heart"></i><p>No hay propinas hoy</p></div>'};
                     break;
                     
                 case 'propinasCantidad':
@@ -1124,13 +1124,13 @@
                 case 'propinasPromedio':
                     title.innerHTML = '<i class="fas fa-chart-line"></i> Promedio de Propinas';
                     const prom = propinas.length ? propinas.reduce((s, p) => s + (p.monto_bs || p.monto || 0), 0) / propinas.length : 0;
-                    contenido = `<p style="font-size:2em;text-align:center;color:var(--propina)">${formatBs(prom)}</p><p style="text-align:center">promedio por propina</p>`;
+                    contenido = `<p style="font-size:2em;text-align:center;color:var(--propina)">${window.formatBs(prom)}</p><p style="text-align:center">promedio por propina</p>`;
                     break;
                     
                 case 'deliverysTotal':
                     title.innerHTML = '<i class="fas fa-motorcycle"></i> Total Deliverys';
-                    const totalDel = calcularTotalDeliverysHoy();
-                    contenido = `<p style="font-size:2em;text-align:center;color:var(--delivery)">${formatBs(totalDel)}</p><p style="text-align:center">acumulado en deliveries hoy</p>`;
+                    const totalDel = window.calcularTotalDeliverysHoy();
+                    contenido = `<p style="font-size:2em;text-align:center;color:var(--delivery)">${window.formatBs(totalDel)}</p><p style="text-align:center">acumulado en deliveries hoy</p>`;
                     break;
                     
                 case 'deliverysCantidad':
@@ -1144,16 +1144,16 @@
                     const entregasHoy = pedidos.filter(p => p.tipo === 'delivery' && p.estado === 'enviado' && new Date(p.timestamp).toDateString() === new Date().toDateString());
                     const totalDelProm = entregasHoy.reduce((sum, p) => sum + (p.costo_delivery_bs || 0), 0);
                     const promDel = entregasHoy.length > 0 ? totalDelProm / entregasHoy.length : 0;
-                    contenido = `<p style="font-size:2em;text-align:center;color:var(--delivery)">${formatBs(promDel)}</p><p style="text-align:center">promedio por entrega</p>`;
+                    contenido = `<p style="font-size:2em;text-align:center;color:var(--delivery)">${window.formatBs(promDel)}</p><p style="text-align:center">promedio por entrega</p>`;
                     break;
             }
             
             body.innerHTML = contenido;
             modal.classList.add('active');
-        }
+        };
 
-        async function abrirModalDeliverys() {
-            const acumulado = await obtenerAcumuladoDeliverysHoy();
+        window.abrirModalDeliverys = async function() {
+            const acumulado = await window.obtenerAcumuladoDeliverysHoy();
             
             const modal = document.getElementById('deliveryModal');
             const body = document.getElementById('deliveryModalBody');
@@ -1166,53 +1166,53 @@
                 contenido += '<div class="motorizados-list">';
                 deliverys.forEach(d => {
                     const monto = acumulado[d.id] || 0;
-                    contenido += `<div class="motorizado-item"><span class="motorizado-nombre">${d.nombre}</span><span class="motorizado-monto">${formatBs(monto)}</span></div>`;
+                    contenido += `<div class="motorizado-item"><span class="motorizado-nombre">${d.nombre}</span><span class="motorizado-monto">${window.formatBs(monto)}</span></div>`;
                 });
                 contenido += '</div>';
             }
             
             body.innerHTML = contenido;
             modal.classList.add('active');
-        }
+        };
 
-        function crearDetalleVentaCompacto(venta, pedido) {
+        window.crearDetalleVentaCompacto = function(venta, pedido) {
             if (!pedido) return '';
             
             const hora = new Date(pedido.timestamp).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-            const items = (pedido.items || []).map(i => `<div class="detail-item-row-compact"><span>${i.cantidad || 1}x ${i.nombre}</span><span>${formatBs(usdToBs((i.precioUnitarioUSD || 0) * (i.cantidad || 1)))}</span></div>`).join('');
+            const items = (pedido.items || []).map(i => `<div class="detail-item-row-compact"><span>${i.cantidad || 1}x ${i.nombre}</span><span>${window.formatBs(window.usdToBs((i.precioUnitarioUSD || 0) * (i.cantidad || 1)))}</span></div>`).join('');
             
             let metodos = '';
             if (pedido.pagos_mixtos?.length) {
                 metodos = '<div style="margin-top:3px">' + pedido.pagos_mixtos.map(p => {
                     const nom = p.metodo === 'efectivo_bs' ? 'Bs' : p.metodo === 'efectivo_usd' ? '$' : p.metodo === 'pago_movil' ? '📱' : '💳';
-                    return `<span class="detail-metodo-tag">${nom} ${formatBs(p.monto)}</span>`;
+                    return `<span class="detail-metodo-tag">${nom} ${window.formatBs(p.monto)}</span>`;
                 }).join('') + '</div>';
             }
             
             let tags = '';
-            if (pedido.condonado > 0) tags += `<span class="condonar-tag"><i class="fas fa-gift"></i> Condonado: ${formatBs(pedido.condonado)}</span>`;
-            if (pedido.a_favor_caja > 0) tags += `<span class="favor-tag"><i class="fas fa-piggy-bank"></i> A favor: ${formatBs(pedido.a_favor_caja)}</span>`;
+            if (pedido.condonado > 0) tags += `<span class="condonar-tag"><i class="fas fa-gift"></i> Condonado: ${window.formatBs(pedido.condonado)}</span>`;
+            if (pedido.a_favor_caja > 0) tags += `<span class="favor-tag"><i class="fas fa-piggy-bank"></i> A favor: ${window.formatBs(pedido.a_favor_caja)}</span>`;
             
             return `<div class="detail-item-compact">
                 <div class="detail-header-compact"><span>${hora}</span><span class="detail-metodo-tag">${venta.tipo}</span></div>
                 <div class="detail-items-compact">${items}</div>
-                <div class="detail-total-compact">Total: ${formatBs(venta.subtotal_platillos || (venta.total * tasaEfectiva))}</div>
+                <div class="detail-total-compact">Total: ${window.formatBs(venta.subtotal_platillos || (venta.total * tasaEfectiva))}</div>
                 ${metodos}${tags ? `<div style="margin-top:5px">${tags}</div>` : ''}
             </div>`;
-        }
+        };
 
-        function crearDetallePedidoCompacto(pedido) {
+        window.crearDetallePedidoCompacto = function(pedido) {
             const hora = new Date(pedido.timestamp).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-            const items = (pedido.items || []).map(i => `<div class="detail-item-row-compact"><span>${i.cantidad || 1}x ${i.nombre}</span><span>${formatBs(usdToBs((i.precioUnitarioUSD || 0) * (i.cantidad || 1)))}</span></div>`).join('');
+            const items = (pedido.items || []).map(i => `<div class="detail-item-row-compact"><span>${i.cantidad || 1}x ${i.nombre}</span><span>${window.formatBs(window.usdToBs((i.precioUnitarioUSD || 0) * (i.cantidad || 1)))}</span></div>`).join('');
             
             return `<div class="detail-item-compact">
                 <div class="detail-header-compact"><span>${hora}</span><span class="detail-metodo-tag">${pedido.tipo}</span></div>
                 <div class="detail-items-compact">${items}</div>
-                <div class="detail-total-compact">Total: ${formatBs(usdToBs(pedido.total || 0))}</div>
+                <div class="detail-total-compact">Total: ${window.formatBs(window.usdToBs(pedido.total || 0))}</div>
             </div>`;
-        }
+        };
 
-        function mostrarCobro(pedidoId) {
+        window.mostrarCobro = function(pedidoId) {
             currentPedido = pedidos.find(p => p.id === pedidoId);
             if (!currentPedido) return;
             
@@ -1228,17 +1228,17 @@
             let metodoPredeterminado = 'efectivo_bs';
             if (currentPedido.tipo === 'delivery' || currentPedido.tipo === 'reserva') metodoPredeterminado = 'pago_movil';
             
-            const totalAPagar = usdToBs(currentPedido.total || 0);
+            const totalAPagar = window.usdToBs(currentPedido.total || 0);
             const body = document.getElementById('cobroModalBody');
             
-            const items = (currentPedido.items || []).map(i => `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.1)"><span>${i.cantidad || 1}x ${i.nombre}</span><span style="font-weight:600">${formatBs(usdToBs((i.precioUnitarioUSD || 0) * (i.cantidad || 1)))}</span></div>`).join('');
+            const items = (currentPedido.items || []).map(i => `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.1)"><span>${i.cantidad || 1}x ${i.nombre}</span><span style="font-weight:600">${window.formatBs(window.usdToBs((i.precioUnitarioUSD || 0) * (i.cantidad || 1)))}</span></div>`).join('');
             
             body.innerHTML = `
                 <div style="background:rgba(0,0,0,.3);padding:15px;border-radius:8px;margin-bottom:20px">
                     <h4>Resumen del Pedido</h4>
                     ${items}
-                    ${currentPedido.costo_delivery_bs ? `<div style="display:flex;justify-content:space-between;margin-top:10px;padding-top:10px;border-top:2px solid rgba(255,255,255,.1)"><span>Costo delivery:</span><span>${formatBs(currentPedido.costo_delivery_bs)}</span></div>` : ''}
-                    <div style="display:flex;justify-content:space-between;margin-top:15px;padding-top:15px;border-top:2px solid var(--primary);font-weight:700"><span>Total a pagar:</span><span id="totalPagarDisplay" style="color:var(--accent)">${formatBs(totalAPagar)}</span></div>
+                    ${currentPedido.costo_delivery_bs ? `<div style="display:flex;justify-content:space-between;margin-top:10px;padding-top:10px;border-top:2px solid rgba(255,255,255,.1)"><span>Costo delivery:</span><span>${window.formatBs(currentPedido.costo_delivery_bs)}</span></div>` : ''}
+                    <div style="display:flex;justify-content:space-between;margin-top:15px;padding-top:15px;border-top:2px solid var(--primary);font-weight:700"><span>Total a pagar:</span><span id="totalPagarDisplay" style="color:var(--accent)">${window.formatBs(totalAPagar)}</span></div>
                 </div>
                 
                 <div style="margin-bottom:20px;padding:12px;background:rgba(245,124,0,.1);border-left:4px solid var(--warning)">
@@ -1248,11 +1248,11 @@
                 <div id="pagosSection">
                     <h4>Pagos Mixtos</h4>
                     <div id="pagosContainer" class="payment-mix-container"></div>
-                    <button class="btn btn-secondary" onclick="agregarMetodoPago()" style="width:100%;margin-bottom:20px"><i class="fas fa-plus"></i> Agregar Método de Pago</button>
+                    <button class="btn btn-secondary" onclick="window.agregarMetodoPago()" style="width:100%;margin-bottom:20px"><i class="fas fa-plus"></i> Agregar Método de Pago</button>
                     
                     <div id="extrasSection" style="display:none">
                         <div class="pagos-resumen-row" id="vueltoRow" style="display:none">
-                            <div class="input-group"><label>Vuelto a entregar (Bs)</label><input type="number" id="vueltoInput" step="0.01" min="0" max="9999999999.99" oninput="calcularConVuelto()"></div>
+                            <div class="input-group"><label>Vuelto a entregar (Bs)</label><input type="number" id="vueltoInput" step="0.01" min="0" max="9999999999.99" oninput="window.calcularConVuelto()"></div>
                             <div class="input-group"><label>Vuelto restante</label><span id="vueltoRestante">Bs. 0.00</span></div>
                         </div>
                         
@@ -1283,37 +1283,37 @@
                 document.getElementById('confirmCobroBtn').disabled = !e.target.checked && pagosMixtos.length === 0;
             });
             
-            agregarMetodoPago(metodoPredeterminado);
+            window.agregarMetodoPago(metodoPredeterminado);
             document.getElementById('cobroModal').classList.add('active');
-            recalcularTotales();
-        }
+            window.recalcularTotales();
+        };
 
-        function agregarMetodoPago(metodoPredeterminado = 'pago_movil') {
+        window.agregarMetodoPago = function(metodoPredeterminado = 'pago_movil') {
             pagosMixtos.push({ id: Date.now() + Math.random(), metodo: metodoPredeterminado, monto: 0, referencia: '' });
-            renderizarPagosMixtos();
-            recalcularTotales();
-        }
+            window.renderizarPagosMixtos();
+            window.recalcularTotales();
+        };
 
-        function renderizarPagosMixtos() {
+        window.renderizarPagosMixtos = function() {
             const c = document.getElementById('pagosContainer');
             if (!c) return;
             
             c.innerHTML = pagosMixtos.map((p, i) => `
                 <div class="pago-item" data-id="${p.id}">
-                    ${pagosMixtos.length > 1 ? `<button class="remove-pago" onclick="eliminarMetodoPago('${p.id}')"><i class="fas fa-times"></i></button>` : ''}
-                    <select onchange="actualizarPago('${p.id}','metodo',this.value)">
+                    ${pagosMixtos.length > 1 ? `<button class="remove-pago" onclick="window.eliminarMetodoPago('${p.id}')"><i class="fas fa-times"></i></button>` : ''}
+                    <select onchange="window.actualizarPago('${p.id}','metodo',this.value)">
                         <option value="efectivo_bs" ${p.metodo === 'efectivo_bs' ? 'selected' : ''}>Efectivo Bs</option>
                         <option value="efectivo_usd" ${p.metodo === 'efectivo_usd' ? 'selected' : ''}>Efectivo Dólar</option>
                         <option value="pago_movil" ${p.metodo === 'pago_movil' ? 'selected' : ''}>Pago Móvil</option>
                         <option value="punto_venta" ${p.metodo === 'punto_venta' ? 'selected' : ''}>Punto de Venta</option>
                     </select>
-                    <input type="number" step="0.01" max="9999999999.99" placeholder="Monto ${p.metodo === 'efectivo_usd' ? 'en USD' : 'en Bs'}" value="${p.monto || 0}" oninput="actualizarPago('${p.id}','monto',this.value)">
-                    ${p.metodo === 'pago_movil' ? `<input type="text" maxlength="6" placeholder="Referencia (6 dígitos)" value="${p.referencia || ''}" oninput="actualizarPago('${p.id}','referencia',this.value)">` : ''}
+                    <input type="number" step="0.01" max="9999999999.99" placeholder="Monto ${p.metodo === 'efectivo_usd' ? 'en USD' : 'en Bs'}" value="${p.monto || 0}" oninput="window.actualizarPago('${p.id}','monto',this.value)">
+                    ${p.metodo === 'pago_movil' ? `<input type="text" maxlength="6" placeholder="Referencia (6 dígitos)" value="${p.referencia || ''}" oninput="window.actualizarPago('${p.id}','referencia',this.value)">` : ''}
                 </div>
             `).join('');
-        }
+        };
 
-        function actualizarPago(id, campo, valor) {
+        window.actualizarPago = function(id, campo, valor) {
             const p = pagosMixtos.find(p => p.id == id);
             if (!p) return;
             
@@ -1328,26 +1328,26 @@
                 p.referencia = valor;
             }
             
-            renderizarPagosMixtos();
-            recalcularTotales();
-        }
+            window.renderizarPagosMixtos();
+            window.recalcularTotales();
+        };
 
-        function eliminarMetodoPago(id) {
+        window.eliminarMetodoPago = function(id) {
             pagosMixtos = pagosMixtos.filter(p => p.id != id);
-            renderizarPagosMixtos();
-            recalcularTotales();
-        }
+            window.renderizarPagosMixtos();
+            window.recalcularTotales();
+        };
 
-        function recalcularTotales() {
-            const total = usdToBs(currentPedido?.total || 0);
-            let recibido = pagosMixtos.reduce((s, p) => s + (p.metodo === 'efectivo_usd' ? usdToBs(p.monto || 0) : (p.monto || 0)), 0);
+        window.recalcularTotales = function() {
+            const total = window.usdToBs(currentPedido?.total || 0);
+            let recibido = pagosMixtos.reduce((s, p) => s + (p.metodo === 'efectivo_usd' ? window.usdToBs(p.monto || 0) : (p.monto || 0)), 0);
             
             const pendiente = total - recibido;
             const sobrante = recibido - total;
             
-            document.getElementById('totalRecibido').textContent = formatBs(recibido);
-            document.getElementById('pendiente').textContent = formatBs(Math.max(0, pendiente));
-            document.getElementById('sobrante').textContent = formatBs(Math.max(0, sobrante));
+            document.getElementById('totalRecibido').textContent = window.formatBs(recibido);
+            document.getElementById('pendiente').textContent = window.formatBs(Math.max(0, pendiente));
+            document.getElementById('sobrante').textContent = window.formatBs(Math.max(0, sobrante));
             
             const extrasSection = document.getElementById('extrasSection');
             const vueltoRow = document.getElementById('vueltoRow');
@@ -1366,16 +1366,16 @@
                 if (vueltoInput.value) {
                     const vuelto = parseFloat(vueltoInput.value) || 0;
                     const restante = Math.abs(pendiente) - vuelto;
-                    document.getElementById('vueltoRestante').textContent = formatBs(Math.max(0, restante));
+                    document.getElementById('vueltoRestante').textContent = window.formatBs(Math.max(0, restante));
                     
                     if (restante > 0) {
                         favorCheckbox.style.display = 'flex';
-                        document.getElementById('favorMonto').textContent = formatBs(restante);
+                        document.getElementById('favorMonto').textContent = window.formatBs(restante);
                     } else {
                         favorCheckbox.style.display = 'none';
                     }
                 } else {
-                    document.getElementById('vueltoRestante').textContent = formatBs(Math.abs(pendiente));
+                    document.getElementById('vueltoRestante').textContent = window.formatBs(Math.abs(pendiente));
                     favorCheckbox.style.display = 'none';
                 }
                 
@@ -1385,7 +1385,7 @@
                 mostrarExtras = true;
                 vueltoRow.style.display = 'none';
                 condonarCheckbox.style.display = 'flex';
-                document.getElementById('condonarMonto').textContent = formatBs(pendiente);
+                document.getElementById('condonarMonto').textContent = window.formatBs(pendiente);
                 favorCheckbox.style.display = 'none';
                 
             } else {
@@ -1408,13 +1408,13 @@
             }
             
             document.getElementById('confirmCobroBtn').disabled = !cobroHabilitado;
-        }
+        };
 
-        function calcularConVuelto() {
-            recalcularTotales();
-        }
+        window.calcularConVuelto = function() {
+            window.recalcularTotales();
+        };
 
-        async function confirmarCobro() {
+        window.confirmarCobro = async function() {
             if (!currentPedido) return;
             
             const inv = document.getElementById('invitacionCheck').checked;
@@ -1429,8 +1429,8 @@
                 metodoPago = 'invitacion';
                 pagos = [{ metodo: 'invitacion', monto: 0, montoBs: 0 }];
             } else {
-                const total = usdToBs(currentPedido.total || 0);
-                const recibido = pagosMixtos.reduce((s, p) => s + (p.metodo === 'efectivo_usd' ? usdToBs(p.monto || 0) : (p.monto || 0)), 0);
+                const total = window.usdToBs(currentPedido.total || 0);
+                const recibido = pagosMixtos.reduce((s, p) => s + (p.metodo === 'efectivo_usd' ? window.usdToBs(p.monto || 0) : (p.monto || 0)), 0);
                 
                 let pendiente = total - recibido;
                 let condonado = 0;
@@ -1456,7 +1456,7 @@
                 }
                 
                 nuevoEstado = currentPedido.tipo === 'delivery' ? 'en_camino' : (currentPedido.tipo === 'reserva' ? 'reserva_pendiente' : 'en_cocina');
-                pagos = pagosMixtos.map(p => ({ metodo: p.metodo, monto: p.monto, montoBs: p.metodo === 'efectivo_usd' ? usdToBs(p.monto) : p.monto, referencia: p.referencia || null }));
+                pagos = pagosMixtos.map(p => ({ metodo: p.metodo, monto: p.monto, montoBs: p.metodo === 'efectivo_usd' ? window.usdToBs(p.monto) : p.monto, referencia: p.referencia || null }));
                 metodoPago = pagosMixtos.length === 1 ? pagosMixtos[0].metodo : 'mixto';
             }
             
@@ -1478,7 +1478,7 @@
                 
                 const totalItems = currentPedido.items?.reduce((s, i) => s + (i.cantidad || 1), 0) || 0;
                 const subtotalPlatillosUSD = (currentPedido.items || []).reduce((s, i) => s + (i.precioUnitarioUSD || 0) * (i.cantidad || 1), 0);
-                const subtotalPlatillosBs = usdToBs(subtotalPlatillosUSD);
+                const subtotalPlatillosBs = window.usdToBs(subtotalPlatillosUSD);
                 
                 await window.supabaseClient
                     .from('ventas')
@@ -1521,29 +1521,29 @@
                     }]);
                 
                 document.getElementById('cobroModal').classList.remove('active');
-                mostrarToast('💰 Cobro procesado');
+                window.mostrarToast('💰 Cobro procesado');
                 enProcesoDeCobro = false;
                 currentPedido = null;
                 pagosMixtos = [];
                 
-                await recargarPedidosCompletos();
-                await cargarMenu();
-                renderizarPropinas();
+                await window.recargarPedidosCompletos();
+                await window.cargarMenu();
+                window.renderizarPropinas();
                 
-                setTimeout(() => mostrarPropinaModal(currentPedido), 500);
+                setTimeout(() => window.mostrarPropinaModal(currentPedido), 500);
                 
             } catch (error) {
                 console.error('Error en cobro:', error);
-                mostrarToast('❌ Error al procesar el cobro', 'error');
+                window.mostrarToast('❌ Error al procesar el cobro', 'error');
             }
-        }
+        };
 
-        async function confirmarRechazo() {
+        window.confirmarRechazo = async function() {
             if (!pedidoParaAccion) return;
             
             const razon = document.querySelector('input[name="rejectionReason"]:checked')?.value;
             if (!razon) {
-                mostrarToast('Selecciona una razón', 'error');
+                window.mostrarToast('Selecciona una razón', 'error');
                 return;
             }
             
@@ -1571,18 +1571,18 @@
                         leida: false
                     }]);
                 
-                cerrarModal('rechazoModal');
-                mostrarToast('🗑️ Pedido rechazado');
-                await recargarPedidosCompletos();
-                verificarYControlarAlarma(true);
+                window.cerrarModal('rechazoModal');
+                window.mostrarToast('🗑️ Pedido rechazado');
+                await window.recargarPedidosCompletos();
+                window.verificarYControlarAlarma(true);
                 
             } catch (error) {
                 console.error('Error al rechazar:', error);
-                mostrarToast('❌ Error al rechazar', 'error');
+                window.mostrarToast('❌ Error al rechazar', 'error');
             }
-        }
+        };
 
-        async function ejecutarConfirmacion() {
+        window.ejecutarConfirmacion = async function() {
             if (!pedidoParaAccion) return;
             
             try {
@@ -1594,7 +1594,7 @@
                 } else if (accionPendiente === 'enviado') {
                     const deliveryId = document.getElementById('deliverySelector')?.value;
                     if (!deliveryId) {
-                        mostrarToast('Selecciona un motorizado', 'error');
+                        window.mostrarToast('Selecciona un motorizado', 'error');
                         return;
                     }
                     
@@ -1639,18 +1639,18 @@
                         leida: false
                     }]);
                 
-                cerrarModal('confirmModal');
-                mostrarToast('✅ Estado actualizado');
-                await recargarPedidosCompletos();
-                verificarYControlarAlarma(true);
+                window.cerrarModal('confirmModal');
+                window.mostrarToast('✅ Estado actualizado');
+                await window.recargarPedidosCompletos();
+                window.verificarYControlarAlarma(true);
                 
             } catch (error) {
                 console.error('Error:', error);
-                mostrarToast('❌ Error', 'error');
+                window.mostrarToast('❌ Error', 'error');
             }
-        }
+        };
 
-        function mostrarPropinaModal(pedido) {
+        window.mostrarPropinaModal = function(pedido) {
             if (!pedido) return;
             
             currentPropinaPedido = pedido;
@@ -1675,27 +1675,27 @@
                     <div style="margin-bottom:20px">
                         <label>💳 Método de Pago</label>
                         <div style="display:flex;gap:10px;margin-top:8px">
-                            <label style="flex:1;background:rgba(0,0,0,.3);padding:10px;border-radius:8px;text-align:center;cursor:pointer"><input type="radio" name="propinaMetodo" value="efectivo_bs" checked onchange="cambiarMetodoPropina('efectivo_bs')"> Efectivo Bs</label>
-                            <label style="flex:1;background:rgba(0,0,0,.3);padding:10px;border-radius:8px;text-align:center;cursor:pointer"><input type="radio" name="propinaMetodo" value="efectivo_usd" onchange="cambiarMetodoPropina('efectivo_usd')"> Efectivo USD</label>
-                            <label style="flex:1;background:rgba(0,0,0,.3);padding:10px;border-radius:8px;text-align:center;cursor:pointer"><input type="radio" name="propinaMetodo" value="pago_movil" onchange="cambiarMetodoPropina('pago_movil')"> Pago Móvil</label>
-                            <label style="flex:1;background:rgba(0,0,0,.3);padding:10px;border-radius:8px;text-align:center;cursor:pointer"><input type="radio" name="propinaMetodo" value="punto_venta" onchange="cambiarMetodoPropina('punto_venta')"> Punto Venta</label>
+                            <label style="flex:1;background:rgba(0,0,0,.3);padding:10px;border-radius:8px;text-align:center;cursor:pointer"><input type="radio" name="propinaMetodo" value="efectivo_bs" checked onchange="window.cambiarMetodoPropina('efectivo_bs')"> Efectivo Bs</label>
+                            <label style="flex:1;background:rgba(0,0,0,.3);padding:10px;border-radius:8px;text-align:center;cursor:pointer"><input type="radio" name="propinaMetodo" value="efectivo_usd" onchange="window.cambiarMetodoPropina('efectivo_usd')"> Efectivo USD</label>
+                            <label style="flex:1;background:rgba(0,0,0,.3);padding:10px;border-radius:8px;text-align:center;cursor:pointer"><input type="radio" name="propinaMetodo" value="pago_movil" onchange="window.cambiarMetodoPropina('pago_movil')"> Pago Móvil</label>
+                            <label style="flex:1;background:rgba(0,0,0,.3);padding:10px;border-radius:8px;text-align:center;cursor:pointer"><input type="radio" name="propinaMetodo" value="punto_venta" onchange="window.cambiarMetodoPropina('punto_venta')"> Punto Venta</label>
                         </div>
                     </div>
                     
                     <div class="propina-monto-group" id="propinaMontoGroup">
-                        <input type="number" id="propinaMontoBs" step="0.01" placeholder="Monto en Bs" oninput="calcularMontoPropina('bs')">
-                        <input type="number" id="propinaMontoUsd" step="0.01" placeholder="Monto en USD" disabled oninput="calcularMontoPropina('usd')">
+                        <input type="number" id="propinaMontoBs" step="0.01" placeholder="Monto en Bs" oninput="window.calcularMontoPropina('bs')">
+                        <input type="number" id="propinaMontoUsd" step="0.01" placeholder="Monto en USD" disabled oninput="window.calcularMontoPropina('usd')">
                     </div>
                     
                     <div id="propinaReferenciaGroup" style="display:none;margin-bottom:20px">
                         <label>🔢 Referencia (6 dígitos)</label>
                         <div class="referencia-input">
-                            <input type="text" maxlength="1" class="ref-propina" data-index="0" oninput="moverRefPropina(this,0)">
-                            <input type="text" maxlength="1" class="ref-propina" data-index="1" oninput="moverRefPropina(this,1)">
-                            <input type="text" maxlength="1" class="ref-propina" data-index="2" oninput="moverRefPropina(this,2)">
-                            <input type="text" maxlength="1" class="ref-propina" data-index="3" oninput="moverRefPropina(this,3)">
-                            <input type="text" maxlength="1" class="ref-propina" data-index="4" oninput="moverRefPropina(this,4)">
-                            <input type="text" maxlength="1" class="ref-propina" data-index="5" oninput="moverRefPropina(this,5)">
+                            <input type="text" maxlength="1" class="ref-propina" data-index="0" oninput="window.moverRefPropina(this,0)">
+                            <input type="text" maxlength="1" class="ref-propina" data-index="1" oninput="window.moverRefPropina(this,1)">
+                            <input type="text" maxlength="1" class="ref-propina" data-index="2" oninput="window.moverRefPropina(this,2)">
+                            <input type="text" maxlength="1" class="ref-propina" data-index="3" oninput="window.moverRefPropina(this,3)">
+                            <input type="text" maxlength="1" class="ref-propina" data-index="4" oninput="window.moverRefPropina(this,4)">
+                            <input type="text" maxlength="1" class="ref-propina" data-index="5" oninput="window.moverRefPropina(this,5)">
                         </div>
                     </div>
                     
@@ -1711,14 +1711,14 @@
                 input.addEventListener('input', function() {
                     const ref = Array.from(document.querySelectorAll('.ref-propina')).map(i => i.value).join('');
                     currentPropinaData.referencia = ref;
-                    validarPropina();
+                    window.validarPropina();
                 });
             });
             
             document.getElementById('propinaModal').classList.add('active');
-        }
+        };
 
-        function cambiarMetodoPropina(metodo) {
+        window.cambiarMetodoPropina = function(metodo) {
             currentPropinaData.metodo = metodo;
             
             const bsInput = document.getElementById('propinaMontoBs');
@@ -1739,35 +1739,35 @@
                 refGroup.style.display = 'none';
             }
             
-            validarPropina();
-        }
+            window.validarPropina();
+        };
 
-        function calcularMontoPropina(tipo) {
+        window.calcularMontoPropina = function(tipo) {
             if (tipo === 'bs') {
                 currentPropinaData.montoBs = parseFloat(document.getElementById('propinaMontoBs').value) || 0;
                 if (currentPropinaData.metodo === 'efectivo_usd') {
                     currentPropinaData.montoUsd = currentPropinaData.montoBs / tasaEfectiva;
                 }
-                document.getElementById('propinaTotalDisplay').textContent = formatBs(currentPropinaData.montoBs);
+                document.getElementById('propinaTotalDisplay').textContent = window.formatBs(currentPropinaData.montoBs);
             } else {
                 currentPropinaData.montoUsd = parseFloat(document.getElementById('propinaMontoUsd').value) || 0;
                 currentPropinaData.montoBs = currentPropinaData.montoUsd * tasaEfectiva;
-                document.getElementById('propinaTotalDisplay').textContent = formatBs(currentPropinaData.montoBs);
+                document.getElementById('propinaTotalDisplay').textContent = window.formatBs(currentPropinaData.montoBs);
             }
-            validarPropina();
-        }
+            window.validarPropina();
+        };
 
-        function moverRefPropina(input, index) {
+        window.moverRefPropina = function(input, index) {
             if (input.value.length === 1 && index < 5) {
                 document.querySelector(`.ref-propina[data-index="${index + 1}"]`).focus();
             }
             
             const ref = Array.from(document.querySelectorAll('.ref-propina')).map(i => i.value).join('');
             currentPropinaData.referencia = ref;
-            validarPropina();
-        }
+            window.validarPropina();
+        };
 
-        function validarPropina() {
+        window.validarPropina = function() {
             const mesonero = document.getElementById('propinaMesonero')?.value;
             const mesa = document.getElementById('propinaMesa')?.value;
             
@@ -1784,9 +1784,9 @@
             } else {
                 document.getElementById('confirmPropinaBtn').disabled = !(currentPropinaData.montoBs > 0);
             }
-        }
+        };
 
-        async function confirmarPropina() {
+        window.confirmarPropina = async function() {
             if (!currentPropinaPedido || !currentUser) return;
             
             const mesoneroId = document.getElementById('propinaMesonero').value;
@@ -1794,7 +1794,7 @@
             const mesonero = mesoneros.find(m => m.id === mesoneroId);
             
             if (!mesonero) {
-                mostrarToast('Selecciona un mesonero', 'error');
+                window.mostrarToast('Selecciona un mesonero', 'error');
                 return;
             }
             
@@ -1816,20 +1816,20 @@
                 
                 await window.supabaseClient.from('propinas').insert([propina]);
                 
-                cerrarPropinaModal();
-                mostrarToast('💰 Propina registrada', 'success');
+                window.cerrarPropinaModal();
+                window.mostrarToast('💰 Propina registrada', 'success');
                 
-                await cargarPropinas();
-                actualizarEstadisticas();
-                renderizarPropinas();
+                await window.cargarPropinas();
+                window.actualizarEstadisticas();
+                window.renderizarPropinas();
                 
             } catch (error) {
                 console.error('Error:', error);
-                mostrarToast('❌ Error al registrar propina', 'error');
+                window.mostrarToast('❌ Error al registrar propina', 'error');
             }
-        }
+        };
 
-        function mostrarConfirmacion(pedidoId, accion) {
+        window.mostrarConfirmacion = function(pedidoId, accion) {
             const pedido = pedidos.find(p => p.id === pedidoId);
             if (!pedido) return;
             
@@ -1866,20 +1866,20 @@
             }
             
             title.innerHTML = `<i class="fas fa-check-circle"></i> ${titulo}`;
-            body.innerHTML = `<p>${mensaje}</p>${crearDetallePedidoHTML(pedido)}<div style="background:rgba(56,142,60,.1);padding:15px;margin-top:20px"><strong>Notificación:</strong><br>${notif.titulo}<br>${notif.mensaje}</div><div class="keyboard-hint"><span><kbd>ENTER</kbd> confirmar</span><span><kbd>ESC</kbd> cancelar</span></div>`;
+            body.innerHTML = `<p>${mensaje}</p>${window.crearDetallePedidoHTML(pedido)}<div style="background:rgba(56,142,60,.1);padding:15px;margin-top:20px"><strong>Notificación:</strong><br>${notif.titulo}<br>${notif.mensaje}</div><div class="keyboard-hint"><span><kbd>ENTER</kbd> confirmar</span><span><kbd>ESC</kbd> cancelar</span></div>`;
             
             modal.classList.add('active');
-        }
+        };
 
-        function mostrarRechazo(pedidoId) {
+        window.mostrarRechazo = function(pedidoId) {
             pedidoParaAccion = pedidos.find(p => p.id === pedidoId);
             if (pedidoParaAccion) document.getElementById('rechazoModal').classList.add('active');
-        }
+        };
 
-        async function verComprobante(pedidoId) {
+        window.verComprobante = async function(pedidoId) {
             const pedido = pedidos.find(p => p.id === pedidoId);
             if (!pedido || !pedido.comprobante_url) {
-                mostrarToast('No hay comprobante', 'error');
+                window.mostrarToast('No hay comprobante', 'error');
                 return;
             }
             
@@ -1889,53 +1889,53 @@
                     <img src="${pedido.comprobante_url}" style="max-width:100%;max-height:400px;border-radius:8px;margin-bottom:15px">
                     <p><strong>Referencia:</strong> ${pedido.referencia || 'N/A'}</p>
                     <p><strong>Teléfono:</strong> ${pedido.telefono || 'N/A'}</p>
-                    <p><strong>Total:</strong> ${formatBs(usdToBs(pedido.total || 0))}</p>
+                    <p><strong>Total:</strong> ${window.formatBs(window.usdToBs(pedido.total || 0))}</p>
                 </div>
                 <div class="keyboard-hint"><span><kbd>ESC</kbd> cerrar</span></div>
             `;
             modal.classList.add('active');
-        }
+        };
 
-        async function abrirSelectorMesa() {
-            await cargarMesas();
+        window.abrirSelectorMesa = async function() {
+            await window.cargarMesas();
             const modal = document.getElementById('mesaModal');
             const lista = document.getElementById('mesaList');
             
             lista.innerHTML = mesas.length 
-                ? mesas.map(m => `<button class="mesa-btn" onclick="abrirMesa('${m.nombre}')"><i class="fas fa-chair"></i>${m.nombre}</button>`).join('')
+                ? mesas.map(m => `<button class="mesa-btn" onclick="window.abrirMesa('${m.nombre}')"><i class="fas fa-chair"></i>${m.nombre}</button>`).join('')
                 : '<p class="text-center">No hay mesas</p>';
                 
             modal.classList.add('active');
-        }
+        };
 
-        function abrirMesa(n) {
+        window.abrirMesa = function(n) {
             window.open(`${window.location.origin}/Cliente/index.html?mesa=${encodeURIComponent(n)}`, '_blank');
-            cerrarModal('mesaModal');
-        }
+            window.cerrarModal('mesaModal');
+        };
 
-        function setupRealtimeSubscriptions() {
+        window.setupRealtimeSubscriptions = function() {
             suscripciones.forEach(s => s.unsubscribe());
             suscripciones = [];
             
-            suscripciones.push(window.supabaseClient.channel('cajero-pedidos-' + Date.now()).on('postgres_changes', { event: '*', schema: 'public', table: 'pedidos' }, async () => { await verificarCambiosPedidos(); }).subscribe());
-            suscripciones.push(window.supabaseClient.channel('cajero-ventas-' + Date.now()).on('postgres_changes', { event: '*', schema: 'public', table: 'ventas' }, async () => { await cargarVentasHoy(); actualizarEstadisticas(); }).subscribe());
-            suscripciones.push(window.supabaseClient.channel('cajero-propinas-' + Date.now()).on('postgres_changes', { event: '*', schema: 'public', table: 'propinas' }, async () => { await cargarPropinas(); actualizarEstadisticas(); renderizarPropinas(); }).subscribe());
-            suscripciones.push(window.supabaseClient.channel('cajero-mesoneros-' + Date.now()).on('postgres_changes', { event: '*', schema: 'public', table: 'mesoneros' }, async () => { await cargarMesoneros(); }).subscribe());
-            suscripciones.push(window.supabaseClient.channel('cajero-deliverys-' + Date.now()).on('postgres_changes', { event: '*', schema: 'public', table: 'deliverys' }, async () => { await cargarDeliverys(); }).subscribe());
-            suscripciones.push(window.supabaseClient.channel('cajero-menu-' + Date.now()).on('postgres_changes', { event: '*', schema: 'public', table: 'menu' }, async () => { await cargarMenu(); }).subscribe());
-            suscripciones.push(window.supabaseClient.channel('cajero-inventario-' + Date.now()).on('postgres_changes', { event: '*', schema: 'public', table: 'inventario' }, async () => { stockCache.invalidate(); await cargarInventario(); }).subscribe());
-            suscripciones.push(window.supabaseClient.channel('cajero-config-' + Date.now()).on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'config', filter: 'id=eq.1' }, (p) => { configGlobal = { ...configGlobal, ...p.new }; tasaEfectiva = configGlobal.tasa_efectiva || 400; renderizarPedidos(); renderizarMenu(); actualizarEstadisticas(); }).subscribe());
-        }
+            suscripciones.push(window.supabaseClient.channel('cajero-pedidos-' + Date.now()).on('postgres_changes', { event: '*', schema: 'public', table: 'pedidos' }, async () => { await window.verificarCambiosPedidos(); }).subscribe());
+            suscripciones.push(window.supabaseClient.channel('cajero-ventas-' + Date.now()).on('postgres_changes', { event: '*', schema: 'public', table: 'ventas' }, async () => { await window.cargarVentasHoy(); window.actualizarEstadisticas(); }).subscribe());
+            suscripciones.push(window.supabaseClient.channel('cajero-propinas-' + Date.now()).on('postgres_changes', { event: '*', schema: 'public', table: 'propinas' }, async () => { await window.cargarPropinas(); window.actualizarEstadisticas(); window.renderizarPropinas(); }).subscribe());
+            suscripciones.push(window.supabaseClient.channel('cajero-mesoneros-' + Date.now()).on('postgres_changes', { event: '*', schema: 'public', table: 'mesoneros' }, async () => { await window.cargarMesoneros(); }).subscribe());
+            suscripciones.push(window.supabaseClient.channel('cajero-deliverys-' + Date.now()).on('postgres_changes', { event: '*', schema: 'public', table: 'deliverys' }, async () => { await window.cargarDeliverys(); }).subscribe());
+            suscripciones.push(window.supabaseClient.channel('cajero-menu-' + Date.now()).on('postgres_changes', { event: '*', schema: 'public', table: 'menu' }, async () => { await window.cargarMenu(); }).subscribe());
+            suscripciones.push(window.supabaseClient.channel('cajero-inventario-' + Date.now()).on('postgres_changes', { event: '*', schema: 'public', table: 'inventario' }, async () => { stockCache.invalidate(); await window.cargarInventario(); }).subscribe());
+            suscripciones.push(window.supabaseClient.channel('cajero-config-' + Date.now()).on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'config', filter: 'id=eq.1' }, (p) => { configGlobal = { ...configGlobal, ...p.new }; tasaEfectiva = configGlobal.tasa_efectiva || 400; window.renderizarPedidos(); window.renderizarMenu(); window.actualizarEstadisticas(); }).subscribe());
+        };
 
-        function setupEventListeners() {
+        window.setupEventListeners = function() {
             document.addEventListener('keydown', (e) => {
                 if (e.key === 'Escape') {
                     ['cobroModal', 'propinaModal', 'confirmModal', 'rechazoModal', 'detalleModal', 'mesaModal', 'comprobanteModal', 'deliveryModal'].forEach(id => {
                         const m = document.getElementById(id);
                         if (m.classList.contains('active')) {
-                            if (id === 'cobroModal') cerrarCobroModal();
-                            else if (id === 'propinaModal') cerrarPropinaModal();
-                            else cerrarModal(id);
+                            if (id === 'cobroModal') window.cerrarCobroModal();
+                            else if (id === 'propinaModal') window.cerrarPropinaModal();
+                            else window.cerrarModal(id);
                         }
                     });
                 }
@@ -1945,16 +1945,16 @@
                         const confirmBtn = document.getElementById('confirmActionBtn');
                         if (!confirmBtn.disabled) {
                             e.preventDefault();
-                            ejecutarConfirmacion();
+                            window.ejecutarConfirmacion();
                         }
                     }
                     if (document.getElementById('cobroModal').classList.contains('active') && !document.getElementById('confirmCobroBtn').disabled) {
                         e.preventDefault();
-                        confirmarCobro();
+                        window.confirmarCobro();
                     }
                     if (document.getElementById('propinaModal').classList.contains('active') && !document.getElementById('confirmPropinaBtn').disabled) {
                         e.preventDefault();
-                        confirmarPropina();
+                        window.confirmarPropina();
                     }
                 }
             });
@@ -1992,41 +1992,41 @@
                     touchStartX = 0;
                 });
             }
-        }
+        };
 
-        function formatBs(m) {
+        window.formatBs = function(m) {
             return new Intl.NumberFormat('es-VE', {
                 style: 'currency',
                 currency: 'VES',
                 minimumFractionDigits: 2
             }).format(m).replace('VES', 'Bs.');
-        }
+        };
 
-        function formatUSD(m) {
+        window.formatUSD = function(m) {
             return new Intl.NumberFormat('en-US', {
                 style: 'currency',
                 currency: 'USD',
                 minimumFractionDigits: 2
             }).format(m);
-        }
+        };
 
-        function usdToBs(u) {
+        window.usdToBs = function(u) {
             return u * (tasaEfectiva || 400);
-        }
+        };
 
-        function crearDetallePedidoHTML(pedido) {
+        window.crearDetallePedidoHTML = function(pedido) {
             let metodos = '';
             if (pedido.pagos_mixtos) {
                 metodos = '<div class="payment-methods">' + pedido.pagos_mixtos.map(p => {
                     const icono = p.metodo === 'pago_movil' ? 'mobile-alt' : (p.metodo === 'punto_venta' ? 'credit-card' : 'money-bill-wave');
                     const simbolo = p.metodo === 'efectivo_bs' ? 'Bs' : (p.metodo === 'efectivo_usd' ? '$' : (p.metodo === 'pago_movil' ? '📱' : '💳'));
-                    return `<span class="payment-tag"><i class="fas fa-${icono}"></i> ${simbolo} ${formatBs(p.monto)}</span>`;
+                    return `<span class="payment-tag"><i class="fas fa-${icono}"></i> ${simbolo} ${window.formatBs(p.monto)}</span>`;
                 }).join('') + '</div>';
             }
             
             let tags = '';
-            if (pedido.condonado > 0) tags += `<span class="condonar-tag"><i class="fas fa-gift"></i> Condonado: ${formatBs(pedido.condonado)}</span>`;
-            if (pedido.a_favor_caja > 0) tags += `<span class="favor-tag"><i class="fas fa-piggy-bank"></i> A favor: ${formatBs(pedido.a_favor_caja)}</span>`;
+            if (pedido.condonado > 0) tags += `<span class="condonar-tag"><i class="fas fa-gift"></i> Condonado: ${window.formatBs(pedido.condonado)}</span>`;
+            if (pedido.a_favor_caja > 0) tags += `<span class="favor-tag"><i class="fas fa-piggy-bank"></i> A favor: ${window.formatBs(pedido.a_favor_caja)}</span>`;
             
             return `<div class="detail-item">
                 <div class="detail-row"><span class="detail-label">Cliente:</span><span class="detail-value">${pedido.cliente_nombre || 'N/A'}</span></div>
@@ -2035,12 +2035,12 @@
                 ${pedido.tipo === 'delivery' ? `<div class="detail-row"><span class="detail-label">Dirección:</span><span class="detail-value">${pedido.direccion}</span></div><div class="detail-row"><span class="detail-label">Teléfono:</span><span class="detail-value">${pedido.telefono}</span></div>` : ''}
                 ${pedido.referencia ? `<div class="detail-row"><span class="detail-label">Ref:</span><span class="detail-value">${pedido.referencia}</span></div>` : ''}
                 <div class="detail-row"><span class="detail-label">Items:</span></div>
-                ${(pedido.items || []).map(i => `<div class="detail-row"><span>${i.cantidad || 1}x ${i.nombre}</span><span>${formatBs(usdToBs(i.precioUnitarioUSD * (i.cantidad || 1)))}</span></div>`).join('')}
+                ${(pedido.items || []).map(i => `<div class="detail-row"><span>${i.cantidad || 1}x ${i.nombre}</span><span>${window.formatBs(window.usdToBs(i.precioUnitarioUSD * (i.cantidad || 1)))}</span></div>`).join('')}
                 ${metodos ? `<div class="detail-row"><span class="detail-label">Pagos:</span></div>${metodos}` : ''}
                 ${tags ? `<div class="detail-row">${tags}</div>` : ''}
-                <div class="detail-row" style="font-weight:700"><span>TOTAL</span><span>${formatBs(usdToBs(pedido.total || 0))}</span></div>
+                <div class="detail-row" style="font-weight:700"><span>TOTAL</span><span>${window.formatBs(window.usdToBs(pedido.total || 0))}</span></div>
             </div>`;
-        }
+        };
     </script>
 </body>
 </html>
