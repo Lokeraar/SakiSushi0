@@ -288,7 +288,14 @@
         async function verificarCambiosPedidos(){if(reconectando||enProcesoDeCobro)return;try{const hoy=new Date();hoy.setHours(0,0,0,0);const manana=new Date(hoy);manana.setDate(manana.getDate()+2);const{data,error}=await window.supabaseClient.from('pedidos').select('id, estado, timestamp').gte('timestamp',hoy.toISOString()).lt('timestamp',manana.toISOString());if(error)throw error;if(data){let hayCambios=false;if(data.length!==pedidos.length)hayCambios=true;else{const mapaActual=new Map(pedidos.map(p=>[p.id,p.estado]));for(const p of data){if(mapaActual.get(p.id)!==p.estado){hayCambios=true;break;}}}if(hayCambios){console.log('📦 Cambios detectados en pedidos, recargando...');await recargarPedidosCompletos();ultimaActualizacion=Date.now();}}}catch(error){console.error('Error verificando cambios:',error);}}
         async function recargarPedidosCompletos(){try{await cargarPedidos();await cargarVentasHoy();actualizarEstadisticas();renderizarPedidos();verificarYControlarAlarma(true);}catch(error){console.error('Error recargando pedidos:',error);}}
         function iniciarVerificacionPeriodica(){if(intervaloVerificacion)clearInterval(intervaloVerificacion);intervaloVerificacion=setInterval(async()=>{if(paginaVisible&&!enProcesoDeCobro)await verificarCambiosPedidos();},3000);}
-        async function cargarDatosIniciales(){await cargarConfiguracion();tasaEfectiva=configGlobal.tasa_efectiva||400;await cargarPedidos();await cargarVentasHoy();await cargarPropinas();await cargarMenu();await cargarInventario();await cargarMesas();await cargarMesoneros();await cargarDeliverys();actualizarEstadisticas();renderizarPedidos();renderizarPropinas();renderizarDeliverysStats();iniciarVerificacionPeriodica();}
+        // En la función cargarDatosIniciales(), agrega esta línea:
+async function cargarDatosIniciales() {
+    await cargarConfiguracion();
+    await verificarUsuarios(); // 👈 AÑADE ESTA LÍNEA
+    tasaEfectiva = configGlobal.tasa_efectiva || 400;
+    // ... resto del código
+};
+tasaEfectiva=configGlobal.tasa_efectiva||400;await cargarPedidos();await cargarVentasHoy();await cargarPropinas();await cargarMenu();await cargarInventario();await cargarMesas();await cargarMesoneros();await cargarDeliverys();actualizarEstadisticas();renderizarPedidos();renderizarPropinas();renderizarDeliverysStats();iniciarVerificacionPeriodica();}
         async function getStockDisponible(ingredienteId){try{const cache=stockCache.get(ingredienteId);if(cache!==undefined)return cache;const ingrediente=inventario.find(i=>i.id===ingredienteId);if(!ingrediente)return 0;const disponible=(ingrediente.stock||0)-(ingrediente.reservado||0);stockCache.set(ingredienteId,disponible);return disponible;}catch(error){console.error('Error obteniendo stock:',error);return 0;}}
         async function calcularStockPlatillo(platillo){let stockDisponible=Infinity;if(platillo.ingredientes&&Object.keys(platillo.ingredientes).length>0){for(const[ingId,ingInfo]of Object.entries(platillo.ingredientes)){const stockDisp=await getStockDisponible(ingId),cantidadNecesaria=ingInfo.cantidad||1,posible=Math.floor(stockDisp/cantidadNecesaria);stockDisponible=Math.min(stockDisponible,posible);}}else stockDisponible=platillo.stock_maximo||999;return stockDisponible;}
         async function cargarPedidos(){try{const hoy=new Date();hoy.setHours(0,0,0,0);const manana=new Date(hoy);manana.setDate(manana.getDate()+2);const{data,error}=await window.supabaseClient.from('pedidos').select('*').gte('timestamp',hoy.toISOString()).lt('timestamp',manana.toISOString()).order('timestamp',{ascending:false});if(error)throw error;pedidos=data||[];}catch(error){console.error('Error cargando pedidos:',error);mostrarToast('Error cargando pedidos','error');}}
@@ -353,6 +360,40 @@
         function formatUSD(m){return new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',minimumFractionDigits:2}).format(m);}
         function usdToBs(u){return u*(tasaEfectiva||400);}
         function crearDetallePedidoHTML(pedido){let metodos='';if(pedido.pagos_mixtos){metodos='<div class="payment-methods">'+pedido.pagos_mixtos.map(p=>`<span class="payment-tag"><i class="fas fa-${p.metodo==='pago_movil'?'mobile-alt':p.metodo==='punto_venta'?'credit-card':'money-bill-wave'}"></i> ${p.metodo==='efectivo_bs'?'Bs':p.metodo==='efectivo_usd'?'$':p.metodo==='pago_movil'?'📱':'💳'} ${formatBs(p.monto)}</span>`).join('')+'</div>';}let tags='';if(pedido.condonado>0)tags+=`<span class="condonar-tag"><i class="fas fa-gift"></i> Condonado: ${formatBs(pedido.condonado)}</span>`;if(pedido.a_favor_caja>0)tags+=`<span class="favor-tag"><i class="fas fa-piggy-bank"></i> A favor: ${formatBs(pedido.a_favor_caja)}</span>`;return`<div class="detail-item"><div class="detail-row"><span class="detail-label">Cliente:</span><span class="detail-value">${pedido.cliente_nombre||'N/A'}</span></div><div class="detail-row"><span class="detail-label">Tipo:</span><span class="detail-value">${pedido.tipo}</span></div>${pedido.tipo==='mesa'?`<div class="detail-row"><span class="detail-label">Mesa:</span><span class="detail-value">${pedido.mesa}</span></div>`:''}${pedido.tipo==='delivery'?`<div class="detail-row"><span class="detail-label">Dirección:</span><span class="detail-value">${pedido.direccion}</span></div><div class="detail-row"><span class="detail-label">Teléfono:</span><span class="detail-value">${pedido.telefono}</span></div>`:''}${pedido.referencia?`<div class="detail-row"><span class="detail-label">Ref:</span><span class="detail-value">${pedido.referencia}</span></div>`:''}<div class="detail-row"><span class="detail-label">Items:</span></div>${(pedido.items||[]).map(i=>`<div class="detail-row"><span>${i.cantidad||1}x ${i.nombre}</span><span>${formatBs(usdToBs(i.precioUnitarioUSD*(i.cantidad||1)))}</span></div>`).join('')}${metodos?`<div class="detail-row"><span class="detail-label">Pagos:</span></div>${metodos}`:''}${tags?`<div class="detail-row">${tags}</div>`:''}<div class="detail-row" style="font-weight:700"><span>TOTAL</span><span>${formatBs(usdToBs(pedido.total||0))}</span></div></div>`;}
+        // ==================== VERIFICAR USUARIOS ====================
+async function verificarUsuarios() {
+    try {
+        const { data, error } = await window.supabaseClient
+            .from('usuarios')
+            .select('count')
+            .limit(1);
+            
+        if (error) throw error;
+        
+        if (!data || data.length === 0) {
+            console.log('📦 No hay usuarios, creando usuarios por defecto...');
+            
+            const usuariosPorDefecto = [
+                { id: 'user_' + Date.now() + '_1', nombre: 'Cajero Principal', username: 'cajero1', password: '123456', rol: 'cajero', activo: true },
+                { id: 'user_' + Date.now() + '_2', nombre: 'Cajero Secundario', username: 'cajero2', password: '123456', rol: 'cajero', activo: true }
+            ];
+            
+            const { error: insertError } = await window.supabaseClient
+                .from('usuarios')
+                .insert(usuariosPorDefecto);
+                
+            if (insertError) throw insertError;
+            
+            console.log('✅ Usuarios creados correctamente');
+            mostrarToast('Usuarios creados: cajero1 / 123456', 'success');
+        } else {
+            console.log('✅ Ya existen usuarios en la base de datos');
+        }
+    } catch (error) {
+        console.error('Error verificando usuarios:', error);
+        mostrarToast('Error al verificar usuarios: ' + error.message, 'error');
+    }
+}
     </script>
 </body>
 </html>
