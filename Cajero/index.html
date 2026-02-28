@@ -288,9 +288,14 @@
     console.log('SUPABASE_URL:', window.SUPABASE_URL);
     console.log('SUPABASE_ANON_KEY:', window.SUPABASE_ANON_KEY);
 
+    // ==================== DECLARACIÓN GLOBAL DE FUNCIONES ====================
+    // Declarar hacerLogin como variable global primero
+    window.hacerLogin = null;
+    
+    // Variables globales
     let currentUser=null,pedidos=[],ventasHoy=[],propinas=[],menuItems=[],inventario=[],mesas=[],currentPedido=null,pedidoParaAccion=null,accionPendiente=null,pagosMixtos=[],tasaEfectiva=400,currentPropinaPedido=null,mesoneros=[],deliverys=[],currentPropinaData={mesonero:'',mesa:'Delivery',metodo:'efectivo_bs',montoBs:0,montoUsd:0,referencia:'',tasaAplicada:400},stockCache={data:{},lastUpdate:0,duration:5000,get:function(id){const ahora=Date.now();if(ahora-this.lastUpdate>this.duration)this.clear();return this.data[id]},set:function(id,val){this.data[id]=val;this.lastUpdate=Date.now()},clear:function(){this.data={};this.lastUpdate=Date.now()},invalidate:function(){this.data={};this.lastUpdate=0}},alarmaAudio=document.getElementById('alarmaSonido'),alarmaActiva=false,enProcesoDeCobro=false,suscripciones=[],paginaVisible=true,reconectando=false,intervaloVerificacion=null,ultimaActualizacion=Date.now(),montosCondonados=[],montosFavorCaja=[],totalCondonadoHoy=0,totalFavorHoy=0;
 
-    // ==================== FUNCIÓN DE LOGIN (declarada primero) ====================
+    // ==================== FUNCIÓN DE LOGIN ====================
     window.hacerLogin = async function() {
         const username = document.getElementById('username').value;
         const password = document.getElementById('password').value;
