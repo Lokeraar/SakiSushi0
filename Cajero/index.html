@@ -283,19 +283,48 @@
     <script src="../supabase-config.js"></script>
     <script>
         let currentUser=null,pedidos=[],ventasHoy=[],propinas=[],menuItems=[],inventario=[],mesas=[],currentPedido=null,pedidoParaAccion=null,accionPendiente=null,pagosMixtos=[],tasaEfectiva=400,currentPropinaPedido=null,mesoneros=[],deliverys=[],currentPropinaData={mesonero:'',mesa:'Delivery',metodo:'efectivo_bs',montoBs:0,montoUsd:0,referencia:'',tasaAplicada:400},stockCache={data:{},lastUpdate:0,duration:5000,get:function(id){const ahora=Date.now();if(ahora-this.lastUpdate>this.duration)this.clear();return this.data[id]},set:function(id,val){this.data[id]=val;this.lastUpdate=Date.now()},clear:function(){this.data={};this.lastUpdate=Date.now()},invalidate:function(){this.data={};this.lastUpdate=0}},alarmaAudio=document.getElementById('alarmaSonido'),alarmaActiva=false,enProcesoDeCobro=false,suscripciones=[],paginaVisible=true,reconectando=false,intervaloVerificacion=null,ultimaActualizacion=Date.now();
+
+        // ==================== VERIFICAR USUARIOS ====================
+        async function verificarUsuarios() {
+            try {
+                const { data, error } = await window.supabaseClient
+                    .from('usuarios')
+                    .select('count')
+                    .limit(1);
+                    
+                if (error) throw error;
+                
+                if (!data || data.length === 0) {
+                    console.log('📦 No hay usuarios, creando usuarios por defecto...');
+                    
+                    const usuariosPorDefecto = [
+                        { id: 'user_' + Date.now() + '_1', nombre: 'Cajero Principal', username: 'cajero1', password: '123456', rol: 'cajero', activo: true },
+                        { id: 'user_' + Date.now() + '_2', nombre: 'Cajero Secundario', username: 'cajero2', password: '123456', rol: 'cajero', activo: true }
+                    ];
+                    
+                    const { error: insertError } = await window.supabaseClient
+                        .from('usuarios')
+                        .insert(usuariosPorDefecto);
+                        
+                    if (insertError) throw insertError;
+                    
+                    console.log('✅ Usuarios creados correctamente');
+                    mostrarToast('Usuarios creados: cajero1 / 123456', 'success');
+                } else {
+                    console.log('✅ Ya existen usuarios en la base de datos');
+                }
+            } catch (error) {
+                console.error('Error verificando usuarios:', error);
+                mostrarToast('Error al verificar usuarios: ' + error.message, 'error');
+            }
+        }
+
         document.addEventListener('DOMContentLoaded',async()=>{const savedUser=sessionStorage.getItem('cajero_user');if(savedUser){try{currentUser=JSON.parse(savedUser);await cargarDatosIniciales();mostrarPanel();}catch{mostrarLogin();}}else mostrarLogin();document.addEventListener('visibilitychange',function(){if(document.hidden)paginaVisible=false;else{paginaVisible=true;verificarCambiosPedidos();}});});
         window.hacerLogin=async function(){const username=document.getElementById('username').value,password=document.getElementById('password').value;if(!username||!password){mostrarToast('Ingresa usuario y contraseña','error');return;}try{const{data,error}=await window.supabaseClient.from('usuarios').select('*').eq('username',username).eq('password',password).eq('activo',true).maybeSingle();if(error)throw error;if(!data){mostrarToast('Credenciales inválidas','error');return;}currentUser=data;sessionStorage.setItem('cajero_user',JSON.stringify(data));await cargarDatosIniciales();mostrarPanel();}catch(error){console.error('Error en login:',error);mostrarToast('Error al conectar: '+error.message,'error');}};
         async function verificarCambiosPedidos(){if(reconectando||enProcesoDeCobro)return;try{const hoy=new Date();hoy.setHours(0,0,0,0);const manana=new Date(hoy);manana.setDate(manana.getDate()+2);const{data,error}=await window.supabaseClient.from('pedidos').select('id, estado, timestamp').gte('timestamp',hoy.toISOString()).lt('timestamp',manana.toISOString());if(error)throw error;if(data){let hayCambios=false;if(data.length!==pedidos.length)hayCambios=true;else{const mapaActual=new Map(pedidos.map(p=>[p.id,p.estado]));for(const p of data){if(mapaActual.get(p.id)!==p.estado){hayCambios=true;break;}}}if(hayCambios){console.log('📦 Cambios detectados en pedidos, recargando...');await recargarPedidosCompletos();ultimaActualizacion=Date.now();}}}catch(error){console.error('Error verificando cambios:',error);}}
         async function recargarPedidosCompletos(){try{await cargarPedidos();await cargarVentasHoy();actualizarEstadisticas();renderizarPedidos();verificarYControlarAlarma(true);}catch(error){console.error('Error recargando pedidos:',error);}}
         function iniciarVerificacionPeriodica(){if(intervaloVerificacion)clearInterval(intervaloVerificacion);intervaloVerificacion=setInterval(async()=>{if(paginaVisible&&!enProcesoDeCobro)await verificarCambiosPedidos();},3000);}
-        // En la función cargarDatosIniciales(), agrega esta línea:
-async function cargarDatosIniciales() {
-    await cargarConfiguracion();
-    await verificarUsuarios(); // 👈 AÑADE ESTA LÍNEA
-    tasaEfectiva = configGlobal.tasa_efectiva || 400;
-    // ... resto del código
-};
-tasaEfectiva=configGlobal.tasa_efectiva||400;await cargarPedidos();await cargarVentasHoy();await cargarPropinas();await cargarMenu();await cargarInventario();await cargarMesas();await cargarMesoneros();await cargarDeliverys();actualizarEstadisticas();renderizarPedidos();renderizarPropinas();renderizarDeliverysStats();iniciarVerificacionPeriodica();}
+        async function cargarDatosIniciales(){await cargarConfiguracion();await verificarUsuarios();tasaEfectiva=configGlobal.tasa_efectiva||400;await cargarPedidos();await cargarVentasHoy();await cargarPropinas();await cargarMenu();await cargarInventario();await cargarMesas();await cargarMesoneros();await cargarDeliverys();actualizarEstadisticas();renderizarPedidos();renderizarPropinas();renderizarDeliverysStats();iniciarVerificacionPeriodica();}
         async function getStockDisponible(ingredienteId){try{const cache=stockCache.get(ingredienteId);if(cache!==undefined)return cache;const ingrediente=inventario.find(i=>i.id===ingredienteId);if(!ingrediente)return 0;const disponible=(ingrediente.stock||0)-(ingrediente.reservado||0);stockCache.set(ingredienteId,disponible);return disponible;}catch(error){console.error('Error obteniendo stock:',error);return 0;}}
         async function calcularStockPlatillo(platillo){let stockDisponible=Infinity;if(platillo.ingredientes&&Object.keys(platillo.ingredientes).length>0){for(const[ingId,ingInfo]of Object.entries(platillo.ingredientes)){const stockDisp=await getStockDisponible(ingId),cantidadNecesaria=ingInfo.cantidad||1,posible=Math.floor(stockDisp/cantidadNecesaria);stockDisponible=Math.min(stockDisponible,posible);}}else stockDisponible=platillo.stock_maximo||999;return stockDisponible;}
         async function cargarPedidos(){try{const hoy=new Date();hoy.setHours(0,0,0,0);const manana=new Date(hoy);manana.setDate(manana.getDate()+2);const{data,error}=await window.supabaseClient.from('pedidos').select('*').gte('timestamp',hoy.toISOString()).lt('timestamp',manana.toISOString()).order('timestamp',{ascending:false});if(error)throw error;pedidos=data||[];}catch(error){console.error('Error cargando pedidos:',error);mostrarToast('Error cargando pedidos','error');}}
@@ -323,7 +352,7 @@ tasaEfectiva=configGlobal.tasa_efectiva||400;await cargarPedidos();await cargarV
         function renderizarDeliverysStats(){const entregasHoy=pedidos.filter(p=>p.tipo==='delivery'&&p.estado==='enviado'&&new Date(p.timestamp).toDateString()===new Date().toDateString()),totalDeliverys=entregasHoy.reduce((sum,p)=>sum+(p.costo_delivery_bs||0),0),cantidad=entregasHoy.length,promedio=cantidad>0?totalDeliverys/cantidad:0;document.getElementById('deliverysTotalStats').textContent=formatBs(totalDeliverys);document.getElementById('deliverysCantidadStats').textContent=cantidad;document.getElementById('deliverysPromedioStats').textContent=formatBs(promedio);document.getElementById('deliverysListCount').textContent=cantidad;document.getElementById('deliverysListContainer').innerHTML=cantidad?entregasHoy.map(p=>crearTarjetaDelivery(p)).join(''):'<div class="empty-state"><i class="fas fa-motorcycle"></i><p>No hay entregas hoy</p></div>';}
         function crearTarjetaPropina(propina){const fecha=new Date(propina.fecha),hora=fecha.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'}),pedido=propina.pedidos||{},tipo=pedido.tipo||'mesa',referencia=pedido.mesa||pedido.cliente_nombre||'Cliente';return`<div class="order-card-compact" style="border-left-color:var(--propina)"><div class="order-header-compact"><span class="order-time-compact"><i class="far fa-clock"></i> ${hora}</span><span class="propina-tag"><i class="fas fa-hand-holding-heart"></i> Propina</span></div><div class="order-info-compact"><div><i class="fas fa-${tipo==='mesa'?'store':tipo==='delivery'?'motorcycle':'calendar-check'}"></i> ${tipo.toUpperCase()} - ${referencia}</div><div><i class="fas fa-user"></i> ${propina.cajero||'Cajero'}</div><div><i class="fas fa-${propina.metodo==='efectivo_bs'?'money-bill-wave':propina.metodo==='efectivo_usd'?'dollar-sign':propina.metodo==='pago_movil'?'mobile-alt':'credit-card'}"></i> ${propina.metodo}</div><div><i class="fas fa-chair"></i> Mesa: ${propina.mesa||'N/A'}</div></div><div class="order-total-compact" style="color:var(--propina)">${formatBs(propina.monto_bs||propina.monto)}</div></div>`;}
         function crearTarjetaDelivery(pedido){const fecha=new Date(pedido.timestamp),hora=fecha.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});return`<div class="order-card-compact" style="border-left-color:var(--delivery)"><div class="order-header-compact"><span class="order-time-compact"><i class="far fa-clock"></i> ${hora}</span><span class="delivery-tag"><i class="fas fa-motorcycle"></i> Delivery</span></div><div class="order-info-compact"><div><i class="fas fa-map-marker-alt"></i> ${(pedido.direccion||'').substring(0,20)}...</div><div><i class="fas fa-phone"></i> ${pedido.telefono||'N/A'}</div><div><i class="fas fa-tag"></i> Pedido: ${pedido.id.substring(0,8)}</div></div><div class="order-total-compact" style="color:var(--delivery)">${formatBs(pedido.costo_delivery_bs||0)}</div></div>`;}
-        async function renderizarMenu(){const grid=document.getElementById('menuGrid'),categoryList=document.getElementById('categoryList');if(!menuItems.length){grid.innerHTML='<div class="empty-state"><i class="fas fa-utensils"></i><p>No hay platillos disponibles</p></div>';return;}const categoriasUnicas=[...new Set(menuItems.map(item=>item.categoria).filter(Boolean))];let categoriasHtml='<li class="category-item active" data-categoria="todos"><i class="fas fa-utensils"></i> Todos</li>';categoriasUnicas.forEach(cat=>{categoriasHtml+=`<li class="category-item" data-categoria="${cat}"><i class="fas fa-${iconosCategorias[cat.toLowerCase()]||'utensils'}"></i> ${cat}</li>`;});categoryList.innerHTML=categoriasHtml;document.querySelectorAll('.category-item').forEach(item=>{item.addEventListener('click',function(){document.querySelectorAll('.category-item').forEach(c=>c.classList.remove('active'));this.classList.add('active');filtrarMenuPorCategoria(this.dataset.categoria);});});filtrarMenuPorCategoria('todos');}
+        async function renderizarMenu(){const grid=document.getElementById('menuGrid'),categoryList=document.getElementById('categoryList');if(!menuItems.length){grid.innerHTML='<div class="empty-state"><i class="fas fa-utensils"></i><p>No hay platillos disponibles</p></div>';return;}const categoriasUnicas=[...new Set(menuItems.map(item=>item.categoria).filter(Boolean))];let categoriasHtml='<li class="category-item active" data-categoria="todos"><i class="fas fa-utensils"></i> Todos</li>';categoriasUnicas.forEach(cat=>{categoriasHtml+=`<li class="category-item" data-categoria="${cat}"><i class="fas fa-${cat==='entradas'?'fa-leaf':cat==='sushi'?'fa-fish':cat==='rolls'?'fa-egg':cat==='tragos'?'fa-wine-glass-alt':cat==='pokes'?'fa-bowl-food':cat==='ensaladas'?'fa-carrot':cat==='china'?'fa-dragon':cat==='japonesa'?'fa-sun':cat==='ofertas'?'fa-fire':'fa-utensils'}"></i> ${cat}</li>`;});categoryList.innerHTML=categoriasHtml;document.querySelectorAll('.category-item').forEach(item=>{item.addEventListener('click',function(){document.querySelectorAll('.category-item').forEach(c=>c.classList.remove('active'));this.classList.add('active');filtrarMenuPorCategoria(this.dataset.categoria);});});filtrarMenuPorCategoria('todos');}
         function filtrarMenuPorCategoria(categoria){let itemsFiltrados=[];if(categoria==='todos')itemsFiltrados=menuItems;else itemsFiltrados=menuItems.filter(item=>item.categoria===categoria);renderizarMenuItems(itemsFiltrados);}
         async function renderizarMenuItems(items){const grid=document.getElementById('menuGrid');const itemsConStock=await Promise.all(items.map(async item=>{const stock=await calcularStockPlatillo(item);let stockClass='available',stockText='Disponible';if(stock<=0){stockClass='sold-out';stockText='Agotado';}else if(stock<5){stockClass='low';stockText=`Últimas ${stock} unidades`;}else stockText=`${stock} disponibles`;return{...item,stock,stockClass,stockText};}));grid.innerHTML=itemsConStock.map(i=>`<div class="menu-card"><div class="menu-card-image" style="background-image:url('${i.imagen||'https://via.placeholder.com/300x150?text=Saki+Sushi'}')"></div><div class="menu-card-content"><div class="menu-card-header"><span class="menu-card-title">${i.nombre}</span><span class="menu-card-price">${formatBs(usdToBs(i.precio||0))}</span></div><p style="font-size:.85rem;color:rgba(255,255,255,.6);margin-bottom:.5rem">${i.descripcion||''}</p><div class="menu-card-stock ${i.stockClass}"><i class="fas fa-box"></i> ${i.stockText}</div></div></div>`).join('');}
         function renderizarPedidos(){const pMesa=pedidos.filter(p=>p.tipo==='mesa'&&p.estado==='pendiente'),pDel=pedidos.filter(p=>p.tipo==='delivery'&&p.estado==='pendiente'),pRes=pedidos.filter(p=>p.tipo==='reserva'&&p.estado==='pendiente'),cMesa=pedidos.filter(p=>p.tipo==='mesa'&&p.estado==='en_cocina'),cDel=pedidos.filter(p=>p.tipo==='delivery'&&p.estado==='en_camino'),rPen=pedidos.filter(p=>p.tipo==='reserva'&&p.estado==='reserva_pendiente'),rAte=pedidos.filter(p=>p.tipo==='reserva'&&p.estado==='reserva_atendida');document.getElementById('mesaPendientesCount').textContent=pMesa.length;document.getElementById('deliveryPendientesCount').textContent=pDel.length;document.getElementById('reservaPendientesCount').textContent=pRes.length;document.getElementById('totalPendientesBadge').textContent=pMesa.length+pDel.length+pRes.length;document.getElementById('mesaCocinaCount').textContent=cMesa.length;document.getElementById('deliveryCaminoCount').textContent=cDel.length;document.getElementById('reservaProcesoCount').textContent=rPen.length+rAte.length;document.getElementById('totalPreparacionBadge').textContent=cMesa.length+cDel.length+rPen.length+rAte.length;document.getElementById('mesaPendientesContainer').innerHTML=pMesa.length?pMesa.map(p=>crearTarjetaPedidoCompacta(p,'pendiente')).join(''):'<div class="empty-state"><i class="fas fa-store"></i><p>No hay pedidos en mesa</p></div>';document.getElementById('deliveryPendientesContainer').innerHTML=pDel.length?pDel.map(p=>crearTarjetaPedidoCompacta(p,'pendiente')).join(''):'<div class="empty-state"><i class="fas fa-motorcycle"></i><p>No hay pedidos delivery</p></div>';document.getElementById('reservaPendientesContainer').innerHTML=pRes.length?pRes.map(p=>crearTarjetaPedidoCompacta(p,'pendiente')).join(''):'<div class="empty-state"><i class="fas fa-calendar-check"></i><p>No hay reservas</p></div>';document.getElementById('mesaCocinaContainer').innerHTML=cMesa.length?cMesa.map(p=>crearTarjetaPedidoCompacta(p,'preparacion')).join(''):'<div class="empty-state"><i class="fas fa-fire"></i><p>No hay pedidos en cocina</p></div>';document.getElementById('deliveryCaminoContainer').innerHTML=cDel.length?cDel.map(p=>crearTarjetaPedidoCompacta(p,'preparacion')).join(''):'<div class="empty-state"><i class="fas fa-truck"></i><p>No hay deliveries en camino</p></div>';document.getElementById('reservaProcesoContainer').innerHTML=(rPen.length+rAte.length)?[...rPen,...rAte].map(p=>crearTarjetaPedidoCompacta(p,'preparacion')).join(''):'<div class="empty-state"><i class="fas fa-clock"></i><p>No hay reservas pendientes</p></div>';}
@@ -360,40 +389,6 @@ tasaEfectiva=configGlobal.tasa_efectiva||400;await cargarPedidos();await cargarV
         function formatUSD(m){return new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',minimumFractionDigits:2}).format(m);}
         function usdToBs(u){return u*(tasaEfectiva||400);}
         function crearDetallePedidoHTML(pedido){let metodos='';if(pedido.pagos_mixtos){metodos='<div class="payment-methods">'+pedido.pagos_mixtos.map(p=>`<span class="payment-tag"><i class="fas fa-${p.metodo==='pago_movil'?'mobile-alt':p.metodo==='punto_venta'?'credit-card':'money-bill-wave'}"></i> ${p.metodo==='efectivo_bs'?'Bs':p.metodo==='efectivo_usd'?'$':p.metodo==='pago_movil'?'📱':'💳'} ${formatBs(p.monto)}</span>`).join('')+'</div>';}let tags='';if(pedido.condonado>0)tags+=`<span class="condonar-tag"><i class="fas fa-gift"></i> Condonado: ${formatBs(pedido.condonado)}</span>`;if(pedido.a_favor_caja>0)tags+=`<span class="favor-tag"><i class="fas fa-piggy-bank"></i> A favor: ${formatBs(pedido.a_favor_caja)}</span>`;return`<div class="detail-item"><div class="detail-row"><span class="detail-label">Cliente:</span><span class="detail-value">${pedido.cliente_nombre||'N/A'}</span></div><div class="detail-row"><span class="detail-label">Tipo:</span><span class="detail-value">${pedido.tipo}</span></div>${pedido.tipo==='mesa'?`<div class="detail-row"><span class="detail-label">Mesa:</span><span class="detail-value">${pedido.mesa}</span></div>`:''}${pedido.tipo==='delivery'?`<div class="detail-row"><span class="detail-label">Dirección:</span><span class="detail-value">${pedido.direccion}</span></div><div class="detail-row"><span class="detail-label">Teléfono:</span><span class="detail-value">${pedido.telefono}</span></div>`:''}${pedido.referencia?`<div class="detail-row"><span class="detail-label">Ref:</span><span class="detail-value">${pedido.referencia}</span></div>`:''}<div class="detail-row"><span class="detail-label">Items:</span></div>${(pedido.items||[]).map(i=>`<div class="detail-row"><span>${i.cantidad||1}x ${i.nombre}</span><span>${formatBs(usdToBs(i.precioUnitarioUSD*(i.cantidad||1)))}</span></div>`).join('')}${metodos?`<div class="detail-row"><span class="detail-label">Pagos:</span></div>${metodos}`:''}${tags?`<div class="detail-row">${tags}</div>`:''}<div class="detail-row" style="font-weight:700"><span>TOTAL</span><span>${formatBs(usdToBs(pedido.total||0))}</span></div></div>`;}
-        // ==================== VERIFICAR USUARIOS ====================
-async function verificarUsuarios() {
-    try {
-        const { data, error } = await window.supabaseClient
-            .from('usuarios')
-            .select('count')
-            .limit(1);
-            
-        if (error) throw error;
-        
-        if (!data || data.length === 0) {
-            console.log('📦 No hay usuarios, creando usuarios por defecto...');
-            
-            const usuariosPorDefecto = [
-                { id: 'user_' + Date.now() + '_1', nombre: 'Cajero Principal', username: 'cajero1', password: '123456', rol: 'cajero', activo: true },
-                { id: 'user_' + Date.now() + '_2', nombre: 'Cajero Secundario', username: 'cajero2', password: '123456', rol: 'cajero', activo: true }
-            ];
-            
-            const { error: insertError } = await window.supabaseClient
-                .from('usuarios')
-                .insert(usuariosPorDefecto);
-                
-            if (insertError) throw insertError;
-            
-            console.log('✅ Usuarios creados correctamente');
-            mostrarToast('Usuarios creados: cajero1 / 123456', 'success');
-        } else {
-            console.log('✅ Ya existen usuarios en la base de datos');
-        }
-    } catch (error) {
-        console.error('Error verificando usuarios:', error);
-        mostrarToast('Error al verificar usuarios: ' + error.message, 'error');
-    }
-}
     </script>
 </body>
 </html>
