@@ -210,6 +210,48 @@
 </head>
 <body>
     <audio id="alarmaSonido" loop preload="auto"><source src="https://iqwwoihiiyrtypyqzhgy.supabase.co/storage/v1/object/public/alarma/Alarm%20Clock%20Effect%20Sound%20HD%20-%20Despertador%20Efecto%20D'%20Sonido.mp3" type="audio/mpeg"></audio>
+    
+    <!-- PRIMERO definimos la función global -->
+    <script>
+        // Definir función global ANTES de que el HTML la use
+        window.hacerLogin = async function() {
+            console.log('Función hacerLogin ejecutándose');
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            if (!username || !password) {
+                window.mostrarToast('Ingresa usuario y contraseña', 'error');
+                return;
+            }
+            
+            try {
+                const { data, error } = await window.supabaseClient
+                    .from('usuarios')
+                    .select('*')
+                    .eq('username', username)
+                    .eq('password', password)
+                    .eq('activo', true)
+                    .maybeSingle();
+                    
+                if (error) throw error;
+                
+                if (!data) {
+                    window.mostrarToast('Credenciales inválidas', 'error');
+                    return;
+                }
+                
+                currentUser = data;
+                sessionStorage.setItem('cajero_user', JSON.stringify(data));
+                
+                await window.cargarDatosIniciales();
+                window.mostrarPanel();
+            } catch (error) {
+                console.error('Error en login:', error);
+                window.mostrarToast('Error al conectar: ' + error.message, 'error');
+            }
+        };
+    </script>
+
     <div class="login-container" id="loginContainer">
         <div class="login-box">
             <h2><i class="fas fa-cash-register"></i> Cajero Saki Sushi</h2>
@@ -332,41 +374,19 @@
         let intervaloVerificacion = null;
         let ultimaActualizacion = Date.now();
 
-        // ==================== FUNCIÓN HACER LOGIN ====================
-        window.hacerLogin = async function() {
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-            
-            if (!username || !password) {
-                window.mostrarToast('Ingresa usuario y contraseña', 'error');
-                return;
+        // ==================== FUNCIÓN MOSTRAR TOAST (definida antes de usarse) ====================
+        window.mostrarToast = function(mensaje, tipo = 'success') {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastText').textContent = mensaje;
+            toast.className = 'toast show';
+            if (tipo === 'error') {
+                toast.querySelector('i').style.color = 'var(--danger)';
+                toast.style.borderLeftColor = 'var(--danger)';
+            } else {
+                toast.querySelector('i').style.color = 'var(--success)';
+                toast.style.borderLeftColor = 'var(--success)';
             }
-            
-            try {
-                const { data, error } = await window.supabaseClient
-                    .from('usuarios')
-                    .select('*')
-                    .eq('username', username)
-                    .eq('password', password)
-                    .eq('activo', true)
-                    .maybeSingle();
-                    
-                if (error) throw error;
-                
-                if (!data) {
-                    window.mostrarToast('Credenciales inválidas', 'error');
-                    return;
-                }
-                
-                currentUser = data;
-                sessionStorage.setItem('cajero_user', JSON.stringify(data));
-                
-                await window.cargarDatosIniciales();
-                window.mostrarPanel();
-            } catch (error) {
-                console.error('Error en login:', error);
-                window.mostrarToast('Error al conectar: ' + error.message, 'error');
-            }
+            setTimeout(() => toast.classList.remove('show'), 3000);
         };
 
         // ==================== VERIFICAR USUARIOS ====================
@@ -658,20 +678,6 @@
             } catch (error) {
                 console.error('Error cargando mesas:', error);
             }
-        };
-
-        window.mostrarToast = function(mensaje, tipo = 'success') {
-            const toast = document.getElementById('toast');
-            document.getElementById('toastText').textContent = mensaje;
-            toast.className = 'toast show';
-            if (tipo === 'error') {
-                toast.querySelector('i').style.color = 'var(--danger)';
-                toast.style.borderLeftColor = 'var(--danger)';
-            } else {
-                toast.querySelector('i').style.color = 'var(--success)';
-                toast.style.borderLeftColor = 'var(--success)';
-            }
-            setTimeout(() => toast.classList.remove('show'), 3000);
         };
 
         window.cerrarModal = function(modalId) {
