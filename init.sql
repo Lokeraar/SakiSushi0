@@ -609,3 +609,47 @@ CREATE POLICY "Imagenes platillos select público" ON storage.objects
     FOR SELECT TO anon USING (bucket_id = 'imagenes-platillos');
 
 SELECT 'Base de datos inicializada correctamente' AS mensaje;
+
+-- init.sql (Modificaciones para Deliverys)
+
+-- 1. Crear tabla para motorizados (deliverys)
+CREATE TABLE IF NOT EXISTS public.deliverys(
+    id SERIAL PRIMARY KEY,
+    nombre TEXT NOT NULL,
+    activo BOOLEAN DEFAULT true,
+    creado_en TIMESTAMP DEFAULT NOW()
+);
+
+-- 2. Crear tabla para registrar las entregas de delivery (acumulado diario)
+CREATE TABLE IF NOT EXISTS public.entregas_delivery(
+    id SERIAL PRIMARY KEY,
+    pedido_id TEXT REFERENCES public.pedidos(id) ON DELETE CASCADE,
+    delivery_id INTEGER REFERENCES public.deliverys(id) ON DELETE CASCADE,
+    monto_bs NUMERIC NOT NULL,
+    fecha_entrega TIMESTAMP DEFAULT NOW()
+);
+CREATE INDEX IF NOT EXISTS idx_entregas_delivery_fecha ON public.entregas_delivery(fecha_entrega);
+CREATE INDEX IF NOT EXISTS idx_entregas_delivery_delivery ON public.entregas_delivery(delivery_id);
+
+-- 3. Modificar tabla ventas para guardar el subtotal de platillos (sin delivery)
+-- Nota: Si la tabla ya existe, agregamos la columna. Si no, se creará con el insert.
+ALTER TABLE public.ventas ADD COLUMN IF NOT EXISTS subtotal_platillos NUMERIC DEFAULT 0;
+
+-- 4. Insertar algunos motorizados de ejemplo (opcional)
+INSERT INTO public.deliverys (nombre) VALUES
+    ('Carlos Moto'),
+    ('Luis Pérez'),
+    ('Ana Rodríguez')
+ON CONFLICT DO NOTHING;
+
+-- 5. Políticas de seguridad (opcional, si usas RLS)
+ALTER TABLE public.deliverys ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.entregas_delivery ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Deliverys acceso público" ON public.deliverys
+    FOR ALL USING (true);
+
+CREATE POLICY "Entregas delivery acceso público" ON public.entregas_delivery
+    FOR ALL USING (true);
+
+SELECT '✅ Tablas de deliverys creadas/actualizadas correctamente' AS mensaje;
