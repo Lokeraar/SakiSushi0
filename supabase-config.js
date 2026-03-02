@@ -1,4 +1,4 @@
-// supabase-config.js
+// supabase-config.js - VERSIÓN CORREGIDA
 window.SUPABASE_URL = 'https://iqwwoihiiyrtypyqzhgy.supabase.co';
 window.SUPABASE_ANON_KEY = 'sb_publishable_m4WcF4gmkj1olAj95HMLlA_4yKqPFXm';
 
@@ -110,20 +110,16 @@ window.eliminarImagenPlatillo = async function(urlImagen) {
     }
 };
 
-// Subir comprobante con progreso - VERSIÓN CORREGIDA
+// Subir comprobante con progreso
 window.subirComprobante = async function(file, tipo, onProgress) {
     try {
-        if (!file) {
-            throw new Error('No se proporcionó archivo');
-        }
+        if (!file) throw new Error('No se proporcionó archivo');
 
-        // Validar tipo de archivo
         const tipoValido = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp', 'image/gif'];
         if (!tipoValido.includes(file.type)) {
             throw new Error('Tipo de archivo no válido. Solo imágenes JPG, PNG, WEBP o GIF');
         }
 
-        // Validar tamaño (5MB máximo)
         const maxSize = 5 * 1024 * 1024;
         if (file.size > maxSize) {
             throw new Error('El archivo es demasiado grande. Máximo 5MB');
@@ -133,12 +129,6 @@ window.subirComprobante = async function(file, tipo, onProgress) {
         const nombreArchivo = `${timestamp}_${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
         const ruta = `${tipo}/${nombreArchivo}`;
 
-        console.log('Subiendo archivo a:', ruta);
-        console.log('Bucket:', 'comprobantes');
-        console.log('Tamaño:', file.size, 'bytes');
-        console.log('Tipo:', file.type);
-
-        // Usar el cliente de Supabase directamente
         const { data, error } = await window.supabaseClient.storage
             .from('comprobantes')
             .upload(ruta, file, {
@@ -147,21 +137,12 @@ window.subirComprobante = async function(file, tipo, onProgress) {
                 contentType: file.type
             });
 
-        if (error) {
-            console.error('Error de Supabase:', error);
-            throw new Error(error.message || 'Error al subir el archivo');
-        }
+        if (error) throw new Error(error.message || 'Error al subir el archivo');
 
-        console.log('Archivo subido exitosamente:', data);
-
-        // Obtener URL pública
         const { data: urlData } = window.supabaseClient.storage
             .from('comprobantes')
             .getPublicUrl(ruta);
 
-        console.log('URL pública:', urlData.publicUrl);
-
-        // Simular progreso
         if (onProgress) {
             onProgress({ loaded: file.size, total: file.size, percent: 100 });
         }
@@ -169,21 +150,18 @@ window.subirComprobante = async function(file, tipo, onProgress) {
         return { success: true, url: urlData.publicUrl };
     } catch (error) {
         console.error('Error en subirComprobante:', error);
-        return { 
-            success: false, 
-            error: error.message || 'Error desconocido al subir el comprobante'
-        };
+        return { success: false, error: error.message || 'Error desconocido al subir el comprobante' };
     }
 };
 
-// Formateadores
+// ===== FORMATADORES CORREGIDOS (SIN PUNTO) =====
 window.formatBs = function(monto) {
     return new Intl.NumberFormat('es-VE', {
         style: 'currency',
         currency: 'VES',
         minimumFractionDigits: 2,
         maximumFractionDigits: 2
-    }).format(monto).replace('VES', 'Bs.');
+    }).format(monto).replace('VES', 'Bs'); // ← CORREGIDO: sin punto
 };
 
 window.formatUSD = function(monto) {
@@ -291,5 +269,5 @@ window.categoriasMenu = {
     "Combo Ejecutivo": []
 };
 
-console.log('✅ supabase-config.js cargado correctamente');
+console.log('✅ supabase-config.js cargado correctamente (versión sin punto en Bs)');
 console.log('🔑 Usando URL:', window.SUPABASE_URL);
