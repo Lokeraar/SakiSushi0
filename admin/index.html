@@ -11,9 +11,157 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- FUNCIONES BÁSICAS Y VARIABLES GLOBALES -->
+    <script>
+        // ==================== VARIABLES GLOBALES ====================
+        window.isAdminAuthenticated = false;
+        window.menuItems = [];
+        window.inventarioItems = [];
+        window.usuarios = [];
+        window.qrCodes = [];
+        window.charts = {};
+        window.platilloEditandoId = null;
+        window.mesoneros = [];
+        window.deliverys = [];
+        window.deliveryEditandoId = null;
+        window.deliveryParaPago = null;
+        window.propinas = [];
+        window.pedidos = [];
+
+        // ==================== FUNCIÓN DE TOAST CON FALLBACK ====================
+        window.mostrarToast = function(mensaje, tipo = 'info') {
+            console.log('Toast:', mensaje, tipo);
+            try {
+                const toast = document.getElementById('toast');
+                if (toast) {
+                    toast.textContent = mensaje;
+                    toast.className = `toast show ${tipo}`;
+                    setTimeout(() => toast.classList.remove('show'), 3000);
+                } else {
+                    alert(mensaje);
+                }
+            } catch (e) {
+                alert(mensaje);
+            }
+        };
+
+        // ==================== FUNCIONES DE UTILIDAD ====================
+        window.formatBs = function(m) {
+            try {
+                return new Intl.NumberFormat('es-VE', { style: 'currency', currency: 'VES', minimumFractionDigits: 2 }).format(m).replace('VES', 'Bs.');
+            } catch (e) {
+                return 'Bs. ' + (m || 0).toFixed(2);
+            }
+        };
+
+        window.formatUSD = function(m) {
+            try {
+                return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 }).format(m);
+            } catch (e) {
+                return '$ ' + (m || 0).toFixed(2);
+            }
+        };
+
+        window.usdToBs = function(u) {
+            return u * (window.configGlobal?.tasa_efectiva || 400);
+        };
+
+        window.generarId = function(prefix = '') {
+            return `${prefix}${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+        };
+
+        window.cerrarModal = function(modalId) {
+            const modal = document.getElementById(modalId);
+            if (modal) modal.classList.remove('active');
+        };
+
+        window.mostrarLogin = function() {
+            document.getElementById('loginContainer').style.display = 'flex';
+            document.getElementById('panelContainer').classList.remove('active');
+        };
+    </script>
+    
+    <!-- FUNCIÓN HACER LOGIN (DEFINIDA DESPUÉS DE FUNCIONES BÁSICAS) -->
+    <script>
+        window.hacerLogin = async function() {
+            console.log('🔑 Intentando login admin...');
+            
+            const password = document.getElementById('adminPassword').value;
+            
+            if (!password) {
+                window.mostrarToast('Ingresa la contraseña', 'error');
+                return;
+            }
+            
+            try {
+                if (!window.supabaseClient) {
+                    console.error('Cliente Supabase no inicializado');
+                    window.mostrarToast('Error: Cliente Supabase no inicializado', 'error');
+                    return;
+                }
+                
+                const { data, error } = await window.supabaseClient
+                    .from('config')
+                    .select('admin_password')
+                    .eq('id', 1)
+                    .maybeSingle();
+                    
+                if (error) {
+                    console.error('Error en consulta:', error);
+                    window.mostrarToast('Error al conectar con la base de datos', 'error');
+                    return;
+                }
+                
+                if (!data) {
+                    window.mostrarToast('No se encontró configuración en la base de datos', 'error');
+                    return;
+                }
+                
+                if (data.admin_password !== password) {
+                    window.mostrarToast('Contraseña incorrecta', 'error');
+                    return;
+                }
+                
+                window.isAdminAuthenticated = true;
+                sessionStorage.setItem('admin_authenticated', 'true');
+                
+                document.getElementById('loginContainer').style.display = 'none';
+                document.getElementById('panelContainer').classList.add('active');
+                
+                window.mostrarToast('👑 Bienvenido Administrador', 'success');
+                
+                // Cargar datos después del login
+                setTimeout(async () => {
+                    try {
+                        await window.cargarConfiguracionInicial();
+                        await window.cargarMenu();
+                        await window.cargarInventario();
+                        await window.cargarUsuarios();
+                        await window.cargarQRs();
+                        await window.cargarReportes();
+                        await window.cargarPedidosRecientes();
+                        await window.cargarMesoneros();
+                        await window.cargarDeliverys();
+                        await window.cargarPropinas();
+                        window.setupEventListeners();
+                        window.setupRealtimeSubscriptions();
+                    } catch (e) {
+                        console.error('Error cargando datos:', e);
+                        window.mostrarToast('Error cargando datos: ' + e.message, 'error');
+                    }
+                }, 500);
+                
+            } catch (error) {
+                console.error('Error en login:', error);
+                window.mostrarToast('Error al iniciar sesión: ' + error.message, 'error');
+            }
+        };
+    </script>
+    
     <style>
         *{margin:0;padding:0;box-sizing:border-box}
-        :root{--primary:#D32F2F;--secondary:#212121;--accent:#FF9800;--light-bg:#F5F5F5;--dark-bg:#121212;--success:#388E3C;--info:#1976D2;--warning:#F57C00;--danger:#ef4444;--delivery:#00ACC1;--text-light:#ffffff;--text-dark:#333333;--gray-100:#f8f9fa;--gray-200:#e9ecef;--gray-300:#dee2e6;--gray-400:#ced4da;--gray-500:#adb5bd;--gray-600:#6c757d;--gray-700:#495057;--gray-800:#343a40;--gray-900:#212529}
+        :root{--primary:#D32F2F;--secondary:#212121;--accent:#FF9800;--light-bg:#F5F5F5;--dark-bg:#121212;--success:#388E3C;--info:#1976D2;--warning:#F57C00;--danger:#ef4444;--delivery:#00ACC1;--propina:#9C27B0;--text-light:#ffffff;--text-dark:#333333;--gray-100:#f8f9fa;--gray-200:#e9ecef;--gray-300:#dee2e6;--gray-400:#ced4da;--gray-500:#adb5bd;--gray-600:#6c757d;--gray-700:#495057;--gray-800:#343a40;--gray-900:#212529}
         body{font-family:'Roboto',sans-serif;background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%);color:#fff;min-height:100vh}
         h1,h2,h3,h4,h5,h6{font-family:'Montserrat',sans-serif}
         .login-container{display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,var(--primary),var(--secondary))}
@@ -163,7 +311,6 @@
         .image-preview small{color:rgba(255,255,255,.7)}
         .wifi-fields{margin-top:20px;padding:20px;background:rgba(0,0,0,.2);border-radius:8px;border:1px solid rgba(255,255,255,.1)}
         .wifi-fields h4{color:var(--accent);margin-bottom:15px}
-        /* Estilos para la sección Deliverys */
         .deliverys-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1.5rem}
         .delivery-card{background:rgba(0,172,193,.1);border-radius:8px;padding:1rem;box-shadow:0 2px 8px rgba(0,0,0,.1);backdrop-filter:blur(5px);border:1px solid var(--delivery)}
         .delivery-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem}
@@ -174,193 +321,1109 @@
         .delivery-acumulado{background:rgba(0,0,0,.3);padding:.75rem;border-radius:6px;margin:.5rem 0;display:flex;justify-content:space-between;align-items:center}
         .delivery-monto{font-weight:700;color:var(--accent);font-size:1.2rem}
         .delivery-actions{display:flex;gap:.5rem;margin-top:.5rem}
+        .propinas-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:2rem}
+        .propina-card{background:rgba(156,39,176,.1);border-radius:8px;padding:1.5rem;text-align:center;border:1px solid var(--propina)}
+        .propina-card .stat-value{font-size:2rem;font-weight:700;color:var(--propina)}
+        .propina-card .stat-label{color:rgba(255,255,255,.7);margin-top:.5rem}
     </style>
 </head>
 <body>
     <div class="login-container" id="loginContainer">
-        <div class="login-box"><h2><i class="fas fa-cog"></i> Admin Saki Sushi</h2><form class="login-form" id="loginForm"><input type="password" id="adminPassword" placeholder="Contraseña de Administrador" required autocomplete="current-password"><button type="submit">Ingresar</button></form><div class="recovery-link"><a href="#" id="recoveryLink">¿Olvidaste la contraseña?</a></div></div>
+        <div class="login-box">
+            <h2><i class="fas fa-cog"></i> Admin Saki Sushi</h2>
+            <form class="login-form" id="loginForm" onsubmit="event.preventDefault(); window.hacerLogin()">
+                <input type="password" id="adminPassword" placeholder="Contraseña de Administrador" required autocomplete="current-password">
+                <button type="submit">Ingresar</button>
+            </form>
+            <div class="recovery-link"><a href="#" id="recoveryLink">¿Olvidaste la contraseña?</a></div>
+        </div>
     </div>
+    
     <div class="panel-container" id="panelContainer">
         <header class="header">
             <div class="header-left"><h2><i class="fas fa-crown"></i> Administración Saki Sushi</h2><button class="save-button" id="saveAllButton"><i class="fas fa-save"></i> Guardar Todo</button></div>
             <div class="header-right"><a href="../Cliente/index.html" target="_blank" class="nav-button"><i class="fas fa-utensils"></i> Cliente</a><a href="../Cajero/index.html" target="_blank" class="nav-button"><i class="fas fa-cash-register"></i> Cajero</a><button class="logout-button" id="logoutButton"><i class="fas fa-sign-out-alt"></i> Salir</button></div>
         </header>
+        
         <div class="tasa-bar" id="tasaBar">
             <div class="tasa-item"><label>Tasa Base:</label><input type="number" step="0.01" id="tasaBaseInput" value="400.00"></div>
             <div class="tasa-item"><label>Aumento Diario %:</label><input type="number" step="0.1" id="aumentoDiarioInput" value="0"></div>
             <div class="tasa-item"><label>Aumento Activo:</label><label class="toggle-switch"><input type="checkbox" id="aumentoActivoToggle"><span class="toggle-slider"></span></label></div>
-            <div class="tasa-item"><button class="btn-small danger" id="detenerAumentoBtn">Detener por Completo</button><button class="btn-small success" id="activarAumentoBtn">Activar por Completo</button></div>
+            <div class="tasa-item"><button class="btn-small danger" id="detenerAumentoBtn">Detener</button><button class="btn-small success" id="activarAumentoBtn">Activar</button></div>
             <div class="tasa-item"><label>Tasa Efectiva:</label><span class="tasa-value" id="tasaEfectivaDisplay">400.00</span></div>
             <div class="tasa-item"><label>Aumento Acumulado:</label><span class="tasa-value" id="aumentoAcumuladoDisplay">0%</span></div>
         </div>
+        
         <div class="tabs">
             <div class="tab active" data-tab="dashboard">Dashboard</div>
             <div class="tab" data-tab="menu">Menú y Precios</div>
             <div class="tab" data-tab="inventario">Inventario</div>
             <div class="tab" data-tab="usuarios">Usuarios</div>
             <div class="tab" data-tab="deliverys">Deliverys</div>
+            <div class="tab" data-tab="propinas">Propinas</div>
             <div class="tab" data-tab="configuracion">Configuración</div>
             <div class="tab" data-tab="qr">Códigos QR</div>
             <div class="tab" data-tab="reportes">Reportes</div>
         </div>
+        
         <div class="content">
+            <!-- DASHBOARD -->
             <div class="tab-pane active" id="dashboardPane">
                 <div class="dashboard-grid">
                     <div class="dashboard-card"><div class="card-title">Ventas Hoy</div><div class="card-value" id="ventasHoy">$0.00</div></div>
                     <div class="dashboard-card"><div class="card-title">Tasa Efectiva</div><div class="card-value" id="tasaEfectivaCard">Bs. 400.00</div></div>
                     <div class="dashboard-card"><div class="card-title">Productos Activos</div><div class="card-value" id="productosActivos">0</div></div>
                     <div class="dashboard-card"><div class="card-title">Alertas Stock</div><div class="card-value" id="alertasStock">0</div></div>
+                    <div class="dashboard-card"><div class="card-title">Propinas Hoy</div><div class="card-value" id="propinasHoyDashboard">Bs. 0</div></div>
+                    <div class="dashboard-card"><div class="card-title">Deliverys Hoy</div><div class="card-value" id="deliverysHoyDashboard">Bs. 0</div></div>
                 </div>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem"><div class="alert-list"><h3 style="margin-bottom:1rem">Pedidos Recientes</h3><div id="pedidosRecientes"></div></div><div class="alert-list"><h3 style="margin-bottom:1rem">Stock Crítico</h3><div id="stockCritico"></div></div></div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem">
+                    <div class="alert-list"><h3>Pedidos Recientes</h3><div id="pedidosRecientes"></div></div>
+                    <div class="alert-list"><h3>Stock Crítico</h3><div id="stockCritico"></div></div>
+                </div>
             </div>
-            <div class="tab-pane" id="menuPane"><button class="btn-primary" onclick="abrirModalNuevoPlatillo()" style="margin-bottom:1rem"><i class="fas fa-plus"></i> Nuevo Platillo</button><div class="menu-grid" id="menuGrid"></div></div>
-            <div class="tab-pane" id="inventarioPane"><button class="btn-primary" onclick="abrirModalNuevoIngrediente()" style="margin-bottom:1rem"><i class="fas fa-plus"></i> Nuevo Ingrediente</button><div class="inventario-grid" id="inventarioGrid"></div></div>
-            <div class="tab-pane" id="usuariosPane"><button class="btn-primary" onclick="abrirModalNuevoUsuario()" style="margin-bottom:1rem"><i class="fas fa-plus"></i> Nuevo Cajero</button><div class="usuarios-grid" id="usuariosGrid"></div></div>
-            <!-- Nueva pestaña Deliverys -->
+            
+            <!-- MENÚ -->
+            <div class="tab-pane" id="menuPane">
+                <button class="btn-primary" onclick="window.abrirModalNuevoPlatillo()" style="margin-bottom:1rem"><i class="fas fa-plus"></i> Nuevo Platillo</button>
+                <div class="menu-grid" id="menuGrid"></div>
+            </div>
+            
+            <!-- INVENTARIO -->
+            <div class="tab-pane" id="inventarioPane">
+                <button class="btn-primary" onclick="window.abrirModalNuevoIngrediente()" style="margin-bottom:1rem"><i class="fas fa-plus"></i> Nuevo Ingrediente</button>
+                <div class="inventario-grid" id="inventarioGrid"></div>
+            </div>
+            
+            <!-- USUARIOS -->
+            <div class="tab-pane" id="usuariosPane">
+                <button class="btn-primary" onclick="window.abrirModalNuevoUsuario()" style="margin-bottom:1rem"><i class="fas fa-plus"></i> Nuevo Cajero</button>
+                <div class="usuarios-grid" id="usuariosGrid"></div>
+            </div>
+            
+            <!-- DELIVERYS -->
             <div class="tab-pane" id="deliverysPane">
                 <h2 class="section-title" style="margin-bottom:20px"><i class="fas fa-motorcycle" style="color:var(--delivery)"></i> Gestión de Motorizados</h2>
                 <div style="margin-bottom:2rem">
                     <div style="display:flex;gap:10px;max-width:500px">
                         <input type="text" id="nuevoDelivery" placeholder="Nombre del motorizado" style="flex:1;padding:10px;border:2px solid rgba(255,255,255,.2);border-radius:8px;background:rgba(0,0,0,.5);color:#fff">
-                        <button class="btn-primary" onclick="agregarDelivery()" style="background:linear-gradient(135deg,var(--delivery),#00838F)"><i class="fas fa-plus"></i> Agregar</button>
+                        <button class="btn-primary" onclick="window.agregarDelivery()" style="background:linear-gradient(135deg,var(--delivery),#00838F)"><i class="fas fa-plus"></i> Agregar</button>
                     </div>
                 </div>
                 <div class="deliverys-grid" id="deliverysGrid"></div>
             </div>
-            <div class="tab-pane" id="configuracionPane">
-                <div class="alert-list" style="max-width:500px"><h3 style="margin-bottom:1rem">Cambiar Contraseña</h3><div class="form-group"><label>Contraseña Actual</label><input type="password" id="currentPassword"></div><div class="form-group"><label>Nueva Contraseña</label><input type="password" id="newPassword"></div><div class="form-group"><label>Confirmar Nueva Contraseña</label><input type="password" id="confirmPassword"></div><button class="btn-primary" onclick="cambiarPassword()">Cambiar Contraseña</button></div>
-                <div class="alert-list" style="max-width:500px;margin-top:2rem"><h3 style="margin-bottom:1rem">Correo de Recuperación</h3><div class="form-group"><label>Correo Electrónico</label><input type="email" id="recoveryEmail" value="admin@sakisushi.com"></div><button class="btn-primary" onclick="guardarRecoveryEmail()">Guardar</button></div>
-                <div class="alert-list" style="max-width:500px;margin-top:2rem"><h3 style="margin-bottom:1rem">Configuración de Alertas</h3><div class="form-group"><label>Umbral de Stock Crítico (unidades mínimas)</label><input type="number" id="alertaStockMinimo" value="5" min="1"><small style="color:rgba(255,255,255,.7)">Cuando un ingrediente baje de esta cantidad, aparecerá en alertas</small></div><button class="btn-primary" onclick="guardarUmbralStock()">Guardar Umbral</button></div>
-                <div class="alert-list" style="max-width:500px;margin-top:2rem"><h3 style="margin-bottom:1rem">Mesoneros</h3><div style="display:flex;gap:10px;margin-bottom:20px"><input type="text" id="nuevoMesonero" placeholder="Nombre del mesonero" style="flex:1;padding:10px;border:1px solid rgba(255,255,255,.2);border-radius:4px;background:rgba(0,0,0,.5);color:#fff"><button class="btn-primary" onclick="agregarMesonero()">Agregar</button></div><div id="mesonerosList"></div></div>
+            
+            <!-- PROPINAS -->
+            <div class="tab-pane" id="propinasPane">
+                <h2 class="section-title" style="margin-bottom:20px"><i class="fas fa-hand-holding-heart" style="color:var(--propina)"></i> Gestión de Propinas</h2>
+                <div class="propinas-stats">
+                    <div class="propina-card"><div class="stat-value" id="propinasTotal">Bs. 0</div><div class="stat-label">Total Propinas</div></div>
+                    <div class="propina-card"><div class="stat-value" id="propinasCantidad">0</div><div class="stat-label">Cantidad</div></div>
+                    <div class="propina-card"><div class="stat-value" id="propinasPromedio">Bs. 0</div><div class="stat-label">Promedio</div></div>
+                </div>
+                <div class="table-responsive">
+                    <h3 style="color:#fff;margin-bottom:1rem">Historial de Propinas</h3>
+                    <table class="data-table" id="propinasTable">
+                        <thead><tr><th>Fecha</th><th>Mesonero</th><th>Mesa</th><th>Método</th><th>Monto</th><th>Cajero</th></tr></thead>
+                        <tbody id="propinasTableBody"></tbody>
+                    </table>
+                </div>
+                <div style="margin-top:2rem">
+                    <h3 style="color:#fff;margin-bottom:1rem">Ranking de Mesoneros</h3>
+                    <div id="mesonerosRanking"></div>
+                </div>
             </div>
+            
+            <!-- CONFIGURACIÓN -->
+            <div class="tab-pane" id="configuracionPane">
+                <div class="alert-list" style="max-width:500px">
+                    <h3>Cambiar Contraseña</h3>
+                    <div class="form-group"><label>Contraseña Actual</label><input type="password" id="currentPassword"></div>
+                    <div class="form-group"><label>Nueva Contraseña</label><input type="password" id="newPassword"></div>
+                    <div class="form-group"><label>Confirmar Nueva Contraseña</label><input type="password" id="confirmPassword"></div>
+                    <button class="btn-primary" onclick="window.cambiarPassword()">Cambiar Contraseña</button>
+                </div>
+                <div class="alert-list" style="max-width:500px;margin-top:2rem">
+                    <h3>Correo de Recuperación</h3>
+                    <div class="form-group"><label>Correo Electrónico</label><input type="email" id="recoveryEmail" value="admin@sakisushi.com"></div>
+                    <button class="btn-primary" onclick="window.guardarRecoveryEmail()">Guardar</button>
+                </div>
+                <div class="alert-list" style="max-width:500px;margin-top:2rem">
+                    <h3>Configuración de Alertas</h3>
+                    <div class="form-group"><label>Umbral de Stock Crítico</label><input type="number" id="alertaStockMinimo" value="5" min="1"></div>
+                    <button class="btn-primary" onclick="window.guardarUmbralStock()">Guardar</button>
+                </div>
+                <div class="alert-list" style="max-width:500px;margin-top:2rem">
+                    <h3>Mesoneros</h3>
+                    <div style="display:flex;gap:10px;margin-bottom:20px">
+                        <input type="text" id="nuevoMesonero" placeholder="Nombre del mesonero" style="flex:1;padding:10px;border:2px solid rgba(255,255,255,.2);border-radius:8px;background:rgba(0,0,0,.5);color:#fff">
+                        <button class="btn-primary" onclick="window.agregarMesonero()">Agregar</button>
+                    </div>
+                    <div id="mesonerosList"></div>
+                </div>
+            </div>
+            
+            <!-- QR -->
             <div class="tab-pane" id="qrPane">
-                <div style="margin-bottom:2rem"><h3 style="color:#fff;margin-bottom:1rem">Generar Nuevo QR</h3><div style="display:flex;gap:1rem;align-items:flex-end;flex-wrap:wrap"><div class="form-group" style="flex:1"><label>Nombre de la Mesa</label><input type="text" id="qrNombreMesa" placeholder="Ej: Mesa 1" style="width:100%"></div><div class="form-group" style="flex:1"><label>ID de Router (SSID WiFi)</label><input type="text" id="qrWifiSsid" placeholder="Ej: SakiSushi_Wifi" style="width:100%"></div><div class="form-group" style="flex:1"><label>Contraseña WiFi</label><input type="text" id="qrWifiPassword" placeholder="Contraseña de la red" style="width:100%"></div><button class="btn-primary" onclick="generarQR()"><i class="fas fa-qrcode"></i> Generar QR</button></div></div>
+                <div style="margin-bottom:2rem">
+                    <h3 style="color:#fff;margin-bottom:1rem">Generar Nuevo QR</h3>
+                    <div style="display:flex;gap:1rem;align-items:flex-end;flex-wrap:wrap">
+                        <div class="form-group" style="flex:1"><label>Nombre de la Mesa</label><input type="text" id="qrNombreMesa" placeholder="Ej: Mesa 1" style="width:100%"></div>
+                        <div class="form-group" style="flex:1"><label>SSID WiFi</label><input type="text" id="qrWifiSsid" placeholder="Ej: SakiSushi_Wifi" style="width:100%"></div>
+                        <div class="form-group" style="flex:1"><label>Contraseña WiFi</label><input type="text" id="qrWifiPassword" placeholder="Contraseña" style="width:100%"></div>
+                        <button class="btn-primary" onclick="window.generarQR()"><i class="fas fa-qrcode"></i> Generar</button>
+                    </div>
+                </div>
                 <div class="qr-grid" id="qrGrid"></div>
             </div>
+            
+            <!-- REPORTES -->
             <div class="tab-pane" id="reportesPane">
-                <div style="display:flex;gap:1rem;margin-bottom:2rem;flex-wrap:wrap"><div class="form-group"><label>Desde</label><input type="date" id="reporteDesde"></div><div class="form-group"><label>Hasta</label><input type="date" id="reporteHasta"></div><div class="form-group" style="align-self:flex-end"><button class="btn-primary" onclick="cargarReportes()">Filtrar</button></div></div>
-                <div class="dashboard-grid"><div class="dashboard-card"><div class="card-title">Ventas Día</div><div class="card-value" id="ventasDia">$0.00</div></div><div class="dashboard-card"><div class="card-title">Ventas Semana</div><div class="card-value" id="ventasSemana">$0.00</div></div><div class="dashboard-card"><div class="card-title">Ticket Promedio</div><div class="card-value" id="ticketPromedio">$0.00</div></div><div class="dashboard-card"><div class="card-title">Platillo Top</div><div class="card-value" id="platilloTop">-</div></div></div>
-                <div class="charts-grid"><div class="chart-container"><h3>Ventas Últimos 7 Días</h3><div class="chart-wrapper"><canvas id="ventasChart"></canvas></div></div><div class="chart-container"><h3>Ventas por Categoría</h3><div class="chart-wrapper"><canvas id="categoriasChart"></canvas></div></div><div class="chart-container"><h3>Métodos de Pago</h3><div class="chart-wrapper"><canvas id="pagosChart"></canvas></div></div><div class="chart-container"><h3>Ventas por Hora</h3><div class="chart-wrapper"><canvas id="horaChart"></canvas></div></div></div>
-                <div class="table-responsive" style="margin-top:2rem"><h3 style="color:#fff;margin-bottom:1rem">Detalle de Ventas</h3><table class="data-table" id="ventasTable"><thead><tr><th>Fecha</th><th>Pedido</th><th>Total</th><th>Items</th><th>Método</th><th>Tipo</th></tr></thead><tbody id="ventasTableBody"></tbody></table></div>
+                <div style="display:flex;gap:1rem;margin-bottom:2rem;flex-wrap:wrap">
+                    <div class="form-group"><label>Desde</label><input type="date" id="reporteDesde"></div>
+                    <div class="form-group"><label>Hasta</label><input type="date" id="reporteHasta"></div>
+                    <div class="form-group" style="align-self:flex-end"><button class="btn-primary" onclick="window.cargarReportes()">Filtrar</button></div>
+                </div>
+                <div class="dashboard-grid">
+                    <div class="dashboard-card"><div class="card-title">Ventas Día</div><div class="card-value" id="ventasDia">$0.00</div></div>
+                    <div class="dashboard-card"><div class="card-title">Ventas Semana</div><div class="card-value" id="ventasSemana">$0.00</div></div>
+                    <div class="dashboard-card"><div class="card-title">Ticket Promedio</div><div class="card-value" id="ticketPromedio">$0.00</div></div>
+                    <div class="dashboard-card"><div class="card-title">Platillo Top</div><div class="card-value" id="platilloTop">-</div></div>
+                </div>
+                <div class="charts-grid">
+                    <div class="chart-container"><h3>Ventas Últimos 7 Días</h3><div class="chart-wrapper"><canvas id="ventasChart"></canvas></div></div>
+                    <div class="chart-container"><h3>Ventas por Categoría</h3><div class="chart-wrapper"><canvas id="categoriasChart"></canvas></div></div>
+                    <div class="chart-container"><h3>Métodos de Pago</h3><div class="chart-wrapper"><canvas id="pagosChart"></canvas></div></div>
+                    <div class="chart-container"><h3>Ventas por Hora</h3><div class="chart-wrapper"><canvas id="horaChart"></canvas></div></div>
+                </div>
+                <div class="table-responsive" style="margin-top:2rem">
+                    <h3 style="color:#fff;margin-bottom:1rem">Detalle de Ventas</h3>
+                    <table class="data-table" id="ventasTable"><thead><tr><th>Fecha</th><th>Pedido</th><th>Total</th><th>Items</th><th>Método</th><th>Tipo</th></tr></thead><tbody id="ventasTableBody"></tbody></table>
+                </div>
             </div>
         </div>
     </div>
+    
+    <!-- MODALES -->
+    <div class="modal" id="platilloModal"><div class="modal-content"><div class="modal-header"><h3 id="platilloModalTitle">Nuevo Platillo</h3><button class="modal-close" id="closePlatilloModal">&times;</button></div><div class="modal-body"><form id="platilloForm"><div class="form-group"><label>Imagen</label><input type="file" id="platilloImagen" accept="image/*"><small>O URL:</small><input type="url" id="platilloImagenUrl"><div id="imagenPreview" class="image-preview" style="display:none"><img id="previewImg"><div><small>Vista previa</small><button type="button" class="btn-small" onclick="window.limpiarImagenPreview()">Eliminar</button></div></div></div><div class="form-row"><div class="form-group"><label>Nombre</label><input type="text" id="platilloNombre" required></div><div class="form-group"><label>Categoría</label><select id="platilloCategoria" required></select></div></div><div class="form-group"><label>Subcategoría</label><select id="platilloSubcategoria"><option value="">Ninguna</option></select></div><div class="form-row"><div class="form-group"><label>Precio (USD)</label><input type="number" step="0.01" id="platilloPrecio" required></div><div class="form-group"><label>Disponible</label><select id="platilloDisponible"><option value="true">Sí</option><option value="false">No</option></select></div></div><div class="form-group"><label>Descripción</label><textarea id="platilloDescripcion" rows="3"></textarea></div><div class="form-group"><label>Ingredientes</label><div id="ingredientesContainer"></div><button type="button" class="btn-secondary" onclick="window.agregarIngredienteRow()"><i class="fas fa-plus"></i> Agregar Ingrediente</button></div></form></div><div class="modal-footer"><button class="btn-secondary" id="cancelPlatillo">Cancelar</button><button class="btn-primary" id="savePlatillo">Guardar</button></div></div></div>
+    
+    <div class="modal" id="ingredienteModal"><div class="modal-content"><div class="modal-header"><h3 id="ingredienteModalTitle">Nuevo Ingrediente</h3><button class="modal-close" id="closeIngredienteModal">&times;</button></div><div class="modal-body"><form id="ingredienteForm"><div class="form-group"><label>Nombre</label><input type="text" id="ingredienteNombre" required></div><div class="form-group password-overlay" id="stockOverlay"><label>Stock Actual</label><div id="stockActualField" class="password-protected"><input type="number" step="0.01" id="ingredienteStock" disabled></div><div class="password-unlock" id="stockUnlock"><input type="password" placeholder="Contraseña" id="stockPassword"><button type="button" onclick="window.desbloquearStock()">Desbloquear</button></div></div><div class="form-group"><label>Mercancía a Agregar</label><input type="number" step="0.01" id="ingredienteAgregar"></div><div class="form-group"><label>Unidad</label><select id="ingredienteUnidad"><option value="unidades">Unidades</option><option value="gramos">Gramos</option><option value="mililitros">Mililitros</option><option value="kilogramos">Kilogramos</option><option value="litros">Litros</option></select></div><div class="form-group"><label>Stock Mínimo</label><input type="number" step="0.01" id="ingredienteMinimo"></div><div class="form-row"><div class="form-group"><label>Costo Total Compra (USD)</label><input type="number" step="0.01" id="costoTotal" onchange="window.calcularCostoUnitario()"></div><div class="form-group"><label>Cantidad Comprada</label><input type="number" step="0.01" id="cantidadComprada" onchange="window.calcularCostoUnitario()"></div></div><div class="form-group"><label>Precio de Costo (USD/ud)</label><input type="number" step="0.01" id="ingredienteCosto"></div><div class="form-group"><label>Precio de Venta (USD/ud)</label><input type="number" step="0.01" id="ingredienteVenta"></div></form></div><div class="modal-footer"><button class="btn-secondary" id="cancelIngrediente">Cancelar</button><button class="btn-primary" id="saveIngrediente">Guardar</button></div></div></div>
+    
+    <div class="modal" id="usuarioModal"><div class="modal-content"><div class="modal-header"><h3>Nuevo Cajero</h3><button class="modal-close" id="closeUsuarioModal">&times;</button></div><div class="modal-body"><form id="usuarioForm"><div class="form-group"><label>Nombre Completo</label><input type="text" id="usuarioNombre" required></div><div class="form-group"><label>Nombre de Usuario</label><input type="text" id="usuarioUsername" required></div><div class="form-group"><label>Contraseña</label><input type="text" id="usuarioPassword" value="123456" required></div></form></div><div class="modal-footer"><button class="btn-secondary" id="cancelUsuario">Cancelar</button><button class="btn-primary" id="saveUsuario">Guardar</button></div></div></div>
+    
+    <div class="modal" id="deliveryModal"><div class="modal-content"><div class="modal-header" style="background:linear-gradient(135deg,var(--delivery),#00838F)"><h3><i class="fas fa-motorcycle"></i> Editar Motorizado</h3><button class="modal-close" id="closeDeliveryModal">&times;</button></div><div class="modal-body"><form id="deliveryForm"><div class="form-group"><label>Nombre</label><input type="text" id="deliveryNombre" required></div><div class="form-group"><label>Estado</label><select id="deliveryEstado"><option value="true">Activo</option><option value="false">Inactivo</option></select></div></form></div><div class="modal-footer"><button class="btn-secondary" id="cancelDeliveryEdit">Cancelar</button><button class="btn-primary" id="saveDelivery" style="background:linear-gradient(135deg,var(--delivery),#00838F)">Guardar</button></div></div></div>
+    
+    <div class="modal" id="confirmPagoDeliveryModal"><div class="modal-content"><div class="modal-header" style="background:linear-gradient(135deg,var(--success),#2E7D32)"><h3><i class="fas fa-hand-holding-usd"></i> Confirmar Pago</h3><button class="modal-close" onclick="window.cerrarModal('confirmPagoDeliveryModal')">&times;</button></div><div class="modal-body" id="confirmPagoDeliveryBody"></div><div class="modal-footer"><button class="btn-secondary" onclick="window.cerrarModal('confirmPagoDeliveryModal')">Cancelar</button><button class="btn-primary" id="confirmPagoDeliveryBtn" onclick="window.confirmarPagoDelivery()">Confirmar</button></div></div></div>
+    
+    <div class="modal" id="qrAmpliadoModal"><div class="modal-content" style="max-width:400px"><div class="modal-header"><h3>Código QR</h3><button class="modal-close" id="closeQrAmpliadoModal">&times;</button></div><div class="modal-body" style="text-align:center"><div id="qrAmpliado" style="width:300px;height:300px;margin:0 auto"></div><div id="qrAmpliadoInfo" style="margin-top:1rem"></div></div><div class="modal-footer"><button class="btn-primary" id="closeQrAmpliado">Cerrar</button></div></div></div>
+    
     <div class="toast" id="toast"></div>
-    <div class="modal" id="platilloModal"><div class="modal-content"><div class="modal-header"><h3 id="platilloModalTitle">Nuevo Platillo</h3><button class="modal-close" id="closePlatilloModal">&times;</button></div><div class="modal-body"><form id="platilloForm"><div class="form-group"><label>Imagen del Platillo</label><input type="file" id="platilloImagen" accept="image/*"><small style="color:rgba(255,255,255,.7)">O ingresa URL (opcional):</small><input type="url" id="platilloImagenUrl" placeholder="https://..."><div id="imagenPreview" class="image-preview" style="display:none"><img id="previewImg" src="" alt="Vista previa"><div><small>Vista previa</small><button type="button" class="btn-small" onclick="limpiarImagenPreview()">Eliminar</button></div></div></div><div class="form-row"><div class="form-group"><label>Nombre</label><input type="text" id="platilloNombre" required></div><div class="form-group"><label>Categoría</label><select id="platilloCategoria" required><option value="">Seleccionar</option></select></div></div><div class="form-group"><label>Subcategoría</label><select id="platilloSubcategoria"><option value="">Ninguna</option></select></div><div class="form-row"><div class="form-group"><label>Precio (USD)</label><input type="number" step="0.01" id="platilloPrecio" required></div><div class="form-group"><label>Disponible</label><select id="platilloDisponible"><option value="true">Sí</option><option value="false">No</option></select></div></div><div class="form-group"><label>Descripción</label><textarea id="platilloDescripcion" rows="3"></textarea></div><div class="form-group"><label>Ingredientes</label><div id="ingredientesContainer"></div><button type="button" class="btn-secondary" onclick="agregarIngredienteRow()" style="margin-top:.5rem"><i class="fas fa-plus"></i> Agregar Ingrediente</button></div><div class="form-group"><label>Stock Calculado:</label><span id="stockCalculado">0</span></div></form></div><div class="modal-footer"><button class="btn-secondary" id="cancelPlatillo">Cancelar</button><button class="btn-primary" id="savePlatillo">Guardar</button></div></div></div>
-    <div class="modal" id="ingredienteModal"><div class="modal-content"><div class="modal-header"><h3 id="ingredienteModalTitle">Nuevo Ingrediente</h3><button class="modal-close" id="closeIngredienteModal">&times;</button></div><div class="modal-body"><form id="ingredienteForm"><div class="form-group"><label>Nombre</label><input type="text" id="ingredienteNombre" required></div><div class="form-group password-overlay" id="stockOverlay"><label>Stock Actual</label><div id="stockActualField" class="password-protected"><input type="number" step="0.01" id="ingredienteStock" disabled></div><div class="password-unlock" id="stockUnlock"><input type="password" placeholder="Contraseña" id="stockPassword"><button type="button" onclick="desbloquearStock()">Desbloquear</button></div></div><div class="form-group"><label>Mercancía Nueva a Agregar</label><input type="number" step="0.01" id="ingredienteAgregar"></div><div class="form-group"><label>Unidad</label><select id="ingredienteUnidad"><option value="unidades">Unidades</option><option value="gramos">Gramos</option><option value="mililitros">Mililitros</option><option value="kilogramos">Kilogramos</option><option value="litros">Litros</option></select></div><div class="form-group"><label>Stock Mínimo (en unidad base)</label><input type="number" step="0.01" id="ingredienteMinimo"></div><div class="form-row"><div class="form-group"><label>Costo Total Compra (USD)</label><input type="number" step="0.01" id="costoTotal" onchange="calcularCostoUnitario()"></div><div class="form-group"><label>Cantidad Comprada</label><input type="number" step="0.01" id="cantidadComprada" onchange="calcularCostoUnitario()"></div></div><div class="form-group"><label>Precio de Costo (USD por unidad)</label><input type="number" step="0.01" id="ingredienteCosto"></div><div class="form-group"><label>Precio de Venta (USD por unidad)</label><input type="number" step="0.01" id="ingredienteVenta"></div></form></div><div class="modal-footer"><button class="btn-secondary" id="cancelIngrediente">Cancelar</button><button class="btn-primary" id="saveIngrediente">Guardar</button></div></div></div>
-    <div class="modal" id="usuarioModal"><div class="modal-content"><div class="modal-header"><h3>Nuevo Cajero</h3><button class="modal-close" id="closeUsuarioModal">&times;</button></div><div class="modal-body"><form id="usuarioForm"><div class="form-group"><label>Nombre Completo</label><input type="text" id="usuarioNombre" required></div><div class="form-group"><label>Nombre de Usuario</label><input type="text" id="usuarioUsername" required></div><div class="form-group"><label>Contraseña Temporal</label><input type="text" id="usuarioPassword" value="123456" required></div></form></div><div class="modal-footer"><button class="btn-secondary" id="cancelUsuario">Cancelar</button><button class="btn-primary" id="saveUsuario">Guardar</button></div></div></div>
-    <!-- Modal para editar delivery -->
-    <div class="modal" id="deliveryModal">
-        <div class="modal-content">
-            <div class="modal-header" style="background:linear-gradient(135deg,var(--delivery),#00838F)"><h3><i class="fas fa-motorcycle"></i> Editar Motorizado</h3><button class="modal-close" id="closeDeliveryModal">&times;</button></div>
-            <div class="modal-body">
-                <form id="deliveryForm">
-                    <div class="form-group"><label>Nombre</label><input type="text" id="deliveryNombre" required></div>
-                    <div class="form-group"><label>Estado</label><select id="deliveryEstado"><option value="true">Activo</option><option value="false">Inactivo</option></select></div>
-                </form>
-            </div>
-            <div class="modal-footer"><button class="btn-secondary" id="cancelDeliveryEdit">Cancelar</button><button class="btn-primary" id="saveDelivery" style="background:linear-gradient(135deg,var(--delivery),#00838F)">Guardar</button></div>
-        </div>
-    </div>
-    <!-- Modal para confirmar pago a delivery -->
-    <div class="modal" id="confirmPagoDeliveryModal">
-        <div class="modal-content">
-            <div class="modal-header" style="background:linear-gradient(135deg,var(--success),#2E7D32)"><h3><i class="fas fa-hand-holding-usd"></i> Confirmar Pago</h3><button class="modal-close" onclick="cerrarModal('confirmPagoDeliveryModal')">&times;</button></div>
-            <div class="modal-body" id="confirmPagoDeliveryBody"></div>
-            <div class="modal-footer"><button class="btn-secondary" onclick="cerrarModal('confirmPagoDeliveryModal')">Cancelar (ESC)</button><button class="btn-primary" id="confirmPagoDeliveryBtn" onclick="confirmarPagoDelivery()">Confirmar Pago (ENTER)</button></div>
-        </div>
-    </div>
-    <div class="modal" id="qrAmpliadoModal"><div class="modal-content" style="max-width:400px"><div class="modal-header"><h3>Código QR</h3><button class="modal-close" id="closeQrAmpliadoModal">&times;</button></div><div class="modal-body" style="text-align:center"><div id="qrAmpliado" style="width:300px;height:300px;margin:0 auto"></div><div id="qrAmpliadoInfo" style="margin-top:1rem;color:#fff"></div></div><div class="modal-footer"><button class="btn-primary" id="closeQrAmpliado">Cerrar</button></div></div></div>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
     <script src="../supabase-config.js"></script>
     <script>
-        let isAdminAuthenticated=false,menuItems=[],inventarioItems=[],usuarios=[],qrCodes=[],charts={},platilloEditandoId=null,mesoneros=[],deliverys=[],deliveryEditandoId=null,deliveryParaPago=null;
-        function mostrarToast(mensaje,tipo='info'){const toast=document.getElementById('toast');toast.textContent=mensaje;toast.className=`toast show ${tipo}`;setTimeout(()=>toast.classList.remove('show'),3000)}
-        document.addEventListener('DOMContentLoaded',()=>{console.log(' Verificando sesión de admin...');const adminSession=sessionStorage.getItem('admin_authenticated');if(adminSession==='true'){console.log(' Sesión de admin encontrada');isAdminAuthenticated=true;mostrarPanel()}else{console.log(' No hay sesión de admin');mostrarLogin()}});
-        function mostrarLogin(){console.log(' Mostrando pantalla de login admin');document.getElementById('loginContainer').style.display='flex';document.getElementById('panelContainer').classList.remove('active')}
-        function mostrarPanel(){console.log(' Mostrando panel de administración');document.getElementById('loginContainer').style.display='none';document.getElementById('panelContainer').classList.add('active');console.log(' Cargando datos iniciales...');cargarConfiguracionInicial();cargarMenu();cargarInventario();cargarUsuarios();cargarQRs();cargarReportes();cargarPedidosRecientes();cargarMesoneros();cargarDeliverys();cargarWifiData();setupEventListeners();setupRealtimeSubscriptions()}
-        async function cargarConfiguracionInicial(){console.log(' Cargando configuración inicial...');await cargarConfiguracion();actualizarTasaUI();document.getElementById('alertaStockMinimo').value=configGlobal.alerta_stock_minimo||5;console.log(' Configuración cargada')}
-        function actualizarTasaUI(){document.getElementById('tasaBaseInput').value=configGlobal.tasa_cambio||400;document.getElementById('aumentoDiarioInput').value=configGlobal.aumento_diario||0;document.getElementById('aumentoActivoToggle').checked=configGlobal.aumento_activo||false;document.getElementById('tasaEfectivaDisplay').textContent=(configGlobal.tasa_efectiva||400).toFixed(2);document.getElementById('aumentoAcumuladoDisplay').textContent=(configGlobal.aumento_acumulado||0)+'%';document.getElementById('tasaEfectivaCard').textContent=`Bs. ${(configGlobal.tasa_efectiva||400).toFixed(2)}`}
-        async function cargarMenu(){console.log(' Cargando menú...');try{const{data,error}=await window.supabaseClient.from('menu').select('*');if(error)throw error;menuItems=data||[];console.log(` ${menuItems.length} platillos cargados`);renderizarMenu();actualizarProductosActivos()}catch(error){console.error('Error cargando menú:',error);mostrarToast('Error cargando menú','error')}}
-        async function cargarInventario(){console.log(' Cargando inventario...');try{const{data,error}=await window.supabaseClient.from('inventario').select('*');if(error)throw error;inventarioItems=data||[];console.log(` ${inventarioItems.length} ingredientes cargados`);renderizarInventario();actualizarAlertasStock();await cargarMenu();await verificarStockCritico()}catch(error){console.error('Error cargando inventario:',error);mostrarToast('Error cargando inventario','error')}}
-        async function cargarMesoneros(){try{const{data,error}=await window.supabaseClient.from('mesoneros').select('*').order('nombre');if(error)throw error;mesoneros=data||[];renderizarMesoneros()}catch(error){console.error('Error cargando mesoneros:',error)}}
-        async function cargarDeliverys(){try{const{data,error}=await window.supabaseClient.from('deliverys').select('*').order('nombre');if(error)throw error;deliverys=data||[];renderizarDeliverys()}catch(error){console.error('Error cargando deliverys:',error)}}
-        // Nueva función para obtener el acumulado de un delivery
-        async function obtenerAcumuladoDelivery(deliveryId){try{const{data,error}=await window.supabaseClient.from('entregas_delivery').select('monto_bs').eq('delivery_id',deliveryId);if(error)throw error;return (data||[]).reduce((sum, e)=>sum + (e.monto_bs||0), 0);}catch(error){console.error('Error obteniendo acumulado:',error);return 0;}}
-        function renderizarDeliverys(){const grid=document.getElementById('deliverysGrid');if(!grid)return;grid.innerHTML='';deliverys.forEach(async(d)=>{const acumulado=await obtenerAcumuladoDelivery(d.id);const card=document.createElement('div');card.className='delivery-card';card.innerHTML=`
-                <div class="delivery-header">
-                    <span class="delivery-nombre">${d.nombre}</span>
-                    <span class="delivery-estado ${d.activo?'activo':'inactivo'}">${d.activo?'Activo':'Inactivo'}</span>
-                </div>
-                <div class="delivery-acumulado">
-                    <span> Acumulado total:</span>
-                    <span class="delivery-monto">${formatBs(acumulado)}</span>
-                </div>
-                <div class="delivery-actions">
-                    <button class="btn-small" onclick="editarDelivery('${d.id}')"><i class="fas fa-edit"></i> Editar</button>
-                    <button class="btn-small success" onclick="mostrarPagoDelivery('${d.id}')"><i class="fas fa-hand-holding-usd"></i> Pagado</button>
-                    <button class="btn-small ${d.activo?'danger':'success'}" onclick="toggleDeliveryActivo('${d.id}',${!d.activo})">${d.activo?'Desactivar':'Activar'}</button>
-                </div>
-            `;grid.appendChild(card);})}
-        function renderizarMesoneros(){const container=document.getElementById('mesonerosList');if(!container)return;container.innerHTML=mesoneros.map(m=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:8px;border-bottom:1px solid rgba(255,255,255,.1)"><span>${m.nombre}</span><div><button class="btn-small" onclick="toggleMesoneroActivo('${m.id}',${!m.activo})">${m.activo?'Desactivar':'Activar'}</button><button class="btn-small danger" onclick="eliminarMesonero('${m.id}')"><i class="fas fa-trash"></i></button></div></div>`).join('')}
-        async function agregarMesonero(){const nombre=document.getElementById('nuevoMesonero').value.trim();if(!nombre){mostrarToast('Ingresa un nombre','error');return}try{const{error}=await window.supabaseClient.from('mesoneros').insert([{nombre,activo:true}]);if(error)throw error;document.getElementById('nuevoMesonero').value='';await cargarMesoneros();mostrarToast(' Mesonero agregado','success')}catch(error){console.error('Error:',error);mostrarToast(' Error al agregar','error')}}
-        async function toggleMesoneroActivo(id,activo){try{await window.supabaseClient.from('mesoneros').update({activo}).eq('id',id);await cargarMesoneros()}catch(error){console.error('Error:',error)}}
-        async function eliminarMesonero(id){if(!confirm('¿Eliminar mesonero?'))return;try{await window.supabaseClient.from('mesoneros').delete().eq('id',id);await cargarMesoneros();mostrarToast(' Eliminado','success')}catch(error){console.error('Error:',error)}}
-        async function agregarDelivery(){const nombre=document.getElementById('nuevoDelivery').value.trim();if(!nombre){mostrarToast('Ingresa un nombre','error');return}try{const{error}=await window.supabaseClient.from('deliverys').insert([{nombre,activo:true}]);if(error)throw error;document.getElementById('nuevoDelivery').value='';await cargarDeliverys();mostrarToast(' Motorizado agregado','success')}catch(error){console.error('Error:',error);mostrarToast(' Error al agregar','error')}}
-        function editarDelivery(id){const delivery=deliverys.find(d=>d.id===id);if(!delivery)return;deliveryEditandoId=id;document.getElementById('deliveryNombre').value=delivery.nombre;document.getElementById('deliveryEstado').value=delivery.activo?'true':'false';document.getElementById('deliveryModal').classList.add('active')}
-        document.getElementById('saveDelivery').addEventListener('click',async()=>{if(!deliveryEditandoId)return;const nombre=document.getElementById('deliveryNombre').value.trim();const activo=document.getElementById('deliveryEstado').value==='true';if(!nombre){mostrarToast('Ingresa un nombre','error');return}try{await window.supabaseClient.from('deliverys').update({nombre,activo}).eq('id',deliveryEditandoId);document.getElementById('deliveryModal').classList.remove('active');await cargarDeliverys();mostrarToast(' Motorizado actualizado','success')}catch(error){console.error('Error:',error);mostrarToast(' Error al actualizar','error')}});
-        async function toggleDeliveryActivo(id,activo){try{await window.supabaseClient.from('deliverys').update({activo}).eq('id',id);await cargarDeliverys()}catch(error){console.error('Error:',error)}}
-        function mostrarPagoDelivery(id){const delivery=deliverys.find(d=>d.id===id);if(!delivery)return;deliveryParaPago=id;const modal=document.getElementById('confirmPagoDeliveryModal');const body=document.getElementById('confirmPagoDeliveryBody');body.innerHTML=`<p style="margin-bottom:20px">¿Confirmas que se ha pagado a <strong>${delivery.nombre}</strong>?</p><p>Esto reiniciará su acumulado a 0 Bs.</p>`;modal.classList.add('active')}
-        async function confirmarPagoDelivery(){if(!deliveryParaPago)return;try{await window.supabaseClient.from('entregas_delivery').delete().eq('delivery_id',deliveryParaPago);cerrarModal('confirmPagoDeliveryModal');await cargarDeliverys();mostrarToast(' Pago registrado. Acumulado reiniciado.','success')}catch(error){console.error('Error registrando pago:',error);mostrarToast(' Error al registrar pago','error')}}
-        async function verificarStockCritico(){try{const{data,error}=await window.supabaseClient.rpc('verificar_stock_critico');if(error)throw error;const stockCriticoDiv=document.getElementById('stockCritico');if(data&&data.length>0){stockCriticoDiv.innerHTML=data.map(item=>`<div class="alert-item critical"><span><strong>${item.nombre}</strong><br>Stock: ${item.stock_actual} / Mínimo: ${item.stock_minimo}<span style="color:var(--danger)">(Faltan ${item.unidades_faltantes})</span></span><button class="btn-small" onclick="agregarStock('${item.ingrediente_id}')"><i class="fas fa-plus"></i> Agregar</button></div>`).join('');document.getElementById('alertasStock').textContent=data.length;if(data.length>0)mostrarToast(` ${data.length} ingrediente(s) con stock crítico`,'warning')}else{stockCriticoDiv.innerHTML='<p>No hay alertas de stock</p>';document.getElementById('alertasStock').textContent='0'}}catch(error){console.error('Error verificando stock crítico:',error)}}
-        async function guardarUmbralStock(){const umbral=parseInt(document.getElementById('alertaStockMinimo').value);if(isNaN(umbral)||umbral<1){mostrarToast('Ingresa un valor válido (mínimo 1)','error');return}try{const{error}=await window.supabaseClient.from('config').update({alerta_stock_minimo:umbral}).eq('id',1);if(error)throw error;configGlobal.alerta_stock_minimo=umbral;mostrarToast(' Umbral de stock actualizado','success');await verificarStockCritico()}catch(error){console.error('Error guardando umbral:',error);mostrarToast(' Error al guardar el umbral','error')}}
-        function renderizarMenu(){const grid=document.getElementById('menuGrid');grid.innerHTML='';menuItems.forEach(item=>{const ingredientesEstado=[];let todosDisponibles=true;if(item.ingredientes){for(const[ingId,ingInfo]of Object.entries(item.ingredientes)){const ing=inventarioItems.find(i=>i.id===ingId);const disponible=ing&&(ing.stock-ing.reservado)>=(ingInfo.cantidad||0);if(!disponible)todosDisponibles=false;ingredientesEstado.push({nombre:ingInfo.nombre||ingId,disponible})}}const card=document.createElement('div');card.className='menu-card';card.innerHTML=`<div class="menu-card-image" style="background-image:url('${item.imagen||'https://via.placeholder.com/300x150?text=Saki+Sushi'}')"><div class="menu-card-actions"><button onclick="editarPlatillo('${item.id}')" title="Editar"><i class="fas fa-edit"></i></button><button onclick="eliminarPlatillo('${item.id}')" title="Eliminar"><i class="fas fa-trash"></i></button></div></div><div class="menu-card-content"><div class="menu-card-header"><span class="menu-card-title">${item.nombre}</span><span class="${item.disponible&&todosDisponibles?'disponible-badge':'no-disponible-badge'}" title="${!todosDisponibles?'Sin stock de ingredientes':''}"></span></div><div class="menu-card-precio">${formatUSD(item.precio||0)} / ${formatBs(usdToBs(item.precio||0))}</div><div class="menu-card-stock">Stock: ${item.stock||0}</div><div class="menu-card-descripcion">${item.descripcion||''}</div><div class="menu-card-ingredientes">${ingredientesEstado.map(ing=>`<span class="${!ing.disponible?'sin-stock':''}">${ing.nombre}${!ing.disponible?'(sin stock)':''}</span>`).join('')}</div></div>`;grid.appendChild(card)})}
-        function renderizarInventario(){const grid=document.getElementById('inventarioGrid');grid.innerHTML='';inventarioItems.forEach(item=>{const disponible=item.stock-item.reservado,porcentajeStock=item.minimo>0?(disponible/item.minimo)*100:100,critical=disponible<=item.minimo;const card=document.createElement('div');card.className='inventario-card';card.innerHTML=`<div class="inventario-header"><span class="inventario-nombre">${item.nombre}</span><div class="inventario-actions"><button onclick="editarIngrediente('${item.id}')"><i class="fas fa-edit"></i></button><button onclick="eliminarIngrediente('${item.id}')"><i class="fas fa-trash"></i></button></div></div><div class="inventario-stock"><strong>Stock:</strong> ${item.stock||0} ${item.unidad_base||'unidades'}<small>(Reservado: ${item.reservado||0} | Disponible: ${disponible})</small><div class="stock-bar"><div class="stock-fill ${critical?'critical':''}" style="width:${Math.min(porcentajeStock,100)}%"></div></div></div><div class="inventario-info"><div><strong>Mínimo:</strong><br><span class="inventario-minimo">${item.minimo||0} ${item.unidad_base||'unidades'}</span></div><div><strong>Costo:</strong><br>${formatUSD(item.precio_costo||0)} / ${formatBs(usdToBs(item.precio_costo||0))}</div><div><strong>Venta:</strong><br>${formatUSD(item.precio_unitario||0)} / ${formatBs(usdToBs(item.precio_unitario||0))}</div></div>`;grid.appendChild(card)})}
-        async function cargarUsuarios(){console.log(' Cargando usuarios...');try{const{data,error}=await window.supabaseClient.from('usuarios').select('*').order('created_at',{ascending:false});if(error)throw error;usuarios=data||[];console.log(` ${usuarios.length} usuarios cargados`);renderizarUsuarios()}catch(error){console.error('Error cargando usuarios:',error);mostrarToast('Error cargando usuarios','error')}}
-        function renderizarUsuarios(){const grid=document.getElementById('usuariosGrid');grid.innerHTML='';usuarios.forEach(user=>{const card=document.createElement('div');card.className='usuario-card';card.innerHTML=`<div class="usuario-header"><span class="usuario-nombre">${user.nombre}</span><span class="${user.activo?'activo':'inactivo'}">${user.activo?'Activo':'Inactivo'}</span></div><div class="usuario-username">@${user.username}</div><div class="usuario-estado"><span>Rol: ${user.rol||'cajero'}</span></div><div class="usuario-actions"><button class="btn-small ${user.activo?'danger':'success'}" onclick="toggleUsuarioActivo('${user.id}',${!user.activo})">${user.activo?'Desactivar':'Activar'}</button><button class="btn-small danger" onclick="eliminarUsuario('${user.id}')">Eliminar</button></div>`;grid.appendChild(card)})}
-        function abrirModalNuevoUsuario(){document.getElementById('usuarioForm').reset();document.getElementById('usuarioModal').classList.add('active')}
-        document.getElementById('saveUsuario').addEventListener('click',async()=>{const nombre=document.getElementById('usuarioNombre').value,username=document.getElementById('usuarioUsername').value,password=document.getElementById('usuarioPassword').value;if(!nombre||!username||!password){mostrarToast('Completa todos los campos','error');return}try{const nuevoUsuario={id:generarId('user_'),nombre,username,password,rol:'cajero',activo:true};const{error}=await window.supabaseClient.from('usuarios').insert([nuevoUsuario]);if(error)throw error;document.getElementById('usuarioModal').classList.remove('active');await cargarUsuarios();mostrarToast(' Usuario creado','success')}catch(error){console.error('Error creando usuario:',error);mostrarToast(' Error al crear usuario','error')}});
-        async function toggleUsuarioActivo(userId,activo){try{await window.supabaseClient.from('usuarios').update({activo}).eq('id',userId);await cargarUsuarios();mostrarToast(` Usuario ${activo?'activado':'desactivado'}`,'success')}catch(error){console.error('Error actualizando usuario:',error);mostrarToast(' Error al actualizar usuario','error')}}
-        async function eliminarUsuario(userId){if(!confirm('¿Estás seguro de eliminar este usuario?'))return;try{await window.supabaseClient.from('usuarios').delete().eq('id',userId);await cargarUsuarios();mostrarToast(' Usuario eliminado','success')}catch(error){console.error('Error eliminando usuario:',error);mostrarToast(' Error al eliminar usuario','error')}}
-        async function cargarQRs(){console.log(' Cargando códigos QR...');try{const{data,error}=await window.supabaseClient.from('codigos_qr').select('*').order('fecha',{ascending:false});if(error)throw error;qrCodes=data||[];console.log(` ${qrCodes.length} códigos QR cargados`);renderizarQRs()}catch(error){console.error('Error cargando QRs:',error);mostrarToast('Error cargando QRs','error')}}
-        function renderizarQRs(){const grid=document.getElementById('qrGrid');grid.innerHTML='';qrCodes.forEach(qr=>{let url;if(qr.tipo==='wifi')url=`WIFI:T:WPA;S:${qr.ssid};P:${qr.password};;`;else url=`${window.location.origin}/Cliente/index.html?mesa=${encodeURIComponent(qr.nombre)}`;const card=document.createElement('div');card.className='qr-card';card.innerHTML=`<div class="qr-image" id="qr-${qr.id}"></div><div class="qr-nombre">${qr.nombre}</div><div class="qr-url">${url}</div><div class="qr-actions"><button onclick="ampliarQR('${qr.id}', '${qr.nombre}', '${url}')" title="Ampliar"><i class="fas fa-expand"></i></button><button onclick="eliminarQR('${qr.id}')" title="Eliminar"><i class="fas fa-trash"></i></button></div>`;grid.appendChild(card);new QRCode(document.getElementById(`qr-${qr.id}`),{text:url,width:150,height:150})})}
-        function cargarWifiData(){const ssid=localStorage.getItem('saki_wifi_ssid')||'';const pass=localStorage.getItem('saki_wifi_password')||'';document.getElementById('qrWifiSsid').value=ssid;document.getElementById('qrWifiPassword').value=pass}
-        async function generarQR(){const nombre=document.getElementById('qrNombreMesa').value.trim();const ssid=document.getElementById('qrWifiSsid').value.trim();const password=document.getElementById('qrWifiPassword').value.trim();if(!nombre&&!ssid){mostrarToast('Ingresa al menos un nombre o configuración WiFi','error');return}if(ssid&&!password){mostrarToast('Ingresa la contraseña WiFi','error');return}localStorage.setItem('saki_wifi_ssid',ssid);localStorage.setItem('saki_wifi_password',password);let qrData={id:generarId('QR_'),nombre:nombre||'WiFi',fecha:new Date().toISOString()};if(ssid&&password){qrData.tipo='wifi';qrData.ssid=ssid;qrData.password=password}else qrData.tipo='mesa';try{const{error}=await window.supabaseClient.from('codigos_qr').insert([qrData]);if(error)throw error;document.getElementById('qrNombreMesa').value='';await cargarQRs();mostrarToast(' QR generado','success')}catch(error){console.error('Error generando QR:',error);mostrarToast(' Error al generar QR','error')}}
-        function ampliarQR(id,nombre,url){const container=document.getElementById('qrAmpliado');container.innerHTML='';new QRCode(container,{text:url,width:300,height:300});document.getElementById('qrAmpliadoInfo').innerHTML=`<strong>${nombre}</strong><br><small>${url}</small>`;document.getElementById('qrAmpliadoModal').classList.add('active')}
-        async function eliminarQR(id){if(!confirm('¿Estás seguro de eliminar este código QR?'))return;try{await window.supabaseClient.from('codigos_qr').delete().eq('id',id);await cargarQRs();mostrarToast(' QR eliminado','success')}catch(error){console.error('Error eliminando QR:',error);mostrarToast(' Error al eliminar QR','error')}}
-        async function cargarReportes(){console.log(' Cargando reportes...');try{const desde=document.getElementById('reporteDesde').value,hasta=document.getElementById('reporteHasta').value;let query=window.supabaseClient.from('pedidos').select('*').in('estado',['cobrado','entregado','enviado','reserva_completada']);if(desde)query=query.gte('timestamp',new Date(desde).toISOString());if(hasta){const hastaDate=new Date(hasta);hastaDate.setDate(hastaDate.getDate()+1);query=query.lt('timestamp',hastaDate.toISOString())}const{data,error}=await query.order('timestamp',{ascending:false});if(error)throw error;console.log(` ${data?.length||0} pedidos cargados para reportes`);actualizarEstadisticasReportes(data||[]);actualizarGraficos(data||[]);actualizarTablaVentas(data||[])}catch(error){console.error('Error cargando reportes:',error);mostrarToast('Error cargando reportes','error')}}
-        function actualizarEstadisticasReportes(pedidos){const hoy=new Date();hoy.setHours(0,0,0,0);const ventasHoy=pedidos.filter(p=>new Date(p.timestamp)>=hoy).reduce((sum,p)=>sum+(p.total||0),0);const semana=new Date();semana.setDate(semana.getDate()-7);const ventasSemana=pedidos.filter(p=>new Date(p.timestamp)>=semana).reduce((sum,p)=>sum+(p.total||0),0);const ticketPromedio=pedidos.length>0?pedidos.reduce((sum,p)=>sum+(p.total||0),0)/pedidos.length:0;const platillosCount={};pedidos.forEach(p=>{if(p.items)p.items.forEach(item=>{platillosCount[item.nombre]=(platillosCount[item.nombre]||0)+(item.cantidad||0)})});let platilloTop='-',maxCount=0;for(const[nombre,count]of Object.entries(platillosCount))if(count>maxCount){maxCount=count;platilloTop=nombre}document.getElementById('ventasDia').textContent=formatUSD(ventasHoy);document.getElementById('ventasSemana').textContent=formatUSD(ventasSemana);document.getElementById('ticketPromedio').textContent=formatUSD(ticketPromedio);document.getElementById('platilloTop').textContent=platilloTop}
-        function actualizarGraficos(pedidos){const ventasPorDia={};for(let i=6;i>=0;i--){const fecha=new Date();fecha.setDate(fecha.getDate()-i);const fechaStr=fecha.toISOString().split('T')[0];ventasPorDia[fechaStr]=0}pedidos.forEach(p=>{const fecha=new Date(p.timestamp).toISOString().split('T')[0];if(ventasPorDia.hasOwnProperty(fecha))ventasPorDia[fecha]+=p.total||0});if(charts.ventas)charts.ventas.destroy();charts.ventas=new Chart(document.getElementById('ventasChart'),{type:'line',data:{labels:Object.keys(ventasPorDia),datasets:[{label:'Ventas (USD)',data:Object.values(ventasPorDia),borderColor:'var(--primary)',backgroundColor:'rgba(211,47,47,0.1)',tension:0.1}]}});const categorias={};pedidos.forEach(p=>{if(p.items)p.items.forEach(item=>{const platillo=menuItems.find(m=>m.nombre===item.nombre),categoria=platillo?.categoria||'Otros';categorias[categoria]=(categorias[categoria]||0)+((item.precioUnitarioUSD||0)*(item.cantidad||0))})});if(charts.categorias)charts.categorias.destroy();charts.categorias=new Chart(document.getElementById('categoriasChart'),{type:'doughnut',data:{labels:Object.keys(categorias),datasets:[{data:Object.values(categorias),backgroundColor:['#D32F2F','#FF9800','#1976D2','#388E3C','#F57C00','#6c757d']}]}});const metodos={};pedidos.forEach(p=>{if(p.pagos_mixtos&&Array.isArray(p.pagos_mixtos))p.pagos_mixtos.forEach(pago=>{const key=pago.metodo||'otro';metodos[key]=(metodos[key]||0)+(pago.monto||0)});else if(p.metodo_pago)metodos[p.metodo_pago]=(metodos[p.metodo_pago]||0)+(p.total||0)});if(charts.pagos)charts.pagos.destroy();charts.pagos=new Chart(document.getElementById('pagosChart'),{type:'bar',data:{labels:Object.keys(metodos).map(m=>{const nombres={efectivo_bs:'Efectivo Bs',efectivo_usd:'Efectivo USD',pago_movil:'Pago Móvil',punto_venta:'Punto de Venta',mixto:'Mixto',invitacion:'Invitación'};return nombres[m]||m}),datasets:[{label:'Monto (USD)',data:Object.values(metodos).map(v=>v/(configGlobal.tasa_efectiva||400)),backgroundColor:'var(--info)'}]}});const horas={};for(let i=0;i<24;i++)horas[i]=0;pedidos.forEach(p=>{const hora=new Date(p.timestamp).getHours();horas[hora]+=p.total||0});if(charts.hora)charts.hora.destroy();charts.hora=new Chart(document.getElementById('horaChart'),{type:'bar',data:{labels:Object.keys(horas).map(h=>`${h}:00`),datasets:[{label:'Ventas (USD)',data:Object.values(horas),backgroundColor:'var(--accent)'}]}})}
-        function actualizarTablaVentas(pedidos){const tbody=document.getElementById('ventasTableBody');tbody.innerHTML='';pedidos.slice(0,50).forEach(p=>{const row=document.createElement('tr');row.innerHTML=`<td>${new Date(p.timestamp).toLocaleDateString()}</td><td>${p.id}</td><td>${formatUSD(p.total||0)}</td><td>${p.items?.reduce((sum,i)=>sum+(i.cantidad||0),0)||0}</td><td>${p.metodo_pago||'N/A'}</td><td>${p.tipo||'N/A'}</td>`;tbody.appendChild(row)})}
-        async function cargarPedidosRecientes(){console.log(' Cargando pedidos recientes...');try{const{data,error}=await window.supabaseClient.from('pedidos').select('*').order('timestamp',{ascending:false}).limit(5);if(error)throw error;const container=document.getElementById('pedidosRecientes');container.innerHTML=(data||[]).map(p=>`<div class="alert-item"><span><strong>${p.id}</strong> - ${formatUSD(p.total||0)}</span><small>${new Date(p.timestamp).toLocaleString()}</small></div>`).join('')||'<p>No hay pedidos recientes</p>';console.log(' Pedidos recientes cargados')}catch(error){console.error('Error cargando pedidos recientes:',error)}}
-        async function cambiarPassword(){const current=document.getElementById('currentPassword').value,nueva=document.getElementById('newPassword').value,confirm=document.getElementById('confirmPassword').value;if(current!==configGlobal.admin_password){mostrarToast('Contraseña actual incorrecta','error');return}if(nueva!==confirm){mostrarToast('Las contraseñas no coinciden','error');return}if(nueva.length<4){mostrarToast('La contraseña debe tener al menos 4 caracteres','error');return}try{await window.supabaseClient.from('config').update({admin_password:nueva}).eq('id',1);configGlobal.admin_password=nueva;mostrarToast(' Contraseña actualizada','success');document.getElementById('currentPassword').value='';document.getElementById('newPassword').value='';document.getElementById('confirmPassword').value=''}catch(error){console.error('Error cambiando contraseña:',error);mostrarToast(' Error al cambiar la contraseña','error')}}
-        async function guardarRecoveryEmail(){const email=document.getElementById('recoveryEmail').value;if(!email||!email.includes('@')){mostrarToast('Ingresa un correo válido','error');return}try{await window.supabaseClient.from('config').update({recovery_email:email}).eq('id',1);mostrarToast(' Correo de recuperación guardado','success')}catch(error){console.error('Error guardando email:',error);mostrarToast(' Error al guardar el correo','error')}}
-        function setupRealtimeSubscriptions(){console.log(' Configurando suscripciones en tiempo real...');window.supabaseClient.channel('admin-menu').on('postgres_changes',{event:'*',schema:'public',table:'menu'},()=>{console.log(' Cambio en menú, recargando...');cargarMenu()}).subscribe();window.supabaseClient.channel('admin-inventario').on('postgres_changes',{event:'*',schema:'public',table:'inventario'},(payload)=>{console.log(' Cambio en inventario, recargando...');if(payload.eventType==='UPDATE'&&payload.new.stock<=payload.new.minimo){verificarStockCritico();mostrarToast(` Stock crítico: ${payload.new.nombre}`,'warning')}cargarInventario()}).subscribe();window.supabaseClient.channel('admin-usuarios').on('postgres_changes',{event:'*',schema:'public',table:'usuarios'},()=>{console.log(' Cambio en usuarios, recargando...');cargarUsuarios()}).subscribe();window.supabaseClient.channel('admin-qr').on('postgres_changes',{event:'*',schema:'public',table:'codigos_qr'},()=>{console.log(' Cambio en códigos QR, recargando...');cargarQRs()}).subscribe();window.supabaseClient.channel('admin-pedidos').on('postgres_changes',{event:'*',schema:'public',table:'pedidos'},()=>{console.log(' Cambio en pedidos, actualizando dashboard...');cargarPedidosRecientes();if(document.getElementById('reportesPane').classList.contains('active'))cargarReportes()}).subscribe();window.supabaseClient.channel('admin-mesoneros').on('postgres_changes',{event:'*',schema:'public',table:'mesoneros'},()=>{cargarMesoneros()}).subscribe();window.supabaseClient.channel('admin-deliverys').on('postgres_changes',{event:'*',schema:'public',table:'deliverys'},()=>{cargarDeliverys()}).subscribe();console.log(' Suscripciones configuradas')}
-        function setupEventListeners(){console.log(' Configurando event listeners de admin...');document.getElementById('loginForm').addEventListener('submit',async(e)=>{e.preventDefault();const password=document.getElementById('adminPassword').value;try{const{data,error}=await window.supabaseClient.from('config').select('admin_password').eq('id',1).maybeSingle();if(error){console.error('Error en consulta:',error);mostrarToast('Error al conectar con la base de datos','error');return}if(!data){mostrarToast('No se encontró configuración en la base de datos','error');return}if(data.admin_password!==password){mostrarToast('Contraseña incorrecta','error');return}isAdminAuthenticated=true;sessionStorage.setItem('admin_authenticated','true');document.getElementById('loginContainer').style.display='none';document.getElementById('panelContainer').classList.add('active');await cargarConfiguracionInicial();await cargarMenu();await cargarInventario();await cargarUsuarios();await cargarQRs();await cargarReportes();await cargarPedidosRecientes();await cargarMesoneros();await cargarDeliverys();mostrarToast(' Bienvenido Administrador','success')}catch(error){console.error('Error en login:',error);mostrarToast('Error al iniciar sesión: '+error.message,'error')}});document.getElementById('recoveryLink').addEventListener('click',async(e)=>{e.preventDefault();const codigo=Math.floor(100000+Math.random()*900000);console.log('Código de recuperación (simulado):',codigo);const codigoIngresado=prompt('Ingresa el código de recuperación (revisa la consola):');if(codigoIngresado===codigo.toString()){const{data}=await window.supabaseClient.from('config').select('admin_password, recovery_email').eq('id',1).single();alert(`Tu contraseña es: ${data.admin_password}\nCorreo de recuperación: ${data.recovery_email}`)}else mostrarToast('Código incorrecto','error')});document.getElementById('logoutButton').addEventListener('click',()=>{sessionStorage.removeItem('admin_authenticated');isAdminAuthenticated=false;mostrarLogin();mostrarToast(' Sesión cerrada','info')});document.getElementById('saveAllButton').addEventListener('click',async()=>{await guardarConfiguracion()});document.getElementById('tasaBaseInput').addEventListener('change',recalcularTasaEfectiva);document.getElementById('aumentoDiarioInput').addEventListener('change',recalcularTasaEfectiva);document.getElementById('aumentoActivoToggle').addEventListener('change',recalcularTasaEfectiva);document.getElementById('detenerAumentoBtn').addEventListener('click',()=>{document.getElementById('aumentoActivoToggle').checked=false;configGlobal.aumento_detenido=true;recalcularTasaEfectiva();mostrarToast(' Aumento detenido','info')});document.getElementById('activarAumentoBtn').addEventListener('click',()=>{document.getElementById('aumentoActivoToggle').checked=true;configGlobal.aumento_detenido=false;recalcularTasaEfectiva();mostrarToast(' Aumento activado','info')});document.querySelectorAll('.tab').forEach(tab=>{tab.addEventListener('click',()=>{document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));tab.classList.add('active');const tabId=tab.dataset.tab;document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));document.getElementById(tabId+'Pane').classList.add('active');if(tabId==='reportes')cargarReportes()})});const closeButtons=['closePlatilloModal','cancelPlatillo','closeIngredienteModal','cancelIngrediente','closeUsuarioModal','cancelUsuario','closeQrAmpliadoModal','closeQrAmpliado','closeDeliveryModal','cancelDeliveryEdit'];closeButtons.forEach(id=>{const btn=document.getElementById(id);if(btn)btn.addEventListener('click',()=>{const modal=btn.closest('.modal');if(modal)modal.classList.remove('active')})});document.querySelectorAll('.modal').forEach(modal=>{modal.addEventListener('click',(e)=>{if(e.target===modal)modal.classList.remove('active')})});document.getElementById('platilloImagen').addEventListener('change',function(e){if(this.files&&this.files[0]){const reader=new FileReader();reader.onload=function(e){document.getElementById('previewImg').src=e.target.result;document.getElementById('imagenPreview').style.display='flex'};reader.readAsDataURL(this.files[0])}});document.getElementById('platilloImagenUrl').addEventListener('input',function(e){if(this.value){document.getElementById('previewImg').src=this.value;document.getElementById('imagenPreview').style.display='flex'}});document.getElementById('savePlatillo').addEventListener('click',guardarPlatillo);document.addEventListener('keydown',(e)=>{if(e.key==='Escape'){['deliveryModal','confirmPagoDeliveryModal','qrAmpliadoModal'].forEach(id=>{const m=document.getElementById(id);if(m&&m.classList.contains('active'))m.classList.remove('active')})}});console.log(' Event listeners de admin configurados')}
-        function recalcularTasaEfectiva(){const tasaBase=parseFloat(document.getElementById('tasaBaseInput').value)||0,aumentoDiario=parseFloat(document.getElementById('aumentoDiarioInput').value)||0,aumentoActivo=document.getElementById('aumentoActivoToggle').checked;let aumentoAcumulado=configGlobal.aumento_acumulado||0;if(aumentoActivo&&!configGlobal.aumento_detenido){const ahora=new Date();if(configGlobal.fecha_ultimo_aumento){const ultimo=new Date(configGlobal.fecha_ultimo_aumento);const dias=Math.floor((ahora-ultimo)/(1000*60*60*24));aumentoAcumulado+=dias*aumentoDiario}}const tasaEfectiva=tasaBase*(1+aumentoAcumulado/100);document.getElementById('tasaEfectivaDisplay').textContent=tasaEfectiva.toFixed(2);document.getElementById('aumentoAcumuladoDisplay').textContent=aumentoAcumulado.toFixed(2)+'%';configGlobal.tasa_cambio=tasaBase;configGlobal.aumento_diario=aumentoDiario;configGlobal.aumento_activo=aumentoActivo;configGlobal.aumento_acumulado=aumentoAcumulado;configGlobal.tasa_efectiva=tasaEfectiva}
-        async function guardarConfiguracion(){try{await window.supabaseClient.from('config').update({tasa_cambio:configGlobal.tasa_cambio,aumento_diario:configGlobal.aumento_diario,aumento_activo:configGlobal.aumento_activo,aumento_detenido:configGlobal.aumento_detenido,aumento_acumulado:configGlobal.aumento_acumulado,tasa_efectiva:configGlobal.tasa_efectiva,ultima_actualizacion:new Date().toISOString()}).eq('id',1);mostrarToast(' Configuración guardada','success')}catch(error){console.error('Error guardando configuración:',error);mostrarToast(' Error al guardar la configuración','error')}}
-        function abrirModalNuevoPlatillo(){document.getElementById('platilloModalTitle').textContent='Nuevo Platillo';document.getElementById('platilloForm').reset();document.getElementById('ingredientesContainer').innerHTML='';limpiarImagenPreview();cargarCategoriasSelect();platilloEditandoId=null;document.getElementById('platilloModal').classList.add('active')}
-        function cargarCategoriasSelect(){const select=document.getElementById('platilloCategoria');select.innerHTML='<option value="">Seleccionar</option>';Object.keys(categoriasMenu).forEach(cat=>{const option=document.createElement('option');option.value=cat;option.textContent=cat;select.appendChild(option)});select.addEventListener('change',(e)=>{cargarSubcategoriasSelect(e.target.value)})}
-        function cargarSubcategoriasSelect(categoria){const select=document.getElementById('platilloSubcategoria');select.innerHTML='<option value="">Ninguna</option>';if(categoria&&categoriasMenu[categoria])categoriasMenu[categoria].forEach(sub=>{const option=document.createElement('option');option.value=sub;option.textContent=sub;select.appendChild(option)})}
-        function agregarIngredienteRow(ingredienteId='',cantidad='',unidad=''){const container=document.getElementById('ingredientesContainer'),row=document.createElement('div');row.className='ingrediente-row';const select=document.createElement('select');select.innerHTML='<option value="">Seleccionar ingrediente</option>';inventarioItems.forEach(ing=>{const option=document.createElement('option');option.value=ing.id;option.textContent=ing.nombre;if(ing.id===ingredienteId)option.selected=true;select.appendChild(option)});const inputCantidad=document.createElement('input');inputCantidad.type='number';inputCantidad.step='0.01';inputCantidad.placeholder='Cantidad';inputCantidad.value=cantidad;const inputUnidad=document.createElement('input');inputUnidad.type='text';inputUnidad.placeholder='Unidad (ej: gramos, unidades)';inputUnidad.value=unidad;const removeBtn=document.createElement('button');removeBtn.innerHTML='<i class="fas fa-times"></i>';removeBtn.onclick=()=>row.remove();row.appendChild(select);row.appendChild(inputCantidad);row.appendChild(inputUnidad);row.appendChild(removeBtn);container.appendChild(row)}
-        function limpiarImagenPreview(){document.getElementById('platilloImagen').value='';document.getElementById('platilloImagenUrl').value='';document.getElementById('imagenPreview').style.display='none';document.getElementById('previewImg').src=''}
-        function editarPlatillo(id){const platillo=menuItems.find(p=>p.id===id);if(!platillo)return;platilloEditandoId=id;document.getElementById('platilloModalTitle').textContent='Editar Platillo';limpiarImagenPreview();document.getElementById('platilloNombre').value=platillo.nombre||'';document.getElementById('platilloCategoria').value=platillo.categoria||'';document.getElementById('platilloSubcategoria').value=platillo.subcategoria||'';document.getElementById('platilloPrecio').value=platillo.precio||'';document.getElementById('platilloDescripcion').value=platillo.descripcion||'';document.getElementById('platilloDisponible').value=platillo.disponible?'true':'false';if(platillo.imagen){document.getElementById('previewImg').src=platillo.imagen;document.getElementById('imagenPreview').style.display='flex';document.getElementById('platilloImagenUrl').value=platillo.imagen}cargarSubcategoriasSelect(platillo.categoria);document.getElementById('ingredientesContainer').innerHTML='';if(platillo.ingredientes)Object.entries(platillo.ingredientes).forEach(([ingId,ingInfo])=>{agregarIngredienteRow(ingId,ingInfo.cantidad,ingInfo.unidad)});document.getElementById('platilloModal').classList.add('active')}
-        async function guardarPlatillo(){try{const saveBtn=document.getElementById('savePlatillo'),originalText=saveBtn.textContent;saveBtn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Guardando...';saveBtn.disabled=true;const nombre=document.getElementById('platilloNombre').value,categoria=document.getElementById('platilloCategoria').value,subcategoria=document.getElementById('platilloSubcategoria').value,precio=parseFloat(document.getElementById('platilloPrecio').value),descripcion=document.getElementById('platilloDescripcion').value,disponible=document.getElementById('platilloDisponible').value==='true';if(!nombre||!categoria||!precio){mostrarToast('Completa los campos obligatorios','error');return}let imagenUrl='';const archivoImagen=document.getElementById('platilloImagen').files[0],imagenUrlInput=document.getElementById('platilloImagenUrl').value;if(archivoImagen){const resultado=await subirImagenPlatillo(archivoImagen,'menu');if(resultado.success)imagenUrl=resultado.url;else{mostrarToast('Error al subir la imagen: '+resultado.error,'error');return}}else if(imagenUrlInput)imagenUrl=imagenUrlInput;const ingredientes={};document.querySelectorAll('#ingredientesContainer .ingrediente-row').forEach(row=>{const select=row.querySelector('select'),cantidad=row.querySelector('input[type="number"]').value;if(select&&select.value&&cantidad)ingredientes[select.value]={cantidad:parseFloat(cantidad),nombre:select.options[select.selectedIndex]?.text||select.value}});const platillo={id:platilloEditandoId||generarId('plat_'),nombre,categoria,subcategoria:subcategoria||null,precio,descripcion,imagen:imagenUrl,ingredientes,disponible,stock:0,stock_maximo:0};let error;if(platilloEditandoId)({error}=await window.supabaseClient.from('menu').update(platillo).eq('id',platilloEditandoId));else({error}=await window.supabaseClient.from('menu').insert([platillo]));if(error)throw error;document.getElementById('platilloModal').classList.remove('active');platilloEditandoId=null;limpiarImagenPreview();await cargarMenu();mostrarToast(' Platillo guardado','success')}catch(error){console.error('Error guardando platillo:',error);mostrarToast(' Error al guardar el platillo: '+error.message,'error')}finally{const saveBtn=document.getElementById('savePlatillo');saveBtn.innerHTML='Guardar';saveBtn.disabled=false}}
-        async function eliminarPlatillo(id){if(!confirm('¿Estás seguro de eliminar este platillo?'))return;try{const platillo=menuItems.find(p=>p.id===id);if(platillo&&platillo.imagen&&platillo.imagen.includes('imagenes-platillos'))await eliminarImagenPlatillo(platillo.imagen);await window.supabaseClient.from('menu').delete().eq('id',id);await cargarMenu();mostrarToast(' Platillo eliminado','success')}catch(error){console.error('Error eliminando platillo:',error);mostrarToast(' Error al eliminar el platillo','error')}}
-        function abrirModalNuevoIngrediente(){document.getElementById('ingredienteModalTitle').textContent='Nuevo Ingrediente';document.getElementById('ingredienteForm').reset();document.getElementById('ingredienteStock').disabled=true;document.getElementById('ingredienteStock').value=0;document.getElementById('stockActualField').classList.add('password-protected');document.getElementById('stockUnlock').style.display='block';document.getElementById('ingredienteModal').classList.add('active')}
-        function editarIngrediente(id){const ingrediente=inventarioItems.find(i=>i.id===id);if(!ingrediente)return;document.getElementById('ingredienteModalTitle').textContent='Editar Ingrediente';document.getElementById('ingredienteNombre').value=ingrediente.nombre||'';document.getElementById('ingredienteStock').value=ingrediente.stock||0;document.getElementById('ingredienteUnidad').value=ingrediente.unidad_base||'unidades';document.getElementById('ingredienteMinimo').value=ingrediente.minimo||0;document.getElementById('ingredienteCosto').value=ingrediente.precio_costo||0;document.getElementById('ingredienteVenta').value=ingrediente.precio_unitario||0;document.getElementById('ingredienteAgregar').value='';document.getElementById('ingredienteStock').disabled=true;document.getElementById('stockActualField').classList.add('password-protected');document.getElementById('stockUnlock').style.display='block';document.getElementById('stockPassword').value='';document.getElementById('ingredienteModal').classList.add('active')}
-        function desbloquearStock(){const password=document.getElementById('stockPassword').value;if(password===configGlobal.admin_password){document.getElementById('ingredienteStock').disabled=false;document.getElementById('stockActualField').classList.remove('password-protected');document.getElementById('stockUnlock').style.display='none'}else mostrarToast('Contraseña incorrecta','error')}
-        function calcularCostoUnitario(){const costoTotal=parseFloat(document.getElementById('costoTotal').value)||0,cantidad=parseFloat(document.getElementById('cantidadComprada').value)||1;if(costoTotal&&cantidad)document.getElementById('ingredienteCosto').value=(costoTotal/cantidad).toFixed(2)}
-        function agregarStock(ingredienteId){const ingrediente=inventarioItems.find(i=>i.id===ingredienteId);if(ingrediente){editarIngrediente(ingredienteId);setTimeout(()=>{document.getElementById('ingredienteAgregar').focus()},500)}}
-        document.getElementById('saveIngrediente').addEventListener('click',async()=>{const id=document.getElementById('ingredienteModalTitle').textContent==='Nuevo Ingrediente'?generarId('ing_'):(inventarioItems.find(i=>i.nombre===document.getElementById('ingredienteNombre').value)?.id||generarId('ing_'));const nombre=document.getElementById('ingredienteNombre').value,stockActual=parseFloat(document.getElementById('ingredienteStock').value)||0,agregar=parseFloat(document.getElementById('ingredienteAgregar').value)||0,unidad=document.getElementById('ingredienteUnidad').value,minimo=parseFloat(document.getElementById('ingredienteMinimo').value)||0,costo=parseFloat(document.getElementById('ingredienteCosto').value)||0,venta=parseFloat(document.getElementById('ingredienteVenta').value)||0;if(!nombre){mostrarToast('Ingresa el nombre del ingrediente','error');return}try{const ingrediente={id,nombre,stock:stockActual+agregar,reservado:0,unidad_base:unidad,minimo,precio_costo:costo,precio_unitario:venta};let error;const existe=inventarioItems.some(i=>i.id===id);if(existe)({error}=await window.supabaseClient.from('inventario').update(ingrediente).eq('id',id));else({error}=await window.supabaseClient.from('inventario').insert([ingrediente]));if(error)throw error;document.getElementById('ingredienteModal').classList.remove('active');await cargarInventario();mostrarToast(' Ingrediente guardado','success')}catch(error){console.error('Error guardando ingrediente:',error);mostrarToast(' Error al guardar ingrediente','error')}});
-        async function eliminarIngrediente(id){if(!confirm('¿Estás seguro de eliminar este ingrediente?'))return;try{await window.supabaseClient.from('inventario').delete().eq('id',id);await cargarInventario();mostrarToast(' Ingrediente eliminado','success')}catch(error){console.error('Error eliminando ingrediente:',error);mostrarToast(' Error al eliminar ingrediente','error')}}
-        async function actualizarProductosActivos(){const activos=menuItems.filter(m=>m.disponible).length;document.getElementById('productosActivos').textContent=activos}
-        async function actualizarAlertasStock(){const alertas=inventarioItems.filter(i=>i.stock<=i.minimo).length;document.getElementById('alertasStock').textContent=alertas}
-        function formatBs(m){return new Intl.NumberFormat('es-VE',{style:'currency',currency:'VES',minimumFractionDigits:2}).format(m).replace('VES','Bs.')}
-        function formatUSD(m){return new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',minimumFractionDigits:2}).format(m)}
-        function usdToBs(u){return u*(configGlobal.tasa_efectiva||400)}
-        function generarId(prefix=''){return `${prefix}${Date.now()}_${Math.random().toString(36).substring(2,9)}`}
-        function cerrarModal(modalId){document.getElementById(modalId).classList.remove('active')}
+        // ==================== FUNCIONES DE CARGA DE DATOS ====================
+        window.cargarConfiguracionInicial = async function() {
+            await window.cargarConfiguracion();
+            window.actualizarTasaUI();
+            document.getElementById('alertaStockMinimo').value = window.configGlobal.alerta_stock_minimo || 5;
+        };
+
+        window.actualizarTasaUI = function() {
+            document.getElementById('tasaBaseInput').value = window.configGlobal.tasa_cambio || 400;
+            document.getElementById('aumentoDiarioInput').value = window.configGlobal.aumento_diario || 0;
+            document.getElementById('aumentoActivoToggle').checked = window.configGlobal.aumento_activo || false;
+            document.getElementById('tasaEfectivaDisplay').textContent = (window.configGlobal.tasa_efectiva || 400).toFixed(2);
+            document.getElementById('aumentoAcumuladoDisplay').textContent = (window.configGlobal.aumento_acumulado || 0) + '%';
+            document.getElementById('tasaEfectivaCard').textContent = `Bs. ${(window.configGlobal.tasa_efectiva || 400).toFixed(2)}`;
+        };
+
+        window.cargarMenu = async function() {
+            try {
+                const { data, error } = await window.supabaseClient.from('menu').select('*');
+                if (error) throw error;
+                window.menuItems = data || [];
+                window.renderizarMenu();
+                window.actualizarProductosActivos();
+            } catch (e) { console.error('Error cargando menú:', e); window.mostrarToast('Error cargando menú', 'error'); }
+        };
+
+        window.cargarInventario = async function() {
+            try {
+                const { data, error } = await window.supabaseClient.from('inventario').select('*');
+                if (error) throw error;
+                window.inventarioItems = data || [];
+                window.renderizarInventario();
+                window.actualizarAlertasStock();
+                await window.cargarMenu();
+                await window.verificarStockCritico();
+            } catch (e) { console.error('Error cargando inventario:', e); window.mostrarToast('Error cargando inventario', 'error'); }
+        };
+
+        window.cargarMesoneros = async function() {
+            try {
+                const { data, error } = await window.supabaseClient.from('mesoneros').select('*').order('nombre');
+                if (error) throw error;
+                window.mesoneros = data || [];
+                window.renderizarMesoneros();
+            } catch (e) { console.error('Error cargando mesoneros:', e); }
+        };
+
+        window.cargarDeliverys = async function() {
+            try {
+                const { data, error } = await window.supabaseClient.from('deliverys').select('*').order('nombre');
+                if (error) throw error;
+                window.deliverys = data || [];
+                window.renderizarDeliverys();
+            } catch (e) { console.error('Error cargando deliverys:', e); }
+        };
+
+        window.cargarPropinas = async function() {
+            try {
+                const h = new Date(); h.setHours(0, 0, 0, 0);
+                const m = new Date(h); m.setDate(m.getDate() + 1);
+                const { data, error } = await window.supabaseClient
+                    .from('propinas')
+                    .select('*, mesoneros(nombre)')
+                    .gte('fecha', h.toISOString())
+                    .lt('fecha', m.toISOString())
+                    .order('fecha', { ascending: false });
+                if (error) throw error;
+                window.propinas = data || [];
+                window.renderizarPropinas();
+            } catch (e) { console.error('Error cargando propinas:', e); }
+        };
+
+        window.obtenerAcumuladoDelivery = async function(deliveryId) {
+            try {
+                const { data, error } = await window.supabaseClient.from('entregas_delivery').select('monto_bs').eq('delivery_id', deliveryId);
+                if (error) throw error;
+                return (data || []).reduce((sum, e) => sum + (e.monto_bs || 0), 0);
+            } catch (e) { console.error('Error obteniendo acumulado:', e); return 0; }
+        };
+
+        window.renderizarDeliverys = function() {
+            const grid = document.getElementById('deliverysGrid');
+            if (!grid) return;
+            grid.innerHTML = '';
+            window.deliverys.forEach(async (d) => {
+                const acumulado = await window.obtenerAcumuladoDelivery(d.id);
+                const card = document.createElement('div');
+                card.className = 'delivery-card';
+                card.innerHTML = `<div class="delivery-header"><span class="delivery-nombre">${d.nombre}</span><span class="delivery-estado ${d.activo ? 'activo' : 'inactivo'}">${d.activo ? 'Activo' : 'Inactivo'}</span></div><div class="delivery-acumulado"><span>💰 Acumulado total:</span><span class="delivery-monto">${window.formatBs(acumulado)}</span></div><div class="delivery-actions"><button class="btn-small" onclick="window.editarDelivery('${d.id}')"><i class="fas fa-edit"></i> Editar</button><button class="btn-small success" onclick="window.mostrarPagoDelivery('${d.id}')"><i class="fas fa-hand-holding-usd"></i> Pagado</button><button class="btn-small ${d.activo ? 'danger' : 'success'}" onclick="window.toggleDeliveryActivo('${d.id}', ${!d.activo})">${d.activo ? 'Desactivar' : 'Activar'}</button></div>`;
+                grid.appendChild(card);
+            });
+        };
+
+        window.renderizarMesoneros = function() {
+            const container = document.getElementById('mesonerosList');
+            if (!container) return;
+            container.innerHTML = window.mesoneros.map(m => `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px;border-bottom:1px solid rgba(255,255,255,.1)"><span>${m.nombre}</span><div><button class="btn-small" onclick="window.toggleMesoneroActivo('${m.id}', ${!m.activo})">${m.activo ? 'Desactivar' : 'Activar'}</button><button class="btn-small danger" onclick="window.eliminarMesonero('${m.id}')"><i class="fas fa-trash"></i></button></div></div>`).join('');
+        };
+
+        window.renderizarPropinas = function() {
+            const total = window.propinas.reduce((s, p) => s + (p.monto_bs || 0), 0);
+            const cantidad = window.propinas.length;
+            const promedio = cantidad > 0 ? total / cantidad : 0;
+            
+            document.getElementById('propinasTotal').textContent = window.formatBs(total);
+            document.getElementById('propinasCantidad').textContent = cantidad;
+            document.getElementById('propinasPromedio').textContent = window.formatBs(promedio);
+            document.getElementById('propinasHoyDashboard').textContent = window.formatBs(total);
+            
+            const tbody = document.getElementById('propinasTableBody');
+            if (tbody) {
+                tbody.innerHTML = window.propinas.map(p => `<tr><td>${new Date(p.fecha).toLocaleString()}</td><td>${p.mesoneros?.nombre || 'N/A'}</td><td>${p.mesa || 'N/A'}</td><td>${p.metodo}</td><td>${window.formatBs(p.monto_bs)}</td><td>${p.cajero || 'N/A'}</td></tr>`).join('');
+            }
+            
+            // Ranking de mesoneros
+            const ranking = {};
+            window.propinas.forEach(p => {
+                const nombre = p.mesoneros?.nombre || 'N/A';
+                ranking[nombre] = (ranking[nombre] || 0) + p.monto_bs;
+            });
+            
+            const rankingHtml = Object.entries(ranking)
+                .sort((a, b) => b[1] - a[1])
+                .map(([n, m], i) => `<div class="ranking-bar"><div class="ranking-position">${i + 1}</div><div class="ranking-info"><div class="ranking-name">${n}</div><div class="ranking-cantidad">${window.formatBs(m)}</div></div></div>`)
+                .join('');
+            
+            document.getElementById('mesonerosRanking').innerHTML = rankingHtml || '<p>No hay datos</p>';
+        };
+
+        window.verificarStockCritico = async function() {
+            try {
+                const { data, error } = await window.supabaseClient.rpc('verificar_stock_critico');
+                if (error) throw error;
+                const stockCriticoDiv = document.getElementById('stockCritico');
+                if (data && data.length > 0) {
+                    stockCriticoDiv.innerHTML = data.map(item => `<div class="alert-item critical"><span><strong>${item.nombre}</strong><br>Stock: ${item.stock_actual} / Mínimo: ${item.stock_minimo} (Faltan ${item.unidades_faltantes})</span><button class="btn-small" onclick="window.agregarStock('${item.ingrediente_id}')"><i class="fas fa-plus"></i> Agregar</button></div>`).join('');
+                    document.getElementById('alertasStock').textContent = data.length;
+                } else {
+                    stockCriticoDiv.innerHTML = '<p>No hay alertas de stock</p>';
+                    document.getElementById('alertasStock').textContent = '0';
+                }
+            } catch (e) { console.error('Error verificando stock crítico:', e); }
+        };
+
+        window.guardarUmbralStock = async function() {
+            const umbral = parseInt(document.getElementById('alertaStockMinimo').value);
+            if (isNaN(umbral) || umbral < 1) { window.mostrarToast('Ingresa un valor válido', 'error'); return; }
+            try {
+                await window.supabaseClient.from('config').update({ alerta_stock_minimo: umbral }).eq('id', 1);
+                window.configGlobal.alerta_stock_minimo = umbral;
+                window.mostrarToast('✅ Umbral de stock actualizado', 'success');
+                await window.verificarStockCritico();
+            } catch (e) { console.error('Error guardando umbral:', e); window.mostrarToast('❌ Error al guardar el umbral', 'error'); }
+        };
+
+        window.agregarMesonero = async function() {
+            const nombre = document.getElementById('nuevoMesonero').value.trim();
+            if (!nombre) { window.mostrarToast('Ingresa un nombre', 'error'); return; }
+            try {
+                await window.supabaseClient.from('mesoneros').insert([{ nombre, activo: true }]);
+                document.getElementById('nuevoMesonero').value = '';
+                await window.cargarMesoneros();
+                window.mostrarToast('✅ Mesonero agregado', 'success');
+            } catch (e) { console.error('Error:', e); window.mostrarToast('❌ Error al agregar', 'error'); }
+        };
+
+        window.toggleMesoneroActivo = async function(id, activo) {
+            try {
+                await window.supabaseClient.from('mesoneros').update({ activo }).eq('id', id);
+                await window.cargarMesoneros();
+            } catch (e) { console.error('Error:', e); }
+        };
+
+        window.eliminarMesonero = async function(id) {
+            if (!confirm('¿Eliminar mesonero?')) return;
+            try {
+                await window.supabaseClient.from('mesoneros').delete().eq('id', id);
+                await window.cargarMesoneros();
+                window.mostrarToast('🗑️ Eliminado', 'success');
+            } catch (e) { console.error('Error:', e); }
+        };
+
+        window.agregarDelivery = async function() {
+            const nombre = document.getElementById('nuevoDelivery').value.trim();
+            if (!nombre) { window.mostrarToast('Ingresa un nombre', 'error'); return; }
+            try {
+                await window.supabaseClient.from('deliverys').insert([{ nombre, activo: true }]);
+                document.getElementById('nuevoDelivery').value = '';
+                await window.cargarDeliverys();
+                window.mostrarToast('✅ Motorizado agregado', 'success');
+            } catch (e) { console.error('Error:', e); window.mostrarToast('❌ Error al agregar', 'error'); }
+        };
+
+        window.editarDelivery = function(id) {
+            const delivery = window.deliverys.find(d => d.id === id);
+            if (!delivery) return;
+            window.deliveryEditandoId = id;
+            document.getElementById('deliveryNombre').value = delivery.nombre;
+            document.getElementById('deliveryEstado').value = delivery.activo ? 'true' : 'false';
+            document.getElementById('deliveryModal').classList.add('active');
+        };
+
+        document.getElementById('saveDelivery').addEventListener('click', async () => {
+            if (!window.deliveryEditandoId) return;
+            const nombre = document.getElementById('deliveryNombre').value.trim();
+            const activo = document.getElementById('deliveryEstado').value === 'true';
+            if (!nombre) { window.mostrarToast('Ingresa un nombre', 'error'); return; }
+            try {
+                await window.supabaseClient.from('deliverys').update({ nombre, activo }).eq('id', window.deliveryEditandoId);
+                document.getElementById('deliveryModal').classList.remove('active');
+                await window.cargarDeliverys();
+                window.mostrarToast('✅ Motorizado actualizado', 'success');
+            } catch (e) { console.error('Error:', e); window.mostrarToast('❌ Error al actualizar', 'error'); }
+        });
+
+        window.toggleDeliveryActivo = async function(id, activo) {
+            try {
+                await window.supabaseClient.from('deliverys').update({ activo }).eq('id', id);
+                await window.cargarDeliverys();
+            } catch (e) { console.error('Error:', e); }
+        };
+
+        window.mostrarPagoDelivery = function(id) {
+            const delivery = window.deliverys.find(d => d.id === id);
+            if (!delivery) return;
+            window.deliveryParaPago = id;
+            document.getElementById('confirmPagoDeliveryBody').innerHTML = `<p>¿Confirmas que se ha pagado a <strong>${delivery.nombre}</strong>? Esto reiniciará su acumulado a 0 Bs.</p>`;
+            document.getElementById('confirmPagoDeliveryModal').classList.add('active');
+        };
+
+        window.confirmarPagoDelivery = async function() {
+            if (!window.deliveryParaPago) return;
+            try {
+                await window.supabaseClient.from('entregas_delivery').delete().eq('delivery_id', window.deliveryParaPago);
+                window.cerrarModal('confirmPagoDeliveryModal');
+                await window.cargarDeliverys();
+                window.mostrarToast('💰 Pago registrado. Acumulado reiniciado.', 'success');
+            } catch (e) { console.error('Error registrando pago:', e); window.mostrarToast('❌ Error al registrar pago', 'error'); }
+        };
+
+        window.cargarUsuarios = async function() {
+            try {
+                const { data, error } = await window.supabaseClient.from('usuarios').select('*').order('created_at', { ascending: false });
+                if (error) throw error;
+                window.usuarios = data || [];
+                window.renderizarUsuarios();
+            } catch (e) { console.error('Error cargando usuarios:', e); window.mostrarToast('Error cargando usuarios', 'error'); }
+        };
+
+        window.renderizarUsuarios = function() {
+            const grid = document.getElementById('usuariosGrid');
+            grid.innerHTML = window.usuarios.map(user => `<div class="usuario-card"><div class="usuario-header"><span class="usuario-nombre">${user.nombre}</span><span class="${user.activo ? 'activo' : 'inactivo'}">${user.activo ? 'Activo' : 'Inactivo'}</span></div><div class="usuario-username">@${user.username}</div><div class="usuario-estado"><span>Rol: ${user.rol || 'cajero'}</span></div><div class="usuario-actions"><button class="btn-small ${user.activo ? 'danger' : 'success'}" onclick="window.toggleUsuarioActivo('${user.id}', ${!user.activo})">${user.activo ? 'Desactivar' : 'Activar'}</button><button class="btn-small danger" onclick="window.eliminarUsuario('${user.id}')">Eliminar</button></div></div>`).join('');
+        };
+
+        window.abrirModalNuevoUsuario = function() {
+            document.getElementById('usuarioForm').reset();
+            document.getElementById('usuarioModal').classList.add('active');
+        };
+
+        document.getElementById('saveUsuario').addEventListener('click', async () => {
+            const nombre = document.getElementById('usuarioNombre').value;
+            const username = document.getElementById('usuarioUsername').value;
+            const password = document.getElementById('usuarioPassword').value;
+            if (!nombre || !username || !password) { window.mostrarToast('Completa todos los campos', 'error'); return; }
+            try {
+                await window.supabaseClient.from('usuarios').insert([{ id: window.generarId('user_'), nombre, username, password, rol: 'cajero', activo: true }]);
+                document.getElementById('usuarioModal').classList.remove('active');
+                await window.cargarUsuarios();
+                window.mostrarToast('✅ Usuario creado', 'success');
+            } catch (e) { console.error('Error creando usuario:', e); window.mostrarToast('❌ Error al crear usuario', 'error'); }
+        });
+
+        window.toggleUsuarioActivo = async function(userId, activo) {
+            try {
+                await window.supabaseClient.from('usuarios').update({ activo }).eq('id', userId);
+                await window.cargarUsuarios();
+                window.mostrarToast(`✅ Usuario ${activo ? 'activado' : 'desactivado'}`, 'success');
+            } catch (e) { console.error('Error actualizando usuario:', e); window.mostrarToast('❌ Error al actualizar usuario', 'error'); }
+        };
+
+        window.eliminarUsuario = async function(userId) {
+            if (!confirm('¿Estás seguro de eliminar este usuario?')) return;
+            try {
+                await window.supabaseClient.from('usuarios').delete().eq('id', userId);
+                await window.cargarUsuarios();
+                window.mostrarToast('🗑️ Usuario eliminado', 'success');
+            } catch (e) { console.error('Error eliminando usuario:', e); window.mostrarToast('❌ Error al eliminar usuario', 'error'); }
+        };
+
+        window.cargarQRs = async function() {
+            try {
+                const { data, error } = await window.supabaseClient.from('codigos_qr').select('*').order('fecha', { ascending: false });
+                if (error) throw error;
+                window.qrCodes = data || [];
+                window.renderizarQRs();
+            } catch (e) { console.error('Error cargando QRs:', e); window.mostrarToast('Error cargando QRs', 'error'); }
+        };
+
+        window.renderizarQRs = function() {
+            const grid = document.getElementById('qrGrid');
+            grid.innerHTML = '';
+            window.qrCodes.forEach(qr => {
+                let url = qr.tipo === 'wifi' ? `WIFI:T:WPA;S:${qr.ssid};P:${qr.password};;` : `${window.location.origin}/Cliente/index.html?mesa=${encodeURIComponent(qr.nombre)}`;
+                const card = document.createElement('div');
+                card.className = 'qr-card';
+                card.innerHTML = `<div class="qr-image" id="qr-${qr.id}"></div><div class="qr-nombre">${qr.nombre}</div><div class="qr-url">${url}</div><div class="qr-actions"><button onclick="window.ampliarQR('${qr.id}', '${qr.nombre}', '${url}')" title="Ampliar"><i class="fas fa-expand"></i></button><button onclick="window.eliminarQR('${qr.id}')" title="Eliminar"><i class="fas fa-trash"></i></button></div>`;
+                grid.appendChild(card);
+                new QRCode(document.getElementById(`qr-${qr.id}`), { text: url, width: 150, height: 150 });
+            });
+        };
+
+        window.generarQR = async function() {
+            const nombre = document.getElementById('qrNombreMesa').value.trim();
+            const ssid = document.getElementById('qrWifiSsid').value.trim();
+            const password = document.getElementById('qrWifiPassword').value.trim();
+            if (!nombre && !ssid) { window.mostrarToast('Ingresa al menos un nombre o configuración WiFi', 'error'); return; }
+            if (ssid && !password) { window.mostrarToast('Ingresa la contraseña WiFi', 'error'); return; }
+            localStorage.setItem('saki_wifi_ssid', ssid);
+            localStorage.setItem('saki_wifi_password', password);
+            let qrData = { id: window.generarId('QR_'), nombre: nombre || 'WiFi', fecha: new Date().toISOString() };
+            if (ssid && password) { qrData.tipo = 'wifi'; qrData.ssid = ssid; qrData.password = password; }
+            else qrData.tipo = 'mesa';
+            try {
+                await window.supabaseClient.from('codigos_qr').insert([qrData]);
+                document.getElementById('qrNombreMesa').value = '';
+                await window.cargarQRs();
+                window.mostrarToast('✅ QR generado', 'success');
+            } catch (e) { console.error('Error generando QR:', e); window.mostrarToast('❌ Error al generar QR', 'error'); }
+        };
+
+        window.ampliarQR = function(id, nombre, url) {
+            const container = document.getElementById('qrAmpliado');
+            container.innerHTML = '';
+            new QRCode(container, { text: url, width: 300, height: 300 });
+            document.getElementById('qrAmpliadoInfo').innerHTML = `<strong>${nombre}</strong><br><small>${url}</small>`;
+            document.getElementById('qrAmpliadoModal').classList.add('active');
+        };
+
+        window.eliminarQR = async function(id) {
+            if (!confirm('¿Estás seguro de eliminar este código QR?')) return;
+            try {
+                await window.supabaseClient.from('codigos_qr').delete().eq('id', id);
+                await window.cargarQRs();
+                window.mostrarToast('🗑️ QR eliminado', 'success');
+            } catch (e) { console.error('Error eliminando QR:', e); window.mostrarToast('❌ Error al eliminar QR', 'error'); }
+        };
+
+        window.cargarReportes = async function() {
+            try {
+                const desde = document.getElementById('reporteDesde').value;
+                const hasta = document.getElementById('reporteHasta').value;
+                let query = window.supabaseClient.from('pedidos').select('*').in('estado', ['cobrado', 'entregado', 'enviado', 'reserva_completada']);
+                if (desde) query = query.gte('timestamp', new Date(desde).toISOString());
+                if (hasta) { const h = new Date(hasta); h.setDate(h.getDate() + 1); query = query.lt('timestamp', h.toISOString()); }
+                const { data, error } = await query.order('timestamp', { ascending: false });
+                if (error) throw error;
+                window.actualizarEstadisticasReportes(data || []);
+                window.actualizarGraficos(data || []);
+                window.actualizarTablaVentas(data || []);
+            } catch (e) { console.error('Error cargando reportes:', e); window.mostrarToast('Error cargando reportes', 'error'); }
+        };
+
+        window.actualizarEstadisticasReportes = function(pedidos) {
+            const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
+            const ventasHoy = pedidos.filter(p => new Date(p.timestamp) >= hoy).reduce((s, p) => s + (p.total || 0), 0);
+            const semana = new Date(); semana.setDate(semana.getDate() - 7);
+            const ventasSemana = pedidos.filter(p => new Date(p.timestamp) >= semana).reduce((s, p) => s + (p.total || 0), 0);
+            const ticketPromedio = pedidos.length > 0 ? pedidos.reduce((s, p) => s + (p.total || 0), 0) / pedidos.length : 0;
+            
+            const platillosCount = {};
+            pedidos.forEach(p => { if (p.items) p.items.forEach(item => { platillosCount[item.nombre] = (platillosCount[item.nombre] || 0) + (item.cantidad || 0); }); });
+            let platilloTop = '-', maxCount = 0;
+            for (const [n, c] of Object.entries(platillosCount)) { if (c > maxCount) { maxCount = c; platilloTop = n; } }
+            
+            document.getElementById('ventasDia').textContent = window.formatUSD(ventasHoy);
+            document.getElementById('ventasSemana').textContent = window.formatUSD(ventasSemana);
+            document.getElementById('ticketPromedio').textContent = window.formatUSD(ticketPromedio);
+            document.getElementById('platilloTop').textContent = platilloTop;
+        };
+
+        window.actualizarGraficos = function(pedidos) {
+            const ventasPorDia = {};
+            for (let i = 6; i >= 0; i--) { const f = new Date(); f.setDate(f.getDate() - i); ventasPorDia[f.toISOString().split('T')[0]] = 0; }
+            pedidos.forEach(p => { const f = new Date(p.timestamp).toISOString().split('T')[0]; if (ventasPorDia.hasOwnProperty(f)) ventasPorDia[f] += p.total || 0; });
+            
+            if (window.charts.ventas) window.charts.ventas.destroy();
+            window.charts.ventas = new Chart(document.getElementById('ventasChart'), {
+                type: 'line',
+                data: { labels: Object.keys(ventasPorDia), datasets: [{ label: 'Ventas (USD)', data: Object.values(ventasPorDia), borderColor: 'var(--primary)', backgroundColor: 'rgba(211,47,47,0.1)', tension: 0.1 }] }
+            });
+            
+            const categorias = {};
+            pedidos.forEach(p => { if (p.items) p.items.forEach(item => { const platillo = window.menuItems.find(m => m.nombre === item.nombre); const cat = platillo?.categoria || 'Otros'; categorias[cat] = (categorias[cat] || 0) + ((item.precioUnitarioUSD || 0) * (item.cantidad || 0)); }); });
+            
+            if (window.charts.categorias) window.charts.categorias.destroy();
+            window.charts.categorias = new Chart(document.getElementById('categoriasChart'), {
+                type: 'doughnut',
+                data: { labels: Object.keys(categorias), datasets: [{ data: Object.values(categorias), backgroundColor: ['#D32F2F', '#FF9800', '#1976D2', '#388E3C', '#F57C00', '#6c757d'] }] }
+            });
+            
+            const metodos = {};
+            pedidos.forEach(p => {
+                if (p.pagos_mixtos) p.pagos_mixtos.forEach(pago => { metodos[pago.metodo] = (metodos[pago.metodo] || 0) + (pago.monto || 0); });
+                else if (p.metodo_pago) metodos[p.metodo_pago] = (metodos[p.metodo_pago] || 0) + (p.total || 0);
+            });
+            
+            if (window.charts.pagos) window.charts.pagos.destroy();
+            window.charts.pagos = new Chart(document.getElementById('pagosChart'), {
+                type: 'bar',
+                data: { labels: Object.keys(metodos).map(m => { const n = { efectivo_bs: 'Efectivo Bs', efectivo_usd: 'Efectivo USD', pago_movil: 'Pago Móvil', punto_venta: 'Punto de Venta', mixto: 'Mixto', invitacion: 'Invitación' }; return n[m] || m; }), datasets: [{ label: 'Monto (USD)', data: Object.values(metodos).map(v => v / (window.configGlobal?.tasa_efectiva || 400)), backgroundColor: 'var(--info)' }] }
+            });
+            
+            const horas = {}; for (let i = 0; i < 24; i++) horas[i] = 0;
+            pedidos.forEach(p => { const h = new Date(p.timestamp).getHours(); horas[h] += p.total || 0; });
+            
+            if (window.charts.hora) window.charts.hora.destroy();
+            window.charts.hora = new Chart(document.getElementById('horaChart'), {
+                type: 'bar',
+                data: { labels: Object.keys(horas).map(h => `${h}:00`), datasets: [{ label: 'Ventas (USD)', data: Object.values(horas), backgroundColor: 'var(--accent)' }] }
+            });
+        };
+
+        window.actualizarTablaVentas = function(pedidos) {
+            const tbody = document.getElementById('ventasTableBody');
+            tbody.innerHTML = pedidos.slice(0, 50).map(p => `<tr><td>${new Date(p.timestamp).toLocaleDateString()}</td><td>${p.id}</td><td>${window.formatUSD(p.total || 0)}</td><td>${p.items?.reduce((s, i) => s + (i.cantidad || 0), 0) || 0}</td><td>${p.metodo_pago || 'N/A'}</td><td>${p.tipo || 'N/A'}</td></tr>`).join('');
+        };
+
+        window.cargarPedidosRecientes = async function() {
+            try {
+                const { data, error } = await window.supabaseClient.from('pedidos').select('*').order('timestamp', { ascending: false }).limit(5);
+                if (error) throw error;
+                document.getElementById('pedidosRecientes').innerHTML = (data || []).map(p => `<div class="alert-item"><span><strong>${p.id}</strong> - ${window.formatUSD(p.total || 0)}</span><small>${new Date(p.timestamp).toLocaleString()}</small></div>`).join('') || '<p>No hay pedidos recientes</p>';
+            } catch (e) { console.error('Error cargando pedidos recientes:', e); }
+        };
+
+        window.actualizarProductosActivos = function() {
+            document.getElementById('productosActivos').textContent = window.menuItems.filter(m => m.disponible).length;
+        };
+
+        window.actualizarAlertasStock = function() {
+            document.getElementById('alertasStock').textContent = window.inventarioItems.filter(i => i.stock <= i.minimo).length;
+        };
+
+        window.cambiarPassword = async function() {
+            const current = document.getElementById('currentPassword').value;
+            const nueva = document.getElementById('newPassword').value;
+            const confirm = document.getElementById('confirmPassword').value;
+            if (current !== window.configGlobal.admin_password) { window.mostrarToast('Contraseña actual incorrecta', 'error'); return; }
+            if (nueva !== confirm) { window.mostrarToast('Las contraseñas no coinciden', 'error'); return; }
+            if (nueva.length < 4) { window.mostrarToast('La contraseña debe tener al menos 4 caracteres', 'error'); return; }
+            try {
+                await window.supabaseClient.from('config').update({ admin_password: nueva }).eq('id', 1);
+                window.configGlobal.admin_password = nueva;
+                window.mostrarToast('✅ Contraseña actualizada', 'success');
+                document.getElementById('currentPassword').value = '';
+                document.getElementById('newPassword').value = '';
+                document.getElementById('confirmPassword').value = '';
+            } catch (e) { console.error('Error cambiando contraseña:', e); window.mostrarToast('❌ Error al cambiar la contraseña', 'error'); }
+        };
+
+        window.guardarRecoveryEmail = async function() {
+            const email = document.getElementById('recoveryEmail').value;
+            if (!email || !email.includes('@')) { window.mostrarToast('Ingresa un correo válido', 'error'); return; }
+            try {
+                await window.supabaseClient.from('config').update({ recovery_email: email }).eq('id', 1);
+                window.mostrarToast('✅ Correo de recuperación guardado', 'success');
+            } catch (e) { console.error('Error guardando email:', e); window.mostrarToast('❌ Error al guardar el correo', 'error'); }
+        };
+
+        // ==================== FUNCIONES DE CONFIGURACIÓN ====================
+        window.recalcularTasaEfectiva = function() {
+            const tasaBase = parseFloat(document.getElementById('tasaBaseInput').value) || 0;
+            const aumentoDiario = parseFloat(document.getElementById('aumentoDiarioInput').value) || 0;
+            const aumentoActivo = document.getElementById('aumentoActivoToggle').checked;
+            let aumentoAcumulado = window.configGlobal.aumento_acumulado || 0;
+            
+            if (aumentoActivo && !window.configGlobal.aumento_detenido) {
+                const ahora = new Date();
+                if (window.configGlobal.fecha_ultimo_aumento) {
+                    const ultimo = new Date(window.configGlobal.fecha_ultimo_aumento);
+                    const dias = Math.floor((ahora - ultimo) / (1000 * 60 * 60 * 24));
+                    aumentoAcumulado += dias * aumentoDiario;
+                }
+            }
+            
+            const tasaEfectiva = tasaBase * (1 + aumentoAcumulado / 100);
+            document.getElementById('tasaEfectivaDisplay').textContent = tasaEfectiva.toFixed(2);
+            document.getElementById('aumentoAcumuladoDisplay').textContent = aumentoAcumulado.toFixed(2) + '%';
+            window.configGlobal.tasa_cambio = tasaBase;
+            window.configGlobal.aumento_diario = aumentoDiario;
+            window.configGlobal.aumento_activo = aumentoActivo;
+            window.configGlobal.aumento_acumulado = aumentoAcumulado;
+            window.configGlobal.tasa_efectiva = tasaEfectiva;
+        };
+
+        window.guardarConfiguracion = async function() {
+            try {
+                await window.supabaseClient.from('config').update({
+                    tasa_cambio: window.configGlobal.tasa_cambio,
+                    aumento_diario: window.configGlobal.aumento_diario,
+                    aumento_activo: window.configGlobal.aumento_activo,
+                    aumento_detenido: window.configGlobal.aumento_detenido,
+                    aumento_acumulado: window.configGlobal.aumento_acumulado,
+                    tasa_efectiva: window.configGlobal.tasa_efectiva,
+                    ultima_actualizacion: new Date().toISOString()
+                }).eq('id', 1);
+                window.mostrarToast('✅ Configuración guardada', 'success');
+            } catch (e) { console.error('Error guardando configuración:', e); window.mostrarToast('❌ Error al guardar la configuración', 'error'); }
+        };
+
+        // ==================== FUNCIONES DE MENÚ (PLATILLOS) ====================
+        window.abrirModalNuevoPlatillo = function() {
+            document.getElementById('platilloModalTitle').textContent = 'Nuevo Platillo';
+            document.getElementById('platilloForm').reset();
+            document.getElementById('ingredientesContainer').innerHTML = '';
+            window.limpiarImagenPreview();
+            window.cargarCategoriasSelect();
+            window.platilloEditandoId = null;
+            document.getElementById('platilloModal').classList.add('active');
+        };
+
+        window.cargarCategoriasSelect = function() {
+            const select = document.getElementById('platilloCategoria');
+            select.innerHTML = '<option value="">Seleccionar</option>';
+            Object.keys(window.categoriasMenu || {}).forEach(cat => { const opt = document.createElement('option'); opt.value = cat; opt.textContent = cat; select.appendChild(opt); });
+            select.addEventListener('change', (e) => { window.cargarSubcategoriasSelect(e.target.value); });
+        };
+
+        window.cargarSubcategoriasSelect = function(categoria) {
+            const select = document.getElementById('platilloSubcategoria');
+            select.innerHTML = '<option value="">Ninguna</option>';
+            if (categoria && window.categoriasMenu && window.categoriasMenu[categoria]) {
+                window.categoriasMenu[categoria].forEach(sub => { const opt = document.createElement('option'); opt.value = sub; opt.textContent = sub; select.appendChild(opt); });
+            }
+        };
+
+        window.agregarIngredienteRow = function(ingredienteId = '', cantidad = '', unidad = '') {
+            const container = document.getElementById('ingredientesContainer');
+            const row = document.createElement('div');
+            row.className = 'ingrediente-row';
+            const select = document.createElement('select');
+            select.innerHTML = '<option value="">Seleccionar ingrediente</option>';
+            window.inventarioItems.forEach(ing => { const opt = document.createElement('option'); opt.value = ing.id; opt.textContent = ing.nombre; if (ing.id === ingredienteId) opt.selected = true; select.appendChild(opt); });
+            const inputCantidad = document.createElement('input');
+            inputCantidad.type = 'number'; inputCantidad.step = '0.01'; inputCantidad.placeholder = 'Cantidad'; inputCantidad.value = cantidad;
+            const inputUnidad = document.createElement('input');
+            inputUnidad.type = 'text'; inputUnidad.placeholder = 'Unidad'; inputUnidad.value = unidad;
+            const removeBtn = document.createElement('button');
+            removeBtn.innerHTML = '<i class="fas fa-times"></i>'; removeBtn.onclick = () => row.remove();
+            row.appendChild(select); row.appendChild(inputCantidad); row.appendChild(inputUnidad); row.appendChild(removeBtn);
+            container.appendChild(row);
+        };
+
+        window.limpiarImagenPreview = function() {
+            document.getElementById('platilloImagen').value = '';
+            document.getElementById('platilloImagenUrl').value = '';
+            document.getElementById('imagenPreview').style.display = 'none';
+            document.getElementById('previewImg').src = '';
+        };
+
+        window.editarPlatillo = function(id) {
+            const platillo = window.menuItems.find(p => p.id === id);
+            if (!platillo) return;
+            window.platilloEditandoId = id;
+            document.getElementById('platilloModalTitle').textContent = 'Editar Platillo';
+            window.limpiarImagenPreview();
+            document.getElementById('platilloNombre').value = platillo.nombre || '';
+            document.getElementById('platilloCategoria').value = platillo.categoria || '';
+            document.getElementById('platilloSubcategoria').value = platillo.subcategoria || '';
+            document.getElementById('platilloPrecio').value = platillo.precio || '';
+            document.getElementById('platilloDescripcion').value = platillo.descripcion || '';
+            document.getElementById('platilloDisponible').value = platillo.disponible ? 'true' : 'false';
+            if (platillo.imagen) {
+                document.getElementById('previewImg').src = platillo.imagen;
+                document.getElementById('imagenPreview').style.display = 'flex';
+                document.getElementById('platilloImagenUrl').value = platillo.imagen;
+            }
+            window.cargarSubcategoriasSelect(platillo.categoria);
+            document.getElementById('ingredientesContainer').innerHTML = '';
+            if (platillo.ingredientes) Object.entries(platillo.ingredientes).forEach(([ingId, ingInfo]) => { window.agregarIngredienteRow(ingId, ingInfo.cantidad, ingInfo.unidad); });
+            document.getElementById('platilloModal').classList.add('active');
+        };
+
+        document.getElementById('savePlatillo').addEventListener('click', async () => {
+            try {
+                const saveBtn = document.getElementById('savePlatillo');
+                saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+                saveBtn.disabled = true;
+                
+                const nombre = document.getElementById('platilloNombre').value;
+                const categoria = document.getElementById('platilloCategoria').value;
+                const subcategoria = document.getElementById('platilloSubcategoria').value;
+                const precio = parseFloat(document.getElementById('platilloPrecio').value);
+                const descripcion = document.getElementById('platilloDescripcion').value;
+                const disponible = document.getElementById('platilloDisponible').value === 'true';
+                
+                if (!nombre || !categoria || !precio) { window.mostrarToast('Completa los campos obligatorios', 'error'); return; }
+                
+                let imagenUrl = '';
+                const archivoImagen = document.getElementById('platilloImagen').files[0];
+                const imagenUrlInput = document.getElementById('platilloImagenUrl').value;
+                
+                if (archivoImagen) {
+                    const resultado = await window.subirImagenPlatillo(archivoImagen, 'menu');
+                    if (resultado.success) imagenUrl = resultado.url;
+                    else { window.mostrarToast('Error al subir la imagen: ' + resultado.error, 'error'); return; }
+                } else if (imagenUrlInput) imagenUrl = imagenUrlInput;
+                
+                const ingredientes = {};
+                document.querySelectorAll('#ingredientesContainer .ingrediente-row').forEach(row => {
+                    const select = row.querySelector('select');
+                    const cantidad = row.querySelector('input[type="number"]').value;
+                    if (select && select.value && cantidad) ingredientes[select.value] = { cantidad: parseFloat(cantidad), nombre: select.options[select.selectedIndex]?.text || select.value };
+                });
+                
+                const platillo = {
+                    id: window.platilloEditandoId || window.generarId('plat_'),
+                    nombre, categoria, subcategoria: subcategoria || null, precio, descripcion,
+                    imagen: imagenUrl, ingredientes, disponible, stock: 0, stock_maximo: 0
+                };
+                
+                let error;
+                if (window.platilloEditandoId) ({ error } = await window.supabaseClient.from('menu').update(platillo).eq('id', window.platilloEditandoId));
+                else ({ error } = await window.supabaseClient.from('menu').insert([platillo]));
+                
+                if (error) throw error;
+                
+                document.getElementById('platilloModal').classList.remove('active');
+                window.platilloEditandoId = null;
+                window.limpiarImagenPreview();
+                await window.cargarMenu();
+                window.mostrarToast('✅ Platillo guardado', 'success');
+            } catch (e) { console.error('Error guardando platillo:', e); window.mostrarToast('❌ Error al guardar el platillo: ' + e.message, 'error'); }
+            finally { const saveBtn = document.getElementById('savePlatillo'); saveBtn.innerHTML = 'Guardar'; saveBtn.disabled = false; }
+        });
+
+        window.eliminarPlatillo = async function(id) {
+            if (!confirm('¿Estás seguro de eliminar este platillo?')) return;
+            try {
+                const platillo = window.menuItems.find(p => p.id === id);
+                if (platillo && platillo.imagen && platillo.imagen.includes('imagenes-platillos')) await window.eliminarImagenPlatillo(platillo.imagen);
+                await window.supabaseClient.from('menu').delete().eq('id', id);
+                await window.cargarMenu();
+                window.mostrarToast('🗑️ Platillo eliminado', 'success');
+            } catch (e) { console.error('Error eliminando platillo:', e); window.mostrarToast('❌ Error al eliminar el platillo', 'error'); }
+        };
+
+        window.abrirModalNuevoIngrediente = function() {
+            document.getElementById('ingredienteModalTitle').textContent = 'Nuevo Ingrediente';
+            document.getElementById('ingredienteForm').reset();
+            document.getElementById('ingredienteStock').disabled = true;
+            document.getElementById('ingredienteStock').value = 0;
+            document.getElementById('stockActualField').classList.add('password-protected');
+            document.getElementById('stockUnlock').style.display = 'block';
+            document.getElementById('ingredienteModal').classList.add('active');
+        };
+
+        window.editarIngrediente = function(id) {
+            const ingrediente = window.inventarioItems.find(i => i.id === id);
+            if (!ingrediente) return;
+            document.getElementById('ingredienteModalTitle').textContent = 'Editar Ingrediente';
+            document.getElementById('ingredienteNombre').value = ingrediente.nombre || '';
+            document.getElementById('ingredienteStock').value = ingrediente.stock || 0;
+            document.getElementById('ingredienteUnidad').value = ingrediente.unidad_base || 'unidades';
+            document.getElementById('ingredienteMinimo').value = ingrediente.minimo || 0;
+            document.getElementById('ingredienteCosto').value = ingrediente.precio_costo || 0;
+            document.getElementById('ingredienteVenta').value = ingrediente.precio_unitario || 0;
+            document.getElementById('ingredienteAgregar').value = '';
+            document.getElementById('ingredienteStock').disabled = true;
+            document.getElementById('stockActualField').classList.add('password-protected');
+            document.getElementById('stockUnlock').style.display = 'block';
+            document.getElementById('stockPassword').value = '';
+            document.getElementById('ingredienteModal').classList.add('active');
+        };
+
+        window.desbloquearStock = function() {
+            const password = document.getElementById('stockPassword').value;
+            if (password === window.configGlobal.admin_password) {
+                document.getElementById('ingredienteStock').disabled = false;
+                document.getElementById('stockActualField').classList.remove('password-protected');
+                document.getElementById('stockUnlock').style.display = 'none';
+            } else window.mostrarToast('Contraseña incorrecta', 'error');
+        };
+
+        window.calcularCostoUnitario = function() {
+            const costoTotal = parseFloat(document.getElementById('costoTotal').value) || 0;
+            const cantidad = parseFloat(document.getElementById('cantidadComprada').value) || 1;
+            if (costoTotal && cantidad) document.getElementById('ingredienteCosto').value = (costoTotal / cantidad).toFixed(2);
+        };
+
+        window.agregarStock = function(ingredienteId) {
+            const ingrediente = window.inventarioItems.find(i => i.id === ingredienteId);
+            if (ingrediente) { window.editarIngrediente(ingredienteId); setTimeout(() => { document.getElementById('ingredienteAgregar').focus(); }, 500); }
+        };
+
+        document.getElementById('saveIngrediente').addEventListener('click', async () => {
+            const id = document.getElementById('ingredienteModalTitle').textContent === 'Nuevo Ingrediente' ? window.generarId('ing_') : (window.inventarioItems.find(i => i.nombre === document.getElementById('ingredienteNombre').value)?.id || window.generarId('ing_'));
+            const nombre = document.getElementById('ingredienteNombre').value;
+            const stockActual = parseFloat(document.getElementById('ingredienteStock').value) || 0;
+            const agregar = parseFloat(document.getElementById('ingredienteAgregar').value) || 0;
+            const unidad = document.getElementById('ingredienteUnidad').value;
+            const minimo = parseFloat(document.getElementById('ingredienteMinimo').value) || 0;
+            const costo = parseFloat(document.getElementById('ingredienteCosto').value) || 0;
+            const venta = parseFloat(document.getElementById('ingredienteVenta').value) || 0;
+            
+            if (!nombre) { window.mostrarToast('Ingresa el nombre del ingrediente', 'error'); return; }
+            
+            try {
+                const ingrediente = { id, nombre, stock: stockActual + agregar, reservado: 0, unidad_base: unidad, minimo, precio_costo: costo, precio_unitario: venta };
+                let error;
+                const existe = window.inventarioItems.some(i => i.id === id);
+                if (existe) ({ error } = await window.supabaseClient.from('inventario').update(ingrediente).eq('id', id));
+                else ({ error } = await window.supabaseClient.from('inventario').insert([ingrediente]));
+                if (error) throw error;
+                document.getElementById('ingredienteModal').classList.remove('active');
+                await window.cargarInventario();
+                window.mostrarToast('✅ Ingrediente guardado', 'success');
+            } catch (e) { console.error('Error guardando ingrediente:', e); window.mostrarToast('❌ Error al guardar ingrediente', 'error'); }
+        });
+
+        window.eliminarIngrediente = async function(id) {
+            if (!confirm('¿Estás seguro de eliminar este ingrediente?')) return;
+            try {
+                await window.supabaseClient.from('inventario').delete().eq('id', id);
+                await window.cargarInventario();
+                window.mostrarToast('🗑️ Ingrediente eliminado', 'success');
+            } catch (e) { console.error('Error eliminando ingrediente:', e); window.mostrarToast('❌ Error al eliminar ingrediente', 'error'); }
+        };
+
+        window.renderizarMenu = function() {
+            const grid = document.getElementById('menuGrid');
+            grid.innerHTML = '';
+            window.menuItems.forEach(item => {
+                const ingredientesEstado = [];
+                let todosDisponibles = true;
+                if (item.ingredientes) {
+                    for (const [ingId, ingInfo] of Object.entries(item.ingredientes)) {
+                        const ing = window.inventarioItems.find(i => i.id === ingId);
+                        const disponible = ing && (ing.stock - ing.reservado) >= (ingInfo.cantidad || 0);
+                        if (!disponible) todosDisponibles = false;
+                        ingredientesEstado.push({ nombre: ingInfo.nombre || ingId, disponible });
+                    }
+                }
+                const card = document.createElement('div');
+                card.className = 'menu-card';
+                card.innerHTML = `<div class="menu-card-image" style="background-image:url('${item.imagen || 'https://via.placeholder.com/300x150?text=Saki+Sushi'}')"><div class="menu-card-actions"><button onclick="window.editarPlatillo('${item.id}')" title="Editar"><i class="fas fa-edit"></i></button><button onclick="window.eliminarPlatillo('${item.id}')" title="Eliminar"><i class="fas fa-trash"></i></button></div></div><div class="menu-card-content"><div class="menu-card-header"><span class="menu-card-title">${item.nombre}</span><span class="${item.disponible && todosDisponibles ? 'disponible-badge' : 'no-disponible-badge'}" title="${!todosDisponibles ? 'Sin stock de ingredientes' : ''}"></span></div><div class="menu-card-precio">${window.formatUSD(item.precio || 0)} / ${window.formatBs(window.usdToBs(item.precio || 0))}</div><div class="menu-card-stock">Stock: ${item.stock || 0}</div><div class="menu-card-descripcion">${item.descripcion || ''}</div><div class="menu-card-ingredientes">${ingredientesEstado.map(ing => `<span class="${!ing.disponible ? 'sin-stock' : ''}">${ing.nombre}${!ing.disponible ? '(sin stock)' : ''}</span>`).join('')}</div></div>`;
+                grid.appendChild(card);
+            });
+        };
+
+        window.renderizarInventario = function() {
+            const grid = document.getElementById('inventarioGrid');
+            grid.innerHTML = '';
+            window.inventarioItems.forEach(item => {
+                const disponible = item.stock - item.reservado;
+                const porcentajeStock = item.minimo > 0 ? (disponible / item.minimo) * 100 : 100;
+                const critical = disponible <= item.minimo;
+                const card = document.createElement('div');
+                card.className = 'inventario-card';
+                card.innerHTML = `<div class="inventario-header"><span class="inventario-nombre">${item.nombre}</span><div class="inventario-actions"><button onclick="window.editarIngrediente('${item.id}')"><i class="fas fa-edit"></i></button><button onclick="window.eliminarIngrediente('${item.id}')"><i class="fas fa-trash"></i></button></div></div><div class="inventario-stock"><strong>Stock:</strong> ${item.stock || 0} ${item.unidad_base || 'unidades'}<small>(Reservado: ${item.reservado || 0} | Disponible: ${disponible})</small><div class="stock-bar"><div class="stock-fill ${critical ? 'critical' : ''}" style="width:${Math.min(porcentajeStock, 100)}%"></div></div></div><div class="inventario-info"><div><strong>Mínimo:</strong><br><span class="inventario-minimo">${item.minimo || 0} ${item.unidad_base || 'unidades'}</span></div><div><strong>Costo:</strong><br>${window.formatUSD(item.precio_costo || 0)} / ${window.formatBs(window.usdToBs(item.precio_costo || 0))}</div><div><strong>Venta:</strong><br>${window.formatUSD(item.precio_unitario || 0)} / ${window.formatBs(window.usdToBs(item.precio_unitario || 0))}</div></div>`;
+                grid.appendChild(card);
+            });
+        };
+
+        // ==================== FUNCIONES DE RECUPERACIÓN ====================
+        document.getElementById('recoveryLink').addEventListener('click', async (e) => {
+            e.preventDefault();
+            const codigo = Math.floor(100000 + Math.random() * 900000);
+            console.log('Código de recuperación (simulado):', codigo);
+            const codigoIngresado = prompt('Ingresa el código de recuperación (revisa la consola):');
+            if (codigoIngresado === codigo.toString()) {
+                const { data } = await window.supabaseClient.from('config').select('admin_password, recovery_email').eq('id', 1).single();
+                alert(`Tu contraseña es: ${data.admin_password}\nCorreo de recuperación: ${data.recovery_email}`);
+            } else window.mostrarToast('Código incorrecto', 'error');
+        });
+
+        document.getElementById('logoutButton').addEventListener('click', () => {
+            sessionStorage.removeItem('admin_authenticated');
+            window.isAdminAuthenticated = false;
+            window.mostrarLogin();
+            window.mostrarToast('👋 Sesión cerrada', 'info');
+        });
+
+        document.getElementById('saveAllButton').addEventListener('click', async () => { await window.guardarConfiguracion(); });
+
+        document.getElementById('tasaBaseInput').addEventListener('change', window.recalcularTasaEfectiva);
+        document.getElementById('aumentoDiarioInput').addEventListener('change', window.recalcularTasaEfectiva);
+        document.getElementById('aumentoActivoToggle').addEventListener('change', window.recalcularTasaEfectiva);
+
+        document.getElementById('detenerAumentoBtn').addEventListener('click', () => {
+            document.getElementById('aumentoActivoToggle').checked = false;
+            window.configGlobal.aumento_detenido = true;
+            window.recalcularTasaEfectiva();
+            window.mostrarToast('⏸️ Aumento detenido', 'info');
+        });
+
+        document.getElementById('activarAumentoBtn').addEventListener('click', () => {
+            document.getElementById('aumentoActivoToggle').checked = true;
+            window.configGlobal.aumento_detenido = false;
+            window.recalcularTasaEfectiva();
+            window.mostrarToast('▶️ Aumento activado', 'info');
+        });
+
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                const tabId = tab.dataset.tab;
+                document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+                document.getElementById(tabId + 'Pane').classList.add('active');
+                if (tabId === 'reportes') window.cargarReportes();
+                if (tabId === 'propinas') window.cargarPropinas();
+            });
+        });
+
+        const closeButtons = ['closePlatilloModal', 'cancelPlatillo', 'closeIngredienteModal', 'cancelIngrediente', 'closeUsuarioModal', 'cancelUsuario', 'closeQrAmpliadoModal', 'closeQrAmpliado', 'closeDeliveryModal', 'cancelDeliveryEdit'];
+        closeButtons.forEach(id => { const btn = document.getElementById(id); if (btn) btn.addEventListener('click', () => { const modal = btn.closest('.modal'); if (modal) modal.classList.remove('active'); }); });
+
+        document.querySelectorAll('.modal').forEach(modal => { modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('active'); }); });
+
+        document.getElementById('platilloImagen').addEventListener('change', function(e) {
+            if (this.files && this.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) { document.getElementById('previewImg').src = e.target.result; document.getElementById('imagenPreview').style.display = 'flex'; };
+                reader.readAsDataURL(this.files[0]);
+            }
+        });
+
+        document.getElementById('platilloImagenUrl').addEventListener('input', function(e) {
+            if (this.value) { document.getElementById('previewImg').src = this.value; document.getElementById('imagenPreview').style.display = 'flex'; }
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                ['deliveryModal', 'confirmPagoDeliveryModal', 'qrAmpliadoModal', 'platilloModal', 'ingredienteModal', 'usuarioModal'].forEach(id => {
+                    const m = document.getElementById(id);
+                    if (m && m.classList.contains('active')) m.classList.remove('active');
+                });
+            }
+        });
+
+        // ==================== FUNCIONES DE REALTIME ====================
+        window.setupRealtimeSubscriptions = function() {
+            try {
+                window.supabaseClient.channel('admin-menu').on('postgres_changes', { event: '*', schema: 'public', table: 'menu' }, () => { window.cargarMenu(); }).subscribe();
+                window.supabaseClient.channel('admin-inventario').on('postgres_changes', { event: '*', schema: 'public', table: 'inventario' }, (p) => {
+                    if (p.eventType === 'UPDATE' && p.new.stock <= p.new.minimo) { window.verificarStockCritico(); window.mostrarToast(`⚠️ Stock crítico: ${p.new.nombre}`, 'warning'); }
+                    window.cargarInventario();
+                }).subscribe();
+                window.supabaseClient.channel('admin-usuarios').on('postgres_changes', { event: '*', schema: 'public', table: 'usuarios' }, () => { window.cargarUsuarios(); }).subscribe();
+                window.supabaseClient.channel('admin-qr').on('postgres_changes', { event: '*', schema: 'public', table: 'codigos_qr' }, () => { window.cargarQRs(); }).subscribe();
+                window.supabaseClient.channel('admin-pedidos').on('postgres_changes', { event: '*', schema: 'public', table: 'pedidos' }, () => { window.cargarPedidosRecientes(); if (document.getElementById('reportesPane').classList.contains('active')) window.cargarReportes(); }).subscribe();
+                window.supabaseClient.channel('admin-mesoneros').on('postgres_changes', { event: '*', schema: 'public', table: 'mesoneros' }, () => { window.cargarMesoneros(); }).subscribe();
+                window.supabaseClient.channel('admin-deliverys').on('postgres_changes', { event: '*', schema: 'public', table: 'deliverys' }, () => { window.cargarDeliverys(); }).subscribe();
+                window.supabaseClient.channel('admin-propinas').on('postgres_changes', { event: '*', schema: 'public', table: 'propinas' }, () => { window.cargarPropinas(); }).subscribe();
+            } catch (e) { console.error('Error configurando suscripciones:', e); }
+        };
+
+        window.setupEventListeners = function() {
+            // Los event listeners ya están definidos arriba
+        };
+
+        // ==================== CATEGORÍAS PREDEFINIDAS ====================
+        window.categoriasMenu = {
+            "Entradas": [], "Sushi": [], "Rolls": ["Rolls Fríos de 10 piezas", "Rolls Tempura de 12 piezas"],
+            "Tragos y bebidas": [], "Pokes": [], "Ensaladas": [],
+            "Comida China": ["Arroz Chino", "Arroz Cantones", "Chopsuey", "Lomey", "Chow Mein", "Fideos de Arroz", "Tallarines Cantones", "Mariscos", "Foo Yong", "Sopas", "Entremeses"],
+            "Comida Japonesa": ["Yakimeshi", "Yakisoba", "Pasta Udon", "Churrasco"],
+            "Ofertas Especiales": [], "Para Niños": [], "Combo Ejecutivo": []
+        };
+
+        // ==================== INICIALIZACIÓN ====================
+        document.addEventListener('DOMContentLoaded', async () => {
+            console.log('👑 Verificando sesión de admin...');
+            const adminSession = sessionStorage.getItem('admin_authenticated');
+            if (adminSession === 'true') {
+                console.log('✅ Sesión de admin encontrada');
+                window.isAdminAuthenticated = true;
+                window.mostrarPanel();
+                setTimeout(async () => {
+                    await window.cargarConfiguracionInicial();
+                    await window.cargarMenu();
+                    await window.cargarInventario();
+                    await window.cargarUsuarios();
+                    await window.cargarQRs();
+                    await window.cargarReportes();
+                    await window.cargarPedidosRecientes();
+                    await window.cargarMesoneros();
+                    await window.cargarDeliverys();
+                    await window.cargarPropinas();
+                    window.setupEventListeners();
+                    window.setupRealtimeSubscriptions();
+                }, 100);
+            } else {
+                console.log('🔒 No hay sesión de admin');
+                window.mostrarLogin();
+            }
+        });
+
+        window.mostrarPanel = function() {
+            document.getElementById('loginContainer').style.display = 'none';
+            document.getElementById('panelContainer').classList.add('active');
+        };
     </script>
 </body>
 </html>
