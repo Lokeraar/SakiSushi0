@@ -10,186 +10,28 @@
     
     <!-- FUNCIONES BÁSICAS Y VARIABLES GLOBALES -->
     <script>
-        // ==================== VARIABLES GLOBALES ====================
-        window.currentUser = null;
-        window.pedidos = [];
-        window.ventasHoy = [];
-        window.propinas = [];
-        window.menuItems = [];
-        window.inventario = [];
-        window.mesas = [];
-        window.currentPedido = null;
-        window.pedidoParaAccion = null;
-        window.accionPendiente = null;
-        window.pagosMixtos = [];
-        window.tasaEfectiva = 400;
-        window.currentPropinaPedido = null;
-        window.mesoneros = [];
-        window.deliverys = [];
-        window.stockCache = { data: {}, lastUpdate: 0, duration: 5000,
-            get: function(id) { const a = Date.now(); if (a - this.lastUpdate > this.duration) this.clear(); return this.data[id]; },
-            set: function(id, v) { this.data[id] = v; this.lastUpdate = Date.now(); },
-            clear: function() { this.data = {}; this.lastUpdate = Date.now(); },
-            invalidate: function() { this.data = {}; this.lastUpdate = 0; }
-        };
-        window.currentPropinaData = { mesonero: '', mesa: 'Mesa 1', metodo: 'efectivo_bs', montoBs: 0, montoUsd: 0, referencia: '', tasaAplicada: 400 };
-        window.alarmaAudio = null;
-        window.alarmaActiva = false;
-        window.enProcesoDeCobro = false;
-        window.suscripciones = [];
-        window.paginaVisible = true;
-        window.reconectando = false;
-        window.intervaloVerificacion = null;
-        window.ultimaActualizacion = Date.now();
-
-        // ==================== FUNCIÓN DE TOAST CON FALLBACK ====================
-        window.mostrarToast = function(mensaje, tipo = 'success') {
-            console.log('Toast:', mensaje, tipo);
-            try {
-                const toast = document.getElementById('toast');
-                const toastText = document.getElementById('toastText');
-                if (toast && toastText) {
-                    toastText.textContent = mensaje;
-                    toast.className = 'toast show';
-                    if (tipo === 'error') {
-                        toast.querySelector('i').style.color = 'var(--danger)';
-                        toast.style.borderLeftColor = 'var(--danger)';
-                    } else {
-                        toast.querySelector('i').style.color = 'var(--success)';
-                        toast.style.borderLeftColor = 'var(--success)';
-                    }
-                    setTimeout(() => toast.classList.remove('show'), 3000);
-                } else {
-                    alert(mensaje);
-                }
-            } catch (e) {
-                alert(mensaje);
-            }
-        };
-
-        // ==================== FUNCIONES DE UTILIDAD ====================
-        window.formatBs = function(m) {
-            try {
-                return new Intl.NumberFormat('es-VE', { style: 'currency', currency: 'VES', minimumFractionDigits: 2 }).format(m).replace('VES', 'Bs.');
-            } catch (e) {
-                return 'Bs. ' + (m || 0).toFixed(2);
-            }
-        };
-
-        window.formatUSD = function(m) {
-            try {
-                return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 }).format(m);
-            } catch (e) {
-                return '$ ' + (m || 0).toFixed(2);
-            }
-        };
-
-        window.usdToBs = function(u) {
-            return u * (window.tasaEfectiva || 400);
-        };
-
-        window.cerrarModal = function(modalId) {
-            const modal = document.getElementById(modalId);
-            if (modal) modal.classList.remove('active');
-            if (modalId === 'confirmModal') { window.pedidoParaAccion = null; window.accionPendiente = null; }
-        };
-
-        window.mostrarLogin = function() {
-            // Limpiar campos de login
-            const userInput = document.getElementById('username');
-            const passInput = document.getElementById('password');
-            if (userInput) userInput.value = '';
-            if (passInput) passInput.value = '';
-            
-            document.getElementById('loginContainer').classList.remove('hidden');
-            document.getElementById('panelContainer').classList.add('hidden');
-            window.detenerAlarma();
-        };
-
-        window.detenerAlarma = function() {
-            if (window.alarmaAudio && window.alarmaActiva) {
-                try { window.alarmaAudio.pause(); window.alarmaAudio.currentTime = 0; } catch (e) {}
-                window.alarmaActiva = false;
-            }
-        };
-
-        window.verificarYControlarAlarma = function() {
-            if (!window.alarmaAudio) window.alarmaAudio = document.getElementById('alarmaSonido');
-            if (!window.alarmaAudio) return;
-            const p = (window.pedidos || []).filter(p => p.estado === 'pendiente').length;
-            if (p > 0 && !window.enProcesoDeCobro) {
-                if (!window.alarmaActiva) {
-                    window.alarmaAudio.play().then(() => { window.alarmaActiva = true; }).catch(() => {});
-                }
-            } else if (window.alarmaActiva && (p === 0 || window.enProcesoDeCobro)) {
-                window.alarmaAudio.pause(); window.alarmaAudio.currentTime = 0; window.alarmaActiva = false;
-            }
-        };
+        window.currentUser=null;window.pedidos=[];window.ventasHoy=[];window.propinas=[];window.menuItems=[];window.inventario=[];window.mesas=[];window.currentPedido=null;window.pedidoParaAccion=null;window.accionPendiente=null;window.pagosMixtos=[];window.tasaEfectiva=400;window.currentPropinaPedido=null;window.mesoneros=[];window.deliverys=[];window.stockCache={data:{},lastUpdate:0,duration:5e3,get:function(id){const a=Date.now();if(a-this.lastUpdate>this.duration)this.clear();return this.data[id]},set:function(id,v){this.data[id]=v;this.lastUpdate=Date.now()},clear:function(){this.data={};this.lastUpdate=Date.now()},invalidate:function(){this.data={};this.lastUpdate=0}};window.currentPropinaData={mesonero:'',mesa:'Mesa 1',metodo:'efectivo_bs',montoBs:0,montoUsd:0,referencia:'',tasaAplicada:400};window.alarmaAudio=null;window.alarmaActiva=false;window.enProcesoDeCobro=false;window.suscripciones=[];window.paginaVisible=true;window.reconectando=false;window.intervaloVerificacion=null;window.ultimaActualizacion=Date.now();
+        
+        window.mostrarToast=function(m,t='success'){console.log('Toast:',m,t);try{const tst=document.getElementById('toast'),txt=document.getElementById('toastText');if(tst&&txt){txt.textContent=m;tst.className='toast show';if(t==='error'){tst.querySelector('i').style.color='var(--danger)';tst.style.borderLeftColor='var(--danger)'}else{tst.querySelector('i').style.color='var(--success)';tst.style.borderLeftColor='var(--success)'}setTimeout(()=>tst.classList.remove('show'),3e3)}else alert(m)}catch(e){alert(m)}};
+        
+        window.formatBs=function(m){try{return new Intl.NumberFormat('es-VE',{style:'currency',currency:'VES',minimumFractionDigits:2}).format(m).replace('VES','Bs.')}catch(e){return 'Bs. '+(m||0).toFixed(2)}};
+        
+        window.formatUSD=function(m){try{return new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',minimumFractionDigits:2}).format(m)}catch(e){return '$ '+(m||0).toFixed(2)}};
+        
+        window.usdToBs=function(u){return u*(window.tasaEfectiva||400)};
+        
+        window.cerrarModal=function(mid){const m=document.getElementById(mid);if(m)m.classList.remove('active');if(mid==='confirmModal'){window.pedidoParaAccion=null;window.accionPendiente=null}};
+        
+        window.mostrarLogin=function(){const u=document.getElementById('username'),p=document.getElementById('password');if(u)u.value='';if(p)p.value='';document.getElementById('loginContainer').classList.remove('hidden');document.getElementById('panelContainer').classList.add('hidden');window.detenerAlarma()};
+        
+        window.detenerAlarma=function(){if(window.alarmaAudio&&window.alarmaActiva){try{window.alarmaAudio.pause();window.alarmaAudio.currentTime=0}catch(e){}window.alarmaActiva=false}};
+        
+        window.verificarYControlarAlarma=function(){if(!window.alarmaAudio)window.alarmaAudio=document.getElementById('alarmaSonido');if(!window.alarmaAudio)return;const p=(window.pedidos||[]).filter(p=>p.estado==='pendiente').length;if(p>0&&!window.enProcesoDeCobro){if(!window.alarmaActiva)window.alarmaAudio.play().then(()=>{window.alarmaActiva=true}).catch(()=>{})}else if(window.alarmaActiva&&(p===0||window.enProcesoDeCobro)){window.alarmaAudio.pause();window.alarmaAudio.currentTime=0;window.alarmaActiva=false}};
     </script>
     
     <!-- FUNCIÓN HACER LOGIN -->
     <script>
-        window.hacerLogin = async function() {
-            console.log('🔑 Intentando login...');
-            
-            const username = document.getElementById('username')?.value;
-            const password = document.getElementById('password')?.value;
-            
-            if (!username || !password) { 
-                window.mostrarToast('Ingresa usuario y contraseña', 'error'); 
-                return; 
-            }
-            
-            try {
-                if (!window.supabaseClient) { 
-                    console.error('Cliente Supabase no inicializado');
-                    window.mostrarToast('Error: Cliente Supabase no inicializado. Verifica supabase-config.js', 'error'); 
-                    return; 
-                }
-                
-                console.log('Consultando usuario:', username);
-                const { data, error } = await window.supabaseClient
-                    .from('usuarios')
-                    .select('*')
-                    .eq('username', username)
-                    .eq('password', password)
-                    .eq('activo', true)
-                    .maybeSingle();
-                    
-                if (error) { 
-                    console.error('Error en consulta:', error); 
-                    window.mostrarToast('Error al conectar con la base de datos: ' + error.message, 'error'); 
-                    return; 
-                }
-                
-                if (!data) { 
-                    window.mostrarToast('Credenciales inválidas', 'error'); 
-                    return; 
-                }
-                
-                console.log('✅ Login exitoso para:', data.nombre);
-                window.currentUser = data;
-                sessionStorage.setItem('cajero_user', JSON.stringify(data));
-                
-                window.mostrarToast('✅ Bienvenido ' + data.nombre, 'success');
-                
-                // Esperar un momento y cargar datos
-                setTimeout(async () => {
-                    try {
-                        await window.cargarDatosIniciales();
-                        window.mostrarPanel();
-                    } catch (e) {
-                        console.error('Error cargando datos:', e);
-                        window.mostrarToast('Error cargando datos: ' + e.message, 'error');
-                        window.mostrarPanel(); // Mostrar panel aunque falle la carga
-                    }
-                }, 500);
-                
-            } catch (error) { 
-                console.error('Error en login:', error); 
-                window.mostrarToast('Error al conectar: ' + (error.message || 'Error desconocido'), 'error'); 
-            }
-        };
+        window.hacerLogin=async function(){const u=document.getElementById('username')?.value,p=document.getElementById('password')?.value;if(!u||!p){window.mostrarToast('Ingresa usuario y contraseña','error');return}try{if(!window.supabaseClient){window.mostrarToast('Error: Cliente Supabase no inicializado','error');return}const{data,error}=await window.supabaseClient.from('usuarios').select('*').eq('username',u).eq('password',p).eq('activo',true).maybeSingle();if(error){window.mostrarToast('Error al conectar con la base de datos','error');return}if(!data){window.mostrarToast('Credenciales inválidas','error');return}window.currentUser=data;sessionStorage.setItem('cajero_user',JSON.stringify(data));window.mostrarToast('✅ Bienvenido '+data.nombre,'success');setTimeout(async()=>{try{await window.cargarDatosIniciales();window.mostrarPanel()}catch(e){console.error('Error cargando datos:',e);window.mostrarToast('Error cargando datos: '+e.message,'error');window.mostrarPanel()}},500)}catch(error){window.mostrarToast('Error al conectar: '+(error.message||'Error desconocido'),'error')}};
     </script>
     
     <style>
@@ -498,1206 +340,135 @@
     
     <script src="../supabase-config.js"></script>
     <script>
-        // ==================== INICIALIZACIÓN DE ALARMA ====================
-        window.alarmaAudio = document.getElementById('alarmaSonido');
-
-        // ==================== FUNCIONES DE PANEL ====================
-        window.mostrarPanel = function() {
-            document.getElementById('loginContainer').classList.add('hidden');
-            document.getElementById('panelContainer').classList.remove('hidden');
-            window.setupEventListeners();
-            window.setupRealtimeSubscriptions();
-            setTimeout(() => window.verificarYControlarAlarma(), 100);
-        };
-
-        window.cerrarSesion = function() {
-            sessionStorage.removeItem('cajero_user');
-            window.currentUser = null;
-            window.detenerAlarma();
-            window.mostrarLogin(); // Esto ya limpia los campos
-        };
-
-        window.showSection = function(s) {
-            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-            document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-            document.getElementById(`section-${s}`).classList.add('active');
-            event.target.classList.add('active');
-            if (s === 'pedidos') window.renderizarPedidos();
-            else if (s === 'menu') window.renderizarMenu();
-            else if (s === 'propinas') window.renderizarPropinas();
-            else if (s === 'deliverys') window.renderizarDeliverysStats();
-        };
-
-        window.abrirSelectorMesa = async function() {
-            await window.cargarMesas();
-            const modal = document.getElementById('mesaModal');
-            const lista = document.getElementById('mesaList');
-            lista.innerHTML = (window.mesas || []).length ? window.mesas.map(m => `<button class="mesa-btn" onclick="window.abrirMesa('${m.nombre}')"><i class="fas fa-chair"></i>${m.nombre}</button>`).join('') : '<p class="text-center">No hay mesas</p>';
-            modal.classList.add('active');
-        };
-
-        window.abrirMesa = function(n) {
-            window.open(`${window.location.origin}/Cliente/index.html?mesa=${encodeURIComponent(n)}`, '_blank');
-            window.cerrarModal('mesaModal');
-        };
-
-        window.cerrarCobroModal = function() {
-            document.getElementById('cobroModal').classList.remove('active');
-            window.enProcesoDeCobro = false;
-            window.currentPedido = null;
-            window.pagosMixtos = [];
-            setTimeout(() => window.verificarYControlarAlarma(), 100);
-        };
-
-        window.cerrarPropinaModal = function() {
-            document.getElementById('propinaModal').classList.remove('active');
-            window.currentPropinaPedido = null;
-        };
-
-        // ==================== FUNCIONES DE CARGA DE DATOS ====================
-        window.cargarDatosIniciales = async function() {
-            try {
-                await window.cargarConfiguracion();
-                window.tasaEfectiva = (window.configGlobal && window.configGlobal.tasa_efectiva) || 400;
-                await window.cargarPedidos();
-                await window.cargarVentasHoy();
-                await window.cargarPropinas();  // Carga propinas SIN relación con pedidos
-                await window.cargarMenu();
-                await window.cargarInventario();
-                await window.cargarMesas();
-                await window.cargarMesoneros();
-                await window.cargarDeliverys();
-                window.actualizarEstadisticas();
-                window.renderizarPedidos();
-                window.renderizarPropinas();    // Renderiza propinas como entidades independientes
-                window.renderizarDeliverysStats();
-                window.iniciarVerificacionPeriodica();
-            } catch (e) {
-                console.error('Error cargando datos:', e);
-            }
-        };
-
-        window.verificarUsuarios = async function() {
-            try {
-                const { data, error } = await window.supabaseClient.from('usuarios').select('*').limit(1);
-                if (error) throw error;
-                if (!data || data.length === 0) {
-                    await window.supabaseClient.from('usuarios').insert([
-                        { id: 'user_' + Date.now() + '_1', nombre: 'Cajero Principal', username: 'cajero1', password: '123456', rol: 'cajero', activo: true },
-                        { id: 'user_' + Date.now() + '_2', nombre: 'Cajero Secundario', username: 'cajero2', password: '123456', rol: 'cajero', activo: true }
-                    ]);
-                    window.mostrarToast('Usuarios creados: cajero1 / 123456', 'success');
-                }
-            } catch (e) { console.error('Error verificando usuarios:', e); }
-        };
-
-        window.cargarPedidos = async function() {
-            try {
-                const h = new Date(); h.setHours(0, 0, 0, 0);
-                const m = new Date(h); m.setDate(m.getDate() + 2);
-                const { data, error } = await window.supabaseClient.from('pedidos').select('*').gte('timestamp', h.toISOString()).lt('timestamp', m.toISOString()).order('timestamp', { ascending: false });
-                if (error) throw error;
-                window.pedidos = data || [];
-            } catch (e) { console.error('Error cargando pedidos:', e); }
-        };
-
-        window.cargarVentasHoy = async function() {
-            try {
-                const h = new Date(); h.setHours(0, 0, 0, 0);
-                const m = new Date(h); m.setDate(m.getDate() + 1);
-                const { data, error } = await window.supabaseClient.from('ventas').select('*').gte('fecha', h.toISOString()).lt('fecha', m.toISOString()).order('fecha', { ascending: false });
-                if (error) throw error;
-                window.ventasHoy = data || [];
-            } catch (e) { console.error('Error cargando ventas:', e); }
-        };
-
-        // ==================== FUNCIONES DE PROPINAS (INDEPENDIENTES) ====================
-        window.cargarPropinas = async function() {
-            try {
-                const h = new Date(); h.setHours(0, 0, 0, 0);
-                const m = new Date(h); m.setDate(m.getDate() + 1);
-                // Sin relación con pedidos - solo datos de propinas
-                const { data, error } = await window.supabaseClient
-                    .from('propinas')
-                    .select('*')
-                    .gte('fecha', h.toISOString())
-                    .lt('fecha', m.toISOString())
-                    .order('fecha', { ascending: false });
-                if (error) throw error;
-                window.propinas = data || [];
-            } catch (e) { console.error('Error cargando propinas:', e); }
-        };
-
-        window.renderizarPropinas = function() {
-            const total = (window.propinas || []).reduce((s, p) => s + (p.monto_bs || p.monto || 0), 0);
-            const cantidad = (window.propinas || []).length;
-            const promedio = cantidad > 0 ? total / cantidad : 0;
-            
-            document.getElementById('propinasTotal').textContent = window.formatBs(total);
-            document.getElementById('propinasCantidad').textContent = cantidad;
-            document.getElementById('propinasPromedio').textContent = window.formatBs(promedio);
-            document.getElementById('propinasListCount').textContent = cantidad;
-            
-            document.getElementById('propinasListContainer').innerHTML = cantidad 
-                ? window.propinas.map(p => window.crearTarjetaPropina(p)).join('') 
-                : '<div class="empty-state"><i class="fas fa-hand-holding-heart"></i><p>No hay propinas hoy</p></div>';
-        };
-
-        window.crearTarjetaPropina = function(p) {
-            try {
-                const f = new Date(p.fecha);
-                const h = f.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-                
-                // Buscar el nombre del mesonero
-                const mesonero = (window.mesoneros || []).find(m => m.id === p.mesonero_id);
-                const nombreMesonero = mesonero ? mesonero.nombre : 'N/A';
-                
-                return `<div class="order-card-compact" style="border-left-color:var(--propina)">
-                    <div class="order-header-compact">
-                        <span class="order-time-compact"><i class="far fa-clock"></i> ${h}</span>
-                        <span class="propina-tag"><i class="fas fa-hand-holding-heart"></i> Propina</span>
-                    </div>
-                    <div class="order-info-compact">
-                        <div><i class="fas fa-user"></i> Mesonero: ${nombreMesonero}</div>
-                        <div><i class="fas fa-chair"></i> Mesa: ${p.mesa || 'N/A'}</div>
-                        <div><i class="fas fa-${p.metodo === 'efectivo_bs' ? 'money-bill-wave' : p.metodo === 'efectivo_usd' ? 'dollar-sign' : p.metodo === 'pago_movil' ? 'mobile-alt' : 'credit-card'}"></i> Método: ${p.metodo}</div>
-                        <div><i class="fas fa-user-tie"></i> Cajero: ${p.cajero || 'Cajero'}</div>
-                    </div>
-                    <div class="order-total-compact" style="color:var(--propina)">${window.formatBs(p.monto_bs || p.monto)}</div>
-                </div>`;
-            } catch (e) { 
-                console.error('Error creando tarjeta de propina:', e);
-                return ''; 
-            }
-        };
-
-        window.mostrarPropinaModal = function(pedido) {
-            // Ya no necesitamos el pedido, pero mantenemos el parámetro por compatibilidad
-            window.currentPropinaData = {
-                mesonero: '', 
-                mesa: 'Mesa 1', 
-                metodo: 'efectivo_bs', 
-                montoBs: 0, 
-                montoUsd: 0, 
-                referencia: '', 
-                tasaAplicada: window.tasaEfectiva
-            };
-            
-            const b = document.getElementById('propinaModalBody');
-            const mo = (window.mesoneros || []).map(m => `<option value="${m.id}">${m.nombre}</option>`).join('');
-            
-            // Generar opciones de mesa (1-10)
-            let mesaOptions = '';
-            for (let i = 1; i <= 10; i++) {
-                mesaOptions += `<option value="Mesa ${i}">Mesa ${i}</option>`;
-            }
-            mesaOptions += `<option value="Delivery">Delivery</option><option value="Reserva">Reserva</option>`;
-            
-            b.innerHTML = `<div style="margin-bottom:20px">
-                <div class="mesonero-selector"><label>🧑‍🍳 Mesonero</label><select id="propinaMesonero"><option value="">Seleccionar mesonero...</option>${mo}</select></div>
-                <div class="mesa-selector"><label>🪑 Mesa Atendida</label><select id="propinaMesa">${mesaOptions}</select></div>
-                <div style="margin-bottom:20px"><label>💳 Método de Pago</label>
-                    <div style="display:flex;gap:10px;margin-top:8px">
-                        <label style="flex:1;background:rgba(0,0,0,.3);padding:10px;border-radius:8px;text-align:center;cursor:pointer"><input type="radio" name="propinaMetodo" value="efectivo_bs" checked onchange="window.cambiarMetodoPropina('efectivo_bs')"> Efectivo Bs</label>
-                        <label style="flex:1;background:rgba(0,0,0,.3);padding:10px;border-radius:8px;text-align:center;cursor:pointer"><input type="radio" name="propinaMetodo" value="efectivo_usd" onchange="window.cambiarMetodoPropina('efectivo_usd')"> Efectivo USD</label>
-                        <label style="flex:1;background:rgba(0,0,0,.3);padding:10px;border-radius:8px;text-align:center;cursor:pointer"><input type="radio" name="propinaMetodo" value="pago_movil" onchange="window.cambiarMetodoPropina('pago_movil')"> Pago Móvil</label>
-                        <label style="flex:1;background:rgba(0,0,0,.3);padding:10px;border-radius:8px;text-align:center;cursor:pointer"><input type="radio" name="propinaMetodo" value="punto_venta" onchange="window.cambiarMetodoPropina('punto_venta')"> Punto Venta</label>
-                    </div>
-                </div>
-                <div class="propina-monto-group" id="propinaMontoGroup">
-                    <input type="number" id="propinaMontoBs" step="0.01" placeholder="Monto en Bs" oninput="window.calcularMontoPropina('bs')">
-                    <input type="number" id="propinaMontoUsd" step="0.01" placeholder="Monto en USD" disabled oninput="window.calcularMontoPropina('usd')">
-                </div>
-                <div id="propinaReferenciaGroup" style="display:none;margin-bottom:20px">
-                    <label>🔢 Referencia (6 dígitos)</label>
-                    <div class="referencia-input">
-                        <input type="text" maxlength="1" class="ref-propina" data-index="0" oninput="window.moverRefPropina(this,0)">
-                        <input type="text" maxlength="1" class="ref-propina" data-index="1" oninput="window.moverRefPropina(this,1)">
-                        <input type="text" maxlength="1" class="ref-propina" data-index="2" oninput="window.moverRefPropina(this,2)">
-                        <input type="text" maxlength="1" class="ref-propina" data-index="3" oninput="window.moverRefPropina(this,3)">
-                        <input type="text" maxlength="1" class="ref-propina" data-index="4" oninput="window.moverRefPropina(this,4)">
-                        <input type="text" maxlength="1" class="ref-propina" data-index="5" oninput="window.moverRefPropina(this,5)">
-                    </div>
-                </div>
-                <div style="background:rgba(0,0,0,.3);padding:15px;border-radius:8px">
-                    <div style="display:flex;justify-content:space-between"><span><strong>Total a registrar:</strong></span><span id="propinaTotalDisplay" style="color:var(--accent);font-size:1.2rem">Bs. 0.00</span></div>
-                    <div style="font-size:.85rem;color:rgba(255,255,255,.7);margin-top:5px">Tasa aplicada: ${window.tasaEfectiva} Bs/USD</div>
-                </div>
-            </div>
-            <div class="keyboard-hint"><span><kbd>ENTER</kbd> guardar</span><span><kbd>ESC</kbd> cancelar</span></div>`;
-            
-            document.querySelectorAll('.ref-propina').forEach(i => {
-                i.addEventListener('input', function() {
-                    const r = Array.from(document.querySelectorAll('.ref-propina')).map(i => i.value).join('');
-                    window.currentPropinaData.referencia = r;
-                    window.validarPropina();
-                });
-            });
-            
-            document.getElementById('propinaModal').classList.add('active');
-        };
-
-        window.cambiarMetodoPropina = function(m) {
-            window.currentPropinaData.metodo = m;
-            const bs = document.getElementById('propinaMontoBs');
-            const usd = document.getElementById('propinaMontoUsd');
-            const rg = document.getElementById('propinaReferenciaGroup');
-            if (m === 'efectivo_usd') { bs.disabled = true; usd.disabled = false; rg.style.display = 'none'; }
-            else if (m === 'pago_movil') { bs.disabled = false; usd.disabled = true; rg.style.display = 'block'; }
-            else { bs.disabled = false; usd.disabled = true; rg.style.display = 'none'; }
-            window.validarPropina();
-        };
-
-        window.calcularMontoPropina = function(t) {
-            if (t === 'bs') {
-                window.currentPropinaData.montoBs = parseFloat(document.getElementById('propinaMontoBs').value) || 0;
-                if (window.currentPropinaData.metodo === 'efectivo_usd') 
-                    window.currentPropinaData.montoUsd = window.currentPropinaData.montoBs / window.tasaEfectiva;
-                document.getElementById('propinaTotalDisplay').textContent = window.formatBs(window.currentPropinaData.montoBs);
-            } else {
-                window.currentPropinaData.montoUsd = parseFloat(document.getElementById('propinaMontoUsd').value) || 0;
-                window.currentPropinaData.montoBs = window.currentPropinaData.montoUsd * window.tasaEfectiva;
-                document.getElementById('propinaTotalDisplay').textContent = window.formatBs(window.currentPropinaData.montoBs);
-            }
-            window.validarPropina();
-        };
-
-        window.moverRefPropina = function(i, idx) {
-            if (i.value.length === 1 && idx < 5) 
-                document.querySelector(`.ref-propina[data-index="${idx + 1}"]`).focus();
-            const r = Array.from(document.querySelectorAll('.ref-propina')).map(i => i.value).join('');
-            window.currentPropinaData.referencia = r;
-            window.validarPropina();
-        };
-
-        window.validarPropina = function() {
-            const mes = document.getElementById('propinaMesonero')?.value;
-            const ms = document.getElementById('propinaMesa')?.value;
-            if (!mes || !ms) { document.getElementById('confirmPropinaBtn').disabled = true; return; }
-            if (window.currentPropinaData.metodo === 'pago_movil') {
-                const rv = window.currentPropinaData.referencia && window.currentPropinaData.referencia.length === 6;
-                document.getElementById('confirmPropinaBtn').disabled = !(window.currentPropinaData.montoBs > 0 && rv);
-            } else if (window.currentPropinaData.metodo === 'efectivo_usd') {
-                document.getElementById('confirmPropinaBtn').disabled = !(window.currentPropinaData.montoUsd > 0);
-            } else {
-                document.getElementById('confirmPropinaBtn').disabled = !(window.currentPropinaData.montoBs > 0);
-            }
-        };
-
-        window.confirmarPropina = async function() {
-            if (!window.currentUser) return;
-            
-            const mid = document.getElementById('propinaMesonero').value;
-            const ms = document.getElementById('propinaMesa').value;
-            const mes = (window.mesoneros || []).find(m => m.id === mid);
-            
-            if (!mes) { window.mostrarToast('Selecciona un mesonero', 'error'); return; }
-            
-            try {
-                const prop = {
-                    mesonero_id: mid,
-                    mesa: ms,
-                    metodo: window.currentPropinaData.metodo,
-                    monto_original: window.currentPropinaData.metodo === 'efectivo_usd' ? window.currentPropinaData.montoUsd : window.currentPropinaData.montoBs,
-                    moneda_original: window.currentPropinaData.metodo === 'efectivo_usd' ? 'USD' : 'Bs',
-                    tasa_aplicada: window.currentPropinaData.metodo === 'efectivo_usd' ? window.tasaEfectiva : null,
-                    monto_bs: window.currentPropinaData.montoBs,
-                    referencia: window.currentPropinaData.referencia || null,
-                    cajero: window.currentUser.nombre,
-                    fecha: new Date().toISOString(),
-                    entregado: false
-                };
-                
-                await window.supabaseClient.from('propinas').insert([prop]);
-                window.cerrarPropinaModal();
-                window.mostrarToast('💰 Propina registrada', 'success');
-                await window.cargarPropinas();
-                window.actualizarEstadisticas();
-                window.renderizarPropinas();
-            } catch (e) { 
-                console.error('Error:', e); 
-                window.mostrarToast('❌ Error al registrar propina', 'error'); 
-            }
-        };
-
-        // ==================== FUNCIONES DE MENÚ ====================
-        window.cargarMenu = async function() {
-            try {
-                const { data, error } = await window.supabaseClient.from('menu').select('*').eq('disponible', true);
-                if (error) throw error;
-                window.menuItems = data || [];
-                window.renderizarMenu();
-            } catch (e) { console.error('Error cargando menú:', e); }
-        };
-
-        window.cargarInventario = async function() {
-            try {
-                const { data, error } = await window.supabaseClient.from('inventario').select('*');
-                if (error) throw error;
-                window.inventario = data || [];
-                window.stockCache.invalidate();
-                window.renderizarMenu();
-            } catch (e) { console.error('Error cargando inventario:', e); }
-        };
-
-        window.cargarMesas = async function() {
-            try {
-                const { data, error } = await window.supabaseClient.from('codigos_qr').select('*').order('nombre');
-                if (error) throw error;
-                window.mesas = data || [];
-            } catch (e) { console.error('Error cargando mesas:', e); }
-        };
-
-        window.cargarMesoneros = async function() {
-            try {
-                const { data, error } = await window.supabaseClient.from('mesoneros').select('*').eq('activo', true).order('nombre');
-                if (error) throw error;
-                window.mesoneros = data || [];
-            } catch (e) { console.error('Error cargando mesoneros:', e); }
-        };
-
-        window.cargarDeliverys = async function() {
-            try {
-                const { data, error } = await window.supabaseClient.from('deliverys').select('*').eq('activo', true).order('nombre');
-                if (error) throw error;
-                window.deliverys = data || [];
-            } catch (e) { console.error('Error cargando deliverys:', e); }
-        };
-
-        window.getStockDisponible = async function(i) {
-            try {
-                const c = window.stockCache.get(i);
-                if (c !== undefined) return c;
-                const ing = window.inventario.find(x => x.id === i);
-                if (!ing) return 0;
-                let rc = 0;
-                (window.pedidos || []).forEach(p => {
-                    if (p.items && p.estado === 'pendiente') {
-                        p.items.forEach(item => {
-                            if (!item.personalizacion || !item.personalizacion.includes(i)) {
-                                rc += item.cantidad || 1;
-                            }
-                        });
-                    }
-                });
-                const d = (ing.stock || 0) - (ing.reservado || 0) - rc;
-                window.stockCache.set(i, d);
-                return d;
-            } catch (e) { console.error('Error obteniendo stock:', e); return 0; }
-        };
-
-        window.calcularStockPlatillo = async function(p) {
-            let sd = Infinity;
-            if (p.ingredientes && Object.keys(p.ingredientes).length > 0) {
-                for (const [i, info] of Object.entries(p.ingredientes)) {
-                    const d = await window.getStockDisponible(i);
-                    const cn = info.cantidad || 1;
-                    const pos = Math.floor(d / cn);
-                    sd = Math.min(sd, pos);
-                }
-            } else sd = p.stock_maximo || 999;
-            return sd;
-        };
-
-        window.renderizarMenu = async function() {
-            const g = document.getElementById('menuGrid');
-            const cl = document.getElementById('categoryList');
-            if (!window.menuItems || !window.menuItems.length) {
-                g.innerHTML = '<div class="empty-state"><i class="fas fa-utensils"></i><p>No hay platillos disponibles</p></div>';
-                return;
-            }
-            const cu = [...new Set(window.menuItems.map(i => i.categoria).filter(Boolean))];
-            let ch = '<li class="category-item active" data-categoria="todos"><i class="fas fa-utensils"></i> Todos</li>';
-            cu.forEach(c => {
-                ch += `<li class="category-item" data-categoria="${c}"><i class="fas fa-${c === 'entradas' ? 'fa-leaf' : c === 'sushi' ? 'fa-fish' : c === 'rolls' ? 'fa-egg' : c === 'tragos' ? 'fa-wine-glass-alt' : c === 'pokes' ? 'fa-bowl-food' : c === 'ensaladas' ? 'fa-carrot' : c === 'china' ? 'fa-dragon' : c === 'japonesa' ? 'fa-sun' : c === 'ofertas' ? 'fa-fire' : 'fa-utensils'}"></i> ${c}</li>`;
-            });
-            cl.innerHTML = ch;
-            document.querySelectorAll('.category-item').forEach(i => {
-                i.addEventListener('click', function() {
-                    document.querySelectorAll('.category-item').forEach(c => c.classList.remove('active'));
-                    this.classList.add('active');
-                    window.filtrarMenuPorCategoria(this.dataset.categoria);
-                });
-            });
-            window.filtrarMenuPorCategoria('todos');
-        };
-
-        window.filtrarMenuPorCategoria = function(c) {
-            let f = [];
-            if (c === 'todos') f = window.menuItems;
-            else f = window.menuItems.filter(i => i.categoria === c);
-            window.renderizarMenuItems(f);
-        };
-
-        window.renderizarMenuItems = async function(i) {
-            const g = document.getElementById('menuGrid');
-            const ics = await Promise.all(i.map(async it => {
-                const s = await window.calcularStockPlatillo(it);
-                let sc = 'available', st = 'Disponible';
-                if (s <= 0) { sc = 'sold-out'; st = 'Agotado'; }
-                else if (s < 5) { sc = 'low'; st = `Últimas ${s} unidades`; }
-                else st = `${s} disponibles`;
-                return { ...it, stock: s, stockClass: sc, stockText: st };
-            }));
-            g.innerHTML = ics.map(i => `<div class="menu-card"><div class="menu-card-image" style="background-image:url('${i.imagen || 'https://via.placeholder.com/300x150?text=Saki+Sushi'}')"></div><div class="menu-card-content"><div class="menu-card-header"><span class="menu-card-title">${i.nombre}</span><span class="menu-card-price">${window.formatBs(window.usdToBs(i.precio || 0))}</span></div><p style="font-size:.85rem;color:rgba(255,255,255,.6);margin-bottom:.5rem">${i.descripcion || ''}</p><div class="menu-card-stock ${i.stockClass}"><i class="fas fa-box"></i> ${i.stockText}</div></div></div>`).join('');
-        };
-
-        // ==================== FUNCIONES DE PEDIDOS ====================
-        window.actualizarEstadisticas = function() {
-            const ep = (window.pedidos || []).filter(p => ['en_cocina', 'en_camino', 'reserva_pendiente', 'reserva_atendida'].includes(p.estado)).length;
-            const ch = (window.ventasHoy || []).length;
-            const tvb = (window.ventasHoy || []).reduce((s, v) => s + (v.subtotal_platillos || 0), 0);
-            const pv = (window.ventasHoy || []).reduce((s, v) => s + (v.items || 0), 0);
-            const tp = (window.propinas || []).reduce((s, p) => s + (p.monto_bs || p.monto || 0), 0);
-            const tdh = window.calcularTotalDeliverysHoy();
-            
-            document.getElementById('statPreparacion').textContent = ep;
-            document.getElementById('statCobrados').textContent = ch;
-            document.getElementById('statVentas').textContent = window.formatBs(tvb);
-            document.getElementById('statPlatillos').textContent = pv;
-            document.getElementById('statPropinas').textContent = window.formatBs(tp);
-            document.getElementById('statDeliverysTotal').textContent = window.formatBs(tdh);
-        };
-
-        window.renderizarPedidos = function() {
-            const pM = (window.pedidos || []).filter(p => p.tipo === 'mesa' && p.estado === 'pendiente');
-            const pD = (window.pedidos || []).filter(p => p.tipo === 'delivery' && p.estado === 'pendiente');
-            const pR = (window.pedidos || []).filter(p => p.tipo === 'reserva' && p.estado === 'pendiente');
-            const cM = (window.pedidos || []).filter(p => p.tipo === 'mesa' && p.estado === 'en_cocina');
-            const cD = (window.pedidos || []).filter(p => p.tipo === 'delivery' && p.estado === 'en_camino');
-            const rP = (window.pedidos || []).filter(p => p.tipo === 'reserva' && p.estado === 'reserva_pendiente');
-            const rA = (window.pedidos || []).filter(p => p.tipo === 'reserva' && p.estado === 'reserva_atendida');
-            
-            document.getElementById('mesaPendientesCount').textContent = pM.length;
-            document.getElementById('deliveryPendientesCount').textContent = pD.length;
-            document.getElementById('reservaPendientesCount').textContent = pR.length;
-            document.getElementById('totalPendientesBadge').textContent = pM.length + pD.length + pR.length;
-            document.getElementById('mesaCocinaCount').textContent = cM.length;
-            document.getElementById('deliveryCaminoCount').textContent = cD.length;
-            document.getElementById('reservaProcesoCount').textContent = rP.length + rA.length;
-            document.getElementById('totalPreparacionBadge').textContent = cM.length + cD.length + rP.length + rA.length;
-            
-            document.getElementById('mesaPendientesContainer').innerHTML = pM.length ? pM.map(p => window.crearTarjetaPedidoCompacta(p, 'pendiente')).join('') : '<div class="empty-state"><i class="fas fa-store"></i><p>No hay pedidos en mesa</p></div>';
-            document.getElementById('deliveryPendientesContainer').innerHTML = pD.length ? pD.map(p => window.crearTarjetaPedidoCompacta(p, 'pendiente')).join('') : '<div class="empty-state"><i class="fas fa-motorcycle"></i><p>No hay pedidos delivery</p></div>';
-            document.getElementById('reservaPendientesContainer').innerHTML = pR.length ? pR.map(p => window.crearTarjetaPedidoCompacta(p, 'pendiente')).join('') : '<div class="empty-state"><i class="fas fa-calendar-check"></i><p>No hay reservas</p></div>';
-            document.getElementById('mesaCocinaContainer').innerHTML = cM.length ? cM.map(p => window.crearTarjetaPedidoCompacta(p, 'preparacion')).join('') : '<div class="empty-state"><i class="fas fa-fire"></i><p>No hay pedidos en cocina</p></div>';
-            document.getElementById('deliveryCaminoContainer').innerHTML = cD.length ? cD.map(p => window.crearTarjetaPedidoCompacta(p, 'preparacion')).join('') : '<div class="empty-state"><i class="fas fa-truck"></i><p>No hay deliveries en camino</p></div>';
-            document.getElementById('reservaProcesoContainer').innerHTML = (rP.length + rA.length) ? [...rP, ...rA].map(p => window.crearTarjetaPedidoCompacta(p, 'preparacion')).join('') : '<div class="empty-state"><i class="fas fa-clock"></i><p>No hay reservas pendientes</p></div>';
-        };
-
-        window.crearTarjetaPedidoCompacta = function(p, t) {
-            try {
-                const h = new Date(p.timestamp).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-                let i = '';
-                if (p.tipo === 'mesa') i = `<div class="order-info-compact"><i class="fas fa-chair"></i> Mesa #${p.mesa || 'N/A'}</div>`;
-                else if (p.tipo === 'delivery') i = `<div class="order-info-compact"><div><i class="fas fa-map-marker-alt"></i> ${(p.direccion || '').substring(0, 20)}...</div><div><i class="fas fa-phone"></i> ${p.telefono || 'N/A'}</div>${p.costo_delivery_bs ? `<div><i class="fas fa-truck"></i> Delivery: ${window.formatBs(p.costo_delivery_bs)}</div>` : ''}</div>`;
-                else i = `<div class="order-info-compact"><div><i class="fas fa-user"></i> ${p.cliente_nombre || 'Cliente'}</div><div><i class="fas fa-calendar"></i> ${p.fecha_reserva ? new Date(p.fecha_reserva).toLocaleDateString() : 'N/A'}</div></div>`;
-                
-                const it = (p.items || []).slice(0, 2).map(i => `<div class="order-item-row-compact"><span class="item-name-compact">${i.cantidad || 1}x ${i.nombre}</span><span class="item-price-compact">${window.formatBs(window.usdToBs((i.precioUnitarioUSD || 0) * (i.cantidad || 1)))}</span></div>`).join('');
-                const ic = (p.items || []).length;
-                const mi = ic > 2 ? `<div class="order-item-row-compact" style="justify-content:center;color:var(--gray-400)">+${ic - 2} más</div>` : '';
-                const tot = window.formatBs(window.usdToBs(p.total || 0));
-                const comp = p.comprobante_url && (p.tipo === 'delivery' || p.tipo === 'reserva') ? `<div class="comprobante-thumbnail" onclick="window.verComprobante('${p.id}')"><img src="${p.comprobante_url}" style="max-width:100%;cursor:pointer"></div>` : '';
-                
-                let b = '';
-                if (t === 'pendiente') b = `<button class="btn-compact btn-cobrar-compact" onclick="window.mostrarCobro('${p.id}')">Cobrar</button><button class="btn-compact btn-rechazar-compact" onclick="window.mostrarRechazo('${p.id}')">Rechazar</button>`;
-                else if (p.tipo === 'mesa' && p.estado === 'en_cocina') b = `<button class="btn-compact btn-entregar-compact" onclick="window.mostrarConfirmacion('${p.id}','entregado')"><i class="fas fa-check"></i> Entregado</button>`;
-                else if (p.tipo === 'delivery' && p.estado === 'en_camino') b = `<button class="btn-compact btn-enviar-compact" onclick="window.mostrarConfirmacionDelivery('${p.id}')"><i class="fas fa-truck"></i> Enviar</button>`;
-                else if (p.tipo === 'reserva' && p.estado === 'reserva_pendiente') b = `<button class="btn-compact btn-confirmar-compact" onclick="window.mostrarConfirmacion('${p.id}','reserva_atendida')"><i class="fas fa-user-check"></i> Confirmar</button>`;
-                else if (p.tipo === 'reserva' && p.estado === 'reserva_atendida') b = `<button class="btn-compact btn-entregar-compact" onclick="window.mostrarConfirmacion('${p.id}','reserva_completada')"><i class="fas fa-check"></i> Entregado</button>`;
-                
-                return `<div class="order-card-compact ${p.estado}"><div class="order-header-compact"><span class="order-time-compact"><i class="far fa-clock"></i> ${h}</span><span style="font-weight:600;color:var(--${p.tipo === 'mesa' ? 'info' : p.tipo === 'delivery' ? 'success' : 'accent'});font-size:.7rem;text-transform:uppercase">${p.tipo}</span></div>${i}<div class="order-items-compact">${it}${mi}</div><div class="order-total-compact">${tot}</div>${comp}<div class="order-actions-compact">${b}</div></div>`;
-            } catch (e) {
-                console.error('Error creando tarjeta:', e);
-                return '';
-            }
-        };
-
-        // ==================== FUNCIONES DE DELIVERY ====================
-        window.calcularTotalDeliverysHoy = function() {
-            try {
-                const h = new Date(); h.setHours(0, 0, 0, 0);
-                const m = new Date(h); m.setDate(m.getDate() + 1);
-                return (window.pedidos || []).filter(p => p.tipo === 'delivery' && p.estado === 'enviado' && new Date(p.timestamp) >= h && new Date(p.timestamp) < m).reduce((s, p) => s + (p.costo_delivery_bs || 0), 0);
-            } catch (e) { return 0; }
-        };
-
-        window.obtenerAcumuladoDeliverysHoy = async function() {
-            try {
-                const h = new Date(); h.setHours(0, 0, 0, 0);
-                const m = new Date(h); m.setDate(m.getDate() + 1);
-                const { data, error } = await window.supabaseClient.from('entregas_delivery').select('delivery_id, monto_bs').gte('fecha_entrega', h.toISOString()).lt('fecha_entrega', m.toISOString());
-                if (error) throw error;
-                const a = {};
-                (data || []).forEach(e => { a[e.delivery_id] = (a[e.delivery_id] || 0) + e.monto_bs; });
-                return a;
-            } catch (e) { console.error('Error obteniendo acumulado deliverys:', e); return {}; }
-        };
-
-        window.abrirModalDeliverys = async function() {
-            try {
-                const a = await window.obtenerAcumuladoDeliverysHoy();
-                const m = document.getElementById('deliveryModal');
-                const b = document.getElementById('deliveryModalBody');
-                let c = '<h3 style="margin-bottom:20px">Acumulado por motorizado (Hoy)</h3>';
-                if (!window.deliverys || window.deliverys.length === 0) c += '<div class="empty-state"><i class="fas fa-motorcycle"></i><p>No hay motorizados registrados</p></div>';
-                else {
-                    c += '<div class="motorizados-list">';
-                    window.deliverys.forEach(d => { const m = a[d.id] || 0; c += `<div class="motorizado-item"><span class="motorizado-nombre">${d.nombre}</span><span class="motorizado-monto">${window.formatBs(m)}</span></div>`; });
-                    c += '</div>';
-                }
-                b.innerHTML = c;
-                m.classList.add('active');
-            } catch (e) {
-                console.error('Error abriendo modal deliverys:', e);
-                window.mostrarToast('Error al cargar datos de deliverys', 'error');
-            }
-        };
-
-        window.renderizarDeliverysStats = function() {
-            const eh = (window.pedidos || []).filter(p => p.tipo === 'delivery' && p.estado === 'enviado' && new Date(p.timestamp).toDateString() === new Date().toDateString());
-            const td = eh.reduce((s, p) => s + (p.costo_delivery_bs || 0), 0);
-            const c = eh.length;
-            const pr = c > 0 ? td / c : 0;
-            document.getElementById('deliverysTotalStats').textContent = window.formatBs(td);
-            document.getElementById('deliverysCantidadStats').textContent = c;
-            document.getElementById('deliverysPromedioStats').textContent = window.formatBs(pr);
-            document.getElementById('deliverysListCount').textContent = c;
-            document.getElementById('deliverysListContainer').innerHTML = c ? eh.map(p => window.crearTarjetaDelivery(p)).join('') : '<div class="empty-state"><i class="fas fa-motorcycle"></i><p>No hay entregas hoy</p></div>';
-        };
-
-        window.crearTarjetaDelivery = function(p) {
-            try {
-                const f = new Date(p.timestamp);
-                const h = f.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-                return `<div class="order-card-compact" style="border-left-color:var(--delivery)"><div class="order-header-compact"><span class="order-time-compact"><i class="far fa-clock"></i> ${h}</span><span class="delivery-tag"><i class="fas fa-motorcycle"></i> Delivery</span></div><div class="order-info-compact"><div><i class="fas fa-map-marker-alt"></i> ${(p.direccion || '').substring(0, 20)}...</div><div><i class="fas fa-phone"></i> ${p.telefono || 'N/A'}</div><div><i class="fas fa-tag"></i> Pedido: ${p.id.substring(0, 8)}</div></div><div class="order-total-compact" style="color:var(--delivery)">${window.formatBs(p.costo_delivery_bs || 0)}</div></div>`;
-            } catch (e) { return ''; }
-        };
-
-        // ==================== FUNCIONES DE CONFIRMACIÓN ====================
-        window.mostrarConfirmacionDelivery = function(pid) {
-            const p = (window.pedidos || []).find(p => p.id === pid);
-            if (!p) return;
-            window.pedidoParaAccion = p;
-            const m = document.getElementById('confirmModal');
-            const t = document.getElementById('confirmModalTitle');
-            const b = document.getElementById('confirmModalBody');
-            const h = document.getElementById('confirmModalHeader');
-            t.innerHTML = '<i class="fas fa-truck"></i> Asignar Delivery';
-            h.style.background = 'linear-gradient(135deg,var(--delivery),#00838F)';
-            const dop = (window.deliverys || []).map(d => `<option value="${d.id}">${d.nombre}</option>`).join('');
-            b.innerHTML = `<p>Selecciona el motorizado que realizará el envío:</p><div class="delivery-selector" style="margin:20px 0"><select id="deliverySelector" style="width:100%;padding:10px;background:rgba(0,0,0,.5);color:#fff;border:2px solid rgba(255,255,255,.2);border-radius:8px;"><option value="">-- Seleccionar motorizado --</option>${dop}</select></div>${window.crearDetallePedidoHTML(p)}<div class="keyboard-hint" style="margin-top:20px"><span><kbd>ENTER</kbd> confirmar</span><span><kbd>ESC</kbd> cancelar</span></div>`;
-            document.getElementById('confirmActionBtn').disabled = true;
-            setTimeout(() => {
-                const s = document.getElementById('deliverySelector');
-                if (s) {
-                    s.addEventListener('change', function() {
-                        document.getElementById('confirmActionBtn').disabled = !this.value;
-                    });
-                }
-            }, 100);
-            m.classList.add('active');
-        };
-
-        window.mostrarConfirmacion = function(pid, acc) {
-            const p = (window.pedidos || []).find(p => p.id === pid);
-            if (!p) return;
-            window.pedidoParaAccion = p;
-            window.accionPendiente = acc;
-            const m = document.getElementById('confirmModal');
-            const t = document.getElementById('confirmModalTitle');
-            const b = document.getElementById('confirmModalBody');
-            const h = document.getElementById('confirmModalHeader');
-            let tit, msg, not;
-            if (acc === 'entregado') {
-                tit = 'Confirmar Entrega'; msg = '¿Pedido entregado?';
-                h.style.background = 'linear-gradient(135deg,var(--success),#2E7D32)';
-                not = { titulo: '🍽️ ¡Que aproveche!', mensaje: 'Tu pedido ha sido entregado.' };
-            } else if (acc === 'enviado') {
-                tit = 'Confirmar Envío'; msg = '¿Pedido enviado?';
-                h.style.background = 'linear-gradient(135deg,var(--info),#1565C0)';
-                not = { titulo: '🚚 Delivery en camino', mensaje: 'El repartidor ya salió.' };
-            } else if (acc === 'reserva_atendida') {
-                tit = 'Cliente Confirmado'; msg = '¿Cliente llegó?';
-                h.style.background = 'linear-gradient(135deg,#9c27b0,#7b1fa2)';
-                not = { titulo: '✅ Cliente confirmado', mensaje: 'Estás siendo atendido.' };
-            } else {
-                tit = 'Confirmar'; msg = '¿Confirmar acción?';
-                h.style.background = 'linear-gradient(135deg,var(--success),#2E7D32)';
-                not = { titulo: '✅ Completado', mensaje: 'Acción confirmada.' };
-            }
-            t.innerHTML = `<i class="fas fa-check-circle"></i> ${tit}`;
-            b.innerHTML = `<p>${msg}</p>${window.crearDetallePedidoHTML(p)}<div style="background:rgba(56,142,60,.1);padding:15px;margin-top:20px"><strong>Notificación:</strong><br>${not.titulo}<br>${not.mensaje}</div><div class="keyboard-hint"><span><kbd>ENTER</kbd> confirmar</span><span><kbd>ESC</kbd> cancelar</span></div>`;
-            m.classList.add('active');
-        };
-
-        window.ejecutarConfirmacion = async function() {
-            if (!window.pedidoParaAccion) return;
-            try {
-                let nt, nm;
-                if (window.accionPendiente === 'entregado') {
-                    nt = '🍽️ Pedido entregado';
-                    nm = '¡Buen Provecho! Gracias por elegir Saki Sushi';
-                } else if (window.accionPendiente === 'enviado') {
-                    const did = document.getElementById('deliverySelector')?.value;
-                    if (!did) { window.mostrarToast('Selecciona un motorizado', 'error'); return; }
-                    const del = (window.deliverys || []).find(d => d.id === did);
-                    await window.supabaseClient.from('entregas_delivery').insert([{
-                        pedido_id: window.pedidoParaAccion.id, delivery_id: did,
-                        monto_bs: window.pedidoParaAccion.costo_delivery_bs || 0,
-                        fecha_entrega: new Date().toISOString()
-                    }]);
-                    nt = '🚚 Delivery en camino';
-                    nm = del ? `Tu pedido está siendo entregado por ${del.nombre}` : 'El repartidor ya salió';
-                } else if (window.accionPendiente === 'reserva_atendida') {
-                    nt = '✅ Reserva Confirmada';
-                    nm = 'En breve tu pedido te será entregado, ¡Gracias por preferirnos!';
-                } else if (window.accionPendiente === 'reserva_completada') {
-                    nt = '🍽️ Pedido entregado';
-                    nm = '¡Buen Provecho! Gracias por elegir Saki Sushi';
-                } else {
-                    nt = '🔄 Estado actualizado';
-                    nm = 'Tu pedido ha sido actualizado';
-                }
-                await window.supabaseClient.from('pedidos').update({ estado: window.accionPendiente }).eq('id', window.pedidoParaAccion.id);
-                await window.supabaseClient.from('notificaciones').insert([{
-                    pedido_id: window.pedidoParaAccion.id, tipo: 'approved', titulo: nt, mensaje: nm,
-                    timestamp: new Date().toISOString(), session_id: window.pedidoParaAccion.session_id, leida: false
-                }]);
-                window.cerrarModal('confirmModal');
-                window.mostrarToast('✅ Estado actualizado');
-                await window.recargarPedidosCompletos();
-                window.verificarYControlarAlarma();
-            } catch (e) { console.error('Error:', e); window.mostrarToast('❌ Error', 'error'); }
-        };
-
-        // ==================== FUNCIONES DE COBRO ====================
-        window.mostrarCobro = function(pid) {
-            window.currentPedido = (window.pedidos || []).find(p => p.id === pid);
-            if (!window.currentPedido) return;
-            window.enProcesoDeCobro = true;
-            if (window.alarmaActiva) { window.alarmaAudio.pause(); window.alarmaAudio.currentTime = 0; window.alarmaActiva = false; }
-            window.pagosMixtos = [];
-            let mp = 'efectivo_bs';
-            if (window.currentPedido.tipo === 'delivery' || window.currentPedido.tipo === 'reserva') mp = 'pago_movil';
-            const tap = window.usdToBs(window.currentPedido.total || 0);
-            const b = document.getElementById('cobroModalBody');
-            const its = (window.currentPedido.items || []).map(i => `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.1)"><span>${i.cantidad || 1}x ${i.nombre}</span><span style="font-weight:600">${window.formatBs(window.usdToBs((i.precioUnitarioUSD || 0) * (i.cantidad || 1)))}</span></div>`).join('');
-            b.innerHTML = `<div style="background:rgba(0,0,0,.3);padding:15px;border-radius:8px;margin-bottom:20px"><h4>Resumen del Pedido</h4>${its}${window.currentPedido.costo_delivery_bs ? `<div style="display:flex;justify-content:space-between;margin-top:10px;padding-top:10px;border-top:2px solid rgba(255,255,255,.1)"><span>Costo delivery:</span><span>${window.formatBs(window.currentPedido.costo_delivery_bs)}</span></div>` : ''}<div style="display:flex;justify-content:space-between;margin-top:15px;padding-top:15px;border-top:2px solid var(--primary);font-weight:700"><span>Total a pagar:</span><span id="totalPagarDisplay" style="color:var(--accent)">${window.formatBs(tap)}</span></div></div><div style="margin-bottom:20px;padding:12px;background:rgba(245,124,0,.1);border-left:4px solid var(--warning)"><label style="display:flex;align-items:center;gap:10px;color:#fff"><input type="checkbox" id="invitacionCheck" style="width:18px;height:18px"><strong>Por parte de la casa (invitación)</strong></label></div><div id="pagosSection"><h4>Pagos Mixtos</h4><div id="pagosContainer" class="payment-mix-container"></div><button class="btn btn-secondary" onclick="window.agregarMetodoPago()" style="width:100%;margin-bottom:20px"><i class="fas fa-plus"></i> Agregar Método de Pago</button><div id="extrasSection" style="display:none"><div class="pagos-resumen-row" id="vueltoRow" style="display:none"><div class="input-group"><label>Vuelto a entregar (Bs)</label><input type="number" id="vueltoInput" step="0.01" min="0" max="9999999999.99" oninput="window.calcularConVuelto()"></div><div class="input-group"><label>Vuelto restante</label><span id="vueltoRestante">Bs. 0.00</span></div></div><div class="pagos-checkbox" id="condonarCheckbox" style="display:none"><input type="checkbox" id="condonarCheck"><label><strong>Condonar monto restante</strong> <span class="badge" id="condonarMonto">Bs. 0.00</span></label></div><div class="pagos-checkbox" id="favorCheckbox" style="display:none"><input type="checkbox" id="favorCheck"><label><strong>A favor de caja</strong> <span class="badge favor" id="favorMonto">Bs. 0.00</span></label></div></div><div class="pagos-total"><div class="pagos-resumen"><span>Total recibido:</span><span id="totalRecibido">Bs. 0.00</span></div><div class="pagos-resumen"><span>Pendiente:</span><span id="pendiente" style="color:var(--danger)">Bs. 0.00</span></div><div class="pagos-resumen"><span>Sobrante:</span><span id="sobrante" style="color:var(--success)">Bs. 0.00</span></div><div class="pagos-resumen" id="condonadoDisplay" style="display:none"><span>Condonado:</span><span id="condonadoValue" style="color:var(--condonar)">Bs. 0.00</span></div><div class="pagos-resumen" id="favorDisplay" style="display:none"><span>A favor caja:</span><span id="favorValue" style="color:var(--favordecaja)">Bs. 0.00</span></div></div></div><div class="keyboard-hint"><span><kbd>ENTER</kbd> confirmar</span><span><kbd>ESC</kbd> cancelar</span></div>`;
-            document.getElementById('invitacionCheck').addEventListener('change', function(e) {
-                document.getElementById('pagosSection').style.opacity = e.target.checked ? '0.5' : '1';
-                document.getElementById('pagosSection').style.pointerEvents = e.target.checked ? 'none' : 'auto';
-                document.getElementById('confirmCobroBtn').disabled = !e.target.checked && window.pagosMixtos.length === 0;
-            });
-            window.agregarMetodoPago(mp);
-            document.getElementById('cobroModal').classList.add('active');
-            window.recalcularTotales();
-        };
-
-        window.agregarMetodoPago = function(mp = 'pago_movil') {
-            window.pagosMixtos.push({ id: Date.now() + Math.random(), metodo: mp, monto: 0, referencia: '' });
-            window.renderizarPagosMixtos();
-            window.recalcularTotales();
-        };
-
-        window.renderizarPagosMixtos = function() {
-            const c = document.getElementById('pagosContainer');
-            if (!c) return;
-            c.innerHTML = window.pagosMixtos.map((p, i) => `<div class="pago-item" data-id="${p.id}">${window.pagosMixtos.length > 1 ? `<button class="remove-pago" onclick="window.eliminarMetodoPago('${p.id}')"><i class="fas fa-times"></i></button>` : ''}<select onchange="window.actualizarPago('${p.id}','metodo',this.value)"><option value="efectivo_bs" ${p.metodo === 'efectivo_bs' ? 'selected' : ''}>Efectivo Bs</option><option value="efectivo_usd" ${p.metodo === 'efectivo_usd' ? 'selected' : ''}>Efectivo Dólar</option><option value="pago_movil" ${p.metodo === 'pago_movil' ? 'selected' : ''}>Pago Móvil</option><option value="punto_venta" ${p.metodo === 'punto_venta' ? 'selected' : ''}>Punto de Venta</option></select><input type="number" step="0.01" max="9999999999.99" placeholder="Monto ${p.metodo === 'efectivo_usd' ? 'en USD' : 'en Bs'}" value="${p.monto || 0}" oninput="window.actualizarPago('${p.id}','monto',this.value)">${p.metodo === 'pago_movil' ? `<input type="text" maxlength="6" placeholder="Referencia (6 dígitos)" value="${p.referencia || ''}" oninput="window.actualizarPago('${p.id}','referencia',this.value)">` : ''}</div>`).join('');
-        };
-
-        window.actualizarPago = function(id, campo, valor) {
-            const p = window.pagosMixtos.find(p => p.id == id);
-            if (!p) return;
-            if (campo === 'monto') { let nv = parseFloat(valor) || 0; if (nv > 9999999999.99) nv = 9999999999.99; p.monto = nv; }
-            else if (campo === 'metodo') { p.metodo = valor; if (valor !== 'pago_movil') p.referencia = ''; }
-            else if (campo === 'referencia') p.referencia = valor;
-            window.renderizarPagosMixtos();
-            window.recalcularTotales();
-        };
-
-        window.eliminarMetodoPago = function(id) {
-            window.pagosMixtos = window.pagosMixtos.filter(p => p.id != id);
-            window.renderizarPagosMixtos();
-            window.recalcularTotales();
-        };
-
-        window.recalcularTotales = function() {
-            const tot = window.usdToBs(window.currentPedido?.total || 0);
-            let rec = window.pagosMixtos.reduce((s, p) => s + (p.metodo === 'efectivo_usd' ? window.usdToBs(p.monto || 0) : (p.monto || 0)), 0);
-            const pen = tot - rec;
-            const sob = rec - tot;
-            document.getElementById('totalRecibido').textContent = window.formatBs(rec);
-            document.getElementById('pendiente').textContent = window.formatBs(Math.max(0, pen));
-            document.getElementById('sobrante').textContent = window.formatBs(Math.max(0, sob));
-            
-            const es = document.getElementById('extrasSection');
-            const vr = document.getElementById('vueltoRow');
-            const cc = document.getElementById('condonarCheckbox');
-            const fc = document.getElementById('favorCheckbox');
-            const cch = document.getElementById('condonarCheck');
-            const fch = document.getElementById('favorCheck');
-            const vi = document.getElementById('vueltoInput');
-            
-            let me = false;
-            if (pen < 0) {
-                me = true;
-                vr.style.display = 'grid';
-                if (vi.value) {
-                    const v = parseFloat(vi.value) || 0;
-                    const rest = Math.abs(pen) - v;
-                    document.getElementById('vueltoRestante').textContent = window.formatBs(Math.max(0, rest));
-                    if (rest > 0) { fc.style.display = 'flex'; document.getElementById('favorMonto').textContent = window.formatBs(rest); }
-                    else fc.style.display = 'none';
-                } else {
-                    document.getElementById('vueltoRestante').textContent = window.formatBs(Math.abs(pen));
-                    fc.style.display = 'none';
-                }
-                cc.style.display = 'none';
-            } else if (pen > 0) {
-                me = true;
-                vr.style.display = 'none';
-                cc.style.display = 'flex';
-                document.getElementById('condonarMonto').textContent = window.formatBs(pen);
-                fc.style.display = 'none';
-            } else {
-                me = false;
-                vr.style.display = 'none';
-                cc.style.display = 'none';
-                fc.style.display = 'none';
-            }
-            es.style.display = me ? 'block' : 'none';
-            
-            const inv = document.getElementById('invitacionCheck');
-            let ch = inv.checked || window.pagosMixtos.length > 0;
-            if (pen > 0 && !cch?.checked) ch = false;
-            if (pen < 0) {
-                const v = parseFloat(vi?.value) || 0;
-                const rest = Math.abs(pen) - v;
-                if (rest > 0 && !fch?.checked) ch = false;
-            }
-            document.getElementById('confirmCobroBtn').disabled = !ch;
-        };
-
-        window.calcularConVuelto = function() { window.recalcularTotales(); };
-
-        window.confirmarCobro = async function() {
-            if (!window.currentPedido) return;
-            const inv = document.getElementById('invitacionCheck').checked;
-            const cc = document.getElementById('condonarCheck');
-            const fc = document.getElementById('favorCheck');
-            const vi = document.getElementById('vueltoInput');
-            let ne, mp, p, cond = 0, afc = 0, v = 0, rec;
-            
-            if (inv) {
-                ne = window.currentPedido.tipo === 'delivery' ? 'en_camino' : (window.currentPedido.tipo === 'reserva' ? 'reserva_pendiente' : 'en_cocina');
-                mp = 'invitacion';
-                p = [{ metodo: 'invitacion', monto: 0, montoBs: 0 }];
-                rec = 0;
-            } else {
-                const tot = window.usdToBs(window.currentPedido.total || 0);
-                rec = window.pagosMixtos.reduce((s, p) => s + (p.metodo === 'efectivo_usd' ? window.usdToBs(p.monto || 0) : (p.monto || 0)), 0);
-                let pen = tot - rec;
-                if (cc && cc.checked && pen > 0) { cond = pen; pen = 0; }
-                if (fc && fc.checked) {
-                    const sob = Math.abs(pen);
-                    if (pen < 0) {
-                        const ve = parseFloat(vi?.value) || 0;
-                        afc = Math.abs(pen) - ve;
-                        if (afc < 0) afc = 0;
-                        v = ve;
-                    } else { afc = pen; pen = 0; }
-                }
-                ne = window.currentPedido.tipo === 'delivery' ? 'en_camino' : (window.currentPedido.tipo === 'reserva' ? 'reserva_pendiente' : 'en_cocina');
-                p = window.pagosMixtos.map(p => ({ metodo: p.metodo, monto: p.monto, montoBs: p.metodo === 'efectivo_usd' ? window.usdToBs(p.monto) : p.monto, referencia: p.referencia || null }));
-                mp = window.pagosMixtos.length === 1 ? window.pagosMixtos[0].metodo : 'mixto';
-            }
-            
-            try {
-                await window.supabaseClient.from('pedidos').update({
-                    estado: ne, metodo_pago: mp, pagos_mixtos: p,
-                    cajero: window.currentUser?.nombre || 'Cajero',
-                    fecha_cobro: new Date().toISOString(),
-                    condonado: cond || 0, a_favor_caja: afc || 0,
-                    vuelto_entregado: v || 0, monto_recibido: rec
-                }).eq('id', window.currentPedido.id);
-                
-                const ti = window.currentPedido.items?.reduce((s, i) => s + (i.cantidad || 1), 0) || 0;
-                const spUSD = (window.currentPedido.items || []).reduce((s, i) => s + (i.precioUnitarioUSD || 0) * (i.cantidad || 1), 0);
-                const spBs = window.usdToBs(spUSD);
-                
-                await window.supabaseClient.from('ventas').insert([{
-                    pedido_id: window.currentPedido.id, total: window.currentPedido.total,
-                    subtotal_platillos: spBs, items: ti, metodo_pago: mp,
-                    tipo: window.currentPedido.tipo, fecha: new Date().toISOString()
-                }]);
-                
-                let tn, tm;
-                if (inv) { tn = '🎁 Pedido por invitación'; tm = 'Tu pedido ha sido procesado. ¡Disfruta!'; }
-                else if (window.currentPedido.tipo === 'delivery') { tn = '✅ Pago confirmado'; tm = 'Tu delivery está en camino'; }
-                else if (window.currentPedido.tipo === 'reserva') { tn = '✅ Reserva confirmada'; tm = 'Tu reserva ha sido confirmada'; }
-                else { tn = '✅ Pago confirmado'; tm = 'Tu pedido está en preparación'; }
-                
-                await window.supabaseClient.from('notificaciones').insert([{
-                    pedido_id: window.currentPedido.id, tipo: 'approved', titulo: tn, mensaje: tm,
-                    timestamp: new Date().toISOString(), session_id: window.currentPedido.session_id, leida: false
-                }]);
-                
-                document.getElementById('cobroModal').classList.remove('active');
-                window.mostrarToast('💰 Cobro procesado');
-                window.enProcesoDeCobro = false;
-                window.currentPedido = null;
-                window.pagosMixtos = [];
-                
-                await window.recargarPedidosCompletos();
-                await window.cargarMenu();
-                window.renderizarPropinas();
-            } catch (e) {
-                console.error('Error en cobro:', e);
-                window.mostrarToast('❌ Error al procesar el cobro', 'error');
-            }
-        };
-
-        // ==================== FUNCIONES DE RECHAZO ====================
-        window.mostrarRechazo = function(pid) {
-            window.pedidoParaAccion = (window.pedidos || []).find(p => p.id === pid);
-            if (window.pedidoParaAccion) document.getElementById('rechazoModal').classList.add('active');
-        };
-
-        window.confirmarRechazo = async function() {
-            if (!window.pedidoParaAccion) return;
-            const r = document.querySelector('input[name="rejectionReason"]:checked')?.value;
-            if (!r) { window.mostrarToast('Selecciona una razón', 'error'); return; }
-            try {
-                await window.supabaseClient.rpc('liberar_ingredientes', { p_pedido_id: window.pedidoParaAccion.id });
-                await window.supabaseClient.from('pedidos').update({ estado: 'rechazado' }).eq('id', window.pedidoParaAccion.id);
-                const rz = {
-                    referencia_invalida: 'Referencia inválida',
-                    monto_insuficiente: 'Monto insuficiente',
-                    datos_incorrectos: 'Datos incorrectos',
-                    no_disponible: 'Producto no disponible',
-                    fuera_horario: 'Fuera de horario'
-                };
-                await window.supabaseClient.from('notificaciones').insert([{
-                    pedido_id: window.pedidoParaAccion.id, tipo: 'rejected', titulo: '❌ Pedido rechazado',
-                    mensaje: `Motivo: ${rz[r] || r}`, timestamp: new Date().toISOString(),
-                    session_id: window.pedidoParaAccion.session_id, leida: false
-                }]);
-                window.cerrarModal('rechazoModal');
-                window.mostrarToast('🗑️ Pedido rechazado');
-                await window.recargarPedidosCompletos();
-                window.verificarYControlarAlarma();
-            } catch (e) {
-                console.error('Error al rechazar:', e);
-                window.mostrarToast('❌ Error al rechazar', 'error');
-            }
-        };
-
-        // ==================== FUNCIONES DE DETALLE ====================
-        window.crearDetallePedidoHTML = function(p) {
-            try {
-                let met = '';
-                if (p.pagos_mixtos) {
-                    met = '<div class="payment-methods">' + p.pagos_mixtos.map(p => {
-                        const ic = p.metodo === 'pago_movil' ? 'mobile-alt' : (p.metodo === 'punto_venta' ? 'credit-card' : 'money-bill-wave');
-                        const sim = p.metodo === 'efectivo_bs' ? 'Bs' : (p.metodo === 'efectivo_usd' ? '$' : (p.metodo === 'pago_movil' ? '📱' : '💳'));
-                        return `<span class="payment-tag"><i class="fas fa-${ic}"></i> ${sim} ${window.formatBs(p.monto)}</span>`;
-                    }).join('') + '</div>';
-                }
-                let tags = '';
-                if (p.condonado > 0) tags += `<span class="condonar-tag"><i class="fas fa-gift"></i> Condonado: ${window.formatBs(p.condonado)}</span>`;
-                if (p.a_favor_caja > 0) tags += `<span class="favor-tag"><i class="fas fa-piggy-bank"></i> A favor: ${window.formatBs(p.a_favor_caja)}</span>`;
-                return `<div class="detail-item"><div class="detail-row"><span class="detail-label">Cliente:</span><span class="detail-value">${p.cliente_nombre || 'N/A'}</span></div><div class="detail-row"><span class="detail-label">Tipo:</span><span class="detail-value">${p.tipo}</span></div>${p.tipo === 'mesa' ? `<div class="detail-row"><span class="detail-label">Mesa:</span><span class="detail-value">${p.mesa}</span></div>` : ''}${p.tipo === 'delivery' ? `<div class="detail-row"><span class="detail-label">Dirección:</span><span class="detail-value">${p.direccion}</span></div><div class="detail-row"><span class="detail-label">Teléfono:</span><span class="detail-value">${p.telefono}</span></div>` : ''}${p.referencia ? `<div class="detail-row"><span class="detail-label">Ref:</span><span class="detail-value">${p.referencia}</span></div>` : ''}<div class="detail-row"><span class="detail-label">Items:</span></div>${(p.items || []).map(i => `<div class="detail-row"><span>${i.cantidad || 1}x ${i.nombre}</span><span>${window.formatBs(window.usdToBs(i.precioUnitarioUSD * (i.cantidad || 1)))}</span></div>`).join('')}${met ? `<div class="detail-row"><span class="detail-label">Pagos:</span></div>${met}` : ''}${tags ? `<div class="detail-row">${tags}</div>` : ''}<div class="detail-row" style="font-weight:700"><span>TOTAL</span><span>${window.formatBs(window.usdToBs(p.total || 0))}</span></div></div>`;
-            } catch (e) { return ''; }
-        };
-
-        window.crearDetalleVentaCompacto = function(v, p) {
-            if (!p) return '';
-            try {
-                const h = new Date(p.timestamp).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-                const its = (p.items || []).map(i => `<div class="detail-item-row-compact"><span>${i.cantidad || 1}x ${i.nombre}</span><span>${window.formatBs(window.usdToBs((i.precioUnitarioUSD || 0) * (i.cantidad || 1)))}</span></div>`).join('');
-                let met = '';
-                if (p.pagos_mixtos?.length) {
-                    met = '<div style="margin-top:3px">' + p.pagos_mixtos.map(p => {
-                        const nom = p.metodo === 'efectivo_bs' ? 'Bs' : p.metodo === 'efectivo_usd' ? '$' : p.metodo === 'pago_movil' ? '📱' : '💳';
-                        return `<span class="detail-metodo-tag">${nom} ${window.formatBs(p.monto)}</span>`;
-                    }).join('') + '</div>';
-                }
-                let tags = '';
-                if (p.condonado > 0) tags += `<span class="condonar-tag"><i class="fas fa-gift"></i> Condonado: ${window.formatBs(p.condonado)}</span>`;
-                if (p.a_favor_caja > 0) tags += `<span class="favor-tag"><i class="fas fa-piggy-bank"></i> A favor: ${window.formatBs(p.a_favor_caja)}</span>`;
-                return `<div class="detail-item-compact"><div class="detail-header-compact"><span>${h}</span><span class="detail-metodo-tag">${v.tipo}</span></div><div class="detail-items-compact">${its}</div><div class="detail-total-compact">Total: ${window.formatBs(v.subtotal_platillos || (v.total * window.tasaEfectiva))}</div>${met}${tags ? `<div style="margin-top:5px">${tags}</div>` : ''}</div>`;
-            } catch (e) { return ''; }
-        };
-
-        window.crearDetallePedidoCompacto = function(p) {
-            try {
-                const h = new Date(p.timestamp).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-                const its = (p.items || []).map(i => `<div class="detail-item-row-compact"><span>${i.cantidad || 1}x ${i.nombre}</span><span>${window.formatBs(window.usdToBs((i.precioUnitarioUSD || 0) * (i.cantidad || 1)))}</span></div>`).join('');
-                return `<div class="detail-item-compact"><div class="detail-header-compact"><span>${h}</span><span class="detail-metodo-tag">${p.tipo}</span></div><div class="detail-items-compact">${its}</div><div class="detail-total-compact">Total: ${window.formatBs(window.usdToBs(p.total || 0))}</div></div>`;
-            } catch (e) { return ''; }
-        };
-
-        window.verComprobante = async function(pid) {
-            const p = (window.pedidos || []).find(p => p.id === pid);
-            if (!p || !p.comprobante_url) { window.mostrarToast('No hay comprobante', 'error'); return; }
-            const m = document.getElementById('comprobanteModal');
-            document.getElementById('comprobanteModalBody').innerHTML = `<div style="text-align:center"><img src="${p.comprobante_url}" style="max-width:100%;max-height:400px;border-radius:8px;margin-bottom:15px"><p><strong>Referencia:</strong> ${p.referencia || 'N/A'}</p><p><strong>Teléfono:</strong> ${p.telefono || 'N/A'}</p><p><strong>Total:</strong> ${window.formatBs(window.usdToBs(p.total || 0))}</p></div><div class="keyboard-hint"><span><kbd>ESC</kbd> cerrar</span></div>`;
-            m.classList.add('active');
-        };
-
-        window.abrirModalDetalle = async function(t) {
-            await window.cargarVentasHoy();
-            await window.cargarPropinas();
-            const m = document.getElementById('detalleModal');
-            const tle = document.getElementById('detalleModalTitle');
-            const b = document.getElementById('detalleModalBody');
-            let c = '';
-            
-            try {
-                switch (t) {
-                    case 'preparacion':
-                        tle.innerHTML = '<i class="fas fa-fire"></i> Pedidos en Preparación';
-                        const ep = (window.pedidos || []).filter(p => ['en_cocina', 'en_camino', 'reserva_pendiente', 'reserva_atendida'].includes(p.estado));
-                        c = ep.length ? ep.map(p => window.crearDetallePedidoCompacto(p)).join('') : '<div class="empty-state"><i class="fas fa-inbox"></i><p>No hay pedidos en preparación</p></div>';
-                        break;
-                    case 'cobrados':
-                        tle.innerHTML = '<i class="fas fa-check-circle"></i> Cobrados Hoy';
-                        if (!window.ventasHoy || !window.ventasHoy.length) c = '<div class="empty-state"><i class="fas fa-inbox"></i><p>No hay cobros registrados hoy</p></div>';
-                        else c = window.ventasHoy.map(v => { const p = (window.pedidos || []).find(p => p.id === v.pedido_id); return window.crearDetalleVentaCompacto(v, p); }).join('');
-                        break;
-                    case 'ventas':
-                        tle.innerHTML = '<i class="fas fa-dollar-sign"></i> Ventas Totales (Platillos)';
-                        const tb = (window.ventasHoy || []).reduce((s, v) => s + (v.subtotal_platillos || 0), 0);
-                        let eb = 0, eu = 0, pm = 0, pv = 0, cond = 0, fav = 0;
-                        (window.ventasHoy || []).forEach(v => {
-                            const pe = (window.pedidos || []).find(p => p.id === v.pedido_id);
-                            if (pe?.condonado) cond += pe.condonado;
-                            if (pe?.a_favor_caja) fav += pe.a_favor_caja;
-                            if (pe?.metodo_pago) {
-                                if (pe.metodo_pago === 'efectivo_bs') eb += v.subtotal_platillos || 0;
-                                else if (pe.metodo_pago === 'efectivo_usd') eu += v.subtotal_platillos || 0;
-                                else if (pe.metodo_pago === 'pago_movil') pm += v.subtotal_platillos || 0;
-                                else if (pe.metodo_pago === 'punto_venta') pv += v.subtotal_platillos || 0;
-                            }
-                        });
-                        c = `<p><strong>Total del día (platillos):</strong> ${window.formatBs(tb)}</p><p><strong>Cantidad de ventas:</strong> ${(window.ventasHoy || []).length}</p>${cond > 0 ? `<p><strong class="condonar-tag">Condonado:</strong> ${window.formatBs(cond)}</p>` : ''}${fav > 0 ? `<p><strong class="favor-tag">A favor de caja:</strong> ${window.formatBs(fav)}</p>` : ''}<h4>Desglose por método:</h4><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:20px"><div class="payment-tag" style="justify-content:space-between;padding:6px"><span>Efectivo Bs</span><span>${window.formatBs(eb)}</span></div><div class="payment-tag" style="justify-content:space-between;padding:6px"><span>Efectivo USD</span><span>${window.formatBs(eu)}</span></div><div class="payment-tag" style="justify-content:space-between;padding:6px"><span>Pago Móvil</span><span>${window.formatBs(pm)}</span></div><div class="payment-tag" style="justify-content:space-between;padding:6px"><span>Punto de Venta</span><span>${window.formatBs(pv)}</span></div></div><h4>Ventas del día:</h4>${(window.ventasHoy || []).map(v => { const p = (window.pedidos || []).find(p => p.id === v.pedido_id); return window.crearDetalleVentaCompacto(v, p); }).join('')}`;
-                        break;
-                    case 'platillos':
-                        tle.innerHTML = '<i class="fas fa-utensils"></i> Platillos Vendidos';
-                        const hoy = new Date().toDateString();
-                        const ph = (window.pedidos || []).filter(p => ['cobrado', 'entregado', 'enviado', 'reserva_completada'].includes(p.estado) && new Date(p.timestamp).toDateString() === hoy);
-                        const cnt = {};
-                        let tt = 0;
-                        ph.forEach(p => {
-                            p.items?.forEach(i => {
-                                const c = i.cantidad || 1;
-                                cnt[i.nombre] = (cnt[i.nombre] || 0) + c;
-                                tt += c;
-                            });
-                        });
-                        const rk = Object.entries(cnt).sort((a, b) => b[1] - a[1]);
-                        const mx = rk[0]?.[1] || 0;
-                        if (!rk.length) c = '<div class="empty-state"><i class="fas fa-utensils"></i><p>No hay platillos vendidos hoy</p></div>';
-                        else c = `<p><strong>Total unidades:</strong> ${tt}</p><div style="max-height:400px;overflow-y:auto">${rk.map(([n, c], i) => `<div class="ranking-bar"><div class="ranking-position">${i + 1}</div><div class="ranking-info"><div class="ranking-name">${n}</div><div class="ranking-cantidad">${c} vendido(s)</div></div><div class="ranking-bar-container"><div class="ranking-bar-fill" style="width:${(c / mx) * 100}%"></div></div></div>`).join('')}</div>`;
-                        break;
-                    case 'propinasDetalle':
-                        tle.innerHTML = '<i class="fas fa-hand-holding-heart"></i> Propinas del Día';
-                        const tp = (window.propinas || []).reduce((s, p) => s + (p.monto_bs || p.monto || 0), 0);
-                        const cp = (window.propinas || []).length;
-                        const pp = cp > 0 ? tp / cp : 0;
-                        c = `<p><strong>Total propinas:</strong> ${window.formatBs(tp)}</p><p><strong>Cantidad:</strong> ${cp}</p><p><strong>Promedio:</strong> ${window.formatBs(pp)}</p><h4>Detalle por propina:</h4>${cp ? window.propinas.map(p => window.crearTarjetaPropina(p)).join('') : '<div class="empty-state"><i class="fas fa-hand-holding-heart"></i><p>No hay propinas hoy</p></div>'}`;
-                        break;
-                    case 'propinasCantidad':
-                        tle.innerHTML = '<i class="fas fa-hashtag"></i> Cantidad de Propinas';
-                        c = `<p style="font-size:2em;text-align:center;color:var(--propina)">${(window.propinas || []).length}</p><p style="text-align:center">propinas recibidas hoy</p>`;
-                        break;
-                    case 'propinasPromedio':
-                        tle.innerHTML = '<i class="fas fa-chart-line"></i> Promedio de Propinas';
-                        const prom = (window.propinas || []).length ? (window.propinas || []).reduce((s, p) => s + (p.monto_bs || p.monto || 0), 0) / (window.propinas || []).length : 0;
-                        c = `<p style="font-size:2em;text-align:center;color:var(--propina)">${window.formatBs(prom)}</p><p style="text-align:center">promedio por propina</p>`;
-                        break;
-                    case 'deliverysTotal':
-                        tle.innerHTML = '<i class="fas fa-motorcycle"></i> Total Deliverys';
-                        const td = window.calcularTotalDeliverysHoy();
-                        c = `<p style="font-size:2em;text-align:center;color:var(--delivery)">${window.formatBs(td)}</p><p style="text-align:center">acumulado en deliveries hoy</p>`;
-                        break;
-                    case 'deliverysCantidad':
-                        tle.innerHTML = '<i class="fas fa-hashtag"></i> Entregas Hoy';
-                        const cd = (window.pedidos || []).filter(p => p.tipo === 'delivery' && p.estado === 'enviado' && new Date(p.timestamp).toDateString() === new Date().toDateString()).length;
-                        c = `<p style="font-size:2em;text-align:center;color:var(--delivery)">${cd}</p><p style="text-align:center">entregas realizadas hoy</p>`;
-                        break;
-                    case 'deliverysPromedio':
-                        tle.innerHTML = '<i class="fas fa-chart-line"></i> Promedio por Entrega';
-                        const eh = (window.pedidos || []).filter(p => p.tipo === 'delivery' && p.estado === 'enviado' && new Date(p.timestamp).toDateString() === new Date().toDateString());
-                        const tdp = eh.reduce((s, p) => s + (p.costo_delivery_bs || 0), 0);
-                        const pdel = eh.length > 0 ? tdp / eh.length : 0;
-                        c = `<p style="font-size:2em;text-align:center;color:var(--delivery)">${window.formatBs(pdel)}</p><p style="text-align:center">promedio por entrega</p>`;
-                        break;
-                    default:
-                        c = '<p>Selecciona una opción válida</p>';
-                }
-            } catch (e) {
-                console.error('Error en abrirModalDetalle:', e);
-                c = '<p>Error al cargar los datos</p>';
-            }
-            
-            b.innerHTML = c;
-            m.classList.add('active');
-        };
-
-        // ==================== FUNCIONES DE VERIFICACIÓN PERIÓDICA ====================
-        window.verificarCambiosPedidos = async function() {
-            if (window.reconectando || window.enProcesoDeCobro) return;
-            try {
-                const h = new Date(); h.setHours(0, 0, 0, 0);
-                const m = new Date(h); m.setDate(m.getDate() + 2);
-                const { data, error } = await window.supabaseClient.from('pedidos').select('id, estado, timestamp').gte('timestamp', h.toISOString()).lt('timestamp', m.toISOString());
-                if (error) throw error;
-                if (data) {
-                    let hc = false;
-                    if (data.length !== (window.pedidos || []).length) hc = true;
-                    else {
-                        const ma = new Map((window.pedidos || []).map(p => [p.id, p.estado]));
-                        for (const p of data) {
-                            if (ma.get(p.id) !== p.estado) { hc = true; break; }
-                        }
-                    }
-                    if (hc) {
-                        console.log('📦 Cambios detectados en pedidos, recargando...');
-                        await window.recargarPedidosCompletos();
-                        window.ultimaActualizacion = Date.now();
-                    }
-                }
-            } catch (e) { console.error('Error verificando cambios:', e); }
-        };
-
-        window.recargarPedidosCompletos = async function() {
-            try {
-                await window.cargarPedidos();
-                await window.cargarVentasHoy();
-                window.actualizarEstadisticas();
-                window.renderizarPedidos();
-                window.verificarYControlarAlarma();
-            } catch (e) { console.error('Error recargando pedidos:', e); }
-        };
-
-        window.iniciarVerificacionPeriodica = function() {
-            if (window.intervaloVerificacion) clearInterval(window.intervaloVerificacion);
-            window.intervaloVerificacion = setInterval(async () => {
-                if (window.paginaVisible && !window.enProcesoDeCobro) await window.verificarCambiosPedidos();
-            }, 3000);
-        };
-
-        // ==================== FUNCIONES DE REALTIME ====================
-        window.setupRealtimeSubscriptions = function() {
-            try {
-                if (window.suscripciones) window.suscripciones.forEach(s => { try { s.unsubscribe(); } catch (e) { } });
-                window.suscripciones = [];
-                
-                const addSub = (name, table, callback) => {
-                    try {
-                        const sub = window.supabaseClient.channel(name + '-' + Date.now())
-                            .on('postgres_changes', { event: '*', schema: 'public', table: table }, callback)
-                            .subscribe();
-                        window.suscripciones.push(sub);
-                    } catch (e) { console.error('Error suscribiendo a ' + table, e); }
-                };
-                
-                addSub('cajero-pedidos', 'pedidos', async () => { await window.verificarCambiosPedidos(); });
-                addSub('cajero-ventas', 'ventas', async () => { await window.cargarVentasHoy(); window.actualizarEstadisticas(); });
-                addSub('cajero-propinas', 'propinas', async () => { await window.cargarPropinas(); window.actualizarEstadisticas(); window.renderizarPropinas(); });
-                addSub('cajero-mesoneros', 'mesoneros', async () => { await window.cargarMesoneros(); });
-                addSub('cajero-deliverys', 'deliverys', async () => { await window.cargarDeliverys(); });
-                addSub('cajero-menu', 'menu', async () => { await window.cargarMenu(); });
-                addSub('cajero-inventario', 'inventario', async () => { window.stockCache.invalidate(); await window.cargarInventario(); });
-                addSub('cajero-config', 'config', (p) => {
-                    window.configGlobal = { ...window.configGlobal, ...p.new };
-                    window.tasaEfectiva = window.configGlobal.tasa_efectiva || 400;
-                    window.renderizarPedidos();
-                    window.renderizarMenu();
-                    window.actualizarEstadisticas();
-                });
-            } catch (e) { console.error('Error configurando suscripciones:', e); }
-        };
-
-        // ==================== FUNCIONES DE EVENTOS ====================
-        window.setupEventListeners = function() {
-            document.addEventListener('keydown', (e) => {
-                if (e.key === 'Escape') {
-                    ['cobroModal', 'propinaModal', 'confirmModal', 'rechazoModal', 'detalleModal', 'mesaModal', 'comprobanteModal', 'deliveryModal'].forEach(id => {
-                        const m = document.getElementById(id);
-                        if (m && m.classList.contains('active')) {
-                            if (id === 'cobroModal') window.cerrarCobroModal();
-                            else if (id === 'propinaModal') window.cerrarPropinaModal();
-                            else window.cerrarModal(id);
-                        }
-                    });
-                }
-                if (e.key === 'Enter') {
-                    if (document.getElementById('confirmModal') && document.getElementById('confirmModal').classList.contains('active')) {
-                        const cb = document.getElementById('confirmActionBtn');
-                        if (cb && !cb.disabled) { e.preventDefault(); window.ejecutarConfirmacion(); }
-                    }
-                    if (document.getElementById('cobroModal') && document.getElementById('cobroModal').classList.contains('active') && !document.getElementById('confirmCobroBtn').disabled) {
-                        e.preventDefault(); window.confirmarCobro();
-                    }
-                    if (document.getElementById('propinaModal') && document.getElementById('propinaModal').classList.contains('active') && !document.getElementById('confirmPropinaBtn').disabled) {
-                        e.preventDefault(); window.confirmarPropina();
-                    }
-                }
-            });
-            
-            const cw = document.getElementById('categoriasWrapper');
-            if (cw) {
-                let ts = 0;
-                cw.addEventListener('touchstart', e => { ts = e.touches[0].clientX; });
-                cw.addEventListener('touchmove', e => {
-                    if (!ts) return;
-                    const tm = e.touches[0].clientX;
-                    const d = ts - tm;
-                    if (Math.abs(d) > 20) e.preventDefault();
-                });
-                cw.addEventListener('touchend', e => {
-                    if (!ts) return;
-                    const te = e.changedTouches[0].clientX;
-                    const d = ts - te;
-                    if (Math.abs(d) > 50) {
-                        if (d > 0) cw.scrollLeft += 150;
-                        else cw.scrollLeft -= 150;
-                    }
-                    ts = 0;
-                });
-            }
-        };
-
-        // ==================== INICIALIZACIÓN ====================
-        document.addEventListener('DOMContentLoaded', async () => {
-            console.log('DOM cargado, verificando sesión...');
-            window.alarmaAudio = document.getElementById('alarmaSonido');
-            
-            const su = sessionStorage.getItem('cajero_user');
-            if (su) {
-                try {
-                    window.currentUser = JSON.parse(su);
-                    await window.cargarDatosIniciales();
-                    window.mostrarPanel();
-                } catch (e) {
-                    console.error('Error restaurando sesión:', e);
-                    window.mostrarLogin();
-                }
-            } else {
-                window.mostrarLogin();
-            }
-            
-            document.addEventListener('visibilitychange', function() {
-                if (document.hidden) window.paginaVisible = false;
-                else {
-                    window.paginaVisible = true;
-                    window.verificarCambiosPedidos();
-                }
-            });
-        });
+        window.alarmaAudio=document.getElementById('alarmaSonido');
+        
+        window.mostrarPanel=function(){document.getElementById('loginContainer').classList.add('hidden');document.getElementById('panelContainer').classList.remove('hidden');window.setupEventListeners();window.setupRealtimeSubscriptions();setTimeout(()=>window.verificarYControlarAlarma(),100)};
+        
+        window.cerrarSesion=function(){sessionStorage.removeItem('cajero_user');window.currentUser=null;window.detenerAlarma();window.mostrarLogin()};
+        
+        window.showSection=function(s){document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));document.getElementById(`section-${s}`).classList.add('active');event.target.classList.add('active');if(s==='pedidos')window.renderizarPedidos();else if(s==='menu')window.renderizarMenu();else if(s==='propinas')window.renderizarPropinas();else if(s==='deliverys')window.renderizarDeliverysStats()};
+        
+        window.abrirSelectorMesa=async function(){await window.cargarMesas();const m=document.getElementById('mesaModal'),l=document.getElementById('mesaList');l.innerHTML=(window.mesas||[]).length?window.mesas.map(m=>`<button class="mesa-btn" onclick="window.abrirMesa('${m.nombre}')"><i class="fas fa-chair"></i>${m.nombre}</button>`).join(''):'<p class="text-center">No hay mesas</p>';m.classList.add('active')};
+        
+        window.abrirMesa=function(n){window.open(`${window.location.origin}/Cliente/index.html?mesa=${encodeURIComponent(n)}`,'_blank');window.cerrarModal('mesaModal')};
+        
+        window.cerrarCobroModal=function(){document.getElementById('cobroModal').classList.remove('active');window.enProcesoDeCobro=false;window.currentPedido=null;window.pagosMixtos=[];setTimeout(()=>window.verificarYControlarAlarma(),100)};
+        
+        window.cerrarPropinaModal=function(){document.getElementById('propinaModal').classList.remove('active');window.currentPropinaPedido=null};
+        
+        window.cargarDatosIniciales=async function(){try{await window.cargarConfiguracion();window.tasaEfectiva=(window.configGlobal&&window.configGlobal.tasa_efectiva)||400;await window.cargarPedidos();await window.cargarVentasHoy();await window.cargarPropinas();await window.cargarMenu();await window.cargarInventario();await window.cargarMesas();await window.cargarMesoneros();await window.cargarDeliverys();window.actualizarEstadisticas();window.renderizarPedidos();window.renderizarPropinas();window.renderizarDeliverysStats();window.iniciarVerificacionPeriodica()}catch(e){console.error('Error cargando datos:',e)}};
+        
+        window.verificarUsuarios=async function(){try{const{data,error}=await window.supabaseClient.from('usuarios').select('*').limit(1);if(error)throw error;if(!data||data.length===0){await window.supabaseClient.from('usuarios').insert([{id:'user_'+Date.now()+'_1',nombre:'Cajero Principal',username:'cajero1',password:'123456',rol:'cajero',activo:true},{id:'user_'+Date.now()+'_2',nombre:'Cajero Secundario',username:'cajero2',password:'123456',rol:'cajero',activo:true}]);window.mostrarToast('Usuarios creados: cajero1 / 123456','success')}}catch(e){console.error('Error verificando usuarios:',e)}};
+        
+        window.cargarPedidos=async function(){try{const h=new Date();h.setHours(0,0,0,0);const m=new Date(h);m.setDate(m.getDate()+2);const{data,error}=await window.supabaseClient.from('pedidos').select('*').gte('timestamp',h.toISOString()).lt('timestamp',m.toISOString()).order('timestamp',{ascending:false});if(error)throw error;window.pedidos=data||[]}catch(e){console.error('Error cargando pedidos:',e)}};
+        
+        window.cargarVentasHoy=async function(){try{const h=new Date();h.setHours(0,0,0,0);const m=new Date(h);m.setDate(m.getDate()+1);const{data,error}=await window.supabaseClient.from('ventas').select('*').gte('fecha',h.toISOString()).lt('fecha',m.toISOString()).order('fecha',{ascending:false});if(error)throw error;window.ventasHoy=data||[]}catch(e){console.error('Error cargando ventas:',e)}};
+        
+        window.cargarPropinas=async function(){try{const h=new Date();h.setHours(0,0,0,0);const m=new Date(h);m.setDate(m.getDate()+1);const{data,error}=await window.supabaseClient.from('propinas').select('*').gte('fecha',h.toISOString()).lt('fecha',m.toISOString()).order('fecha',{ascending:false});if(error)throw error;window.propinas=data||[]}catch(e){console.error('Error cargando propinas:',e)}};
+        
+        window.cargarMenu=async function(){try{const{data,error}=await window.supabaseClient.from('menu').select('*').eq('disponible',true);if(error)throw error;window.menuItems=data||[];window.renderizarMenu()}catch(e){console.error('Error cargando menú:',e)}};
+        
+        window.cargarInventario=async function(){try{const{data,error}=await window.supabaseClient.from('inventario').select('*');if(error)throw error;window.inventario=data||[];window.stockCache.invalidate();window.renderizarMenu()}catch(e){console.error('Error cargando inventario:',e)}};
+        
+        window.cargarMesas=async function(){try{const{data,error}=await window.supabaseClient.from('codigos_qr').select('*').order('nombre');if(error)throw error;window.mesas=data||[]}catch(e){console.error('Error cargando mesas:',e)}};
+        
+        window.cargarMesoneros=async function(){try{const{data,error}=await window.supabaseClient.from('mesoneros').select('*').eq('activo',true).order('nombre');if(error)throw error;window.mesoneros=data||[]}catch(e){console.error('Error cargando mesoneros:',e)}};
+        
+        window.cargarDeliverys=async function(){try{const{data,error}=await window.supabaseClient.from('deliverys').select('*').eq('activo',true).order('nombre');if(error)throw error;window.deliverys=data||[]}catch(e){console.error('Error cargando deliverys:',e)}};
+        
+        window.getStockDisponible=async function(i){try{const c=window.stockCache.get(i);if(c!==undefined)return c;const ing=window.inventario.find(x=>x.id===i);if(!ing)return 0;let rc=0;(window.pedidos||[]).forEach(p=>{if(p.items&&p.estado==='pendiente'){p.items.forEach(item=>{if(!item.personalizacion||!item.personalizacion.includes(i)){rc+=item.cantidad||1}})}});const d=(ing.stock||0)-(ing.reservado||0)-rc;window.stockCache.set(i,d);return d}catch(e){console.error('Error obteniendo stock:',e);return 0}};
+        
+        window.calcularStockPlatillo=async function(p){let sd=Infinity;if(p.ingredientes&&Object.keys(p.ingredientes).length>0){for(const[i,info]of Object.entries(p.ingredientes)){const d=await window.getStockDisponible(i);const cn=info.cantidad||1;const pos=Math.floor(d/cn);sd=Math.min(sd,pos)}}else sd=p.stock_maximo||999;return sd};
+        
+        window.actualizarEstadisticas=function(){const ep=(window.pedidos||[]).filter(p=>['en_cocina','en_camino','reserva_pendiente','reserva_atendida'].includes(p.estado)).length;const ch=(window.ventasHoy||[]).length;const tvb=(window.ventasHoy||[]).reduce((s,v)=>s+(v.subtotal_platillos||0),0);const pv=(window.ventasHoy||[]).reduce((s,v)=>s+(v.items||0),0);const tp=(window.propinas||[]).reduce((s,p)=>s+(p.monto_bs||p.monto||0),0);const tdh=window.calcularTotalDeliverysHoy();document.getElementById('statPreparacion').textContent=ep;document.getElementById('statCobrados').textContent=ch;document.getElementById('statVentas').textContent=window.formatBs(tvb);document.getElementById('statPlatillos').textContent=pv;document.getElementById('statPropinas').textContent=window.formatBs(tp);document.getElementById('statDeliverysTotal').textContent=window.formatBs(tdh)};
+        
+        window.renderizarPedidos=function(){const pM=(window.pedidos||[]).filter(p=>p.tipo==='mesa'&&p.estado==='pendiente');const pD=(window.pedidos||[]).filter(p=>p.tipo==='delivery'&&p.estado==='pendiente');const pR=(window.pedidos||[]).filter(p=>p.tipo==='reserva'&&p.estado==='pendiente');const cM=(window.pedidos||[]).filter(p=>p.tipo==='mesa'&&p.estado==='en_cocina');const cD=(window.pedidos||[]).filter(p=>p.tipo==='delivery'&&p.estado==='en_camino');const rP=(window.pedidos||[]).filter(p=>p.tipo==='reserva'&&p.estado==='reserva_pendiente');const rA=(window.pedidos||[]).filter(p=>p.tipo==='reserva'&&p.estado==='reserva_atendida');document.getElementById('mesaPendientesCount').textContent=pM.length;document.getElementById('deliveryPendientesCount').textContent=pD.length;document.getElementById('reservaPendientesCount').textContent=pR.length;document.getElementById('totalPendientesBadge').textContent=pM.length+pD.length+pR.length;document.getElementById('mesaCocinaCount').textContent=cM.length;document.getElementById('deliveryCaminoCount').textContent=cD.length;document.getElementById('reservaProcesoCount').textContent=rP.length+rA.length;document.getElementById('totalPreparacionBadge').textContent=cM.length+cD.length+rP.length+rA.length;document.getElementById('mesaPendientesContainer').innerHTML=pM.length?pM.map(p=>window.crearTarjetaPedidoCompacta(p,'pendiente')).join(''):'<div class="empty-state"><i class="fas fa-store"></i><p>No hay pedidos en mesa</p></div>';document.getElementById('deliveryPendientesContainer').innerHTML=pD.length?pD.map(p=>window.crearTarjetaPedidoCompacta(p,'pendiente')).join(''):'<div class="empty-state"><i class="fas fa-motorcycle"></i><p>No hay pedidos delivery</p></div>';document.getElementById('reservaPendientesContainer').innerHTML=pR.length?pR.map(p=>window.crearTarjetaPedidoCompacta(p,'pendiente')).join(''):'<div class="empty-state"><i class="fas fa-calendar-check"></i><p>No hay reservas</p></div>';document.getElementById('mesaCocinaContainer').innerHTML=cM.length?cM.map(p=>window.crearTarjetaPedidoCompacta(p,'preparacion')).join(''):'<div class="empty-state"><i class="fas fa-fire"></i><p>No hay pedidos en cocina</p></div>';document.getElementById('deliveryCaminoContainer').innerHTML=cD.length?cD.map(p=>window.crearTarjetaPedidoCompacta(p,'preparacion')).join(''):'<div class="empty-state"><i class="fas fa-truck"></i><p>No hay deliveries en camino</p></div>';document.getElementById('reservaProcesoContainer').innerHTML=(rP.length+rA.length)?[...rP,...rA].map(p=>window.crearTarjetaPedidoCompacta(p,'preparacion')).join(''):'<div class="empty-state"><i class="fas fa-clock"></i><p>No hay reservas pendientes</p></div>'};
+        
+        window.crearTarjetaPedidoCompacta=function(p,t){try{const h=new Date(p.timestamp).toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});let i='';if(p.tipo==='mesa')i=`<div class="order-info-compact"><i class="fas fa-chair"></i> Mesa #${p.mesa||'N/A'}</div>`;else if(p.tipo==='delivery')i=`<div class="order-info-compact"><div><i class="fas fa-map-marker-alt"></i> ${(p.direccion||'').substring(0,20)}...</div><div><i class="fas fa-phone"></i> ${p.telefono||'N/A'}</div>${p.costo_delivery_bs?`<div><i class="fas fa-truck"></i> Delivery: ${window.formatBs(p.costo_delivery_bs)}</div>`:''}</div>`;else i=`<div class="order-info-compact"><div><i class="fas fa-user"></i> ${p.cliente_nombre||'Cliente'}</div><div><i class="fas fa-calendar"></i> ${p.fecha_reserva?new Date(p.fecha_reserva).toLocaleDateString():'N/A'}</div></div>`;const it=(p.items||[]).slice(0,2).map(i=>`<div class="order-item-row-compact"><span class="item-name-compact">${i.cantidad||1}x ${i.nombre}</span><span class="item-price-compact">${window.formatBs(window.usdToBs((i.precioUnitarioUSD||0)*(i.cantidad||1)))}</span></div>`).join('');const ic=(p.items||[]).length;const mi=ic>2?`<div class="order-item-row-compact" style="justify-content:center;color:var(--gray-400)">+${ic-2} más</div>`:'';const tot=window.formatBs(window.usdToBs(p.total||0));const comp=p.comprobante_url&&(p.tipo==='delivery'||p.tipo==='reserva')?`<div class="comprobante-thumbnail" onclick="window.verComprobante('${p.id}')"><img src="${p.comprobante_url}" style="max-width:100%;cursor:pointer"></div>`:'';let b='';if(t==='pendiente')b=`<button class="btn-compact btn-cobrar-compact" onclick="window.mostrarCobro('${p.id}')">Cobrar</button><button class="btn-compact btn-rechazar-compact" onclick="window.mostrarRechazo('${p.id}')">Rechazar</button>`;else if(p.tipo==='mesa'&&p.estado==='en_cocina')b=`<button class="btn-compact btn-entregar-compact" onclick="window.mostrarConfirmacion('${p.id}','entregado')"><i class="fas fa-check"></i> Entregado</button>`;else if(p.tipo==='delivery'&&p.estado==='en_camino')b=`<button class="btn-compact btn-enviar-compact" onclick="window.mostrarConfirmacionDelivery('${p.id}')"><i class="fas fa-truck"></i> Enviar</button>`;else if(p.tipo==='reserva'&&p.estado==='reserva_pendiente')b=`<button class="btn-compact btn-confirmar-compact" onclick="window.mostrarConfirmacion('${p.id}','reserva_atendida')"><i class="fas fa-user-check"></i> Confirmar</button>`;else if(p.tipo==='reserva'&&p.estado==='reserva_atendida')b=`<button class="btn-compact btn-entregar-compact" onclick="window.mostrarConfirmacion('${p.id}','reserva_completada')"><i class="fas fa-check"></i> Entregado</button>`;return`<div class="order-card-compact ${p.estado}"><div class="order-header-compact"><span class="order-time-compact"><i class="far fa-clock"></i> ${h}</span><span style="font-weight:600;color:var(--${p.tipo==='mesa'?'info':p.tipo==='delivery'?'success':'accent'});font-size:.7rem;text-transform:uppercase">${p.tipo}</span></div>${i}<div class="order-items-compact">${it}${mi}</div><div class="order-total-compact">${tot}</div>${comp}<div class="order-actions-compact">${b}</div></div>`}catch(e){console.error('Error creando tarjeta:',e);return''}};
+        
+        window.calcularTotalDeliverysHoy=function(){try{const h=new Date();h.setHours(0,0,0,0);const m=new Date(h);m.setDate(m.getDate()+1);return(window.pedidos||[]).filter(p=>p.tipo==='delivery'&&p.estado==='enviado'&&new Date(p.timestamp)>=h&&new Date(p.timestamp)<m).reduce((s,p)=>s+(p.costo_delivery_bs||0),0)}catch(e){return 0}};
+        
+        window.obtenerAcumuladoDeliverysHoy=async function(){try{const h=new Date();h.setHours(0,0,0,0);const m=new Date(h);m.setDate(m.getDate()+1);const{data,error}=await window.supabaseClient.from('entregas_delivery').select('delivery_id, monto_bs').gte('fecha_entrega',h.toISOString()).lt('fecha_entrega',m.toISOString());if(error)throw error;const a={};(data||[]).forEach(e=>{a[e.delivery_id]=(a[e.delivery_id]||0)+e.monto_bs});return a}catch(e){console.error('Error obteniendo acumulado deliverys:',e);return{}}};
+        
+        window.abrirModalDeliverys=async function(){try{const a=await window.obtenerAcumuladoDeliverysHoy();const m=document.getElementById('deliveryModal');const b=document.getElementById('deliveryModalBody');let c='<h3 style="margin-bottom:20px">Acumulado por motorizado (Hoy)</h3>';if(!window.deliverys||window.deliverys.length===0)c+='<div class="empty-state"><i class="fas fa-motorcycle"></i><p>No hay motorizados registrados</p></div>';else{c+='<div class="motorizados-list">';window.deliverys.forEach(d=>{const m=a[d.id]||0;c+=`<div class="motorizado-item"><span class="motorizado-nombre">${d.nombre}</span><span class="motorizado-monto">${window.formatBs(m)}</span></div>`});c+='</div>'}b.innerHTML=c;m.classList.add('active')}catch(e){console.error('Error abriendo modal deliverys:',e);window.mostrarToast('Error al cargar datos de deliverys','error')}};
+        
+        window.mostrarCobro=function(pid){window.currentPedido=(window.pedidos||[]).find(p=>p.id===pid);if(!window.currentPedido)return;window.enProcesoDeCobro=true;if(window.alarmaActiva){window.alarmaAudio.pause();window.alarmaAudio.currentTime=0;window.alarmaActiva=false}window.pagosMixtos=[];let mp='efectivo_bs';if(window.currentPedido.tipo==='delivery'||window.currentPedido.tipo==='reserva')mp='pago_movil';const tap=window.usdToBs(window.currentPedido.total||0);const b=document.getElementById('cobroModalBody');const its=(window.currentPedido.items||[]).map(i=>`<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.1)"><span>${i.cantidad||1}x ${i.nombre}</span><span style="font-weight:600">${window.formatBs(window.usdToBs((i.precioUnitarioUSD||0)*(i.cantidad||1)))}</span></div>`).join('');b.innerHTML=`<div style="background:rgba(0,0,0,.3);padding:15px;border-radius:8px;margin-bottom:20px"><h4>Resumen del Pedido</h4>${its}${window.currentPedido.costo_delivery_bs?`<div style="display:flex;justify-content:space-between;margin-top:10px;padding-top:10px;border-top:2px solid rgba(255,255,255,.1)"><span>Costo delivery:</span><span>${window.formatBs(window.currentPedido.costo_delivery_bs)}</span></div>`:''}<div style="display:flex;justify-content:space-between;margin-top:15px;padding-top:15px;border-top:2px solid var(--primary);font-weight:700"><span>Total a pagar:</span><span id="totalPagarDisplay" style="color:var(--accent)">${window.formatBs(tap)}</span></div></div><div style="margin-bottom:20px;padding:12px;background:rgba(245,124,0,.1);border-left:4px solid var(--warning)"><label style="display:flex;align-items:center;gap:10px;color:#fff"><input type="checkbox" id="invitacionCheck" style="width:18px;height:18px"><strong>Por parte de la casa (invitación)</strong></label></div><div id="pagosSection"><h4>Pagos Mixtos</h4><div id="pagosContainer" class="payment-mix-container"></div><button class="btn btn-secondary" onclick="window.agregarMetodoPago()" style="width:100%;margin-bottom:20px"><i class="fas fa-plus"></i> Agregar Método de Pago</button><div id="extrasSection" style="display:none"><div class="pagos-resumen-row" id="vueltoRow" style="display:none"><div class="input-group"><label>Vuelto a entregar (Bs)</label><input type="number" id="vueltoInput" step="0.01" min="0" max="9999999999.99" oninput="window.calcularConVuelto()" inputmode="numeric"></div><div class="input-group"><label>Vuelto restante</label><span id="vueltoRestante">Bs. 0.00</span></div></div><div class="pagos-checkbox" id="condonarCheckbox" style="display:none"><input type="checkbox" id="condonarCheck" onchange="window.manejarCheckCondonar()"><label><strong>Condonar monto restante</strong> <span class="badge" id="condonarMonto">Bs. 0.00</span></label></div><div class="pagos-checkbox" id="favorCheckbox" style="display:none"><input type="checkbox" id="favorCheck" onchange="window.manejarCheckFavor()"><label><strong>A favor de caja</strong> <span class="badge favor" id="favorMonto">Bs. 0.00</span></label></div></div><div class="pagos-total"><div class="pagos-resumen"><span>Total recibido:</span><span id="totalRecibido">Bs. 0.00</span></div><div class="pagos-resumen"><span>Pendiente:</span><span id="pendiente" style="color:var(--danger)">Bs. 0.00</span></div><div class="pagos-resumen"><span>Sobrante:</span><span id="sobrante" style="color:var(--success)">Bs. 0.00</span></div><div class="pagos-resumen" id="condonadoDisplay" style="display:none"><span>Condonado:</span><span id="condonadoValue" style="color:var(--condonar)">Bs. 0.00</span></div><div class="pagos-resumen" id="favorDisplay" style="display:none"><span>A favor caja:</span><span id="favorValue" style="color:var(--favordecaja)">Bs. 0.00</span></div></div></div><div class="keyboard-hint"><span><kbd>ENTER</kbd> confirmar</span><span><kbd>ESC</kbd> cancelar</span></div>`;document.getElementById('invitacionCheck').addEventListener('change',function(e){document.getElementById('pagosSection').style.opacity=e.target.checked?'0.5':'1';document.getElementById('pagosSection').style.pointerEvents=e.target.checked?'none':'auto';document.getElementById('confirmCobroBtn').disabled=!e.target.checked&&window.pagosMixtos.length===0});window.agregarMetodoPago(mp);document.getElementById('cobroModal').classList.add('active');window.recalcularTotales()};
+        
+        window.agregarMetodoPago=function(mp='pago_movil'){window.pagosMixtos.push({id:Date.now()+Math.random(),metodo:mp,monto:0,referencia:''});window.renderizarPagosMixtos();window.recalcularTotales()};
+        
+        window.renderizarPagosMixtos=function(){const c=document.getElementById('pagosContainer');if(!c)return;c.innerHTML=window.pagosMixtos.map((p,i)=>`<div class="pago-item" data-id="${p.id}">${window.pagosMixtos.length>1?`<button class="remove-pago" onclick="window.eliminarMetodoPago('${p.id}')"><i class="fas fa-times"></i></button>`:''}<select onchange="window.actualizarPago('${p.id}','metodo',this.value)"><option value="efectivo_bs" ${p.metodo==='efectivo_bs'?'selected':''}>Efectivo Bs</option><option value="efectivo_usd" ${p.metodo==='efectivo_usd'?'selected':''}>Efectivo Dólar</option><option value="pago_movil" ${p.metodo==='pago_movil'?'selected':''}>Pago Móvil</option><option value="punto_venta" ${p.metodo==='punto_venta'?'selected':''}>Punto de Venta</option></select><input type="number" step="0.01" max="9999999999.99" placeholder="Monto ${p.metodo==='efectivo_usd'?'en USD':'en Bs'}" value="${p.monto||0}" oninput="window.actualizarPago('${p.id}','monto',this.value)" inputmode="numeric">${p.metodo==='pago_movil'?`<input type="text" maxlength="6" placeholder="Referencia (6 dígitos)" value="${p.referencia||''}" oninput="window.actualizarPago('${p.id}','referencia',this.value)">`:''}</div>`).join('')};
+        
+                window.actualizarPago=function(id,campo,valor){const p=window.pagosMixtos.find(p=>p.id==id);if(!p)return;if(campo==='monto'){let nv=parseFloat(valor)||0;if(nv>9999999999.99)nv=9999999999.99;p.monto=nv}else if(campo==='metodo'){p.metodo=valor;if(valor!=='pago_movil')p.referencia=''}else if(campo==='referencia')p.referencia=valor;window.renderizarPagosMixtos();window.recalcularTotales()};
+        
+        window.eliminarMetodoPago=function(id){window.pagosMixtos=window.pagosMixtos.filter(p=>p.id!=id);window.renderizarPagosMixtos();window.recalcularTotales()};
+        
+        window.manejarCheckCondonar=function(){const cc=document.getElementById('condonarCheck');if(cc.checked){const fc=document.getElementById('favorCheck');if(fc)fc.checked=false}window.recalcularTotales()};
+        
+        window.manejarCheckFavor=function(){const fc=document.getElementById('favorCheck');if(fc.checked){const cc=document.getElementById('condonarCheck');if(cc)cc.checked=false}window.recalcularTotales()};
+        
+        window.recalcularTotales=function(){const tot=window.usdToBs(window.currentPedido?.total||0);let rec=window.pagosMixtos.reduce((s,p)=>s+(p.metodo==='efectivo_usd'?window.usdToBs(p.monto||0):(p.monto||0)),0);const pen=tot-rec;const sob=rec-tot;document.getElementById('totalRecibido').textContent=window.formatBs(rec);document.getElementById('pendiente').textContent=window.formatBs(Math.max(0,pen));document.getElementById('sobrante').textContent=window.formatBs(Math.max(0,sob));const es=document.getElementById('extrasSection');const vr=document.getElementById('vueltoRow');const cc=document.getElementById('condonarCheckbox');const fc=document.getElementById('favorCheckbox');const cch=document.getElementById('condonarCheck');const fch=document.getElementById('favorCheck');const vi=document.getElementById('vueltoInput');let me=false;let diferencia=pen;if(cch&&cch.checked)diferencia=0;if(fch&&fch.checked){const sobranteValor=Math.abs(pen);const vueltoEntregado=parseFloat(vi?.value)||0;if(pen<0){const restante=sobranteValor-vueltoEntregado;if(restante<=0)diferencia=0}else diferencia=0}if(pen<0){me=true;vr.style.display='grid';if(vi.value){const v=parseFloat(vi.value)||0;const rest=Math.abs(pen)-v;document.getElementById('vueltoRestante').textContent=window.formatBs(Math.max(0,rest));if(rest>0){fc.style.display='flex';document.getElementById('favorMonto').textContent=window.formatBs(rest)}else{fc.style.display='none';if(fch)fch.checked=false}}else{document.getElementById('vueltoRestante').textContent=window.formatBs(Math.abs(pen));fc.style.display='none'}cc.style.display='none'}else if(pen>0){me=true;vr.style.display='none';cc.style.display='flex';document.getElementById('condonarMonto').textContent=window.formatBs(pen);fc.style.display='none'}else{me=false;vr.style.display='none';cc.style.display='none';fc.style.display='none'}es.style.display=me?'block':'none';const inv=document.getElementById('invitacionCheck');let ch=false;if(inv.checked)ch=true;else if(pagosMixtos.length>0){if(pen===0)ch=true;else if(pen>0&&cch?.checked)ch=true;else if(pen<0){const v=parseFloat(vi?.value)||0;const rest=Math.abs(pen)-v;if(rest<=0||fch?.checked)ch=true}}document.getElementById('confirmCobroBtn').disabled=!ch};
+        
+        window.calcularConVuelto=function(){window.recalcularTotales()};
+        
+        window.confirmarCobro=async function(){if(!window.currentPedido)return;const inv=document.getElementById('invitacionCheck').checked;const cc=document.getElementById('condonarCheck');const fc=document.getElementById('favorCheck');const vi=document.getElementById('vueltoInput');let ne,mp,p,cond=0,afc=0,v=0,rec;if(inv){ne=window.currentPedido.tipo==='delivery'?'en_camino':(window.currentPedido.tipo==='reserva'?'reserva_pendiente':'en_cocina');mp='invitacion';p=[{metodo:'invitacion',monto:0,montoBs:0}];rec=0}else{const tot=window.usdToBs(window.currentPedido.total||0);rec=window.pagosMixtos.reduce((s,p)=>s+(p.metodo==='efectivo_usd'?window.usdToBs(p.monto||0):(p.monto||0)),0);let pen=tot-rec;if(cc&&cc.checked&&pen>0){cond=pen;pen=0}if(fc&&fc.checked){const sob=Math.abs(pen);if(pen<0){const ve=parseFloat(vi?.value)||0;afc=Math.abs(pen)-ve;if(afc<0)afc=0;v=ve}else{afc=pen;pen=0}}ne=window.currentPedido.tipo==='delivery'?'en_camino':(window.currentPedido.tipo==='reserva'?'reserva_pendiente':'en_cocina');p=window.pagosMixtos.map(p=>({metodo:p.metodo,monto:p.monto,montoBs:p.metodo==='efectivo_usd'?window.usdToBs(p.monto):p.monto,referencia:p.referencia||null}));mp=window.pagosMixtos.length===1?window.pagosMixtos[0].metodo:'mixto'}try{await window.supabaseClient.from('pedidos').update({estado:ne,metodo_pago:mp,pagos_mixtos:p,cajero:window.currentUser?.nombre||'Cajero',fecha_cobro:new Date().toISOString(),condonado:cond||0,a_favor_caja:afc||0,vuelto_entregado:v||0,monto_recibido:rec}).eq('id',window.currentPedido.id);const ti=window.currentPedido.items?.reduce((s,i)=>s+(i.cantidad||1),0)||0;const spUSD=(window.currentPedido.items||[]).reduce((s,i)=>s+(i.precioUnitarioUSD||0)*(i.cantidad||1),0);const spBs=window.usdToBs(spUSD);await window.supabaseClient.from('ventas').insert([{pedido_id:window.currentPedido.id,total:window.currentPedido.total,subtotal_platillos:spBs,items:ti,metodo_pago:mp,tipo:window.currentPedido.tipo,fecha:new Date().toISOString()}]);let tn,tm;if(inv){tn='🎁 Pedido por invitación';tm='Tu pedido ha sido procesado. ¡Disfruta!'}else if(window.currentPedido.tipo==='delivery'){tn='✅ Pago confirmado';tm='Tu delivery está en camino'}else if(window.currentPedido.tipo==='reserva'){tn='✅ Reserva confirmada';tm='Tu reserva ha sido confirmada'}else{tn='✅ Pago confirmado';tm='Tu pedido está en preparación'}await window.supabaseClient.from('notificaciones').insert([{pedido_id:window.currentPedido.id,tipo:'approved',titulo:tn,mensaje:tm,timestamp:new Date().toISOString(),session_id:window.currentPedido.session_id,leida:false}]);document.getElementById('cobroModal').classList.remove('active');window.mostrarToast('💰 Cobro procesado');window.enProcesoDeCobro=false;window.currentPedido=null;window.pagosMixtos=[];await window.recargarPedidosCompletos();await window.cargarMenu();window.renderizarPropinas()}catch(e){console.error('Error en cobro:',e);window.mostrarToast('❌ Error al procesar el cobro','error')}};
+        
+        window.mostrarRechazo=function(pid){window.pedidoParaAccion=(window.pedidos||[]).find(p=>p.id===pid);if(window.pedidoParaAccion)document.getElementById('rechazoModal').classList.add('active')};
+        
+        window.confirmarRechazo=async function(){if(!window.pedidoParaAccion)return;const r=document.querySelector('input[name="rejectionReason"]:checked')?.value;if(!r){window.mostrarToast('Selecciona una razón','error');return}try{await window.supabaseClient.rpc('liberar_ingredientes',{p_pedido_id:window.pedidoParaAccion.id});await window.supabaseClient.from('pedidos').update({estado:'rechazado'}).eq('id',window.pedidoParaAccion.id);const rz={referencia_invalida:'Referencia inválida',monto_insuficiente:'Monto insuficiente',datos_incorrectos:'Datos incorrectos',no_disponible:'Producto no disponible',fuera_horario:'Fuera de horario'};await window.supabaseClient.from('notificaciones').insert([{pedido_id:window.pedidoParaAccion.id,tipo:'rejected',titulo:'❌ Pedido rechazado',mensaje:`Motivo: ${rz[r]||r}`,timestamp:new Date().toISOString(),session_id:window.pedidoParaAccion.session_id,leida:false}]);window.cerrarModal('rechazoModal');window.mostrarToast('🗑️ Pedido rechazado');await window.recargarPedidosCompletos();window.verificarYControlarAlarma()}catch(e){console.error('Error al rechazar:',e);window.mostrarToast('❌ Error al rechazar','error')}};
+        
+        window.renderizarMenu=async function(){const g=document.getElementById('menuGrid'),cl=document.getElementById('categoryList');if(!window.menuItems||!window.menuItems.length){g.innerHTML='<div class="empty-state"><i class="fas fa-utensils"></i><p>No hay platillos disponibles</p></div>';return}const cu=[...new Set(window.menuItems.map(i=>i.categoria).filter(Boolean))];let ch='<li class="category-item active" data-categoria="todos"><i class="fas fa-utensils"></i> Todos</li>';cu.forEach(c=>{ch+=`<li class="category-item" data-categoria="${c}"><i class="fas fa-${c==='entradas'?'fa-leaf':c==='sushi'?'fa-fish':c==='rolls'?'fa-egg':c==='tragos'?'fa-wine-glass-alt':c==='pokes'?'fa-bowl-food':c==='ensaladas'?'fa-carrot':c==='china'?'fa-dragon':c==='japonesa'?'fa-sun':c==='ofertas'?'fa-fire':'fa-utensils'}"></i> ${c}</li>`});cl.innerHTML=ch;document.querySelectorAll('.category-item').forEach(i=>{i.addEventListener('click',function(){document.querySelectorAll('.category-item').forEach(c=>c.classList.remove('active'));this.classList.add('active');window.filtrarMenuPorCategoria(this.dataset.categoria)})});window.filtrarMenuPorCategoria('todos')};
+        
+        window.filtrarMenuPorCategoria=function(c){let f=[];if(c==='todos')f=window.menuItems;else f=window.menuItems.filter(i=>i.categoria===c);window.renderizarMenuItems(f)};
+        
+        window.renderizarMenuItems=async function(i){const g=document.getElementById('menuGrid');const ics=await Promise.all(i.map(async it=>{const s=await window.calcularStockPlatillo(it);let sc='available',st='Disponible';if(s<=0){sc='sold-out';st='Agotado'}else if(s<5){sc='low';st=`Últimas ${s} unidades`}else st=`${s} disponibles`;return{...it,stock:s,stockClass:sc,stockText:st}}));g.innerHTML=ics.map(i=>`<div class="menu-card"><div class="menu-card-image" style="background-image:url('${i.imagen||'https://via.placeholder.com/300x150?text=Saki+Sushi'}')"></div><div class="menu-card-content"><div class="menu-card-header"><span class="menu-card-title">${i.nombre}</span><span class="menu-card-price">${window.formatBs(window.usdToBs(i.precio||0))}</span></div><p style="font-size:.85rem;color:rgba(255,255,255,.6);margin-bottom:.5rem">${i.descripcion||''}</p><div class="menu-card-stock ${i.stockClass}"><i class="fas fa-box"></i> ${i.stockText}</div></div></div>`).join('')};
+        
+        window.renderizarPropinas=function(){const total=(window.propinas||[]).reduce((s,p)=>s+(p.monto_bs||p.monto||0),0);const cantidad=(window.propinas||[]).length;const promedio=cantidad>0?total/cantidad:0;document.getElementById('propinasTotal').textContent=window.formatBs(total);document.getElementById('propinasCantidad').textContent=cantidad;document.getElementById('propinasPromedio').textContent=window.formatBs(promedio);document.getElementById('propinasListCount').textContent=cantidad;document.getElementById('propinasListContainer').innerHTML=cantidad?window.propinas.map(p=>window.crearTarjetaPropina(p)).join(''):'<div class="empty-state"><i class="fas fa-hand-holding-heart"></i><p>No hay propinas hoy</p></div>'};
+        
+        window.crearTarjetaPropina=function(p){try{const f=new Date(p.fecha);const h=f.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});const mesonero=(window.mesoneros||[]).find(m=>m.id===p.mesonero_id);const nm=mesonero?mesonero.nombre:'N/A';return`<div class="order-card-compact" style="border-left-color:var(--propina)"><div class="order-header-compact"><span class="order-time-compact"><i class="far fa-clock"></i> ${h}</span><span class="propina-tag"><i class="fas fa-hand-holding-heart"></i> Propina</span></div><div class="order-info-compact"><div><i class="fas fa-user"></i> Mesonero: ${nm}</div><div><i class="fas fa-chair"></i> Mesa: ${p.mesa||'N/A'}</div><div><i class="fas fa-${p.metodo==='efectivo_bs'?'money-bill-wave':p.metodo==='efectivo_usd'?'dollar-sign':p.metodo==='pago_movil'?'mobile-alt':'credit-card'}"></i> Método: ${p.metodo}</div><div><i class="fas fa-user-tie"></i> Cajero: ${p.cajero||'Cajero'}</div></div><div class="order-total-compact" style="color:var(--propina)">${window.formatBs(p.monto_bs||p.monto)}</div></div>`}catch(e){console.error('Error creando tarjeta de propina:',e);return''}};
+        
+        window.mostrarPropinaModal=function(){window.currentPropinaData={mesonero:'',mesa:'Mesa 1',metodo:'efectivo_bs',montoBs:0,montoUsd:0,referencia:'',tasaAplicada:window.tasaEfectiva};const b=document.getElementById('propinaModalBody');const mo=(window.mesoneros||[]).map(m=>`<option value="${m.id}">${m.nombre}</option>`).join('');let mesaOptions='';for(let i=1;i<=10;i++)mesaOptions+=`<option value="Mesa ${i}">Mesa ${i}</option>`;mesaOptions+=`<option value="Delivery">Delivery</option><option value="Reserva">Reserva</option>`;b.innerHTML=`<div style="margin-bottom:20px"><div class="mesonero-selector"><label>🧑‍🍳 Mesonero</label><select id="propinaMesonero"><option value="">Seleccionar mesonero...</option>${mo}</select></div><div class="mesa-selector"><label>🪑 Mesa Atendida</label><select id="propinaMesa">${mesaOptions}</select></div><div style="margin-bottom:20px"><label>💳 Método de Pago</label><div style="display:flex;gap:10px;margin-top:8px"><label style="flex:1;background:rgba(0,0,0,.3);padding:10px;border-radius:8px;text-align:center;cursor:pointer"><input type="radio" name="propinaMetodo" value="efectivo_bs" checked onchange="window.cambiarMetodoPropina('efectivo_bs')"> Efectivo Bs</label><label style="flex:1;background:rgba(0,0,0,.3);padding:10px;border-radius:8px;text-align:center;cursor:pointer"><input type="radio" name="propinaMetodo" value="efectivo_usd" onchange="window.cambiarMetodoPropina('efectivo_usd')"> Efectivo USD</label><label style="flex:1;background:rgba(0,0,0,.3);padding:10px;border-radius:8px;text-align:center;cursor:pointer"><input type="radio" name="propinaMetodo" value="pago_movil" onchange="window.cambiarMetodoPropina('pago_movil')"> Pago Móvil</label><label style="flex:1;background:rgba(0,0,0,.3);padding:10px;border-radius:8px;text-align:center;cursor:pointer"><input type="radio" name="propinaMetodo" value="punto_venta" onchange="window.cambiarMetodoPropina('punto_venta')"> Punto Venta</label></div></div><div class="propina-monto-group" id="propinaMontoGroup"><input type="number" id="propinaMontoBs" step="0.01" placeholder="Monto en Bs" oninput="window.calcularMontoPropina('bs')"><input type="number" id="propinaMontoUsd" step="0.01" placeholder="Monto en USD" disabled oninput="window.calcularMontoPropina('usd')"></div><div id="propinaReferenciaGroup" style="display:none;margin-bottom:20px"><label>🔢 Referencia (6 dígitos)</label><div class="referencia-input"><input type="text" maxlength="1" class="ref-propina" data-index="0" oninput="window.moverRefPropina(this,0)"><input type="text" maxlength="1" class="ref-propina" data-index="1" oninput="window.moverRefPropina(this,1)"><input type="text" maxlength="1" class="ref-propina" data-index="2" oninput="window.moverRefPropina(this,2)"><input type="text" maxlength="1" class="ref-propina" data-index="3" oninput="window.moverRefPropina(this,3)"><input type="text" maxlength="1" class="ref-propina" data-index="4" oninput="window.moverRefPropina(this,4)"><input type="text" maxlength="1" class="ref-propina" data-index="5" oninput="window.moverRefPropina(this,5)"></div></div><div style="background:rgba(0,0,0,.3);padding:15px;border-radius:8px"><div style="display:flex;justify-content:space-between"><span><strong>Total a registrar:</strong></span><span id="propinaTotalDisplay" style="color:var(--accent);font-size:1.2rem">Bs. 0.00</span></div><div style="font-size:.85rem;color:rgba(255,255,255,.7);margin-top:5px">Tasa aplicada: ${window.tasaEfectiva} Bs/USD</div></div></div><div class="keyboard-hint"><span><kbd>ENTER</kbd> guardar</span><span><kbd>ESC</kbd> cancelar</span></div>`;document.querySelectorAll('.ref-propina').forEach(i=>{i.addEventListener('input',function(){const r=Array.from(document.querySelectorAll('.ref-propina')).map(i=>i.value).join('');window.currentPropinaData.referencia=r;window.validarPropina()})});document.getElementById('propinaModal').classList.add('active')};
+        
+        window.cambiarMetodoPropina=function(m){window.currentPropinaData.metodo=m;const bs=document.getElementById('propinaMontoBs'),usd=document.getElementById('propinaMontoUsd'),rg=document.getElementById('propinaReferenciaGroup');if(m==='efectivo_usd'){bs.disabled=true;usd.disabled=false;rg.style.display='none'}else if(m==='pago_movil'){bs.disabled=false;usd.disabled=true;rg.style.display='block'}else{bs.disabled=false;usd.disabled=true;rg.style.display='none'}window.validarPropina()};
+        
+        window.calcularMontoPropina=function(t){if(t==='bs'){window.currentPropinaData.montoBs=parseFloat(document.getElementById('propinaMontoBs').value)||0;if(window.currentPropinaData.metodo==='efectivo_usd')window.currentPropinaData.montoUsd=window.currentPropinaData.montoBs/window.tasaEfectiva;document.getElementById('propinaTotalDisplay').textContent=window.formatBs(window.currentPropinaData.montoBs)}else{window.currentPropinaData.montoUsd=parseFloat(document.getElementById('propinaMontoUsd').value)||0;window.currentPropinaData.montoBs=window.currentPropinaData.montoUsd*window.tasaEfectiva;document.getElementById('propinaTotalDisplay').textContent=window.formatBs(window.currentPropinaData.montoBs)}window.validarPropina()};
+        
+        window.moverRefPropina=function(i,idx){if(i.value.length===1&&idx<5)document.querySelector(`.ref-propina[data-index="${idx+1}"]`).focus();const r=Array.from(document.querySelectorAll('.ref-propina')).map(i=>i.value).join('');window.currentPropinaData.referencia=r;window.validarPropina()};
+        
+        window.validarPropina=function(){const mes=document.getElementById('propinaMesonero')?.value,ms=document.getElementById('propinaMesa')?.value;if(!mes||!ms){document.getElementById('confirmPropinaBtn').disabled=true;return}if(window.currentPropinaData.metodo==='pago_movil'){const rv=window.currentPropinaData.referencia&&window.currentPropinaData.referencia.length===6;document.getElementById('confirmPropinaBtn').disabled=!(window.currentPropinaData.montoBs>0&&rv)}else if(window.currentPropinaData.metodo==='efectivo_usd')document.getElementById('confirmPropinaBtn').disabled=!(window.currentPropinaData.montoUsd>0);else document.getElementById('confirmPropinaBtn').disabled=!(window.currentPropinaData.montoBs>0)};
+        
+        window.confirmarPropina=async function(){if(!window.currentUser)return;const mid=document.getElementById('propinaMesonero').value,ms=document.getElementById('propinaMesa').value,mes=(window.mesoneros||[]).find(m=>m.id===mid);if(!mes){window.mostrarToast('Selecciona un mesonero','error');return}try{const prop={mesonero_id:mid,mesa:ms,metodo:window.currentPropinaData.metodo,monto_original:window.currentPropinaData.metodo==='efectivo_usd'?window.currentPropinaData.montoUsd:window.currentPropinaData.montoBs,moneda_original:window.currentPropinaData.metodo==='efectivo_usd'?'USD':'Bs',tasa_aplicada:window.currentPropinaData.metodo==='efectivo_usd'?window.tasaEfectiva:null,monto_bs:window.currentPropinaData.montoBs,referencia:window.currentPropinaData.referencia||null,cajero:window.currentUser.nombre,fecha:new Date().toISOString(),entregado:false};await window.supabaseClient.from('propinas').insert([prop]);window.cerrarPropinaModal();window.mostrarToast('💰 Propina registrada','success');await window.cargarPropinas();window.actualizarEstadisticas();window.renderizarPropinas()}catch(e){console.error('Error:',e);window.mostrarToast('❌ Error al registrar propina','error')}};
+        
+        window.renderizarDeliverysStats=function(){const eh=(window.pedidos||[]).filter(p=>p.tipo==='delivery'&&p.estado==='enviado'&&new Date(p.timestamp).toDateString()===new Date().toDateString());const td=eh.reduce((s,p)=>s+(p.costo_delivery_bs||0),0);const c=eh.length;const pr=c>0?td/c:0;document.getElementById('deliverysTotalStats').textContent=window.formatBs(td);document.getElementById('deliverysCantidadStats').textContent=c;document.getElementById('deliverysPromedioStats').textContent=window.formatBs(pr);document.getElementById('deliverysListCount').textContent=c;document.getElementById('deliverysListContainer').innerHTML=c?eh.map(p=>window.crearTarjetaDelivery(p)).join(''):'<div class="empty-state"><i class="fas fa-motorcycle"></i><p>No hay entregas hoy</p></div>'};
+        
+        window.crearTarjetaDelivery=function(p){try{const f=new Date(p.timestamp),h=f.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});return`<div class="order-card-compact" style="border-left-color:var(--delivery)"><div class="order-header-compact"><span class="order-time-compact"><i class="far fa-clock"></i> ${h}</span><span class="delivery-tag"><i class="fas fa-motorcycle"></i> Delivery</span></div><div class="order-info-compact"><div><i class="fas fa-map-marker-alt"></i> ${(p.direccion||'').substring(0,20)}...</div><div><i class="fas fa-phone"></i> ${p.telefono||'N/A'}</div><div><i class="fas fa-tag"></i> Pedido: ${p.id.substring(0,8)}</div></div><div class="order-total-compact" style="color:var(--delivery)">${window.formatBs(p.costo_delivery_bs||0)}</div></div>`}catch(e){return''}};
+        
+        window.mostrarConfirmacionDelivery=function(pid){const p=(window.pedidos||[]).find(p=>p.id===pid);if(!p)return;window.pedidoParaAccion=p;const m=document.getElementById('confirmModal'),t=document.getElementById('confirmModalTitle'),b=document.getElementById('confirmModalBody'),h=document.getElementById('confirmModalHeader');t.innerHTML='<i class="fas fa-truck"></i> Asignar Delivery';h.style.background='linear-gradient(135deg,var(--delivery),#00838F)';const dop=(window.deliverys||[]).map(d=>`<option value="${d.id}">${d.nombre}</option>`).join('');const montoDelivery=p.costo_delivery_bs?window.formatBs(p.costo_delivery_bs):'Bs. 0';b.innerHTML=`<p>Selecciona el motorizado que realizará el envío:</p><div class="delivery-selector" style="margin:20px 0"><select id="deliverySelector" style="width:100%;padding:10px;background:rgba(0,0,0,.5);color:#fff;border:2px solid rgba(255,255,255,.2);border-radius:8px;"><option value="">-- Seleccionar motorizado --</option>${dop}</select></div><div class="detail-item"><div class="detail-row"><span class="detail-label">Tipo:</span><span class="detail-value">${p.tipo}</span></div>${p.tipo==='mesa'?`<div class="detail-row"><span class="detail-label">Mesa:</span><span class="detail-value">${p.mesa}</span></div>`:''}${p.tipo==='delivery'?`<div class="detail-row"><span class="detail-label">Dirección:</span><span class="detail-value">${p.direccion}</span></div><div class="detail-row"><span class="detail-label">Teléfono:</span><span class="detail-value">${p.telefono}</span></div>`:''}<div class="detail-row"><span class="detail-label">Items:</span></div>${(p.items||[]).map(i=>`<div class="detail-row"><span>${i.cantidad||1}x ${i.nombre}</span><span>${window.formatBs(window.usdToBs(i.precioUnitarioUSD*(i.cantidad||1)))}</span></div>`).join('')}<div class="detail-row"><span class="detail-label">Costo Delivery:</span><span class="detail-value" style="color:var(--delivery)">${montoDelivery}</span></div><div class="detail-row" style="font-weight:700"><span>TOTAL</span><span>${window.formatBs(window.usdToBs(p.total||0))}</span></div></div><div class="keyboard-hint" style="margin-top:20px"><span><kbd>ENTER</kbd> confirmar</span><span><kbd>ESC</kbd> cancelar</span></div>`;document.getElementById('confirmActionBtn').disabled=true;setTimeout(()=>{const s=document.getElementById('deliverySelector');if(s){s.addEventListener('change',function(){document.getElementById('confirmActionBtn').disabled=!this.value})}},100);m.classList.add('active')};
+        
+        window.mostrarConfirmacion=function(pid,acc){const p=(window.pedidos||[]).find(p=>p.id===pid);if(!p)return;window.pedidoParaAccion=p;window.accionPendiente=acc;const m=document.getElementById('confirmModal'),t=document.getElementById('confirmModalTitle'),b=document.getElementById('confirmModalBody'),h=document.getElementById('confirmModalHeader');let tit,msg,not;if(acc==='entregado'){tit='Confirmar Entrega';msg='¿Pedido entregado?';h.style.background='linear-gradient(135deg,var(--success),#2E7D32)';not={titulo:'🍽️ ¡Que aproveche!',mensaje:'Tu pedido ha sido entregado.'}}else if(acc==='enviado'){tit='Confirmar Envío';msg='¿Pedido enviado?';h.style.background='linear-gradient(135deg,var(--info),#1565C0)';not={titulo:'🚚 Delivery en camino',mensaje:'El repartidor ya salió.'}}else if(acc==='reserva_atendida'){tit='Cliente Confirmado';msg='¿Cliente llegó?';h.style.background='linear-gradient(135deg,#9c27b0,#7b1fa2)';not={titulo:'✅ Cliente confirmado',mensaje:'Estás siendo atendido.'}}else{tit='Confirmar';msg='¿Confirmar acción?';h.style.background='linear-gradient(135deg,var(--success),#2E7D32)';not={titulo:'✅ Completado',mensaje:'Acción confirmada.'}}t.innerHTML=`<i class="fas fa-check-circle"></i> ${tit}`;b.innerHTML=`<p>${msg}</p>${window.crearDetallePedidoHTML(p)}<div style="background:rgba(56,142,60,.1);padding:15px;margin-top:20px"><strong>Notificación:</strong><br>${not.titulo}<br>${not.mensaje}</div><div class="keyboard-hint"><span><kbd>ENTER</kbd> confirmar</span><span><kbd>ESC</kbd> cancelar</span></div>`;m.classList.add('active')};
+        
+        window.ejecutarConfirmacion=async function(){if(!window.pedidoParaAccion)return;try{let nt,nm;if(window.accionPendiente==='entregado'){nt='🍽️ Pedido entregado';nm='¡Buen Provecho! Gracias por elegir Saki Sushi'}else if(window.accionPendiente==='enviado'){const did=document.getElementById('deliverySelector')?.value;if(!did){window.mostrarToast('Selecciona un motorizado','error');return}const del=(window.deliverys||[]).find(d=>d.id===did);await window.supabaseClient.from('entregas_delivery').insert([{pedido_id:window.pedidoParaAccion.id,delivery_id:did,monto_bs:window.pedidoParaAccion.costo_delivery_bs||0,fecha_entrega:new Date().toISOString()}]);nt='🚚 Delivery en camino';nm=del?`Tu pedido está siendo entregado por ${del.nombre}`:'El repartidor ya salió'}else if(window.accionPendiente==='reserva_atendida'){nt='✅ Reserva Confirmada';nm='En breve tu pedido te será entregado, ¡Gracias por preferirnos!'}else if(window.accionPendiente==='reserva_completada'){nt='🍽️ Pedido entregado';nm='¡Buen Provecho! Gracias por elegir Saki Sushi'}else{nt='🔄 Estado actualizado';nm='Tu pedido ha sido actualizado'}await window.supabaseClient.from('pedidos').update({estado:window.accionPendiente}).eq('id',window.pedidoParaAccion.id);await window.supabaseClient.from('notificaciones').insert([{pedido_id:window.pedidoParaAccion.id,tipo:'approved',titulo:nt,mensaje:nm,timestamp:new Date().toISOString(),session_id:window.pedidoParaAccion.session_id,leida:false}]);window.cerrarModal('confirmModal');window.mostrarToast('✅ Estado actualizado');await window.recargarPedidosCompletos();window.verificarYControlarAlarma()}catch(e){console.error('Error:',e);window.mostrarToast('❌ Error','error')}};
+        
+        window.verComprobante=async function(pid){const p=(window.pedidos||[]).find(p=>p.id===pid);if(!p||!p.comprobante_url){window.mostrarToast('No hay comprobante','error');return}const m=document.getElementById('comprobanteModal');document.getElementById('comprobanteModalBody').innerHTML=`<div style="text-align:center"><img src="${p.comprobante_url}" style="max-width:100%;max-height:400px;border-radius:8px;margin-bottom:15px"><p><strong>Referencia:</strong> ${p.referencia||'N/A'}</p><p><strong>Teléfono:</strong> ${p.telefono||'N/A'}</p><p><strong>Total:</strong> ${window.formatBs(window.usdToBs(p.total||0))}</p></div><div class="keyboard-hint"><span><kbd>ESC</kbd> cerrar</span></div>`;m.classList.add('active')};
+        
+        window.crearDetallePedidoHTML=function(p){try{let met='';if(p.pagos_mixtos){met='<div class="payment-methods">'+p.pagos_mixtos.map(p=>{const ic=p.metodo==='pago_movil'?'mobile-alt':(p.metodo==='punto_venta'?'credit-card':'money-bill-wave');const sim=p.metodo==='efectivo_bs'?'Bs':(p.metodo==='efectivo_usd'?'$':(p.metodo==='pago_movil'?'📱':'💳'));return`<span class="payment-tag"><i class="fas fa-${ic}"></i> ${sim} ${window.formatBs(p.monto)}</span>`}).join('')+'</div>'}let tags='';if(p.condonado>0)tags+=`<span class="condonar-tag"><i class="fas fa-gift"></i> Condonado: ${window.formatBs(p.condonado)}</span>`;if(p.a_favor_caja>0)tags+=`<span class="favor-tag"><i class="fas fa-piggy-bank"></i> A favor: ${window.formatBs(p.a_favor_caja)}</span>`;return`<div class="detail-item"><div class="detail-row"><span class="detail-label">Tipo:</span><span class="detail-value">${p.tipo}</span></div>${p.tipo==='mesa'?`<div class="detail-row"><span class="detail-label">Mesa:</span><span class="detail-value">${p.mesa}</span></div>`:''}${p.tipo==='delivery'?`<div class="detail-row"><span class="detail-label">Dirección:</span><span class="detail-value">${p.direccion}</span></div><div class="detail-row"><span class="detail-label">Teléfono:</span><span class="detail-value">${p.telefono}</span></div>`:''}<div class="detail-row"><span class="detail-label">Items:</span></div>${(p.items||[]).map(i=>`<div class="detail-row"><span>${i.cantidad||1}x ${i.nombre}</span><span>${window.formatBs(window.usdToBs(i.precioUnitarioUSD*(i.cantidad||1)))}</span></div>`).join('')}${met?`<div class="detail-row"><span class="detail-label">Pagos:</span></div>${met}`:''}${tags?`<div class="detail-row">${tags}</div>`:''}<div class="detail-row" style="font-weight:700"><span>TOTAL</span><span>${window.formatBs(window.usdToBs(p.total||0))}</span></div></div>`}catch(e){return''}};
+        
+        window.crearDetalleVentaCompacto=function(v,p){if(!p)return'';try{const h=new Date(p.timestamp).toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});const its=(p.items||[]).map(i=>`<div class="detail-item-row-compact"><span>${i.cantidad||1}x ${i.nombre}</span><span>${window.formatBs(window.usdToBs((i.precioUnitarioUSD||0)*(i.cantidad||1)))}</span></div>`).join('');let met='';if(p.pagos_mixtos?.length){met='<div style="margin-top:3px">'+p.pagos_mixtos.map(p=>{const nom=p.metodo==='efectivo_bs'?'Bs':p.metodo==='efectivo_usd'?'$':p.metodo==='pago_movil'?'📱':'💳';return`<span class="detail-metodo-tag">${nom} ${window.formatBs(p.monto)}</span>`}).join('')+'</div>'}let tags='';if(p.condonado>0)tags+=`<span class="condonar-tag"><i class="fas fa-gift"></i> Condonado: ${window.formatBs(p.condonado)}</span>`;if(p.a_favor_caja>0)tags+=`<span class="favor-tag"><i class="fas fa-piggy-bank"></i> A favor: ${window.formatBs(p.a_favor_caja)}</span>`;return`<div class="detail-item-compact"><div class="detail-header-compact"><span>${h}</span><span class="detail-metodo-tag">${v.tipo}</span></div><div class="detail-items-compact">${its}</div><div class="detail-total-compact">Total: ${window.formatBs(v.subtotal_platillos||(v.total*window.tasaEfectiva))}</div>${met}${tags?`<div style="margin-top:5px">${tags}</div>`:''}</div>`}catch(e){return''}};
+        
+        window.crearDetallePedidoCompacto=function(p){try{const h=new Date(p.timestamp).toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});const its=(p.items||[]).map(i=>`<div class="detail-item-row-compact"><span>${i.cantidad||1}x ${i.nombre}</span><span>${window.formatBs(window.usdToBs((i.precioUnitarioUSD||0)*(i.cantidad||1)))}</span></div>`).join('');return`<div class="detail-item-compact"><div class="detail-header-compact"><span>${h}</span><span class="detail-metodo-tag">${p.tipo}</span></div><div class="detail-items-compact">${its}</div><div class="detail-total-compact">Total: ${window.formatBs(window.usdToBs(p.total||0))}</div></div>`}catch(e){return''}};
+        
+        window.abrirModalDetalle=async function(t){await window.cargarVentasHoy();await window.cargarPropinas();const m=document.getElementById('detalleModal'),tle=document.getElementById('detalleModalTitle'),b=document.getElementById('detalleModalBody');let c='';try{switch(t){case'preparacion':tle.innerHTML='<i class="fas fa-fire"></i> Pedidos en Preparación';const ep=(window.pedidos||[]).filter(p=>['en_cocina','en_camino','reserva_pendiente','reserva_atendida'].includes(p.estado));c=ep.length?ep.map(p=>window.crearDetallePedidoCompacto(p)).join(''):'<div class="empty-state"><i class="fas fa-inbox"></i><p>No hay pedidos en preparación</p></div>';break;case'cobrados':tle.innerHTML='<i class="fas fa-check-circle"></i> Cobrados Hoy';if(!window.ventasHoy||!window.ventasHoy.length)c='<div class="empty-state"><i class="fas fa-inbox"></i><p>No hay cobros registrados hoy</p></div>';else c=window.ventasHoy.map(v=>{const p=(window.pedidos||[]).find(p=>p.id===v.pedido_id);return window.crearDetalleVentaCompacto(v,p)}).join('');break;case'ventas':tle.innerHTML='<i class="fas fa-dollar-sign"></i> Ventas Totales (Platillos)';const tb=(window.ventasHoy||[]).reduce((s,v)=>s+(v.subtotal_platillos||0),0);let eb=0,eu=0,pm=0,pv=0,cond=0,fav=0;(window.ventasHoy||[]).forEach(v=>{const pe=(window.pedidos||[]).find(p=>p.id===v.pedido_id);if(pe?.condonado)cond+=pe.condonado;if(pe?.a_favor_caja)fav+=pe.a_favor_caja;if(pe?.metodo_pago){if(pe.metodo_pago==='efectivo_bs')eb+=v.subtotal_platillos||0;else if(pe.metodo_pago==='efectivo_usd')eu+=v.subtotal_platillos||0;else if(pe.metodo_pago==='pago_movil')pm+=v.subtotal_platillos||0;else if(pe.metodo_pago==='punto_venta')pv+=v.subtotal_platillos||0}});c=`<p><strong>Total del día (platillos):</strong> ${window.formatBs(tb)}</p><p><strong>Cantidad de ventas:</strong> ${(window.ventasHoy||[]).length}</p>${cond>0?`<p><strong class="condonar-tag">Condonado:</strong> ${window.formatBs(cond)}</p>`:''}${fav>0?`<p><strong class="favor-tag">A favor de caja:</strong> ${window.formatBs(fav)}</p>`:''}<h4>Desglose por método:</h4><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:20px"><div class="payment-tag" style="justify-content:space-between;padding:6px"><span>Efectivo Bs</span><span>${window.formatBs(eb)}</span></div><div class="payment-tag" style="justify-content:space-between;padding:6px"><span>Efectivo USD</span><span>${window.formatBs(eu)}</span></div><div class="payment-tag" style="justify-content:space-between;padding:6px"><span>Pago Móvil</span><span>${window.formatBs(pm)}</span></div><div class="payment-tag" style="justify-content:space-between;padding:6px"><span>Punto de Venta</span><span>${window.formatBs(pv)}</span></div></div><h4>Ventas del día:</h4>${(window.ventasHoy||[]).map(v=>{const p=(window.pedidos||[]).find(p=>p.id===v.pedido_id);return window.crearDetalleVentaCompacto(v,p)}).join('')}`;break;case'platillos':tle.innerHTML='<i class="fas fa-utensils"></i> Platillos Vendidos';const hoy=new Date().toDateString();const ph=(window.pedidos||[]).filter(p=>['cobrado','entregado','enviado','reserva_completada'].includes(p.estado)&&new Date(p.timestamp).toDateString()===hoy);const cnt={};let tt=0;ph.forEach(p=>{p.items?.forEach(i=>{const c=i.cantidad||1;cnt[i.nombre]=(cnt[i.nombre]||0)+c;tt+=c})});const rk=Object.entries(cnt).sort((a,b)=>b[1]-a[1]);const mx=rk[0]?.[1]||0;if(!rk.length)c='<div class="empty-state"><i class="fas fa-utensils"></i><p>No hay platillos vendidos hoy</p></div>';else c=`<p><strong>Total unidades:</strong> ${tt}</p><div style="max-height:400px;overflow-y:auto">${rk.map(([n,c],i)=>`<div class="ranking-bar"><div class="ranking-position">${i+1}</div><div class="ranking-info"><div class="ranking-name">${n}</div><div class="ranking-cantidad">${c} vendido(s)</div></div><div class="ranking-bar-container"><div class="ranking-bar-fill" style="width:${(c/mx)*100}%"></div></div></div>`).join('')}</div>`;break;case'propinasDetalle':tle.innerHTML='<i class="fas fa-hand-holding-heart"></i> Propinas del Día';const tp=(window.propinas||[]).reduce((s,p)=>s+(p.monto_bs||p.monto||0),0);const cp=(window.propinas||[]).length;const pp=cp>0?tp/cp:0;c=`<p><strong>Total propinas:</strong> ${window.formatBs(tp)}</p><p><strong>Cantidad:</strong> ${cp}</p><p><strong>Promedio:</strong> ${window.formatBs(pp)}</p><h4>Detalle por propina:</h4>${cp?window.propinas.map(p=>window.crearTarjetaPropina(p)).join(''):'<div class="empty-state"><i class="fas fa-hand-holding-heart"></i><p>No hay propinas hoy</p></div>'}`;break;case'propinasCantidad':tle.innerHTML='<i class="fas fa-hashtag"></i> Cantidad de Propinas';c=`<p style="font-size:2em;text-align:center;color:var(--propina)">${(window.propinas||[]).length}</p><p style="text-align:center">propinas recibidas hoy</p>`;break;case'propinasPromedio':tle.innerHTML='<i class="fas fa-chart-line"></i> Promedio de Propinas';const prom=(window.propinas||[]).length?(window.propinas||[]).reduce((s,p)=>s+(p.monto_bs||p.monto||0),0)/(window.propinas||[]).length:0;c=`<p style="font-size:2em;text-align:center;color:var(--propina)">${window.formatBs(prom)}</p><p style="text-align:center">promedio por propina</p>`;break;case'deliverysTotal':tle.innerHTML='<i class="fas fa-motorcycle"></i> Total Deliverys';const td=window.calcularTotalDeliverysHoy();c=`<p style="font-size:2em;text-align:center;color:var(--delivery)">${window.formatBs(td)}</p><p style="text-align:center">acumulado en deliveries hoy</p>`;break;case'deliverysCantidad':tle.innerHTML='<i class="fas fa-hashtag"></i> Entregas Hoy';const cd=(window.pedidos||[]).filter(p=>p.tipo==='delivery'&&p.estado==='enviado'&&new Date(p.timestamp).toDateString()===new Date().toDateString()).length;c=`<p style="font-size:2em;text-align:center;color:var(--delivery)">${cd}</p><p style="text-align:center">entregas realizadas hoy</p>`;break;case'deliverysPromedio':tle.innerHTML='<i class="fas fa-chart-line"></i> Promedio por Entrega';const eh=(window.pedidos||[]).filter(p=>p.tipo==='delivery'&&p.estado==='enviado'&&new Date(p.timestamp).toDateString()===new Date().toDateString());const tdp=eh.reduce((s,p)=>s+(p.costo_delivery_bs||0),0);const pdel=eh.length>0?tdp/eh.length:0;c=`<p style="font-size:2em;text-align:center;color:var(--delivery)">${window.formatBs(pdel)}</p><p style="text-align:center">promedio por entrega</p>`;break;default:c='<p>Selecciona una opción válida</p>'}}catch(e){console.error('Error en abrirModalDetalle:',e);c='<p>Error al cargar los datos</p>'}b.innerHTML=c;m.classList.add('active')};
+        
+        window.verificarCambiosPedidos=async function(){if(window.reconectando||window.enProcesoDeCobro)return;try{const h=new Date();h.setHours(0,0,0,0);const m=new Date(h);m.setDate(m.getDate()+2);const{data,error}=await window.supabaseClient.from('pedidos').select('id, estado, timestamp').gte('timestamp',h.toISOString()).lt('timestamp',m.toISOString());if(error)throw error;if(data){let hc=false;if(data.length!==(window.pedidos||[]).length)hc=true;else{const ma=new Map((window.pedidos||[]).map(p=>[p.id,p.estado]));for(const p of data){if(ma.get(p.id)!==p.estado){hc=true;break}}}if(hc){console.log('📦 Cambios detectados en pedidos, recargando...');await window.recargarPedidosCompletos();window.ultimaActualizacion=Date.now()}}}catch(e){console.error('Error verificando cambios:',e)}};
+        
+        window.recargarPedidosCompletos=async function(){try{await window.cargarPedidos();await window.cargarVentasHoy();window.actualizarEstadisticas();window.renderizarPedidos();window.verificarYControlarAlarma()}catch(e){console.error('Error recargando pedidos:',e)}};
+        
+        window.iniciarVerificacionPeriodica=function(){if(window.intervaloVerificacion)clearInterval(window.intervaloVerificacion);window.intervaloVerificacion=setInterval(async()=>{if(window.paginaVisible&&!window.enProcesoDeCobro)await window.verificarCambiosPedidos()},3000)};
+        
+        window.setupRealtimeSubscriptions=function(){try{if(window.suscripciones)window.suscripciones.forEach(s=>{try{s.unsubscribe()}catch(e){}});window.suscripciones=[];const addSub=(name,table,callback)=>{try{const sub=window.supabaseClient.channel(name+'-'+Date.now()).on('postgres_changes',{event:'*',schema:'public',table:table},callback).subscribe();window.suscripciones.push(sub)}catch(e){console.error('Error suscribiendo a '+table,e)}};addSub('cajero-pedidos','pedidos',async()=>{await window.verificarCambiosPedidos()});addSub('cajero-ventas','ventas',async()=>{await window.cargarVentasHoy();window.actualizarEstadisticas()});addSub('cajero-propinas','propinas',async()=>{await window.cargarPropinas();window.actualizarEstadisticas();window.renderizarPropinas()});addSub('cajero-mesoneros','mesoneros',async()=>{await window.cargarMesoneros()});addSub('cajero-deliverys','deliverys',async()=>{await window.cargarDeliverys()});addSub('cajero-menu','menu',async()=>{await window.cargarMenu()});addSub('cajero-inventario','inventario',async()=>{window.stockCache.invalidate();await window.cargarInventario()});addSub('cajero-config','config',(p)=>{window.configGlobal={...window.configGlobal,...p.new};window.tasaEfectiva=window.configGlobal.tasa_efectiva||400;window.renderizarPedidos();window.renderizarMenu();window.actualizarEstadisticas()})}catch(e){console.error('Error configurando suscripciones:',e)}};
+        
+        window.setupEventListeners=function(){document.addEventListener('keydown',(e)=>{if(e.key==='Escape'){['cobroModal','propinaModal','confirmModal','rechazoModal','detalleModal','mesaModal','comprobanteModal','deliveryModal'].forEach(id=>{const m=document.getElementById(id);if(m&&m.classList.contains('active')){if(id==='cobroModal')window.cerrarCobroModal();else if(id==='propinaModal')window.cerrarPropinaModal();else window.cerrarModal(id)}})}if(e.key==='Enter'){if(document.getElementById('confirmModal')&&document.getElementById('confirmModal').classList.contains('active')){const cb=document.getElementById('confirmActionBtn');if(cb&&!cb.disabled){e.preventDefault();window.ejecutarConfirmacion()}}if(document.getElementById('cobroModal')&&document.getElementById('cobroModal').classList.contains('active')&&!document.getElementById('confirmCobroBtn').disabled){e.preventDefault();window.confirmarCobro()}if(document.getElementById('propinaModal')&&document.getElementById('propinaModal').classList.contains('active')&&!document.getElementById('confirmPropinaBtn').disabled){e.preventDefault();window.confirmarPropina()}}});const cw=document.getElementById('categoriasWrapper');if(cw){let ts=0;cw.addEventListener('touchstart',e=>{ts=e.touches[0].clientX});cw.addEventListener('touchmove',e=>{if(!ts)return;const tm=e.touches[0].clientX,d=ts-tm;if(Math.abs(d)>20)e.preventDefault()});cw.addEventListener('touchend',e=>{if(!ts)return;const te=e.changedTouches[0].clientX,d=ts-te;if(Math.abs(d)>50){if(d>0)cw.scrollLeft+=150;else cw.scrollLeft-=150}ts=0})}};
+        
+        document.addEventListener('DOMContentLoaded',async()=>{console.log('DOM cargado, verificando sesión...');window.alarmaAudio=document.getElementById('alarmaSonido');const su=sessionStorage.getItem('cajero_user');if(su){try{window.currentUser=JSON.parse(su);await window.cargarDatosIniciales();window.mostrarPanel()}catch(e){console.error('Error restaurando sesión:',e);window.mostrarLogin()}}else window.mostrarLogin();document.addEventListener('visibilitychange',function(){if(document.hidden)window.paginaVisible=false;else{window.paginaVisible=true;window.verificarCambiosPedidos()}})});
     </script>
 </body>
 </html>
