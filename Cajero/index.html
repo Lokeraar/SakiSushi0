@@ -463,7 +463,7 @@ window.recalcularTotales = function() {
     if (favorCheck && favorCheck.checked && montoSobrante > 0) {
         montoFavor = montoSobrante;     // TODO el sobrante pasa a favor
         montoSobrante = 0;              // EL SOBRANTE MUERE
-        console.log('✅ Check A FAVOR activado:', montoFavor, 'Bs pasan a favor');
+        console.log(' Check A FAVOR activado:', montoFavor, 'Bs pasan a favor');
         console.log('   montoSobrante ahora es:', montoSobrante);
     }
     
@@ -471,7 +471,7 @@ window.recalcularTotales = function() {
     if (condonarCheck && condonarCheck.checked && montoPendiente > 0) {
         montoCondonar = montoPendiente; // TODO el pendiente pasa a condonado
         montoPendiente = 0;              // EL PENDIENTE MUERE
-        console.log('✅ Check CONDONAR activado:', montoCondonar, 'Bs se condonan');
+        console.log(' Check CONDONAR activado:', montoCondonar, 'Bs se condonan');
         console.log('   montoPendiente ahora es:', montoPendiente);
     }
     
@@ -514,22 +514,22 @@ window.recalcularTotales = function() {
     
     if (esInvitacion) {
         confirmarActivo = true;
-        console.log('🔘 Confirmar ACTIVADO por INVITACIÓN');
+        console.log(' Confirmar ACTIVADO por INVITACIÓN');
     } else if (diferencia === 0) {
         confirmarActivo = true;
-        console.log('🔘 Confirmar ACTIVADO por PAGO EXACTO');
+        console.log(' Confirmar ACTIVADO por PAGO EXACTO');
     } else if (diferencia > 0 && condonarActivo) {
         confirmarActivo = true;
-        console.log('🔘 Confirmar ACTIVADO por CONDONAR');
+        console.log(' Confirmar ACTIVADO por CONDONAR');
     } else if (diferencia < 0 && favorActivo) {
         confirmarActivo = true;
-        console.log('🔘 Confirmar ACTIVADO por A FAVOR');
+        console.log(' Confirmar ACTIVADO por A FAVOR');
     } else if (diferencia < 0 && montoPendiente > 0 && condonarActivo) {
         confirmarActivo = true;
-        console.log('🔘 Confirmar ACTIVADO por VUELTO EXCESIVO + CONDONAR');
+        console.log(' Confirmar ACTIVADO por VUELTO EXCESIVO + CONDONAR');
     } else {
         confirmarActivo = false;
-        console.log('🔘 Confirmar DESACTIVADO');
+        console.log(' Confirmar DESACTIVADO');
     }
     
     document.getElementById('confirmCobroBtn').disabled = !confirmarActivo;
