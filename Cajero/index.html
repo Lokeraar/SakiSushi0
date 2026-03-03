@@ -239,22 +239,22 @@ window.abrirModalDeliverys=async function(){try{const a=await window.obtenerAcum
 window.mostrarCobro=function(pid){window.currentPedido=(window.pedidos||[]).find(a=>a.id===pid);if(!window.currentPedido)return;window.enProcesoDeCobro=true;if(window.alarmaActiva){window.alarmaAudio.pause();window.alarmaAudio.currentTime=0;window.alarmaActiva=false;}window.pagosMixtos=[];let a='efectivo_bs';if(window.currentPedido.tipo==='delivery'||window.currentPedido.tipo==='reserva')a='pago_movil';const b=window.usdToBs(window.currentPedido.total||0),c=document.getElementById('cobroModalBody'),d=(window.currentPedido.items||[]).map(e=>`<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.1)"><span>${e.cantidad||1}x ${e.nombre}</span><span style="font-weight:600">${window.formatBs(window.usdToBs((e.precioUnitarioUSD||0)*(e.cantidad||1)))}</span></div>`).join('');c.innerHTML=`<div style="background:rgba(0,0,0,.3);padding:15px;border-radius:8px;margin-bottom:20px"><h4>Resumen del Pedido</h4>${d}${window.currentPedido.costo_delivery_bs?`<div style="display:flex;justify-content:space-between;margin-top:10px;padding-top:10px;border-top:2px solid rgba(255,255,255,.1)"><span>Costo delivery:</span><span>${window.formatBs(window.currentPedido.costo_delivery_bs)}</span></div>`:''}<div style="display:flex;justify-content:space-between;margin-top:15px;padding-top:15px;border-top:2px solid var(--primary);font-weight:700"><span>Total a pagar:</span><span id="totalPagarDisplay" style="color:var(--accent)">${window.formatBs(b)}</span></div></div><div style="margin-bottom:20px;padding:12px;background:rgba(245,124,0,.1);border-left:4px solid var(--warning)"><label style="display:flex;align-items:center;gap:10px;color:#fff"><input type="checkbox" id="invitacionCheck" style="width:18px;height:18px"><strong>Por parte de la casa (invitación)</strong></label></div><div id="pagosSection"><h4>Pagos Mixtos</h4><div id="pagosContainer" class="payment-mix-container"></div><button class="btn btn-secondary" onclick="window.agregarMetodoPago()" style="width:100%;margin-bottom:20px"><i class="fas fa-plus"></i> Agregar Método de Pago</button><div id="extrasSection"><div class="pagos-resumen-row" id="vueltoRow"><div class="input-group"><label>Vuelto a entregar (Bs)</label><input type="text" id="vueltoInput" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,'');window.calcularConVuelto()"></div><div class="input-group"><label>Vuelto restante</label><span id="vueltoRestante">Bs 0.00</span></div></div><div class="pagos-checkbox" id="condonarCheckbox"><input type="checkbox" id="condonarCheck"><label><strong>Condonar monto restante</strong> <span class="badge" id="condonarMonto">Bs 0.00</span></label></div><div class="pagos-checkbox" id="favorCheckbox"><input type="checkbox" id="favorCheck"><label><strong>A favor de caja</strong> <span class="badge favor" id="favorMonto">Bs 0.00</span></label></div></div><div class="pagos-total"><div class="pagos-resumen"><span>Total recibido:</span><span id="totalRecibido">Bs 0.00</span></div><div class="pagos-resumen"><span>Pendiente:</span><span id="pendiente" style="color:var(--danger)">Bs 0.00</span></div><div class="pagos-resumen"><span>Sobrante:</span><span id="sobrante" style="color:var(--success)">Bs 0.00</span></div><div class="pagos-resumen" id="condonadoDisplay"><span>Condonado:</span><span id="condonadoValue" style="color:var(--condonar)">Bs 0.00</span></div><div class="pagos-resumen" id="favorDisplay"><span>A favor caja:</span><span id="favorValue" style="color:var(--favordecaja)">Bs 0.00</span></div></div></div><div class="keyboard-hint"><span><kbd>ENTER</kbd> confirmar</span><span><kbd>ESC</kbd> cancelar</span></div>`;document.getElementById('invitacionCheck').addEventListener('change',function(e){document.getElementById('pagosSection').style.opacity=e.target.checked?'0.5':'1';document.getElementById('pagosSection').style.pointerEvents=e.target.checked?'none':'auto';window.recalcularTotales();});window.agregarMetodoPago(a);document.getElementById('cobroModal').classList.add('active');window.recalcularTotales();};
 window.agregarMetodoPago=function(a='pago_movil'){window.pagosMixtos.push({id:Date.now()+Math.random(),metodo:a,monto:0,referencia:''});window.renderizarPagosMixtos();window.recalcularTotales();};
 // ============================================
-// FUNCIÓN CORREGIDA: window.renderizarPagosMixtos
-// Versión con value corregido y onkeyup mejorado
+// VARIABLES GLOBALES PARA PAGOS MIXTOS
 // ============================================
 window.renderizarPagosMixtos = function() {
     const container = document.getElementById('pagosContainer');
     if (!container) return;
     
+    // Guardar referencia a los valores actuales antes de renderizar
+    const valoresActuales = {};
+    window.pagosMixtos.forEach(p => { valoresActuales[p.id] = p.monto; });
+    
     container.innerHTML = window.pagosMixtos.map((pago, index) => {
-        // Determinamos el placeholder según el método
         const placeholder = pago.metodo === 'efectivo_usd' ? 'Monto en USD' : 'Monto en Bs';
-        
-        // CORRECCIÓN: Si monto es 0, mostramos 0, pero permitimos que quede vacío
         const valorMostrar = pago.monto !== undefined && pago.monto !== null ? pago.monto : '';
         
         return `
-            <div class="pago-item" data-id="${pago.id}">
+            <div class="pago-item" data-id="${pago.id}" data-pago-id="${pago.id}">
                 ${window.pagosMixtos.length > 1 ? 
                     `<button class="remove-pago" onclick="window.eliminarMetodoPago('${pago.id}')">
                         <i class="fas fa-times"></i>
@@ -262,7 +262,7 @@ window.renderizarPagosMixtos = function() {
                     : ''
                 }
                 
-                <select onchange="window.actualizarPago('${pago.id}', 'metodo', this.value)">
+                <select class="pago-metodo" data-pago-id="${pago.id}">
                     <option value="efectivo_bs" ${pago.metodo === 'efectivo_bs' ? 'selected' : ''}>Efectivo Bs</option>
                     <option value="efectivo_usd" ${pago.metodo === 'efectivo_usd' ? 'selected' : ''}>Efectivo Dólar</option>
                     <option value="pago_movil" ${pago.metodo === 'pago_movil' ? 'selected' : ''}>Pago Móvil</option>
@@ -270,66 +270,189 @@ window.renderizarPagosMixtos = function() {
                 </select>
                 
                 <input type="text" 
+                       class="pago-monto" 
                        inputmode="numeric" 
                        pattern="[0-9]*" 
                        placeholder="${placeholder}" 
                        value="${valorMostrar}"
-                       data-pago-id="${pago.id}"
-                       onkeyup="window.actualizarMontoPago(this)">
+                       data-pago-id="${pago.id}">
                 
-                ${pago.metodo === 'pago_movil' ? 
-                    `<input type="text" 
-                            maxlength="6" 
-                            placeholder="Referencia (6 dígitos)" 
-                            value="${pago.referencia || ''}" 
-                            oninput="window.actualizarPago('${pago.id}', 'referencia', this.value)">` 
-                    : ''
-                }
+                <div class="pago-referencia-container" data-pago-id="${pago.id}" style="${pago.metodo === 'pago_movil' ? 'display:block;' : 'display:none;'}">
+                    <div class="referencia-input">
+                        ${Array(6).fill(0).map((_, i) => `
+                            <input type="text" 
+                                   class="ref-digit pago-ref-${pago.id}" 
+                                   data-pago-id="${pago.id}"
+                                   data-index="${i}"
+                                   maxlength="1" 
+                                   value="${pago.referencia?.[i] || ''}"
+                                   style="width:45px;height:45px;text-align:center;font-size:1.3rem;">
+                        `).join('')}
+                    </div>
+                </div>
             </div>
         `;
     }).join('');
+    
+    // ============================================
+    // CONFIGURAR EVENT LISTENERS (UNA SOLA VEZ)
+    // ============================================
+    
+    // 1. Event listeners para inputs de MONTO (SOLUCIÓN PRINCIPAL)
+    document.querySelectorAll('.pago-monto').forEach(input => {
+        // Eliminar listeners anteriores para evitar duplicados
+        input.removeEventListener('input', window.handleMontoInput);
+        
+        // Crear y asignar nuevo listener
+        window.handleMontoInput = function(e) {
+            const pagoId = e.target.dataset.pagoId;
+            const valor = e.target.value;
+            
+            // Filtrar solo números PERO SIN RE-RENDERIZAR
+            const soloNumeros = valor.replace(/[^0-9]/g, '');
+            
+            // Actualizar el valor del input sin perder el foco
+            if (e.target.value !== soloNumeros) {
+                e.target.value = soloNumeros;
+            }
+            
+            // Actualizar el objeto pago SIN re-renderizar todo
+            const pago = window.pagosMixtos.find(p => p.id == pagoId);
+            if (pago) {
+                pago.monto = soloNumeros === '' ? 0 : parseFloat(soloNumeros) || 0;
+            }
+            
+            // Recalcular totales (esto NO re-renderiza los inputs)
+            window.recalcularTotales();
+        };
+        
+        input.addEventListener('input', window.handleMontoInput);
+    });
+    
+    // 2. Event listeners para SELECT de método
+    document.querySelectorAll('.pago-metodo').forEach(select => {
+        select.removeEventListener('change', window.handleMetodoChange);
+        
+        window.handleMetodoChange = function(e) {
+            const pagoId = e.target.dataset.pagoId;
+            const nuevoMetodo = e.target.value;
+            
+            // Actualizar objeto pago
+            const pago = window.pagosMixtos.find(p => p.id == pagoId);
+            if (pago) {
+                pago.metodo = nuevoMetodo;
+                if (nuevoMetodo !== 'pago_movil') {
+                    pago.referencia = '';
+                }
+            }
+            
+            // Actualizar visibilidad del campo de referencia
+            const refContainer = document.querySelector(`.pago-referencia-container[data-pago-id="${pagoId}"]`);
+            if (refContainer) {
+                refContainer.style.display = nuevoMetodo === 'pago_movil' ? 'block' : 'none';
+            }
+            
+            // Actualizar placeholder del input de monto
+            const montoInput = document.querySelector(`.pago-monto[data-pago-id="${pagoId}"]`);
+            if (montoInput) {
+                montoInput.placeholder = nuevoMetodo === 'efectivo_usd' ? 'Monto en USD' : 'Monto en Bs';
+            }
+            
+            window.recalcularTotales();
+        };
+        
+        select.addEventListener('change', window.handleMetodoChange);
+    });
+    
+    // 3. Event listeners para REFERENCIA (6 dígitos) - ¡ESTE ES EL OTRO PROBLEMA!
+    document.querySelectorAll('.ref-digit').forEach(input => {
+        input.removeEventListener('input', window.handleRefInput);
+        input.removeEventListener('keydown', window.handleRefKeydown);
+        
+        window.handleRefInput = function(e) {
+            const pagoId = e.target.dataset.pagoId;
+            const index = parseInt(e.target.dataset.index);
+            
+            // Filtrar solo números
+            e.target.value = e.target.value.replace(/[^0-9]/g, '');
+            
+            // Mover al siguiente si hay un dígito
+            if (e.target.value.length === 1 && index < 5) {
+                const nextInput = document.querySelector(`.ref-digit[data-pago-id="${pagoId}"][data-index="${index + 1}"]`);
+                if (nextInput) nextInput.focus();
+            }
+            
+            // Recolectar todos los dígitos y actualizar referencia
+            const pago = window.pagosMixtos.find(p => p.id == pagoId);
+            if (pago) {
+                const digitos = [];
+                for (let i = 0; i < 6; i++) {
+                    const input = document.querySelector(`.ref-digit[data-pago-id="${pagoId}"][data-index="${i}"]`);
+                    digitos.push(input ? input.value : '');
+                }
+                pago.referencia = digitos.join('');
+            }
+            
+            window.recalcularTotales();
+        };
+        
+        window.handleRefKeydown = function(e) {
+            const pagoId = e.target.dataset.pagoId;
+            const index = parseInt(e.target.dataset.index);
+            
+            // Mover al anterior con backspace
+            if (e.key === 'Backspace' && e.target.value.length === 0 && index > 0) {
+                const prevInput = document.querySelector(`.ref-digit[data-pago-id="${pagoId}"][data-index="${index - 1}"]`);
+                if (prevInput) {
+                    prevInput.focus();
+                    prevInput.value = ''; // Borrar el anterior también
+                    
+                    // Actualizar referencia
+                    const pago = window.pagosMixtos.find(p => p.id == pagoId);
+                    if (pago) {
+                        const digitos = [];
+                        for (let i = 0; i < 6; i++) {
+                            const input = document.querySelector(`.ref-digit[data-pago-id="${pagoId}"][data-index="${i}"]`);
+                            digitos.push(input ? input.value : '');
+                        }
+                        pago.referencia = digitos.join('');
+                    }
+                    window.recalcularTotales();
+                }
+            }
+        };
+        
+        input.addEventListener('input', window.handleRefInput);
+        input.addEventListener('keydown', window.handleRefKeydown);
+    });
 };
 
 // ============================================
-// FUNCIÓN AUXILIAR: window.actualizarMontoPago
-// Mejorada para manejar valores vacíos
+// FUNCIÓN: window.agregarMetodoPago (modificada)
 // ============================================
-window.actualizarMontoPago = function(input) {
-    // Filtrar solo números (permitir vacío)
-    const valorLimpio = input.value.replace(/[^0-9]/g, '');
-    input.value = valorLimpio;
+window.agregarMetodoPago = function(metodoInicial = 'pago_movil') {
+    window.pagosMixtos.push({
+        id: 'pago_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9),
+        metodo: metodoInicial,
+        monto: 0,
+        referencia: ''
+    });
     
-    // Obtener el ID del pago desde el atributo data
-    const pagoId = input.dataset.pagoId;
-    
-    // Si está vacío, pasamos string vacío (que luego se convertirá en 0 en actualizarPago)
-    window.actualizarPago(pagoId, 'monto', valorLimpio);
-};
-
-// ============================================
-// FUNCIÓN ACTUALIZAR PAGO (ya existe, pero la incluyo para referencia)
-// Debe manejar correctamente los valores vacíos
-// ============================================
-window.actualizarPago = function(id, campo, valor) {
-    const pago = window.pagosMixtos.find(p => p.id == id);
-    if (!pago) return;
-    
-    if (campo === 'monto') {
-        // Si viene vacío, establecemos 0
-        pago.monto = valor === '' ? 0 : parseFloat(valor) || 0;
-        if (pago.monto > 9999999999.99) pago.monto = 9999999999.99;
-    } else if (campo === 'metodo') {
-        pago.metodo = valor;
-        if (valor !== 'pago_movil') pago.referencia = '';
-    } else if (campo === 'referencia') {
-        pago.referencia = valor;
-    }
-    
-    // Renderizar de nuevo para actualizar UI (ej: campo de referencia)
+    // Renderizar UNA SOLA VEZ después de agregar
     window.renderizarPagosMixtos();
     window.recalcularTotales();
 };
-window.eliminarMetodoPago=function(id){window.pagosMixtos=window.pagosMixtos.filter(a=>a.id!=id);window.renderizarPagosMixtos();window.recalcularTotales();};
+
+// ============================================
+// FUNCIÓN: window.eliminarMetodoPago (modificada)
+// ============================================
+window.eliminarMetodoPago = function(id) {
+    window.pagosMixtos = window.pagosMixtos.filter(p => p.id != id);
+    
+    // Renderizar UNA SOLA VEZ después de eliminar
+    window.renderizarPagosMixtos();
+    window.recalcularTotales();
+};
 window.recalcularTotales=function(){const a=window.usdToBs(window.currentPedido?.total||0);let b=window.pagosMixtos.reduce((c,d)=>c+(d.metodo==='efectivo_usd'?window.usdToBs(d.monto||0):(d.monto||0)),0);let c=a-b,d=b-a;const e=document.getElementById('extrasSection'),f=document.getElementById('vueltoRow'),g=document.getElementById('condonarCheckbox'),h=document.getElementById('favorCheckbox'),i=document.getElementById('condonarCheck'),j=document.getElementById('favorCheck'),k=document.getElementById('vueltoInput'),l=document.getElementById('condonarMonto'),m=document.getElementById('favorMonto'),n=document.getElementById('condonadoValue'),o=document.getElementById('favorValue'),p=document.getElementById('condonadoDisplay'),q=document.getElementById('favorDisplay'),r=document.getElementById('totalRecibido'),s=document.getElementById('pendiente'),t=document.getElementById('sobrante'),u=document.getElementById('vueltoRestante');let v=0,w=0,x=0,y=0,z=0,aa=false,ab=false,ac=false;if(c<0){f.style.display='grid';const ad=Math.abs(c);if(k.value){const ae=parseFloat(k.value)||0;if(ae>ad){v=ae-ad;w=0;x=v;y=0;z=ad;aa=true;ab=false;ac=true;}else if(ae===ad){v=0;w=0;x=0;y=0;z=0;aa=false;ab=false;ac=false;}else{v=0;w=ad-ae;x=0;y=w;z=ae;aa=false;ab=true;ac=false;}u.textContent=window.formatBs(ad-ae);}else{u.textContent=window.formatBs(ad);v=0;w=ad;x=0;y=w;z=0;aa=false;ab=true;ac=false;}}else if(c>0){f.style.display='none';v=c;w=0;x=v;y=0;z=0;aa=true;ab=false;ac=false;}else{f.style.display='none';v=0;w=0;x=0;y=0;z=0;aa=false;ab=false;ac=false;}l.textContent=window.formatBs(x);m.textContent=window.formatBs(y);n.textContent=window.formatBs(x);o.textContent=window.formatBs(y);p.style.display=x>0?'flex':'none';q.style.display=y>0?'flex':'none';g.style.display=aa?'flex':'none';h.style.display=ab?'flex':'none';r.textContent=window.formatBs(b);s.textContent=window.formatBs(Math.max(0,c));t.textContent=window.formatBs(Math.max(0,d));const af=document.getElementById('invitacionCheck');let ag=af.checked||window.pagosMixtos.length>0;if(c>0){if(i&&i.checked){b+=x;ag=window.usdToBs(window.currentPedido?.total||0)-b===0;}else ag=false;}else if(c<0){if(j&&j.checked){b-=y;ag=window.usdToBs(window.currentPedido?.total||0)-b===0;}else if(ac){ag=false;}else ag=true;}else ag=true;document.getElementById('confirmCobroBtn').disabled=!ag;};
 window.calcularConVuelto=function(){window.recalcularTotales();};
 window.confirmarCobro=async function(){if(!window.currentPedido)return;const a=document.getElementById('invitacionCheck').checked,b=document.getElementById('condonarCheck'),c=document.getElementById('favorCheck'),d=document.getElementById('vueltoInput');let e,f,g,h=0,i=0,j=0,k;if(a){e=window.currentPedido.tipo==='delivery'?'en_camino':(window.currentPedido.tipo==='reserva'?'reserva_pendiente':'en_cocina');f='invitacion';g=[{metodo:'invitacion',monto:0,montoBs:0}];k=0;}else{const l=window.usdToBs(window.currentPedido.total||0);k=window.pagosMixtos.reduce((m,n)=>m+(n.metodo==='efectivo_usd'?window.usdToBs(n.monto||0):(n.monto||0)),0);let m=l-k;if(b&&b.checked){h=m;m=0;}if(c&&c.checked){const n=Math.abs(m);if(m<0){const o=parseFloat(d?.value)||0;i=Math.abs(m)-o;if(i<0)i=0;j=o;}else{i=m;m=0;}}e=window.currentPedido.tipo==='delivery'?'en_camino':(window.currentPedido.tipo==='reserva'?'reserva_pendiente':'en_cocina');g=window.pagosMixtos.map(p=>({metodo:p.metodo,monto:p.monto,montoBs:p.metodo==='efectivo_usd'?window.usdToBs(p.monto):p.monto,referencia:p.referencia||null}));f=window.pagosMixtos.length===1?window.pagosMixtos[0].metodo:'mixto';}try{await window.supabaseClient.from('pedidos').update({estado:e,metodo_pago:f,pagos_mixtos:g,cajero:window.currentUser?.nombre||'Cajero',fecha_cobro:new Date().toISOString(),condonado:h||0,a_favor_caja:i||0,vuelto_entregado:j||0,monto_recibido:k}).eq('id',window.currentPedido.id);const l=window.currentPedido.items?.reduce((m,n)=>m+(n.cantidad||1),0)||0,m=(window.currentPedido.items||[]).reduce((n,o)=>n+(o.precioUnitarioUSD||0)*(o.cantidad||1),0),n=window.usdToBs(m);await window.supabaseClient.from('ventas').insert([{pedido_id:window.currentPedido.id,total:window.currentPedido.total,subtotal_platillos:n,items:l,metodo_pago:f,tipo:window.currentPedido.tipo,fecha:new Date().toISOString()}]);let o,p;if(a){o='✅ Pedido por invitación';p='Tu pedido ha sido procesado. ¡Disfruta!';}else if(window.currentPedido.tipo==='delivery'){o='✅ Pago confirmado';p='Tu delivery está en camino';}else if(window.currentPedido.tipo==='reserva'){o='✅ Reserva confirmada';p='Tu reserva ha sido confirmada';}else{o='✅ Pago confirmado';p='Tu pedido está en preparación';}await window.supabaseClient.from('notificaciones').insert([{pedido_id:window.currentPedido.id,tipo:'approved',titulo:o,mensaje:p,timestamp:new Date().toISOString(),session_id:window.currentPedido.session_id,leida:false}]);document.getElementById('cobroModal').classList.remove('active');window.mostrarToast('✅ Cobro procesado');window.enProcesoDeCobro=false;window.currentPedido=null;window.pagosMixtos=[];await window.recargarPedidosCompletos();await window.cargarMenu();window.renderizarPropinas();}catch(e){console.error('Error en cobro:',e);window.mostrarToast('❌ Error al procesar el cobro','error');}};
