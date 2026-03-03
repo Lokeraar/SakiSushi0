@@ -236,7 +236,136 @@ window.crearTarjetaPedidoCompacta=function(p,t){try{const a=new Date(p.timestamp
 window.calcularTotalDeliverysHoy=function(){try{const a=new Date();a.setHours(0,0,0,0);const b=new Date(a);b.setDate(b.getDate()+1);return(window.pedidos||[]).filter(c=>c.tipo==='delivery'&&c.estado==='enviado'&&new Date(c.timestamp)>=a&&new Date(c.timestamp)<b).reduce((d,e)=>d+(e.costo_delivery_bs||0),0);}catch(e){return 0;}};
 window.obtenerAcumuladoDeliverysHoy=async function(){try{const a=new Date();a.setHours(0,0,0,0);const b=new Date(a);b.setDate(b.getDate()+1);const c=await window.supabaseClient.from('entregas_delivery').select('delivery_id, monto_bs').gte('fecha_entrega',a.toISOString()).lt('fecha_entrega',b.toISOString());if(c.error)throw c.error;const d={};(c.data||[]).forEach(e=>{d[e.delivery_id]=(d[e.delivery_id]||0)+e.monto_bs;});return d;}catch(e){console.error('Error obteniendo acumulado deliverys:',e);return{};}};
 window.abrirModalDeliverys=async function(){try{const a=await window.obtenerAcumuladoDeliverysHoy(),b=document.getElementById('deliveryModal'),c=document.getElementById('deliveryModalBody');let d='<h3 style="margin-bottom:20px">Acumulado por motorizado (Hoy)</h3>';if(!window.deliverys||window.deliverys.length===0)d+='<div class="empty-state"><i class="fas fa-motorcycle"></i><p>No hay motorizados registrados</p></div>';else{d+='<div class="motorizados-list">';window.deliverys.forEach(e=>{const f=a[e.id]||0;d+=`<div class="motorizado-item"><span class="motorizado-nombre">${e.nombre}</span><span class="motorizado-monto">${window.formatBs(f)}</span></div>`;});d+='</div>';}c.innerHTML=d;b.classList.add('active');}catch(e){console.error('Error abriendo modal deliverys:',e);window.mostrarToast('Error al cargar datos de deliverys','error');}};
-window.mostrarCobro=function(pid){window.currentPedido=(window.pedidos||[]).find(a=>a.id===pid);if(!window.currentPedido)return;window.enProcesoDeCobro=true;if(window.alarmaActiva){window.alarmaAudio.pause();window.alarmaAudio.currentTime=0;window.alarmaActiva=false;}window.pagosMixtos=[];let a='efectivo_bs';if(window.currentPedido.tipo==='delivery'||window.currentPedido.tipo==='reserva')a='pago_movil';const b=window.usdToBs(window.currentPedido.total||0),c=document.getElementById('cobroModalBody'),d=(window.currentPedido.items||[]).map(e=>`<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.1)"><span>${e.cantidad||1}x ${e.nombre}</span><span style="font-weight:600">${window.formatBs(window.usdToBs((e.precioUnitarioUSD||0)*(e.cantidad||1)))}</span></div>`).join('');c.innerHTML=`<div style="background:rgba(0,0,0,.3);padding:15px;border-radius:8px;margin-bottom:20px"><h4>Resumen del Pedido</h4>${d}${window.currentPedido.costo_delivery_bs?`<div style="display:flex;justify-content:space-between;margin-top:10px;padding-top:10px;border-top:2px solid rgba(255,255,255,.1)"><span>Costo delivery:</span><span>${window.formatBs(window.currentPedido.costo_delivery_bs)}</span></div>`:''}<div style="display:flex;justify-content:space-between;margin-top:15px;padding-top:15px;border-top:2px solid var(--primary);font-weight:700"><span>Total a pagar:</span><span id="totalPagarDisplay" style="color:var(--accent)">${window.formatBs(b)}</span></div></div><div style="margin-bottom:20px;padding:12px;background:rgba(245,124,0,.1);border-left:4px solid var(--warning)"><label style="display:flex;align-items:center;gap:10px;color:#fff"><input type="checkbox" id="invitacionCheck" style="width:18px;height:18px"><strong>Por parte de la casa (invitación)</strong></label></div><div id="pagosSection"><h4>Pagos Mixtos</h4><div id="pagosContainer" class="payment-mix-container"></div><button class="btn btn-secondary" onclick="window.agregarMetodoPago()" style="width:100%;margin-bottom:20px"><i class="fas fa-plus"></i> Agregar Método de Pago</button><div id="extrasSection"><div class="pagos-resumen-row" id="vueltoRow"><div class="input-group"><label>Vuelto a entregar (Bs)</label><input type="text" id="vueltoInput" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,'');window.calcularConVuelto()"></div><div class="input-group"><label>Vuelto restante</label><span id="vueltoRestante">Bs 0.00</span></div></div><div class="pagos-checkbox" id="condonarCheckbox"><input type="checkbox" id="condonarCheck"><label><strong>Condonar monto restante</strong> <span class="badge" id="condonarMonto">Bs 0.00</span></label></div><div class="pagos-checkbox" id="favorCheckbox"><input type="checkbox" id="favorCheck"><label><strong>A favor de caja</strong> <span class="badge favor" id="favorMonto">Bs 0.00</span></label></div></div><div class="pagos-total"><div class="pagos-resumen"><span>Total recibido:</span><span id="totalRecibido">Bs 0.00</span></div><div class="pagos-resumen"><span>Pendiente:</span><span id="pendiente" style="color:var(--danger)">Bs 0.00</span></div><div class="pagos-resumen"><span>Sobrante:</span><span id="sobrante" style="color:var(--success)">Bs 0.00</span></div><div class="pagos-resumen" id="condonadoDisplay"><span>Condonado:</span><span id="condonadoValue" style="color:var(--condonar)">Bs 0.00</span></div><div class="pagos-resumen" id="favorDisplay"><span>A favor caja:</span><span id="favorValue" style="color:var(--favordecaja)">Bs 0.00</span></div></div></div><div class="keyboard-hint"><span><kbd>ENTER</kbd> confirmar</span><span><kbd>ESC</kbd> cancelar</span></div>`;document.getElementById('invitacionCheck').addEventListener('change',function(e){const a=document.getElementById('pagosSection');if(a){a.style.opacity=e.target.checked?'0.5':'1';a.style.pointerEvents=e.target.checked?'none':'auto';}window.recalcularTotales();});window.agregarMetodoPago(a);document.getElementById('cobroModal').classList.add('active');window.recalcularTotales();};
+window.mostrarCobro = function(pid) {
+    window.currentPedido = (window.pedidos || []).find(a => a.id === pid);
+    if (!window.currentPedido) return;
+    
+    window.enProcesoDeCobro = true;
+    if (window.alarmaActiva) {
+        window.alarmaAudio.pause();
+        window.alarmaAudio.currentTime = 0;
+        window.alarmaActiva = false;
+    }
+    
+    window.pagosMixtos = [];
+    let metodoInicial = 'efectivo_bs';
+    if (window.currentPedido.tipo === 'delivery' || window.currentPedido.tipo === 'reserva') {
+        metodoInicial = 'pago_movil';
+    }
+    
+    const totalAPagarBs = window.usdToBs(window.currentPedido.total || 0);
+    const modalBody = document.getElementById('cobroModalBody');
+    const itemsHTML = (window.currentPedido.items || []).map(item => 
+        `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.1)">
+            <span>${item.cantidad || 1}x ${item.nombre}</span>
+            <span style="font-weight:600">${window.formatBs(window.usdToBs((item.precioUnitarioUSD || 0) * (item.cantidad || 1)))}</span>
+        </div>`
+    ).join('');
+    
+    modalBody.innerHTML = `
+        <div style="background:rgba(0,0,0,.3);padding:15px;border-radius:8px;margin-bottom:20px">
+            <h4>Resumen del Pedido</h4>
+            ${itemsHTML}
+            ${window.currentPedido.costo_delivery_bs ? 
+                `<div style="display:flex;justify-content:space-between;margin-top:10px;padding-top:10px;border-top:2px solid rgba(255,255,255,.1)">
+                    <span>Costo delivery:</span>
+                    <span>${window.formatBs(window.currentPedido.costo_delivery_bs)}</span>
+                </div>` : ''}
+            <div style="display:flex;justify-content:space-between;margin-top:15px;padding-top:15px;border-top:2px solid var(--primary);font-weight:700">
+                <span>Total a pagar:</span>
+                <span id="totalPagarDisplay" style="color:var(--accent)">${window.formatBs(totalAPagarBs)}</span>
+            </div>
+        </div>
+        
+        <div style="margin-bottom:20px;padding:12px;background:rgba(245,124,0,.1);border-left:4px solid var(--warning)">
+            <label style="display:flex;align-items:center;gap:10px;color:#fff">
+                <input type="checkbox" id="invitacionCheck" style="width:18px;height:18px">
+                <strong>Por parte de la casa (invitación)</strong>
+            </label>
+        </div>
+        
+        <div id="pagosSection">
+            <h4>Pagos Mixtos</h4>
+            <div id="pagosContainer" class="payment-mix-container"></div>
+            <button class="btn btn-secondary" onclick="window.agregarMetodoPago()" style="width:100%;margin-bottom:20px">
+                <i class="fas fa-plus"></i> Agregar Método de Pago
+            </button>
+            
+            <div id="extrasSection">
+                <div class="pagos-resumen-row" id="vueltoRow">
+                    <div class="input-group">
+                        <label>Vuelto a entregar (Bs)</label>
+                        <input type="text" id="vueltoInput" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,'');window.calcularConVuelto()">
+                    </div>
+                    <div class="input-group">
+                        <label>Vuelto restante</label>
+                        <span id="vueltoRestante">Bs 0.00</span>
+                    </div>
+                </div>
+                
+                <div class="pagos-checkbox" id="condonarCheckbox">
+                    <input type="checkbox" id="condonarCheck">
+                    <label><strong>Condonar monto restante</strong> <span class="badge" id="condonarMonto">Bs 0.00</span></label>
+                </div>
+                
+                <div class="pagos-checkbox" id="favorCheckbox">
+                    <input type="checkbox" id="favorCheck">
+                    <label><strong>A favor de caja</strong> <span class="badge favor" id="favorMonto">Bs 0.00</span></label>
+                </div>
+            </div>
+            
+            <div class="pagos-total">
+                <div class="pagos-resumen"><span>Total recibido:</span><span id="totalRecibido">Bs 0.00</span></div>
+                <div class="pagos-resumen"><span>Pendiente:</span><span id="pendiente" style="color:var(--danger)">Bs 0.00</span></div>
+                <div class="pagos-resumen"><span>Sobrante:</span><span id="sobrante" style="color:var(--success)">Bs 0.00</span></div>
+                <div class="pagos-resumen" id="condonadoDisplay"><span>Condonado:</span><span id="condonadoValue" style="color:var(--condonar)">Bs 0.00</span></div>
+                <div class="pagos-resumen" id="favorDisplay"><span>A favor caja:</span><span id="favorValue" style="color:var(--favordecaja)">Bs 0.00</span></div>
+            </div>
+        </div>
+        
+        <div class="keyboard-hint">
+            <span><kbd>ENTER</kbd> confirmar</span>
+            <span><kbd>ESC</kbd> cancelar</span>
+        </div>
+    `;
+    
+    // ============================================
+    // AGREGAR EVENT LISTENERS A LOS CHECKS
+    // ============================================
+    const invitacionCheck = document.getElementById('invitacionCheck');
+    const condonarCheck = document.getElementById('condonarCheck');
+    const favorCheck = document.getElementById('favorCheck');
+    
+    if (invitacionCheck) {
+        invitacionCheck.removeEventListener('change', window.recalcularTotales);
+        invitacionCheck.addEventListener('change', window.recalcularTotales);
+        console.log('✅ Event listener agregado a INVITACIÓN');
+    }
+    
+    if (condonarCheck) {
+        condonarCheck.removeEventListener('change', window.recalcularTotales);
+        condonarCheck.addEventListener('change', window.recalcularTotales);
+        console.log('✅ Event listener agregado a CONDONAR');
+    }
+    
+    if (favorCheck) {
+        favorCheck.removeEventListener('change', window.recalcularTotales);
+        favorCheck.addEventListener('change', window.recalcularTotales);
+        console.log('✅ Event listener agregado a A FAVOR');
+    }
+    
+    // También para el input de vuelto
+    const vueltoInput = document.getElementById('vueltoInput');
+    if (vueltoInput) {
+        vueltoInput.removeEventListener('input', window.calcularConVuelto);
+        vueltoInput.addEventListener('input', window.calcularConVuelto);
+    }
+    
+    // Inicializar
+    window.agregarMetodoPago(metodoInicial);
+    document.getElementById('cobroModal').classList.add('active');
+    window.recalcularTotales();
+};
 window.agregarMetodoPago = function(metodoInicial = 'pago_movil') {
     window.pagosMixtos.push({
         id: 'pago_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9),
