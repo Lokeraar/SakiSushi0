@@ -1,6 +1,14 @@
--- init.sql
+-- ============================================
+-- SCRIPT COMPLETO DE INICIALIZACIÓN - SISTEMA SUSHI
+-- ============================================
+
+-- Extensiones necesarias
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 CREATE EXTENSION IF NOT EXISTS pg_cron;
+
+-- ============================================
+-- TABLAS
+-- ============================================
 
 -- Tabla config
 CREATE TABLE IF NOT EXISTS public.config(
@@ -11,12 +19,15 @@ CREATE TABLE IF NOT EXISTS public.config(
     aumento_acumulado numeric DEFAULT 0,
     aumento_activo boolean DEFAULT false,
     aumento_detenido boolean DEFAULT false,
+    fecha_inicio_aumento timestamptz,
     fecha_ultimo_aumento timestamptz,
     ultima_actualizacion timestamptz DEFAULT now(),
     admin_password text DEFAULT '654321',
     recovery_email text DEFAULT 'admin@sakisushi.com',
     alerta_stock_minimo integer DEFAULT 5
 );
+
+-- Insertar registro por defecto en config
 INSERT INTO public.config (id) VALUES (1) ON CONFLICT (id) DO NOTHING;
 
 -- Tabla inventario
@@ -31,8 +42,6 @@ CREATE TABLE IF NOT EXISTS public.inventario(
     precio_costo numeric DEFAULT 0,
     precio_unitario numeric DEFAULT 0
 );
-CREATE INDEX IF NOT EXISTS idx_inventario_stock ON public.inventario(stock);
-CREATE INDEX IF NOT EXISTS idx_inventario_disponible ON public.inventario(disponible);
 
 -- Tabla menu
 CREATE TABLE IF NOT EXISTS public.menu(
@@ -48,8 +57,6 @@ CREATE TABLE IF NOT EXISTS public.menu(
     stock_maximo integer DEFAULT 0,
     disponible boolean DEFAULT true
 );
-CREATE INDEX IF NOT EXISTS idx_menu_disponible ON public.menu(disponible);
-CREATE INDEX IF NOT EXISTS idx_menu_categoria ON public.menu(categoria);
 
 -- Tabla usuarios
 CREATE TABLE IF NOT EXISTS public.usuarios(
@@ -83,6 +90,7 @@ CREATE TABLE IF NOT EXISTS public.pedidos(
     comprobante_url text,
     costo_delivery numeric DEFAULT 0,
     costo_delivery_usd numeric DEFAULT 0,
+    costo_delivery_bs numeric DEFAULT 0,
     vuelto_entregado numeric DEFAULT 0,
     condonado numeric DEFAULT 0,
     a_favor_caja numeric DEFAULT 0,
@@ -93,9 +101,6 @@ CREATE TABLE IF NOT EXISTS public.pedidos(
     session_id text,
     reservas_confirmadas boolean DEFAULT false
 );
-CREATE INDEX IF NOT EXISTS idx_pedidos_estado_timestamp ON public.pedidos(estado, timestamp);
-CREATE INDEX IF NOT EXISTS idx_pedidos_tipo_estado ON public.pedidos(tipo, estado);
-CREATE INDEX IF NOT EXISTS idx_pedidos_session ON public.pedidos(session_id);
 
 -- Tabla notificaciones
 CREATE TABLE IF NOT EXISTS public.notificaciones(
@@ -108,9 +113,6 @@ CREATE TABLE IF NOT EXISTS public.notificaciones(
     leida boolean DEFAULT false,
     session_id text
 );
-CREATE INDEX IF NOT EXISTS idx_notificaciones_leida ON public.notificaciones(leida);
-CREATE INDEX IF NOT EXISTS idx_notificaciones_timestamp ON public.notificaciones(timestamp);
-CREATE INDEX IF NOT EXISTS idx_notificaciones_session ON public.notificaciones(session_id);
 
 -- Tabla codigos_qr
 CREATE TABLE IF NOT EXISTS public.codigos_qr(
@@ -130,22 +132,26 @@ CREATE TABLE IF NOT EXISTS public.ventas(
     total numeric DEFAULT 0,
     items integer DEFAULT 0,
     metodo_pago text,
-    tipo text
+    tipo text,
+    subtotal_platillos numeric DEFAULT 0
 );
 
--- Tabla reservas_ingredientes
+-- Tabla reservas_ingredientes (con todas las columnas y constraints)
 CREATE TABLE IF NOT EXISTS public.reservas_ingredientes(
     id text PRIMARY KEY,
-    pedido_id text NOT NULL REFERENCES public.pedidos(id) ON DELETE CASCADE,
-    ingrediente_id text NOT NULL REFERENCES public.inventario(id) ON DELETE CASCADE,
+    pedido_id text NOT NULL,
+    ingrediente_id text NOT NULL,
     cantidad numeric NOT NULL,
     fecha_reserva timestamptz DEFAULT now(),
     estado text DEFAULT 'activa',
+    platillo_nombre text,
+    instancia_id text,
+    FOREIGN KEY (pedido_id) REFERENCES public.pedidos(id) ON DELETE CASCADE,
+    FOREIGN KEY (ingrediente_id) REFERENCES public.inventario(id) ON DELETE CASCADE,
+    CONSTRAINT reservas_ingredientes_estado_check 
+        CHECK (estado = ANY (ARRAY['activa', 'descontada', 'liberada'])),
     UNIQUE (pedido_id, ingrediente_id)
 );
-CREATE INDEX IF NOT EXISTS idx_reservas_pedido ON public.reservas_ingredientes(pedido_id);
-CREATE INDEX IF NOT EXISTS idx_reservas_ingrediente ON public.reservas_ingredientes(ingrediente_id);
-CREATE INDEX IF NOT EXISTS idx_reservas_estado ON public.reservas_ingredientes(estado);
 
 -- Tabla mesoneros
 CREATE TABLE IF NOT EXISTS public.mesoneros(
@@ -171,9 +177,6 @@ CREATE TABLE IF NOT EXISTS public.propinas(
     fecha TIMESTAMP DEFAULT NOW(),
     entregado BOOLEAN DEFAULT false
 );
-CREATE INDEX IF NOT EXISTS idx_propinas_mesonero ON public.propinas(mesonero_id);
-CREATE INDEX IF NOT EXISTS idx_propinas_entregado ON public.propinas(entregado);
-CREATE INDEX IF NOT EXISTS idx_propinas_fecha ON public.propinas(fecha);
 
 -- Tabla entregas_propinas
 CREATE TABLE IF NOT EXISTS public.entregas_propinas(
@@ -193,7 +196,68 @@ CREATE TABLE IF NOT EXISTS public.eventos_sistema(
     procesado boolean DEFAULT false
 );
 
--- Función crear_pedido_con_reserva
+-- Tabla deliverys (motorizados)
+CREATE TABLE IF NOT EXISTS public.deliverys(
+    id SERIAL PRIMARY KEY,
+    nombre TEXT NOT NULL,
+    activo BOOLEAN DEFAULT true,
+    creado_en TIMESTAMP DEFAULT NOW()
+);
+
+-- Tabla entregas_delivery (con FOREIGN KEY explícitos y ON DELETE CASCADE)
+CREATE TABLE IF NOT EXISTS public.entregas_delivery(
+    id SERIAL PRIMARY KEY,
+    pedido_id TEXT,
+    delivery_id INTEGER,
+    monto_bs NUMERIC NOT NULL,
+    fecha_entrega TIMESTAMP DEFAULT NOW(),
+    CONSTRAINT entregas_delivery_pedido_id_fkey 
+        FOREIGN KEY (pedido_id) REFERENCES public.pedidos(id) ON DELETE CASCADE,
+    CONSTRAINT entregas_delivery_delivery_id_fkey 
+        FOREIGN KEY (delivery_id) REFERENCES public.deliverys(id) ON DELETE CASCADE
+);
+
+-- ============================================
+-- ÍNDICES
+-- ============================================
+
+-- Índices para inventario
+CREATE INDEX IF NOT EXISTS idx_inventario_stock ON public.inventario(stock);
+CREATE INDEX IF NOT EXISTS idx_inventario_disponible ON public.inventario(disponible);
+
+-- Índices para menu
+CREATE INDEX IF NOT EXISTS idx_menu_disponible ON public.menu(disponible);
+CREATE INDEX IF NOT EXISTS idx_menu_categoria ON public.menu(categoria);
+
+-- Índices para pedidos
+CREATE INDEX IF NOT EXISTS idx_pedidos_estado_timestamp ON public.pedidos(estado, timestamp);
+CREATE INDEX IF NOT EXISTS idx_pedidos_tipo_estado ON public.pedidos(tipo, estado);
+CREATE INDEX IF NOT EXISTS idx_pedidos_session ON public.pedidos(session_id);
+
+-- Índices para notificaciones
+CREATE INDEX IF NOT EXISTS idx_notificaciones_leida ON public.notificaciones(leida);
+CREATE INDEX IF NOT EXISTS idx_notificaciones_timestamp ON public.notificaciones(timestamp);
+CREATE INDEX IF NOT EXISTS idx_notificaciones_session ON public.notificaciones(session_id);
+
+-- Índices para reservas_ingredientes
+CREATE INDEX IF NOT EXISTS idx_reservas_pedido ON public.reservas_ingredientes(pedido_id);
+CREATE INDEX IF NOT EXISTS idx_reservas_ingrediente ON public.reservas_ingredientes(ingrediente_id);
+CREATE INDEX IF NOT EXISTS idx_reservas_estado ON public.reservas_ingredientes(estado);
+
+-- Índices para propinas
+CREATE INDEX IF NOT EXISTS idx_propinas_mesonero ON public.propinas(mesonero_id);
+CREATE INDEX IF NOT EXISTS idx_propinas_entregado ON public.propinas(entregado);
+CREATE INDEX IF NOT EXISTS idx_propinas_fecha ON public.propinas(fecha);
+
+-- Índices para entregas_delivery
+CREATE INDEX IF NOT EXISTS idx_entregas_delivery_fecha ON public.entregas_delivery(fecha_entrega);
+CREATE INDEX IF NOT EXISTS idx_entregas_delivery_delivery ON public.entregas_delivery(delivery_id);
+
+-- ============================================
+-- FUNCIONES
+-- ============================================
+
+-- Función: crear_pedido_con_reserva
 CREATE OR REPLACE FUNCTION public.crear_pedido_con_reserva(
     p_pedido jsonb,
     p_items jsonb
@@ -237,7 +301,8 @@ BEGIN
     INSERT INTO public.pedidos (
         id, timestamp, estado, tipo, items, total, session_id, mesa,
         cliente_nombre, parroquia, direccion, telefono, referencia,
-        fecha_reserva, comprobante_url, costo_delivery, costo_delivery_usd
+        fecha_reserva, comprobante_url, costo_delivery, costo_delivery_usd,
+        costo_delivery_bs
     ) VALUES (
         v_pedido_id,
         (p_pedido->>'timestamp')::timestamptz,
@@ -255,7 +320,8 @@ BEGIN
         (p_pedido->>'fecha_reserva')::date,
         p_pedido->>'comprobante_url',
         (p_pedido->>'costo_delivery')::numeric,
-        (p_pedido->>'costo_delivery_usd')::numeric
+        (p_pedido->>'costo_delivery_usd')::numeric,
+        (p_pedido->>'costo_delivery_bs')::numeric
     );
 
     -- Reservar ingredientes
@@ -267,13 +333,16 @@ BEGIN
                 v_cantidad_necesaria := (v_ing_record.value->>'cantidad')::numeric;
 
                 INSERT INTO public.reservas_ingredientes (
-                    id, pedido_id, ingrediente_id, cantidad, estado
+                    id, pedido_id, ingrediente_id, cantidad, estado,
+                    platillo_nombre, instancia_id
                 ) VALUES (
                     'res_' || gen_random_uuid()::text,
                     v_pedido_id,
                     v_ing_record.key,
                     v_cantidad_necesaria,
-                    'activa'
+                    'activa',
+                    v_item->>'nombre',
+                    v_item->>'instanciaId'
                 );
 
                 UPDATE public.inventario
@@ -316,7 +385,7 @@ EXCEPTION
 END;
 $$;
 
--- Función liberar_ingredientes
+-- Función: liberar_ingredientes
 CREATE OR REPLACE FUNCTION public.liberar_ingredientes(p_pedido_id text)
 RETURNS boolean
 LANGUAGE plpgsql
@@ -349,7 +418,7 @@ BEGIN
 END;
 $$;
 
--- Función procesar_cobro
+-- Función: procesar_cobro
 CREATE OR REPLACE FUNCTION public.procesar_cobro(
     p_pedido_id text,
     p_pagos_mixtos jsonb,
@@ -430,21 +499,22 @@ BEGIN
         v_pedido.session_id
     );
 
-    INSERT INTO public.ventas (fecha, pedido_id, total, items, metodo_pago, tipo)
+    INSERT INTO public.ventas (fecha, pedido_id, total, items, metodo_pago, tipo, subtotal_platillos)
     VALUES (
         now(),
         p_pedido_id,
         v_pedido.total,
         (SELECT SUM((item->>'cantidad')::integer) FROM jsonb_array_elements(v_pedido.items) AS item),
         v_metodo_principal,
-        v_pedido.tipo
+        v_pedido.tipo,
+        (v_pedido.total - COALESCE(v_pedido.costo_delivery_bs, 0))
     );
 
     INSERT INTO public.eventos_sistema (tipo) VALUES ('pedido_actualizado');
 END;
 $$;
 
--- Función cancelar_pedidos_timeout
+-- Función: cancelar_pedidos_timeout
 CREATE OR REPLACE FUNCTION public.cancelar_pedidos_timeout()
 RETURNS void
 LANGUAGE plpgsql
@@ -482,7 +552,7 @@ BEGIN
 END;
 $$;
 
--- Función verificar_stock_critico
+-- Función: verificar_stock_critico
 CREATE OR REPLACE FUNCTION public.verificar_stock_critico()
 RETURNS TABLE(
     ingrediente_id text,
@@ -508,31 +578,114 @@ BEGIN
 END;
 $$;
 
--- Programar trabajos cron
+-- ============================================
+-- CONFIGURACIÓN DE STORAGE (BUCKETS Y POLÍTICAS)
+-- ============================================
+
+-- Crear buckets
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('comprobantes', 'comprobantes', true)
+ON CONFLICT (id) DO UPDATE SET public = true;
+
+INSERT INTO storage.buckets (id, name, public)
+VALUES ('imagenes-platillos', 'imagenes-platillos', true)
+ON CONFLICT (id) DO UPDATE SET public = true;
+
+-- Eliminar políticas existentes
+DROP POLICY IF EXISTS "Comprobantes insert público" ON storage.objects;
+DROP POLICY IF EXISTS "Comprobantes select público" ON storage.objects;
+DROP POLICY IF EXISTS "Comprobantes update público" ON storage.objects;
+DROP POLICY IF EXISTS "Comprobantes delete público" ON storage.objects;
+DROP POLICY IF EXISTS "Comprobantes insert autenticado" ON storage.objects;
+DROP POLICY IF EXISTS "Comprobantes select autenticado" ON storage.objects;
+DROP POLICY IF EXISTS "Imagenes platillos insert público" ON storage.objects;
+DROP POLICY IF EXISTS "Imagenes platillos select público" ON storage.objects;
+
+-- Crear políticas para comprobantes
+CREATE POLICY "Comprobantes insert público" ON storage.objects
+    FOR INSERT TO anon WITH CHECK (bucket_id = 'comprobantes');
+
+CREATE POLICY "Comprobantes select público" ON storage.objects
+    FOR SELECT TO anon USING (bucket_id = 'comprobantes');
+
+CREATE POLICY "Comprobantes update público" ON storage.objects
+    FOR UPDATE TO anon USING (bucket_id = 'comprobantes');
+
+CREATE POLICY "Comprobantes delete público" ON storage.objects
+    FOR DELETE TO anon USING (bucket_id = 'comprobantes');
+
+CREATE POLICY "Comprobantes insert autenticado" ON storage.objects
+    FOR INSERT TO authenticated WITH CHECK (bucket_id = 'comprobantes');
+
+CREATE POLICY "Comprobantes select autenticado" ON storage.objects
+    FOR SELECT TO authenticated USING (bucket_id = 'comprobantes');
+
+-- Crear políticas para imagenes-platillos
+CREATE POLICY "Imagenes platillos insert público" ON storage.objects
+    FOR INSERT TO anon WITH CHECK (bucket_id = 'imagenes-platillos');
+
+CREATE POLICY "Imagenes platillos select público" ON storage.objects
+    FOR SELECT TO anon USING (bucket_id = 'imagenes-platillos');
+
+-- ============================================
+-- ROW LEVEL SECURITY (RLS)
+-- ============================================
+
+-- Habilitar RLS en tablas
+ALTER TABLE public.deliverys ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.entregas_delivery ENABLE ROW LEVEL SECURITY;
+
+-- Políticas para deliverys y entregas_delivery
+DROP POLICY IF EXISTS "Deliverys acceso público" ON public.deliverys;
+DROP POLICY IF EXISTS "Entregas delivery acceso público" ON public.entregas_delivery;
+
+CREATE POLICY "Deliverys acceso público" ON public.deliverys
+    FOR ALL USING (true);
+
+CREATE POLICY "Entregas delivery acceso público" ON public.entregas_delivery
+    FOR ALL USING (true);
+
+-- ============================================
+-- TRABAJOS PROGRAMADOS (CRON)
+-- ============================================
+
 DO $$
 BEGIN
     IF EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'pg_cron') THEN
+        -- Cancelar pedidos timeout cada minuto
         PERFORM cron.schedule('cancelar-pedidos-timeout', '* * * * *', 'SELECT public.cancelar_pedidos_timeout()');
+        
+        -- Verificar stock crítico cada 5 minutos
         PERFORM cron.schedule('verificar-stock-critico', '*/5 * * * *', 'SELECT public.verificar_stock_critico()');
     END IF;
 END;
 $$;
 
--- Datos de ejemplo
+-- ============================================
+-- DATOS DE EJEMPLO
+-- ============================================
+
+-- Usuarios
 INSERT INTO public.usuarios (id, nombre, username, password, rol, activo)
 VALUES
     ('user_ejemplo1', 'Cajero Principal', 'cajero1', '123456', 'cajero', true),
-    ('user_ejemplo2', 'Cajero Secundario', 'cajero2', '123456', 'cajero', true)
+    ('user_ejemplo2', 'Cajero Secundario', 'cajero2', '123456', 'cajero', true),
+    ('user_admin1', 'Administrador', 'admin', 'admin123', 'admin', true)
 ON CONFLICT (username) DO NOTHING;
 
+-- Inventario inicial
 INSERT INTO public.inventario (id, nombre, stock, minimo, unidad_base, precio_costo, precio_unitario)
 VALUES
     ('ing_arroz', 'Arroz para sushi', 5000, 1000, 'gramos', 0.002, 0.01),
     ('ing_salmon', 'Salmón fresco', 2000, 500, 'gramos', 0.015, 0.05),
     ('ing_aguacate', 'Aguacate', 10, 5, 'unidades', 0.5, 1.5),
-    ('ing_alga', 'Alga nori', 100, 20, 'unidades', 0.1, 0.3)
+    ('ing_alga', 'Alga nori', 100, 20, 'unidades', 0.1, 0.3),
+    ('ing_pepino', 'Pepino', 15, 5, 'unidades', 0.3, 0.8),
+    ('ing_queso', 'Queso crema', 2000, 500, 'gramos', 0.005, 0.015),
+    ('ing_cangrejo', 'Surimi de cangrejo', 1500, 300, 'gramos', 0.008, 0.02)
 ON CONFLICT (id) DO NOTHING;
 
+-- Menú
 INSERT INTO public.menu (id, nombre, categoria, precio, descripcion, ingredientes, disponible)
 VALUES
     (
@@ -552,104 +705,70 @@ VALUES
         'Finas láminas de salmón',
         '{"ing_salmon": {"cantidad": 100, "nombre": "Salmón fresco"}}'::jsonb,
         true
+    ),
+    (
+        'plat_003',
+        'California Roll',
+        'Rolls',
+        9.00,
+        'Roll de cangrejo y aguacate',
+        '{"ing_cangrejo": {"cantidad": 40, "nombre": "Surimi"}, "ing_aguacate": {"cantidad": 0.5, "nombre": "Aguacate"}, "ing_arroz": {"cantidad": 100, "nombre": "Arroz"}, "ing_alga": {"cantidad": 1, "nombre": "Alga nori"}}'::jsonb,
+        true
+    ),
+    (
+        'plat_004',
+        'Philadelphia Roll',
+        'Rolls',
+        10.00,
+        'Roll de salmón y queso crema',
+        '{"ing_salmon": {"cantidad": 40, "nombre": "Salmón"}, "ing_queso": {"cantidad": 30, "nombre": "Queso crema"}, "ing_arroz": {"cantidad": 100, "nombre": "Arroz"}, "ing_alga": {"cantidad": 1, "nombre": "Alga nori"}}'::jsonb,
+        true
     )
 ON CONFLICT (id) DO NOTHING;
 
+-- Mesoneros
 INSERT INTO public.mesoneros (nombre)
 VALUES
     ('Juan Pérez'),
     ('María García'),
-    ('Carlos López')
+    ('Carlos López'),
+    ('Ana Martínez'),
+    ('Pedro Rodríguez')
 ON CONFLICT DO NOTHING;
 
--- Configurar bucket de almacenamiento
-INSERT INTO storage.buckets (id, name, public)
-VALUES ('comprobantes', 'comprobantes', true)
-ON CONFLICT (id) DO UPDATE SET public = true;
-
-INSERT INTO storage.buckets (id, name, public)
-VALUES ('imagenes-platillos', 'imagenes-platillos', true)
-ON CONFLICT (id) DO UPDATE SET public = true;
-
--- Eliminar políticas existentes
-DROP POLICY IF EXISTS "Comprobantes insert público" ON storage.objects;
-DROP POLICY IF EXISTS "Comprobantes select público" ON storage.objects;
-DROP POLICY IF EXISTS "Comprobantes update público" ON storage.objects;
-DROP POLICY IF EXISTS "Comprobantes delete público" ON storage.objects;
-DROP POLICY IF EXISTS "Comprobantes insert autenticado" ON storage.objects;
-DROP POLICY IF EXISTS "Comprobantes select autenticado" ON storage.objects;
-
--- Crear nuevas políticas
-CREATE POLICY "Comprobantes insert público" ON storage.objects
-    FOR INSERT TO anon WITH CHECK (bucket_id = 'comprobantes');
-
-CREATE POLICY "Comprobantes select público" ON storage.objects
-    FOR SELECT TO anon USING (bucket_id = 'comprobantes');
-
-CREATE POLICY "Comprobantes update público" ON storage.objects
-    FOR UPDATE TO anon USING (bucket_id = 'comprobantes');
-
-CREATE POLICY "Comprobantes delete público" ON storage.objects
-    FOR DELETE TO anon USING (bucket_id = 'comprobantes');
-
-CREATE POLICY "Comprobantes insert autenticado" ON storage.objects
-    FOR INSERT TO authenticated WITH CHECK (bucket_id = 'comprobantes');
-
-CREATE POLICY "Comprobantes select autenticado" ON storage.objects
-    FOR SELECT TO authenticated USING (bucket_id = 'comprobantes');
-
--- Políticas para imagenes-platillos
-DROP POLICY IF EXISTS "Imagenes platillos insert público" ON storage.objects;
-DROP POLICY IF EXISTS "Imagenes platillos select público" ON storage.objects;
-
-CREATE POLICY "Imagenes platillos insert público" ON storage.objects
-    FOR INSERT TO anon WITH CHECK (bucket_id = 'imagenes-platillos');
-
-CREATE POLICY "Imagenes platillos select público" ON storage.objects
-    FOR SELECT TO anon USING (bucket_id = 'imagenes-platillos');
-
-SELECT 'Base de datos inicializada correctamente' AS mensaje;
-
--- init.sql (Modificaciones para Deliverys)
-
--- 1. Crear tabla para motorizados (deliverys)
-CREATE TABLE IF NOT EXISTS public.deliverys(
-    id SERIAL PRIMARY KEY,
-    nombre TEXT NOT NULL,
-    activo BOOLEAN DEFAULT true,
-    creado_en TIMESTAMP DEFAULT NOW()
-);
-
--- 2. Crear tabla para registrar las entregas de delivery (acumulado diario)
-CREATE TABLE IF NOT EXISTS public.entregas_delivery(
-    id SERIAL PRIMARY KEY,
-    pedido_id TEXT REFERENCES public.pedidos(id) ON DELETE CASCADE,
-    delivery_id INTEGER REFERENCES public.deliverys(id) ON DELETE CASCADE,
-    monto_bs NUMERIC NOT NULL,
-    fecha_entrega TIMESTAMP DEFAULT NOW()
-);
-CREATE INDEX IF NOT EXISTS idx_entregas_delivery_fecha ON public.entregas_delivery(fecha_entrega);
-CREATE INDEX IF NOT EXISTS idx_entregas_delivery_delivery ON public.entregas_delivery(delivery_id);
-
--- 3. Modificar tabla ventas para guardar el subtotal de platillos (sin delivery)
--- Nota: Si la tabla ya existe, agregamos la columna. Si no, se creará con el insert.
-ALTER TABLE public.ventas ADD COLUMN IF NOT EXISTS subtotal_platillos NUMERIC DEFAULT 0;
-
--- 4. Insertar algunos motorizados de ejemplo (opcional)
+-- Deliverys (motorizados)
 INSERT INTO public.deliverys (nombre) VALUES
     ('Carlos Moto'),
     ('Luis Pérez'),
-    ('Ana Rodríguez')
+    ('Ana Rodríguez'),
+    ('Miguel Sánchez')
 ON CONFLICT DO NOTHING;
 
--- 5. Políticas de seguridad (opcional, si usas RLS)
-ALTER TABLE public.deliverys ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.entregas_delivery ENABLE ROW LEVEL SECURITY;
+-- Códigos QR para mesas
+INSERT INTO public.codigos_qr (id, nombre, tipo)
+VALUES
+    ('mesa_01', 'Mesa 1', 'mesa'),
+    ('mesa_02', 'Mesa 2', 'mesa'),
+    ('mesa_03', 'Mesa 3', 'mesa'),
+    ('mesa_04', 'Mesa 4', 'mesa'),
+    ('mesa_05', 'Mesa 5', 'mesa'),
+    ('mesa_06', 'Mesa 6', 'mesa')
+ON CONFLICT (id) DO NOTHING;
 
-CREATE POLICY "Deliverys acceso público" ON public.deliverys
-    FOR ALL USING (true);
+-- ============================================
+-- VERIFICACIÓN FINAL
+-- ============================================
 
-CREATE POLICY "Entregas delivery acceso público" ON public.entregas_delivery
-    FOR ALL USING (true);
+DO $$
+BEGIN
+    RAISE NOTICE '==========================================';
+    RAISE NOTICE 'BASE DE DATOS INICIALIZADA CORRECTAMENTE';
+    RAISE NOTICE '==========================================';
+    RAISE NOTICE 'Tablas creadas: config, inventario, menu, usuarios, pedidos, notificaciones, codigos_qr, ventas, reservas_ingredientes, mesoneros, propinas, entregas_propinas, eventos_sistema, deliverys, entregas_delivery';
+    RAISE NOTICE 'Funciones creadas: crear_pedido_con_reserva, liberar_ingredientes, procesar_cobro, cancelar_pedidos_timeout, verificar_stock_critico';
+    RAISE NOTICE 'Buckets: comprobantes, imagenes-platillos';
+    RAISE NOTICE 'Trabajos cron configurados: cancelar-pedidos-timeout, verificar-stock-critico';
+    RAISE NOTICE '==========================================';
+END $$;
 
-SELECT '✅ Tablas de deliverys creadas/actualizadas correctamente' AS mensaje;
+SELECT '✅ BASE DE DATOS INICIALIZADA COMPLETAMENTE' AS mensaje;
