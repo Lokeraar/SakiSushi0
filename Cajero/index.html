@@ -242,7 +242,7 @@ window.formatearHora12 = function(timestamp) {
     const minutos = fecha.getMinutes().toString().padStart(2, '0');
     const ampm = horas >= 12 ? 'pm' : 'am';
     horas = horas % 12;
-    horas = horas ? horas : 12; // La hora 0 debe mostrarse como 12
+    horas = horas ? horas : 12;
     return `${horas}:${minutos} ${ampm}`;
 };
 
@@ -257,16 +257,19 @@ window.crearTarjetaPedidoCompacta = function(p, t) {
         if (p.tipo === 'mesa') {
             infoAdicional = `<div class="order-info-compact"><i class="fas fa-chair"></i> Mesa #${p.mesa || 'N/A'}</div>`;
         } else if (p.tipo === 'delivery') {
-			const deliveryBs = p.costo_delivery_bs || p.costo_delivery || 0;
-			const referencia = p.referencia ? `<div><i class="fas fa-hashtag"></i> Ref: ${p.referencia}</div>` : '';
-			
-			infoAdicional = `<div class="order-info-compact">
-				<div><i class="fas fa-map-marker-alt"></i> ${(p.direccion || '').substring(0, 20)}...</div>
-				<div><i class="fas fa-phone"></i> ${p.telefono || 'N/A'}</div>
-				${deliveryBs ? `<div><i class="fas fa-truck"></i> Delivery: ${window.formatBs(deliveryBs)}</div>` : ''}
-				${referencia}
-			</div>`;
-		}
+            infoAdicional = `<div class="order-info-compact">
+                <div><i class="fas fa-map-marker-alt"></i> ${(p.direccion || '').substring(0, 20)}...</div>
+                <div><i class="fas fa-phone"></i> ${p.telefono || 'N/A'}</div>
+                ${p.costo_delivery_bs ? `<div><i class="fas fa-truck"></i> Delivery: ${window.formatBs(p.costo_delivery_bs)}</div>` : ''}
+                ${p.referencia ? `<div><i class="fas fa-hashtag"></i> Ref: ${p.referencia}</div>` : ''}
+            </div>`;
+        } else {
+            infoAdicional = `<div class="order-info-compact">
+                <div><i class="fas fa-user"></i> ${p.cliente_nombre || 'Cliente'}</div>
+                <div><i class="fas fa-calendar"></i> ${p.fecha_reserva ? new Date(p.fecha_reserva).toLocaleDateString() : 'N/A'}</div>
+                ${p.referencia ? `<div><i class="fas fa-hashtag"></i> Ref: ${p.referencia}</div>` : ''}
+            </div>`;
+        }
         
         const itemsHTML = (p.items || []).slice(0, 2).map(item => 
             `<div class="order-item-row-compact">
@@ -327,12 +330,8 @@ window.obtenerAcumuladoDeliverysHoy=async function(){try{const a=new Date();a.se
 window.abrirModalDeliverys=async function(){try{const a=await window.obtenerAcumuladoDeliverysHoy(),b=document.getElementById('deliveryModal'),c=document.getElementById('deliveryModalBody');let d='<h3 style="margin-bottom:20px">Acumulado por motorizado (Hoy)</h3>';if(!window.deliverys||window.deliverys.length===0)d+='<div class="empty-state"><i class="fas fa-motorcycle"></i><p>No hay motorizados registrados</p></div>';else{d+='<div class="motorizados-list">';window.deliverys.forEach(e=>{const f=a[e.id]||0;d+=`<div class="motorizado-item"><span class="motorizado-nombre">${e.nombre}</span><span class="motorizado-monto">${window.formatBs(f)}</span></div>`;});d+='</div>';}c.innerHTML=d;b.classList.add('active');}catch(e){console.error('Error abriendo modal deliverys:',e);window.mostrarToast('Error al cargar datos de deliverys','error');}};
 
 // ============================================
-// FUNCIÓN: window.mostrarCobro (MODIFICADA)
+// FUNCIÓN: window.mostrarCobro (CORREGIDA - Delivery visible)
 // ============================================
-console.log('🔍 Pedido actual:', window.currentPedido);
-console.log('🔍 costo_delivery_bs:', window.currentPedido.costo_delivery_bs);
-console.log('🔍 parroquia:', window.currentPedido.parroquia);
-
 window.mostrarCobro = function(pid) {
     window.currentPedido = (window.pedidos || []).find(a => a.id === pid);
     if (!window.currentPedido) return;
@@ -354,56 +353,51 @@ window.mostrarCobro = function(pid) {
     const modalBody = document.getElementById('cobroModalBody');
     
     // ============================================
-	// CONSTRUIR EL RESUMEN DEL PEDIDO (VERSIÓN ROBUSTA)
-	// ============================================
-	let resumenHTML = '<div style="background:rgba(0,0,0,.3);padding:15px;border-radius:8px;margin-bottom:20px"><h4>Resumen del Pedido</h4>';
-
-	// 1. REFERENCIA (si existe)
-	if (window.currentPedido.referencia) {
-		resumenHTML += `
-			<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.1)">
-				<span><i class="fas fa-hashtag"></i> Referencia</span>
-				<span style="font-weight:600;font-family:monospace">${window.currentPedido.referencia}</span>
-			</div>
-		`;
-	}
-
-	// 2. ITEMS DEL PEDIDO
-	(window.currentPedido.items || []).forEach(item => {
-		resumenHTML += `
-			<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.1)">
-				<span>${item.cantidad || 1}x ${item.nombre}</span>
-				<span style="font-weight:600">${window.formatBs(window.usdToBs((item.precioUnitarioUSD || 0) * (item.cantidad || 1)))}</span>
-			</div>
-		`;
-	});
-
-	// 3. DELIVERY - Buscar en diferentes posibles nombres de variable
-	let deliveryBs = window.currentPedido.costo_delivery_bs || 
-					 window.currentPedido.costo_delivery || 
-					 window.currentPedido.delivery_cost || 
-					 0;
-
-	if (deliveryBs > 0) {
-		const parroquia = window.currentPedido.parroquia ? ` (${window.currentPedido.parroquia})` : '';
-		resumenHTML += `
-			<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.1)">
-				<span><i class="fas fa-truck"></i> Delivery${parroquia}</span>
-				<span style="font-weight:600">${window.formatBs(deliveryBs)}</span>
-			</div>
-		`;
-	}
-
-	// 4. TOTAL
-	resumenHTML += `
-		<div style="display:flex;justify-content:space-between;margin-top:15px;padding-top:15px;border-top:2px solid var(--primary);font-weight:700">
-			<span>Total a pagar:</span>
-			<span id="totalPagarDisplay" style="color:var(--accent)">${window.formatBs(totalAPagarBs)}</span>
-		</div>
-	</div>`;
+    // CONSTRUIR EL RESUMEN DEL PEDIDO
+    // ============================================
+    let resumenHTML = '<div style="background:rgba(0,0,0,.3);padding:15px;border-radius:8px;margin-bottom:20px"><h4>Resumen del Pedido</h4>';
+    
+    // 1. REFERENCIA (si existe)
+    if (window.currentPedido.referencia) {
+        resumenHTML += `
+            <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.1)">
+                <span><i class="fas fa-hashtag"></i> Referencia</span>
+                <span style="font-weight:600;font-family:monospace">${window.currentPedido.referencia}</span>
+            </div>
+        `;
+    }
+    
+    // 2. ITEMS DEL PEDIDO
+    (window.currentPedido.items || []).forEach(item => {
+        resumenHTML += `
+            <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.1)">
+                <span>${item.cantidad || 1}x ${item.nombre}</span>
+                <span style="font-weight:600">${window.formatBs(window.usdToBs((item.precioUnitarioUSD || 0) * (item.cantidad || 1)))}</span>
+            </div>
+        `;
+    });
+    
+    // 3. DELIVERY (si existe) - USANDO costo_delivery_bs
+    if (window.currentPedido.costo_delivery_bs && window.currentPedido.costo_delivery_bs > 0) {
+        const parroquia = window.currentPedido.parroquia ? ` (${window.currentPedido.parroquia})` : '';
+        resumenHTML += `
+            <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.1)">
+                <span><i class="fas fa-truck"></i> Delivery${parroquia}</span>
+                <span style="font-weight:600">${window.formatBs(window.currentPedido.costo_delivery_bs)}</span>
+            </div>
+        `;
+    }
+    
+    // 4. TOTAL
+    resumenHTML += `
+        <div style="display:flex;justify-content:space-between;margin-top:15px;padding-top:15px;border-top:2px solid var(--primary);font-weight:700">
+            <span>Total a pagar:</span>
+            <span id="totalPagarDisplay" style="color:var(--accent)">${window.formatBs(totalAPagarBs)}</span>
+        </div>
+    </div>`;
     
     // ============================================
-    // RESTO DEL MODAL (invitación, pagos mixtos, etc.)
+    // RESTO DEL MODAL
     // ============================================
     modalBody.innerHTML = resumenHTML + `
         <div style="margin-bottom:20px;padding:12px;background:rgba(245,124,0,.1);border-left:4px solid var(--warning)">
@@ -623,7 +617,7 @@ window.renderizarPagosMixtos = function() {
 };
 
 // ============================================
-// FUNCIÓN: window.recalcularTotales (VERSIÓN FINAL)
+// FUNCIÓN: window.recalcularTotales
 // ============================================
 window.recalcularTotales = function() {
     const totalAPagarUSD = window.currentPedido?.total || 0;
@@ -632,7 +626,6 @@ window.recalcularTotales = function() {
         return sum + (pago.metodo === 'efectivo_usd' ? window.usdToBs(pago.monto || 0) : (pago.monto || 0));
     }, 0);
     
-    // Obtener referencias a los elementos del DOM
     const invitacionCheck = document.getElementById('invitacionCheck');
     const condonarCheck = document.getElementById('condonarCheck');
     const favorCheck = document.getElementById('favorCheck');
@@ -651,18 +644,13 @@ window.recalcularTotales = function() {
     const pendienteSpan = document.getElementById('pendiente');
     const sobranteSpan = document.getElementById('sobrante');
     
-    // Calcular diferencia base
     let diferencia = totalAPagarBs - totalRecibidoBs;
     const vueltoValue = parseFloat(vueltoInput?.value) || 0;
     
-    // Variables para los montos base (sin aplicar checks)
     let montoPendiente = 0;
     let montoSobrante = 0;
     let montoVueltoReal = 0;
     
-    // ============================================
-    // CASO 1: SOBRA DINERO (recibido > total)
-    // ============================================
     if (diferencia < 0) {
         const sobraTotal = Math.abs(diferencia);
         
@@ -684,18 +672,12 @@ window.recalcularTotales = function() {
         
         vueltoRow.style.display = 'grid';
         
-    // ============================================
-    // CASO 2: FALTA DINERO (recibido < total)
-    // ============================================
     } else if (diferencia > 0) {
         montoPendiente = diferencia;
         montoSobrante = 0;
         montoVueltoReal = 0;
         vueltoRow.style.display = 'none';
         
-    // ============================================
-    // CASO 3: PAGO EXACTO
-    // ============================================
     } else {
         montoPendiente = 0;
         montoSobrante = 0;
@@ -703,15 +685,9 @@ window.recalcularTotales = function() {
         vueltoRow.style.display = 'none';
     }
     
-    // ============================================
-    // APLICAR CHECKS
-    // ============================================
-    
-    // Guardar estado de los checks
     const condonarActivo = condonarCheck?.checked || false;
     const favorActivo = favorCheck?.checked || false;
     
-    // Valores para los checks
     let montoCondonar = montoPendiente;
     let montoFavor = montoSobrante;
     
@@ -725,9 +701,6 @@ window.recalcularTotales = function() {
         montoPendiente = 0;
     }
     
-    // ============================================
-    // DETERMINAR VISIBILIDAD DE LOS CHECKS
-    // ============================================
     let mostrarCondonar = false;
     let mostrarFavor = false;
     
@@ -741,13 +714,9 @@ window.recalcularTotales = function() {
         mostrarCondonar = true;
     }
     
-    // Aplicar visibilidad
     condonarCheckbox.style.display = mostrarCondonar ? 'flex' : 'none';
     favorCheckbox.style.display = mostrarFavor ? 'flex' : 'none';
     
-    // ============================================
-    // ACTUALIZAR UI
-    // ============================================
     condonarMontoSpan.textContent = window.formatBs(montoCondonar);
     favorMontoSpan.textContent = window.formatBs(montoFavor);
     
@@ -763,9 +732,6 @@ window.recalcularTotales = function() {
     
     totalRecibidoSpan.textContent = window.formatBs(totalRecibidoBs);
     
-    // ============================================
-    // REGLA DEL BOTÓN CONFIRMAR
-    // ============================================
     const esInvitacion = invitacionCheck?.checked || false;
     
     let confirmarActivo = false;
@@ -790,7 +756,7 @@ window.recalcularTotales = function() {
 window.calcularConVuelto = function() { window.recalcularTotales(); };
 
 // ============================================
-// FUNCIÓN: window.confirmarCobro (MODIFICADA - Ventas Totales)
+// FUNCIÓN: window.confirmarCobro (MODIFICADA)
 // ============================================
 window.confirmarCobro = async function() {
     if (!window.currentPedido) return;
@@ -811,7 +777,6 @@ window.confirmarCobro = async function() {
     let montoRecibido = 0;
     let totalFinalUSD = window.currentPedido.total;
     
-    // Calcular lo que realmente pagó el cliente
     const totalRecibidoBs = window.pagosMixtos.reduce((sum, pago) => {
         return sum + (pago.metodo === 'efectivo_usd' ? window.usdToBs(pago.monto || 0) : (pago.monto || 0));
     }, 0);
@@ -833,8 +798,6 @@ window.confirmarCobro = async function() {
         const diferencia = totalAPagarOriginalBs - totalRecibidoBs;
         montoCondonado = diferencia;
         
-        // Ventas totales = (subtotal platillos) - condonado
-        // El delivery se excluye de esta cuenta
         const ventasTotalesBs = subtotalPlatillosBs - montoCondonado;
         totalFinalUSD = ventasTotalesBs / window.tasaEfectiva;
         montoRecibido = totalRecibidoBs;
@@ -863,7 +826,6 @@ window.confirmarCobro = async function() {
             montoFavor = sobra;
         }
         
-        // Ventas totales = subtotal platillos + a favor
         const ventasTotalesBs = subtotalPlatillosBs + montoFavor;
         totalFinalUSD = ventasTotalesBs / window.tasaEfectiva;
         montoRecibido = totalRecibidoBs;
@@ -879,7 +841,6 @@ window.confirmarCobro = async function() {
         metodoPago = window.pagosMixtos.length === 1 ? window.pagosMixtos[0].metodo : 'mixto';
         
     } else {
-        // Pago normal
         totalFinalUSD = window.currentPedido.total;
         montoRecibido = totalRecibidoBs;
         
