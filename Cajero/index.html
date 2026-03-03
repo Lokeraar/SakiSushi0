@@ -370,9 +370,6 @@ window.renderizarPagosMixtos = function() {
     });
 };
 
-// ============================================
-// FUNCIÓN: window.recalcularTotales (NUEVA VERSIÓN - COMPORTAMIENTO SOLICITADO)
-// ============================================
 window.recalcularTotales = function() {
     const totalAPagarUSD = window.currentPedido?.total || 0;
     const totalAPagarBs = window.usdToBs(totalAPagarUSD);
@@ -400,19 +397,21 @@ window.recalcularTotales = function() {
     const pendienteSpan = document.getElementById('pendiente');
     const sobranteSpan = document.getElementById('sobrante');
     
-    // Calcular diferencia
+    // Calcular diferencia base
     let diferencia = totalAPagarBs - totalRecibidoBs;
     const vueltoValue = parseFloat(vueltoInput?.value) || 0;
     
-    // Variables para los montos especiales
-    let montoVueltoReal = 0;
-    let montoSobrante = 0;
+    // Variables para los montos
     let montoPendiente = 0;
+    let montoSobrante = 0;
+    let montoVueltoReal = 0;
     let montoCondonar = 0;
     let montoFavor = 0;
     
-    // Resetear checks si es necesario
-    if (diferencia < 0) { // SOBRA DINERO
+    // ============================================
+    // CASO 1: SOBRA DINERO (recibido > total)
+    // ============================================
+    if (diferencia < 0) {
         const sobraTotal = Math.abs(diferencia);
         
         if (vueltoValue > 0) {
@@ -422,10 +421,10 @@ window.recalcularTotales = function() {
                 montoSobrante = sobraTotal - vueltoValue;
                 montoPendiente = 0;
             } else {
-                // Vuelto MAYOR que el sobrante (caso especial)
-                montoVueltoReal = sobraTotal; // Solo puede dar lo que sobra
+                // Vuelto MAYOR que el sobrante
+                montoVueltoReal = sobraTotal;
                 montoSobrante = 0;
-                montoPendiente = vueltoValue - sobraTotal; // Lo que falta pasa a pendiente
+                montoPendiente = vueltoValue - sobraTotal;
             }
         } else {
             // No hay vuelto
@@ -437,74 +436,76 @@ window.recalcularTotales = function() {
         montoCondonar = 0;
         montoFavor = montoSobrante;
         
-        // Configurar UI para caso de sobra
+        // Configurar UI
         vueltoRow.style.display = 'grid';
         condonarCheckbox.style.display = montoPendiente > 0 ? 'flex' : 'none';
         favorCheckbox.style.display = montoFavor > 0 ? 'flex' : 'none';
         
-        // Si hay pendiente por vuelto excesivo, mostrar monto correcto
-        if (montoPendiente > 0) {
-            condonarMontoSpan.textContent = window.formatBs(montoPendiente);
-        }
-        if (montoFavor > 0) {
-            favorMontoSpan.textContent = window.formatBs(montoFavor);
+        // Si se activa el check de FAVOR, TODO el sobrante pasa a favor
+        if (favorCheck && favorCheck.checked && montoFavor > 0) {
+            montoFavor = montoSobrante;
+            montoSobrante = 0;
         }
         
         // Actualizar spans
         pendienteSpan.textContent = window.formatBs(montoPendiente);
         sobranteSpan.textContent = window.formatBs(montoSobrante);
         vueltoRestanteSpan.textContent = window.formatBs(montoSobrante);
+        favorMontoSpan.textContent = window.formatBs(montoFavor);
+        condonarMontoSpan.textContent = window.formatBs(montoPendiente);
         
-        // Si se activa el check de favor, el sobrante se mueve a favor
-        if (favorCheck && favorCheck.checked && montoFavor > 0) {
-            montoFavor = montoSobrante;
-            montoSobrante = 0;
-            sobranteSpan.textContent = window.formatBs(0);
-        }
-        
-    } else if (diferencia > 0) { // FALTA DINERO
+    // ============================================
+    // CASO 2: FALTA DINERO (recibido < total)
+    // ============================================
+    } else if (diferencia > 0) {
         montoPendiente = diferencia;
         montoCondonar = montoPendiente;
         montoSobrante = 0;
         montoFavor = 0;
         montoVueltoReal = 0;
         
-        // Configurar UI para caso de falta
+        // Configurar UI
         vueltoRow.style.display = 'none';
         condonarCheckbox.style.display = 'flex';
         favorCheckbox.style.display = 'none';
-        condonarMontoSpan.textContent = window.formatBs(montoCondonar);
         
-        pendienteSpan.textContent = window.formatBs(montoPendiente);
-        sobranteSpan.textContent = window.formatBs(0);
-        vueltoRestanteSpan.textContent = window.formatBs(0);
-        
-        // Si se activa el check de condonar, el pendiente se mueve a condonado
+        // Si se activa el check de CONDONAR, TODO el pendiente pasa a condonado
         if (condonarCheck && condonarCheck.checked && montoCondonar > 0) {
             montoCondonar = montoPendiente;
             montoPendiente = 0;
-            pendienteSpan.textContent = window.formatBs(0);
         }
         
-    } else { // PAGO EXACTO
+        // Actualizar spans
+        pendienteSpan.textContent = window.formatBs(montoPendiente);
+        sobranteSpan.textContent = window.formatBs(0);
+        vueltoRestanteSpan.textContent = window.formatBs(0);
+        condonarMontoSpan.textContent = window.formatBs(montoCondonar);
+        favorMontoSpan.textContent = window.formatBs(0);
+        
+    // ============================================
+    // CASO 3: PAGO EXACTO
+    // ============================================
+    } else {
         montoPendiente = 0;
         montoCondonar = 0;
         montoSobrante = 0;
         montoFavor = 0;
         montoVueltoReal = 0;
         
+        // Configurar UI
         vueltoRow.style.display = 'none';
         condonarCheckbox.style.display = 'none';
         favorCheckbox.style.display = 'none';
         
+        // Actualizar spans
         pendienteSpan.textContent = window.formatBs(0);
         sobranteSpan.textContent = window.formatBs(0);
         vueltoRestanteSpan.textContent = window.formatBs(0);
+        condonarMontoSpan.textContent = window.formatBs(0);
+        favorMontoSpan.textContent = window.formatBs(0);
     }
     
-    // Actualizar displays de montos especiales
-    condonarMontoSpan.textContent = window.formatBs(montoCondonar);
-    favorMontoSpan.textContent = window.formatBs(montoFavor);
+    // Actualizar displays de montos especiales en el resumen final
     condonadoValueSpan.textContent = window.formatBs(montoCondonar);
     favorValueSpan.textContent = window.formatBs(montoFavor);
     
@@ -516,7 +517,7 @@ window.recalcularTotales = function() {
     totalRecibidoSpan.textContent = window.formatBs(totalRecibidoBs);
     
     // ============================================
-    // REGLA DEL BOTÓN CONFIRMAR
+    // REGLA DEL BOTÓN CONFIRMAR (CORREGIDA)
     // ============================================
     const esInvitacion = invitacionCheck?.checked || false;
     const condonarActivo = condonarCheck?.checked || false;
@@ -527,13 +528,13 @@ window.recalcularTotales = function() {
     if (esInvitacion) {
         confirmarActivo = true; // Invitación: todo gratis
     } else if (diferencia === 0) {
-        confirmarActivo = true; // Pago exacto
+        confirmarActivo = true; // PAGO EXACTO (ahora sí se activa)
     } else if (diferencia > 0 && condonarActivo) {
         confirmarActivo = true; // Falta dinero y se condona
     } else if (diferencia < 0 && favorActivo) {
         confirmarActivo = true; // Sobra dinero y se deja a favor
     } else if (diferencia < 0 && montoPendiente > 0 && condonarActivo) {
-        confirmarActivo = true; // Caso vuelto > sobra y se condona lo que falta
+        confirmarActivo = true; // Vuelto > sobra y se condona lo que falta
     } else {
         confirmarActivo = false;
     }
