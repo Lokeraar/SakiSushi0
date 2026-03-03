@@ -371,7 +371,7 @@ window.renderizarPagosMixtos = function() {
 };
 
 // ============================================
-// FUNCIÓN: window.recalcularTotales (VERSIÓN FINAL)
+// FUNCIÓN: window.recalcularTotales (VERSIÓN FINAL CON TODAS LAS CORRECCIONES)
 // ============================================
 window.recalcularTotales = function() {
     const totalAPagarUSD = window.currentPedido?.total || 0;
@@ -445,7 +445,7 @@ window.recalcularTotales = function() {
         if (favorCheck && favorCheck.checked && montoSobrante > 0) {
             // TODO el sobrante pasa a favor
             montoFavor = montoSobrante;
-            montoSobrante = 0; // EL SOBRANTE MUERE 🪦
+            montoSobrante = 0; // EL SOBRANTE MUERE
         }
         
         // ============================================
@@ -454,7 +454,7 @@ window.recalcularTotales = function() {
         if (condonarCheck && condonarCheck.checked && montoPendiente > 0) {
             // TODO el pendiente pasa a condonado
             montoCondonar = montoPendiente;
-            montoPendiente = 0; // EL PENDIENTE MUERE 🪦
+            montoPendiente = 0; // EL PENDIENTE MUERE
         }
         
         // Configurar UI
@@ -485,7 +485,7 @@ window.recalcularTotales = function() {
         if (condonarCheck && condonarCheck.checked && montoPendiente > 0) {
             // TODO el pendiente pasa a condonado
             montoCondonar = montoPendiente;
-            montoPendiente = 0; // EL PENDIENTE MUERE 🪦
+            montoPendiente = 0; // EL PENDIENTE MUERE
         }
         
         // Configurar UI
