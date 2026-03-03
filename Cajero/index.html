@@ -264,7 +264,7 @@ window.crearTarjetaPedidoCompacta = function(p, t) {
             infoAdicional = `<div class="order-info-compact">
                 <div><i class="fas fa-map-marker-alt"></i> ${(p.direccion || '').substring(0, 20)}...</div>
                 <div><i class="fas fa-phone"></i> ${p.telefono || 'N/A'}</div>
-                ${costoDelivery ? `<div><i class="fas fa-truck"></i> Delivery${parroquia}: ${window.formatBs(costoDelivery)}</div>` : ''}
+                ${costoDelivery > 0 ? `<div><i class="fas fa-truck"></i> Delivery${parroquia}: ${window.formatBs(costoDelivery)}</div>` : ''}
                 ${p.referencia ? `<div><i class="fas fa-hashtag"></i> Ref: ${p.referencia}</div>` : ''}
             </div>`;
         } else {
