@@ -1,4 +1,4 @@
-// supabase-config.js - VERSIÓN CORREGIDA
+// supabase-config.js - VERSIÓN CORREGIDA (CON NUEVO FORMATO BS)
 window.SUPABASE_URL = 'https://iqwwoihiiyrtypyqzhgy.supabase.co';
 window.SUPABASE_ANON_KEY = 'sb_publishable_m4WcF4gmkj1olAj95HMLlA_4yKqPFXm';
 
@@ -8,7 +8,7 @@ if (!window.supabaseClient) {
         window.SUPABASE_ANON_KEY,
         { auth: { persistSession: false } }
     );
-    console.log('✅ Cliente Supabase inicializado');
+    console.log('📌 Cliente Supabase inicializado');
 }
 
 // Configuración global
@@ -154,14 +154,24 @@ window.subirComprobante = async function(file, tipo, onProgress) {
     }
 };
 
-// ===== FORMATADORES CORREGIDOS (SIN PUNTO) =====
+// ============================================
+// NUEVA FUNCIÓN: window.formatBs (CORREGIDA)
+// Formatea un número a 'Bs X.XXX,XX' manualmente.
+// ============================================
 window.formatBs = function(monto) {
-    return new Intl.NumberFormat('es-VE', {
-        style: 'currency',
-        currency: 'VES',
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2
-    }).format(monto).replace('VES', 'Bs'); // ← CORREGIDO: sin punto
+    try {
+        // 1. Redondear a 2 decimales y convertir a número
+        const valor = Math.round((monto || 0) * 100) / 100;
+        // 2. Separar parte entera y decimal
+        let [entero, decimal] = valor.toFixed(2).split('.');
+        // 3. Añadir separadores de miles a la parte entera
+        entero = entero.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+        // 4. Devolver el string con 'Bs', la parte entera (con puntos) y la parte decimal
+        return `Bs ${entero},${decimal}`;
+    } catch (e) {
+        // Fallback en caso de error
+        return 'Bs ' + (monto || 0).toFixed(2);
+    }
 };
 
 window.formatUSD = function(monto) {
@@ -269,5 +279,5 @@ window.categoriasMenu = {
     "Combo Ejecutivo": []
 };
 
-console.log('✅ supabase-config.js cargado correctamente (versión sin punto en Bs)');
-console.log('🔑 Usando URL:', window.SUPABASE_URL);
+console.log('📌 supabase-config.js cargado correctamente (con nuevo formato Bs)');
+console.log('📍 Usando URL:', window.SUPABASE_URL);
