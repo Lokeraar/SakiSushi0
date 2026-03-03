@@ -339,19 +339,19 @@ window.mostrarCobro = function(pid) {
     if (invitacionCheck) {
         invitacionCheck.removeEventListener('change', window.recalcularTotales);
         invitacionCheck.addEventListener('change', window.recalcularTotales);
-        console.log('✅ Event listener agregado a INVITACIÓN');
+        console.log(' Event listener agregado a INVITACIÓN');
     }
     
     if (condonarCheck) {
         condonarCheck.removeEventListener('change', window.recalcularTotales);
         condonarCheck.addEventListener('change', window.recalcularTotales);
-        console.log('✅ Event listener agregado a CONDONAR');
+        console.log(' Event listener agregado a CONDONAR');
     }
     
     if (favorCheck) {
         favorCheck.removeEventListener('change', window.recalcularTotales);
         favorCheck.addEventListener('change', window.recalcularTotales);
-        console.log('✅ Event listener agregado a A FAVOR');
+        console.log(' Event listener agregado a A FAVOR');
     }
     
     // También para el input de vuelto
@@ -500,7 +500,7 @@ window.renderizarPagosMixtos = function() {
 };
 
 // ============================================
-// FUNCIÓN: window.recalcularTotales (VERSIÓN FINAL)
+// FUNCIÓN: window.recalcularTotales (VERSIÓN CORREGIDA)
 // ============================================
 window.recalcularTotales = function() {
     const totalAPagarUSD = window.currentPedido?.total || 0;
@@ -588,29 +588,59 @@ window.recalcularTotales = function() {
     let montoCondonar = montoPendiente; // Por defecto, el pendiente
     let montoFavor = montoSobrante;     // Por defecto, el sobrante
     
+    // Guardar estado de los checks antes de modificar montos
+    const condonarActivo = condonarCheck?.checked || false;
+    const favorActivo = favorCheck?.checked || false;
+    
     // APLICAR CHECK A FAVOR (si está activado)
-    if (favorCheck && favorCheck.checked && montoSobrante > 0) {
+    if (favorActivo && montoSobrante > 0) {
         montoFavor = montoSobrante;     // TODO el sobrante pasa a favor
         montoSobrante = 0;              // EL SOBRANTE MUERE
-        console.log(' Check A FAVOR activado:', montoFavor, 'Bs pasan a favor');
-        console.log('   montoSobrante ahora es:', montoSobrante);
+        console.log('✅ Check A FAVOR activado:', montoFavor, 'Bs pasan a favor');
     }
     
     // APLICAR CHECK CONDONAR (si está activado)
-    if (condonarCheck && condonarCheck.checked && montoPendiente > 0) {
+    if (condonarActivo && montoPendiente > 0) {
         montoCondonar = montoPendiente; // TODO el pendiente pasa a condonado
         montoPendiente = 0;              // EL PENDIENTE MUERE
-        console.log(' Check CONDONAR activado:', montoCondonar, 'Bs se condonan');
-        console.log('   montoPendiente ahora es:', montoPendiente);
+        console.log('✅ Check CONDONAR activado:', montoCondonar, 'Bs se condonan');
     }
+    
+    // ============================================
+    // DETERMINAR VISIBILIDAD DE LOS CHECKS
+    // ============================================
+    
+    // Mostrar checks si:
+    // - Hay una situación que lo requiera (falta o sobra) 
+    // - O el check ya está activado (para que no desaparezca)
+    
+    let mostrarCondonar = false;
+    let mostrarFavor = false;
+    
+    if (diferencia > 0) {
+        // Falta dinero - mostrar condonar SIEMPRE (incluso si ya está activado)
+        mostrarCondonar = true;
+    } else if (diferencia < 0) {
+        // Sobra dinero - mostrar a favor SIEMPRE (incluso si ya está activado)
+        mostrarFavor = true;
+    } else if (diferencia === 0) {
+        // Pago exacto - NO mostrar ningún check
+        mostrarCondonar = false;
+        mostrarFavor = false;
+    }
+    
+    // También considerar el caso de vuelto excesivo (cuando hay pendiente aunque sobre)
+    if (diferencia < 0 && montoPendiente > 0) {
+        mostrarCondonar = true; // Mostrar condonar también si hay pendiente por vuelto excesivo
+    }
+    
+    // Aplicar visibilidad
+    condonarCheckbox.style.display = mostrarCondonar ? 'flex' : 'none';
+    favorCheckbox.style.display = mostrarFavor ? 'flex' : 'none';
     
     // ============================================
     // ACTUALIZAR UI CON LOS VALORES FINALES
     // ============================================
-    
-    // Mostrar/ocultar checks según corresponda
-    condonarCheckbox.style.display = montoPendiente > 0 ? 'flex' : 'none';
-    favorCheckbox.style.display = montoSobrante > 0 ? 'flex' : 'none';
     
     // Actualizar montos en los labels de los checks
     condonarMontoSpan.textContent = window.formatBs(montoCondonar);
@@ -636,29 +666,27 @@ window.recalcularTotales = function() {
     // REGLA DEL BOTÓN CONFIRMAR
     // ============================================
     const esInvitacion = invitacionCheck?.checked || false;
-    const condonarActivo = condonarCheck?.checked || false;
-    const favorActivo = favorCheck?.checked || false;
     
     let confirmarActivo = false;
     
     if (esInvitacion) {
         confirmarActivo = true;
-        console.log(' Confirmar ACTIVADO por INVITACIÓN');
+        console.log('🔘 Confirmar ACTIVADO por INVITACIÓN');
     } else if (diferencia === 0) {
         confirmarActivo = true;
-        console.log(' Confirmar ACTIVADO por PAGO EXACTO');
+        console.log('🔘 Confirmar ACTIVADO por PAGO EXACTO');
     } else if (diferencia > 0 && condonarActivo) {
         confirmarActivo = true;
-        console.log(' Confirmar ACTIVADO por CONDONAR');
+        console.log('🔘 Confirmar ACTIVADO por CONDONAR');
     } else if (diferencia < 0 && favorActivo) {
         confirmarActivo = true;
-        console.log(' Confirmar ACTIVADO por A FAVOR');
+        console.log('🔘 Confirmar ACTIVADO por A FAVOR');
     } else if (diferencia < 0 && montoPendiente > 0 && condonarActivo) {
         confirmarActivo = true;
-        console.log(' Confirmar ACTIVADO por VUELTO EXCESIVO + CONDONAR');
+        console.log('🔘 Confirmar ACTIVADO por VUELTO EXCESIVO + CONDONAR');
     } else {
         confirmarActivo = false;
-        console.log(' Confirmar DESACTIVADO');
+        console.log('🔘 Confirmar DESACTIVADO');
     }
     
     document.getElementById('confirmCobroBtn').disabled = !confirmarActivo;
