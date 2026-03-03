@@ -364,7 +364,42 @@
         async function cargarInventario(){try{const{data,error}=await window.supabaseClient.from('inventario').select('*');if(error)throw error;inventario=data||[];window.stockCache.invalidate();renderizarMenuPaginado();}catch(error){console.error('Error cargando inventario:',error);}}
         async function getStockDisponible(ingredienteId){try{const cache=window.stockCache.get(ingredienteId);if(cache!==undefined)return cache;const ingrediente=inventario.find(i=>i.id===ingredienteId);if(!ingrediente)return 0;let reservadoEnCarrito=0;carrito.forEach(instancia=>{if(instancia.platilloId){const platillo=menuItems.find(p=>p.id===instancia.platilloId);if(platillo&&platillo.ingredientes&&platillo.ingredientes[ingredienteId]&&!instancia.personalizacion.includes(ingredienteId))reservadoEnCarrito+=platillo.ingredientes[ingredienteId].cantidad||1;}});const disponible=(ingrediente.stock||0)-(ingrediente.reservado||0)-reservadoEnCarrito;window.stockCache.set(ingredienteId,disponible);return disponible;}catch(error){console.error('Error obteniendo stock:',error);return 0;}}
         async function verificarStockDisponible(platilloId,personalizacion=[]){const platillo=menuItems.find(p=>p.id===platilloId);if(!platillo)return{disponible:false,motivo:'Platillo no encontrado'};if(!platillo.ingredientes||Object.keys(platillo.ingredientes).length===0)return{disponible:true};for(const[ingId,ingInfo]of Object.entries(platillo.ingredientes)){if(personalizacion.includes(ingId))continue;const cantidadNecesaria=ingInfo.cantidad||1,stockDisp=await getStockDisponible(ingId);if(stockDisp<cantidadNecesaria){const ingrediente=inventario.find(i=>i.id===ingId);return{disponible:false,motivo:`No hay suficiente ${ingrediente?.nombre||ingId}`};}}return{disponible:true};}
-        async function crearPedidoTransaccional(pedido){try{const pedidoParaRPC={id:pedido.id,timestamp:pedido.timestamp,estado:pedido.estado,tipo:pedido.tipo,total:pedido.total,session_id:pedido.session_id,mesa:pedido.mesa||null,cliente_nombre:pedido.cliente_nombre||null,parroquia:pedido.parroquia||null,direccion:pedido.direccion||null,telefono:pedido.telefono||null,referencia:pedido.referencia||null,fecha_reserva:pedido.fecha_reserva||null,comprobante_url:pedido.comprobante_url||null,costo_delivery:pedido.costo_delivery||0,costo_delivery_usd:pedido.costo_delivery_usd||0};const{data,error}=await window.supabaseClient.rpc('crear_pedido_con_reserva',{p_pedido:pedidoParaRPC,p_items:pedido.items});if(error)throw error;if(data&&data.success){mostrarToast('✅ Pedido realizado','success');if(window.innerWidth<=992){document.getElementById('cartSidebar').classList.remove('open');document.getElementById('overlay').classList.remove('active');}return{success:true,pedidoId:data.pedido_id};}else return{success:false,error:data?.error||'Error desconocido'};}catch(error){console.error('❌ Error:',error);mostrarToast('Error al procesar el pedido: '+error.message,'error');return{success:false,error:error.message};}}
+        async function crearPedidoTransaccional(pedido){try{
+            // Asegurar que el objeto pedidoParaRPC tenga todos los campos necesarios
+            const pedidoParaRPC={
+                id:pedido.id,
+                timestamp:pedido.timestamp,
+                estado:pedido.estado,
+                tipo:pedido.tipo,
+                total:pedido.total,
+                session_id:pedido.session_id,
+                mesa:pedido.mesa||null,
+                cliente_nombre:pedido.cliente_nombre||null,
+                parroquia:pedido.parroquia||null,
+                direccion:pedido.direccion||null,
+                telefono:pedido.telefono||null,
+                referencia:pedido.referencia||null,
+                fecha_reserva:pedido.fecha_reserva||null,
+                comprobante_url:pedido.comprobante_url||null,
+                costo_delivery:pedido.costo_delivery||0,
+                costo_delivery_usd:pedido.costo_delivery_usd||0,
+                costo_delivery_bs:pedido.costo_delivery_bs||0  // AÑADIR ESTA LÍNEA
+            };
+            const{data,error}=await window.supabaseClient.rpc('crear_pedido_con_reserva',{p_pedido:pedidoParaRPC,p_items:pedido.items});
+            if(error)throw error;
+            if(data&&data.success){
+                mostrarToast('✅ Pedido realizado','success');
+                if(window.innerWidth<=992){
+                    document.getElementById('cartSidebar').classList.remove('open');
+                    document.getElementById('overlay').classList.remove('active');
+                }
+                return{success:true,pedidoId:data.pedido_id};
+            } else return{success:false,error:data?.error||'Error desconocido'};
+        }catch(error){
+            console.error('❌ Error:',error);
+            mostrarToast('Error al procesar el pedido: '+error.message,'error');
+            return{success:false,error:error.message};
+        }}
         let currentPage=1, itemsPerPage=6, filteredMenuItems=[];
         function renderizarMenuPaginado(filtroCategoria=null,filtroSubcategoria=null,busqueda=''){let itemsFiltrados=[...menuItems];if(filtroCategoria){if(filtroCategoria==='ofertas')itemsFiltrados=itemsFiltrados.filter(item=>item.categoria==='Ofertas Especiales'||item.precio<10);else if(filtroCategoria!=='todos')itemsFiltrados=itemsFiltrados.filter(item=>item.categoria===filtroCategoria);}if(filtroSubcategoria)itemsFiltrados=itemsFiltrados.filter(item=>item.subcategoria===filtroSubcategoria);if(busqueda){const terminos=busqueda.toLowerCase().split(/\s+/).filter(t=>t.length>0);itemsFiltrados=itemsFiltrados.filter(item=>{const nombre=item.nombre.toLowerCase();return terminos.every(t=>nombre.includes(t));});}filteredMenuItems=itemsFiltrados;currentPage=1;renderizarPaginaActual();}
         async function renderizarPaginaActual(){const grid=document.getElementById('menuGrid'),totalItems=filteredMenuItems.length,totalPages=Math.ceil(totalItems/itemsPerPage)||1;if(currentPage>totalPages)currentPage=totalPages;if(currentPage<1)currentPage=1;const startIndex=(currentPage-1)*itemsPerPage,endIndex=Math.min(startIndex+itemsPerPage,totalItems),itemsPagina=filteredMenuItems.slice(startIndex,endIndex);if(itemsPagina.length===0){grid.innerHTML='<div class="loading-container"><p>No hay platillos</p></div>';document.getElementById('paginationControls').style.display='none';return;}else document.getElementById('paginationControls').style.display='flex';const cards=await Promise.all(itemsPagina.map(async(item)=>{let stockDisponible=Infinity,ingredientesFaltantes=[];if(item.ingredientes&&Object.keys(item.ingredientes).length>0){for(const[ingId,ingInfo]of Object.entries(item.ingredientes)){const stockDisp=await getStockDisponible(ingId),cantidadNecesaria=ingInfo.cantidad||1,posible=Math.floor(stockDisp/cantidadNecesaria);stockDisponible=Math.min(stockDisponible,posible);if(posible<=0){const ingrediente=inventario.find(i=>i.id===ingId);ingredientesFaltantes.push(ingrediente?.nombre||ingId);}}}else stockDisponible=item.stock_maximo||999;const agotado=stockDisponible<=0;let stockClass='available';if(agotado)stockClass='sold-out';else if(stockDisponible<5)stockClass='low';return `<div class="menu-card ${agotado?'agotado':''}" data-id="${item.id}"><div class="menu-card-image" style="background-image:url('${item.imagen||'https://via.placeholder.com/400x300?text=Sushi'}')">${agotado?'<div class="menu-card-badge sold-out"><i class="fas fa-times-circle"></i> Agotado</div>':(stockClass==='low'?'<div class="menu-card-badge low"><i class="fas fa-exclamation-triangle"></i> Últimas</div>':'')}</div><div class="menu-card-content"><div class="menu-card-header"><h3 class="menu-card-title">${item.nombre}</h3><span class="menu-card-price">${formatBs(usdToBs(item.precio))}</span></div><p class="menu-card-description">${item.descripcion||''}</p><div class="menu-card-footer">${!agotado?`<button class="btn-add" onclick="agregarAlCarrito('${item.id}')" title="Agregar"><i class="fas fa-plus"></i></button><button class="btn-customize" onclick="abrirPersonalizacion('${item.id}')" title="Personalizar"><i class="fas fa-star"></i> Personalizar</button>`:`<span class="stock-info" title="${ingredientesFaltantes.join(', ')}"><i class="fas fa-info-circle"></i> Sin stock</span>`}</div>${!agotado?`<div class="stock-info"><i class="fas fa-box ${stockClass}"></i><span id="stock-${item.id}">${stockDisponible} disponibles</span></div>`:''}</div></div>`;}));grid.innerHTML=cards.join('');document.getElementById('pageInfo').textContent=`Página ${currentPage} de ${totalPages}`;document.getElementById('prevPageBtn').disabled=currentPage===1;document.getElementById('nextPageBtn').disabled=currentPage===totalPages;}
@@ -406,29 +441,8 @@ else cartButtons.innerHTML = `<button class="btn-primary" onclick="iniciarProces
         function getReferencia(type){let ref='';for(let i=0;i<6;i++){const input=document.querySelector(`.ref-digit[data-type="${type}"][data-index="${i}"]`);if(input)ref+=input.value;}return ref;}
         function validarFormularioDelivery(){const parroquia=document.getElementById('parroquiaSelect').value,direccion=document.getElementById('direccion').value,telefono=document.getElementById('telefono').value,referencia=getReferencia('delivery'),comprobanteOk=uploadComplete,telefonoValido=/^\+[0-9]{11,14}$/.test(telefono),referenciaValida=window.validarReferencia(referencia),direccionValida=direccion.length>=20;document.getElementById('confirmDelivery').disabled=!(parroquia&&direccionValida&&telefonoValido&&referenciaValida&&comprobanteOk&&!isUploading);}
         function validarFormularioReserva(){const fecha=document.getElementById('fechaReserva').value,nombre=document.getElementById('nombreReserva').value,referencia=getReferencia('reserva'),comprobanteOk=uploadComplete,referenciaValida=window.validarReferencia(referencia);document.getElementById('confirmReserva').disabled=!(fecha&&nombre&&referenciaValida&&comprobanteOk&&!isUploading);}
-        async function confirmarPedidoDelivery() {
-			detenerTimer('delivery');
-			const pedido = crearPedidoBase('delivery');
-			pedido.parroquia = document.getElementById('parroquiaSelect').value;
-			pedido.direccion = document.getElementById('direccion').value;
-			pedido.telefono = document.getElementById('telefono').value;
-			pedido.referencia = getReferencia('delivery');
-			pedido.costo_delivery_usd = preciosPorParroquia[pedido.parroquia] || 2;
-			
-			// ============================================
-			// CAMBIO IMPORTANTE: Guardar costo_delivery_bs
-			// ============================================
-			pedido.costo_delivery_bs = usdToBs(pedido.costo_delivery_usd);  // ← NUEVO
-			
-			// También mantener costo_delivery por compatibilidad
-			pedido.costo_delivery = pedido.costo_delivery_bs;
-			
-			pedido.total += pedido.costo_delivery_usd;
-			pedido.comprobante_url = deliveryFormData.comprobante;
-			
-			const resultado = await crearPedidoTransaccional(pedido);
-		}
-		if(resultado.success){carrito=[];guardarCarrito();actualizarCarritoUI();actualizarCarritoBadge();document.getElementById('deliveryModal').classList.remove('active');window.stockCache.invalidate();limpiarDatosFormulario();}else{mostrarToast('❌ Error: '+resultado.error,'error');iniciarTimerFrontend('delivery',20);}}
+        async function confirmarPedidoDelivery(){detenerTimer('delivery');const pedido=crearPedidoBase('delivery');pedido.parroquia=document.getElementById('parroquiaSelect').value;pedido.direccion=document.getElementById('direccion').value;pedido.telefono=document.getElementById('telefono').value;pedido.referencia=getReferencia('delivery');pedido.costo_delivery_usd=preciosPorParroquia[pedido.parroquia]||2;pedido.costo_delivery_bs=usdToBs(pedido.costo_delivery_usd); // ? CAMBIADO: antes era costo_delivery
+pedido.total+=pedido.costo_delivery_usd;pedido.comprobante_url=deliveryFormData.comprobante;const resultado=await crearPedidoTransaccional(pedido);if(resultado.success){carrito=[];guardarCarrito();actualizarCarritoUI();actualizarCarritoBadge();document.getElementById('deliveryModal').classList.remove('active');window.stockCache.invalidate();limpiarDatosFormulario();}else{mostrarToast('❌ Error: '+resultado.error,'error');iniciarTimerFrontend('delivery',20);}}
         async function confirmarPedidoReserva(){detenerTimer('reserva');const pedido=crearPedidoBase('reserva');pedido.fecha_reserva=document.getElementById('fechaReserva').value;pedido.cliente_nombre=document.getElementById('nombreReserva').value;pedido.referencia=getReferencia('reserva');pedido.comprobante_url=reservaFormData.comprobante;const resultado=await crearPedidoTransaccional(pedido);if(resultado.success){carrito=[];guardarCarrito();actualizarCarritoUI();actualizarCarritoBadge();document.getElementById('reservaModal').classList.remove('active');window.stockCache.invalidate();limpiarDatosFormulario();}else{mostrarToast('❌ Error: '+resultado.error,'error');iniciarTimerFrontend('reserva',20);}}
         function guardarDatosDelivery(){deliveryFormData.parroquia=document.getElementById('parroquiaSelect').value;deliveryFormData.direccion=document.getElementById('direccion').value;deliveryFormData.telefono=document.getElementById('telefono').value;deliveryFormData.referencia=getReferencia('delivery');localStorage.setItem('saki_delivery_data',JSON.stringify(deliveryFormData));}
         function guardarDatosReserva(){reservaFormData.fecha=document.getElementById('fechaReserva').value;reservaFormData.nombre=document.getElementById('nombreReserva').value;reservaFormData.referencia=getReferencia('reserva');localStorage.setItem('saki_reserva_data',JSON.stringify(reservaFormData));}
