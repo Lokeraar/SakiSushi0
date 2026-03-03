@@ -234,54 +234,44 @@ window.actualizarEstadisticas=function(){const a=(window.pedidos||[]).filter(b=>
 window.renderizarPedidos=function(){const a=window.pedidos.filter(b=>b.tipo==='mesa'&&b.estado==='pendiente'),b=window.pedidos.filter(c=>c.tipo==='delivery'&&c.estado==='pendiente'),c=window.pedidos.filter(d=>d.tipo==='reserva'&&d.estado==='pendiente'),d=window.pedidos.filter(e=>e.tipo==='mesa'&&e.estado==='en_cocina'),e=window.pedidos.filter(f=>f.tipo==='delivery'&&f.estado==='en_camino'),f=window.pedidos.filter(g=>g.tipo==='reserva'&&g.estado==='reserva_pendiente'),g=window.pedidos.filter(h=>h.tipo==='reserva'&&h.estado==='reserva_atendida');document.getElementById('mesaPendientesCount').textContent=a.length;document.getElementById('deliveryPendientesCount').textContent=b.length;document.getElementById('reservaPendientesCount').textContent=c.length;document.getElementById('totalPendientesBadge').textContent=a.length+b.length+c.length;document.getElementById('mesaCocinaCount').textContent=d.length;document.getElementById('deliveryCaminoCount').textContent=e.length;document.getElementById('reservaProcesoCount').textContent=f.length+g.length;document.getElementById('totalPreparacionBadge').textContent=d.length+e.length+f.length+g.length;document.getElementById('mesaPendientesContainer').innerHTML=a.length?a.map(h=>window.crearTarjetaPedidoCompacta(h,'pendiente')).join(''):'<div class="empty-state"><i class="fas fa-store"></i><p>No hay pedidos en mesa</p></div>';document.getElementById('deliveryPendientesContainer').innerHTML=b.length?b.map(h=>window.crearTarjetaPedidoCompacta(h,'pendiente')).join(''):'<div class="empty-state"><i class="fas fa-motorcycle"></i><p>No hay pedidos delivery</p></div>';document.getElementById('reservaPendientesContainer').innerHTML=c.length?c.map(h=>window.crearTarjetaPedidoCompacta(h,'pendiente')).join(''):'<div class="empty-state"><i class="fas fa-calendar-check"></i><p>No hay reservas</p></div>';document.getElementById('mesaCocinaContainer').innerHTML=d.length?d.map(h=>window.crearTarjetaPedidoCompacta(h,'preparacion')).join(''):'<div class="empty-state"><i class="fas fa-fire"></i><p>No hay pedidos en cocina</p></div>';document.getElementById('deliveryCaminoContainer').innerHTML=e.length?e.map(h=>window.crearTarjetaPedidoCompacta(h,'preparacion')).join(''):'<div class="empty-state"><i class="fas fa-truck"></i><p>No hay deliveries en camino</p></div>';document.getElementById('reservaProcesoContainer').innerHTML=(f.length+g.length)?[...f,...g].map(h=>window.crearTarjetaPedidoCompacta(h,'preparacion')).join(''):'<div class="empty-state"><i class="fas fa-clock"></i><p>No hay reservas pendientes</p></div>';};
 
 // ============================================
+// FUNCIÓN: formatearHora12 (nueva)
+// ============================================
+window.formatearHora12 = function(timestamp) {
+    const fecha = new Date(timestamp);
+    let horas = fecha.getHours();
+    const minutos = fecha.getMinutes().toString().padStart(2, '0');
+    const ampm = horas >= 12 ? 'pm' : 'am';
+    horas = horas % 12;
+    horas = horas ? horas : 12; // La hora 0 debe mostrarse como 12
+    return `${horas}:${minutos} ${ampm}`;
+};
+
+// ============================================
 // FUNCIÓN: window.crearTarjetaPedidoCompacta (MODIFICADA)
-// Hora a la derecha y formato 12h AM/PM
 // ============================================
 window.crearTarjetaPedidoCompacta = function(p, t) {
     try {
-        // Formato de hora 12h con AM/PM
-        const fecha = new Date(p.timestamp);
-        let horas = fecha.getHours();
-        const minutos = fecha.getMinutes().toString().padStart(2, '0');
-        const ampm = horas >= 12 ? 'PM' : 'AM';
-        horas = horas % 12;
-        horas = horas ? horas : 12; // la hora 0 se muestra como 12
-        const horaFormateada = `${horas}:${minutos} ${ampm}`;
-        
+        const hora12 = window.formatearHora12(p.timestamp);
         let infoAdicional = '';
-        let referencia = '';
         
         if (p.tipo === 'mesa') {
             infoAdicional = `<div class="order-info-compact"><i class="fas fa-chair"></i> Mesa #${p.mesa || 'N/A'}</div>`;
         } else if (p.tipo === 'delivery') {
-            // Buscar referencia en los pagos mixtos o en el campo referencia
-            if (p.pagos_mixtos && p.pagos_mixtos.length > 0) {
-                const pagoMovil = p.pagos_mixtos.find(pg => pg.metodo === 'pago_movil');
-                if (pagoMovil && pagoMovil.referencia) {
-                    referencia = pagoMovil.referencia;
-                }
-            } else if (p.referencia) {
-                referencia = p.referencia;
-            }
-            
-            infoAdicional = `
-                <div class="order-info-compact">
-                    <div><i class="fas fa-map-marker-alt"></i> ${(p.direccion || '').substring(0, 20)}...</div>
-                    <div><i class="fas fa-phone"></i> ${p.telefono || 'N/A'}</div>
-                    ${p.costo_delivery_bs ? `<div><i class="fas fa-truck"></i> Delivery: ${window.formatBs(p.costo_delivery_bs)}</div>` : ''}
-                    ${referencia ? `<div><i class="fas fa-hashtag"></i> Ref: ${referencia}</div>` : ''}
-                </div>
-            `;
+            infoAdicional = `<div class="order-info-compact">
+                <div><i class="fas fa-map-marker-alt"></i> ${(p.direccion || '').substring(0, 20)}...</div>
+                <div><i class="fas fa-phone"></i> ${p.telefono || 'N/A'}</div>
+                ${p.costo_delivery_bs ? `<div><i class="fas fa-truck"></i> Delivery: ${window.formatBs(p.costo_delivery_bs)}</div>` : ''}
+                ${p.referencia ? `<div><i class="fas fa-hashtag"></i> Ref: ${p.referencia}</div>` : ''}
+            </div>`;
         } else {
-            infoAdicional = `
-                <div class="order-info-compact">
-                    <div><i class="fas fa-user"></i> ${p.cliente_nombre || 'Cliente'}</div>
-                    <div><i class="fas fa-calendar"></i> ${p.fecha_reserva ? new Date(p.fecha_reserva).toLocaleDateString() : 'N/A'}</div>
-                </div>
-            `;
+            infoAdicional = `<div class="order-info-compact">
+                <div><i class="fas fa-user"></i> ${p.cliente_nombre || 'Cliente'}</div>
+                <div><i class="fas fa-calendar"></i> ${p.fecha_reserva ? new Date(p.fecha_reserva).toLocaleDateString() : 'N/A'}</div>
+                ${p.referencia ? `<div><i class="fas fa-hashtag"></i> Ref: ${p.referencia}</div>` : ''}
+            </div>`;
         }
         
-        const items = (p.items || []).slice(0, 2).map(item => 
+        const itemsHTML = (p.items || []).slice(0, 2).map(item => 
             `<div class="order-item-row-compact">
                 <span class="item-name-compact">${item.cantidad || 1}x ${item.nombre}</span>
                 <span class="item-price-compact">${window.formatBs(window.usdToBs((item.precioUnitarioUSD || 0) * (item.cantidad || 1)))}</span>
@@ -289,49 +279,46 @@ window.crearTarjetaPedidoCompacta = function(p, t) {
         ).join('');
         
         const totalItems = (p.items || []).length;
-        const masItems = totalItems > 2 ? 
+        const masItemsHTML = totalItems > 2 ? 
             `<div class="order-item-row-compact" style="justify-content:center;color:var(--gray-400)">+${totalItems - 2} más</div>` : '';
         
-        const total = window.formatBs(window.usdToBs(p.total || 0));
+        const totalBs = window.formatBs(window.usdToBs(p.total || 0));
         
-        const comprobante = p.comprobante_url && (p.tipo === 'delivery' || p.tipo === 'reserva') ? 
+        const comprobanteHTML = p.comprobante_url && (p.tipo === 'delivery' || p.tipo === 'reserva') ? 
             `<div class="comprobante-thumbnail" onclick="window.verComprobante('${p.id}')">
                 <img src="${p.comprobante_url}" style="max-width:100%;cursor:pointer">
             </div>` : '';
         
-        let botones = '';
+        let accionesHTML = '';
         if (t === 'pendiente') {
-            botones = `
+            accionesHTML = `
                 <button class="btn-compact btn-cobrar-compact" onclick="window.mostrarCobro('${p.id}')">Cobrar</button>
                 <button class="btn-compact btn-rechazar-compact" onclick="window.mostrarRechazo('${p.id}')">Rechazar</button>
             `;
         } else if (p.tipo === 'mesa' && p.estado === 'en_cocina') {
-            botones = `<button class="btn-compact btn-entregar-compact" onclick="window.mostrarConfirmacion('${p.id}','entregado')"><i class="fas fa-check"></i> Entregado</button>`;
+            accionesHTML = `<button class="btn-compact btn-entregar-compact" onclick="window.mostrarConfirmacion('${p.id}','entregado')"><i class="fas fa-check"></i> Entregado</button>`;
         } else if (p.tipo === 'delivery' && p.estado === 'en_camino') {
-            botones = `<button class="btn-compact btn-enviar-compact" onclick="window.mostrarConfirmacionDelivery('${p.id}')"><i class="fas fa-truck"></i> Enviar</button>`;
+            accionesHTML = `<button class="btn-compact btn-enviar-compact" onclick="window.mostrarConfirmacionDelivery('${p.id}')"><i class="fas fa-truck"></i> Enviar</button>`;
         } else if (p.tipo === 'reserva' && p.estado === 'reserva_pendiente') {
-            botones = `<button class="btn-compact btn-confirmar-compact" onclick="window.mostrarConfirmacion('${p.id}','reserva_atendida')"><i class="fas fa-user-check"></i> Confirmar</button>`;
+            accionesHTML = `<button class="btn-compact btn-confirmar-compact" onclick="window.mostrarConfirmacion('${p.id}','reserva_atendida')"><i class="fas fa-user-check"></i> Confirmar</button>`;
         } else if (p.tipo === 'reserva' && p.estado === 'reserva_atendida') {
-            botones = `<button class="btn-compact btn-entregar-compact" onclick="window.mostrarConfirmacion('${p.id}','reserva_completada')"><i class="fas fa-check"></i> Entregado</button>`;
+            accionesHTML = `<button class="btn-compact btn-entregar-compact" onclick="window.mostrarConfirmacion('${p.id}','reserva_completada')"><i class="fas fa-check"></i> Entregado</button>`;
         }
         
-        // HORA A LA DERECHA
-        return `
-            <div class="order-card-compact ${p.estado}">
-                <div class="order-header-compact">
-                    <span style="font-weight:600;color:var(--${p.tipo === 'mesa' ? 'info' : p.tipo === 'delivery' ? 'success' : 'accent'});font-size:.7rem;text-transform:uppercase">${p.tipo}</span>
-                    <span class="order-time-compact"><i class="far fa-clock"></i> ${horaFormateada}</span>
-                </div>
-                ${infoAdicional}
-                <div class="order-items-compact">
-                    ${items}
-                    ${masItems}
-                </div>
-                <div class="order-total-compact">${total}</div>
-                ${comprobante}
-                <div class="order-actions-compact">${botones}</div>
+        return `<div class="order-card-compact ${p.estado}">
+            <div class="order-header-compact">
+                <span class="order-time-compact"><i class="far fa-clock"></i> ${hora12}</span>
+                <span style="font-weight:600;color:var(--${p.tipo==='mesa'?'info':p.tipo==='delivery'?'success':'accent'});font-size:.7rem;text-transform:uppercase">${p.tipo}</span>
             </div>
-        `;
+            ${infoAdicional}
+            <div class="order-items-compact">
+                ${itemsHTML}
+                ${masItemsHTML}
+            </div>
+            <div class="order-total-compact">${totalBs}</div>
+            ${comprobanteHTML}
+            <div class="order-actions-compact">${accionesHTML}</div>
+        </div>`;
     } catch (e) {
         console.error('Error creando tarjeta:', e);
         return '';
@@ -344,7 +331,6 @@ window.abrirModalDeliverys=async function(){try{const a=await window.obtenerAcum
 
 // ============================================
 // FUNCIÓN: window.mostrarCobro (MODIFICADA)
-// Agrega referencia en el resumen
 // ============================================
 window.mostrarCobro = function(pid) {
     window.currentPedido = (window.pedidos || []).find(a => a.id === pid);
@@ -366,35 +352,42 @@ window.mostrarCobro = function(pid) {
     const totalAPagarBs = window.usdToBs(window.currentPedido.total || 0);
     const modalBody = document.getElementById('cobroModalBody');
     
-    // Buscar referencia en el pedido
-    let referencia = '';
-    if (window.currentPedido.pagos_mixtos && window.currentPedido.pagos_mixtos.length > 0) {
-        const pagoMovil = window.currentPedido.pagos_mixtos.find(p => p.metodo === 'pago_movil');
-        if (pagoMovil && pagoMovil.referencia) {
-            referencia = pagoMovil.referencia;
-        }
-    } else if (window.currentPedido.referencia) {
-        referencia = window.currentPedido.referencia;
-    }
-    
-    const itemsHTML = (window.currentPedido.items || []).map(item => 
+    // Construir items del pedido
+    let itemsHTML = (window.currentPedido.items || []).map(item => 
         `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.1)">
             <span>${item.cantidad || 1}x ${item.nombre}</span>
             <span style="font-weight:600">${window.formatBs(window.usdToBs((item.precioUnitarioUSD || 0) * (item.cantidad || 1)))}</span>
         </div>`
     ).join('');
     
-    // AGREGAR REFERENCIA Y DELIVERY EN EL RESUMEN
+    // Agregar delivery si existe
+    let deliveryHTML = '';
+    if (window.currentPedido.costo_delivery_bs) {
+        deliveryHTML = `
+            <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.1)">
+                <span><i class="fas fa-truck"></i> Delivery</span>
+                <span style="font-weight:600">${window.formatBs(window.currentPedido.costo_delivery_bs)}</span>
+            </div>
+        `;
+    }
+    
+    // Agregar referencia si existe
+    let referenciaHTML = '';
+    if (window.currentPedido.referencia) {
+        referenciaHTML = `
+            <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.1)">
+                <span><i class="fas fa-hashtag"></i> Referencia</span>
+                <span style="font-weight:600;font-family:monospace">${window.currentPedido.referencia}</span>
+            </div>
+        `;
+    }
+    
     modalBody.innerHTML = `
         <div style="background:rgba(0,0,0,.3);padding:15px;border-radius:8px;margin-bottom:20px">
             <h4>Resumen del Pedido</h4>
-            ${referencia ? `<div style="margin-bottom:8px;padding:4px 0;color:var(--accent)"><i class="fas fa-hashtag"></i> Referencia: ${referencia}</div>` : ''}
             ${itemsHTML}
-            ${window.currentPedido.costo_delivery_bs ? 
-                `<div style="display:flex;justify-content:space-between;margin-top:8px;padding:8px 0;border-top:1px solid rgba(255,255,255,.1)">
-                    <span><i class="fas fa-truck"></i> Delivery</span>
-                    <span>${window.formatBs(window.currentPedido.costo_delivery_bs)}</span>
-                </div>` : ''}
+            ${deliveryHTML}
+            ${referenciaHTML}
             <div style="display:flex;justify-content:space-between;margin-top:15px;padding-top:15px;border-top:2px solid var(--primary);font-weight:700">
                 <span>Total a pagar:</span>
                 <span id="totalPagarDisplay" style="color:var(--accent)">${window.formatBs(totalAPagarBs)}</span>
@@ -453,7 +446,7 @@ window.mostrarCobro = function(pid) {
         </div>
     `;
     
-    // Agregar event listeners a los checks
+    // Agregar event listeners
     const invitacionCheck = document.getElementById('invitacionCheck');
     const condonarCheck = document.getElementById('condonarCheck');
     const favorCheck = document.getElementById('favorCheck');
@@ -618,7 +611,7 @@ window.renderizarPagosMixtos = function() {
 };
 
 // ============================================
-// FUNCIÓN: window.recalcularTotales (VERSIÓN FINAL CON AMBOS CHECKS)
+// FUNCIÓN: window.recalcularTotales (VERSIÓN FINAL)
 // ============================================
 window.recalcularTotales = function() {
     const totalAPagarUSD = window.currentPedido?.total || 0;
@@ -699,57 +692,41 @@ window.recalcularTotales = function() {
     }
     
     // ============================================
-    // APLICAR CHECKS (AQUÍ ESTÁ LA MAGIA)
+    // APLICAR CHECKS
     // ============================================
     
-    // Valores para los checks (basados en los montos actuales)
-    let montoCondonar = montoPendiente; // Por defecto, el pendiente
-    let montoFavor = montoSobrante;     // Por defecto, el sobrante
-    
-    // Guardar estado de los checks antes de modificar montos
+    // Guardar estado de los checks
     const condonarActivo = condonarCheck?.checked || false;
     const favorActivo = favorCheck?.checked || false;
     
-    // APLICAR CHECK A FAVOR (si está activado)
+    // Valores para los checks
+    let montoCondonar = montoPendiente;
+    let montoFavor = montoSobrante;
+    
     if (favorActivo && montoSobrante > 0) {
-        montoFavor = montoSobrante;     // TODO el sobrante pasa a favor
-        montoSobrante = 0;              // EL SOBRANTE MUERE
-        console.log('✅ Check A FAVOR activado:', montoFavor, 'Bs pasan a favor');
+        montoFavor = montoSobrante;
+        montoSobrante = 0;
     }
     
-    // APLICAR CHECK CONDONAR (si está activado)
     if (condonarActivo && montoPendiente > 0) {
-        montoCondonar = montoPendiente; // TODO el pendiente pasa a condonado
-        montoPendiente = 0;              // EL PENDIENTE MUERE
-        console.log('✅ Check CONDONAR activado:', montoCondonar, 'Bs se condonan');
+        montoCondonar = montoPendiente;
+        montoPendiente = 0;
     }
     
     // ============================================
     // DETERMINAR VISIBILIDAD DE LOS CHECKS
     // ============================================
-    
-    // Mostrar checks si:
-    // - Hay una situación que lo requiera (falta o sobra) 
-    // - O el check ya está activado (para que no desaparezca)
-    
     let mostrarCondonar = false;
     let mostrarFavor = false;
     
     if (diferencia > 0) {
-        // Falta dinero - mostrar condonar SIEMPRE (incluso si ya está activado)
         mostrarCondonar = true;
     } else if (diferencia < 0) {
-        // Sobra dinero - mostrar a favor SIEMPRE (incluso si ya está activado)
         mostrarFavor = true;
-    } else if (diferencia === 0) {
-        // Pago exacto - NO mostrar ningún check
-        mostrarCondonar = false;
-        mostrarFavor = false;
     }
     
-    // También considerar el caso de vuelto excesivo (cuando hay pendiente aunque sobre)
     if (diferencia < 0 && montoPendiente > 0) {
-        mostrarCondonar = true; // Mostrar condonar también si hay pendiente por vuelto excesivo
+        mostrarCondonar = true;
     }
     
     // Aplicar visibilidad
@@ -757,27 +734,21 @@ window.recalcularTotales = function() {
     favorCheckbox.style.display = mostrarFavor ? 'flex' : 'none';
     
     // ============================================
-    // ACTUALIZAR UI CON LOS VALORES FINALES
+    // ACTUALIZAR UI
     // ============================================
-    
-    // Actualizar montos en los labels de los checks
     condonarMontoSpan.textContent = window.formatBs(montoCondonar);
     favorMontoSpan.textContent = window.formatBs(montoFavor);
     
-    // Actualizar el resumen principal
     pendienteSpan.textContent = window.formatBs(montoPendiente);
     sobranteSpan.textContent = window.formatBs(montoSobrante);
     vueltoRestanteSpan.textContent = window.formatBs(montoSobrante);
     
-    // ACTUALIZAR LOS VALORES DE CONDONADO Y A FAVOR EN EL RESUMEN FINAL
     condonadoValueSpan.textContent = window.formatBs(montoCondonar);
     favorValueSpan.textContent = window.formatBs(montoFavor);
     
-    // Mostrar/ocultar las secciones de resumen
     condonadoDisplay.style.display = montoCondonar > 0 ? 'flex' : 'none';
     favorDisplay.style.display = montoFavor > 0 ? 'flex' : 'none';
     
-    // Actualizar total recibido
     totalRecibidoSpan.textContent = window.formatBs(totalRecibidoBs);
     
     // ============================================
@@ -789,22 +760,16 @@ window.recalcularTotales = function() {
     
     if (esInvitacion) {
         confirmarActivo = true;
-        console.log('🔘 Confirmar ACTIVADO por INVITACIÓN');
     } else if (diferencia === 0) {
         confirmarActivo = true;
-        console.log('🔘 Confirmar ACTIVADO por PAGO EXACTO');
     } else if (diferencia > 0 && condonarActivo) {
         confirmarActivo = true;
-        console.log('🔘 Confirmar ACTIVADO por CONDONAR');
     } else if (diferencia < 0 && favorActivo) {
         confirmarActivo = true;
-        console.log('🔘 Confirmar ACTIVADO por A FAVOR');
     } else if (diferencia < 0 && montoPendiente > 0 && condonarActivo) {
         confirmarActivo = true;
-        console.log('🔘 Confirmar ACTIVADO por VUELTO EXCESIVO + CONDONAR');
     } else {
         confirmarActivo = false;
-        console.log('🔘 Confirmar DESACTIVADO');
     }
     
     document.getElementById('confirmCobroBtn').disabled = !confirmarActivo;
@@ -813,8 +778,7 @@ window.recalcularTotales = function() {
 window.calcularConVuelto = function() { window.recalcularTotales(); };
 
 // ============================================
-// FUNCIÓN: window.confirmarCobro (CORREGIDA)
-// Ahora calcula Ventas Totales = (Total - Delivery) - Condonado + A favor
+// FUNCIÓN: window.confirmarCobro (MODIFICADA - Ventas Totales)
 // ============================================
 window.confirmarCobro = async function() {
     if (!window.currentPedido) return;
@@ -833,9 +797,9 @@ window.confirmarCobro = async function() {
     let montoFavor = 0;
     let vueltoEntregado = 0;
     let montoRecibido = 0;
-    let totalFinalUSD = window.currentPedido.total; // Por defecto, el total original
+    let totalFinalUSD = window.currentPedido.total;
     
-    // Calcular lo que realmente pagó el cliente (suma de todos los métodos)
+    // Calcular lo que realmente pagó el cliente
     const totalRecibidoBs = window.pagosMixtos.reduce((sum, pago) => {
         return sum + (pago.metodo === 'efectivo_usd' ? window.usdToBs(pago.monto || 0) : (pago.monto || 0));
     }, 0);
@@ -843,25 +807,24 @@ window.confirmarCobro = async function() {
     const totalAPagarOriginalBs = window.usdToBs(window.currentPedido.total);
     const deliveryBs = window.currentPedido.costo_delivery_bs || 0;
     const subtotalPlatillosBs = totalAPagarOriginalBs - deliveryBs;
-    
     const vueltoValue = parseFloat(vueltoInput?.value) || 0;
     
     if (esInvitacion) {
-        // CASO 1: INVITACIÓN - Todo gratis
         nuevoEstado = window.currentPedido.tipo === 'delivery' ? 'en_camino' : 
                      (window.currentPedido.tipo === 'reserva' ? 'reserva_pendiente' : 'en_cocina');
         metodoPago = 'invitacion';
         pagosData = [{ metodo: 'invitacion', monto: 0, montoBs: 0 }];
         montoRecibido = 0;
-        totalFinalUSD = 0; // La invitación no paga nada
+        totalFinalUSD = 0;
         
     } else if (condonarActivo && totalRecibidoBs < totalAPagarOriginalBs) {
-        // CASO 2: CONDONAR - El cliente pagó menos y se perdona
         const diferencia = totalAPagarOriginalBs - totalRecibidoBs;
         montoCondonado = diferencia;
         
-        // El total FINAL es lo que realmente pagó (sin la parte condonada)
-        totalFinalUSD = totalRecibidoBs / window.tasaEfectiva;
+        // Ventas totales = (subtotal platillos) - condonado
+        // El delivery se excluye de esta cuenta
+        const ventasTotalesBs = subtotalPlatillosBs - montoCondonado;
+        totalFinalUSD = ventasTotalesBs / window.tasaEfectiva;
         montoRecibido = totalRecibidoBs;
         
         nuevoEstado = window.currentPedido.tipo === 'delivery' ? 'en_camino' : 
@@ -875,7 +838,6 @@ window.confirmarCobro = async function() {
         metodoPago = window.pagosMixtos.length === 1 ? window.pagosMixtos[0].metodo : 'mixto';
         
     } else if (favorActivo && totalRecibidoBs > totalAPagarOriginalBs) {
-        // CASO 3: A FAVOR - El cliente pagó más y se guarda el saldo
         const sobra = totalRecibidoBs - totalAPagarOriginalBs;
         
         if (vueltoValue > 0) {
@@ -884,14 +846,14 @@ window.confirmarCobro = async function() {
                 montoFavor = sobra - vueltoValue;
             } else {
                 vueltoEntregado = sobra;
-                // Si pide más vuelto del que sobra, eso genera pendiente (pero ya se maneja en UI)
             }
         } else {
             montoFavor = sobra;
         }
         
-        // El total FINAL es el original (no cambia)
-        totalFinalUSD = window.currentPedido.total;
+        // Ventas totales = subtotal platillos + a favor
+        const ventasTotalesBs = subtotalPlatillosBs + montoFavor;
+        totalFinalUSD = ventasTotalesBs / window.tasaEfectiva;
         montoRecibido = totalRecibidoBs;
         
         nuevoEstado = window.currentPedido.tipo === 'delivery' ? 'en_camino' : 
@@ -905,7 +867,7 @@ window.confirmarCobro = async function() {
         metodoPago = window.pagosMixtos.length === 1 ? window.pagosMixtos[0].metodo : 'mixto';
         
     } else {
-        // CASO 4: PAGO NORMAL (exacto o sin checks)
+        // Pago normal
         totalFinalUSD = window.currentPedido.total;
         montoRecibido = totalRecibidoBs;
         
@@ -921,7 +883,6 @@ window.confirmarCobro = async function() {
     }
     
     try {
-        // Actualizar el pedido con el nuevo total (si aplica)
         await window.supabaseClient.from('pedidos').update({
             estado: nuevoEstado,
             metodo_pago: metodoPago,
@@ -935,25 +896,9 @@ window.confirmarCobro = async function() {
             total: totalFinalUSD
         }).eq('id', window.currentPedido.id);
         
-        // Calcular items para la venta
         const totalItems = window.currentPedido.items?.reduce((sum, item) => sum + (item.cantidad || 1), 0) || 0;
         const subtotalUSD = (window.currentPedido.items || []).reduce((sum, item) => sum + (item.precioUnitarioUSD || 0) * (item.cantidad || 1), 0);
-        
-        // Si se condonó, el subtotal también debe ajustarse proporcionalmente
-        let subtotalFinalUSD = subtotalUSD;
-        if (condonarActivo && totalRecibidoBs < totalAPagarOriginalBs) {
-            const porcentajePagado = totalRecibidoBs / totalAPagarOriginalBs;
-            subtotalFinalUSD = subtotalUSD * porcentajePagado;
-        }
-        
-        const subtotalBs = window.usdToBs(subtotalFinalUSD);
-        
-        // ============================================
-        // CALCULAR VENTAS TOTALES SEGÚN LA FÓRMULA:
-        // Ventas Totales = (Total original - Delivery) - Condonado + A favor
-        // ============================================
-        let ventasTotalesBs = subtotalPlatillosBs - (montoCondonado || 0) + (montoFavor || 0);
-        let ventasTotalesUSD = ventasTotalesBs / window.tasaEfectiva;
+        const subtotalBs = window.usdToBs(subtotalUSD);
         
         await window.supabaseClient.from('ventas').insert([{
             pedido_id: window.currentPedido.id,
@@ -965,7 +910,6 @@ window.confirmarCobro = async function() {
             fecha: new Date().toISOString()
         }]);
         
-        // Notificaciones (igual que antes)
         let tituloNotif, mensajeNotif;
         if (esInvitacion) {
             tituloNotif = '✅ Pedido por invitación';
