@@ -230,11 +230,46 @@ window.cargarMesoneros=async function(){try{const a=await window.supabaseClient.
 window.cargarDeliverys=async function(){try{const a=await window.supabaseClient.from('deliverys').select('*').eq('activo',true).order('nombre');if(a.error)throw a.error;window.deliverys=a.data||[];}catch(e){console.error('Error cargando deliverys:',e);}};
 window.getStockDisponible=async function(i){try{const a=window.stockCache.get(i);if(a!==undefined)return a;const b=window.inventario.find(c=>c.id===i);if(!b)return 0;let c=0;(window.pedidos||[]).forEach(d=>{if(d.items&&d.estado==='pendiente'){d.items.forEach(e=>{if(!e.personalizacion||!e.personalizacion.includes(i))c+=e.cantidad||1;});}});const d=(b.stock||0)-(b.reservado||0)-c;window.stockCache.set(i,d);return d;}catch(e){console.error('Error obteniendo stock:',e);return 0;}};
 window.calcularStockPlatillo=async function(p){let a=Infinity;if(p.ingredientes&&Object.keys(p.ingredientes).length>0){for(const[b,c]of Object.entries(p.ingredientes)){const d=await window.getStockDisponible(b),e=c.cantidad||1,f=Math.floor(d/e);a=Math.min(a,f);}}else a=p.stock_maximo||999;return a;};
-window.actualizarEstadisticas=function(){const a=(window.pedidos||[]).filter(b=>['en_cocina','en_camino','reserva_pendiente','reserva_atendida'].includes(b.estado)).length,b=(window.ventasHoy||[]).length,c=(window.ventasHoy||[]).reduce((d,e)=>d+(e.subtotal_platillos||0),0),d=(window.ventasHoy||[]).reduce((e,f)=>e+(f.items||0),0),e=(window.propinas||[]).reduce((f,g)=>f+(g.monto_bs||g.monto||0),0),f=window.calcularTotalDeliverysHoy();document.getElementById('statPreparacion').textContent=a;document.getElementById('statCobrados').textContent=b;document.getElementById('statVentas').textContent=window.formatBs(c);document.getElementById('statPlatillos').textContent=d;document.getElementById('statPropinas').textContent=window.formatBs(e);document.getElementById('statDeliverysTotal').textContent=window.formatBs(f);};
+
+// ============================================
+// FUNCIÓN: actualizarEstadisticas (MODIFICADA - Ventas Totales)
+// ============================================
+window.actualizarEstadisticas = function() {
+    // Estadísticas existentes
+    const enPreparacion = (window.pedidos || []).filter(p => 
+        ['en_cocina', 'en_camino', 'reserva_pendiente', 'reserva_atendida'].includes(p.estado)
+    ).length;
+    
+    const cobradosHoy = (window.ventasHoy || []).length;
+    
+    // VENTAS TOTALES = Subtotal de platillos - Condonado + A favor
+    let ventasTotalesBs = 0;
+    (window.ventasHoy || []).forEach(venta => {
+        const pedido = (window.pedidos || []).find(p => p.id === venta.pedido_id);
+        if (pedido) {
+            let subtotalPlatillos = venta.subtotal_platillos || 0;
+            // Aplicar ajustes
+            subtotalPlatillos = subtotalPlatillos - (pedido.condonado || 0) + (pedido.a_favor_caja || 0);
+            ventasTotalesBs += subtotalPlatillos;
+        }
+    });
+    
+    const totalPlatillosVendidos = (window.ventasHoy || []).reduce((sum, v) => sum + (v.items || 0), 0);
+    const totalPropinas = (window.propinas || []).reduce((sum, p) => sum + (p.monto_bs || p.monto || 0), 0);
+    const totalDeliverys = window.calcularTotalDeliverysHoy();
+    
+    document.getElementById('statPreparacion').textContent = enPreparacion;
+    document.getElementById('statCobrados').textContent = cobradosHoy;
+    document.getElementById('statVentas').textContent = window.formatBs(ventasTotalesBs);
+    document.getElementById('statPlatillos').textContent = totalPlatillosVendidos;
+    document.getElementById('statPropinas').textContent = window.formatBs(totalPropinas);
+    document.getElementById('statDeliverysTotal').textContent = window.formatBs(totalDeliverys);
+};
+
 window.renderizarPedidos=function(){const a=window.pedidos.filter(b=>b.tipo==='mesa'&&b.estado==='pendiente'),b=window.pedidos.filter(c=>c.tipo==='delivery'&&c.estado==='pendiente'),c=window.pedidos.filter(d=>d.tipo==='reserva'&&d.estado==='pendiente'),d=window.pedidos.filter(e=>e.tipo==='mesa'&&e.estado==='en_cocina'),e=window.pedidos.filter(f=>f.tipo==='delivery'&&f.estado==='en_camino'),f=window.pedidos.filter(g=>g.tipo==='reserva'&&g.estado==='reserva_pendiente'),g=window.pedidos.filter(h=>h.tipo==='reserva'&&h.estado==='reserva_atendida');document.getElementById('mesaPendientesCount').textContent=a.length;document.getElementById('deliveryPendientesCount').textContent=b.length;document.getElementById('reservaPendientesCount').textContent=c.length;document.getElementById('totalPendientesBadge').textContent=a.length+b.length+c.length;document.getElementById('mesaCocinaCount').textContent=d.length;document.getElementById('deliveryCaminoCount').textContent=e.length;document.getElementById('reservaProcesoCount').textContent=f.length+g.length;document.getElementById('totalPreparacionBadge').textContent=d.length+e.length+f.length+g.length;document.getElementById('mesaPendientesContainer').innerHTML=a.length?a.map(h=>window.crearTarjetaPedidoCompacta(h,'pendiente')).join(''):'<div class="empty-state"><i class="fas fa-store"></i><p>No hay pedidos en mesa</p></div>';document.getElementById('deliveryPendientesContainer').innerHTML=b.length?b.map(h=>window.crearTarjetaPedidoCompacta(h,'pendiente')).join(''):'<div class="empty-state"><i class="fas fa-motorcycle"></i><p>No hay pedidos delivery</p></div>';document.getElementById('reservaPendientesContainer').innerHTML=c.length?c.map(h=>window.crearTarjetaPedidoCompacta(h,'pendiente')).join(''):'<div class="empty-state"><i class="fas fa-calendar-check"></i><p>No hay reservas</p></div>';document.getElementById('mesaCocinaContainer').innerHTML=d.length?d.map(h=>window.crearTarjetaPedidoCompacta(h,'preparacion')).join(''):'<div class="empty-state"><i class="fas fa-fire"></i><p>No hay pedidos en cocina</p></div>';document.getElementById('deliveryCaminoContainer').innerHTML=e.length?e.map(h=>window.crearTarjetaPedidoCompacta(h,'preparacion')).join(''):'<div class="empty-state"><i class="fas fa-truck"></i><p>No hay deliveries en camino</p></div>';document.getElementById('reservaProcesoContainer').innerHTML=(f.length+g.length)?[...f,...g].map(h=>window.crearTarjetaPedidoCompacta(h,'preparacion')).join(''):'<div class="empty-state"><i class="fas fa-clock"></i><p>No hay reservas pendientes</p></div>';};
 
 // ============================================
-// FUNCIÓN: formatearHora12 (nueva)
+// FUNCIÓN: formatearHora12
 // ============================================
 window.formatearHora12 = function(timestamp) {
     const fecha = new Date(timestamp);
@@ -247,7 +282,7 @@ window.formatearHora12 = function(timestamp) {
 };
 
 // ============================================
-// FUNCIÓN: window.crearTarjetaPedidoCompacta (CORREGIDA - Delivery visible)
+// FUNCIÓN: window.crearTarjetaPedidoCompacta (MODIFICADA - Más datos)
 // ============================================
 window.crearTarjetaPedidoCompacta = function(p, t) {
     try {
@@ -257,20 +292,19 @@ window.crearTarjetaPedidoCompacta = function(p, t) {
         if (p.tipo === 'mesa') {
             infoAdicional = `<div class="order-info-compact"><i class="fas fa-chair"></i> Mesa #${p.mesa || 'N/A'}</div>`;
         } else if (p.tipo === 'delivery') {
-            // Usar los mismos nombres que en la versión 1.0
             const parroquia = p.parroquia ? ` (${p.parroquia})` : '';
             const costoDelivery = p.costo_delivery_bs || p.costoDelivery || 0;
             
             infoAdicional = `<div class="order-info-compact">
-                <div><i class="fas fa-map-marker-alt"></i> ${(p.direccion || '').substring(0, 20)}...</div>
+                <div><i class="fas fa-map-marker-alt"></i> ${p.direccion || ''}</div>
                 <div><i class="fas fa-phone"></i> ${p.telefono || 'N/A'}</div>
-                ${costoDelivery > 0 ? `<div><i class="fas fa-truck"></i> Delivery${parroquia}: ${window.formatBs(costoDelivery)}</div>` : ''}
+                ${costoDelivery ? `<div><i class="fas fa-truck"></i> Delivery${parroquia}: ${window.formatBs(costoDelivery)}</div>` : ''}
                 ${p.referencia ? `<div><i class="fas fa-hashtag"></i> Ref: ${p.referencia}</div>` : ''}
             </div>`;
         } else {
             infoAdicional = `<div class="order-info-compact">
-                <div><i class="fas fa-user"></i> ${p.cliente_nombre || p.clienteNombre || 'Cliente'}</div>
-                <div><i class="fas fa-calendar"></i> ${p.fecha_reserva ? new Date(p.fecha_reserva).toLocaleDateString() : (p.fechaReserva ? new Date(p.fechaReserva).toLocaleDateString() : 'N/A')}</div>
+                <div><i class="fas fa-user"></i> ${p.cliente_nombre || 'Cliente'}</div>
+                <div><i class="fas fa-calendar"></i> ${p.fecha_reserva ? new Date(p.fecha_reserva).toLocaleDateString() : 'N/A'}</div>
                 ${p.referencia ? `<div><i class="fas fa-hashtag"></i> Ref: ${p.referencia}</div>` : ''}
             </div>`;
         }
@@ -330,12 +364,81 @@ window.crearTarjetaPedidoCompacta = function(p, t) {
 };
 
 window.calcularTotalDeliverysHoy=function(){try{const a=new Date();a.setHours(0,0,0,0);const b=new Date(a);b.setDate(b.getDate()+1);return(window.pedidos||[]).filter(c=>c.tipo==='delivery'&&c.estado==='enviado'&&new Date(c.timestamp)>=a&&new Date(c.timestamp)<b).reduce((d,e)=>d+(e.costo_delivery_bs||0),0);}catch(e){return 0;}};
-window.obtenerAcumuladoDeliverysHoy=async function(){try{const a=new Date();a.setHours(0,0,0,0);const b=new Date(a);b.setDate(b.getDate()+1);const c=await window.supabaseClient.from('entregas_delivery').select('delivery_id, monto_bs').gte('fecha_entrega',a.toISOString()).lt('fecha_entrega',b.toISOString());if(c.error)throw c.error;const d={};(c.data||[]).forEach(e=>{d[e.delivery_id]=(d[e.delivery_id]||0)+e.monto_bs;});return d;}catch(e){console.error('Error obteniendo acumulado deliverys:',e);return{};}};
-window.abrirModalDeliverys=async function(){try{const a=await window.obtenerAcumuladoDeliverysHoy(),b=document.getElementById('deliveryModal'),c=document.getElementById('deliveryModalBody');let d='<h3 style="margin-bottom:20px">Acumulado por motorizado (Hoy)</h3>';if(!window.deliverys||window.deliverys.length===0)d+='<div class="empty-state"><i class="fas fa-motorcycle"></i><p>No hay motorizados registrados</p></div>';else{d+='<div class="motorizados-list">';window.deliverys.forEach(e=>{const f=a[e.id]||0;d+=`<div class="motorizado-item"><span class="motorizado-nombre">${e.nombre}</span><span class="motorizado-monto">${window.formatBs(f)}</span></div>`;});d+='</div>';}c.innerHTML=d;b.classList.add('active');}catch(e){console.error('Error abriendo modal deliverys:',e);window.mostrarToast('Error al cargar datos de deliverys','error');}};
 
 // ============================================
-// FUNCIÓN: window.mostrarCobro (CORREGIDA - Delivery visible)
+// FUNCIÓN: obtenerAcumuladoDeliverysHoy (MODIFICADA - Suma total)
 // ============================================
+window.obtenerAcumuladoDeliverysHoy = async function() {
+    try {
+        const hoy = new Date();
+        hoy.setHours(0, 0, 0, 0);
+        const manana = new Date(hoy);
+        manana.setDate(manana.getDate() + 1);
+        
+        const { data, error } = await window.supabaseClient
+            .from('entregas_delivery')
+            .select('delivery_id, monto_bs')
+            .gte('fecha_entrega', hoy.toISOString())
+            .lt('fecha_entrega', manana.toISOString());
+            
+        if (error) throw error;
+        
+        // Calcular acumulado por motorizado Y total general
+        const acumuladoPorMotorizado = {};
+        let totalGeneral = 0;
+        
+        (data || []).forEach(entrega => {
+            acumuladoPorMotorizado[entrega.delivery_id] = (acumuladoPorMotorizado[entrega.delivery_id] || 0) + entrega.monto_bs;
+            totalGeneral += entrega.monto_bs;
+        });
+        
+        return { 
+            porMotorizado: acumuladoPorMotorizado,
+            totalGeneral: totalGeneral
+        };
+    } catch (e) {
+        console.error('Error obteniendo acumulado deliverys:', e);
+        return { porMotorizado: {}, totalGeneral: 0 };
+    }
+};
+
+// ============================================
+// FUNCIÓN: abrirModalDeliverys (MODIFICADA - Muestra total general)
+// ============================================
+window.abrirModalDeliverys = async function() {
+    try {
+        const acumulado = await window.obtenerAcumuladoDeliverysHoy();
+        const modal = document.getElementById('deliveryModal');
+        const body = document.getElementById('deliveryModalBody');
+        
+        let html = '<h3 style="margin-bottom:20px">Acumulado por motorizado (Hoy)</h3>';
+        html += `<div style="background:var(--delivery); padding:15px; border-radius:8px; margin-bottom:20px; text-align:center">
+            <span style="font-size:1.2rem">TOTAL DELIVERYS HOY:</span>
+            <span style="font-size:2rem; font-weight:700; display:block">${window.formatBs(acumulado.totalGeneral)}</span>
+        </div>`;
+        
+        if (!window.deliverys || window.deliverys.length === 0) {
+            html += '<div class="empty-state"><i class="fas fa-motorcycle"></i><p>No hay motorizados registrados</p></div>';
+        } else {
+            html += '<div class="motorizados-list">';
+            window.deliverys.forEach(d => {
+                const monto = acumulado.porMotorizado[d.id] || 0;
+                html += `<div class="motorizado-item">
+                    <span class="motorizado-nombre">${d.nombre}</span>
+                    <span class="motorizado-monto">${window.formatBs(monto)}</span>
+                </div>`;
+            });
+            html += '</div>';
+        }
+        
+        body.innerHTML = html;
+        modal.classList.add('active');
+    } catch (e) {
+        console.error('Error abriendo modal deliverys:', e);
+        window.mostrarToast('Error al cargar datos de deliverys', 'error');
+    }
+};
+
 window.mostrarCobro = function(pid) {
     window.currentPedido = (window.pedidos || []).find(a => a.id === pid);
     if (!window.currentPedido) return;
@@ -356,12 +459,10 @@ window.mostrarCobro = function(pid) {
     const totalAPagarBs = window.usdToBs(window.currentPedido.total || 0);
     const modalBody = document.getElementById('cobroModalBody');
     
-    // ============================================
-    // CONSTRUIR EL RESUMEN DEL PEDIDO (CORREGIDO)
-    // ============================================
+    // Construir resumen del pedido
     let resumenHTML = '<div style="background:rgba(0,0,0,.3);padding:15px;border-radius:8px;margin-bottom:20px"><h4>Resumen del Pedido</h4>';
     
-    // 1. REFERENCIA (si existe) - AHORA VA PRIMERO
+    // Referencia
     if (window.currentPedido.referencia) {
         resumenHTML += `
             <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.1)">
@@ -371,7 +472,7 @@ window.mostrarCobro = function(pid) {
         `;
     }
     
-    // 2. ITEMS DEL PEDIDO
+    // Items
     (window.currentPedido.items || []).forEach(item => {
         resumenHTML += `
             <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.1)">
@@ -381,7 +482,7 @@ window.mostrarCobro = function(pid) {
         `;
     });
     
-    // 3. DELIVERY (si existe) - USANDO LOS MISMOS NOMBRES QUE EN LA VERSIÓN 1.0
+    // Delivery
     const costoDelivery = window.currentPedido.costo_delivery_bs || window.currentPedido.costoDelivery || 0;
     if (costoDelivery > 0) {
         const parroquia = window.currentPedido.parroquia ? ` (${window.currentPedido.parroquia})` : '';
@@ -393,7 +494,7 @@ window.mostrarCobro = function(pid) {
         `;
     }
     
-    // 4. TOTAL
+    // Total
     resumenHTML += `
         <div style="display:flex;justify-content:space-between;margin-top:15px;padding-top:15px;border-top:2px solid var(--primary);font-weight:700">
             <span>Total a pagar:</span>
@@ -401,9 +502,7 @@ window.mostrarCobro = function(pid) {
         </div>
     </div>`;
     
-    // ============================================
-    // RESTO DEL MODAL
-    // ============================================
+    // Resto del modal (invitación, pagos mixtos, etc.)
     modalBody.innerHTML = resumenHTML + `
         <div style="margin-bottom:20px;padding:12px;background:rgba(245,124,0,.1);border-left:4px solid var(--warning)">
             <label style="display:flex;align-items:center;gap:10px;color:#fff">
@@ -761,7 +860,7 @@ window.recalcularTotales = function() {
 window.calcularConVuelto = function() { window.recalcularTotales(); };
 
 // ============================================
-// FUNCIÓN: window.confirmarCobro (MODIFICADA)
+// FUNCIÓN: window.confirmarCobro (MODIFICADA - Ventas totales sin delivery)
 // ============================================
 window.confirmarCobro = async function() {
     if (!window.currentPedido) return;
@@ -781,6 +880,7 @@ window.confirmarCobro = async function() {
     let vueltoEntregado = 0;
     let montoRecibido = 0;
     let totalFinalUSD = window.currentPedido.total;
+    let subtotalPlatillosFinalUSD = 0;
     
     const totalRecibidoBs = window.pagosMixtos.reduce((sum, pago) => {
         return sum + (pago.metodo === 'efectivo_usd' ? window.usdToBs(pago.monto || 0) : (pago.monto || 0));
@@ -798,13 +898,16 @@ window.confirmarCobro = async function() {
         pagosData = [{ metodo: 'invitacion', monto: 0, montoBs: 0 }];
         montoRecibido = 0;
         totalFinalUSD = 0;
+        subtotalPlatillosFinalUSD = 0;
         
     } else if (condonarActivo && totalRecibidoBs < totalAPagarOriginalBs) {
         const diferencia = totalAPagarOriginalBs - totalRecibidoBs;
         montoCondonado = diferencia;
         
+        // Ventas totales = subtotal de platillos - condonado
         const ventasTotalesBs = subtotalPlatillosBs - montoCondonado;
-        totalFinalUSD = ventasTotalesBs / window.tasaEfectiva;
+        subtotalPlatillosFinalUSD = ventasTotalesBs / window.tasaEfectiva;
+        totalFinalUSD = (ventasTotalesBs + costoDelivery) / window.tasaEfectiva; // El total del pedido incluye delivery
         montoRecibido = totalRecibidoBs;
         
         nuevoEstado = window.currentPedido.tipo === 'delivery' ? 'en_camino' : 
@@ -831,8 +934,10 @@ window.confirmarCobro = async function() {
             montoFavor = sobra;
         }
         
+        // Ventas totales = subtotal de platillos + a favor
         const ventasTotalesBs = subtotalPlatillosBs + montoFavor;
-        totalFinalUSD = ventasTotalesBs / window.tasaEfectiva;
+        subtotalPlatillosFinalUSD = ventasTotalesBs / window.tasaEfectiva;
+        totalFinalUSD = (ventasTotalesBs + costoDelivery) / window.tasaEfectiva;
         montoRecibido = totalRecibidoBs;
         
         nuevoEstado = window.currentPedido.tipo === 'delivery' ? 'en_camino' : 
@@ -846,6 +951,8 @@ window.confirmarCobro = async function() {
         metodoPago = window.pagosMixtos.length === 1 ? window.pagosMixtos[0].metodo : 'mixto';
         
     } else {
+        // Pago normal (exacto)
+        subtotalPlatillosFinalUSD = (window.currentPedido.items || []).reduce((sum, item) => sum + (item.precioUnitarioUSD || 0) * (item.cantidad || 1), 0);
         totalFinalUSD = window.currentPedido.total;
         montoRecibido = totalRecibidoBs;
         
@@ -875,8 +982,7 @@ window.confirmarCobro = async function() {
         }).eq('id', window.currentPedido.id);
         
         const totalItems = window.currentPedido.items?.reduce((sum, item) => sum + (item.cantidad || 1), 0) || 0;
-        const subtotalUSD = (window.currentPedido.items || []).reduce((sum, item) => sum + (item.precioUnitarioUSD || 0) * (item.cantidad || 1), 0);
-        const subtotalBs = window.usdToBs(subtotalUSD);
+        const subtotalBs = window.usdToBs(subtotalPlatillosFinalUSD);
         
         await window.supabaseClient.from('ventas').insert([{
             pedido_id: window.currentPedido.id,
@@ -943,15 +1049,413 @@ window.filtrarMenuPorCategoria=function(a){let b=[];if(a==='todos')b=window.menu
 window.renderizarMenuItems=async function(a){const b=document.getElementById('menuGrid'),c=await Promise.all(a.map(async d=>{const e=await window.calcularStockPlatillo(d);let f='available',g='Disponible';if(e<=0){f='sold-out';g='Agotado';}else if(e<5){f='low';g=`Últimas ${e} unidades`;}else g=`${e} disponibles`;return{...d,stock:e,stockClass:f,stockText:g};}));b.innerHTML=c.map(h=>`<div class="menu-card"><div class="menu-card-image" style="background-image:url('${h.imagen||'https://via.placeholder.com/300x150?text=Saki+Sushi'}')"></div><div class="menu-card-content"><div class="menu-card-header"><span class="menu-card-title">${h.nombre}</span><span class="menu-card-price">${window.formatBs(window.usdToBs(h.precio||0))}</span></div><p style="font-size:.85rem;color:rgba(255,255,255,.6);margin-bottom:.5rem">${h.descripcion||''}</p><div class="menu-card-stock ${h.stockClass}"><i class="fas fa-box"></i> ${h.stockText}</div></div></div>`).join('');};
 window.renderizarDeliverysStats=function(){const a=window.pedidos.filter(b=>b.tipo==='delivery'&&b.estado==='enviado'&&new Date(b.timestamp).toDateString()===new Date().toDateString()),b=a.reduce((c,d)=>c+(d.costo_delivery_bs||0),0),c=a.length,d=c>0?b/c:0;document.getElementById('deliverysTotalStats').textContent=window.formatBs(b);document.getElementById('deliverysCantidadStats').textContent=c;document.getElementById('deliverysPromedioStats').textContent=window.formatBs(d);document.getElementById('deliverysListCount').textContent=c;document.getElementById('deliverysListContainer').innerHTML=c?a.map(e=>window.crearTarjetaDelivery(e)).join(''):'<div class="empty-state"><i class="fas fa-motorcycle"></i><p>No hay entregas hoy</p></div>';};
 window.crearTarjetaDelivery=function(a){try{const b=new Date(a.timestamp),c=b.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});return`<div class="order-card-compact" style="border-left-color:var(--delivery)"><div class="order-header-compact"><span class="order-time-compact"><i class="far fa-clock"></i> ${c}</span><span class="delivery-tag"><i class="fas fa-motorcycle"></i> Delivery</span></div><div class="order-info-compact"><div><i class="fas fa-map-marker-alt"></i> ${(a.direccion||'').substring(0,20)}...</div><div><i class="fas fa-phone"></i> ${a.telefono||'N/A'}</div><div><i class="fas fa-tag"></i> Pedido: ${a.id.substring(0,8)}</div></div><div class="order-total-compact" style="color:var(--delivery)">${window.formatBs(a.costo_delivery_bs||0)}</div></div>`;}catch(e){return'';}};
-window.mostrarConfirmacionDelivery=function(a){const b=window.pedidos.find(c=>c.id===a);if(!b)return;window.pedidoParaAccion=b;const c=document.getElementById('confirmModal'),d=document.getElementById('confirmModalTitle'),e=document.getElementById('confirmModalBody'),f=document.getElementById('confirmModalHeader');d.innerHTML='<i class="fas fa-truck"></i> Asignar Delivery';f.style.background='linear-gradient(135deg,var(--delivery),#00838F)';const g=window.deliverys.map(h=>`<option value="${h.id}">${h.nombre}</option>`).join('');e.innerHTML=`<p>Selecciona el motorizado que realizará el envío:</p><div class="delivery-selector" style="margin:20px 0"><select id="deliverySelector" style="width:100%;padding:10px;background:rgba(0,0,0,.5);color:#fff;border:2px solid rgba(255,255,255,.2);border-radius:8px;"><option value="">-- Seleccionar motorizado --</option>${g}</select></div>${window.crearDetallePedidoResumido(b)}<div class="keyboard-hint" style="margin-top:20px"><span><kbd>ENTER</kbd> confirmar</span><span><kbd>ESC</kbd> cancelar</span></div>`;document.getElementById('confirmActionBtn').disabled=true;setTimeout(()=>{const h=document.getElementById('deliverySelector');if(h){h.addEventListener('change',function(){document.getElementById('confirmActionBtn').disabled=!this.value;});}},100);c.classList.add('active');};
+
+// ============================================
+// FUNCIÓN: window.mostrarConfirmacionDelivery (MODIFICADA)
+// ============================================
+window.mostrarConfirmacionDelivery = function(pedidoId) {
+    const pedido = window.pedidos.find(p => p.id === pedidoId);
+    if (!pedido) return;
+    
+    window.pedidoParaAccion = pedido;
+    const modal = document.getElementById('confirmModal');
+    const title = document.getElementById('confirmModalTitle');
+    const body = document.getElementById('confirmModalBody');
+    const header = document.getElementById('confirmModalHeader');
+    
+    title.innerHTML = '<i class="fas fa-truck"></i> Asignar Delivery';
+    header.style.background = 'linear-gradient(135deg, var(--delivery), #00838F)';
+    
+    const motorizadosOptions = window.deliverys.map(d => 
+        `<option value="${d.id}">${d.nombre}</option>`
+    ).join('');
+    
+    const costoDelivery = pedido.costo_delivery_bs || pedido.costoDelivery || 0;
+    const parroquia = pedido.parroquia ? ` (${pedido.parroquia})` : '';
+    
+    body.innerHTML = `
+        <p>Selecciona el motorizado que realizará el envío:</p>
+        <div style="background:rgba(0,172,193,.1); padding:15px; border-radius:8px; margin:15px 0; border:2px solid var(--delivery)">
+            <div style="display:flex; justify-content:space-between; align-items:center">
+                <span><i class="fas fa-truck"></i> <strong>Delivery${parroquia}:</strong></span>
+                <span style="font-size:1.2rem; font-weight:700; color:var(--delivery)">${window.formatBs(costoDelivery)}</span>
+            </div>
+        </div>
+        <div class="delivery-selector" style="margin:20px 0">
+            <select id="deliverySelector" style="width:100%; padding:10px; background:rgba(0,0,0,.5); color:#fff; border:2px solid rgba(255,255,255,.2); border-radius:8px;">
+                <option value="">-- Seleccionar motorizado --</option>
+                ${motorizadosOptions}
+            </select>
+        </div>
+        ${window.crearDetallePedidoResumido(pedido)}
+        <div class="keyboard-hint" style="margin-top:20px">
+            <span><kbd>ENTER</kbd> confirmar</span>
+            <span><kbd>ESC</kbd> cancelar</span>
+        </div>
+    `;
+    
+    document.getElementById('confirmActionBtn').disabled = true;
+    
+    setTimeout(() => {
+        const selector = document.getElementById('deliverySelector');
+        if (selector) {
+            selector.addEventListener('change', function() {
+                document.getElementById('confirmActionBtn').disabled = !this.value;
+            });
+        }
+    }, 100);
+    
+    modal.classList.add('active');
+};
+
 window.mostrarConfirmacion=function(a,b){const c=window.pedidos.find(d=>d.id===a);if(!c)return;window.pedidoParaAccion=c;window.accionPendiente=b;const d=document.getElementById('confirmModal'),e=document.getElementById('confirmModalTitle'),f=document.getElementById('confirmModalBody'),g=document.getElementById('confirmModalHeader');let h,i,j;if(b==='entregado'){h='Confirmar Entrega';i='¿Pedido entregado?';g.style.background='linear-gradient(135deg,var(--success),#2E7D32)';j={titulo:'🍽️ ¡Que aproveche!',mensaje:'Tu pedido ha sido entregado.'};}else if(b==='enviado'){h='Confirmar Envío';i='¿Pedido enviado?';g.style.background='linear-gradient(135deg,var(--info),#1565C0)';j={titulo:'🚚 Delivery en camino',mensaje:'El repartidor ya salió.'};}else if(b==='reserva_atendida'){h='Cliente Confirmado';i='¿Cliente llegó?';g.style.background='linear-gradient(135deg,#9c27b0,#7b1fa2)';j={titulo:'👤 Cliente confirmado',mensaje:'Estás siendo atendido.'};}else{h='Confirmar';i='¿Confirmar acción?';g.style.background='linear-gradient(135deg,var(--success),#2E7D32)';j={titulo:'✅ Completado',mensaje:'Acción confirmada.'};}e.innerHTML=`<i class="fas fa-check-circle"></i> ${h}`;f.innerHTML=`<p>${i}</p>${window.crearDetallePedidoResumido(c)}<div style="background:rgba(56,142,60,.1);padding:15px;margin-top:20px"><strong>Notificación:</strong><br>${j.titulo}<br>${j.mensaje}</div><div class="keyboard-hint"><span><kbd>ENTER</kbd> confirmar</span><span><kbd>ESC</kbd> cancelar</span></div>`;d.classList.add('active');};
 window.crearDetallePedidoResumido=function(a){try{let b='';if(a.tipo==='mesa')b=`<div class="detail-row"><span class="detail-label">Mesa:</span><span class="detail-value">${a.mesa}</span></div>`;else if(a.tipo==='delivery')b=`<div class="detail-row"><span class="detail-label">Dirección:</span><span class="detail-value">${a.direccion}</span></div><div class="detail-row"><span class="detail-label">Teléfono:</span><span class="detail-value">${a.telefono}</span></div>`;else b=`<div class="detail-row"><span class="detail-label">Fecha:</span><span class="detail-value">${a.fecha_reserva?new Date(a.fecha_reserva).toLocaleDateString():'N/A'}</span></div>`;return`<div class="detail-item"><div class="detail-row"><span class="detail-label">Tipo:</span><span class="detail-value">${a.tipo}</span></div>${b}<div class="detail-row"><span class="detail-label">Items:</span></div>${(a.items||[]).map(c=>`<div class="detail-row"><span>${c.cantidad||1}x ${c.nombre}</span><span>${window.formatBs(window.usdToBs(c.precioUnitarioUSD*(c.cantidad||1)))}</span></div>`).join('')}<div class="detail-row" style="font-weight:700"><span>TOTAL</span><span>${window.formatBs(window.usdToBs(a.total||0))}</span></div></div>`;}catch(e){return'';}};
 window.crearDetallePedidoHTML=function(a){let b='';if(a.pagos_mixtos){b='<div class="payment-methods">'+a.pagos_mixtos.map(c=>{const d=c.metodo==='pago_movil'?'mobile-alt':(c.metodo==='punto_venta'?'credit-card':'money-bill-wave'),e=c.metodo==='efectivo_bs'?'Bs':(c.metodo==='efectivo_usd'?'$':(c.metodo==='pago_movil'?'🔑':'💳'));return`<span class="payment-tag"><i class="fas fa-${d}"></i> ${e} ${window.formatBs(c.monto)}</span>`;}).join('')+'</div>';}let c='';if(a.condonado>0)c+=`<span class="condonar-tag"><i class="fas fa-gift"></i> Condonado: ${window.formatBs(a.condonado)}</span>`;if(a.a_favor_caja>0)c+=`<span class="favor-tag"><i class="fas fa-piggy-bank"></i> A favor: ${window.formatBs(a.a_favor_caja)}</span>`;return`<div class="detail-item"><div class="detail-row"><span class="detail-label">Tipo:</span><span class="detail-value">${a.tipo}</span></div>${a.tipo==='mesa'?`<div class="detail-row"><span class="detail-label">Mesa:</span><span class="detail-value">${a.mesa}</span></div>`:''}${a.tipo==='delivery'?`<div class="detail-row"><span class="detail-label">Dirección:</span><span class="detail-value">${a.direccion}</span></div><div class="detail-row"><span class="detail-label">Teléfono:</span><span class="detail-value">${a.telefono}</span></div>`:''}<div class="detail-row"><span class="detail-label">Items:</span></div>${(a.items||[]).map(d=>`<div class="detail-row"><span>${d.cantidad||1}x ${d.nombre}</span><span>${window.formatBs(window.usdToBs(d.precioUnitarioUSD*(d.cantidad||1)))}</span></div>`).join('')}${b?`<div class="detail-row"><span class="detail-label">Pagos:</span></div>${b}`:''}${c?`<div class="detail-row">${c}</div>`:''}<div class="detail-row" style="font-weight:700"><span>TOTAL</span><span>${window.formatBs(window.usdToBs(a.total||0))}</span></div></div>`;};
-window.crearDetalleVentaCompacto=function(a,b){if(!b)return'';try{const c=new Date(b.timestamp).toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'}),d=(b.items||[]).map(e=>`<div class="detail-item-row-compact"><span>${e.cantidad||1}x ${e.nombre}</span><span>${window.formatBs(window.usdToBs((e.precioUnitarioUSD||0)*(e.cantidad||1)))}</span></div>`).join('');let e='';if(b.pagos_mixtos?.length){e='<div style="margin-top:3px">'+b.pagos_mixtos.map(f=>{const g=f.metodo==='efectivo_bs'?'Bs':f.metodo==='efectivo_usd'?'$':f.metodo==='pago_movil'?'🔑':'💳';return`<span class="detail-metodo-tag">${g} ${window.formatBs(f.monto)}</span>`;}).join('')+'</div>';}let f='';if(b.condonado>0)f+=`<span class="condonar-tag"><i class="fas fa-gift"></i> Condonado: ${window.formatBs(b.condonado)}</span>`;if(b.a_favor_caja>0)f+=`<span class="favor-tag"><i class="fas fa-piggy-bank"></i> A favor: ${window.formatBs(b.a_favor_caja)}</span>`;return`<div class="detail-item-compact"><div class="detail-header-compact"><span>${c}</span><span class="detail-metodo-tag">${a.tipo}</span></div><div class="detail-items-compact">${d}</div><div class="detail-total-compact">Total: ${window.formatBs(a.subtotal_platillos||(a.total*window.tasaEfectiva))}</div>${e}${f?`<div style="margin-top:5px">${f}</div>`:''}</div>`;}catch(e){return'';}};
+
+// ============================================
+// FUNCIÓN: crearDetalleVentaCompacto (MODIFICADA - Incluye motorizado)
+// ============================================
+window.crearDetalleVentaCompacto = function(venta, pedido) {
+    if (!pedido) return '';
+    try {
+        const hora = new Date(pedido.timestamp).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+        
+        const itemsHTML = (pedido.items || []).map(item => 
+            `<div class="detail-item-row-compact">
+                <span>${item.cantidad || 1}x ${item.nombre}</span>
+                <span>${window.formatBs(window.usdToBs((item.precioUnitarioUSD || 0) * (item.cantidad || 1)))}</span>
+            </div>`
+        ).join('');
+        
+        // Información de pagos
+        let pagosHTML = '';
+        if (pedido.pagos_mixtos?.length) {
+            pagosHTML = '<div style="margin-top:3px">' + 
+                pedido.pagos_mixtos.map(p => {
+                    const simbolo = p.metodo === 'efectivo_bs' ? 'Bs' : 
+                                   p.metodo === 'efectivo_usd' ? '$' : 
+                                   p.metodo === 'pago_movil' ? '🔑' : '💳';
+                    return `<span class="detail-metodo-tag">${simbolo} ${window.formatBs(p.monto)}</span>`;
+                }).join('') + 
+                '</div>';
+        }
+        
+        // Información de ajustes
+        let ajustesHTML = '';
+        if (pedido.condonado > 0) {
+            ajustesHTML += `<span class="condonar-tag"><i class="fas fa-gift"></i> Condonado: ${window.formatBs(pedido.condonado)}</span>`;
+        }
+        if (pedido.a_favor_caja > 0) {
+            ajustesHTML += `<span class="favor-tag"><i class="fas fa-piggy-bank"></i> A favor: ${window.formatBs(pedido.a_favor_caja)}</span>`;
+        }
+        
+        // Información del motorizado (si es delivery y tiene asignado)
+        let motorizadoHTML = '';
+        if (pedido.tipo === 'delivery' && pedido.motorizado) {
+            const motorizado = window.deliverys?.find(d => d.id === pedido.motorizado);
+            if (motorizado) {
+                motorizadoHTML = `<div style="margin-top:5px; padding:5px; background:rgba(0,172,193,.1); border-radius:4px">
+                    <i class="fas fa-motorcycle" style="color:var(--delivery)"></i> 
+                    <strong>Motorizado:</strong> ${motorizado.nombre}
+                    <span style="float:right">Delivery: ${window.formatBs(pedido.costo_delivery_bs || 0)}</span>
+                </div>`;
+            }
+        }
+        
+        return `<div class="detail-item-compact">
+            <div class="detail-header-compact">
+                <span>${hora}</span>
+                <span class="detail-metodo-tag">${venta.tipo}</span>
+            </div>
+            <div class="detail-items-compact">${itemsHTML}</div>
+            <div class="detail-total-compact">Total: ${window.formatBs(venta.subtotal_platillos || (venta.total * window.tasaEfectiva))}</div>
+            ${pagosHTML}
+            ${ajustesHTML ? `<div style="margin-top:5px">${ajustesHTML}</div>` : ''}
+            ${motorizadoHTML}
+        </div>`;
+    } catch (e) {
+        return '';
+    }
+};
+
 window.crearDetallePedidoCompacto=function(a){try{const b=new Date(a.timestamp).toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'}),c=(a.items||[]).map(d=>`<div class="detail-item-row-compact"><span>${d.cantidad||1}x ${d.nombre}</span><span>${window.formatBs(window.usdToBs((d.precioUnitarioUSD||0)*(d.cantidad||1)))}</span></div>`).join('');return`<div class="detail-item-compact"><div class="detail-header-compact"><span>${b}</span><span class="detail-metodo-tag">${a.tipo}</span></div><div class="detail-items-compact">${c}</div><div class="detail-total-compact">Total: ${window.formatBs(window.usdToBs(a.total||0))}</div></div>`;}catch(e){return'';}};
 window.verComprobante=async function(a){const b=window.pedidos.find(c=>c.id===a);if(!b||!b.comprobante_url){window.mostrarToast('No hay comprobante','error');return;}const c=document.getElementById('comprobanteModal');document.getElementById('comprobanteModalBody').innerHTML=`<div style="text-align:center"><img src="${b.comprobante_url}" style="max-width:100%;max-height:400px;border-radius:8px;margin-bottom:15px"><p><strong>Referencia:</strong> ${b.referencia||'N/A'}</p><p><strong>Teléfono:</strong> ${b.telefono||'N/A'}</p><p><strong>Total:</strong> ${window.formatBs(window.usdToBs(b.total||0))}</p></div><div class="keyboard-hint"><span><kbd>ESC</kbd> cerrar</span></div>`;c.classList.add('active');};
-window.abrirModalDetalle=async function(a){await window.cargarVentasHoy();await window.cargarPropinas();const b=document.getElementById('detalleModal'),c=document.getElementById('detalleModalTitle'),d=document.getElementById('detalleModalBody');let e='';try{switch(a){case'preparacion':c.innerHTML='<i class="fas fa-fire"></i> Pedidos en Preparación';const f=window.pedidos.filter(g=>['en_cocina','en_camino','reserva_pendiente','reserva_atendida'].includes(g.estado));e=f.length?f.map(g=>window.crearDetallePedidoCompacto(g)).join(''):'<div class="empty-state"><i class="fas fa-inbox"></i><p>No hay pedidos en preparación</p></div>';break;case'cobrados':c.innerHTML='<i class="fas fa-check-circle"></i> Cobrados Hoy';if(!window.ventasHoy||!window.ventasHoy.length)e='<div class="empty-state"><i class="fas fa-inbox"></i><p>No hay cobros registrados hoy</p></div>';else e=window.ventasHoy.map(h=>{const i=window.pedidos.find(j=>j.id===h.pedido_id);return window.crearDetalleVentaCompacto(h,i);}).join('');break;case'ventas':c.innerHTML='<i class="fas fa-dollar-sign"></i> Ventas Totales (Platillos)';const k=window.ventasHoy.reduce((l,m)=>l+(m.subtotal_platillos||0),0);let l=0,m=0,n=0,o=0,p=0,q=0;window.ventasHoy.forEach(r=>{const s=window.pedidos.find(t=>t.id===r.pedido_id);if(s?.condonado)p+=s.condonado;if(s?.a_favor_caja)q+=s.a_favor_caja;if(s?.metodo_pago){if(s.metodo_pago==='efectivo_bs')l+=r.subtotal_platillos||0;else if(s.metodo_pago==='efectivo_usd')m+=r.subtotal_platillos||0;else if(s.metodo_pago==='pago_movil')n+=r.subtotal_platillos||0;else if(s.metodo_pago==='punto_venta')o+=r.subtotal_platillos||0;}});e=`<p><strong>Total del día (platillos):</strong> ${window.formatBs(k)}</p><p><strong>Cantidad de ventas:</strong> ${window.ventasHoy.length}</p>${p>0?`<p><strong class="condonar-tag">Condonado:</strong> ${window.formatBs(p)}</p>`:''}${q>0?`<p><strong class="favor-tag">A favor de caja:</strong> ${window.formatBs(q)}</p>`:''}<h4>Desglose por método:</h4><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:20px"><div class="payment-tag" style="justify-content:space-between;padding:6px"><span>Efectivo Bs</span><span>${window.formatBs(l)}</span></div><div class="payment-tag" style="justify-content:space-between;padding:6px"><span>Efectivo USD</span><span>${window.formatBs(m)}</span></div><div class="payment-tag" style="justify-content:space-between;padding:6px"><span>Pago Móvil</span><span>${window.formatBs(n)}</span></div><div class="payment-tag" style="justify-content:space-between;padding:6px"><span>Punto de Venta</span><span>${window.formatBs(o)}</span></div></div><h4>Ventas del día:</h4>${window.ventasHoy.map(u=>{const v=window.pedidos.find(w=>w.id===u.pedido_id);return window.crearDetalleVentaCompacto(u,v);}).join('')}`;break;case'platillos':c.innerHTML='<i class="fas fa-utensils"></i> Platillos Vendidos';const x=new Date().toDateString(),y=window.pedidos.filter(z=>['cobrado','entregado','enviado','reserva_completada'].includes(z.estado)&&new Date(z.timestamp).toDateString()===x),aa={},bb=0;y.forEach(cc=>{cc.items?.forEach(dd=>{const ee=dd.cantidad||1;aa[dd.nombre]=(aa[dd.nombre]||0)+ee;bb+=ee;});});const ff=Object.entries(aa).sort((gg,hh)=>hh[1]-gg[1]),ii=ff[0]?.[1]||0;if(!ff.length)e='<div class="empty-state"><i class="fas fa-utensils"></i><p>No hay platillos vendidos hoy</p></div>';else e=`<p><strong>Total unidades:</strong> ${bb}</p><div style="max-height:400px;overflow-y:auto">${ff.map(([jj,kk],ll)=>`<div class="ranking-bar"><div class="ranking-position">${ll+1}</div><div class="ranking-info"><div class="ranking-name">${jj}</div><div class="ranking-cantidad">${kk} vendido(s)</div></div><div class="ranking-bar-container"><div class="ranking-bar-fill" style="width:${(kk/ii)*100}%"></div></div></div>`).join('')}</div>`;break;case'propinasDetalle':c.innerHTML='<i class="fas fa-hand-holding-heart"></i> Propinas del Día';const mm=window.propinas.reduce((nn,oo)=>nn+(oo.monto_bs||oo.monto||0),0),pp=window.propinas.length,qq=pp>0?mm/pp:0;e=`<p><strong>Total propinas:</strong> ${window.formatBs(mm)}</p><p><strong>Cantidad:</strong> ${pp}</p><p><strong>Promedio:</strong> ${window.formatBs(qq)}</p><h4>Detalle por propina:</h4>${pp?window.propinas.map(rr=>window.crearTarjetaPropina(rr)).join(''):'<div class="empty-state"><i class="fas fa-hand-holding-heart"></i><p>No hay propinas hoy</p></div>'}`;break;case'propinasCantidad':c.innerHTML='<i class="fas fa-hashtag"></i> Cantidad de Propinas';e=`<p style="font-size:2em;text-align:center;color:var(--propina)">${window.propinas.length}</p><p style="text-align:center">propinas recibidas hoy</p>`;break;case'propinasPromedio':c.innerHTML='<i class="fas fa-chart-line"></i> Promedio de Propinas';const ss=window.propinas.length?window.propinas.reduce((tt,uu)=>tt+(uu.monto_bs||uu.monto||0),0)/window.propinas.length:0;e=`<p style="font-size:2em;text-align:center;color:var(--propina)">${window.formatBs(ss)}</p><p style="text-align:center">promedio por propina</p>`;break;case'deliverysTotal':c.innerHTML='<i class="fas fa-motorcycle"></i> Total Deliverys';const vv=window.calcularTotalDeliverysHoy();e=`<p style="font-size:2em;text-align:center;color:var(--delivery)">${window.formatBs(vv)}</p><p style="text-align:center">acumulado en deliveries hoy</p>`;break;case'deliverysCantidad':c.innerHTML='<i class="fas fa-hashtag"></i> Entregas Hoy';const ww=window.pedidos.filter(xx=>xx.tipo==='delivery'&&xx.estado==='enviado'&&new Date(xx.timestamp).toDateString()===new Date().toDateString()).length;e=`<p style="font-size:2em;text-align:center;color:var(--delivery)">${ww}</p><p style="text-align:center">entregas realizadas hoy</p>`;break;case'deliverysPromedio':c.innerHTML='<i class="fas fa-chart-line"></i> Promedio por Entrega';const yy=window.pedidos.filter(zz=>zz.tipo==='delivery'&&zz.estado==='enviado'&&new Date(zz.timestamp).toDateString()===new Date().toDateString()),aaa=yy.reduce((bbb,ccc)=>bbb+(ccc.costo_delivery_bs||0),0),ddd=yy.length>0?aaa/yy.length:0;e=`<p style="font-size:2em;text-align:center;color:var(--delivery)">${window.formatBs(ddd)}</p><p style="text-align:center">promedio por entrega</p>`;break;default:e='<p>Selecciona una opción válida</p>';}}catch(e){console.error('Error en abrirModalDetalle:',e);e='<p>Error al cargar los datos</p>';}d.innerHTML=e;b.classList.add('active');};
-window.ejecutarConfirmacion=async function(){if(!window.pedidoParaAccion)return;try{let a,b;if(window.accionPendiente==='entregado'){a='🍽️ Pedido entregado';b='¡Buen Provecho! Gracias por elegir Saki Sushi';}else if(window.accionPendiente==='enviado'){const c=document.getElementById('deliverySelector')?.value;if(!c){window.mostrarToast('Selecciona un motorizado','error');return;}const d=window.deliverys.find(e=>e.id===c);await window.supabaseClient.from('entregas_delivery').insert([{pedido_id:window.pedidoParaAccion.id,delivery_id:c,monto_bs:window.pedidoParaAccion.costo_delivery_bs||0,fecha_entrega:new Date().toISOString()}]);a='🚚 Delivery en camino';b=d?`Tu pedido está siendo entregado por ${d.nombre}`:'El repartidor ya salió';}else if(window.accionPendiente==='reserva_atendida'){a='👤 Reserva Confirmada';b='En breve tu pedido te será entregado, ¡Gracias por preferirnos!';}else if(window.accionPendiente==='reserva_completada'){a='🍽️ Pedido entregado';b='¡Buen Provecho! Gracias por elegir Saki Sushi';}else{a='✅ Estado actualizado';b='Tu pedido ha sido actualizado';}await window.supabaseClient.from('pedidos').update({estado:window.accionPendiente}).eq('id',window.pedidoParaAccion.id);await window.supabaseClient.from('notificaciones').insert([{pedido_id:window.pedidoParaAccion.id,tipo:'approved',titulo:a,mensaje:b,timestamp:new Date().toISOString(),session_id:window.pedidoParaAccion.session_id,leida:false}]);window.cerrarModal('confirmModal');window.mostrarToast('✅ Estado actualizado');await window.recargarPedidosCompletos();window.verificarYControlarAlarma();}catch(e){console.error('Error:',e);window.mostrarToast('❌ Error','error');}};
+
+// ============================================
+// FUNCIÓN: window.abrirModalDetalle (MODIFICADA - Platillos vendidos)
+// ============================================
+window.abrirModalDetalle = async function(tipo) {
+    await window.cargarVentasHoy();
+    await window.cargarPropinas();
+    
+    const modal = document.getElementById('detalleModal');
+    const title = document.getElementById('detalleModalTitle');
+    const body = document.getElementById('detalleModalBody');
+    
+    let contenido = '';
+    
+    try {
+        switch(tipo) {
+            case 'preparacion':
+                title.innerHTML = '<i class="fas fa-fire"></i> Pedidos en Preparación';
+                const pedidosPrep = window.pedidos.filter(p => 
+                    ['en_cocina', 'en_camino', 'reserva_pendiente', 'reserva_atendida'].includes(p.estado)
+                );
+                contenido = pedidosPrep.length ? 
+                    pedidosPrep.map(p => window.crearDetallePedidoCompacto(p)).join('') : 
+                    '<div class="empty-state"><i class="fas fa-inbox"></i><p>No hay pedidos en preparación</p></div>';
+                break;
+                
+            case 'cobrados':
+                title.innerHTML = '<i class="fas fa-check-circle"></i> Cobrados Hoy';
+                if (!window.ventasHoy || !window.ventasHoy.length) {
+                    contenido = '<div class="empty-state"><i class="fas fa-inbox"></i><p>No hay cobros registrados hoy</p></div>';
+                } else {
+                    contenido = window.ventasHoy.map(v => {
+                        const pedido = window.pedidos.find(p => p.id === v.pedido_id);
+                        return window.crearDetalleVentaCompacto(v, pedido);
+                    }).join('');
+                }
+                break;
+                
+            case 'ventas':
+                title.innerHTML = '<i class="fas fa-dollar-sign"></i> Ventas Totales';
+                const totalVentasBs = window.ventasHoy.reduce((sum, v) => sum + (v.subtotal_platillos || 0), 0);
+                let efectivo = 0, pagoMovil = 0, puntoVenta = 0, condonadoTotal = 0, aFavorTotal = 0;
+                
+                window.ventasHoy.forEach(v => {
+                    const pedido = window.pedidos.find(p => p.id === v.pedido_id);
+                    if (pedido) {
+                        if (pedido.condonado) condonadoTotal += pedido.condonado;
+                        if (pedido.a_favor_caja) aFavorTotal += pedido.a_favor_caja;
+                        
+                        if (pedido.metodo_pago) {
+                            if (pedido.metodo_pago === 'efectivo_bs' || pedido.metodo_pago === 'efectivo_usd') {
+                                efectivo += v.subtotal_platillos || 0;
+                            } else if (pedido.metodo_pago === 'pago_movil') {
+                                pagoMovil += v.subtotal_platillos || 0;
+                            } else if (pedido.metodo_pago === 'punto_venta') {
+                                puntoVenta += v.subtotal_platillos || 0;
+                            }
+                        }
+                    }
+                });
+                
+                contenido = `
+                    <p><strong>Total del día (platillos):</strong> ${window.formatBs(totalVentasBs)}</p>
+                    <p><strong>Cantidad de ventas:</strong> ${window.ventasHoy.length}</p>
+                    ${condonadoTotal > 0 ? `<p><strong class="condonar-tag">Condonado:</strong> ${window.formatBs(condonadoTotal)}</p>` : ''}
+                    ${aFavorTotal > 0 ? `<p><strong class="favor-tag">A favor de caja:</strong> ${window.formatBs(aFavorTotal)}</p>` : ''}
+                    <h4>Desglose por método:</h4>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:20px">
+                        <div class="payment-tag" style="justify-content:space-between; padding:6px">
+                            <span>Efectivo</span>
+                            <span>${window.formatBs(efectivo)}</span>
+                        </div>
+                        <div class="payment-tag" style="justify-content:space-between; padding:6px">
+                            <span>Pago Móvil</span>
+                            <span>${window.formatBs(pagoMovil)}</span>
+                        </div>
+                        <div class="payment-tag" style="justify-content:space-between; padding:6px; grid-column:span 2">
+                            <span>Punto de Venta</span>
+                            <span>${window.formatBs(puntoVenta)}</span>
+                        </div>
+                    </div>
+                    <h4>Ventas del día:</h4>
+                    ${window.ventasHoy.map(v => {
+                        const pedido = window.pedidos.find(p => p.id === v.pedido_id);
+                        return window.crearDetalleVentaCompacto(v, pedido);
+                    }).join('')}
+                `;
+                break;
+                
+            case 'platillos':
+                title.innerHTML = '<i class="fas fa-utensils"></i> Platillos Vendidos';
+                
+                // Contar todos los platillos vendidos hoy
+                const conteoPlatillos = {};
+                let totalUnidades = 0;
+                
+                window.ventasHoy.forEach(venta => {
+                    const pedido = window.pedidos.find(p => p.id === venta.pedido_id);
+                    if (pedido && pedido.items) {
+                        pedido.items.forEach(item => {
+                            const cantidad = item.cantidad || 1;
+                            conteoPlatillos[item.nombre] = (conteoPlatillos[item.nombre] || 0) + cantidad;
+                            totalUnidades += cantidad;
+                        });
+                    }
+                });
+                
+                const ranking = Object.entries(conteoPlatillos).sort((a, b) => b[1] - a[1]);
+                const maxVentas = ranking.length > 0 ? ranking[0][1] : 0;
+                
+                if (ranking.length === 0) {
+                    contenido = '<div class="empty-state"><i class="fas fa-utensils"></i><p>No hay platillos vendidos hoy</p></div>';
+                } else {
+                    contenido = `<p><strong>Total unidades vendidas:</strong> ${totalUnidades}</p>`;
+                    contenido += '<div style="max-height:400px; overflow-y:auto">';
+                    ranking.forEach(([nombre, cantidad], index) => {
+                        const porcentaje = maxVentas > 0 ? (cantidad / maxVentas) * 100 : 0;
+                        contenido += `
+                            <div class="ranking-bar">
+                                <div class="ranking-position">${index + 1}</div>
+                                <div class="ranking-info">
+                                    <div class="ranking-name">${nombre}</div>
+                                    <div class="ranking-cantidad">${cantidad} vendido(s)</div>
+                                </div>
+                                <div class="ranking-bar-container">
+                                    <div class="ranking-bar-fill" style="width: ${porcentaje}%"></div>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    contenido += '</div>';
+                }
+                break;
+                
+            case 'propinasDetalle':
+                title.innerHTML = '<i class="fas fa-hand-holding-heart"></i> Propinas del Día';
+                const totalPropinas = window.propinas.reduce((sum, p) => sum + (p.monto_bs || p.monto || 0), 0);
+                const cantidadPropinas = window.propinas.length;
+                const promedio = cantidadPropinas > 0 ? totalPropinas / cantidadPropinas : 0;
+                
+                contenido = `
+                    <p><strong>Total propinas:</strong> ${window.formatBs(totalPropinas)}</p>
+                    <p><strong>Cantidad:</strong> ${cantidadPropinas}</p>
+                    <p><strong>Promedio:</strong> ${window.formatBs(promedio)}</p>
+                    <h4>Detalle por propina:</h4>
+                    ${cantidadPropinas ? window.propinas.map(p => window.crearTarjetaPropina(p)).join('') : '<div class="empty-state"><i class="fas fa-hand-holding-heart"></i><p>No hay propinas hoy</p></div>'}
+                `;
+                break;
+                
+            case 'propinasCantidad':
+                title.innerHTML = '<i class="fas fa-hashtag"></i> Cantidad de Propinas';
+                contenido = `<p style="font-size:2em; text-align:center; color:var(--propina)">${window.propinas.length}</p><p style="text-align:center">propinas recibidas hoy</p>`;
+                break;
+                
+            case 'propinasPromedio':
+                title.innerHTML = '<i class="fas fa-chart-line"></i> Promedio de Propinas';
+                const prom = window.propinas.length ? 
+                    window.propinas.reduce((sum, p) => sum + (p.monto_bs || p.monto || 0), 0) / window.propinas.length : 0;
+                contenido = `<p style="font-size:2em; text-align:center; color:var(--propina)">${window.formatBs(prom)}</p><p style="text-align:center">promedio por propina</p>`;
+                break;
+                
+            case 'deliverysTotal':
+                title.innerHTML = '<i class="fas fa-motorcycle"></i> Total Deliverys';
+                const totalDeliverys = window.calcularTotalDeliverysHoy();
+                contenido = `<p style="font-size:2em; text-align:center; color:var(--delivery)">${window.formatBs(totalDeliverys)}</p><p style="text-align:center">acumulado en deliveries hoy</p>`;
+                break;
+                
+            case 'deliverysCantidad':
+                title.innerHTML = '<i class="fas fa-hashtag"></i> Entregas Hoy';
+                const entregasHoy = window.pedidos.filter(p => 
+                    p.tipo === 'delivery' && 
+                    p.estado === 'enviado' && 
+                    new Date(p.timestamp).toDateString() === new Date().toDateString()
+                ).length;
+                contenido = `<p style="font-size:2em; text-align:center; color:var(--delivery)">${entregasHoy}</p><p style="text-align:center">entregas realizadas hoy</p>`;
+                break;
+                
+            case 'deliverysPromedio':
+                title.innerHTML = '<i class="fas fa-chart-line"></i> Promedio por Entrega';
+                const deliveriesHoy = window.pedidos.filter(p => 
+                    p.tipo === 'delivery' && 
+                    p.estado === 'enviado' && 
+                    new Date(p.timestamp).toDateString() === new Date().toDateString()
+                );
+                const totalMonto = deliveriesHoy.reduce((sum, p) => sum + (p.costo_delivery_bs || 0), 0);
+                const promedioEntrega = deliveriesHoy.length > 0 ? totalMonto / deliveriesHoy.length : 0;
+                contenido = `<p style="font-size:2em; text-align:center; color:var(--delivery)">${window.formatBs(promedioEntrega)}</p><p style="text-align:center">promedio por entrega</p>`;
+                break;
+                
+            default:
+                contenido = '<p>Selecciona una opción válida</p>';
+        }
+    } catch (e) {
+        console.error('Error en abrirModalDetalle:', e);
+        contenido = '<p>Error al cargar los datos</p>';
+    }
+    
+    body.innerHTML = contenido;
+    modal.classList.add('active');
+};
+
+// ============================================
+// FUNCIÓN: ejecutarConfirmacion (MODIFICADA - Asignar delivery)
+// ============================================
+window.ejecutarConfirmacion = async function() {
+    if (!window.pedidoParaAccion) return;
+    
+    try {
+        let tituloNotif, mensajeNotif;
+        
+        if (window.accionPendiente === 'entregado') {
+            tituloNotif = '🍽️ Pedido entregado';
+            mensajeNotif = '¡Buen Provecho! Gracias por elegir Saki Sushi';
+        } else if (window.accionPendiente === 'enviado') {
+            const selector = document.getElementById('deliverySelector')?.value;
+            if (!selector) {
+                window.mostrarToast('Selecciona un motorizado', 'error');
+                return;
+            }
+            
+            const motorizado = window.deliverys.find(d => d.id === selector);
+            
+            // Guardar la entrega del delivery
+            await window.supabaseClient.from('entregas_delivery').insert([{
+                pedido_id: window.pedidoParaAccion.id,
+                delivery_id: selector,
+                monto_bs: window.pedidoParaAccion.costo_delivery_bs || 0,
+                fecha_entrega: new Date().toISOString()
+            }]);
+            
+            // Actualizar el pedido con el motorizado asignado
+            await window.supabaseClient.from('pedidos').update({
+                motorizado: selector
+            }).eq('id', window.pedidoParaAccion.id);
+            
+            tituloNotif = '🚚 Delivery en camino';
+            mensajeNotif = motorizado ? 
+                `Tu pedido está siendo entregado por ${motorizado.nombre}` : 
+                'El repartidor ya salió';
+                
+        } else if (window.accionPendiente === 'reserva_atendida') {
+            tituloNotif = '👤 Reserva Confirmada';
+            mensajeNotif = 'En breve tu pedido te será entregado, ¡Gracias por preferirnos!';
+        } else if (window.accionPendiente === 'reserva_completada') {
+            tituloNotif = '🍽️ Pedido entregado';
+            mensajeNotif = '¡Buen Provecho! Gracias por elegir Saki Sushi';
+        } else {
+            tituloNotif = '✅ Estado actualizado';
+            mensajeNotif = 'Tu pedido ha sido actualizado';
+        }
+        
+        await window.supabaseClient.from('pedidos').update({
+            estado: window.accionPendiente
+        }).eq('id', window.pedidoParaAccion.id);
+        
+        await window.supabaseClient.from('notificaciones').insert([{
+            pedido_id: window.pedidoParaAccion.id,
+            tipo: 'approved',
+            titulo: tituloNotif,
+            mensaje: mensajeNotif,
+            timestamp: new Date().toISOString(),
+            session_id: window.pedidoParaAccion.session_id,
+            leida: false
+        }]);
+        
+        window.cerrarModal('confirmModal');
+        window.mostrarToast('✅ Estado actualizado');
+        await window.recargarPedidosCompletos();
+        window.verificarYControlarAlarma();
+        
+    } catch (e) {
+        console.error('Error:', e);
+        window.mostrarToast('❌ Error', 'error');
+    }
+};
+
 window.verificarCambiosPedidos=async function(){if(window.reconectando||window.enProcesoDeCobro)return;try{const a=new Date();a.setHours(0,0,0,0);const b=new Date(a);b.setDate(b.getDate()+2);const c=await window.supabaseClient.from('pedidos').select('id, estado, timestamp').gte('timestamp',a.toISOString()).lt('timestamp',b.toISOString());if(c.error)throw c.error;if(c.data){let d=false;if(c.data.length!==(window.pedidos||[]).length)d=true;else{const e=new Map((window.pedidos||[]).map(f=>[f.id,f.estado]));for(const g of c.data){if(e.get(g.id)!==g.estado){d=true;break;}}}if(d){console.log('🔄 Cambios detectados en pedidos, recargando...');await window.recargarPedidosCompletos();window.ultimaActualizacion=Date.now();}}}catch(e){console.error('Error verificando cambios:',e);}};
 window.recargarPedidosCompletos=async function(){try{await window.cargarPedidos();await window.cargarVentasHoy();window.actualizarEstadisticas();window.renderizarPedidos();window.verificarYControlarAlarma();}catch(e){console.error('Error recargando pedidos:',e);}};
 window.iniciarVerificacionPeriodica=function(){if(window.intervaloVerificacion)clearInterval(window.intervaloVerificacion);window.intervaloVerificacion=setInterval(async()=>{if(window.paginaVisible&&!window.enProcesoDeCobro)await window.verificarCambiosPedidos();},3000);};
