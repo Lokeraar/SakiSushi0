@@ -237,10 +237,6 @@ window.calcularTotalDeliverysHoy=function(){try{const a=new Date();a.setHours(0,
 window.obtenerAcumuladoDeliverysHoy=async function(){try{const a=new Date();a.setHours(0,0,0,0);const b=new Date(a);b.setDate(b.getDate()+1);const c=await window.supabaseClient.from('entregas_delivery').select('delivery_id, monto_bs').gte('fecha_entrega',a.toISOString()).lt('fecha_entrega',b.toISOString());if(c.error)throw c.error;const d={};(c.data||[]).forEach(e=>{d[e.delivery_id]=(d[e.delivery_id]||0)+e.monto_bs;});return d;}catch(e){console.error('Error obteniendo acumulado deliverys:',e);return{};}};
 window.abrirModalDeliverys=async function(){try{const a=await window.obtenerAcumuladoDeliverysHoy(),b=document.getElementById('deliveryModal'),c=document.getElementById('deliveryModalBody');let d='<h3 style="margin-bottom:20px">Acumulado por motorizado (Hoy)</h3>';if(!window.deliverys||window.deliverys.length===0)d+='<div class="empty-state"><i class="fas fa-motorcycle"></i><p>No hay motorizados registrados</p></div>';else{d+='<div class="motorizados-list">';window.deliverys.forEach(e=>{const f=a[e.id]||0;d+=`<div class="motorizado-item"><span class="motorizado-nombre">${e.nombre}</span><span class="motorizado-monto">${window.formatBs(f)}</span></div>`;});d+='</div>';}c.innerHTML=d;b.classList.add('active');}catch(e){console.error('Error abriendo modal deliverys:',e);window.mostrarToast('Error al cargar datos de deliverys','error');}};
 window.mostrarCobro=function(pid){window.currentPedido=(window.pedidos||[]).find(a=>a.id===pid);if(!window.currentPedido)return;window.enProcesoDeCobro=true;if(window.alarmaActiva){window.alarmaAudio.pause();window.alarmaAudio.currentTime=0;window.alarmaActiva=false;}window.pagosMixtos=[];let a='efectivo_bs';if(window.currentPedido.tipo==='delivery'||window.currentPedido.tipo==='reserva')a='pago_movil';const b=window.usdToBs(window.currentPedido.total||0),c=document.getElementById('cobroModalBody'),d=(window.currentPedido.items||[]).map(e=>`<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.1)"><span>${e.cantidad||1}x ${e.nombre}</span><span style="font-weight:600">${window.formatBs(window.usdToBs((e.precioUnitarioUSD||0)*(e.cantidad||1)))}</span></div>`).join('');c.innerHTML=`<div style="background:rgba(0,0,0,.3);padding:15px;border-radius:8px;margin-bottom:20px"><h4>Resumen del Pedido</h4>${d}${window.currentPedido.costo_delivery_bs?`<div style="display:flex;justify-content:space-between;margin-top:10px;padding-top:10px;border-top:2px solid rgba(255,255,255,.1)"><span>Costo delivery:</span><span>${window.formatBs(window.currentPedido.costo_delivery_bs)}</span></div>`:''}<div style="display:flex;justify-content:space-between;margin-top:15px;padding-top:15px;border-top:2px solid var(--primary);font-weight:700"><span>Total a pagar:</span><span id="totalPagarDisplay" style="color:var(--accent)">${window.formatBs(b)}</span></div></div><div style="margin-bottom:20px;padding:12px;background:rgba(245,124,0,.1);border-left:4px solid var(--warning)"><label style="display:flex;align-items:center;gap:10px;color:#fff"><input type="checkbox" id="invitacionCheck" style="width:18px;height:18px"><strong>Por parte de la casa (invitación)</strong></label></div><div id="pagosSection"><h4>Pagos Mixtos</h4><div id="pagosContainer" class="payment-mix-container"></div><button class="btn btn-secondary" onclick="window.agregarMetodoPago()" style="width:100%;margin-bottom:20px"><i class="fas fa-plus"></i> Agregar Método de Pago</button><div id="extrasSection"><div class="pagos-resumen-row" id="vueltoRow"><div class="input-group"><label>Vuelto a entregar (Bs)</label><input type="text" id="vueltoInput" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,'');window.calcularConVuelto()"></div><div class="input-group"><label>Vuelto restante</label><span id="vueltoRestante">Bs 0.00</span></div></div><div class="pagos-checkbox" id="condonarCheckbox"><input type="checkbox" id="condonarCheck"><label><strong>Condonar monto restante</strong> <span class="badge" id="condonarMonto">Bs 0.00</span></label></div><div class="pagos-checkbox" id="favorCheckbox"><input type="checkbox" id="favorCheck"><label><strong>A favor de caja</strong> <span class="badge favor" id="favorMonto">Bs 0.00</span></label></div></div><div class="pagos-total"><div class="pagos-resumen"><span>Total recibido:</span><span id="totalRecibido">Bs 0.00</span></div><div class="pagos-resumen"><span>Pendiente:</span><span id="pendiente" style="color:var(--danger)">Bs 0.00</span></div><div class="pagos-resumen"><span>Sobrante:</span><span id="sobrante" style="color:var(--success)">Bs 0.00</span></div><div class="pagos-resumen" id="condonadoDisplay"><span>Condonado:</span><span id="condonadoValue" style="color:var(--condonar)">Bs 0.00</span></div><div class="pagos-resumen" id="favorDisplay"><span>A favor caja:</span><span id="favorValue" style="color:var(--favordecaja)">Bs 0.00</span></div></div></div><div class="keyboard-hint"><span><kbd>ENTER</kbd> confirmar</span><span><kbd>ESC</kbd> cancelar</span></div>`;document.getElementById('invitacionCheck').addEventListener('change',function(e){const a=document.getElementById('pagosSection');if(a){a.style.opacity=e.target.checked?'0.5':'1';a.style.pointerEvents=e.target.checked?'none':'auto';}window.recalcularTotales();});window.agregarMetodoPago(a);document.getElementById('cobroModal').classList.add('active');window.recalcularTotales();};
-
-// ============================================
-// FUNCIÓN: window.agregarMetodoPago
-// ============================================
 window.agregarMetodoPago = function(metodoInicial = 'pago_movil') {
     window.pagosMixtos.push({
         id: 'pago_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9),
@@ -251,27 +247,17 @@ window.agregarMetodoPago = function(metodoInicial = 'pago_movil') {
     window.renderizarPagosMixtos();
     window.recalcularTotales();
 };
-
-// ============================================
-// FUNCIÓN: window.eliminarMetodoPago
-// ============================================
 window.eliminarMetodoPago = function(id) {
     window.pagosMixtos = window.pagosMixtos.filter(p => p.id != id);
     window.renderizarPagosMixtos();
     window.recalcularTotales();
 };
-
-// ============================================
-// FUNCIÓN: window.renderizarPagosMixtos (ACTUALIZADA)
-// ============================================
 window.renderizarPagosMixtos = function() {
     const container = document.getElementById('pagosContainer');
     if (!container) return;
-    
     container.innerHTML = window.pagosMixtos.map((pago, index) => {
         const placeholder = pago.metodo === 'efectivo_usd' ? 'Monto en USD' : 'Monto en Bs';
         const valorMostrar = pago.monto !== undefined && pago.monto !== null ? pago.monto : '';
-        
         return `
             <div class="pago-item" data-id="${pago.id}" data-pago-id="${pago.id}">
                 ${window.pagosMixtos.length > 1 ? 
@@ -280,41 +266,23 @@ window.renderizarPagosMixtos = function() {
                     </button>` 
                     : ''
                 }
-                
                 <select class="pago-metodo" data-pago-id="${pago.id}">
                     <option value="efectivo_bs" ${pago.metodo === 'efectivo_bs' ? 'selected' : ''}>Efectivo Bs</option>
                     <option value="efectivo_usd" ${pago.metodo === 'efectivo_usd' ? 'selected' : ''}>Efectivo Dólar</option>
                     <option value="pago_movil" ${pago.metodo === 'pago_movil' ? 'selected' : ''}>Pago Móvil</option>
                     <option value="punto_venta" ${pago.metodo === 'punto_venta' ? 'selected' : ''}>Punto de Venta</option>
                 </select>
-                
-                <input type="text" 
-                       class="pago-monto" 
-                       inputmode="decimal" 
-                       placeholder="${placeholder}" 
-                       value="${valorMostrar}"
-                       data-pago-id="${pago.id}">
-                
+                <input type="text" class="pago-monto" inputmode="decimal" placeholder="${placeholder}" value="${valorMostrar}" data-pago-id="${pago.id}">
                 <div class="pago-referencia-container" data-pago-id="${pago.id}" style="${pago.metodo === 'pago_movil' ? 'display:block;' : 'display:none;'}">
                     <div class="referencia-input">
                         ${Array(6).fill(0).map((_, i) => `
-                            <input type="text" 
-                                   class="ref-digit pago-ref-${pago.id}" 
-                                   data-pago-id="${pago.id}"
-                                   data-index="${i}"
-                                   maxlength="1" 
-                                   inputmode="numeric"
-                                   pattern="[0-9]*"
-                                   value="${pago.referencia?.[i] || ''}"
-                                   style="width:45px;height:45px;text-align:center;font-size:1.3rem;">
+                            <input type="text" class="ref-digit pago-ref-${pago.id}" data-pago-id="${pago.id}" data-index="${i}" maxlength="1" inputmode="numeric" pattern="[0-9]*" value="${pago.referencia?.[i] || ''}" style="width:45px;height:45px;text-align:center;font-size:1.3rem;">
                         `).join('')}
                     </div>
                 </div>
             </div>
         `;
     }).join('');
-    
-    // Event listeners para inputs de MONTO
     document.querySelectorAll('.pago-monto').forEach(input => {
         input.removeEventListener('input', window.handleMontoInput);
         window.handleMontoInput = function(e) {
@@ -336,8 +304,6 @@ window.renderizarPagosMixtos = function() {
         };
         input.addEventListener('input', window.handleMontoInput);
     });
-    
-    // Event listeners para SELECT de método
     document.querySelectorAll('.pago-metodo').forEach(select => {
         select.removeEventListener('change', window.handleMetodoChange);
         window.handleMetodoChange = function(e) {
@@ -356,8 +322,6 @@ window.renderizarPagosMixtos = function() {
         };
         select.addEventListener('change', window.handleMetodoChange);
     });
-    
-    // Event listeners para REFERENCIA (6 dígitos)
     document.querySelectorAll('.ref-digit').forEach(input => {
         input.removeEventListener('input', window.handleRefInput);
         input.removeEventListener('keydown', window.handleRefKeydown);
@@ -407,7 +371,7 @@ window.renderizarPagosMixtos = function() {
 };
 
 // ============================================
-// FUNCIÓN: window.recalcularTotales (ACTUALIZADA)
+// FUNCIÓN: window.recalcularTotales (NUEVA VERSIÓN - COMPORTAMIENTO SOLICITADO)
 // ============================================
 window.recalcularTotales = function() {
     const totalAPagarUSD = window.currentPedido?.total || 0;
@@ -415,15 +379,16 @@ window.recalcularTotales = function() {
     let totalRecibidoBs = window.pagosMixtos.reduce((sum, pago) => {
         return sum + (pago.metodo === 'efectivo_usd' ? window.usdToBs(pago.monto || 0) : (pago.monto || 0));
     }, 0);
-    const diferencia = totalAPagarBs - totalRecibidoBs;
+    
+    // Obtener referencias a los elementos del DOM
+    const invitacionCheck = document.getElementById('invitacionCheck');
+    const condonarCheck = document.getElementById('condonarCheck');
+    const favorCheck = document.getElementById('favorCheck');
     const vueltoInput = document.getElementById('vueltoInput');
-    const vueltoValue = parseFloat(vueltoInput?.value) || 0;
     const extrasSection = document.getElementById('extrasSection');
     const vueltoRow = document.getElementById('vueltoRow');
     const condonarCheckbox = document.getElementById('condonarCheckbox');
     const favorCheckbox = document.getElementById('favorCheckbox');
-    const condonarCheck = document.getElementById('condonarCheck');
-    const favorCheck = document.getElementById('favorCheck');
     const vueltoRestanteSpan = document.getElementById('vueltoRestante');
     const condonarMontoSpan = document.getElementById('condonarMonto');
     const favorMontoSpan = document.getElementById('favorMonto');
@@ -434,85 +399,141 @@ window.recalcularTotales = function() {
     const totalRecibidoSpan = document.getElementById('totalRecibido');
     const pendienteSpan = document.getElementById('pendiente');
     const sobranteSpan = document.getElementById('sobrante');
-    let montoCondonar = 0, montoFavor = 0, montoVuelto = 0;
-    let mostrarCondonar = false, mostrarFavor = false;
     
-    if (diferencia < 0) {
-        const sobra = Math.abs(diferencia);
-        vueltoRow.style.display = 'grid';
+    // Calcular diferencia
+    let diferencia = totalAPagarBs - totalRecibidoBs;
+    const vueltoValue = parseFloat(vueltoInput?.value) || 0;
+    
+    // Variables para los montos especiales
+    let montoVueltoReal = 0;
+    let montoSobrante = 0;
+    let montoPendiente = 0;
+    let montoCondonar = 0;
+    let montoFavor = 0;
+    
+    // Resetear checks si es necesario
+    if (diferencia < 0) { // SOBRA DINERO
+        const sobraTotal = Math.abs(diferencia);
+        
         if (vueltoValue > 0) {
-            if (vueltoValue > sobra) {
-                montoFavor = vueltoValue - sobra;
-                montoVuelto = sobra;
-                montoCondonar = 0;
-                mostrarCondonar = false;
-                mostrarFavor = true;
-                vueltoRestanteSpan.textContent = window.formatBs(0);
-            } else if (vueltoValue === sobra) {
-                montoVuelto = sobra;
-                montoFavor = 0;
-                montoCondonar = 0;
-                mostrarCondonar = false;
-                mostrarFavor = false;
-                vueltoRestanteSpan.textContent = window.formatBs(0);
+            if (vueltoValue <= sobraTotal) {
+                // Vuelto menor o igual al sobrante
+                montoVueltoReal = vueltoValue;
+                montoSobrante = sobraTotal - vueltoValue;
+                montoPendiente = 0;
             } else {
-                montoVuelto = vueltoValue;
-                montoFavor = sobra - vueltoValue;
-                montoCondonar = 0;
-                mostrarCondonar = false;
-                mostrarFavor = true;
-                vueltoRestanteSpan.textContent = window.formatBs(sobra - vueltoValue);
+                // Vuelto MAYOR que el sobrante (caso especial)
+                montoVueltoReal = sobraTotal; // Solo puede dar lo que sobra
+                montoSobrante = 0;
+                montoPendiente = vueltoValue - sobraTotal; // Lo que falta pasa a pendiente
             }
         } else {
-            vueltoRestanteSpan.textContent = window.formatBs(sobra);
-            montoVuelto = 0;
-            montoFavor = sobra;
-            montoCondonar = 0;
-            mostrarCondonar = false;
-            mostrarFavor = true;
+            // No hay vuelto
+            montoVueltoReal = 0;
+            montoSobrante = sobraTotal;
+            montoPendiente = 0;
         }
-    } else if (diferencia > 0) {
-        vueltoRow.style.display = 'none';
-        montoFavor = 0;
-        montoCondonar = diferencia;
-        montoVuelto = 0;
-        mostrarCondonar = true;
-        mostrarFavor = false;
-    } else {
-        vueltoRow.style.display = 'none';
-        montoFavor = 0;
+        
         montoCondonar = 0;
-        montoVuelto = 0;
-        mostrarCondonar = false;
-        mostrarFavor = false;
+        montoFavor = montoSobrante;
+        
+        // Configurar UI para caso de sobra
+        vueltoRow.style.display = 'grid';
+        condonarCheckbox.style.display = montoPendiente > 0 ? 'flex' : 'none';
+        favorCheckbox.style.display = montoFavor > 0 ? 'flex' : 'none';
+        
+        // Si hay pendiente por vuelto excesivo, mostrar monto correcto
+        if (montoPendiente > 0) {
+            condonarMontoSpan.textContent = window.formatBs(montoPendiente);
+        }
+        if (montoFavor > 0) {
+            favorMontoSpan.textContent = window.formatBs(montoFavor);
+        }
+        
+        // Actualizar spans
+        pendienteSpan.textContent = window.formatBs(montoPendiente);
+        sobranteSpan.textContent = window.formatBs(montoSobrante);
+        vueltoRestanteSpan.textContent = window.formatBs(montoSobrante);
+        
+        // Si se activa el check de favor, el sobrante se mueve a favor
+        if (favorCheck && favorCheck.checked && montoFavor > 0) {
+            montoFavor = montoSobrante;
+            montoSobrante = 0;
+            sobranteSpan.textContent = window.formatBs(0);
+        }
+        
+    } else if (diferencia > 0) { // FALTA DINERO
+        montoPendiente = diferencia;
+        montoCondonar = montoPendiente;
+        montoSobrante = 0;
+        montoFavor = 0;
+        montoVueltoReal = 0;
+        
+        // Configurar UI para caso de falta
+        vueltoRow.style.display = 'none';
+        condonarCheckbox.style.display = 'flex';
+        favorCheckbox.style.display = 'none';
+        condonarMontoSpan.textContent = window.formatBs(montoCondonar);
+        
+        pendienteSpan.textContent = window.formatBs(montoPendiente);
+        sobranteSpan.textContent = window.formatBs(0);
+        vueltoRestanteSpan.textContent = window.formatBs(0);
+        
+        // Si se activa el check de condonar, el pendiente se mueve a condonado
+        if (condonarCheck && condonarCheck.checked && montoCondonar > 0) {
+            montoCondonar = montoPendiente;
+            montoPendiente = 0;
+            pendienteSpan.textContent = window.formatBs(0);
+        }
+        
+    } else { // PAGO EXACTO
+        montoPendiente = 0;
+        montoCondonar = 0;
+        montoSobrante = 0;
+        montoFavor = 0;
+        montoVueltoReal = 0;
+        
+        vueltoRow.style.display = 'none';
+        condonarCheckbox.style.display = 'none';
+        favorCheckbox.style.display = 'none';
+        
+        pendienteSpan.textContent = window.formatBs(0);
+        sobranteSpan.textContent = window.formatBs(0);
+        vueltoRestanteSpan.textContent = window.formatBs(0);
     }
     
+    // Actualizar displays de montos especiales
     condonarMontoSpan.textContent = window.formatBs(montoCondonar);
     favorMontoSpan.textContent = window.formatBs(montoFavor);
     condonadoValueSpan.textContent = window.formatBs(montoCondonar);
     favorValueSpan.textContent = window.formatBs(montoFavor);
+    
+    // Mostrar/ocultar secciones de resumen
     condonadoDisplay.style.display = montoCondonar > 0 ? 'flex' : 'none';
     favorDisplay.style.display = montoFavor > 0 ? 'flex' : 'none';
-    condonarCheckbox.style.display = mostrarCondonar ? 'flex' : 'none';
-    favorCheckbox.style.display = mostrarFavor ? 'flex' : 'none';
-    totalRecibidoSpan.textContent = window.formatBs(totalRecibidoBs);
-    pendienteSpan.textContent = window.formatBs(Math.max(0, diferencia));
-    sobranteSpan.textContent = window.formatBs(Math.max(0, -diferencia));
     
-    const invitacionCheck = document.getElementById('invitacionCheck');
+    // Actualizar total recibido
+    totalRecibidoSpan.textContent = window.formatBs(totalRecibidoBs);
+    
+    // ============================================
+    // REGLA DEL BOTÓN CONFIRMAR
+    // ============================================
     const esInvitacion = invitacionCheck?.checked || false;
     const condonarActivo = condonarCheck?.checked || false;
     const favorActivo = favorCheck?.checked || false;
+    
     let confirmarActivo = false;
     
     if (esInvitacion) {
-        confirmarActivo = true;
+        confirmarActivo = true; // Invitación: todo gratis
     } else if (diferencia === 0) {
-        confirmarActivo = true;
+        confirmarActivo = true; // Pago exacto
     } else if (diferencia > 0 && condonarActivo) {
-        confirmarActivo = true;
+        confirmarActivo = true; // Falta dinero y se condona
     } else if (diferencia < 0 && favorActivo) {
-        confirmarActivo = true;
+        confirmarActivo = true; // Sobra dinero y se deja a favor
+    } else if (diferencia < 0 && montoPendiente > 0 && condonarActivo) {
+        confirmarActivo = true; // Caso vuelto > sobra y se condona lo que falta
     } else {
         confirmarActivo = false;
     }
@@ -543,26 +564,31 @@ window.confirmarCobro = async function() {
             return sum + (pago.metodo === 'efectivo_usd' ? window.usdToBs(pago.monto || 0) : (pago.monto || 0));
         }, 0);
         let diferencia = totalAPagarBs - montoRecibido;
-        if (condonarActivo && diferencia > 0) {
-            montoCondonado = diferencia;
-            diferencia = 0;
-        }
-        if (favorActivo && diferencia < 0) {
-            const sobra = Math.abs(diferencia);
-            const vueltoValue = parseFloat(vueltoInput?.value) || 0;
+        const vueltoValue = parseFloat(vueltoInput?.value) || 0;
+        
+        if (diferencia < 0) { // Sobra dinero
+            const sobraTotal = Math.abs(diferencia);
             if (vueltoValue > 0) {
-                if (vueltoValue > sobra) {
-                    montoFavor = vueltoValue - sobra;
-                    vueltoEntregado = sobra;
-                } else {
+                if (vueltoValue <= sobraTotal) {
                     vueltoEntregado = vueltoValue;
-                    montoFavor = sobra - vueltoValue;
+                    if (favorActivo) {
+                        montoFavor = sobraTotal - vueltoValue;
+                    }
+                } else {
+                    vueltoEntregado = sobraTotal;
+                    if (condonarActivo) {
+                        montoCondonado = vueltoValue - sobraTotal;
+                    }
                 }
             } else {
-                montoFavor = sobra;
+                if (favorActivo) {
+                    montoFavor = sobraTotal;
+                }
             }
-            diferencia = 0;
+        } else if (diferencia > 0 && condonarActivo) { // Falta dinero y se condona
+            montoCondonado = diferencia;
         }
+        
         nuevoEstado = window.currentPedido.tipo === 'delivery' ? 'en_camino' : (window.currentPedido.tipo === 'reserva' ? 'reserva_pendiente' : 'en_cocina');
         pagosData = window.pagosMixtos.map(p => ({
             metodo: p.metodo,
