@@ -257,19 +257,16 @@ window.crearTarjetaPedidoCompacta = function(p, t) {
         if (p.tipo === 'mesa') {
             infoAdicional = `<div class="order-info-compact"><i class="fas fa-chair"></i> Mesa #${p.mesa || 'N/A'}</div>`;
         } else if (p.tipo === 'delivery') {
-            infoAdicional = `<div class="order-info-compact">
-                <div><i class="fas fa-map-marker-alt"></i> ${(p.direccion || '').substring(0, 20)}...</div>
-                <div><i class="fas fa-phone"></i> ${p.telefono || 'N/A'}</div>
-                ${p.costo_delivery_bs ? `<div><i class="fas fa-truck"></i> Delivery: ${window.formatBs(p.costo_delivery_bs)}</div>` : ''}
-                ${p.referencia ? `<div><i class="fas fa-hashtag"></i> Ref: ${p.referencia}</div>` : ''}
-            </div>`;
-        } else {
-            infoAdicional = `<div class="order-info-compact">
-                <div><i class="fas fa-user"></i> ${p.cliente_nombre || 'Cliente'}</div>
-                <div><i class="fas fa-calendar"></i> ${p.fecha_reserva ? new Date(p.fecha_reserva).toLocaleDateString() : 'N/A'}</div>
-                ${p.referencia ? `<div><i class="fas fa-hashtag"></i> Ref: ${p.referencia}</div>` : ''}
-            </div>`;
-        }
+			const deliveryBs = p.costo_delivery_bs || p.costo_delivery || 0;
+			const referencia = p.referencia ? `<div><i class="fas fa-hashtag"></i> Ref: ${p.referencia}</div>` : '';
+			
+			infoAdicional = `<div class="order-info-compact">
+				<div><i class="fas fa-map-marker-alt"></i> ${(p.direccion || '').substring(0, 20)}...</div>
+				<div><i class="fas fa-phone"></i> ${p.telefono || 'N/A'}</div>
+				${deliveryBs ? `<div><i class="fas fa-truck"></i> Delivery: ${window.formatBs(deliveryBs)}</div>` : ''}
+				${referencia}
+			</div>`;
+		}
         
         const itemsHTML = (p.items || []).slice(0, 2).map(item => 
             `<div class="order-item-row-compact">
@@ -332,6 +329,10 @@ window.abrirModalDeliverys=async function(){try{const a=await window.obtenerAcum
 // ============================================
 // FUNCIÓN: window.mostrarCobro (MODIFICADA)
 // ============================================
+console.log('🔍 Pedido actual:', window.currentPedido);
+console.log('🔍 costo_delivery_bs:', window.currentPedido.costo_delivery_bs);
+console.log('🔍 parroquia:', window.currentPedido.parroquia);
+
 window.mostrarCobro = function(pid) {
     window.currentPedido = (window.pedidos || []).find(a => a.id === pid);
     if (!window.currentPedido) return;
@@ -353,48 +354,53 @@ window.mostrarCobro = function(pid) {
     const modalBody = document.getElementById('cobroModalBody');
     
     // ============================================
-    // CONSTRUIR EL RESUMEN DEL PEDIDO (CORREGIDO)
-    // ============================================
-    let resumenHTML = '<div style="background:rgba(0,0,0,.3);padding:15px;border-radius:8px;margin-bottom:20px"><h4>Resumen del Pedido</h4>';
-    
-    // 1. REFERENCIA (si existe) - AHORA VA PRIMERO
-    if (window.currentPedido.referencia) {
-        resumenHTML += `
-            <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.1)">
-                <span><i class="fas fa-hashtag"></i> Referencia</span>
-                <span style="font-weight:600;font-family:monospace">${window.currentPedido.referencia}</span>
-            </div>
-        `;
-    }
-    
-    // 2. ITEMS DEL PEDIDO
-    (window.currentPedido.items || []).forEach(item => {
-        resumenHTML += `
-            <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.1)">
-                <span>${item.cantidad || 1}x ${item.nombre}</span>
-                <span style="font-weight:600">${window.formatBs(window.usdToBs((item.precioUnitarioUSD || 0) * (item.cantidad || 1)))}</span>
-            </div>
-        `;
-    });
-    
-    // 3. DELIVERY (si existe) - PRECIO SEGÚN PARROQUIA
-    if (window.currentPedido.costo_delivery_bs) {
-        const parroquia = window.currentPedido.parroquia ? ` (${window.currentPedido.parroquia})` : '';
-        resumenHTML += `
-            <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.1)">
-                <span><i class="fas fa-truck"></i> Delivery${parroquia}</span>
-                <span style="font-weight:600">${window.formatBs(window.currentPedido.costo_delivery_bs)}</span>
-            </div>
-        `;
-    }
-    
-    // 4. TOTAL
-    resumenHTML += `
-        <div style="display:flex;justify-content:space-between;margin-top:15px;padding-top:15px;border-top:2px solid var(--primary);font-weight:700">
-            <span>Total a pagar:</span>
-            <span id="totalPagarDisplay" style="color:var(--accent)">${window.formatBs(totalAPagarBs)}</span>
-        </div>
-    </div>`;
+	// CONSTRUIR EL RESUMEN DEL PEDIDO (VERSIÓN ROBUSTA)
+	// ============================================
+	let resumenHTML = '<div style="background:rgba(0,0,0,.3);padding:15px;border-radius:8px;margin-bottom:20px"><h4>Resumen del Pedido</h4>';
+
+	// 1. REFERENCIA (si existe)
+	if (window.currentPedido.referencia) {
+		resumenHTML += `
+			<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.1)">
+				<span><i class="fas fa-hashtag"></i> Referencia</span>
+				<span style="font-weight:600;font-family:monospace">${window.currentPedido.referencia}</span>
+			</div>
+		`;
+	}
+
+	// 2. ITEMS DEL PEDIDO
+	(window.currentPedido.items || []).forEach(item => {
+		resumenHTML += `
+			<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.1)">
+				<span>${item.cantidad || 1}x ${item.nombre}</span>
+				<span style="font-weight:600">${window.formatBs(window.usdToBs((item.precioUnitarioUSD || 0) * (item.cantidad || 1)))}</span>
+			</div>
+		`;
+	});
+
+	// 3. DELIVERY - Buscar en diferentes posibles nombres de variable
+	let deliveryBs = window.currentPedido.costo_delivery_bs || 
+					 window.currentPedido.costo_delivery || 
+					 window.currentPedido.delivery_cost || 
+					 0;
+
+	if (deliveryBs > 0) {
+		const parroquia = window.currentPedido.parroquia ? ` (${window.currentPedido.parroquia})` : '';
+		resumenHTML += `
+			<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.1)">
+				<span><i class="fas fa-truck"></i> Delivery${parroquia}</span>
+				<span style="font-weight:600">${window.formatBs(deliveryBs)}</span>
+			</div>
+		`;
+	}
+
+	// 4. TOTAL
+	resumenHTML += `
+		<div style="display:flex;justify-content:space-between;margin-top:15px;padding-top:15px;border-top:2px solid var(--primary);font-weight:700">
+			<span>Total a pagar:</span>
+			<span id="totalPagarDisplay" style="color:var(--accent)">${window.formatBs(totalAPagarBs)}</span>
+		</div>
+	</div>`;
     
     // ============================================
     // RESTO DEL MODAL (invitación, pagos mixtos, etc.)
