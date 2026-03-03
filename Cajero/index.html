@@ -371,7 +371,7 @@ window.renderizarPagosMixtos = function() {
 };
 
 // ============================================
-// FUNCIÓN: window.recalcularTotales (VERSIÓN FINAL CON TODAS LAS CORRECCIONES)
+// FUNCIÓN: window.recalcularTotales (VERSIÓN FINAL CON AMBOS CHECKS)
 // ============================================
 window.recalcularTotales = function() {
     const totalAPagarUSD = window.currentPedido?.total || 0;
@@ -403,12 +403,10 @@ window.recalcularTotales = function() {
     let diferencia = totalAPagarBs - totalRecibidoBs;
     const vueltoValue = parseFloat(vueltoInput?.value) || 0;
     
-    // Variables para los montos
+    // Variables para los montos base (sin aplicar checks)
     let montoPendiente = 0;
     let montoSobrante = 0;
     let montoVueltoReal = 0;
-    let montoCondonar = 0;
-    let montoFavor = 0;
     
     // ============================================
     // CASO 1: SOBRA DINERO (recibido > total)
@@ -418,116 +416,85 @@ window.recalcularTotales = function() {
         
         if (vueltoValue > 0) {
             if (vueltoValue <= sobraTotal) {
-                // Vuelto menor o igual al sobrante
                 montoVueltoReal = vueltoValue;
                 montoSobrante = sobraTotal - vueltoValue;
                 montoPendiente = 0;
             } else {
-                // Vuelto MAYOR que el sobrante
                 montoVueltoReal = sobraTotal;
                 montoSobrante = 0;
                 montoPendiente = vueltoValue - sobraTotal;
             }
         } else {
-            // No hay vuelto
             montoVueltoReal = 0;
             montoSobrante = sobraTotal;
             montoPendiente = 0;
         }
         
-        // Valores iniciales (sin aplicar checks)
-        montoFavor = montoSobrante;
-        montoCondonar = montoPendiente;
-        
-        // ============================================
-        // APLICAR CHECK A FAVOR (si está activado)
-        // ============================================
-        if (favorCheck && favorCheck.checked && montoSobrante > 0) {
-            // TODO el sobrante pasa a favor
-            montoFavor = montoSobrante;
-            montoSobrante = 0; // EL SOBRANTE MUERE
-        }
-        
-        // ============================================
-        // APLICAR CHECK CONDONAR (si está activado)
-        // ============================================
-        if (condonarCheck && condonarCheck.checked && montoPendiente > 0) {
-            // TODO el pendiente pasa a condonado
-            montoCondonar = montoPendiente;
-            montoPendiente = 0; // EL PENDIENTE MUERE
-        }
-        
-        // Configurar UI
         vueltoRow.style.display = 'grid';
-        condonarCheckbox.style.display = montoPendiente > 0 ? 'flex' : 'none';
-        favorCheckbox.style.display = montoSobrante > 0 ? 'flex' : 'none';
-        
-        // Actualizar spans
-        pendienteSpan.textContent = window.formatBs(montoPendiente);
-        sobranteSpan.textContent = window.formatBs(montoSobrante);
-        vueltoRestanteSpan.textContent = window.formatBs(montoSobrante); // Vuelto restante = sobrante
-        favorMontoSpan.textContent = window.formatBs(montoFavor);
-        condonarMontoSpan.textContent = window.formatBs(montoCondonar);
         
     // ============================================
     // CASO 2: FALTA DINERO (recibido < total)
     // ============================================
     } else if (diferencia > 0) {
         montoPendiente = diferencia;
-        montoCondonar = montoPendiente;
         montoSobrante = 0;
-        montoFavor = 0;
         montoVueltoReal = 0;
-        
-        // ============================================
-        // APLICAR CHECK CONDONAR (si está activado)
-        // ============================================
-        if (condonarCheck && condonarCheck.checked && montoPendiente > 0) {
-            // TODO el pendiente pasa a condonado
-            montoCondonar = montoPendiente;
-            montoPendiente = 0; // EL PENDIENTE MUERE
-        }
-        
-        // Configurar UI
         vueltoRow.style.display = 'none';
-        condonarCheckbox.style.display = montoPendiente > 0 ? 'flex' : 'none';
-        favorCheckbox.style.display = 'none';
-        
-        // Actualizar spans
-        pendienteSpan.textContent = window.formatBs(montoPendiente);
-        sobranteSpan.textContent = window.formatBs(0);
-        vueltoRestanteSpan.textContent = window.formatBs(0);
-        condonarMontoSpan.textContent = window.formatBs(montoCondonar);
-        favorMontoSpan.textContent = window.formatBs(0);
         
     // ============================================
     // CASO 3: PAGO EXACTO
     // ============================================
     } else {
         montoPendiente = 0;
-        montoCondonar = 0;
         montoSobrante = 0;
-        montoFavor = 0;
         montoVueltoReal = 0;
-        
-        // Configurar UI
         vueltoRow.style.display = 'none';
-        condonarCheckbox.style.display = 'none';
-        favorCheckbox.style.display = 'none';
-        
-        // Actualizar spans
-        pendienteSpan.textContent = window.formatBs(0);
-        sobranteSpan.textContent = window.formatBs(0);
-        vueltoRestanteSpan.textContent = window.formatBs(0);
-        condonarMontoSpan.textContent = window.formatBs(0);
-        favorMontoSpan.textContent = window.formatBs(0);
     }
     
-    // Actualizar displays de montos especiales en el resumen final
+    // ============================================
+    // APLICAR CHECKS (AQUÍ ESTÁ LA MAGIA)
+    // ============================================
+    
+    // Valores para los checks (basados en los montos actuales)
+    let montoCondonar = montoPendiente; // Por defecto, el pendiente
+    let montoFavor = montoSobrante;     // Por defecto, el sobrante
+    
+    // APLICAR CHECK A FAVOR (si está activado)
+    if (favorCheck && favorCheck.checked && montoSobrante > 0) {
+        montoFavor = montoSobrante;     // TODO el sobrante pasa a favor
+        montoSobrante = 0;              // EL SOBRANTE MUERE
+        console.log('✅ Check A FAVOR activado:', montoFavor, 'Bs pasan a favor');
+    }
+    
+    // APLICAR CHECK CONDONAR (si está activado)
+    if (condonarCheck && condonarCheck.checked && montoPendiente > 0) {
+        montoCondonar = montoPendiente; // TODO el pendiente pasa a condonado
+        montoPendiente = 0;              // EL PENDIENTE MUERE
+        console.log('✅ Check CONDONAR activado:', montoCondonar, 'Bs se condonan');
+    }
+    
+    // ============================================
+    // ACTUALIZAR UI CON LOS VALORES FINALES
+    // ============================================
+    
+    // Mostrar/ocultar checks según corresponda
+    condonarCheckbox.style.display = montoPendiente > 0 ? 'flex' : 'none';
+    favorCheckbox.style.display = montoSobrante > 0 ? 'flex' : 'none';
+    
+    // Actualizar montos en los labels de los checks
+    condonarMontoSpan.textContent = window.formatBs(montoCondonar);
+    favorMontoSpan.textContent = window.formatBs(montoFavor);
+    
+    // Actualizar el resumen principal
+    pendienteSpan.textContent = window.formatBs(montoPendiente);
+    sobranteSpan.textContent = window.formatBs(montoSobrante);
+    vueltoRestanteSpan.textContent = window.formatBs(montoSobrante);
+    
+    // ACTUALIZAR LOS VALORES DE CONDONADO Y A FAVOR EN EL RESUMEN FINAL
     condonadoValueSpan.textContent = window.formatBs(montoCondonar);
     favorValueSpan.textContent = window.formatBs(montoFavor);
     
-    // Mostrar/ocultar secciones de resumen
+    // Mostrar/ocultar las secciones de resumen
     condonadoDisplay.style.display = montoCondonar > 0 ? 'flex' : 'none';
     favorDisplay.style.display = montoFavor > 0 ? 'flex' : 'none';
     
@@ -545,16 +512,22 @@ window.recalcularTotales = function() {
     
     if (esInvitacion) {
         confirmarActivo = true;
+        console.log('🔘 Confirmar ACTIVADO por INVITACIÓN');
     } else if (diferencia === 0) {
-        confirmarActivo = true; // Pago exacto
+        confirmarActivo = true;
+        console.log('🔘 Confirmar ACTIVADO por PAGO EXACTO');
     } else if (diferencia > 0 && condonarActivo) {
-        confirmarActivo = true; // Falta y se condona
+        confirmarActivo = true;
+        console.log('🔘 Confirmar ACTIVADO por CONDONAR');
     } else if (diferencia < 0 && favorActivo) {
-        confirmarActivo = true; // Sobra y se deja a favor
+        confirmarActivo = true;
+        console.log('🔘 Confirmar ACTIVADO por A FAVOR');
     } else if (diferencia < 0 && montoPendiente > 0 && condonarActivo) {
-        confirmarActivo = true; // Vuelto > sobra y se condona
+        confirmarActivo = true;
+        console.log('🔘 Confirmar ACTIVADO por VUELTO EXCESIVO + CONDONAR');
     } else {
         confirmarActivo = false;
+        console.log('🔘 Confirmar DESACTIVADO');
     }
     
     document.getElementById('confirmCobroBtn').disabled = !confirmarActivo;
@@ -677,7 +650,7 @@ window.confirmarCobro = async function() {
             a_favor_caja: montoFavor || 0,
             vuelto_entregado: vueltoEntregado || 0,
             monto_recibido: montoRecibido,
-            total: totalFinalUSD // ← ESTO ES CLAVE: se actualiza el total si se condonó
+            total: totalFinalUSD //  ESTO ES CLAVE: se actualiza el total si se condonó
         }).eq('id', window.currentPedido.id);
         
         // Calcular items para la venta
@@ -707,16 +680,16 @@ window.confirmarCobro = async function() {
         // Notificaciones (igual que antes)
         let tituloNotif, mensajeNotif;
         if (esInvitacion) {
-            tituloNotif = '✅ Pedido por invitación';
+            tituloNotif = ' Pedido por invitación';
             mensajeNotif = 'Tu pedido ha sido procesado. ¡Disfruta!';
         } else if (window.currentPedido.tipo === 'delivery') {
-            tituloNotif = '✅ Pago confirmado';
+            tituloNotif = ' Pago confirmado';
             mensajeNotif = 'Tu delivery está en camino';
         } else if (window.currentPedido.tipo === 'reserva') {
-            tituloNotif = '✅ Reserva confirmada';
+            tituloNotif = ' Reserva confirmada';
             mensajeNotif = 'Tu reserva ha sido confirmada';
         } else {
-            tituloNotif = '✅ Pago confirmado';
+            tituloNotif = ' Pago confirmado';
             mensajeNotif = 'Tu pedido está en preparación';
         }
         
@@ -731,7 +704,7 @@ window.confirmarCobro = async function() {
         }]);
         
         document.getElementById('cobroModal').classList.remove('active');
-        window.mostrarToast('✅ Cobro procesado');
+        window.mostrarToast(' Cobro procesado');
         window.enProcesoDeCobro = false;
         window.currentPedido = null;
         window.pagosMixtos = [];
@@ -741,7 +714,7 @@ window.confirmarCobro = async function() {
         
     } catch (e) {
         console.error('Error en cobro:', e);
-        window.mostrarToast('❌ Error al procesar el cobro', 'error');
+        window.mostrarToast(' Error al procesar el cobro', 'error');
     }
 };
 
