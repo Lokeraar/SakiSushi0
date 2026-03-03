@@ -371,7 +371,7 @@ window.renderizarPagosMixtos = function() {
 };
 
 // ============================================
-// FUNCIÓN: window.recalcularTotales (VERSIÓN FINAL CON AMBOS CHECKS)
+// FUNCIÓN: window.recalcularTotales (VERSIÓN FINAL)
 // ============================================
 window.recalcularTotales = function() {
     const totalAPagarUSD = window.currentPedido?.total || 0;
@@ -464,6 +464,7 @@ window.recalcularTotales = function() {
         montoFavor = montoSobrante;     // TODO el sobrante pasa a favor
         montoSobrante = 0;              // EL SOBRANTE MUERE
         console.log('✅ Check A FAVOR activado:', montoFavor, 'Bs pasan a favor');
+        console.log('   montoSobrante ahora es:', montoSobrante);
     }
     
     // APLICAR CHECK CONDONAR (si está activado)
@@ -471,6 +472,7 @@ window.recalcularTotales = function() {
         montoCondonar = montoPendiente; // TODO el pendiente pasa a condonado
         montoPendiente = 0;              // EL PENDIENTE MUERE
         console.log('✅ Check CONDONAR activado:', montoCondonar, 'Bs se condonan');
+        console.log('   montoPendiente ahora es:', montoPendiente);
     }
     
     // ============================================
