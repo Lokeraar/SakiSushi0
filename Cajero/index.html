@@ -247,7 +247,7 @@ window.formatearHora12 = function(timestamp) {
 };
 
 // ============================================
-// FUNCIÓN: window.crearTarjetaPedidoCompacta (MODIFICADA)
+// FUNCIÓN: window.crearTarjetaPedidoCompacta (CORREGIDA - Delivery visible)
 // ============================================
 window.crearTarjetaPedidoCompacta = function(p, t) {
     try {
@@ -257,16 +257,20 @@ window.crearTarjetaPedidoCompacta = function(p, t) {
         if (p.tipo === 'mesa') {
             infoAdicional = `<div class="order-info-compact"><i class="fas fa-chair"></i> Mesa #${p.mesa || 'N/A'}</div>`;
         } else if (p.tipo === 'delivery') {
+            // Usar los mismos nombres que en la versión 1.0
+            const parroquia = p.parroquia ? ` (${p.parroquia})` : '';
+            const costoDelivery = p.costo_delivery_bs || p.costoDelivery || 0;
+            
             infoAdicional = `<div class="order-info-compact">
                 <div><i class="fas fa-map-marker-alt"></i> ${(p.direccion || '').substring(0, 20)}...</div>
                 <div><i class="fas fa-phone"></i> ${p.telefono || 'N/A'}</div>
-                ${p.costo_delivery_bs ? `<div><i class="fas fa-truck"></i> Delivery: ${window.formatBs(p.costo_delivery_bs)}</div>` : ''}
+                ${costoDelivery ? `<div><i class="fas fa-truck"></i> Delivery${parroquia}: ${window.formatBs(costoDelivery)}</div>` : ''}
                 ${p.referencia ? `<div><i class="fas fa-hashtag"></i> Ref: ${p.referencia}</div>` : ''}
             </div>`;
         } else {
             infoAdicional = `<div class="order-info-compact">
-                <div><i class="fas fa-user"></i> ${p.cliente_nombre || 'Cliente'}</div>
-                <div><i class="fas fa-calendar"></i> ${p.fecha_reserva ? new Date(p.fecha_reserva).toLocaleDateString() : 'N/A'}</div>
+                <div><i class="fas fa-user"></i> ${p.cliente_nombre || p.clienteNombre || 'Cliente'}</div>
+                <div><i class="fas fa-calendar"></i> ${p.fecha_reserva ? new Date(p.fecha_reserva).toLocaleDateString() : (p.fechaReserva ? new Date(p.fechaReserva).toLocaleDateString() : 'N/A')}</div>
                 ${p.referencia ? `<div><i class="fas fa-hashtag"></i> Ref: ${p.referencia}</div>` : ''}
             </div>`;
         }
@@ -353,11 +357,11 @@ window.mostrarCobro = function(pid) {
     const modalBody = document.getElementById('cobroModalBody');
     
     // ============================================
-    // CONSTRUIR EL RESUMEN DEL PEDIDO
+    // CONSTRUIR EL RESUMEN DEL PEDIDO (CORREGIDO)
     // ============================================
     let resumenHTML = '<div style="background:rgba(0,0,0,.3);padding:15px;border-radius:8px;margin-bottom:20px"><h4>Resumen del Pedido</h4>';
     
-    // 1. REFERENCIA (si existe)
+    // 1. REFERENCIA (si existe) - AHORA VA PRIMERO
     if (window.currentPedido.referencia) {
         resumenHTML += `
             <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.1)">
@@ -377,13 +381,14 @@ window.mostrarCobro = function(pid) {
         `;
     });
     
-    // 3. DELIVERY (si existe) - USANDO costo_delivery_bs
-    if (window.currentPedido.costo_delivery_bs && window.currentPedido.costo_delivery_bs > 0) {
+    // 3. DELIVERY (si existe) - USANDO LOS MISMOS NOMBRES QUE EN LA VERSIÓN 1.0
+    const costoDelivery = window.currentPedido.costo_delivery_bs || window.currentPedido.costoDelivery || 0;
+    if (costoDelivery > 0) {
         const parroquia = window.currentPedido.parroquia ? ` (${window.currentPedido.parroquia})` : '';
         resumenHTML += `
             <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.1)">
                 <span><i class="fas fa-truck"></i> Delivery${parroquia}</span>
-                <span style="font-weight:600">${window.formatBs(window.currentPedido.costo_delivery_bs)}</span>
+                <span style="font-weight:600">${window.formatBs(costoDelivery)}</span>
             </div>
         `;
     }
@@ -782,8 +787,8 @@ window.confirmarCobro = async function() {
     }, 0);
     
     const totalAPagarOriginalBs = window.usdToBs(window.currentPedido.total);
-    const deliveryBs = window.currentPedido.costo_delivery_bs || 0;
-    const subtotalPlatillosBs = totalAPagarOriginalBs - deliveryBs;
+    const costoDelivery = window.currentPedido.costo_delivery_bs || window.currentPedido.costoDelivery || 0;
+    const subtotalPlatillosBs = totalAPagarOriginalBs - costoDelivery;
     const vueltoValue = parseFloat(vueltoInput?.value) || 0;
     
     if (esInvitacion) {
