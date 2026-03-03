@@ -352,29 +352,14 @@ window.mostrarCobro = function(pid) {
     const totalAPagarBs = window.usdToBs(window.currentPedido.total || 0);
     const modalBody = document.getElementById('cobroModalBody');
     
-    // Construir items del pedido
-    let itemsHTML = (window.currentPedido.items || []).map(item => 
-        `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.1)">
-            <span>${item.cantidad || 1}x ${item.nombre}</span>
-            <span style="font-weight:600">${window.formatBs(window.usdToBs((item.precioUnitarioUSD || 0) * (item.cantidad || 1)))}</span>
-        </div>`
-    ).join('');
+    // ============================================
+    // CONSTRUIR EL RESUMEN DEL PEDIDO (CORREGIDO)
+    // ============================================
+    let resumenHTML = '<div style="background:rgba(0,0,0,.3);padding:15px;border-radius:8px;margin-bottom:20px"><h4>Resumen del Pedido</h4>';
     
-    // Agregar delivery si existe
-    let deliveryHTML = '';
-    if (window.currentPedido.costo_delivery_bs) {
-        deliveryHTML = `
-            <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.1)">
-                <span><i class="fas fa-truck"></i> Delivery</span>
-                <span style="font-weight:600">${window.formatBs(window.currentPedido.costo_delivery_bs)}</span>
-            </div>
-        `;
-    }
-    
-    // Agregar referencia si existe
-    let referenciaHTML = '';
+    // 1. REFERENCIA (si existe) - AHORA VA PRIMERO
     if (window.currentPedido.referencia) {
-        referenciaHTML = `
+        resumenHTML += `
             <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.1)">
                 <span><i class="fas fa-hashtag"></i> Referencia</span>
                 <span style="font-weight:600;font-family:monospace">${window.currentPedido.referencia}</span>
@@ -382,18 +367,39 @@ window.mostrarCobro = function(pid) {
         `;
     }
     
-    modalBody.innerHTML = `
-        <div style="background:rgba(0,0,0,.3);padding:15px;border-radius:8px;margin-bottom:20px">
-            <h4>Resumen del Pedido</h4>
-            ${itemsHTML}
-            ${deliveryHTML}
-            ${referenciaHTML}
-            <div style="display:flex;justify-content:space-between;margin-top:15px;padding-top:15px;border-top:2px solid var(--primary);font-weight:700">
-                <span>Total a pagar:</span>
-                <span id="totalPagarDisplay" style="color:var(--accent)">${window.formatBs(totalAPagarBs)}</span>
+    // 2. ITEMS DEL PEDIDO
+    (window.currentPedido.items || []).forEach(item => {
+        resumenHTML += `
+            <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.1)">
+                <span>${item.cantidad || 1}x ${item.nombre}</span>
+                <span style="font-weight:600">${window.formatBs(window.usdToBs((item.precioUnitarioUSD || 0) * (item.cantidad || 1)))}</span>
             </div>
+        `;
+    });
+    
+    // 3. DELIVERY (si existe) - PRECIO SEGÚN PARROQUIA
+    if (window.currentPedido.costo_delivery_bs) {
+        const parroquia = window.currentPedido.parroquia ? ` (${window.currentPedido.parroquia})` : '';
+        resumenHTML += `
+            <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.1)">
+                <span><i class="fas fa-truck"></i> Delivery${parroquia}</span>
+                <span style="font-weight:600">${window.formatBs(window.currentPedido.costo_delivery_bs)}</span>
+            </div>
+        `;
+    }
+    
+    // 4. TOTAL
+    resumenHTML += `
+        <div style="display:flex;justify-content:space-between;margin-top:15px;padding-top:15px;border-top:2px solid var(--primary);font-weight:700">
+            <span>Total a pagar:</span>
+            <span id="totalPagarDisplay" style="color:var(--accent)">${window.formatBs(totalAPagarBs)}</span>
         </div>
-        
+    </div>`;
+    
+    // ============================================
+    // RESTO DEL MODAL (invitación, pagos mixtos, etc.)
+    // ============================================
+    modalBody.innerHTML = resumenHTML + `
         <div style="margin-bottom:20px;padding:12px;background:rgba(245,124,0,.1);border-left:4px solid var(--warning)">
             <label style="display:flex;align-items:center;gap:10px;color:#fff">
                 <input type="checkbox" id="invitacionCheck" style="width:18px;height:18px">
