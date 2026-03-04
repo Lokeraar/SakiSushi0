@@ -1,6 +1,7 @@
 -- ============================================
 -- SCRIPT COMPLETO PARA SUPABASE - SAKI SUSHI
 -- CON REALTIME HABILITADO PARA NOTIFICACIONES
+-- (VERSIÓN CORREGIDA - SIN ERROR DE PUBLICACIÓN)
 -- ============================================
 
 -- HABILITAR EXTENSIONES NECESARIAS
@@ -723,20 +724,20 @@ END $$;
 
 -- ============================================
 -- *** HABILITAR REALTIME PARA NOTIFICACIONES ***
+-- (VERSIÓN CORREGIDA - SIN ERROR DE PUBLICACIÓN)
 -- ============================================
 
--- IMPORTANTE: Estas líneas habilitan Realtime para la tabla notificaciones
--- Esto permite que los clientes reciban notificaciones en tiempo real
+-- NOTA: En Supabase, la publicación 'supabase_realtime' ya existe y está configurada como FOR ALL TABLES
+-- No necesitamos crearla ni modificarla. Solo necesitamos asegurarnos de que:
 
--- 1. Publicar la tabla en el esquema realtime
-DROP PUBLICATION IF EXISTS supabase_realtime;
-CREATE PUBLICATION supabase_realtime FOR ALL TABLES;
+-- 1. La tabla tiene REPLICA IDENTITY FULL para que Realtime pueda capturar los cambios completos
+-- (Ya lo hicimos arriba con: ALTER TABLE notificaciones REPLICA IDENTITY FULL;)
 
--- 2. Agregar la tabla notificaciones a la publicación
-ALTER PUBLICATION supabase_realtime ADD TABLE notificaciones;
+-- 2. La tabla está incluida en la publicación existente (ya lo está porque la publicación es FOR ALL TABLES)
 
--- 3. Asegurar que la replicación esté habilitada
-ALTER TABLE notificaciones REPLICA IDENTITY FULL;
+-- Para verificar que todo está correcto, podemos ejecutar:
+-- SELECT * FROM pg_publication_tables WHERE pubname = 'supabase_realtime' AND tablename = 'notificaciones';
+-- Esto debería mostrar la tabla notificaciones (aunque no ejecutamos nada, ya está incluida)
 
 -- ============================================
 -- VERIFICACIÓN FINAL
@@ -751,16 +752,21 @@ WHERE table_schema = 'public'
     AND table_name NOT LIKE 'pg_%'
 ORDER BY table_name;
 
--- Verificar que Realtime está configurado
+-- Verificar que Replica Identity está configurado para notificaciones
 SELECT 
-    tablename,
-    identity
-FROM pg_replication_identity 
-WHERE relid IN (SELECT oid FROM pg_class WHERE relname = 'notificaciones');
+    relname as table_name,
+    CASE relreplident
+        WHEN 'd' THEN 'default'
+        WHEN 'i' THEN 'index'
+        WHEN 'f' THEN 'full'
+        ELSE 'nothing'
+    END as replica_identity
+FROM pg_class 
+WHERE relname = 'notificaciones';
 
 -- Mensajes de éxito
 SELECT '✅ SCRIPT COMPLETADO EXITOSAMENTE' as mensaje;
 SELECT '✅ RLS DESHABILITADO PARA TODAS LAS TABLAS' as resultado;
-SELECT '✅ REALTIME HABILITADO PARA NOTIFICACIONES' as realtime_info;
+SELECT '✅ REPLICA IDENTITY FULL configurado para NOTIFICACIONES' as realtime_info;
 SELECT '✅ Usuario admin: contraseña 654321' as admin_info;
 SELECT '✅ Usuarios cajero: cajero1/123456, cajero2/123456' as cajero_info;
