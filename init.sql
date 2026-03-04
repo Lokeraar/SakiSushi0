@@ -1,7 +1,6 @@
 -- ============================================
 -- SCRIPT COMPLETO PARA SUPABASE - SAKI SUSHI
--- CON REALTIME HABILITADO PARA NOTIFICACIONES
--- (VERSIÓN CORREGIDA - SIN ERROR DE PUBLICACIÓN)
+-- VERSIÓN FINAL CON CORRECCIONES
 -- ============================================
 
 -- HABILITAR EXTENSIONES NECESARIAS
@@ -9,21 +8,17 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
 -- ============================================
--- ELIMINAR TODO LO EXISTENTE (FUERZA BRUTA)
+-- ELIMINAR TODO LO EXISTENTE
 -- ============================================
-
--- Desconectar todos los usuarios de las tablas
 REVOKE ALL ON ALL TABLES IN SCHEMA public FROM PUBLIC;
 REVOKE ALL ON ALL TABLES IN SCHEMA public FROM anon;
 REVOKE ALL ON ALL TABLES IN SCHEMA public FROM authenticated;
 
--- Eliminar funciones
 DROP FUNCTION IF EXISTS crear_pedido_con_reserva CASCADE;
 DROP FUNCTION IF EXISTS liberar_ingredientes CASCADE;
 DROP FUNCTION IF EXISTS verificar_stock_critico CASCADE;
 DROP FUNCTION IF EXISTS update_updated_at_column CASCADE;
 
--- Eliminar tablas (con CASCADE para eliminar dependencias)
 DROP TABLE IF EXISTS notificaciones CASCADE;
 DROP TABLE IF EXISTS entregas_delivery CASCADE;
 DROP TABLE IF EXISTS ventas CASCADE;
@@ -38,10 +33,8 @@ DROP TABLE IF EXISTS usuarios CASCADE;
 DROP TABLE IF EXISTS config CASCADE;
 
 -- ============================================
--- CREAR TABLAS SIN RLS (FORZADO)
+-- TABLA: config
 -- ============================================
-
--- Tabla: config
 CREATE TABLE config (
     id INTEGER PRIMARY KEY DEFAULT 1,
     tasa_cambio NUMERIC(10,2) DEFAULT 400.00,
@@ -60,7 +53,6 @@ CREATE TABLE config (
     CONSTRAINT config_id_check CHECK (id = 1)
 );
 
--- Insertar configuración inicial
 INSERT INTO config (id, tasa_cambio, tasa_efectiva, admin_password, recovery_email, alerta_stock_minimo) 
 VALUES (1, 400.00, 400.00, '654321', 'admin@sakisushi.com', 5)
 ON CONFLICT (id) DO UPDATE SET
@@ -70,13 +62,14 @@ ON CONFLICT (id) DO UPDATE SET
     recovery_email = EXCLUDED.recovery_email,
     alerta_stock_minimo = EXCLUDED.alerta_stock_minimo;
 
--- DESHABILITAR RLS INMEDIATAMENTE
 ALTER TABLE config DISABLE ROW LEVEL SECURITY;
 GRANT ALL ON config TO PUBLIC;
 GRANT ALL ON config TO anon;
 GRANT ALL ON config TO authenticated;
 
--- Tabla: usuarios
+-- ============================================
+-- TABLA: usuarios
+-- ============================================
 CREATE TABLE usuarios (
     id TEXT PRIMARY KEY,
     nombre TEXT NOT NULL,
@@ -93,13 +86,14 @@ GRANT ALL ON usuarios TO PUBLIC;
 GRANT ALL ON usuarios TO anon;
 GRANT ALL ON usuarios TO authenticated;
 
--- Insertar usuarios de ejemplo
 INSERT INTO usuarios (id, nombre, username, password, rol, activo) VALUES
     ('user_' || gen_random_uuid() || '_1', 'Cajero Principal', 'cajero1', '123456', 'cajero', true),
     ('user_' || gen_random_uuid() || '_2', 'Cajero Secundario', 'cajero2', '123456', 'cajero', true)
 ON CONFLICT (username) DO NOTHING;
 
--- Tabla: mesoneros
+-- ============================================
+-- TABLA: mesoneros
+-- ============================================
 CREATE TABLE mesoneros (
     id TEXT PRIMARY KEY,
     nombre TEXT NOT NULL,
@@ -113,7 +107,6 @@ GRANT ALL ON mesoneros TO PUBLIC;
 GRANT ALL ON mesoneros TO anon;
 GRANT ALL ON mesoneros TO authenticated;
 
--- Insertar mesoneros de ejemplo
 INSERT INTO mesoneros (id, nombre, activo) VALUES
     ('mes_' || gen_random_uuid() || '_1', 'Carlos Méndez', true),
     ('mes_' || gen_random_uuid() || '_2', 'María González', true),
@@ -122,7 +115,9 @@ INSERT INTO mesoneros (id, nombre, activo) VALUES
     ('mes_' || gen_random_uuid() || '_5', 'Luis Martínez', true)
 ON CONFLICT DO NOTHING;
 
--- Tabla: deliverys
+-- ============================================
+-- TABLA: deliverys
+-- ============================================
 CREATE TABLE deliverys (
     id TEXT PRIMARY KEY,
     nombre TEXT NOT NULL,
@@ -136,7 +131,6 @@ GRANT ALL ON deliverys TO PUBLIC;
 GRANT ALL ON deliverys TO anon;
 GRANT ALL ON deliverys TO authenticated;
 
--- Insertar motorizados de ejemplo
 INSERT INTO deliverys (id, nombre, activo) VALUES
     ('del_' || gen_random_uuid() || '_1', 'Pedro Castillo', true),
     ('del_' || gen_random_uuid() || '_2', 'Juan Flores', true),
@@ -145,7 +139,9 @@ INSERT INTO deliverys (id, nombre, activo) VALUES
     ('del_' || gen_random_uuid() || '_5', 'David Silva', true)
 ON CONFLICT DO NOTHING;
 
--- Tabla: inventario
+-- ============================================
+-- TABLA: inventario
+-- ============================================
 CREATE TABLE inventario (
     id TEXT PRIMARY KEY,
     nombre TEXT NOT NULL,
@@ -164,7 +160,6 @@ GRANT ALL ON inventario TO PUBLIC;
 GRANT ALL ON inventario TO anon;
 GRANT ALL ON inventario TO authenticated;
 
--- Insertar ingredientes
 INSERT INTO inventario (id, nombre, stock, reservado, unidad_base, minimo, precio_costo, precio_unitario) VALUES
     ('ing_' || gen_random_uuid() || '_1', 'Arroz para sushi', 50, 0, 'kilogramos', 10, 3.50, 5.00),
     ('ing_' || gen_random_uuid() || '_2', 'Alga nori', 200, 0, 'unidades', 50, 0.30, 0.60),
@@ -183,7 +178,9 @@ INSERT INTO inventario (id, nombre, stock, reservado, unidad_base, minimo, preci
     ('ing_' || gen_random_uuid() || '_15', 'Mayonesa japonesa', 12, 0, 'litros', 3, 3.50, 6.00)
 ON CONFLICT DO NOTHING;
 
--- Tabla: menu
+-- ============================================
+-- TABLA: menu
+-- ============================================
 CREATE TABLE menu (
     id TEXT PRIMARY KEY,
     nombre TEXT NOT NULL,
@@ -205,7 +202,6 @@ GRANT ALL ON menu TO PUBLIC;
 GRANT ALL ON menu TO anon;
 GRANT ALL ON menu TO authenticated;
 
--- Insertar platillos (usando los IDs de ingredientes)
 DO $$
 DECLARE
     arroz_id TEXT;
@@ -220,7 +216,6 @@ DECLARE
     anguila_id TEXT;
     huevas_id TEXT;
 BEGIN
-    -- Obtener IDs de ingredientes
     SELECT id INTO arroz_id FROM inventario WHERE nombre = 'Arroz para sushi' LIMIT 1;
     SELECT id INTO alga_id FROM inventario WHERE nombre = 'Alga nori' LIMIT 1;
     SELECT id INTO salmon_id FROM inventario WHERE nombre = 'Salmón fresco' LIMIT 1;
@@ -233,7 +228,6 @@ BEGIN
     SELECT id INTO anguila_id FROM inventario WHERE nombre = 'Anguila' LIMIT 1;
     SELECT id INTO huevas_id FROM inventario WHERE nombre = 'Huevas de pez volador' LIMIT 1;
 
-    -- Insertar platillos
     INSERT INTO menu (id, nombre, categoria, subcategoria, precio, descripcion, imagen, ingredientes, disponible, stock_maximo) VALUES
         ('plat_' || gen_random_uuid() || '_1', 'California Roll', 'Rolls', 'Rolls Fríos de 10 piezas', 8.99, 'Rollo de cangrejo, pepino y aguacate', 'https://images.unsplash.com/photo-1579584425555-c3ce17fd4351', 
          jsonb_build_object(
@@ -285,7 +279,9 @@ BEGIN
     ON CONFLICT DO NOTHING;
 END $$;
 
--- Tabla: pedidos
+-- ============================================
+-- TABLA: pedidos
+-- ============================================
 CREATE TABLE pedidos (
     id TEXT PRIMARY KEY,
     timestamp TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
@@ -329,7 +325,9 @@ CREATE INDEX IF NOT EXISTS idx_pedidos_estado ON pedidos(estado);
 CREATE INDEX IF NOT EXISTS idx_pedidos_timestamp ON pedidos(timestamp);
 CREATE INDEX IF NOT EXISTS idx_pedidos_session_id ON pedidos(session_id);
 
--- Tabla: ventas
+-- ============================================
+-- TABLA: ventas
+-- ============================================
 CREATE TABLE ventas (
     id SERIAL PRIMARY KEY,
     pedido_id TEXT REFERENCES pedidos(id) ON DELETE CASCADE,
@@ -349,7 +347,9 @@ GRANT ALL ON ventas TO authenticated;
 
 CREATE INDEX IF NOT EXISTS idx_ventas_fecha ON ventas(fecha);
 
--- Tabla: entregas_delivery
+-- ============================================
+-- TABLA: entregas_delivery
+-- ============================================
 CREATE TABLE entregas_delivery (
     id SERIAL PRIMARY KEY,
     pedido_id TEXT REFERENCES pedidos(id) ON DELETE CASCADE,
@@ -367,7 +367,9 @@ GRANT ALL ON entregas_delivery TO authenticated;
 CREATE INDEX IF NOT EXISTS idx_entregas_delivery_id ON entregas_delivery(delivery_id);
 CREATE INDEX IF NOT EXISTS idx_entregas_fecha ON entregas_delivery(fecha_entrega);
 
--- Tabla: propinas
+-- ============================================
+-- TABLA: propinas
+-- ============================================
 CREATE TABLE propinas (
     id SERIAL PRIMARY KEY,
     mesonero_id TEXT REFERENCES mesoneros(id) ON DELETE SET NULL,
@@ -393,7 +395,7 @@ CREATE INDEX IF NOT EXISTS idx_propinas_fecha ON propinas(fecha);
 CREATE INDEX IF NOT EXISTS idx_propinas_mesonero ON propinas(mesonero_id);
 
 -- ============================================
--- TABLA: notificaciones (CONFIGURADA PARA REALTIME)
+-- TABLA: notificaciones (CON ÍNDICES CRÍTICOS)
 -- ============================================
 CREATE TABLE notificaciones (
     id SERIAL PRIMARY KEY,
@@ -412,14 +414,15 @@ GRANT ALL ON notificaciones TO PUBLIC;
 GRANT ALL ON notificaciones TO anon;
 GRANT ALL ON notificaciones TO authenticated;
 
+-- ÍNDICES CRÍTICOS PARA RENDIMIENTO
 CREATE INDEX IF NOT EXISTS idx_notificaciones_session ON notificaciones(session_id);
 CREATE INDEX IF NOT EXISTS idx_notificaciones_timestamp ON notificaciones(timestamp);
 CREATE INDEX IF NOT EXISTS idx_notificaciones_leida ON notificaciones(leida);
+CREATE INDEX IF NOT EXISTS idx_notificaciones_session_leida ON notificaciones(session_id, leida);
 
--- HABILITAR REPLICACIÓN PARA REALTIME (CRÍTICO PARA NOTIFICACIONES)
-ALTER TABLE notificaciones REPLICA IDENTITY FULL;
-
--- Tabla: codigos_qr
+-- ============================================
+-- TABLA: codigos_qr
+-- ============================================
 CREATE TABLE codigos_qr (
     id TEXT PRIMARY KEY,
     nombre TEXT,
@@ -435,7 +438,6 @@ GRANT ALL ON codigos_qr TO PUBLIC;
 GRANT ALL ON codigos_qr TO anon;
 GRANT ALL ON codigos_qr TO authenticated;
 
--- Insertar QR de ejemplo
 INSERT INTO codigos_qr (id, nombre, tipo) VALUES
     ('QR_' || gen_random_uuid() || '_1', 'Mesa 1', 'mesa'),
     ('QR_' || gen_random_uuid() || '_2', 'Mesa 2', 'mesa'),
@@ -446,9 +448,8 @@ INSERT INTO codigos_qr (id, nombre, tipo) VALUES
 ON CONFLICT DO NOTHING;
 
 -- ============================================
--- FUNCIONES
+-- FUNCIÓN: update_updated_at_column
 -- ============================================
-
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -494,7 +495,7 @@ CREATE TRIGGER update_pedidos_updated_at
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
 -- ============================================
--- FUNCIÓN: crear_pedido_con_reserva (MEJORADA)
+-- FUNCIÓN: crear_pedido_con_reserva
 -- ============================================
 CREATE OR REPLACE FUNCTION crear_pedido_con_reserva(
     p_pedido JSONB,
@@ -508,7 +509,6 @@ DECLARE
     v_ingrediente_info JSONB;
     v_result JSONB;
 BEGIN
-    -- Insertar el pedido
     INSERT INTO pedidos (
         id, timestamp, estado, tipo, total, session_id, mesa, cliente_nombre,
         parroquia, direccion, telefono, referencia, fecha_reserva, comprobante_url,
@@ -535,11 +535,9 @@ BEGIN
         p_items
     ) RETURNING id INTO v_pedido_id;
 
-    -- Actualizar reserva de ingredientes si el pedido es pendiente
     IF p_pedido->>'estado' = 'pendiente' THEN
         FOR v_item IN SELECT * FROM jsonb_array_elements(p_items)
         LOOP
-            -- Obtener ingredientes del platillo
             SELECT ingredientes INTO v_ingrediente_info
             FROM menu
             WHERE id = v_item->>'platilloId';
@@ -549,7 +547,6 @@ BEGIN
                     SELECT key, (value->>'cantidad')::NUMERIC
                     FROM jsonb_each(v_ingrediente_info)
                 LOOP
-                    -- Actualizar reservado en inventario
                     UPDATE inventario
                     SET reservado = reservado + (v_cantidad * (v_item->>'cantidad')::NUMERIC)
                     WHERE id = v_ingrediente_id;
@@ -573,7 +570,9 @@ EXCEPTION WHEN OTHERS THEN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Función para liberar ingredientes
+-- ============================================
+-- FUNCIÓN: liberar_ingredientes
+-- ============================================
 CREATE OR REPLACE FUNCTION liberar_ingredientes(
     p_pedido_id TEXT
 ) RETURNS JSONB AS $$
@@ -618,7 +617,9 @@ EXCEPTION WHEN OTHERS THEN
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
--- Función para verificar stock crítico
+-- ============================================
+-- FUNCIÓN: verificar_stock_critico
+-- ============================================
 CREATE OR REPLACE FUNCTION verificar_stock_critico()
 RETURNS TABLE (
     ingrediente_id TEXT,
@@ -642,22 +643,18 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- ============================================
--- CONFIGURACIÓN DE ALMACENAMIENTO (Storage)
+-- CONFIGURACIÓN DE STORAGE
 -- ============================================
-
--- Crear buckets
 INSERT INTO storage.buckets (id, name, public) VALUES
     ('imagenes-platillos', 'imagenes-platillos', true),
     ('comprobantes', 'comprobantes', true),
     ('alarma', 'alarma', true)
 ON CONFLICT (id) DO NOTHING;
 
--- Eliminar políticas existentes
 DROP POLICY IF EXISTS "Permitir todo en imagenes-platillos" ON storage.objects;
 DROP POLICY IF EXISTS "Permitir todo en comprobantes" ON storage.objects;
 DROP POLICY IF EXISTS "Permitir todo en alarma" ON storage.objects;
 
--- Crear políticas de acceso total
 CREATE POLICY "Permitir todo en imagenes-platillos"
     ON storage.objects FOR ALL
     USING (bucket_id = 'imagenes-platillos')
@@ -676,8 +673,6 @@ CREATE POLICY "Permitir todo en alarma"
 -- ============================================
 -- DATOS DE EJEMPLO
 -- ============================================
-
--- Insertar pedido de ejemplo
 DO $$
 DECLARE
     v_pedido_id TEXT;
@@ -702,12 +697,10 @@ BEGIN
         400
     );
 
-    -- Insertar notificación de ejemplo
     INSERT INTO notificaciones (pedido_id, tipo, titulo, mensaje, session_id)
     VALUES (v_pedido_id, 'pending', '⏳ Pedido pendiente', 'Tu pedido está pendiente de confirmación', v_session_id);
 END $$;
 
--- Insertar algunas propinas de ejemplo
 DO $$
 DECLARE
     v_mesonero_id TEXT;
@@ -723,27 +716,17 @@ BEGIN
 END $$;
 
 -- ============================================
--- *** HABILITAR REALTIME PARA NOTIFICACIONES ***
--- (VERSIÓN CORREGIDA - SIN ERROR DE PUBLICACIÓN)
+-- ACTUALIZAR NOTIFICACIONES CON SESSION_ID CORRECTO
 -- ============================================
-
--- NOTA: En Supabase, la publicación 'supabase_realtime' ya existe y está configurada como FOR ALL TABLES
--- No necesitamos crearla ni modificarla. Solo necesitamos asegurarnos de que:
-
--- 1. La tabla tiene REPLICA IDENTITY FULL para que Realtime pueda capturar los cambios completos
--- (Ya lo hicimos arriba con: ALTER TABLE notificaciones REPLICA IDENTITY FULL;)
-
--- 2. La tabla está incluida en la publicación existente (ya lo está porque la publicación es FOR ALL TABLES)
-
--- Para verificar que todo está correcto, podemos ejecutar:
--- SELECT * FROM pg_publication_tables WHERE pubname = 'supabase_realtime' AND tablename = 'notificaciones';
--- Esto debería mostrar la tabla notificaciones (aunque no ejecutamos nada, ya está incluida)
+UPDATE notificaciones n
+SET session_id = p.session_id
+FROM pedidos p
+WHERE n.pedido_id = p.id
+AND (n.session_id IS NULL OR n.session_id != p.session_id);
 
 -- ============================================
 -- VERIFICACIÓN FINAL
 -- ============================================
-
--- Verificar que las tablas existen
 SELECT 
     table_name 
 FROM information_schema.tables 
@@ -752,21 +735,8 @@ WHERE table_schema = 'public'
     AND table_name NOT LIKE 'pg_%'
 ORDER BY table_name;
 
--- Verificar que Replica Identity está configurado para notificaciones
-SELECT 
-    relname as table_name,
-    CASE relreplident
-        WHEN 'd' THEN 'default'
-        WHEN 'i' THEN 'index'
-        WHEN 'f' THEN 'full'
-        ELSE 'nothing'
-    END as replica_identity
-FROM pg_class 
-WHERE relname = 'notificaciones';
-
--- Mensajes de éxito
 SELECT '✅ SCRIPT COMPLETADO EXITOSAMENTE' as mensaje;
-SELECT '✅ RLS DESHABILITADO PARA TODAS LAS TABLAS' as resultado;
-SELECT '✅ REPLICA IDENTITY FULL configurado para NOTIFICACIONES' as realtime_info;
+SELECT '✅ ÍNDICES CREADOS PARA NOTIFICACIONES' as indices;
+SELECT '✅ RLS DESHABILITADO PARA TODAS LAS TABLAS' as rls;
 SELECT '✅ Usuario admin: contraseña 654321' as admin_info;
 SELECT '✅ Usuarios cajero: cajero1/123456, cajero2/123456' as cajero_info;
