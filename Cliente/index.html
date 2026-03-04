@@ -664,7 +664,7 @@
     <script src="../supabase-config.js"></script>
     <script>
         // ============================================
-        // VARIABLES GLOBALES
+        // VARIABLES GLOBALES - VERSIÓN POLLING
         // ============================================
         let sessionId = localStorage.getItem('saki_session_id') || generarId('session_');
         localStorage.setItem('saki_session_id', sessionId);
@@ -683,8 +683,6 @@
         let pedidosActivos = [];
         let paginaVisible = true;
         let intervaloNotificaciones = null;
-        let ultimoTimestamp = localStorage.getItem('saki_ultimo_timestamp') || null;
-        let realtimeSubscription = null;
         
         const preciosPorParroquia = {
             "Altagracia":3, "Antímano":7, "Candelaria":2, "Caricuao":7, "Caucagüita":7,
@@ -725,18 +723,16 @@
             { id: 'ejecutivo', nombre: 'Combo Ejecutivo' }
         ];
         
-        // Obtener parámetro de la URL
         const urlParams = new URLSearchParams(window.location.search);
         mesaId = urlParams.get('mesa');
         
-        // Datos de formularios
         let deliveryFormData = { parroquia: '', direccion: '', telefono: '', referencia: '', comprobante: null };
         let reservaFormData = { fecha: '', nombre: '', referencia: '', comprobante: null };
         let isUploading = false;
         let uploadComplete = false;
         
         // ============================================
-        // FUNCIONES DE NOTIFICACIONES (CORREGIDAS)
+        // FUNCIONES DE NOTIFICACIONES (POLLING)
         // ============================================
         
         function reproducirAlertaNotificacion() {
@@ -792,7 +788,12 @@
             }
         }
         
-        async function cargarNotificaciones() {
+        // ============================================
+        // FUNCIÓN: verificarNotificaciones (POLLING)
+        // ============================================
+        async function verificarNotificaciones() {
+            if (!paginaVisible) return;
+            
             try {
                 const { data, error } = await window.supabaseClient
                     .from('notificaciones')
@@ -808,11 +809,13 @@
                     const nuevasNotificaciones = data.filter(n => !notificaciones.some(e => e.id === n.id));
                     
                     if (nuevasNotificaciones.length > 0) {
+                        console.log('🔔 Nuevas notificaciones detectadas:', nuevasNotificaciones.length);
+                        
                         notificaciones = data;
                         notificacionesNoLeidas = nuevasNoLeidas;
+                        
                         actualizarNotificacionesUI();
                         
-                        // Reproducir sonido para nuevas notificaciones no leídas
                         nuevasNotificaciones.forEach(n => {
                             if (!n.leida) reproducirAlertaNotificacion();
                         });
@@ -821,61 +824,21 @@
                     }
                 }
             } catch (error) {
-                console.error('Error cargando notificaciones:', error);
+                console.error('Error verificando notificaciones:', error);
             }
         }
         
         // ============================================
-        // FUNCIÓN: setupRealtimeNotifications (NUEVA)
+        // FUNCIÓN: iniciarVerificacionPeriodica
         // ============================================
-        async function setupRealtimeNotifications() {
-            try {
-                // Si ya existe una suscripción, la cancelamos
-                if (realtimeSubscription) {
-                    realtimeSubscription.unsubscribe();
-                }
-                
-                // Configurar suscripción en tiempo real
-                realtimeSubscription = window.supabaseClient
-                    .channel('notificaciones-realtime')
-                    .on(
-                        'postgres_changes',
-                        {
-                            event: 'INSERT',
-                            schema: 'public',
-                            table: 'notificaciones',
-                            filter: `session_id=eq.${sessionId}`
-                        },
-                        (payload) => {
-                            console.log('🔔 Nueva notificación recibida:', payload);
-                            const nuevaNotificacion = payload.new;
-                            
-                            // Verificar si ya existe
-                            if (!notificaciones.some(n => n.id === nuevaNotificacion.id)) {
-                                notificaciones.unshift(nuevaNotificacion);
-                                if (!nuevaNotificacion.leida) {
-                                    notificacionesNoLeidas++;
-                                    reproducirAlertaNotificacion();
-                                }
-                                actualizarNotificacionesUI();
-                                localStorage.setItem('saki_notificaciones', JSON.stringify(notificaciones));
-                            }
-                        }
-                    )
-                    .subscribe((status) => {
-                        console.log('📡 Estado de suscripción realtime:', status);
-                    });
-                    
-            } catch (error) {
-                console.error('Error configurando notificaciones en tiempo real:', error);
-            }
-        }
-        
         function iniciarVerificacionPeriodica() {
             if (intervaloNotificaciones) clearInterval(intervaloNotificaciones);
+            
             intervaloNotificaciones = setInterval(async () => {
-                if (paginaVisible) await cargarNotificaciones();
+                if (paginaVisible) await verificarNotificaciones();
             }, 3000);
+            
+            console.log('⏱️ Polling de notificaciones iniciado (cada 3s)');
         }
         
         async function marcarTodasComoLeidas() {
@@ -1024,12 +987,8 @@
             return { disponible: true };
         }
         
-        // ============================================
-        // FUNCIÓN: crearPedidoTransaccional (CORREGIDA)
-        // ============================================
         async function crearPedidoTransaccional(pedido) {
             try {
-                // Asegurar que el objeto pedidoParaRPC tenga todos los campos necesarios
                 const pedidoParaRPC = {
                     id: pedido.id,
                     timestamp: pedido.timestamp,
@@ -2738,9 +2697,9 @@
             await cargarNotificaciones();
             console.log('6️⃣ Notificaciones cargadas');
             
-            // Configurar notificaciones en tiempo real
-            await setupRealtimeNotifications();
-            console.log('7️⃣ Notificaciones en tiempo real configuradas');
+            // Iniciar POLLING en lugar de Realtime
+            iniciarVerificacionPeriodica();
+            console.log('7️⃣ Polling de notificaciones iniciado');
             
             setupEventListeners();
             console.log('8️⃣ Event listeners configurados');
@@ -2752,7 +2711,6 @@
             actualizarCarritoBadge();
             restaurarDatosFormulario();
             
-            iniciarVerificacionPeriodica();
             verificarPermisosAudio();
             
             const hoy = new Date().toISOString().split('T')[0];
@@ -2782,20 +2740,21 @@
         });
         
         window.addEventListener('beforeunload', () => {
-            if (intervaloNotificaciones) clearInterval(intervaloNotificaciones);
-            Object.values(intervalosTimer).forEach(clearInterval);
-            
-            if (realtimeSubscription) {
-                realtimeSubscription.unsubscribe();
+            if (intervaloNotificaciones) {
+                clearInterval(intervaloNotificaciones);
+                intervaloNotificaciones = null;
             }
+            Object.values(intervalosTimer).forEach(clearInterval);
         });
         
         window.addEventListener('visibilitychange', function() {
             if (document.hidden) {
                 paginaVisible = false;
+                console.log('📱 Página oculta, pausando polling');
             } else {
                 paginaVisible = true;
-                cargarNotificaciones();
+                console.log('📱 Página visible, reanudando polling');
+                verificarNotificaciones();
             }
         });
     </script>
