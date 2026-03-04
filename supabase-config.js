@@ -1,4 +1,4 @@
-// supabase-config.js - VERSIÓN 2.0 COMPLETA
+// supabase-config.js - VERSIÓN CORREGIDA CON REALTIME HABILITADO
 window.SUPABASE_URL = 'https://iqwwoihiiyrtypyqzhgy.supabase.co';
 window.SUPABASE_ANON_KEY = 'sb_publishable_m4WcF4gmkj1olAj95HMLlA_4yKqPFXm';
 
@@ -6,14 +6,19 @@ if (!window.supabaseClient) {
     window.supabaseClient = window.supabase.createClient(
         window.SUPABASE_URL,
         window.SUPABASE_ANON_KEY,
-        { auth: { persistSession: false } }
+        { 
+            auth: { persistSession: false },
+            realtime: {
+                params: {
+                    eventsPerSecond: 10
+                }
+            }
+        }
     );
-    console.log('📌 Cliente Supabase inicializado');
+    console.log('📌 Cliente Supabase inicializado con Realtime');
 }
 
-// ============================================
-// CONFIGURACIÓN GLOBAL
-// ============================================
+// Configuración global
 window.configGlobal = {
     tasa_cambio: 400,
     tasa_efectiva: 400,
@@ -28,41 +33,7 @@ window.configGlobal = {
     alerta_stock_minimo: 5
 };
 
-// ============================================
-// CONSTANTES DEL SISTEMA
-// ============================================
-window.ESTADOS_PEDIDO = {
-    PENDIENTE: 'pendiente',
-    COBRADO: 'cobrado',
-    EN_COCINA: 'en_cocina',
-    EN_CAMINO: 'en_camino',
-    ENTREGADO: 'entregado',
-    ENVIADO: 'enviado',
-    RESERVA_PENDIENTE: 'reserva_pendiente',
-    RESERVA_ATENDIDA: 'reserva_atendida',
-    RESERVA_COMPLETADA: 'reserva_completada',
-    RECHAZADO: 'rechazado',
-    CANCELADO_TIMEOUT: 'cancelado_timeout'
-};
-
-window.TIPOS_PEDIDO = {
-    MESA: 'mesa',
-    DELIVERY: 'delivery',
-    RESERVA: 'reserva'
-};
-
-window.METODOS_PAGO = {
-    EFECTIVO_BS: 'efectivo_bs',
-    EFECTIVO_USD: 'efectivo_usd',
-    PAGO_MOVIL: 'pago_movil',
-    PUNTO_VENTA: 'punto_venta',
-    MIXTO: 'mixto',
-    INVITACION: 'invitacion'
-};
-
-// ============================================
-// FUNCIÓN: Cargar configuración
-// ============================================
+// Cargar configuración
 window.cargarConfiguracion = async function() {
     try {
         const { data, error } = await window.supabaseClient
@@ -79,65 +50,7 @@ window.cargarConfiguracion = async function() {
     }
 };
 
-// ============================================
-// FUNCIÓN: Crear pedido (unificada)
-// ============================================
-window.crearPedido = async function(tipo, datos) {
-    try {
-        const pedido = {
-            id: window.generarId('PED-'),
-            timestamp: new Date().toISOString(),
-            estado: window.ESTADOS_PEDIDO.PENDIENTE,
-            tipo: tipo,
-            items: datos.items || [],
-            total: datos.total || 0,
-            session_id: datos.session_id || localStorage.getItem('saki_session_id'),
-            tasa_aplicada: window.configGlobal.tasa_efectiva || 400,
-            
-            // Campos específicos según tipo
-            mesa: tipo === window.TIPOS_PEDIDO.MESA ? datos.mesa : null,
-            cliente_nombre: datos.cliente_nombre || null,
-            
-            // Campos para delivery
-            parroquia: datos.parroquia || null,
-            direccion: datos.direccion || null,
-            telefono: datos.telefono || null,
-            referencia: datos.referencia || null,
-            costo_delivery_usd: datos.costo_delivery_usd || 0,
-            costo_delivery_bs: datos.costo_delivery_bs || 0,
-            
-            // Campos para reserva
-            fecha_reserva: datos.fecha_reserva || null,
-            
-            // Comprobante
-            comprobante_url: datos.comprobante_url || null
-        };
-
-        // Llamar a la función RPC
-        const { data, error } = await window.supabaseClient
-            .rpc('crear_pedido_con_reserva', {
-                p_pedido: pedido,
-                p_items: pedido.items
-            });
-
-        if (error) throw error;
-        
-        if (data && data.success) {
-            console.log('✅ Pedido creado:', data.pedido_id);
-            return { success: true, pedidoId: data.pedido_id };
-        } else {
-            throw new Error(data?.error || 'Error desconocido');
-        }
-
-    } catch (error) {
-        console.error('❌ Error creando pedido:', error);
-        return { success: false, error: error.message };
-    }
-};
-
-// ============================================
-// FUNCIÓN: Subir imagen de platillo
-// ============================================
+// Subir imagen de platillo
 window.subirImagenPlatillo = async function(archivoImagen, carpetaAdicional = '') {
     try {
         if (!archivoImagen) return { success: false, error: 'No se proporcionó archivo' };
@@ -179,9 +92,7 @@ window.subirImagenPlatillo = async function(archivoImagen, carpetaAdicional = ''
     }
 };
 
-// ============================================
-// FUNCIÓN: Eliminar imagen de platillo
-// ============================================
+// Eliminar imagen de platillo
 window.eliminarImagenPlatillo = async function(urlImagen) {
     try {
         if (!urlImagen) return { success: true };
@@ -206,9 +117,7 @@ window.eliminarImagenPlatillo = async function(urlImagen) {
     }
 };
 
-// ============================================
-// FUNCIÓN: Subir comprobante con progreso
-// ============================================
+// Subir comprobante con progreso
 window.subirComprobante = async function(file, tipo, onProgress) {
     try {
         if (!file) throw new Error('No se proporcionó archivo');
@@ -253,65 +162,34 @@ window.subirComprobante = async function(file, tipo, onProgress) {
 };
 
 // ============================================
-// FUNCIÓN: Formatear moneda (Bs)
+// NUEVA FUNCIÓN: window.formatBs (CORREGIDA)
+// Formatea un número a 'Bs X.XXX,XX' manualmente.
 // ============================================
 window.formatBs = function(monto) {
     try {
-        // 1. Redondear a 2 decimales y convertir a número
         const valor = Math.round((monto || 0) * 100) / 100;
-        // 2. Separar parte entera y decimal
         let [entero, decimal] = valor.toFixed(2).split('.');
-        // 3. Añadir separadores de miles a la parte entera
         entero = entero.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-        // 4. Devolver el string con 'Bs', la parte entera (con puntos) y la parte decimal
         return `Bs ${entero},${decimal}`;
     } catch (e) {
-        // Fallback en caso de error
         return 'Bs ' + (monto || 0).toFixed(2);
     }
 };
 
-// ============================================
-// FUNCIÓN: Formatear moneda (USD)
-// ============================================
 window.formatUSD = function(monto) {
-    try {
-        return new Intl.NumberFormat('en-US', {
-            style: 'currency',
-            currency: 'USD',
-            minimumFractionDigits: 2
-        }).format(monto);
-    } catch (e) {
-        return '$ ' + (monto || 0).toFixed(2);
-    }
+    return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        minimumFractionDigits: 2
+    }).format(monto);
 };
 
-// ============================================
-// FUNCIÓN: Convertir USD a Bs
-// ============================================
-window.usdToBs = function(usd, tasa) {
-    const tasaActual = tasa || window.configGlobal.tasa_efectiva || 400;
-    return usd * tasaActual;
-};
-
-// ============================================
-// FUNCIÓN: Convertir Bs a USD
-// ============================================
-window.bsToUsd = function(bs, tasa) {
-    const tasaActual = tasa || window.configGlobal.tasa_efectiva || 400;
-    return bs / tasaActual;
-};
-
-// ============================================
-// FUNCIÓN: Generar ID único
-// ============================================
+// Generador de IDs
 window.generarId = function(prefix = '') {
     return `${prefix}${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 };
 
-// ============================================
-// VALIDACIONES
-// ============================================
+// Validaciones
 window.validarTelefono = function(telefono) {
     const soloNumeros = telefono.replace(/\D/g, '');
     const regex = /^(0412|0414|0424|0416|0426|0418|0422|0212|0234|0241|0243|0246|0251|0254|0255|0257|0261|0264|0265|0268|0271|0273|0274|0275|0276|0281)\d{7}$/;
@@ -323,18 +201,23 @@ window.validarReferencia = function(ref) {
     return soloNumeros.length === 6;
 };
 
-window.validarDireccion = function(direccion) {
-    return direccion && direccion.length >= 20;
-};
-
 window.formatearReferenciaInput = function(input) {
     input.value = input.value.replace(/[^0-9]/g, '');
     if (input.value.length > 1) input.value = input.value.charAt(0);
 };
 
-// ============================================
-// CACHÉ DE STOCK
-// ============================================
+// Conversores de moneda
+window.usdToBs = function(usd, tasa) {
+    const tasaActual = tasa || window.configGlobal.tasa_efectiva || 400;
+    return usd * tasaActual;
+};
+
+window.bsToUsd = function(bs, tasa) {
+    const tasaActual = tasa || window.configGlobal.tasa_efectiva || 400;
+    return bs / tasaActual;
+};
+
+// Cache de stock
 window.stockCache = {
     data: {},
     lastUpdate: 0,
@@ -362,9 +245,7 @@ window.stockCache = {
     }
 };
 
-// ============================================
-// LISTA DE PARROQUIAS CON PRECIOS (DELIVERY)
-// ============================================
+// Lista de parroquias con precios
 window.parroquiasDelivery = [
     { nombre: "San Bernardino", precioUSD: 2 }, { nombre: "San José", precioUSD: 2 },
     { nombre: "San Agustín", precioUSD: 2 }, { nombre: "Candelaria", precioUSD: 2 },
@@ -385,9 +266,7 @@ window.parroquiasDelivery = [
     { nombre: "El Junquito", precioUSD: 7 }
 ];
 
-// ============================================
-// CATEGORÍAS PREDEFINIDAS DEL MENÚ
-// ============================================
+// Categorías predefinidas
 window.categoriasMenu = {
     "Entradas": [],
     "Sushi": [],
@@ -402,5 +281,5 @@ window.categoriasMenu = {
     "Combo Ejecutivo": []
 };
 
-console.log('📌 supabase-config.js v2.0 cargado correctamente');
+console.log('📌 supabase-config.js cargado correctamente (con Realtime habilitado)');
 console.log('📍 Usando URL:', window.SUPABASE_URL);
