@@ -1,4 +1,4 @@
-// supabase-config.js - VERSIÓN CORREGIDA CON REALTIME HABILITADO
+// supabase-config.js - VERSIÓN FINAL CON POLLING PERSISTENTE
 window.SUPABASE_URL = 'https://iqwwoihiiyrtypyqzhgy.supabase.co';
 window.SUPABASE_ANON_KEY = 'sb_publishable_m4WcF4gmkj1olAj95HMLlA_4yKqPFXm';
 
@@ -7,15 +7,10 @@ if (!window.supabaseClient) {
         window.SUPABASE_URL,
         window.SUPABASE_ANON_KEY,
         { 
-            auth: { persistSession: false },
-            realtime: {
-                params: {
-                    eventsPerSecond: 10
-                }
-            }
+            auth: { persistSession: false }
         }
     );
-    console.log('📌 Cliente Supabase inicializado con Realtime');
+    console.log('📌 Cliente Supabase inicializado (modo polling)');
 }
 
 // Configuración global
@@ -161,10 +156,7 @@ window.subirComprobante = async function(file, tipo, onProgress) {
     }
 };
 
-// ============================================
-// NUEVA FUNCIÓN: window.formatBs (CORREGIDA)
-// Formatea un número a 'Bs X.XXX,XX' manualmente.
-// ============================================
+// Formateador Bs (CORREGIDO)
 window.formatBs = function(monto) {
     try {
         const valor = Math.round((monto || 0) * 100) / 100;
@@ -281,5 +273,4 @@ window.categoriasMenu = {
     "Combo Ejecutivo": []
 };
 
-console.log('📌 supabase-config.js cargado correctamente (con Realtime habilitado)');
-console.log('📍 Usando URL:', window.SUPABASE_URL);
+console.log('📌 supabase-config.js cargado correctamente (modo polling)');
