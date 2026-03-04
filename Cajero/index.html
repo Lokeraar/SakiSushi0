@@ -247,7 +247,7 @@ window.formatearHora12 = function(timestamp) {
 };
 
 // ============================================
-// FUNCIÓN: crearTarjetaPedidoCompacta (ACTUALIZADA)
+// FUNCIÓN: crearTarjetaPedidoCompacta
 // ============================================
 window.crearTarjetaPedidoCompacta = function(p, t) {
     try {
@@ -751,7 +751,7 @@ window.recalcularTotales = function() {
 window.calcularConVuelto = function() { window.recalcularTotales(); };
 
 // ============================================
-// FUNCIÓN: confirmarCobro (ACTUALIZADA)
+// FUNCIÓN: confirmarCobro (ACTUALIZADA - con notificaciones mejoradas)
 // ============================================
 window.confirmarCobro = async function() {
     if (!window.currentPedido) return;
@@ -989,7 +989,7 @@ window.mostrarConfirmacionDelivery = function(pedidoId) {
 };
 
 // ============================================
-// FUNCIÓN: ejecutarConfirmacion (ACTUALIZADA)
+// FUNCIÓN: ejecutarConfirmacion (ACTUALIZADA - con notificaciones mejoradas)
 // ============================================
 window.ejecutarConfirmacion = async function() {
     if (!window.pedidoParaAccion) return;
@@ -1089,7 +1089,7 @@ window.crearDetallePedidoCompacto=function(a){try{const b=new Date(a.timestamp).
 window.verComprobante=async function(a){const b=window.pedidos.find(c=>c.id===a);if(!b||!b.comprobante_url){window.mostrarToast('No hay comprobante','error');return;}const c=document.getElementById('comprobanteModal');document.getElementById('comprobanteModalBody').innerHTML=`<div style="text-align:center"><img src="${b.comprobante_url}" style="max-width:100%;max-height:400px;border-radius:8px;margin-bottom:15px"><p><strong>Referencia:</strong> ${b.referencia||'N/A'}</p><p><strong>Teléfono:</strong> ${b.telefono||'N/A'}</p><p><strong>Total:</strong> ${window.formatBs(window.usdToBs(b.total||0))}</p></div><div class="keyboard-hint"><span><kbd>ESC</kbd> cerrar</span></div>`;c.classList.add('active');};
 
 // ============================================
-// FUNCIÓN: abrirModalDetalle (ACTUALIZADA - PLATILLOS)
+// FUNCIÓN: abrirModalDetalle (ACTUALIZADA)
 // ============================================
 window.abrirModalDetalle = async function(tipo) {
     await window.cargarVentasHoy();
