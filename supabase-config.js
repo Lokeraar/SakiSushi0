@@ -1,4 +1,4 @@
-// supabase-config.js - VERSIÓN FINAL CON POLLING PERSISTENTE
+// supabase-config.js - VERSIÓN FINAL
 window.SUPABASE_URL = 'https://iqwwoihiiyrtypyqzhgy.supabase.co';
 window.SUPABASE_ANON_KEY = 'sb_publishable_m4WcF4gmkj1olAj95HMLlA_4yKqPFXm';
 
@@ -6,14 +6,11 @@ if (!window.supabaseClient) {
     window.supabaseClient = window.supabase.createClient(
         window.SUPABASE_URL,
         window.SUPABASE_ANON_KEY,
-        { 
-            auth: { persistSession: false }
-        }
+        { auth: { persistSession: false } }
     );
-    console.log('📌 Cliente Supabase inicializado (modo polling)');
+    console.log('📌 Cliente Supabase inicializado');
 }
 
-// Configuración global
 window.configGlobal = {
     tasa_cambio: 400,
     tasa_efectiva: 400,
@@ -28,7 +25,6 @@ window.configGlobal = {
     alerta_stock_minimo: 5
 };
 
-// Cargar configuración
 window.cargarConfiguracion = async function() {
     try {
         const { data, error } = await window.supabaseClient
@@ -45,41 +41,23 @@ window.cargarConfiguracion = async function() {
     }
 };
 
-// Subir imagen de platillo
 window.subirImagenPlatillo = async function(archivoImagen, carpetaAdicional = '') {
     try {
         if (!archivoImagen) return { success: false, error: 'No se proporcionó archivo' };
-        
         const tipoValido = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp', 'image/gif'];
-        if (!tipoValido.includes(archivoImagen.type)) {
-            return { success: false, error: 'Tipo de archivo no válido' };
-        }
-
+        if (!tipoValido.includes(archivoImagen.type)) return { success: false, error: 'Tipo de archivo no válido' };
         const maxSize = 5 * 1024 * 1024;
-        if (archivoImagen.size > maxSize) {
-            return { success: false, error: 'El archivo es demasiado grande. Máximo 5MB' };
-        }
-
+        if (archivoImagen.size > maxSize) return { success: false, error: 'El archivo es demasiado grande. Máximo 5MB' };
         const timestamp = Date.now();
         const random = Math.random().toString(36).substring(2, 8);
         const extension = archivoImagen.name.split('.').pop();
         const nombreArchivo = `${timestamp}_${random}.${extension}`;
         const ruta = carpetaAdicional ? `${carpetaAdicional}/${nombreArchivo}` : nombreArchivo;
-
         const { data, error } = await window.supabaseClient.storage
             .from('imagenes-platillos')
-            .upload(ruta, archivoImagen, {
-                cacheControl: '3600',
-                upsert: false,
-                contentType: archivoImagen.type
-            });
-
+            .upload(ruta, archivoImagen, { cacheControl: '3600', upsert: false, contentType: archivoImagen.type });
         if (error) throw error;
-
-        const { data: urlData } = window.supabaseClient.storage
-            .from('imagenes-platillos')
-            .getPublicUrl(ruta);
-
+        const { data: urlData } = window.supabaseClient.storage.from('imagenes-platillos').getPublicUrl(ruta);
         return { success: true, path: ruta, url: urlData.publicUrl };
     } catch (error) {
         console.error('Error subiendo imagen:', error);
@@ -87,23 +65,15 @@ window.subirImagenPlatillo = async function(archivoImagen, carpetaAdicional = ''
     }
 };
 
-// Eliminar imagen de platillo
 window.eliminarImagenPlatillo = async function(urlImagen) {
     try {
         if (!urlImagen) return { success: true };
-
         const bucketName = 'imagenes-platillos';
         const bucketIndex = urlImagen.indexOf(`/public/${bucketName}/`);
-
         if (bucketIndex === -1) return { success: true };
-
         const rutaRelativa = urlImagen.substring(bucketIndex + `/public/${bucketName}/`.length);
         if (!rutaRelativa) return { success: true };
-
-        const { error } = await window.supabaseClient.storage
-            .from(bucketName)
-            .remove([rutaRelativa]);
-
+        const { error } = await window.supabaseClient.storage.from(bucketName).remove([rutaRelativa]);
         if (error) throw error;
         return { success: true };
     } catch (error) {
@@ -112,43 +82,22 @@ window.eliminarImagenPlatillo = async function(urlImagen) {
     }
 };
 
-// Subir comprobante con progreso
 window.subirComprobante = async function(file, tipo, onProgress) {
     try {
         if (!file) throw new Error('No se proporcionó archivo');
-
         const tipoValido = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp', 'image/gif'];
-        if (!tipoValido.includes(file.type)) {
-            throw new Error('Tipo de archivo no válido. Solo imágenes JPG, PNG, WEBP o GIF');
-        }
-
+        if (!tipoValido.includes(file.type)) throw new Error('Tipo de archivo no válido. Solo imágenes JPG, PNG, WEBP o GIF');
         const maxSize = 5 * 1024 * 1024;
-        if (file.size > maxSize) {
-            throw new Error('El archivo es demasiado grande. Máximo 5MB');
-        }
-
+        if (file.size > maxSize) throw new Error('El archivo es demasiado grande. Máximo 5MB');
         const timestamp = Date.now();
         const nombreArchivo = `${timestamp}_${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
         const ruta = `${tipo}/${nombreArchivo}`;
-
         const { data, error } = await window.supabaseClient.storage
             .from('comprobantes')
-            .upload(ruta, file, {
-                cacheControl: '3600',
-                upsert: false,
-                contentType: file.type
-            });
-
+            .upload(ruta, file, { cacheControl: '3600', upsert: false, contentType: file.type });
         if (error) throw new Error(error.message || 'Error al subir el archivo');
-
-        const { data: urlData } = window.supabaseClient.storage
-            .from('comprobantes')
-            .getPublicUrl(ruta);
-
-        if (onProgress) {
-            onProgress({ loaded: file.size, total: file.size, percent: 100 });
-        }
-
+        const { data: urlData } = window.supabaseClient.storage.from('comprobantes').getPublicUrl(ruta);
+        if (onProgress) onProgress({ loaded: file.size, total: file.size, percent: 100 });
         return { success: true, url: urlData.publicUrl };
     } catch (error) {
         console.error('Error en subirComprobante:', error);
@@ -156,7 +105,6 @@ window.subirComprobante = async function(file, tipo, onProgress) {
     }
 };
 
-// Formateador Bs (CORREGIDO)
 window.formatBs = function(monto) {
     try {
         const valor = Math.round((monto || 0) * 100) / 100;
@@ -169,19 +117,13 @@ window.formatBs = function(monto) {
 };
 
 window.formatUSD = function(monto) {
-    return new Intl.NumberFormat('en-US', {
-        style: 'currency',
-        currency: 'USD',
-        minimumFractionDigits: 2
-    }).format(monto);
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 }).format(monto);
 };
 
-// Generador de IDs
 window.generarId = function(prefix = '') {
     return `${prefix}${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 };
 
-// Validaciones
 window.validarTelefono = function(telefono) {
     const soloNumeros = telefono.replace(/\D/g, '');
     const regex = /^(0412|0414|0424|0416|0426|0418|0422|0212|0234|0241|0243|0246|0251|0254|0255|0257|0261|0264|0265|0268|0271|0273|0274|0275|0276|0281)\d{7}$/;
@@ -198,7 +140,6 @@ window.formatearReferenciaInput = function(input) {
     if (input.value.length > 1) input.value = input.value.charAt(0);
 };
 
-// Conversores de moneda
 window.usdToBs = function(usd, tasa) {
     const tasaActual = tasa || window.configGlobal.tasa_efectiva || 400;
     return usd * tasaActual;
@@ -209,35 +150,27 @@ window.bsToUsd = function(bs, tasa) {
     return bs / tasaActual;
 };
 
-// Cache de stock
 window.stockCache = {
-    data: {},
-    lastUpdate: 0,
-    duration: 5000,
-
+    data: {}, lastUpdate: 0, duration: 5000,
     get: function(ingredienteId) {
         const ahora = Date.now();
         if (ahora - this.lastUpdate > this.duration) this.clear();
         return this.data[ingredienteId];
     },
-
     set: function(ingredienteId, valor) {
         this.data[ingredienteId] = valor;
         this.lastUpdate = Date.now();
     },
-
     clear: function() {
         this.data = {};
         this.lastUpdate = Date.now();
     },
-
     invalidate: function() {
         this.data = {};
         this.lastUpdate = 0;
     }
 };
 
-// Lista de parroquias con precios
 window.parroquiasDelivery = [
     { nombre: "San Bernardino", precioUSD: 2 }, { nombre: "San José", precioUSD: 2 },
     { nombre: "San Agustín", precioUSD: 2 }, { nombre: "Candelaria", precioUSD: 2 },
@@ -258,19 +191,12 @@ window.parroquiasDelivery = [
     { nombre: "El Junquito", precioUSD: 7 }
 ];
 
-// Categorías predefinidas
 window.categoriasMenu = {
-    "Entradas": [],
-    "Sushi": [],
-    "Rolls": ["Rolls Fríos de 10 piezas", "Rolls Tempura de 12 piezas"],
-    "Tragos y bebidas": [],
-    "Pokes": [],
-    "Ensaladas": [],
+    "Entradas": [], "Sushi": [], "Rolls": ["Rolls Fríos de 10 piezas", "Rolls Tempura de 12 piezas"],
+    "Tragos y bebidas": [], "Pokes": [], "Ensaladas": [],
     "Comida China": ["Arroz Chino", "Arroz Cantones", "Chopsuey", "Lomey", "Chow Mein", "Fideos de Arroz", "Tallarines Cantones", "Mariscos", "Foo Yong", "Sopas", "Entremeses"],
     "Comida Japonesa": ["Yakimeshi", "Yakisoba", "Pasta Udon", "Churrasco"],
-    "Ofertas Especiales": [],
-    "Para Niños": [],
-    "Combo Ejecutivo": []
+    "Ofertas Especiales": [], "Para Niños": [], "Combo Ejecutivo": []
 };
 
-console.log('📌 supabase-config.js cargado correctamente (modo polling)');
+console.log('📌 supabase-config.js cargado correctamente');
