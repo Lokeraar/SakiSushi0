@@ -1,4 +1,4 @@
-// supabase-config.js - VERSIÓN FINAL CON UUID
+// supabase-config.js - VERSIÓN FINAL CON UUID Y LOGS
 window.SUPABASE_URL = 'https://iqwwoihiiyrtypyqzhgy.supabase.co';
 window.SUPABASE_ANON_KEY = 'sb_publishable_m4WcF4gmkj1olAj95HMLlA_4yKqPFXm';
 
