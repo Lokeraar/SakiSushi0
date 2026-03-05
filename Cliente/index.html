@@ -105,13 +105,13 @@
         .nivel3-item{display:flex;align-items:center;gap:.8rem;padding:.8rem;border-bottom:1px solid var(--nivel3-border);background:var(--nivel3-bg)}
         .nivel3-item:last-child{border-bottom:none}
         .item-image{width:40px;height:40px;border-radius:var(--radius-sm);background-size:cover;background-position:center;background-color:var(--gray-200);flex-shrink:0}
-        .item-info{flex:1}
+        .item-info{flex:1;min-width:0}
         .item-info .item-number{font-weight:700;color:var(--primary);font-size:.85rem;margin-right:.5rem}
-        .item-info .item-name{font-weight:600;color:var(--secondary);font-size:.9rem}
-        .item-info .personalizacion{font-size:.8rem;color:var(--gray-600);font-style:italic;margin-top:.2rem}
+        .item-info .item-name{font-weight:600;color:var(--secondary);font-size:.9rem;white-space:normal;word-break:break-word}
+        .item-info .personalizacion{font-size:.8rem;color:var(--gray-600);font-style:italic;margin-top:.2rem;white-space:normal;word-break:break-word}
         .item-info .personalizacion i{color:var(--accent);margin-right:.3rem}
-        .item-precio{font-weight:600;color:var(--secondary);font-size:.9rem;min-width:70px;text-align:right}
-        .btn-remove-item{background:none;border:none;color:var(--danger);cursor:pointer;font-size:.9rem;padding:.3rem;opacity:.6;transition:all .2s;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+        .item-precio{font-weight:600;color:var(--secondary);font-size:.9rem;min-width:70px;text-align:right;flex-shrink:0}
+        .btn-remove-item{background:none;border:none;color:var(--danger);cursor:pointer;font-size:.9rem;padding:.3rem;opacity:.6;transition:all .2s;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-left:4px}
         .btn-remove-item:hover{opacity:1;background:var(--gray-100);transform:scale(1.1)}
         .cart-footer{padding:1.2rem;border-top:2px solid rgba(255,255,255,.1);background:rgba(0,0,0,.2);flex-shrink:0}
         .cart-total{display:flex;justify-content:space-between;font-weight:700;font-size:1.2rem;margin-bottom:1.2rem;color:var(--gray-100)}
@@ -237,9 +237,9 @@
         .toast.info{background:var(--info)}
         .toast.warning{background:var(--warning)}
         @keyframes slideUp{from{transform:translate(-50%,20px);opacity:0}to{transform:translate(-50%,0);opacity:1}}
-        .scroll-indicator-cascade{display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;margin:.5rem 0;cursor:pointer;opacity:0.9;transition:opacity 0.3s;position:sticky;bottom:10px;z-index:10;background:rgba(26,26,46,.9);border-radius:30px;padding:5px 0;backdrop-filter:blur(5px);box-shadow:0 -5px 15px rgba(0,0,0,.3);pointer-events:auto}
+        .scroll-indicator-cascade{display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;margin:0;cursor:pointer;opacity:0.9;transition:opacity 0.3s;position:relative;bottom:auto;z-index:10;background:rgba(26,26,46,.9);border-radius:30px;padding:5px 0;backdrop-filter:blur(5px);box-shadow:0 -5px 15px rgba(0,0,0,.3);pointer-events:auto}
         .scroll-indicator-cascade.hidden{display:none}
-        .scroll-indicator-cascade.sticky-at-bottom{position:absolute;bottom:10px}
+        .scroll-indicator-cascade.fixed-bottom{position:sticky;bottom:10px}
         .scroll-indicator-cascade:hover{opacity:1}
         .cascade-arrow{font-size:1.5rem;color:var(--accent);filter:drop-shadow(0 0 5px rgba(255,152,0,0.5));animation:cascadeDown 1.5s infinite}
         .cascade-arrow:nth-child(1){animation-delay:0s}
@@ -724,8 +724,8 @@ if (!sessionId || !sessionId.includes('-')) {
 }
 
 let menuItems=[],inventario=[],carrito=[],notificaciones=[],notificacionesCache=[],notificacionesNoLeidas=0,notificacionesCompletas=[],ultimaActualizacion=Date.now(),paginaVisible=true,intervaloNotificaciones=null,currentCustomizeItem=null,mesaId=null,nivel1Activo=null,nivel2Activo=null,timersActivos={},intervalosTimer={};
-let scrollIndicadorActivo = false;
-let scrollInterval = null;
+let scrollRafId = null;
+let ultimaPosicionFlechas = 0;
 
 const preciosPorParroquia={"Altagracia":3,"Antímano":7,"Candelaria":2,"Caricuao":7,"Caucagüita":7,"Catedral":3,"Chacao":5,"Coche":5,"El Cafetal":6,"El Junquito":7,"El Paraíso":4,"El Recreo":4,"El Valle":5,"Fila de Mariches":6,"La Dolorita":6,"La Pastora":3,"La Vega":4,"Las Minas":5,"Leoncio Martínez":6,"Macarao":7,"Nuestra Señora del Rosario":7,"Petare":6,"San Agustín":2,"San Bernardino":2,"San José":2,"San Juan":3,"San Pedro":4,"Santa Rosalía":3,"Santa Rosalía de Palermo":3,"Santa Teresa":3,"Sucre":7,"23 de Enero":4};
 const mensajesEstado={'approved':{titulo:'✅ Pago confirmado',icono:'check-circle'},'rejected':{titulo:'❌ Pedido rechazado',icono:'times-circle'},'pending':{titulo:'⏳ Pedido pendiente',icono:'clock'}};
@@ -735,21 +735,19 @@ const urlParams=new URLSearchParams(window.location.search);mesaId=urlParams.get
 let deliveryFormData={parroquia:'',direccion:'',telefono:'',referencia:'',comprobante:null},reservaFormData={fecha:'',nombre:'',referencia:'',comprobante:null},isUploading=false,uploadComplete=false;
 
 // ============================================
-// FUNCIONES DE SCROLL Y FLECHAS ANIMADAS
+// FUNCIONES DE SCROLL Y FLECHAS ANIMADAS (MEJORADAS)
 // ============================================
 
 function iniciarSeguimientoScroll() {
-    if (scrollInterval) clearInterval(scrollInterval);
-    scrollIndicadorActivo = true;
-    scrollInterval = setInterval(actualizarPosicionFlechas, 50);
+    if (scrollRafId) cancelAnimationFrame(scrollRafId);
+    scrollRafId = requestAnimationFrame(actualizarPosicionFlechas);
 }
 
 function detenerSeguimientoScroll() {
-    if (scrollInterval) {
-        clearInterval(scrollInterval);
-        scrollInterval = null;
+    if (scrollRafId) {
+        cancelAnimationFrame(scrollRafId);
+        scrollRafId = null;
     }
-    scrollIndicadorActivo = false;
 }
 
 function actualizarPosicionFlechas() {
@@ -757,24 +755,51 @@ function actualizarPosicionFlechas() {
     const cartItems = document.getElementById('cartItems');
     const cartFooter = document.getElementById('cartFooter');
     
-    if (!flechas || !cartItems || !cartFooter || carrito.length === 0) return;
+    if (!flechas || !cartItems || !cartFooter || carrito.length === 0) {
+        if (scrollRafId) cancelAnimationFrame(scrollRafId);
+        scrollRafId = null;
+        return;
+    }
     
-    const cartRect = cartItems.getBoundingClientRect();
+    // Obtener el último item del carrito
+    const ultimoItem = cartItems.querySelector('.nivel3-item:last-child');
+    if (!ultimoItem) {
+        scrollRafId = requestAnimationFrame(actualizarPosicionFlechas);
+        return;
+    }
+    
+    const ultimoItemRect = ultimoItem.getBoundingClientRect();
     const footerRect = cartFooter.getBoundingClientRect();
     const flechasRect = flechas.getBoundingClientRect();
+    const cartRect = cartItems.getBoundingClientRect();
     
-    // Límite inferior: justo encima del footer
-    const limiteInferior = footerRect.top - flechasRect.height - 10;
-    // Límite superior: tope del carrito
-    const limiteSuperior = cartRect.top + 10;
+    // Posición base: justo debajo del último item
+    const posicionBase = ultimoItemRect.bottom - cartRect.top + 10;
     
-    let nuevaPosicion = window.scrollY + cartRect.top + cartItems.scrollTop + (cartItems.clientHeight / 2);
+    // Si el usuario ha scrolleado más allá de los items
+    const espacioVisible = cartItems.clientHeight;
+    const scrollActual = cartItems.scrollTop;
+    const limiteInferior = cartItems.scrollHeight - espacioVisible;
     
-    // Aplicar límites
-    if (nuevaPosicion < limiteSuperior) nuevaPosicion = limiteSuperior;
-    if (nuevaPosicion > limiteInferior) nuevaPosicion = limiteInferior;
+    let nuevaPosicion = posicionBase;
     
-    flechas.style.top = nuevaPosicion + 'px';
+    // Solo perseguir si hay scroll y el último item no es visible
+    if (scrollActual > 0 && (ultimoItemRect.bottom > cartRect.bottom || ultimoItemRect.top < cartRect.top)) {
+        // La flecha se queda en el viewport, pero sin pasarse de los botones
+        nuevaPosicion = Math.min(
+            Math.max(scrollActual + 10, posicionBase),
+            limiteInferior - flechasRect.height - 10
+        );
+    }
+    
+    // Aplicar la nueva posición
+    if (Math.abs(nuevaPosicion - ultimaPosicionFlechas) > 1) {
+        flechas.style.transform = `translateY(${nuevaPosicion}px)`;
+        ultimaPosicionFlechas = nuevaPosicion;
+    }
+    
+    // Continuar el bucle de animación
+    scrollRafId = requestAnimationFrame(actualizarPosicionFlechas);
 }
 
 function irABotonesAccion() {
@@ -925,12 +950,8 @@ function actualizarCarritoUI(){
     const cartItemsElement=document.getElementById('cartItems'),necesitaScroll=cartItemsElement.scrollHeight>cartItemsElement.clientHeight;
     const flechasHTML = `<div class="scroll-indicator-cascade" onclick="irABotonesAccion()"><i class="fas fa-chevron-down cascade-arrow"></i><i class="fas fa-chevron-down cascade-arrow"></i><i class="fas fa-chevron-down cascade-arrow"></i><span class="cascade-text">Toca para ir a los botones</span></div>`;
     if(carrito.length>0){
-        if(necesitaScroll){
-            html += flechasHTML;
-            iniciarSeguimientoScroll();
-        } else {
-            html += flechasHTML;
-        }
+        html += flechasHTML;
+        iniciarSeguimientoScroll();
     }
     cartItems.innerHTML=html;
     cartTotal.textContent=formatBs(totalGeneral);
