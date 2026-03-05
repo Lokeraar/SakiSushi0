@@ -1,4 +1,4 @@
-// supabase-config.js - VERSIÓN FINAL CON UUID Y LOGS
+// supabase-config.js - VERSIÓN FINAL CON UUID Y LOGS Y ZONA HORARIA GMT-4
 window.SUPABASE_URL = 'https://iqwwoihiiyrtypyqzhgy.supabase.co';
 window.SUPABASE_ANON_KEY = 'sb_publishable_m4WcF4gmkj1olAj95HMLlA_4yKqPFXm';
 
@@ -23,6 +23,83 @@ window.configGlobal = {
     admin_password: '654321',
     recovery_email: 'admin@sakisushi.com',
     alerta_stock_minimo: 5
+};
+
+// ============================================
+// FUNCIONES DE ZONA HORARIA GMT-4
+// ============================================
+
+// Obtener fecha actual en GMT-4 (Venezuela/Caracas)
+window.getFechaGMT4 = function() {
+    const fecha = new Date();
+    // Ajustar a GMT-4 (Venezuela no tiene horario de verano)
+    const fechaGMT4 = new Date(fecha.toLocaleString('en-US', { timeZone: 'America/Caracas' }));
+    return fechaGMT4;
+};
+
+// Formatear fecha para mostrar en GMT-4
+window.formatearFechaGMT4 = function(timestamp) {
+    if (!timestamp) return 'N/A';
+    
+    try {
+        const fecha = new Date(timestamp);
+        const fechaGMT4 = new Date(fecha.toLocaleString('en-US', { timeZone: 'America/Caracas' }));
+        
+        const dia = fechaGMT4.getDate().toString().padStart(2, '0');
+        const mes = (fechaGMT4.getMonth() + 1).toString().padStart(2, '0');
+        const año = fechaGMT4.getFullYear();
+        const horas = fechaGMT4.getHours().toString().padStart(2, '0');
+        const minutos = fechaGMT4.getMinutes().toString().padStart(2, '0');
+        
+        return `${dia}/${mes}/${año} ${horas}:${minutos}`;
+    } catch (e) {
+        return timestamp;
+    }
+};
+
+// Formatear hora 12h en GMT-4
+window.formatearHora12GMT4 = function(timestamp) {
+    if (!timestamp) return 'N/A';
+    
+    try {
+        const fecha = new Date(timestamp);
+        const fechaGMT4 = new Date(fecha.toLocaleString('en-US', { timeZone: 'America/Caracas' }));
+        
+        let horas = fechaGMT4.getHours();
+        const minutos = fechaGMT4.getMinutes().toString().padStart(2, '0');
+        const ampm = horas >= 12 ? 'pm' : 'am';
+        
+        horas = horas % 12;
+        horas = horas ? horas : 12;
+        
+        return `${horas}:${minutos} ${ampm}`;
+    } catch (e) {
+        return timestamp;
+    }
+};
+
+// Obtener timestamp ISO en GMT-4 para guardar en BD
+window.getTimestampISO_GMT4 = function() {
+    const fecha = new Date();
+    const fechaGMT4 = new Date(fecha.toLocaleString('en-US', { timeZone: 'America/Caracas' }));
+    
+    // Restar 4 horas para guardar en UTC pero mantener la hora local correcta
+    const fechaUTC = new Date(fechaGMT4.getTime() + (4 * 60 * 60 * 1000));
+    return fechaUTC.toISOString();
+};
+
+// Convertir timestamp UTC a GMT-4 para mostrar
+window.utcToGMT4 = function(utcTimestamp) {
+    if (!utcTimestamp) return null;
+    
+    try {
+        const fecha = new Date(utcTimestamp);
+        // Restar 4 horas para obtener GMT-4
+        const fechaGMT4 = new Date(fecha.getTime() - (4 * 60 * 60 * 1000));
+        return fechaGMT4;
+    } catch (e) {
+        return new Date(utcTimestamp);
+    }
 };
 
 window.cargarConfiguracion = async function() {
@@ -190,7 +267,7 @@ window.parroquiasDelivery = [
     { nombre: "Petare", precioUSD: 6 }, { nombre: "La Dolorita", precioUSD: 6 },
     { nombre: "Fila de Mariches", precioUSD: 6 }, { nombre: "Caucagüita", precioUSD: 7 },
     { nombre: "El Cafetal", precioUSD: 6 }, { nombre: "Las Minas", precioUSD: 5 },
-    { nombre: "Nuestra Señora del Rosario", precioUSD: 7 }, { nombre: "Sucre", precioUSD: 7 },
+    { nombre: "Nuestra Seńora del Rosario", precioUSD: 7 }, { nombre: "Sucre", precioUSD: 7 },
     { nombre: "El Junquito", precioUSD: 7 }
 ];
 
@@ -202,8 +279,6 @@ window.categoriasMenu = {
     "Ofertas Especiales": [], "Para Niños": [], "Combo Ejecutivo": []
 };
 
-console.log(' supabase-config.js cargado correctamente (con UUID)');
-
 // ============================================
 // FUNCIÓN DE VERIFICACIÓN FORZADA DE NOTIFICACIONES
 // ============================================
@@ -211,17 +286,21 @@ window.verificarNotificacionesForzadas = async function(sessionId) {
     try {
         console.log('🔍 Verificación forzada para session:', sessionId);
         
-        const hoy = new Date();
+        const hoy = window.getFechaGMT4();
         hoy.setHours(0,0,0,0);
         const manana = new Date(hoy);
         manana.setDate(manana.getDate() + 1);
+        
+        // Convertir a UTC para la consulta
+        const hoyUTC = new Date(hoy.getTime() - (4 * 60 * 60 * 1000));
+        const mananaUTC = new Date(manana.getTime() - (4 * 60 * 60 * 1000));
         
         const { data, error } = await window.supabaseClient
             .from('notificaciones')
             .select('*')
             .eq('session_id', sessionId)
-            .gte('timestamp', hoy.toISOString())
-            .lt('timestamp', manana.toISOString())
+            .gte('timestamp', hoyUTC.toISOString())
+            .lt('timestamp', mananaUTC.toISOString())
             .order('timestamp', { ascending: false });
             
         if (error) throw error;
@@ -234,3 +313,5 @@ window.verificarNotificacionesForzadas = async function(sessionId) {
         return [];
     }
 };
+
+console.log(' supabase-config.js cargado correctamente (con UUID y GMT-4)');
