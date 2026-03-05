@@ -8,7 +8,7 @@ if (!window.supabaseClient) {
         window.SUPABASE_ANON_KEY,
         { auth: { persistSession: false } }
     );
-    console.log('📌 Cliente Supabase inicializado');
+    console.log(' Cliente Supabase inicializado');
 }
 
 window.configGlobal = {
@@ -202,4 +202,35 @@ window.categoriasMenu = {
     "Ofertas Especiales": [], "Para Niños": [], "Combo Ejecutivo": []
 };
 
-console.log('📌 supabase-config.js cargado correctamente (con UUID)');
+console.log(' supabase-config.js cargado correctamente (con UUID)');
+
+// ============================================
+// FUNCIÓN DE VERIFICACIÓN FORZADA DE NOTIFICACIONES
+// ============================================
+window.verificarNotificacionesForzadas = async function(sessionId) {
+    try {
+        console.log('🔍 Verificación forzada para session:', sessionId);
+        
+        const hoy = new Date();
+        hoy.setHours(0,0,0,0);
+        const manana = new Date(hoy);
+        manana.setDate(manana.getDate() + 1);
+        
+        const { data, error } = await window.supabaseClient
+            .from('notificaciones')
+            .select('*')
+            .eq('session_id', sessionId)
+            .gte('timestamp', hoy.toISOString())
+            .lt('timestamp', manana.toISOString())
+            .order('timestamp', { ascending: false });
+            
+        if (error) throw error;
+        
+        console.log(`📦 Encontradas ${data?.length || 0} notificaciones para hoy`);
+        return data || [];
+        
+    } catch (error) {
+        console.error('❌ Error en verificación forzada:', error);
+        return [];
+    }
+};
