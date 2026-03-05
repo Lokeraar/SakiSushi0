@@ -1,4 +1,4 @@
-// supabase-config.js - VERSIÓN FINAL
+// supabase-config.js - VERSIÓN FINAL CON UUID
 window.SUPABASE_URL = 'https://iqwwoihiiyrtypyqzhgy.supabase.co';
 window.SUPABASE_ANON_KEY = 'sb_publishable_m4WcF4gmkj1olAj95HMLlA_4yKqPFXm';
 
@@ -121,7 +121,10 @@ window.formatUSD = function(monto) {
 };
 
 window.generarId = function(prefix = '') {
-    return `${prefix}${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+    if (window.crypto && window.crypto.randomUUID) {
+        return `${prefix}${crypto.randomUUID()}`;
+    }
+    return `${prefix}${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
 };
 
 window.validarTelefono = function(telefono) {
@@ -199,4 +202,4 @@ window.categoriasMenu = {
     "Ofertas Especiales": [], "Para Niños": [], "Combo Ejecutivo": []
 };
 
-console.log('📌 supabase-config.js cargado correctamente');
+console.log('📌 supabase-config.js cargado correctamente (con UUID)');
