@@ -152,47 +152,51 @@
         .pagination-info{color:#fff;font-size:1rem;background:rgba(0,0,0,.3);padding:.5rem 1rem;border-radius:50px}
         
         /* ============================================
-           OPTIMIZACIÓN DE IMÁGENES - OPCIÓN 4 HÍBRIDA
+           OPTIMIZACIÓN DE IMÁGENES - VERSIÓN ULTRA RÁPIDA
            ============================================ */
         .menu-card {
-            content-visibility: auto;
-            contain-intrinsic-size: 320px;
-            contain: layout paint style;
-            transform: translateZ(0);
-            backface-visibility: hidden;
-            perspective: 1000;
             background: rgba(255,255,255,.05);
             border-radius: var(--radius-md);
             overflow: hidden;
             box-shadow: var(--shadow-sm);
-            transition: all .3s;
+            transition: all 0.2s ease;
             position: relative;
             border: 1px solid rgba(255,255,255,.1);
             display: flex;
             flex-direction: column;
             backdrop-filter: blur(5px);
             height: 100%;
+            contain: content; /* Más rápido que layout paint style */
+            transform: translateZ(0);
+            will-change: transform;
+            opacity: 1;
+            visibility: visible;
         }
+        
         .menu-card-image {
             height: 160px;
             background-size: cover;
             background-position: center;
             position: relative;
             background-color: #1a1a2e;
-            will-change: transform;
+            flex-shrink: 0;
             image-rendering: -webkit-optimize-contrast;
             image-rendering: crisp-edges;
-            transition: background-image 0.2s ease;
+            transition: opacity 0.2s ease;
+            opacity: 1;
         }
+        
         .menu-card-image.loading {
             background: linear-gradient(90deg, #1a1a2e 0%, #2a2a3e 50%, #1a1a2e 100%);
             background-size: 200% 100%;
-            animation: shimmer 1.5s infinite;
+            animation: shimmer 1.2s infinite linear;
         }
+        
         @keyframes shimmer {
             0% { background-position: 200% 0; }
             100% { background-position: -200% 0; }
         }
+        
         .menu-card-image.error {
             background-color: #2a1a1a;
             background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="%23D32F2F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>');
@@ -200,6 +204,7 @@
             background-position: center;
             background-size: 48px;
         }
+        
         .menu-card-badge {
             position: absolute;
             top: .8rem;
@@ -214,31 +219,38 @@
             display: flex;
             align-items: center;
             gap: .3rem;
+            z-index: 2;
         }
+        
         .menu-card-content {
             padding: 1rem;
             flex: 1;
             display: flex;
             flex-direction: column;
+            background: rgba(0,0,0,0.2); /* Fondo sólido para evitar transparencias */
         }
+        
         .menu-card-header {
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
             margin-bottom: .5rem;
         }
+        
         .menu-card-title {
             font-size: 1.1rem;
             font-weight: 600;
             color: #fff;
             line-height: 1.3;
         }
+        
         .menu-card-price {
             font-weight: 700;
             color: var(--accent);
             font-size: 1.2rem;
             white-space: nowrap;
         }
+        
         .menu-card-description {
             font-size: .85rem;
             color: var(--gray-400);
@@ -246,6 +258,7 @@
             line-height: 1.4;
             flex: 1;
         }
+        
         .menu-card-footer {
             display: flex;
             align-items: center;
@@ -253,6 +266,7 @@
             margin-top: auto;
             gap: .5rem;
         }
+        
         .btn-add {
             background: var(--accent);
             color: white;
@@ -264,20 +278,23 @@
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            transition: all .2s;
+            transition: all 0.15s ease;
             font-size: 1rem;
             box-shadow: var(--shadow-sm);
             flex-shrink: 0;
         }
+        
         .btn-add:hover:not(:disabled) {
             background: #e68900;
-            transform: scale(1.1);
+            transform: scale(1.05);
         }
+        
         .btn-add:disabled {
             background: var(--gray-400);
             cursor: not-allowed;
             opacity: .5;
         }
+        
         .btn-customize {
             background: var(--primary);
             color: white;
@@ -290,21 +307,25 @@
             display: flex;
             align-items: center;
             gap: .3rem;
-            transition: all .2s;
+            transition: all 0.15s ease;
             flex: 1;
             justify-content: center;
         }
+        
         .btn-customize:hover:not(:disabled) {
             background: #b71c1c;
-            transform: translateY(-2px);
+            transform: translateY(-1px);
         }
+        
         .btn-customize:disabled {
             background: var(--gray-400);
             cursor: not-allowed;
         }
+        
         .btn-customize i {
             font-size: .8rem;
         }
+        
         .stock-info {
             font-size: .75rem;
             color: var(--gray-400);
@@ -313,12 +334,15 @@
             gap: .3rem;
             margin-top: .5rem;
         }
+        
         .stock-info i.available {
             color: var(--success);
         }
+        
         .stock-info i.low {
             color: var(--warning);
         }
+        
         .stock-info i.sold-out {
             color: var(--danger);
         }
@@ -874,10 +898,61 @@ let scrollRafId = null;
 let ultimaPosicionFlechas = 0;
 
 // ============================================
-// OPTIMIZACIÓN DE IMÁGENES - CACHÉ Y OBSERVER
+// OPTIMIZACIÓN DE IMÁGENES - VERSIÓN ULTRA RÁPIDA
 // ============================================
 const imagenCache = new Map();
+const CACHE_LIMIT = 200;
 let imageObserver = null;
+let imagenesPrecargadas = false;
+
+function limpiarCacheSiEsNecesario() {
+    if (imagenCache.size > CACHE_LIMIT) {
+        const entries = Array.from(imagenCache.entries());
+        const aEliminar = entries.slice(0, 50);
+        aEliminar.forEach(([key]) => imagenCache.delete(key));
+        console.log(`🧹 Cache limpiado: eliminadas ${aEliminar.length} entradas`);
+    }
+}
+
+function cargarImagenConCache(imgDiv, imgUrl) {
+    if (!imgUrl) return;
+    
+    // Si ya está en caché y cargada, mostrar inmediatamente
+    if (imagenCache.get(imgUrl) === 'loaded') {
+        if (imgDiv.style.backgroundImage !== `url('${imgUrl}')`) {
+            imgDiv.style.backgroundImage = `url('${imgUrl}')`;
+        }
+        imgDiv.classList.remove('loading', 'error');
+        return;
+    }
+    
+    // Si ya está en proceso, no hacer nada
+    if (imagenCache.get(imgUrl) === 'loading') return;
+    
+    limpiarCacheSiEsNecesario();
+    
+    imagenCache.set(imgUrl, 'loading');
+    const tempImg = new Image();
+    
+    tempImg.onload = () => {
+        imagenCache.set(imgUrl, 'loaded');
+        if (document.body.contains(imgDiv)) {
+            imgDiv.style.backgroundImage = `url('${imgUrl}')`;
+            imgDiv.classList.remove('loading', 'error');
+        }
+    };
+    
+    tempImg.onerror = () => {
+        imagenCache.set(imgUrl, 'error');
+        if (document.body.contains(imgDiv)) {
+            imgDiv.classList.remove('loading');
+            imgDiv.classList.add('error');
+        }
+        console.warn('Error cargando imagen:', imgUrl);
+    };
+    
+    tempImg.src = imgUrl;
+}
 
 function iniciarObservadorImagenes() {
     if (imageObserver) return;
@@ -887,52 +962,35 @@ function iniciarObservadorImagenes() {
             if (entry.isIntersecting) {
                 const imgDiv = entry.target;
                 const imgUrl = imgDiv.dataset.src;
-                
-                if (imgUrl && !imagenCache.has(imgUrl)) {
-                    // Marcar como en proceso
-                    imagenCache.set(imgUrl, 'loading');
-                    
-                    const tempImg = new Image();
-                    tempImg.onload = () => {
-                        imagenCache.set(imgUrl, 'loaded');
-                        imgDiv.style.backgroundImage = `url('${imgUrl}')`;
-                        imgDiv.classList.remove('loading');
-                        imgDiv.classList.remove('error');
-                    };
-                    tempImg.onerror = () => {
-                        imagenCache.set(imgUrl, 'error');
-                        imgDiv.classList.remove('loading');
-                        imgDiv.classList.add('error');
-                        console.warn('Error cargando imagen:', imgUrl);
-                    };
-                    tempImg.src = imgUrl;
-                } else if (imagenCache.get(imgUrl) === 'loaded') {
-                    imgDiv.style.backgroundImage = `url('${imgUrl}')`;
-                    imgDiv.classList.remove('loading');
-                } else if (imagenCache.get(imgUrl) === 'error') {
-                    imgDiv.classList.remove('loading');
-                    imgDiv.classList.add('error');
-                }
-                
+                cargarImagenConCache(imgDiv, imgUrl);
                 imageObserver.unobserve(imgDiv);
             }
         });
     }, {
-        rootMargin: '200px 0px',
+        rootMargin: '400px 0px', // Aumentado para cargar antes
         threshold: 0.01
     });
 }
 
-function precargarImagenesVisibles() {
+function precargarTodasLasImagenes() {
+    if (imagenesPrecargadas) return;
+    
     const imagenes = document.querySelectorAll('.menu-card-image[data-src]');
     imagenes.forEach(img => {
-        const rect = img.getBoundingClientRect();
-        const estaVisible = rect.top < window.innerHeight && rect.bottom > 0;
-        
-        if (estaVisible && imageObserver) {
-            imageObserver.observe(img);
+        const imgUrl = img.dataset.src;
+        if (!imagenCache.has(imgUrl)) {
+            const tempImg = new Image();
+            tempImg.src = imgUrl;
+            tempImg.onload = () => imagenCache.set(imgUrl, 'loaded');
         }
     });
+    
+    imagenesPrecargadas = true;
+}
+
+// Precargar inmediatamente después de renderizar
+function precargarInmediato() {
+    setTimeout(precargarTodasLasImagenes, 100);
 }
 
 const preciosPorParroquia={"Altagracia":3,"Antímano":7,"Candelaria":2,"Caricuao":7,"Caucagüita":7,"Catedral":3,"Chacao":5,"Coche":5,"El Cafetal":6,"El Junquito":7,"El Paraíso":4,"El Recreo":4,"El Valle":5,"Fila de Mariches":6,"La Dolorita":6,"La Pastora":3,"La Vega":4,"Las Minas":5,"Leoncio Martínez":6,"Macarao":7,"Nuestra Señora del Rosario":7,"Petare":6,"San Agustín":2,"San Bernardino":2,"San José":2,"San Juan":3,"San Pedro":4,"Santa Rosalía":3,"Santa Rosalía de Palermo":3,"Santa Teresa":3,"Sucre":7,"23 de Enero":4};
@@ -943,7 +1001,7 @@ const urlParams=new URLSearchParams(window.location.search);mesaId=urlParams.get
 let deliveryFormData={parroquia:'',direccion:'',telefono:'',referencia:'',comprobante:null},reservaFormData={fecha:'',nombre:'',referencia:'',comprobante:null},isUploading=false,uploadComplete=false;
 
 // ============================================
-// FUNCIONES DE SCROLL Y FLECHAS ANIMADAS (MEJORADAS)
+// FUNCIONES DE SCROLL Y FLECHAS ANIMADAS
 // ============================================
 
 function iniciarSeguimientoScroll() {
@@ -1115,7 +1173,10 @@ async function renderizarPaginaActual(){
         document.getElementById('paginationControls').style.display='flex';
     }
     
-    // Generar HTML con placeholders
+    // Resetear flag de precarga
+    imagenesPrecargadas = false;
+    
+    // Generar HTML
     let html = '';
     for (const item of itemsPagina) {
         let stockDisponible = Infinity, ingredientesFaltantes = [];
@@ -1140,24 +1201,10 @@ async function renderizarPaginaActual(){
         else if(stockDisponible<5) stockClass = 'low';
         
         const imgUrl = item.imagen || 'https://via.placeholder.com/400x300?text=Sushi';
-        const cacheEstado = imagenCache.get(imgUrl);
-        
-        // Determinar clase inicial basada en caché
-        let imgClass = 'menu-card-image';
-        if (cacheEstado === 'loaded') {
-            // Ya cargada, mostrar directamente
-            imgClass += ' loaded';
-        } else if (cacheEstado === 'error') {
-            imgClass += ' error';
-        } else {
-            imgClass += ' loading';
-        }
         
         html += `
             <div class="menu-card ${agotado?'agotado':''}">
-                <div class="${imgClass}" 
-                     data-src="${imgUrl}"
-                     style="${cacheEstado === 'loaded' ? `background-image: url('${imgUrl}');` : 'background-color: #1a1a2e;'}">
+                <div class="menu-card-image loading" data-src="${imgUrl}">
                     ${agotado ? '<div class="menu-card-badge sold-out"><i class="fas fa-times-circle"></i> Agotado</div>' : ''}
                     ${!agotado && stockDisponible < 5 ? '<div class="menu-card-badge low"><i class="fas fa-exclamation-triangle"></i> Últimas</div>' : ''}
                 </div>
@@ -1186,23 +1233,31 @@ async function renderizarPaginaActual(){
     
     grid.innerHTML = html;
     
-    // Iniciar observador si no existe
+    // Iniciar observador y precargar inmediatamente
     iniciarObservadorImagenes();
     
-    // Observar imágenes no cargadas
-    document.querySelectorAll('.menu-card-image.loading, .menu-card-image.error').forEach(img => {
+    // Observar todas las imágenes
+    document.querySelectorAll('.menu-card-image').forEach(img => {
         if (imageObserver) imageObserver.observe(img);
     });
+    
+    // Precarga inmediata
+    precargarInmediato();
     
     document.getElementById('pageInfo').textContent = `Página ${currentPage} de ${totalPages}`;
     document.getElementById('prevPageBtn').disabled = currentPage === 1;
     document.getElementById('nextPageBtn').disabled = currentPage === totalPages;
 }
 
-// Evento de scroll para precargar imágenes visibles
+// Evento de scroll para precargar
 window.addEventListener('scroll', () => {
     if (window.scrollTimer) clearTimeout(window.scrollTimer);
-    window.scrollTimer = setTimeout(precargarImagenesVisibles, 100);
+    window.scrollTimer = setTimeout(() => {
+        const imagenes = document.querySelectorAll('.menu-card-image.loading');
+        imagenes.forEach(img => {
+            if (imageObserver) imageObserver.observe(img);
+        });
+    }, 50);
 }, { passive: true });
 
 function cambiarPagina(direccion){const totalPages=Math.ceil(filteredMenuItems.length/itemsPerPage)||1;currentPage+=direccion;if(currentPage<1)currentPage=1;if(currentPage>totalPages)currentPage=totalPages;renderizarPaginaActual();}
