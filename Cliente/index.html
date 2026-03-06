@@ -150,10 +150,51 @@
         .pagination-btn:hover:not(:disabled){background:var(--accent);color:var(--secondary);transform:translateY(-2px)}
         .pagination-btn:disabled{opacity:.3;cursor:not-allowed}
         .pagination-info{color:#fff;font-size:1rem;background:rgba(0,0,0,.3);padding:.5rem 1rem;border-radius:50px}
-        .menu-card{background:rgba(255,255,255,.05);border-radius:var(--radius-md);overflow:hidden;box-shadow:var(--shadow-sm);transition:all .3s;position:relative;border:1px solid rgba(255,255,255,.1);display:flex;flex-direction:column;backdrop-filter:blur(5px);height:100%;transform:translateZ(0);backface-visibility:hidden;perspective:1000;will-change:transform}
+        .menu-card{
+            background:rgba(255,255,255,.05);
+            border-radius:var(--radius-md);
+            overflow:hidden;
+            box-shadow:var(--shadow-sm);
+            transition:all .3s;
+            position:relative;
+            border:1px solid rgba(255,255,255,.1);
+            display:flex;
+            flex-direction:column;
+            backdrop-filter:blur(5px);
+            height:100%;
+            content-visibility:auto;
+            contain-intrinsic-size:380px;
+            contain: layout paint style;
+            transform:translateZ(0);
+            backface-visibility:hidden;
+            perspective:1000
+        }
         .menu-card:hover{transform:translateY(-3px);box-shadow:var(--shadow-md)}
-        .menu-card-image{height:160px;background-size:cover;background-position:center;position:relative;background-color:#1a1a2e;will-change:transform;image-rendering:-webkit-optimize-contrast;image-rendering:crisp-edges}
-        .menu-card-badge{position:absolute;top:.8rem;right:.8rem;background:rgba(0,0,0,.7);color:white;padding:.2rem .6rem;border-radius:20px;font-size:.75rem;font-weight:500;backdrop-filter:blur(4px);display:flex;align-items:center;gap:.3rem}
+        .menu-card-image{
+            height:160px;
+            background-size:cover;
+            background-position:center;
+            position:relative;
+            background-color:#1a1a2e;
+            will-change:transform;
+            image-rendering:-webkit-optimize-contrast;
+            image-rendering:crisp-edges
+        }
+        .menu-card-badge{
+            position:absolute;
+            top:.8rem;
+            right:.8rem;
+            background:rgba(0,0,0,.7);
+            color:white;
+            padding:.2rem .6rem;
+            border-radius:20px;
+            font-size:.75rem;
+            font-weight:500;
+            backdrop-filter:blur(4px);
+            display:flex;
+            align-items:center;
+            gap:.3rem
+        }
         .menu-card-badge i{font-size:.7rem}
         .menu-card-badge.agotado{background:rgba(239,68,68,.9)}
         .menu-card-badge.available{background:var(--success)}
@@ -165,10 +206,40 @@
         .menu-card-price{font-weight:700;color:var(--accent);font-size:1.2rem;white-space:nowrap}
         .menu-card-description{font-size:.85rem;color:var(--gray-400);margin-bottom:.8rem;line-height:1.4;flex:1}
         .menu-card-footer{display:flex;align-items:center;justify-content:space-between;margin-top:auto;gap:.5rem}
-        .btn-add{background:var(--accent);color:white;border:none;width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;font-size:1rem;box-shadow:var(--shadow-sm);flex-shrink:0}
+        .btn-add{
+            background:var(--accent);
+            color:white;
+            border:none;
+            width:36px;
+            height:36px;
+            border-radius:50%;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            cursor:pointer;
+            transition:all .2s;
+            font-size:1rem;
+            box-shadow:var(--shadow-sm);
+            flex-shrink:0
+        }
         .btn-add:hover:not(:disabled){background:#e68900;transform:scale(1.1)}
         .btn-add:disabled{background:var(--gray-400);cursor:not-allowed;opacity:.5}
-        .btn-customize{background:var(--primary);color:white;border:none;padding:.4rem .8rem;border-radius:25px;font-size:.8rem;font-weight:500;cursor:pointer;display:flex;align-items:center;gap:.3rem;transition:all .2s;flex:1;justify-content:center}
+        .btn-customize{
+            background:var(--primary);
+            color:white;
+            border:none;
+            padding:.4rem .8rem;
+            border-radius:25px;
+            font-size:.8rem;
+            font-weight:500;
+            cursor:pointer;
+            display:flex;
+            align-items:center;
+            gap:.3rem;
+            transition:all .2s;
+            flex:1;
+            justify-content:center
+        }
         .btn-customize:hover:not(:disabled){background:#b71c1c;transform:translateY(-2px)}
         .btn-customize:disabled{background:var(--gray-400);cursor:not-allowed}
         .btn-customize i{font-size:.8rem}
@@ -726,7 +797,6 @@ if (!sessionId || !sessionId.includes('-')) {
 let menuItems=[],inventario=[],carrito=[],notificaciones=[],notificacionesCache=[],notificacionesNoLeidas=0,notificacionesCompletas=[],ultimaActualizacion=Date.now(),paginaVisible=true,intervaloNotificaciones=null,currentCustomizeItem=null,mesaId=null,nivel1Activo=null,nivel2Activo=null,timersActivos={},intervalosTimer={};
 let scrollRafId = null;
 let ultimaPosicionFlechas = 0;
-let imagenesPrecargadas = new Map();
 
 const preciosPorParroquia={"Altagracia":3,"Antímano":7,"Candelaria":2,"Caricuao":7,"Caucagüita":7,"Catedral":3,"Chacao":5,"Coche":5,"El Cafetal":6,"El Junquito":7,"El Paraíso":4,"El Recreo":4,"El Valle":5,"Fila de Mariches":6,"La Dolorita":6,"La Pastora":3,"La Vega":4,"Las Minas":5,"Leoncio Martínez":6,"Macarao":7,"Nuestra Señora del Rosario":7,"Petare":6,"San Agustín":2,"San Bernardino":2,"San José":2,"San Juan":3,"San Pedro":4,"Santa Rosalía":3,"Santa Rosalía de Palermo":3,"Santa Teresa":3,"Sucre":7,"23 de Enero":4};
 const mensajesEstado={'approved':{titulo:'✅ Pago confirmado',icono:'check-circle'},'rejected':{titulo:'❌ Pedido rechazado',icono:'times-circle'},'pending':{titulo:'⏳ Pedido pendiente',icono:'clock'}};
@@ -734,45 +804,6 @@ const iconosCategorias={'todos':'fa-utensils','entradas':'fa-leaf','sushi':'fa-f
 const categoriasPredefinidas=[{id:'todos',nombre:'Todos los platillos'},{id:'entradas',nombre:'Entradas'},{id:'sushi',nombre:'Sushi'},{id:'rolls',nombre:'Rolls',subcategorias:['Rolls Fríos de 10 piezas','Rolls Tempura de 12 piezas']},{id:'tragos',nombre:'Tragos y bebidas'},{id:'pokes',nombre:'Pokes'},{id:'ensaladas',nombre:'Ensaladas'},{id:'china',nombre:'Comida China',subcategorias:['Arroz Chino','Arroz Cantones','Chopsuey','Lomey','Chow Mein','Fideos de Arroz','Tallarines Cantones','Mariscos','Foo Yong','Sopas','Entremeses']},{id:'japonesa',nombre:'Comida Japonesa',subcategorias:['Yakimeshi','Yakisoba','Pasta Udon','Churrasco']},{id:'ofertas',nombre:'OFERTAS ESPECIALES'},{id:'ninos',nombre:'Para Niños'},{id:'ejecutivo',nombre:'Combo Ejecutivo'}];
 const urlParams=new URLSearchParams(window.location.search);mesaId=urlParams.get('mesa');
 let deliveryFormData={parroquia:'',direccion:'',telefono:'',referencia:'',comprobante:null},reservaFormData={fecha:'',nombre:'',referencia:'',comprobante:null},isUploading=false,uploadComplete=false;
-
-// ============================================
-// FUNCIONES DE PRECARGA DE IMÁGENES
-// ============================================
-
-function precargarImagenes(items) {
-    return new Promise((resolve) => {
-        let imagenesCargadas = 0;
-        const totalImagenes = items.length;
-        
-        if (totalImagenes === 0) {
-            resolve();
-            return;
-        }
-        
-        items.forEach(item => {
-            const imgUrl = item.imagen || 'https://via.placeholder.com/400x300?text=Sushi';
-            
-            if (imagenesPrecargadas.has(imgUrl)) {
-                imagenesCargadas++;
-                if (imagenesCargadas === totalImagenes) resolve();
-                return;
-            }
-            
-            const img = new Image();
-            img.onload = () => {
-                imagenesPrecargadas.set(imgUrl, true);
-                imagenesCargadas++;
-                if (imagenesCargadas === totalImagenes) resolve();
-            };
-            img.onerror = () => {
-                imagenesPrecargadas.set(imgUrl, false);
-                imagenesCargadas++;
-                if (imagenesCargadas === totalImagenes) resolve();
-            };
-            img.src = imgUrl;
-        });
-    });
-}
 
 // ============================================
 // FUNCIONES DE SCROLL Y FLECHAS ANIMADAS
@@ -913,7 +944,7 @@ function toggleNotifications(){const panel=document.getElementById('notification
 
 function verificarPermisosAudio(){const audio=document.getElementById('notificationSound');if(!audio)return;audio.load();audio.volume=1;}
 
-async function cargarMenu(){try{const{data,error}=await window.supabaseClient.from('menu').select('*').eq('disponible',true);if(error)throw error;menuItems=data||[];menuItems.sort((a,b)=>a.nombre.localeCompare(b.nombre));filteredMenuItems=[...menuItems];currentPage=1;await precargarImagenes(menuItems);renderizarMenuPaginado();}catch(error){console.error('Error cargando menú:',error);mostrarToast('Error al cargar el menú','error');}}
+async function cargarMenu(){try{const{data,error}=await window.supabaseClient.from('menu').select('*').eq('disponible',true);if(error)throw error;menuItems=data||[];menuItems.sort((a,b)=>a.nombre.localeCompare(b.nombre));filteredMenuItems=[...menuItems];currentPage=1;renderizarMenuPaginado();}catch(error){console.error('Error cargando menú:',error);mostrarToast('Error al cargar el menú','error');}}
 
 async function cargarInventario(){try{const{data,error}=await window.supabaseClient.from('inventario').select('*');if(error)throw error;inventario=data||[];window.stockCache.invalidate();renderizarMenuPaginado();}catch(error){console.error('Error cargando inventario:',error);}}
 
@@ -927,7 +958,71 @@ let currentPage=1,itemsPerPage=6,filteredMenuItems=[];
 
 function renderizarMenuPaginado(filtroCategoria=null,filtroSubcategoria=null,busqueda=''){let itemsFiltrados=[...menuItems];if(filtroCategoria){if(filtroCategoria==='ofertas'){itemsFiltrados=itemsFiltrados.filter(item=>item.categoria==='Ofertas Especiales'||item.precio<10);}else if(filtroCategoria!=='todos'){itemsFiltrados=itemsFiltrados.filter(item=>item.categoria===filtroCategoria);}}if(filtroSubcategoria){itemsFiltrados=itemsFiltrados.filter(item=>item.subcategoria===filtroSubcategoria);}if(busqueda){const terminos=busqueda.toLowerCase().split(/\s+/).filter(t=>t.length>0);itemsFiltrados=itemsFiltrados.filter(item=>{const nombre=item.nombre.toLowerCase();return terminos.every(t=>nombre.includes(t));});}filteredMenuItems=itemsFiltrados;currentPage=1;renderizarPaginaActual();}
 
-async function renderizarPaginaActual(){const grid=document.getElementById('menuGrid'),totalItems=filteredMenuItems.length,totalPages=Math.ceil(totalItems/itemsPerPage)||1;if(currentPage>totalPages)currentPage=totalPages;if(currentPage<1)currentPage=1;const startIndex=(currentPage-1)*itemsPerPage,endIndex=Math.min(startIndex+itemsPerPage,totalItems),itemsPagina=filteredMenuItems.slice(startIndex,endIndex);if(itemsPagina.length===0){grid.innerHTML='<div class="loading-container"><p>No hay platillos</p></div>';document.getElementById('paginationControls').style.display='none';return;}else document.getElementById('paginationControls').style.display='flex';const cards=await Promise.all(itemsPagina.map(async(item)=>{let stockDisponible=Infinity,ingredientesFaltantes=[];if(item.ingredientes&&Object.keys(item.ingredientes).length>0){for(const[ingId,ingInfo]of Object.entries(item.ingredientes)){const stockDisp=await getStockDisponible(ingId),cantidadNecesaria=ingInfo.cantidad||1,posible=Math.floor(stockDisp/cantidadNecesaria);stockDisponible=Math.min(stockDisponible,posible);if(posible<=0){const ingrediente=inventario.find(i=>i.id===ingId);ingredientesFaltantes.push(ingrediente?.nombre||ingId);}}}else stockDisponible=item.stock_maximo||999;const agotado=stockDisponible<=0;let stockClass='available';if(agotado)stockClass='sold-out';else if(stockDisponible<5)stockClass='low';const imgUrl = item.imagen || 'https://via.placeholder.com/400x300?text=Sushi';return`<div class="menu-card ${agotado?'agotado':''}" data-id="${item.id}"><div class="menu-card-image" style="background-image:url('${imgUrl}')">${agotado?'<div class="menu-card-badge sold-out"><i class="fas fa-times-circle"></i> Agotado</div>':(stockClass==='low'?'<div class="menu-card-badge low"><i class="fas fa-exclamation-triangle"></i> Últimas</div>':'')}</div><div class="menu-card-content"><div class="menu-card-header"><h3 class="menu-card-title">${item.nombre}</h3><span class="menu-card-price">${formatBs(usdToBs(item.precio))}</span></div><p class="menu-card-description">${item.descripcion||''}</p><div class="menu-card-footer">${!agotado?`<button class="btn-add" onclick="agregarAlCarrito('${item.id}')" title="Agregar"><i class="fas fa-plus"></i></button><button class="btn-customize" onclick="abrirPersonalizacion('${item.id}')" title="Personalizar"><i class="fas fa-star"></i> Personalizar</button>`:`<span class="stock-info" title="${ingredientesFaltantes.join(', ')}"><i class="fas fa-info-circle"></i> Sin stock</span>`}</div>${!agotado?`<div class="stock-info"><i class="fas fa-box ${stockClass}"></i><span id="stock-${item.id}">${stockDisponible} disponibles</span></div>`:''}</div></div>`;}));grid.innerHTML=cards.join('');document.getElementById('pageInfo').textContent=`Página ${currentPage} de ${totalPages}`;document.getElementById('prevPageBtn').disabled=currentPage===1;document.getElementById('nextPageBtn').disabled=currentPage===totalPages;}
+async function renderizarPaginaActual(){
+    const grid=document.getElementById('menuGrid'),totalItems=filteredMenuItems.length,totalPages=Math.ceil(totalItems/itemsPerPage)||1;
+    if(currentPage>totalPages)currentPage=totalPages;
+    if(currentPage<1)currentPage=1;
+    const startIndex=(currentPage-1)*itemsPerPage,endIndex=Math.min(startIndex+itemsPerPage,totalItems),itemsPagina=filteredMenuItems.slice(startIndex,endIndex);
+    if(itemsPagina.length===0){
+        grid.innerHTML='<div class="loading-container"><p>No hay platillos</p></div>';
+        document.getElementById('paginationControls').style.display='none';
+        return;
+    } else {
+        document.getElementById('paginationControls').style.display='flex';
+    }
+    
+    // Generar HTML con imágenes ya incluidas (carga inmediata)
+    const cards = await Promise.all(itemsPagina.map(async(item)=>{
+        let stockDisponible=Infinity,ingredientesFaltantes=[];
+        if(item.ingredientes&&Object.keys(item.ingredientes).length>0){
+            for(const[ingId,ingInfo]of Object.entries(item.ingredientes)){
+                const stockDisp=await getStockDisponible(ingId),cantidadNecesaria=ingInfo.cantidad||1,posible=Math.floor(stockDisp/cantidadNecesaria);
+                stockDisponible=Math.min(stockDisponible,posible);
+                if(posible<=0){
+                    const ingrediente=inventario.find(i=>i.id===ingId);
+                    ingredientesFaltantes.push(ingrediente?.nombre||ingId);
+                }
+            }
+        } else {
+            stockDisponible=item.stock_maximo||999;
+        }
+        const agotado=stockDisponible<=0;
+        let stockClass='available';
+        if(agotado) stockClass='sold-out';
+        else if(stockDisponible<5) stockClass='low';
+        
+        // Imagen incluida directamente en style (carga inmediata)
+        return `<div class="menu-card ${agotado?'agotado':''}" data-id="${item.id}">
+            <div class="menu-card-image" style="background-image:url('${item.imagen||'https://via.placeholder.com/400x300?text=Sushi'}')">
+                ${agotado?'<div class="menu-card-badge sold-out"><i class="fas fa-times-circle"></i> Agotado</div>':(stockClass==='low'?'<div class="menu-card-badge low"><i class="fas fa-exclamation-triangle"></i> Últimas</div>':'')}
+            </div>
+            <div class="menu-card-content">
+                <div class="menu-card-header">
+                    <h3 class="menu-card-title">${item.nombre}</h3>
+                    <span class="menu-card-price">${formatBs(usdToBs(item.precio))}</span>
+                </div>
+                <p class="menu-card-description">${item.descripcion||''}</p>
+                <div class="menu-card-footer">
+                    ${!agotado?`
+                        <button class="btn-add" onclick="agregarAlCarrito('${item.id}')" title="Agregar"><i class="fas fa-plus"></i></button>
+                        <button class="btn-customize" onclick="abrirPersonalizacion('${item.id}')" title="Personalizar"><i class="fas fa-star"></i> Personalizar</button>
+                    `:`<span class="stock-info" title="${ingredientesFaltantes.join(', ')}"><i class="fas fa-info-circle"></i> Sin stock</span>`}
+                </div>
+                ${!agotado?`
+                    <div class="stock-info">
+                        <i class="fas fa-box ${stockClass}"></i>
+                        <span id="stock-${item.id}">${stockDisponible} disponibles</span>
+                    </div>
+                `:''}
+            </div>
+        </div>`;
+    }));
+    
+    grid.innerHTML = cards.join('');
+    document.getElementById('pageInfo').textContent = `Página ${currentPage} de ${totalPages}`;
+    document.getElementById('prevPageBtn').disabled = currentPage === 1;
+    document.getElementById('nextPageBtn').disabled = currentPage === totalPages;
+}
 
 function cambiarPagina(direccion){const totalPages=Math.ceil(filteredMenuItems.length/itemsPerPage)||1;currentPage+=direccion;if(currentPage<1)currentPage=1;if(currentPage>totalPages)currentPage=totalPages;renderizarPaginaActual();}
 
@@ -1103,7 +1198,7 @@ document.addEventListener('DOMContentLoaded', async() => {
     console.log('2️⃣ Configuración cargada');
     
     await cargarMenu();
-    console.log('3️⃣ Menú cargado (imágenes precargadas)');
+    console.log('3️⃣ Menú cargado');
     
     await cargarInventario();
     console.log('4️⃣ Inventario cargado');
