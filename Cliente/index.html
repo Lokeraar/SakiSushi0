@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* ... (El CSS se mantiene exactamente igual) ... */
+        /* ... (El CSS se mantiene exactamente igual al anterior) ... */
         *{margin:0;padding:0;box-sizing:border-box}
         :root{--primary:#D32F2F;--secondary:#212121;--accent:#FF9800;--light-bg:#F5F5F5;--dark-bg:#121212;--success:#388E3C;--info:#1976D2;--warning:#F57C00;--danger:#ef4444;--text-light:#ffffff;--text-dark:#333333;--gray-100:#f8f9fa;--gray-200:#e9ecef;--gray-300:#dee2e6;--gray-400:#ced4da;--gray-500:#adb5bd;--gray-600:#6c757d;--gray-700:#495057;--gray-800:#343a40;--gray-900:#212529;--shadow-sm:0 2px 4px rgba(0,0,0,0.1);--shadow-md:0 4px 8px rgba(0,0,0,0.15);--shadow-lg:0 8px 16px rgba(0,0,0,0.2);--radius-sm:8px;--radius-md:12px;--radius-lg:16px;--nivel1-bg:linear-gradient(135deg,var(--primary),#b71c1c);--nivel1-text:white;--nivel2-bg:#FFF3E0;--nivel2-border:#FFB74D;--nivel2-text:#E65100;--nivel3-bg:white;--nivel3-border:var(--gray-200)}
         body{font-family:'Roboto',sans-serif;background-image:url('https://userscontent2.emaze.com/images/28851f51-ec90-466c-ad3a-51e653c9f058/c862bd8c3df982859d9f75ed46af72e1.jpg');background-size:cover;background-attachment:fixed;background-position:center;color:var(--text-dark);min-height:100vh;display:flex;flex-direction:column}
@@ -153,7 +153,7 @@
         .pagination-info{color:#fff;font-size:1rem;background:rgba(0,0,0,.3);padding:.5rem 1rem;border-radius:50px}
         
         /* ============================================
-           OPTIMIZACIÓN DE IMÁGENES - VERSIÓN MEJORADA
+           OPTIMIZACIÓN DE IMÁGENES - VERSIÓN ULTRA RÁPIDA
            ============================================ */
         .menu-card {
             background: rgba(255,255,255,.05);
@@ -167,7 +167,7 @@
             flex-direction: column;
             backdrop-filter: blur(5px);
             height: 100%;
-            contain: content; /* Más rápido que layout paint style */
+            contain: content;
             transform: translateZ(0);
             will-change: transform;
         }
@@ -183,7 +183,7 @@
             image-rendering: crisp-edges;
             transition: opacity 0.2s ease;
             opacity: 1;
-            background-image: none; /* Inicia sin imagen de fondo */
+            background-image: none;
         }
         
         .menu-card-image.loading {
@@ -227,7 +227,7 @@
             flex: 1;
             display: flex;
             flex-direction: column;
-            background: rgba(0,0,0,0.2); /* Fondo sólido para evitar transparencias */
+            background: rgba(0,0,0,0.2);
         }
         
         .menu-card-header {
@@ -898,12 +898,12 @@ let scrollRafId = null;
 let ultimaPosicionFlechas = 0;
 
 // ============================================
-// OPTIMIZACIÓN DE IMÁGENES - VERSIÓN MEJORADA (CARGA UNA VEZ, VISIBLE SIEMPRE)
+// OPTIMIZACIÓN DE IMÁGENES - VERSIÓN ULTRA RÁPIDA CON CARGA INMEDIATA
 // ============================================
 const imagenCache = new Map();
 const CACHE_LIMIT = 200;
 let imageObserver = null;
-let imagenPrecargadaGlobal = false;
+let imagenesProcesadas = new Set(); // Para evitar procesar la misma imagen múltiples veces
 
 function limpiarCacheSiEsNecesario() {
     if (imagenCache.size > CACHE_LIMIT) {
@@ -917,27 +917,16 @@ function limpiarCacheSiEsNecesario() {
 function cargarImagenConCache(imgDiv, imgUrl) {
     if (!imgUrl) return;
     
-    // 1. Verificar si la imagen YA ESTÁ EN CACHÉ y fue cargada exitosamente
+    // Si la imagen ya está en caché y cargada, mostrarla inmediatamente
     if (imagenCache.get(imgUrl) === 'loaded') {
-        // Si el div todavía no tiene la imagen de fondo, se la asignamos.
-        // Usamos un pequeño delay con requestAnimationFrame para evitar conflictos de reflow.
-        requestAnimationFrame(() => {
-            if (document.body.contains(imgDiv)) {
-                if (imgDiv.style.backgroundImage !== `url('${imgUrl}')`) {
-                    imgDiv.style.backgroundImage = `url('${imgUrl}')`;
-                }
-                imgDiv.classList.remove('loading', 'error');
-            }
-        });
+        imgDiv.style.backgroundImage = `url('${imgUrl}')`;
+        imgDiv.classList.remove('loading', 'error');
         return;
     }
     
-    // 2. Si ya está en proceso de carga o falló, no hacemos nada.
-    if (imagenCache.get(imgUrl) === 'loading' || imagenCache.get(imgUrl) === 'error') {
-        return;
-    }
+    // Si ya está en proceso de carga, no hacer nada
+    if (imagenCache.get(imgUrl) === 'loading') return;
     
-    // 3. Si no está en caché, procedemos a cargarla.
     limpiarCacheSiEsNecesario();
     
     imagenCache.set(imgUrl, 'loading');
@@ -963,61 +952,72 @@ function cargarImagenConCache(imgDiv, imgUrl) {
     tempImg.src = imgUrl;
 }
 
-function iniciarObservadorImagenes() {
-    if (imageObserver) {
-        imageObserver.disconnect();
-    }
+function cargarImagenesVisibles() {
+    const imagenes = document.querySelectorAll('.menu-card-image');
+    const viewportHeight = window.innerHeight;
+    const scrollY = window.scrollY;
     
-    imageObserver = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                const imgDiv = entry.target;
-                const imgUrl = imgDiv.dataset.src;
-                // Verificamos el caché ANTES de cargar, por si mientras se creaba el observador ya se había cargado.
+    imagenes.forEach(img => {
+        const rect = img.getBoundingClientRect();
+        const imgUrl = img.dataset.src;
+        
+        // Si la imagen está en el viewport o cerca (margen de 300px)
+        if (rect.top < viewportHeight + 300 && rect.bottom > -300) {
+            if (imgUrl && !imagenesProcesadas.has(imgUrl)) {
+                imagenesProcesadas.add(imgUrl);
                 if (imagenCache.get(imgUrl) === 'loaded') {
-                    imgDiv.style.backgroundImage = `url('${imgUrl}')`;
-                    imgDiv.classList.remove('loading', 'error');
+                    img.style.backgroundImage = `url('${imgUrl}')`;
+                    img.classList.remove('loading', 'error');
                 } else if (imagenCache.get(imgUrl) !== 'error' && imagenCache.get(imgUrl) !== 'loading') {
-                    cargarImagenConCache(imgDiv, imgUrl);
+                    cargarImagenConCache(img, imgUrl);
                 }
-                // Una vez que procesamos la imagen (ya sea para cargarla o porque ya estaba), dejamos de observarla.
-                imageObserver.unobserve(imgDiv);
             }
-        });
-    }, {
-        rootMargin: '200px 0px', // Un margen un poco más conservador
-        threshold: 0.01
+        }
     });
 }
 
-function conectarObservadorANuevasImagenes() {
+// Inicializar el observer y la carga inmediata
+function iniciarCargaInmediata() {
+    // Cargar imágenes visibles inmediatamente
+    setTimeout(cargarImagenesVisibles, 10);
+    
+    // Configurar observer para carga perezosa
     if (!imageObserver) {
-        iniciarObservadorImagenes();
+        imageObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const imgDiv = entry.target;
+                    const imgUrl = imgDiv.dataset.src;
+                    if (imgUrl && !imagenesProcesadas.has(imgUrl)) {
+                        imagenesProcesadas.add(imgUrl);
+                        cargarImagenConCache(imgDiv, imgUrl);
+                        imageObserver.unobserve(imgDiv);
+                    }
+                }
+            });
+        }, {
+            rootMargin: '200px 0px',
+            threshold: 0.01
+        });
     }
+    
+    // Conectar imágenes al observer
     document.querySelectorAll('.menu-card-image[data-src]').forEach(img => {
-        // Verificamos si la imagen ya está en caché ANTES de observarla.
         const imgUrl = img.dataset.src;
-        if (imagenCache.get(imgUrl) === 'loaded') {
-            img.style.backgroundImage = `url('${imgUrl}')`;
-            img.classList.remove('loading', 'error');
-        } else {
+        if (!imagenesProcesadas.has(imgUrl)) {
             imageObserver.observe(img);
         }
     });
 }
 
-// Precarga pasiva de imágenes en segundo plano
-function precargarImagenesPasivas() {
-    const imagenes = document.querySelectorAll('.menu-card-image[data-src]');
-    imagenes.forEach(img => {
-        const imgUrl = img.dataset.src;
-        if (!imagenCache.has(imgUrl)) {
-            const tempImg = new Image();
-            tempImg.src = imgUrl;
-            tempImg.onload = () => imagenCache.set(imgUrl, 'loaded');
-        }
-    });
-}
+// Evento de scroll optimizado para carga inmediata
+let scrollTimeout;
+window.addEventListener('scroll', () => {
+    if (scrollTimeout) clearTimeout(scrollTimeout);
+    scrollTimeout = setTimeout(() => {
+        cargarImagenesVisibles();
+    }, 50);
+}, { passive: true });
 
 const preciosPorParroquia={"Altagracia":3,"Antímano":7,"Candelaria":2,"Caricuao":7,"Caucagüita":7,"Catedral":3,"Chacao":5,"Coche":5,"El Cafetal":6,"El Junquito":7,"El Paraíso":4,"El Recreo":4,"El Valle":5,"Fila de Mariches":6,"La Dolorita":6,"La Pastora":3,"La Vega":4,"Las Minas":5,"Leoncio Martínez":6,"Macarao":7,"Nuestra Señora del Rosario":7,"Petare":6,"San Agustín":2,"San Bernardino":2,"San José":2,"San Juan":3,"San Pedro":4,"Santa Rosalía":3,"Santa Rosalía de Palermo":3,"Santa Teresa":3,"Sucre":7,"23 de Enero":4};
 const mensajesEstado={'approved':{titulo:'✅ Pago confirmado',icono:'check-circle'},'rejected':{titulo:'❌ Pedido rechazado',icono:'times-circle'},'pending':{titulo:'⏳ Pedido pendiente',icono:'clock'}};
@@ -1199,8 +1199,8 @@ async function renderizarPaginaActual(){
         document.getElementById('paginationControls').style.display='flex';
     }
     
-    // Resetear flag de precarga global
-    imagenPrecargadaGlobal = false;
+    // Limpiar conjunto de imágenes procesadas para esta página
+    imagenesProcesadas.clear();
     
     // Generar HTML
     let html = '';
@@ -1259,30 +1259,13 @@ async function renderizarPaginaActual(){
     
     grid.innerHTML = html;
     
-    // Conectar el observador a las nuevas imágenes
-    conectarObservadorANuevasImagenes();
-    
-    // Precarga pasiva de imágenes en segundo plano
-    setTimeout(precargarImagenesPasivas, 200);
+    // Iniciar carga inmediata de imágenes visibles
+    iniciarCargaInmediata();
     
     document.getElementById('pageInfo').textContent = `Página ${currentPage} de ${totalPages}`;
     document.getElementById('prevPageBtn').disabled = currentPage === 1;
     document.getElementById('nextPageBtn').disabled = currentPage === totalPages;
 }
-
-// Evento de scroll para activar el observador (aunque ya no debería ser necesario)
-window.addEventListener('scroll', () => {
-    if (window.scrollTimer) clearTimeout(window.scrollTimer);
-    window.scrollTimer = setTimeout(() => {
-        if (imageObserver) {
-            document.querySelectorAll('.menu-card-image.loading').forEach(img => {
-                if (img.dataset.src && imagenCache.get(img.dataset.src) !== 'loaded') {
-                    imageObserver.observe(img);
-                }
-            });
-        }
-    }, 50);
-}, { passive: true });
 
 function cambiarPagina(direccion){const totalPages=Math.ceil(filteredMenuItems.length/itemsPerPage)||1;currentPage+=direccion;if(currentPage<1)currentPage=1;if(currentPage>totalPages)currentPage=totalPages;renderizarPaginaActual();}
 
