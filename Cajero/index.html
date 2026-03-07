@@ -66,7 +66,7 @@ body{background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%);min-height:100vh
 .column-header.delivery-stats{background:linear-gradient(135deg,var(--delivery),#00838F)}
 .column-header .count-badge{background:rgba(255,255,255,.3);padding:3px 10px;border-radius:20px;font-size:.8rem}
 .column-content{padding:10px;overflow-y:auto;flex:1;display:flex;flex-direction:column;gap:8px;max-height:500px}
-.order-card-compact{background:rgba(0,0,0,.3);border-radius:6px;padding:8px;border-left:4px solid;font-size:.75rem;line-height:1.2;transition:var(--transition);color:#fff}
+.order-card-compact{background:rgba(0,0,0,.3);border-radius:6px;padding:8px;border-left:4px solid;font-size:.75rem;line-height:1.2;transition:var(--transition);color:#fff;transform:translateZ(0);contain:content}
 .order-card-compact:hover{transform:translateX(-2px);box-shadow:0 3px 8px rgba(0,0,0,.2)}
 .order-card-compact.pendiente{border-left-color:var(--warning)}
 .order-card-compact.en_cocina{border-left-color:var(--info)}
@@ -220,7 +220,6 @@ console.log('🔍 Verificando funciones GMT-4 en Cajero:');
 console.log('   formatearHora12GMT4:', typeof window.formatearHora12GMT4 === 'function' ? '✅' : '❌');
 console.log('   formatearFechaGMT4:', typeof window.formatearFechaGMT4 === 'function' ? '✅' : '❌');
 
-// Funciones de respaldo si no están disponibles
 if (typeof window.formatearHora12GMT4 !== 'function') {
     console.warn('⚠️ formatearHora12GMT4 no disponible, usando función local');
     window.formatearHora12GMT4 = function(timestamp) {
@@ -255,26 +254,194 @@ if (typeof window.formatearFechaGMT4 !== 'function') {
     };
 }
 
-window.currentUser=null;window.pedidos=[];window.ventasHoy=[];window.propinas=[];window.menuItems=[];window.inventario=[];window.mesas=[];window.currentPedido=null;window.pedidoParaAccion=null;window.accionPendiente=null;window.pagosMixtos=[];window.tasaEfectiva=400;window.currentPropinaPedido=null;window.mesoneros=[];window.deliverys=[];window.stockCache={data:{},lastUpdate:0,duration:5e3,get:function(id){const a=Date.now();if(a-this.lastUpdate>this.duration)this.clear();return this.data[id]},set:function(id,v){this.data[id]=v;this.lastUpdate=Date.now()},clear:function(){this.data={};this.lastUpdate=Date.now()},invalidate:function(){this.data={};this.lastUpdate=0}};window.currentPropinaData={mesonero:'',mesa:'Mesa 1',metodo:'efectivo_bs',montoBs:0,montoUsd:0,referencia:'',tasaAplicada:400};window.alarmaAudio=document.getElementById('alarmaSonido');window.alarmaActiva=false;window.enProcesoDeCobro=false;window.suscripciones=[];window.paginaVisible=true;window.reconectando=false;window.intervaloVerificacion=null;window.ultimaActualizacion=Date.now();
+window.currentUser=null;window.pedidos=[];window.ventasHoy=[];window.propinas=[];window.menuItems=[];window.inventario=[];window.mesas=[];window.currentPedido=null;window.pedidoParaAccion=null;window.accionPendiente=null;window.pagosMixtos=[];window.tasaEfectiva=400;window.currentPropinaPedido=null;window.mesoneros=[];window.deliverys=[];window.alarmaAudio=document.getElementById('alarmaSonido');window.alarmaActiva=false;window.enProcesoDeCobro=false;window.suscripcionesRealtime=[];window.paginaVisible=true;window.reconectando=false;window.currentPropinaData={mesonero:'',mesa:'Mesa 1',metodo:'efectivo_bs',montoBs:0,montoUsd:0,referencia:'',tasaAplicada:400};
+
+// ============================================
+// CACHÉ Y OPTIMIZACIONES
+// ============================================
+window.pedidosCache = {
+    data: [],
+    ultimaActualizacion: 0,
+    duracion: 30000,
+    
+    get: function() {
+        if (Date.now() - this.ultimaActualizacion < this.duracion) return this.data;
+        return null;
+    },
+    
+    set: function(data) {
+        this.data = data;
+        this.ultimaActualizacion = Date.now();
+    },
+    
+    invalidate: function() {
+        this.ultimaActualizacion = 0;
+    }
+};
+
+window.getStockDisponible = async function(ingredienteId) {
+    try {
+        const cache = window.appCache.getStock(ingredienteId);
+        if (cache !== undefined) return cache;
+        
+        const ingrediente = inventario.find(i => i.id === ingredienteId);
+        if (!ingrediente) return 0;
+        
+        let reservadoEnPedidos = 0;
+        (window.pedidos || []).forEach(p => {
+            if (p.items && p.estado === 'pendiente') {
+                p.items.forEach(item => {
+                    if (!item.personalizacion || !item.personalizacion.includes(ingredienteId)) {
+                        reservadoEnPedidos += item.cantidad || 1;
+                    }
+                });
+            }
+        });
+        
+        const disponible = (ingrediente.stock || 0) - (ingrediente.reservado || 0) - reservadoEnPedidos;
+        window.appCache.setStock(ingredienteId, disponible);
+        return disponible;
+    } catch(e) {
+        console.error('Error obteniendo stock:', e);
+        return 0;
+    }
+};
+
+window.calcularStockPlatillo = async function(platillo) {
+    if (!platillo) return 999;
+    
+    if (window.appCache.platillos.has(platillo.id)) {
+        return window.appCache.platillos.get(platillo.id);
+    }
+    
+    let stock = Infinity;
+    if (platillo.ingredientes && Object.keys(platillo.ingredientes).length > 0) {
+        for (const [ingId, ingInfo] of Object.entries(platillo.ingredientes)) {
+            const stockDisp = await window.getStockDisponible(ingId);
+            const cantNecesaria = ingInfo.cantidad || 1;
+            const posible = Math.floor(stockDisp / cantNecesaria);
+            stock = Math.min(stock, posible);
+        }
+    } else {
+        stock = platillo.stock_maximo || 999;
+    }
+    
+    window.appCache.platillos.set(platillo.id, stock);
+    return stock;
+};
+
+// ============================================
+// SUSCRIPCIONES REALTIME (SIN POLLING)
+// ============================================
+window.setupRealtimeSubscriptions = function() {
+    if (window.suscripcionesRealtime.length > 0) {
+        window.suscripcionesRealtime.forEach(sub => sub.unsubscribe());
+        window.suscripcionesRealtime = [];
+    }
+    
+    const pedidosSub = window.supabaseClient
+        .channel('cajero-pedidos')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'pedidos' }, async () => {
+            console.log('📦 Cambios en pedidos detectados');
+            await window.cargarPedidos();
+            window.renderizarPedidos();
+            window.verificarYControlarAlarma();
+        })
+        .subscribe();
+    
+    window.suscripcionesRealtime.push(pedidosSub);
+    
+    const ventasSub = window.supabaseClient
+        .channel('cajero-ventas')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'ventas' }, async () => {
+            await window.cargarVentasHoy();
+            window.actualizarEstadisticas();
+        })
+        .subscribe();
+    
+    window.suscripcionesRealtime.push(ventasSub);
+    
+    const propinasSub = window.supabaseClient
+        .channel('cajero-propinas')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'propinas' }, async () => {
+            await window.cargarPropinas();
+            window.actualizarEstadisticas();
+            window.renderizarPropinas();
+        })
+        .subscribe();
+    
+    window.suscripcionesRealtime.push(propinasSub);
+    
+    const mesonerosSub = window.supabaseClient
+        .channel('cajero-mesoneros')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'mesoneros' }, async () => {
+            await window.cargarMesoneros();
+        })
+        .subscribe();
+    
+    window.suscripcionesRealtime.push(mesonerosSub);
+    
+    const deliverysSub = window.supabaseClient
+        .channel('cajero-deliverys')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'deliverys' }, async () => {
+            await window.cargarDeliverys();
+        })
+        .subscribe();
+    
+    window.suscripcionesRealtime.push(deliverysSub);
+    
+    const menuSub = window.supabaseClient
+        .channel('cajero-menu')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'menu' }, async () => {
+            await window.cargarMenu();
+        })
+        .subscribe();
+    
+    window.suscripcionesRealtime.push(menuSub);
+    
+    const inventarioSub = window.supabaseClient
+        .channel('cajero-inventario')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'inventario' }, () => {
+            window.appCache.invalidateStock();
+            window.cargarInventario();
+        })
+        .subscribe();
+    
+    window.suscripcionesRealtime.push(inventarioSub);
+    
+    const configSub = window.supabaseClient
+        .channel('cajero-config')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'config' }, (payload) => {
+            window.configGlobal = { ...window.configGlobal, ...payload.new };
+            window.tasaEfectiva = window.configGlobal.tasa_efectiva || 400;
+            window.renderizarPedidos();
+            window.renderizarMenu();
+            window.actualizarEstadisticas();
+        })
+        .subscribe();
+    
+    window.suscripcionesRealtime.push(configSub);
+    
+    console.log('📡 Suscripciones Realtime configuradas');
+};
+
 window.mostrarPanel=function(){document.getElementById('loginContainer').classList.add('hidden');document.getElementById('panelContainer').classList.remove('hidden');window.setupEventListeners();window.setupRealtimeSubscriptions();setTimeout(()=>window.verificarYControlarAlarma(),100);};
-window.cerrarSesion=function(){sessionStorage.removeItem('cajero_user');window.currentUser=null;window.detenerAlarma();window.mostrarLogin();};
+window.cerrarSesion=function(){sessionStorage.removeItem('cajero_user');window.currentUser=null;window.detenerAlarma();window.mostrarLogin();if(window.suscripcionesRealtime.length){window.suscripcionesRealtime.forEach(s=>s.unsubscribe());window.suscripcionesRealtime=[];}};
 window.showSection=function(s){document.querySelectorAll('.section').forEach(a=>a.classList.remove('active'));document.querySelectorAll('.nav-tab').forEach(a=>a.classList.remove('active'));document.getElementById(`section-${s}`).classList.add('active');event.target.classList.add('active');if(s==='pedidos')window.renderizarPedidos();else if(s==='menu')window.renderizarMenu();else if(s==='propinas')window.renderizarPropinas();else if(s==='deliverys')window.renderizarDeliverysStats();};
 window.abrirSelectorMesa=async function(){await window.cargarMesas();const a=document.getElementById('mesaModal'),b=document.getElementById('mesaList');b.innerHTML=(window.mesas||[]).length?window.mesas.map(c=>`<button class="mesa-btn" onclick="window.abrirMesa('${c.nombre}')"><i class="fas fa-chair"></i>${c.nombre}</button>`).join(''):'<p class="text-center">No hay mesas</p>';a.classList.add('active');};
 window.abrirMesa=function(a){window.open(`${window.location.origin}/Cliente/index.html?mesa=${encodeURIComponent(a)}`,'_blank');window.cerrarModal('mesaModal');};
 window.cerrarCobroModal=function(){document.getElementById('cobroModal').classList.remove('active');window.enProcesoDeCobro=false;window.currentPedido=null;window.pagosMixtos=[];setTimeout(()=>window.verificarYControlarAlarma(),100);};
 window.cerrarPropinaModal=function(){document.getElementById('propinaModal').classList.remove('active');window.currentPropinaPedido=null;};
-window.cargarDatosIniciales=async function(){try{await window.cargarConfiguracion();window.tasaEfectiva=(window.configGlobal&&window.configGlobal.tasa_efectiva)||400;await window.cargarPedidos();await window.cargarVentasHoy();await window.cargarPropinas();await window.cargarMenu();await window.cargarInventario();await window.cargarMesas();await window.cargarMesoneros();await window.cargarDeliverys();window.actualizarEstadisticas();window.renderizarPedidos();window.renderizarPropinas();window.renderizarDeliverysStats();window.iniciarVerificacionPeriodica();}catch(e){console.error('Error cargando datos:',e);}};
+window.cargarDatosIniciales=async function(){try{await window.cargarConfiguracion();window.tasaEfectiva=(window.configGlobal&&window.configGlobal.tasa_efectiva)||400;await window.cargarPedidos();await window.cargarVentasHoy();await window.cargarPropinas();await window.cargarMenu();await window.cargarInventario();await window.cargarMesas();await window.cargarMesoneros();await window.cargarDeliverys();window.actualizarEstadisticas();window.renderizarPedidos();window.renderizarPropinas();window.renderizarDeliverysStats();}catch(e){console.error('Error cargando datos:',e);}};
 window.verificarUsuarios=async function(){try{const a=await window.supabaseClient.from('usuarios').select('*').limit(1);if(a.error)throw a.error;if(!a.data||a.data.length===0){await window.supabaseClient.from('usuarios').insert([{id:'user_'+Date.now()+'_1',nombre:'Cajero Principal',username:'cajero1',password:'123456',rol:'cajero',activo:true},{id:'user_'+Date.now()+'_2',nombre:'Cajero Secundario',username:'cajero2',password:'123456',rol:'cajero',activo:true}]);window.mostrarToast('Usuarios creados: cajero1 / 123456','success');}}catch(e){console.error('Error verificando usuarios:',e);}};
-window.cargarPedidos=async function(){try{const a=new Date();a.setHours(0,0,0,0);const b=new Date(a);b.setDate(b.getDate()+2);const c=await window.supabaseClient.from('pedidos').select('*').gte('timestamp',a.toISOString()).lt('timestamp',b.toISOString()).order('timestamp',{ascending:false});if(c.error)throw c.error;window.pedidos=c.data||[];}catch(e){console.error('Error cargando pedidos:',e);}};
+window.cargarPedidos=async function(){try{const a=new Date();a.setHours(0,0,0,0);const b=new Date(a);b.setDate(b.getDate()+2);const c=await window.supabaseClient.from('pedidos').select('*').gte('timestamp',a.toISOString()).lt('timestamp',b.toISOString()).order('timestamp',{ascending:false});if(c.error)throw c.error;window.pedidos=c.data||[];window.pedidosCache.set(window.pedidos);}catch(e){console.error('Error cargando pedidos:',e);}};
 window.cargarVentasHoy=async function(){try{const a=new Date();a.setHours(0,0,0,0);const b=new Date(a);b.setDate(b.getDate()+1);const c=await window.supabaseClient.from('ventas').select('*').gte('fecha',a.toISOString()).lt('fecha',b.toISOString()).order('fecha',{ascending:false});if(c.error)throw c.error;window.ventasHoy=c.data||[];}catch(e){console.error('Error cargando ventas:',e);}};
 window.cargarPropinas=async function(){try{const a=new Date();a.setHours(0,0,0,0);const b=new Date(a);b.setDate(b.getDate()+1);const c=await window.supabaseClient.from('propinas').select('*').gte('fecha',a.toISOString()).lt('fecha',b.toISOString()).order('fecha',{ascending:false});if(c.error)throw c.error;window.propinas=c.data||[];}catch(e){console.error('Error cargando propinas:',e);}};
-window.cargarMenu=async function(){try{const a=await window.supabaseClient.from('menu').select('*').eq('disponible',true);if(a.error)throw a.error;window.menuItems=a.data||[];window.renderizarMenu();}catch(e){console.error('Error cargando menú:',e);}};
-window.cargarInventario=async function(){try{const a=await window.supabaseClient.from('inventario').select('*');if(a.error)throw a.error;window.inventario=a.data||[];window.stockCache.invalidate();window.renderizarMenu();}catch(e){console.error('Error cargando inventario:',e);}};
+window.cargarMenu=async function(){try{const a=await window.supabaseClient.from('menu').select('*').eq('disponible',true);if(a.error)throw a.error;window.menuItems=a.data||[];window.appCache.platillos.clear();window.renderizarMenu();}catch(e){console.error('Error cargando menú:',e);}};
+window.cargarInventario=async function(){try{const a=await window.supabaseClient.from('inventario').select('*');if(a.error)throw a.error;window.inventario=a.data||[];window.appCache.invalidateStock();window.renderizarMenu();}catch(e){console.error('Error cargando inventario:',e);}};
 window.cargarMesas=async function(){try{const a=await window.supabaseClient.from('codigos_qr').select('*').order('nombre');if(a.error)throw a.error;window.mesas=a.data||[];}catch(e){console.error('Error cargando mesas:',e);}};
 window.cargarMesoneros=async function(){try{const a=await window.supabaseClient.from('mesoneros').select('*').eq('activo',true).order('nombre');if(a.error)throw a.error;window.mesoneros=a.data||[];}catch(e){console.error('Error cargando mesoneros:',e);}};
 window.cargarDeliverys=async function(){try{const a=await window.supabaseClient.from('deliverys').select('*').eq('activo',true).order('nombre');if(a.error)throw a.error;window.deliverys=a.data||[];}catch(e){console.error('Error cargando deliverys:',e);}};
-window.getStockDisponible=async function(i){try{const a=window.stockCache.get(i);if(a!==undefined)return a;const b=window.inventario.find(c=>c.id===i);if(!b)return 0;let c=0;(window.pedidos||[]).forEach(d=>{if(d.items&&d.estado==='pendiente'){d.items.forEach(e=>{if(!e.personalizacion||!e.personalizacion.includes(i))c+=e.cantidad||1;});}});const d=(b.stock||0)-(b.reservado||0)-c;window.stockCache.set(i,d);return d;}catch(e){console.error('Error obteniendo stock:',e);return 0;}};
-window.calcularStockPlatillo=async function(p){let a=Infinity;if(p.ingredientes&&Object.keys(p.ingredientes).length>0){for(const[b,c]of Object.entries(p.ingredientes)){const d=await window.getStockDisponible(b),e=c.cantidad||1,f=Math.floor(d/e);a=Math.min(a,f);}}else a=p.stock_maximo||999;return a;};
 window.actualizarEstadisticas=function(){const a=(window.pedidos||[]).filter(b=>['en_cocina','en_camino','reserva_pendiente','reserva_atendida'].includes(b.estado)).length,b=(window.ventasHoy||[]).length,c=(window.ventasHoy||[]).reduce((d,e)=>d+(e.subtotal_platillos||0),0),d=(window.ventasHoy||[]).reduce((e,f)=>e+(f.items||0),0),e=(window.propinas||[]).reduce((f,g)=>f+(g.monto_bs||g.monto||0),0),f=window.calcularTotalDeliverysHoy();document.getElementById('statPreparacion').textContent=a;document.getElementById('statCobrados').textContent=b;document.getElementById('statVentas').textContent=window.formatBs(c);document.getElementById('statPlatillos').textContent=d;document.getElementById('statPropinas').textContent=window.formatBs(e);document.getElementById('statDeliverysTotal').textContent=window.formatBs(f);};
 window.renderizarPedidos=function(){const a=window.pedidos.filter(b=>b.tipo==='mesa'&&b.estado==='pendiente'),b=window.pedidos.filter(c=>c.tipo==='delivery'&&c.estado==='pendiente'),c=window.pedidos.filter(d=>d.tipo==='reserva'&&d.estado==='pendiente'),d=window.pedidos.filter(e=>e.tipo==='mesa'&&e.estado==='en_cocina'),e=window.pedidos.filter(f=>f.tipo==='delivery'&&f.estado==='en_camino'),f=window.pedidos.filter(g=>g.tipo==='reserva'&&g.estado==='reserva_pendiente'),g=window.pedidos.filter(h=>h.tipo==='reserva'&&h.estado==='reserva_atendida');document.getElementById('mesaPendientesCount').textContent=a.length;document.getElementById('deliveryPendientesCount').textContent=b.length;document.getElementById('reservaPendientesCount').textContent=c.length;document.getElementById('totalPendientesBadge').textContent=a.length+b.length+c.length;document.getElementById('mesaCocinaCount').textContent=d.length;document.getElementById('deliveryCaminoCount').textContent=e.length;document.getElementById('reservaProcesoCount').textContent=f.length+g.length;document.getElementById('totalPreparacionBadge').textContent=d.length+e.length+f.length+g.length;document.getElementById('mesaPendientesContainer').innerHTML=a.length?a.map(h=>window.crearTarjetaPedidoCompacta(h,'pendiente')).join(''):'<div class="empty-state"><i class="fas fa-store"></i><p>No hay pedidos en mesa</p></div>';document.getElementById('deliveryPendientesContainer').innerHTML=b.length?b.map(h=>window.crearTarjetaPedidoCompacta(h,'pendiente')).join(''):'<div class="empty-state"><i class="fas fa-motorcycle"></i><p>No hay pedidos delivery</p></div>';document.getElementById('reservaPendientesContainer').innerHTML=c.length?c.map(h=>window.crearTarjetaPedidoCompacta(h,'pendiente')).join(''):'<div class="empty-state"><i class="fas fa-calendar-check"></i><p>No hay reservas</p></div>';document.getElementById('mesaCocinaContainer').innerHTML=d.length?d.map(h=>window.crearTarjetaPedidoCompacta(h,'preparacion')).join(''):'<div class="empty-state"><i class="fas fa-fire"></i><p>No hay pedidos en cocina</p></div>';document.getElementById('deliveryCaminoContainer').innerHTML=e.length?e.map(h=>window.crearTarjetaPedidoCompacta(h,'preparacion')).join(''):'<div class="empty-state"><i class="fas fa-truck"></i><p>No hay deliveries en camino</p></div>';document.getElementById('reservaProcesoContainer').innerHTML=(f.length+g.length)?[...f,...g].map(h=>window.crearTarjetaPedidoCompacta(h,'preparacion')).join(''):'<div class="empty-state"><i class="fas fa-clock"></i><p>No hay reservas pendientes</p></div>';};
 window.formatearHora12 = function(timestamp) {
@@ -502,10 +669,8 @@ window.crearDetallePedidoCompacto=function(a){try{const b=new Date(a.timestamp).
 window.verComprobante=async function(a){const b=window.pedidos.find(c=>c.id===a);if(!b||!b.comprobante_url){window.mostrarToast('No hay comprobante','error');return;}const c=document.getElementById('comprobanteModal');document.getElementById('comprobanteModalBody').innerHTML=`<div style="text-align:center"><img src="${b.comprobante_url}" style="max-width:100%;max-height:400px;border-radius:8px;margin-bottom:15px"><p><strong>Referencia:</strong> ${b.referencia||'N/A'}</p><p><strong>Teléfono:</strong> ${b.telefono||'N/A'}</p><p><strong>Total:</strong> ${window.formatBs(window.usdToBs(b.total||0))}</p></div><div class="keyboard-hint"><span><kbd>ESC</kbd> cerrar</span></div>`;c.classList.add('active');};
 window.abrirModalDetalle=async function(tipo){await window.cargarVentasHoy();await window.cargarPropinas();const modal=document.getElementById('detalleModal');const title=document.getElementById('detalleModalTitle');const body=document.getElementById('detalleModalBody');let contenido='';try{switch(tipo){case'preparacion':title.innerHTML='<i class="fas fa-fire"></i> Pedidos en Preparación';const preparacion=window.pedidos.filter(p=>['en_cocina','en_camino','reserva_pendiente','reserva_atendida'].includes(p.estado));contenido=preparacion.length?preparacion.map(p=>window.crearDetallePedidoCompacto(p)).join(''):'<div class="empty-state"><i class="fas fa-inbox"></i><p>No hay pedidos en preparación</p></div>';break;case'cobrados':title.innerHTML='<i class="fas fa-check-circle"></i> Cobrados Hoy';if(!window.ventasHoy||!window.ventasHoy.length){contenido='<div class="empty-state"><i class="fas fa-inbox"></i><p>No hay cobros registrados hoy</p></div>';}else{contenido=window.ventasHoy.map(v=>{const pedido=window.pedidos.find(p=>p.id===v.pedido_id);return window.crearDetalleVentaCompacto(v,pedido);}).join('');}break;case'ventas':title.innerHTML='<i class="fas fa-dollar-sign"></i> Ventas Totales (Platillos)';const totalVentas=window.ventasHoy.reduce((sum,v)=>sum+(v.subtotal_platillos||0),0);let efectivo=0,pm=0,pv=0,condonadoTotal=0,favorTotal=0;window.ventasHoy.forEach(v=>{const p=window.pedidos.find(p=>p.id===v.pedido_id);if(p?.condonado)condonadoTotal+=p.condonado;if(p?.a_favor_caja)favorTotal+=p.a_favor_caja;if(v.metodo_pago==='efectivo_bs')efectivo+=v.subtotal_platillos||0;else if(v.metodo_pago==='efectivo_usd')efectivo+=v.subtotal_platillos||0;else if(v.metodo_pago==='pago_movil')pm+=v.subtotal_platillos||0;else if(v.metodo_pago==='punto_venta')pv+=v.subtotal_platillos||0;});contenido=`<p><strong>Total del día (platillos):</strong> ${window.formatBs(totalVentas)}</p><p><strong>Cantidad de ventas:</strong> ${window.ventasHoy.length}</p>${condonadoTotal>0?`<p><strong class="condonar-tag">Condonado:</strong> ${window.formatBs(condonadoTotal)}</p>`:''}${favorTotal>0?`<p><strong class="favor-tag">A favor de caja:</strong> ${window.formatBs(favorTotal)}</p>`:''}<h4>Desglose por método:</h4><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:20px"><div class="payment-tag" style="justify-content:space-between;padding:6px"><span>Efectivo</span><span>${window.formatBs(efectivo)}</span></div><div class="payment-tag" style="justify-content:space-between;padding:6px"><span>Pago Móvil</span><span>${window.formatBs(pm)}</span></div><div class="payment-tag" style="justify-content:space-between;padding:6px"><span>Punto Venta</span><span>${window.formatBs(pv)}</span></div></div><h4>Ventas del día:</h4>${window.ventasHoy.map(v=>{const p=window.pedidos.find(p=>p.id===v.pedido_id);return window.crearDetalleVentaCompacto(v,p);}).join('')}`;break;case'platillos':title.innerHTML='<i class="fas fa-utensils"></i> Platillos Vendidos';const hoy=new Date().toDateString();const pedidosCompletados=window.pedidos.filter(p=>['cobrado','entregado','enviado','reserva_completada'].includes(p.estado)&&new Date(p.timestamp).toDateString()===hoy);const conteo={};let totalUnidades=0;pedidosCompletados.forEach(p=>{p.items?.forEach(item=>{const cantidad=item.cantidad||1;conteo[item.nombre]=(conteo[item.nombre]||0)+cantidad;totalUnidades+=cantidad;});});const ranking=Object.entries(conteo).sort((a,b)=>b[1]-a[1]);const maxVentas=ranking[0]?.[1]||0;if(!ranking.length){contenido='<div class="empty-state"><i class="fas fa-utensils"></i><p>No hay platillos vendidos hoy</p></div>';}else{contenido=`<p><strong>Total unidades:</strong> ${totalUnidades}</p>`;contenido+='<div style="max-height:400px;overflow-y:auto">';ranking.forEach(([nombre,cantidad],index)=>{contenido+=`<div class="ranking-bar"><div class="ranking-position">${index+1}</div><div class="ranking-info"><div class="ranking-name">${nombre}</div><div class="ranking-cantidad">${cantidad} vendido(s)</div></div><div class="ranking-bar-container"><div class="ranking-bar-fill" style="width:${(cantidad/maxVentas)*100}%"></div></div></div>`;});contenido+='</div>';}break;case'propinasDetalle':title.innerHTML='<i class="fas fa-hand-holding-heart"></i> Propinas del Día';const totalPropinas=window.propinas.reduce((sum,p)=>sum+(p.monto_bs||p.monto||0),0);const cantidadPropinas=window.propinas.length;const promedio=cantidadPropinas>0?totalPropinas/cantidadPropinas:0;contenido=`<p><strong>Total propinas:</strong> ${window.formatBs(totalPropinas)}</p><p><strong>Cantidad:</strong> ${cantidadPropinas}</p><p><strong>Promedio:</strong> ${window.formatBs(promedio)}</p><h4>Detalle por propina:</h4>${cantidadPropinas?window.propinas.map(p=>window.crearTarjetaPropina(p)).join(''):'<div class="empty-state"><i class="fas fa-hand-holding-heart"></i><p>No hay propinas hoy</p></div>'}`;break;case'propinasCantidad':title.innerHTML='<i class="fas fa-hashtag"></i> Cantidad de Propinas';contenido=`<p style="font-size:2em;text-align:center;color:var(--propina)">${window.propinas.length}</p><p style="text-align:center">propinas recibidas hoy</p>`;break;case'propinasPromedio':title.innerHTML='<i class="fas fa-chart-line"></i> Promedio de Propinas';const prom=window.propinas.length?window.propinas.reduce((s,p)=>s+(p.monto_bs||p.monto||0),0)/window.propinas.length:0;contenido=`<p style="font-size:2em;text-align:center;color:var(--propina)">${window.formatBs(prom)}</p><p style="text-align:center">promedio por propina</p>`;break;case'deliverysTotal':title.innerHTML='<i class="fas fa-motorcycle"></i> Total Deliverys';const totalDeliverys=window.calcularTotalDeliverysHoy();contenido=`<p style="font-size:2em;text-align:center;color:var(--delivery)">${window.formatBs(totalDeliverys)}</p><p style="text-align:center">acumulado en deliveries hoy</p>`;break;case'deliverysCantidad':title.innerHTML='<i class="fas fa-hashtag"></i> Entregas Hoy';const entregas=window.pedidos.filter(p=>p.tipo==='delivery'&&p.estado==='enviado'&&new Date(p.timestamp).toDateString()===new Date().toDateString()).length;contenido=`<p style="font-size:2em;text-align:center;color:var(--delivery)">${entregas}</p><p style="text-align:center">entregas realizadas hoy</p>`;break;case'deliverysPromedio':title.innerHTML='<i class="fas fa-chart-line"></i> Promedio por Entrega';const enviados=window.pedidos.filter(p=>p.tipo==='delivery'&&p.estado==='enviado'&&new Date(p.timestamp).toDateString()===new Date().toDateString());const total=enviados.reduce((s,p)=>s+(p.costo_delivery_bs||0),0);const promDelivery=enviados.length>0?total/enviados.length:0;contenido=`<p style="font-size:2em;text-align:center;color:var(--delivery)">${window.formatBs(promDelivery)}</p><p style="text-align:center">promedio por entrega</p>`;break;default:contenido='<p>Selecciona una opción válida</p>';}body.innerHTML=contenido;modal.classList.add('active');}catch(e){console.error('Error en abrirModalDetalle:',e);body.innerHTML='<p>Error al cargar los datos</p>';modal.classList.add('active');}};
 window.ejecutarConfirmacion=async function(){if(!window.pedidoParaAccion)return;try{let a,b;if(window.accionPendiente==='entregado'){a='🍽️ Pedido entregado';b='¡Buen Provecho! Gracias por elegir Saki Sushi';}else if(window.accionPendiente==='enviado'){const c=document.getElementById('deliverySelector')?.value;if(!c){window.mostrarToast('Selecciona un motorizado','error');return;}const d=window.deliverys.find(e=>e.id===c);await window.supabaseClient.from('entregas_delivery').insert([{pedido_id:window.pedidoParaAccion.id,delivery_id:c,monto_bs:window.pedidoParaAccion.costo_delivery_bs||0,fecha_entrega:new Date().toISOString()}]);a='🚚 Delivery en camino';b=d?`Tu pedido está siendo entregado por ${d.nombre}`:'El repartidor ya salió';}else if(window.accionPendiente==='reserva_atendida'){a='👤 Reserva Confirmada';b='En breve tu pedido te será entregado, ¡Gracias por preferirnos!';}else if(window.accionPendiente==='reserva_completada'){a='🍽️ Pedido entregado';b='¡Buen Provecho! Gracias por elegir Saki Sushi';}else{a='✅ Estado actualizado';b='Tu pedido ha sido actualizado';}await window.supabaseClient.from('pedidos').update({estado:window.accionPendiente}).eq('id',window.pedidoParaAccion.id);await window.supabaseClient.from('notificaciones').insert([{pedido_id:window.pedidoParaAccion.id,tipo:'approved',titulo:a,mensaje:b,timestamp:new Date().toISOString(),session_id:window.pedidoParaAccion.session_id,leida:false}]);window.cerrarModal('confirmModal');window.mostrarToast('✅ Estado actualizado');await window.recargarPedidosCompletos();window.verificarYControlarAlarma();}catch(e){console.error('Error:',e);window.mostrarToast('❌ Error','error');}};
-window.verificarCambiosPedidos=async function(){if(window.reconectando||window.enProcesoDeCobro)return;try{const a=new Date();a.setHours(0,0,0,0);const b=new Date(a);b.setDate(b.getDate()+2);const c=await window.supabaseClient.from('pedidos').select('id, estado, timestamp').gte('timestamp',a.toISOString()).lt('timestamp',b.toISOString());if(c.error)throw c.error;if(c.data){let d=false;if(c.data.length!==(window.pedidos||[]).length)d=true;else{const e=new Map((window.pedidos||[]).map(f=>[f.id,f.estado]));for(const g of c.data){if(e.get(g.id)!==g.estado){d=true;break;}}}if(d){console.log('🔄 Cambios detectados en pedidos, recargando...');await window.recargarPedidosCompletos();window.ultimaActualizacion=Date.now();}}}catch(e){console.error('Error verificando cambios:',e);}};
+window.verificarCambiosPedidos=async function(){if(window.reconectando||window.enProcesoDeCobro)return;try{const a=new Date();a.setHours(0,0,0,0);const b=new Date(a);b.setDate(b.getDate()+2);const c=await window.supabaseClient.from('pedidos').select('id, estado, timestamp').gte('timestamp',a.toISOString()).lt('timestamp',b.toISOString());if(c.error)throw c.error;if(c.data){let d=false;if(c.data.length!==(window.pedidos||[]).length)d=true;else{const e=new Map((window.pedidos||[]).map(f=>[f.id,f.estado]));for(const g of c.data){if(e.get(g.id)!==g.estado){d=true;break;}}}if(d){console.log('🔄 Cambios detectados en pedidos, recargando...');await window.recargarPedidosCompletos();}}}catch(e){console.error('Error verificando cambios:',e);}};
 window.recargarPedidosCompletos=async function(){try{await window.cargarPedidos();await window.cargarVentasHoy();window.actualizarEstadisticas();window.renderizarPedidos();window.verificarYControlarAlarma();}catch(e){console.error('Error recargando pedidos:',e);}};
-window.iniciarVerificacionPeriodica=function(){if(window.intervaloVerificacion)clearInterval(window.intervaloVerificacion);window.intervaloVerificacion=setInterval(async()=>{if(window.paginaVisible&&!window.enProcesoDeCobro)await window.verificarCambiosPedidos();},3000);};
-window.setupRealtimeSubscriptions=function(){try{if(window.suscripciones)window.suscripciones.forEach(a=>{try{a.unsubscribe();}catch(e){}});window.suscripciones=[];const b=(c,d,e)=>{try{const f=window.supabaseClient.channel(c+'-'+Date.now()).on('postgres_changes',{event:'*',schema:'public',table:d},e).subscribe();window.suscripciones.push(f);}catch(g){console.error('Error suscribiendo a '+d,g);}};b('cajero-pedidos','pedidos',async()=>{await window.verificarCambiosPedidos();});b('cajero-ventas','ventas',async()=>{await window.cargarVentasHoy();window.actualizarEstadisticas();});b('cajero-propinas','propinas',async()=>{await window.cargarPropinas();window.actualizarEstadisticas();window.renderizarPropinas();});b('cajero-mesoneros','mesoneros',async()=>{await window.cargarMesoneros();});b('cajero-deliverys','deliverys',async()=>{await window.cargarDeliverys();});b('cajero-menu','menu',async()=>{await window.cargarMenu();});b('cajero-inventario','inventario',async()=>{window.stockCache.invalidate();await window.cargarInventario();});b('cajero-config','config',(a)=>{window.configGlobal={...window.configGlobal,...a.new};window.tasaEfectiva=window.configGlobal.tasa_efectiva||400;window.renderizarPedidos();window.renderizarMenu();window.actualizarEstadisticas();});}catch(e){console.error('Error configurando suscripciones:',e);}};
 window.setupEventListeners=function(){document.addEventListener('keydown',(a)=>{if(a.key==='Escape'){['cobroModal','propinaModal','confirmModal','rechazoModal','detalleModal','mesaModal','comprobanteModal','deliveryModal'].forEach(b=>{const c=document.getElementById(b);if(c&&c.classList.contains('active')){if(b==='cobroModal')window.cerrarCobroModal();else if(b==='propinaModal')window.cerrarPropinaModal();else window.cerrarModal(b);}});}if(a.key==='Enter'){if(document.getElementById('confirmModal')&&document.getElementById('confirmModal').classList.contains('active')){const b=document.getElementById('confirmActionBtn');if(b&&!b.disabled){a.preventDefault();window.ejecutarConfirmacion();}}if(document.getElementById('cobroModal')&&document.getElementById('cobroModal').classList.contains('active')&&!document.getElementById('confirmCobroBtn').disabled){a.preventDefault();window.confirmarCobro();}if(document.getElementById('propinaModal')&&document.getElementById('propinaModal').classList.contains('active')&&!document.getElementById('confirmPropinaBtn').disabled){a.preventDefault();window.confirmarPropina();}}});const b=document.getElementById('categoriasWrapper');if(b){let c=0;b.addEventListener('touchstart',d=>{c=d.touches[0].clientX;});b.addEventListener('touchmove',d=>{if(!c)return;const e=d.touches[0].clientX,f=c-e;if(Math.abs(f)>20)d.preventDefault();});b.addEventListener('touchend',d=>{if(!c)return;const e=d.changedTouches[0].clientX,f=c-e;if(Math.abs(f)>50){if(f>0)b.scrollLeft+=150;else b.scrollLeft-=150;}c=0;});}};
 document.addEventListener('DOMContentLoaded',async()=>{console.log('DOM cargado, verificando sesión...');window.alarmaAudio=document.getElementById('alarmaSonido');const a=sessionStorage.getItem('cajero_user');if(a){try{window.currentUser=JSON.parse(a);await window.cargarDatosIniciales();window.mostrarPanel();}catch(e){console.error('Error restaurando sesión:',e);window.mostrarLogin();}}else window.mostrarLogin();document.addEventListener('visibilitychange',function(){if(document.hidden)window.paginaVisible=false;else{window.paginaVisible=true;window.verificarCambiosPedidos();}});});
 </script></body></html>
