@@ -777,9 +777,19 @@ function setupBackButtonHandler() {
             if (modal && modal.classList.contains('active')) {
                 event.preventDefault();
                 modal.classList.remove('active');
-                // Detener timers si es necesario
+                
+                // Limpiar estado específico del modal
+                if (modalId === 'customizeModal') {
+                    currentCustomizeItem = null;
+                }
                 if (modalId === 'deliveryModal') detenerTimer('delivery');
                 if (modalId === 'reservaModal') detenerTimer('reserva');
+                
+                // Eliminar último estado del historial
+                if (historialEstados.length > 0) {
+                    historialEstados.pop();
+                }
+                
                 manejandoPopState = false;
                 return;
             }
@@ -829,217 +839,24 @@ function setupBackButtonHandler() {
 // FUNCIÓN PARA AGREGAR ESTADO AL HISTORIAL
 // ============================================
 function agregarEstadoHistorial(tipo) {
-    // Evitar duplicados
+    // Evitar duplicados - si el último estado es el mismo, no agregar
     if (historialEstados.length > 0 && historialEstados[historialEstados.length - 1] === tipo) {
         return;
     }
     historialEstados.push(tipo);
     window.history.pushState({ tipo: tipo }, '');
+    console.log('📌 Estado agregado:', tipo, 'Historial:', historialEstados);
 }
 
 // ============================================
-// MODIFICAR FUNCIONES PARA AGREGAR ESTADO
+// FUNCIÓN PARA LIMPIAR ESTADO DEL HISTORIAL
 // ============================================
-function abrirPersonalizacion(platilloId) {
-    agregarEstadoHistorial('customize');
-    const platillo = menuItems.find(p => p.id === platilloId);
-    if (!platillo) return;
-    currentCustomizeItem = { ...platillo, cantidad: 1, ingredientesQuitados: [], selectionType: 'completo' };
-    const modalBody = document.getElementById('customizeModalBody');
-    
-    Promise.all(Object.entries(platillo.ingredientes || {}).map(async ([ingId, ingInfo]) => {
-        const ingrediente = inventario.find(i => i.id === ingId);
-        const stockDisp = await getStockDisponible(ingId);
-        const disponible = stockDisp >= (ingInfo.cantidad || 1);
-        const precio = ingrediente?.precio_unitario || 0;
-        return `<div style="margin-bottom:.8rem; padding:.7rem; background:rgba(0,0,0,.2); border-radius:var(--radius-sm); ${!disponible ? 'opacity:0.5;' : ''}"><label style="display:flex; align-items:center; gap:.8rem; cursor:${disponible ? 'pointer' : 'not-allowed'}; color:#fff"><input type="checkbox" class="ingrediente-check" data-ingrediente="${ingId}" data-precio="${precio}" ${!disponible ? 'disabled' : ''}><div style="flex:1"><div style="font-weight:500">${ingInfo.nombre || ingId}</div><div style="font-size:.85rem; color:var(--gray-400)">Valor: ${formatBs(usdToBs(precio))}${!disponible ? '<span style="color:var(--danger); margin-left:.5rem">(Sin stock)</span>' : ''}</div></div></label></div>`;
-    })).then(ingredientesHtml => {
-        const completoOption = `<div style="margin-bottom:.8rem; padding:.7rem; background:${currentCustomizeItem.selectionType === 'completo' ? 'rgba(56,142,60,.1)' : 'rgba(0,0,0,.2)'}; border-radius:var(--radius-sm); border:2px solid ${currentCustomizeItem.selectionType === 'completo' ? 'var(--success)' : 'transparent'}; cursor:pointer" onclick="selectCompleto()"><div style="display:flex; align-items:center; gap:.8rem"><div style="width:22px; height:22px; border-radius:50%; background:${currentCustomizeItem.selectionType === 'completo' ? 'var(--success)' : 'var(--gray-300)'}; display:flex; align-items:center; justify-content:center; color:white">${currentCustomizeItem.selectionType === 'completo' ? '<i class="fas fa-check" style="font-size:.7rem"></i>' : ''}</div><div style="flex:1"><div style="font-weight:600; color:#fff">Platillo completo</div><div style="font-size:.85rem; color:var(--gray-400)">Con todos los ingredientes</div></div></div></div>`;
-        modalBody.innerHTML = `<div style="display:flex; gap:1rem; margin-bottom:1.5rem; background:rgba(0,0,0,.2); padding:.8rem; border-radius:var(--radius-sm)"><img src="${platillo.imagen || 'https://via.placeholder.com/80'}" style="width:80px; height:80px; object-fit:cover; border-radius:var(--radius-sm)"><div><h4 style="font-size:1.2rem; margin-bottom:.3rem; color:#fff">${platillo.nombre}</h4><p style="color:var(--gray-400); font-size:.9rem">${platillo.descripcion || ''}</p><p style="font-weight:600; color:var(--accent); font-size:1rem">Base: ${formatBs(usdToBs(platillo.precio))}</p></div></div><div style="margin-bottom:1.5rem"><label style="display:block; margin-bottom:.5rem; font-weight:600; color:#fff">Cantidad:</label><div style="display:flex; align-items:center; gap:1rem"><button class="btn-icon" onclick="actualizarCantidadPersonalizacion(-1)" style="width:36px; height:36px; border:1px solid rgba(255,255,255,.1); background:rgba(0,0,0,.3); border-radius:50%; cursor:pointer; color:#fff"><i class="fas fa-minus"></i></button><span id="customizeCantidad" style="font-size:1.2rem; font-weight:600; min-width:40px; text-align:center; color:#fff">1</span><button class="btn-icon" onclick="actualizarCantidadPersonalizacion(1)" style="width:36px; height:36px; border:1px solid rgba(255,255,255,.1); background:rgba(0,0,0,.3); border-radius:50%; cursor:pointer; color:#fff"><i class="fas fa-plus"></i></button></div></div><div style="margin-bottom:1.5rem"><label style="display:block; margin-bottom:.5rem; font-weight:600; color:#fff">Opciones:</label>${completoOption}<div id="ingredientesList" style="margin-top:.8rem"><div style="font-weight:500; margin-bottom:.5rem; color:#fff">Quitar ingredientes:</div>${ingredientesHtml.join('') || '<p style="color:var(--gray-400)">Sin ingredientes para personalizar</p>'}</div></div><div style="background:rgba(0,0,0,.2); padding:.8rem; border-radius:var(--radius-sm)"><div style="display:flex; justify-content:space-between"><span style="font-weight:600; color:#fff">Precio final:</span><span style="font-size:1.3rem; font-weight:700; color:var(--accent)" id="customizePrecio">${formatBs(usdToBs(platillo.precio * currentCustomizeItem.cantidad))}</span></div></div>`;
-        
-        document.querySelectorAll('.ingrediente-check').forEach(cb => {
-            cb.addEventListener('change', function() { if (this.checked) selectPersonalizado(); calcularPrecioPersonalizado(); });
-        });
-        document.getElementById('customizeModal').classList.add('active');
-    });
-}
-
-function abrirConfirmacionMesa() {
-    agregarEstadoHistorial('mesa');
-    const summary = document.getElementById('mesaOrderSummary');
-    let total = 0;
-    const grupos = agruparItemsJerarquicamente();
-    let html = '';
-    
-    grupos.forEach(grupo => {
-        total += grupo.subtotal;
-        grupo.subgrupos.forEach(subgrupo => {
-            let personalizacionTexto = '';
-            if (subgrupo.personalizacion.length > 0) {
-                const ingredientesNombres = subgrupo.personalizacion.map(p => { const ing = inventario.find(i => i.id === p); return ing?.nombre || p; }).join(', ');
-                personalizacionTexto = `<small style="display:block; color:var(--gray-400)">Sin: ${ingredientesNombres}</small>`;
-            }
-            html += `<div style="display:flex; justify-content:space-between; margin-bottom:.5rem"><div><span>${grupo.nombre} x${subgrupo.cantidad}</span>${personalizacionTexto}</div><span style="color:var(--accent)">${formatBs(subgrupo.subtotal)}</span></div>`;
-        });
-    });
-    
-    summary.innerHTML = html;
-    summary.innerHTML += `<div style="display:flex; justify-content:space-between; margin-top:1rem; padding-top:.5rem; border-top:2px solid rgba(255,255,255,.1); font-weight:700"><span>Total:</span><span>${formatBs(total)}</span></div>`;
-    document.getElementById('confirmMesaModal').classList.add('active');
-}
-
-function iniciarProcesoDelivery() {
-    agregarEstadoHistorial('delivery');
-    iniciarTimerFrontend('delivery', 20);
-    document.getElementById('selectedParroquiaText').textContent = deliveryFormData.parroquia || 'Seleccionar parroquia';
-    document.getElementById('parroquiaSelect').value = deliveryFormData.parroquia || '';
-    document.getElementById('direccion').value = deliveryFormData.direccion || '';
-    document.getElementById('telefono').value = deliveryFormData.telefono || '';
-    if (deliveryFormData.referencia) {
-        for (let i = 0; i < 6; i++) {
-            const input = document.querySelector(`.ref-digit[data-type="delivery"][data-index="${i}"]`);
-            if (input) input.value = deliveryFormData.referencia[i] || '';
-        }
+function limpiarEstadoHistorial(tipo) {
+    const index = historialEstados.lastIndexOf(tipo);
+    if (index !== -1) {
+        historialEstados.splice(index, 1);
+        console.log('🧹 Estado limpiado:', tipo, 'Historial:', historialEstados);
     }
-    actualizarTotalDelivery();
-    document.getElementById('deliveryModal').classList.add('active');
-}
-
-function iniciarProcesoReserva() {
-    agregarEstadoHistorial('reserva');
-    iniciarTimerFrontend('reserva', 20);
-    const subtotalUSD = carrito.reduce((sum, item) => sum + item.precioUnitarioUSD, 0);
-    document.getElementById('reservaTotal').textContent = formatBs(usdToBs(subtotalUSD));
-    document.getElementById('montoReserva').textContent = formatBs(usdToBs(subtotalUSD));
-    document.getElementById('fechaReserva').value = reservaFormData.fecha || '';
-    document.getElementById('nombreReserva').value = reservaFormData.nombre || '';
-    if (reservaFormData.referencia) {
-        for (let i = 0; i < 6; i++) {
-            const input = document.querySelector(`.ref-digit[data-type="reserva"][data-index="${i}"]`);
-            if (input) input.value = reservaFormData.referencia[i] || '';
-        }
-    }
-    validarFormularioReserva();
-    document.getElementById('reservaModal').classList.add('active');
-}
-
-function toggleMenuCategorias() {
-    const menu = document.getElementById('categorySidebar'), carrito = document.getElementById('cartSidebar'), overlay = document.getElementById('overlay');
-    if (window.innerWidth <= 992) {
-        if (menu.classList.contains('open')) {
-            menu.classList.remove('open');
-            if (!carrito.classList.contains('open') && !document.getElementById('notificationsPanel').classList.contains('active')) {
-                overlay.classList.remove('active');
-                // Eliminar último estado si era menú
-                if (historialEstados.length > 0 && historialEstados[historialEstados.length - 1] === 'menu') {
-                    historialEstados.pop();
-                }
-            }
-        } else {
-            agregarEstadoHistorial('menu');
-            menu.classList.add('open');
-            overlay.classList.add('active');
-            carrito.classList.remove('open');
-            document.getElementById('notificationsPanel').classList.remove('active');
-        }
-    }
-}
-
-function cerrarMenuCategorias() {
-    if (window.innerWidth <= 992) {
-        document.getElementById('categorySidebar').classList.remove('open');
-        if (!document.getElementById('cartSidebar').classList.contains('open') && !document.getElementById('notificationsPanel').classList.contains('active')) {
-            document.getElementById('overlay').classList.remove('active');
-            // Eliminar último estado si era menú
-            if (historialEstados.length > 0 && historialEstados[historialEstados.length - 1] === 'menu') {
-                historialEstados.pop();
-            }
-        }
-    }
-}
-
-function toggleCarrito() {
-    const carrito = document.getElementById('cartSidebar'), menu = document.getElementById('categorySidebar'), overlay = document.getElementById('overlay');
-    if (window.innerWidth <= 992) {
-        if (carrito.classList.contains('open')) {
-            carrito.classList.remove('open');
-            if (!menu.classList.contains('open') && !document.getElementById('notificationsPanel').classList.contains('active')) {
-                overlay.classList.remove('active');
-                // Eliminar último estado si era carrito
-                if (historialEstados.length > 0 && historialEstados[historialEstados.length - 1] === 'carrito') {
-                    historialEstados.pop();
-                }
-            }
-        } else {
-            agregarEstadoHistorial('carrito');
-            carrito.classList.add('open');
-            overlay.classList.add('active');
-            menu.classList.remove('open');
-            document.getElementById('notificationsPanel').classList.remove('active');
-        }
-    }
-    if (carrito.classList.contains('open') && carrito.length > 0) iniciarSeguimientoScroll(); else detenerSeguimientoScroll();
-}
-
-function cerrarCarrito() {
-    if (window.innerWidth <= 992) {
-        document.getElementById('cartSidebar').classList.remove('open');
-        if (!document.getElementById('categorySidebar').classList.contains('open') && !document.getElementById('notificationsPanel').classList.contains('active')) {
-            document.getElementById('overlay').classList.remove('active');
-            // Eliminar último estado si era carrito
-            if (historialEstados.length > 0 && historialEstados[historialEstados.length - 1] === 'carrito') {
-                historialEstados.pop();
-            }
-        }
-    }
-    detenerSeguimientoScroll();
-}
-
-function toggleNotifications() {
-    const panel = document.getElementById('notificationsPanel'), overlay = document.getElementById('overlay');
-    if (panel.classList.contains('active')) {
-        panel.classList.remove('active');
-        if (window.innerWidth <= 992) {
-            if (!document.getElementById('categorySidebar').classList.contains('open') && !document.getElementById('cartSidebar').classList.contains('open')) {
-                overlay.classList.remove('active');
-                // Eliminar último estado si era notificaciones
-                if (historialEstados.length > 0 && historialEstados[historialEstados.length - 1] === 'notificaciones') {
-                    historialEstados.pop();
-                }
-            }
-        }
-    } else {
-        agregarEstadoHistorial('notificaciones');
-        panel.classList.add('active');
-        if (window.innerWidth <= 992) overlay.classList.add('active');
-        marcarTodasComoLeidas();
-    }
-}
-
-function cerrarNotificaciones() {
-    const panel = document.getElementById('notificationsPanel'), overlay = document.getElementById('overlay');
-    panel.classList.remove('active');
-    if (window.innerWidth <= 992) {
-        if (!document.getElementById('categorySidebar').classList.contains('open') && !document.getElementById('cartSidebar').classList.contains('open')) {
-            overlay.classList.remove('active');
-            // Eliminar último estado si era notificaciones
-            if (historialEstados.length > 0 && historialEstados[historialEstados.length - 1] === 'notificaciones') {
-                historialEstados.pop();
-            }
-        }
-    }
-}
-
-function cerrarTodosLosPaneles() {
-    if (window.innerWidth <= 992) {
-        document.getElementById('categorySidebar').classList.remove('open');
-        document.getElementById('cartSidebar').classList.remove('open');
-        document.getElementById('overlay').classList.remove('active');
-        // Limpiar historial de estados laterales
-        historialEstados = historialEstados.filter(e => !['menu', 'carrito', 'notificaciones'].includes(e));
-    }
-    document.getElementById('notificationsPanel').classList.remove('active');
-    detenerSeguimientoScroll();
 }
 
 // ============================================
@@ -1472,9 +1289,7 @@ async function crearPedidoTransaccional(pedido) {
                 document.getElementById('cartSidebar').classList.remove('open');
                 document.getElementById('overlay').classList.remove('active');
                 // Limpiar estado del carrito
-                if (historialEstados.length > 0 && historialEstados[historialEstados.length - 1] === 'carrito') {
-                    historialEstados.pop();
-                }
+                limpiarEstadoHistorial('carrito');
             }
             detenerSeguimientoScroll();
             await precargarStock();
@@ -1773,6 +1588,36 @@ function toggleNivel2(subgrupoId, grupoPadreId) {
     }
 }
 
+// ============================================
+// FUNCIONES DE PERSONALIZACIÓN (CORREGIDAS)
+// ============================================
+function abrirPersonalizacion(platilloId) {
+    // Asegurar que currentCustomizeItem esté limpio
+    currentCustomizeItem = null;
+    
+    agregarEstadoHistorial('customize');
+    const platillo = menuItems.find(p => p.id === platilloId);
+    if (!platillo) return;
+    currentCustomizeItem = { ...platillo, cantidad: 1, ingredientesQuitados: [], selectionType: 'completo' };
+    const modalBody = document.getElementById('customizeModalBody');
+    
+    Promise.all(Object.entries(platillo.ingredientes || {}).map(async ([ingId, ingInfo]) => {
+        const ingrediente = inventario.find(i => i.id === ingId);
+        const stockDisp = await getStockDisponible(ingId);
+        const disponible = stockDisp >= (ingInfo.cantidad || 1);
+        const precio = ingrediente?.precio_unitario || 0;
+        return `<div style="margin-bottom:.8rem; padding:.7rem; background:rgba(0,0,0,.2); border-radius:var(--radius-sm); ${!disponible ? 'opacity:0.5;' : ''}"><label style="display:flex; align-items:center; gap:.8rem; cursor:${disponible ? 'pointer' : 'not-allowed'}; color:#fff"><input type="checkbox" class="ingrediente-check" data-ingrediente="${ingId}" data-precio="${precio}" ${!disponible ? 'disabled' : ''}><div style="flex:1"><div style="font-weight:500">${ingInfo.nombre || ingId}</div><div style="font-size:.85rem; color:var(--gray-400)">Valor: ${formatBs(usdToBs(precio))}${!disponible ? '<span style="color:var(--danger); margin-left:.5rem">(Sin stock)</span>' : ''}</div></div></label></div>`;
+    })).then(ingredientesHtml => {
+        const completoOption = `<div style="margin-bottom:.8rem; padding:.7rem; background:${currentCustomizeItem.selectionType === 'completo' ? 'rgba(56,142,60,.1)' : 'rgba(0,0,0,.2)'}; border-radius:var(--radius-sm); border:2px solid ${currentCustomizeItem.selectionType === 'completo' ? 'var(--success)' : 'transparent'}; cursor:pointer" onclick="selectCompleto()"><div style="display:flex; align-items:center; gap:.8rem"><div style="width:22px; height:22px; border-radius:50%; background:${currentCustomizeItem.selectionType === 'completo' ? 'var(--success)' : 'var(--gray-300)'}; display:flex; align-items:center; justify-content:center; color:white">${currentCustomizeItem.selectionType === 'completo' ? '<i class="fas fa-check" style="font-size:.7rem"></i>' : ''}</div><div style="flex:1"><div style="font-weight:600; color:#fff">Platillo completo</div><div style="font-size:.85rem; color:var(--gray-400)">Con todos los ingredientes</div></div></div></div>`;
+        modalBody.innerHTML = `<div style="display:flex; gap:1rem; margin-bottom:1.5rem; background:rgba(0,0,0,.2); padding:.8rem; border-radius:var(--radius-sm)"><img src="${platillo.imagen || 'https://via.placeholder.com/80'}" style="width:80px; height:80px; object-fit:cover; border-radius:var(--radius-sm)"><div><h4 style="font-size:1.2rem; margin-bottom:.3rem; color:#fff">${platillo.nombre}</h4><p style="color:var(--gray-400); font-size:.9rem">${platillo.descripcion || ''}</p><p style="font-weight:600; color:var(--accent); font-size:1rem">Base: ${formatBs(usdToBs(platillo.precio))}</p></div></div><div style="margin-bottom:1.5rem"><label style="display:block; margin-bottom:.5rem; font-weight:600; color:#fff">Cantidad:</label><div style="display:flex; align-items:center; gap:1rem"><button class="btn-icon" onclick="actualizarCantidadPersonalizacion(-1)" style="width:36px; height:36px; border:1px solid rgba(255,255,255,.1); background:rgba(0,0,0,.3); border-radius:50%; cursor:pointer; color:#fff"><i class="fas fa-minus"></i></button><span id="customizeCantidad" style="font-size:1.2rem; font-weight:600; min-width:40px; text-align:center; color:#fff">1</span><button class="btn-icon" onclick="actualizarCantidadPersonalizacion(1)" style="width:36px; height:36px; border:1px solid rgba(255,255,255,.1); background:rgba(0,0,0,.3); border-radius:50%; cursor:pointer; color:#fff"><i class="fas fa-plus"></i></button></div></div><div style="margin-bottom:1.5rem"><label style="display:block; margin-bottom:.5rem; font-weight:600; color:#fff">Opciones:</label>${completoOption}<div id="ingredientesList" style="margin-top:.8rem"><div style="font-weight:500; margin-bottom:.5rem; color:#fff">Quitar ingredientes:</div>${ingredientesHtml.join('') || '<p style="color:var(--gray-400)">Sin ingredientes para personalizar</p>'}</div></div><div style="background:rgba(0,0,0,.2); padding:.8rem; border-radius:var(--radius-sm)"><div style="display:flex; justify-content:space-between"><span style="font-weight:600; color:#fff">Precio final:</span><span style="font-size:1.3rem; font-weight:700; color:var(--accent)" id="customizePrecio">${formatBs(usdToBs(platillo.precio * currentCustomizeItem.cantidad))}</span></div></div>`;
+        
+        document.querySelectorAll('.ingrediente-check').forEach(cb => {
+            cb.addEventListener('change', function() { if (this.checked) selectPersonalizado(); calcularPrecioPersonalizado(); });
+        });
+        document.getElementById('customizeModal').classList.add('active');
+    });
+}
+
 function selectCompleto() {
     if (!currentCustomizeItem) return;
     currentCustomizeItem.selectionType = 'completo';
@@ -1846,6 +1691,10 @@ async function agregarPersonalizadoAlCarrito() {
     window.appCache.invalidateStock();
     await precargarStock();
     document.getElementById('customizeModal').classList.remove('active');
+    
+    // Limpiar estado del modal
+    limpiarEstadoHistorial('customize');
+    
     currentCustomizeItem = null;
     mostrarToast(`${currentCustomizeItem?.cantidad || 1} agregado(s)`, 'success');
     
@@ -1859,8 +1708,32 @@ async function agregarPersonalizadoAlCarrito() {
 }
 
 // ============================================
-// FUNCIONES DE PEDIDOS (RESTO SIN CAMBIOS)
+// FUNCIONES DE PEDIDOS
 // ============================================
+function abrirConfirmacionMesa() {
+    agregarEstadoHistorial('mesa');
+    const summary = document.getElementById('mesaOrderSummary');
+    let total = 0;
+    const grupos = agruparItemsJerarquicamente();
+    let html = '';
+    
+    grupos.forEach(grupo => {
+        total += grupo.subtotal;
+        grupo.subgrupos.forEach(subgrupo => {
+            let personalizacionTexto = '';
+            if (subgrupo.personalizacion.length > 0) {
+                const ingredientesNombres = subgrupo.personalizacion.map(p => { const ing = inventario.find(i => i.id === p); return ing?.nombre || p; }).join(', ');
+                personalizacionTexto = `<small style="display:block; color:var(--gray-400)">Sin: ${ingredientesNombres}</small>`;
+            }
+            html += `<div style="display:flex; justify-content:space-between; margin-bottom:.5rem"><div><span>${grupo.nombre} x${subgrupo.cantidad}</span>${personalizacionTexto}</div><span style="color:var(--accent)">${formatBs(subgrupo.subtotal)}</span></div>`;
+        });
+    });
+    
+    summary.innerHTML = html;
+    summary.innerHTML += `<div style="display:flex; justify-content:space-between; margin-top:1rem; padding-top:.5rem; border-top:2px solid rgba(255,255,255,.1); font-weight:700"><span>Total:</span><span>${formatBs(total)}</span></div>`;
+    document.getElementById('confirmMesaModal').classList.add('active');
+}
+
 async function confirmarPedidoMesa() {
     const pedido = crearPedidoBase('mesa');
     pedido.cliente_nombre = document.getElementById('clienteNombre').value.trim() || 'Cliente';
@@ -1875,9 +1748,7 @@ async function confirmarPedidoMesa() {
         await precargarStock();
         limpiarDatosFormulario();
         // Limpiar estado del modal
-        if (historialEstados.length > 0 && historialEstados[historialEstados.length - 1] === 'mesa') {
-            historialEstados.pop();
-        }
+        limpiarEstadoHistorial('mesa');
     } else mostrarToast('❌ Error: ' + resultado.error, 'error');
 }
 
@@ -1893,6 +1764,41 @@ function crearPedidoBase(tipo) {
         items: items, total: carrito.reduce((sum, i) => sum + i.precioUnitarioUSD, 0),
         session_id: sessionId, mesa: tipo === 'mesa' ? mesaId : null, tasa_aplicada: tasaActual
     };
+}
+
+function iniciarProcesoDelivery() {
+    agregarEstadoHistorial('delivery');
+    iniciarTimerFrontend('delivery', 20);
+    document.getElementById('selectedParroquiaText').textContent = deliveryFormData.parroquia || 'Seleccionar parroquia';
+    document.getElementById('parroquiaSelect').value = deliveryFormData.parroquia || '';
+    document.getElementById('direccion').value = deliveryFormData.direccion || '';
+    document.getElementById('telefono').value = deliveryFormData.telefono || '';
+    if (deliveryFormData.referencia) {
+        for (let i = 0; i < 6; i++) {
+            const input = document.querySelector(`.ref-digit[data-type="delivery"][data-index="${i}"]`);
+            if (input) input.value = deliveryFormData.referencia[i] || '';
+        }
+    }
+    actualizarTotalDelivery();
+    document.getElementById('deliveryModal').classList.add('active');
+}
+
+function iniciarProcesoReserva() {
+    agregarEstadoHistorial('reserva');
+    iniciarTimerFrontend('reserva', 20);
+    const subtotalUSD = carrito.reduce((sum, item) => sum + item.precioUnitarioUSD, 0);
+    document.getElementById('reservaTotal').textContent = formatBs(usdToBs(subtotalUSD));
+    document.getElementById('montoReserva').textContent = formatBs(usdToBs(subtotalUSD));
+    document.getElementById('fechaReserva').value = reservaFormData.fecha || '';
+    document.getElementById('nombreReserva').value = reservaFormData.nombre || '';
+    if (reservaFormData.referencia) {
+        for (let i = 0; i < 6; i++) {
+            const input = document.querySelector(`.ref-digit[data-type="reserva"][data-index="${i}"]`);
+            if (input) input.value = reservaFormData.referencia[i] || '';
+        }
+    }
+    validarFormularioReserva();
+    document.getElementById('reservaModal').classList.add('active');
 }
 
 function iniciarTimerFrontend(tipo, minutos) {
@@ -2033,9 +1939,7 @@ async function confirmarPedidoDelivery() {
         document.getElementById('deliveryModal').classList.remove('active');
         window.appCache.invalidateStock(); await precargarStock(); limpiarDatosFormulario();
         // Limpiar estado del modal
-        if (historialEstados.length > 0 && historialEstados[historialEstados.length - 1] === 'delivery') {
-            historialEstados.pop();
-        }
+        limpiarEstadoHistorial('delivery');
     } else { mostrarToast('❌ Error: ' + resultado.error, 'error'); iniciarTimerFrontend('delivery', 20); }
 }
 
@@ -2052,9 +1956,7 @@ async function confirmarPedidoReserva() {
         document.getElementById('reservaModal').classList.remove('active');
         window.appCache.invalidateStock(); await precargarStock(); limpiarDatosFormulario();
         // Limpiar estado del modal
-        if (historialEstados.length > 0 && historialEstados[historialEstados.length - 1] === 'reserva') {
-            historialEstados.pop();
-        }
+        limpiarEstadoHistorial('reserva');
     } else { mostrarToast('❌ Error: ' + resultado.error, 'error'); iniciarTimerFrontend('reserva', 20); }
 }
 
@@ -2232,15 +2134,33 @@ function copiarAlPortapapeles(texto, boton) {
 // ============================================
 // FUNCIONES DE UI Y EVENTOS (MODIFICADAS)
 // ============================================
+function toggleMenuCategorias() {
+    const menu = document.getElementById('categorySidebar'), carrito = document.getElementById('cartSidebar'), overlay = document.getElementById('overlay');
+    if (window.innerWidth <= 992) {
+        if (menu.classList.contains('open')) {
+            menu.classList.remove('open');
+            if (!carrito.classList.contains('open') && !document.getElementById('notificationsPanel').classList.contains('active')) {
+                overlay.classList.remove('active');
+                // Limpiar estado del menú
+                limpiarEstadoHistorial('menu');
+            }
+        } else {
+            agregarEstadoHistorial('menu');
+            menu.classList.add('open');
+            overlay.classList.add('active');
+            carrito.classList.remove('open');
+            document.getElementById('notificationsPanel').classList.remove('active');
+        }
+    }
+}
+
 function cerrarMenuCategorias() {
     if (window.innerWidth <= 992) {
         document.getElementById('categorySidebar').classList.remove('open');
         if (!document.getElementById('cartSidebar').classList.contains('open') && !document.getElementById('notificationsPanel').classList.contains('active')) {
             document.getElementById('overlay').classList.remove('active');
-            // Eliminar último estado si era menú
-            if (historialEstados.length > 0 && historialEstados[historialEstados.length - 1] === 'menu') {
-                historialEstados.pop();
-            }
+            // Limpiar estado del menú
+            limpiarEstadoHistorial('menu');
         }
     }
 }
@@ -2252,10 +2172,8 @@ function toggleCarrito() {
             carrito.classList.remove('open');
             if (!menu.classList.contains('open') && !document.getElementById('notificationsPanel').classList.contains('active')) {
                 overlay.classList.remove('active');
-                // Eliminar último estado si era carrito
-                if (historialEstados.length > 0 && historialEstados[historialEstados.length - 1] === 'carrito') {
-                    historialEstados.pop();
-                }
+                // Limpiar estado del carrito
+                limpiarEstadoHistorial('carrito');
             }
         } else {
             agregarEstadoHistorial('carrito');
@@ -2273,13 +2191,30 @@ function cerrarCarrito() {
         document.getElementById('cartSidebar').classList.remove('open');
         if (!document.getElementById('categorySidebar').classList.contains('open') && !document.getElementById('notificationsPanel').classList.contains('active')) {
             document.getElementById('overlay').classList.remove('active');
-            // Eliminar último estado si era carrito
-            if (historialEstados.length > 0 && historialEstados[historialEstados.length - 1] === 'carrito') {
-                historialEstados.pop();
-            }
+            // Limpiar estado del carrito
+            limpiarEstadoHistorial('carrito');
         }
     }
     detenerSeguimientoScroll();
+}
+
+function toggleNotifications() {
+    const panel = document.getElementById('notificationsPanel'), overlay = document.getElementById('overlay');
+    if (panel.classList.contains('active')) {
+        panel.classList.remove('active');
+        if (window.innerWidth <= 992) {
+            if (!document.getElementById('categorySidebar').classList.contains('open') && !document.getElementById('cartSidebar').classList.contains('open')) {
+                overlay.classList.remove('active');
+                // Limpiar estado de notificaciones
+                limpiarEstadoHistorial('notificaciones');
+            }
+        }
+    } else {
+        agregarEstadoHistorial('notificaciones');
+        panel.classList.add('active');
+        if (window.innerWidth <= 992) overlay.classList.add('active');
+        marcarTodasComoLeidas();
+    }
 }
 
 function cerrarNotificaciones() {
@@ -2288,10 +2223,8 @@ function cerrarNotificaciones() {
     if (window.innerWidth <= 992) {
         if (!document.getElementById('categorySidebar').classList.contains('open') && !document.getElementById('cartSidebar').classList.contains('open')) {
             overlay.classList.remove('active');
-            // Eliminar último estado si era notificaciones
-            if (historialEstados.length > 0 && historialEstados[historialEstados.length - 1] === 'notificaciones') {
-                historialEstados.pop();
-            }
+            // Limpiar estado de notificaciones
+            limpiarEstadoHistorial('notificaciones');
         }
     }
 }
@@ -2302,7 +2235,7 @@ function cerrarTodosLosPaneles() {
         document.getElementById('cartSidebar').classList.remove('open');
         document.getElementById('overlay').classList.remove('active');
         // Limpiar historial de estados laterales
-        historialEstados = historialEstados.filter(e => !['menu', 'carrito', 'notificaciones'].includes(e));
+        ['menu', 'carrito', 'notificaciones'].forEach(tipo => limpiarEstadoHistorial(tipo));
     }
     document.getElementById('notificationsPanel').classList.remove('active');
     detenerSeguimientoScroll();
@@ -2357,17 +2290,13 @@ function setupEventListeners() {
         document.getElementById('customizeModal').classList.remove('active'); 
         currentCustomizeItem = null;
         // Limpiar estado del modal
-        if (historialEstados.length > 0 && historialEstados[historialEstados.length - 1] === 'customize') {
-            historialEstados.pop();
-        }
+        limpiarEstadoHistorial('customize');
     });
     document.getElementById('cancelCustomize').addEventListener('click', () => { 
         document.getElementById('customizeModal').classList.remove('active'); 
         currentCustomizeItem = null;
         // Limpiar estado del modal
-        if (historialEstados.length > 0 && historialEstados[historialEstados.length - 1] === 'customize') {
-            historialEstados.pop();
-        }
+        limpiarEstadoHistorial('customize');
     });
     document.getElementById('addToCartFromModal').addEventListener('click', agregarPersonalizadoAlCarrito);
     
@@ -2375,34 +2304,26 @@ function setupEventListeners() {
         detenerTimer('delivery'); 
         document.getElementById('deliveryModal').classList.remove('active');
         // Limpiar estado del modal
-        if (historialEstados.length > 0 && historialEstados[historialEstados.length - 1] === 'delivery') {
-            historialEstados.pop();
-        }
+        limpiarEstadoHistorial('delivery');
     });
     document.getElementById('cancelDelivery').addEventListener('click', () => { 
         detenerTimer('delivery'); 
         document.getElementById('deliveryModal').classList.remove('active');
         // Limpiar estado del modal
-        if (historialEstados.length > 0 && historialEstados[historialEstados.length - 1] === 'delivery') {
-            historialEstados.pop();
-        }
+        limpiarEstadoHistorial('delivery');
     });
     
     document.getElementById('closeReservaModal').addEventListener('click', () => { 
         detenerTimer('reserva'); 
         document.getElementById('reservaModal').classList.remove('active');
         // Limpiar estado del modal
-        if (historialEstados.length > 0 && historialEstados[historialEstados.length - 1] === 'reserva') {
-            historialEstados.pop();
-        }
+        limpiarEstadoHistorial('reserva');
     });
     document.getElementById('cancelReserva').addEventListener('click', () => { 
         detenerTimer('reserva'); 
         document.getElementById('reservaModal').classList.remove('active');
         // Limpiar estado del modal
-        if (historialEstados.length > 0 && historialEstados[historialEstados.length - 1] === 'reserva') {
-            historialEstados.pop();
-        }
+        limpiarEstadoHistorial('reserva');
     });
     
     setupReferenceInputs();
@@ -2419,16 +2340,12 @@ function setupEventListeners() {
     document.getElementById('cancelMesaOrder').addEventListener('click', () => { 
         document.getElementById('confirmMesaModal').classList.remove('active');
         // Limpiar estado del modal
-        if (historialEstados.length > 0 && historialEstados[historialEstados.length - 1] === 'mesa') {
-            historialEstados.pop();
-        }
+        limpiarEstadoHistorial('mesa');
     });
     document.getElementById('closeConfirmMesaModal').addEventListener('click', () => { 
         document.getElementById('confirmMesaModal').classList.remove('active');
         // Limpiar estado del modal
-        if (historialEstados.length > 0 && historialEstados[historialEstados.length - 1] === 'mesa') {
-            historialEstados.pop();
-        }
+        limpiarEstadoHistorial('mesa');
     });
     
     document.querySelectorAll('.modal-overlay').forEach(modal => {
@@ -2438,10 +2355,14 @@ function setupEventListeners() {
                 if (modal.id === 'reservaModal') detenerTimer('reserva');
                 modal.classList.remove('active');
                 // Limpiar estado del modal correspondiente
-                const tipo = modal.id.replace('Modal', '');
-                if (historialEstados.length > 0 && historialEstados[historialEstados.length - 1] === tipo) {
-                    historialEstados.pop();
-                }
+                const tipoMap = {
+                    'customizeModal': 'customize',
+                    'confirmMesaModal': 'mesa',
+                    'deliveryModal': 'delivery',
+                    'reservaModal': 'reserva'
+                };
+                const tipo = tipoMap[modal.id];
+                if (tipo) limpiarEstadoHistorial(tipo);
             }
         });
     });
@@ -2457,9 +2378,7 @@ function setupEventListeners() {
                     if (!document.getElementById('categorySidebar').classList.contains('open') && !document.getElementById('cartSidebar').classList.contains('open')) {
                         document.getElementById('overlay').classList.remove('active');
                         // Limpiar estado de notificaciones
-                        if (historialEstados.length > 0 && historialEstados[historialEstados.length - 1] === 'notificaciones') {
-                            historialEstados.pop();
-                        }
+                        limpiarEstadoHistorial('notificaciones');
                     }
                 }
             }
@@ -2472,7 +2391,7 @@ function setupEventListeners() {
             document.getElementById('cartSidebar').classList.remove('open');
             document.getElementById('overlay').classList.remove('active');
             // Limpiar historial de estados laterales
-            historialEstados = historialEstados.filter(e => !['menu', 'carrito', 'notificaciones'].includes(e));
+            ['menu', 'carrito', 'notificaciones'].forEach(tipo => limpiarEstadoHistorial(tipo));
         }
     });
     
