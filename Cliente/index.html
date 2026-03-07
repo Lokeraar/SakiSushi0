@@ -304,6 +304,17 @@
         .text-accent{color:var(--accent)}
         .bg-light{background:var(--light-bg)}
         .text-center{text-align:center}
+        
+        /* Animación de destello para botones */
+        @keyframes botonDestello {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            25% { opacity: 0.7; transform: scale(0.98); background: rgba(255, 152, 0, 0.3); }
+            50% { opacity: 1; transform: scale(1); }
+            75% { opacity: 0.7; transform: scale(0.98); background: rgba(255, 152, 0, 0.3); }
+        }
+        .boton-destello {
+            animation: botonDestello 2s ease-in-out;
+        }
     </style>
 </head>
 <body>
@@ -770,7 +781,30 @@ function getStockPrecalculado(platilloId) {
 }
 
 // ============================================
-// RENDERIZADO SÍNCRONO DE TARJETAS (SIN LAZY LOADING)
+// FUNCIÓN PARA DESTELLO DE BOTONES
+// ============================================
+function hacerDestellarBotones() {
+    const botones = document.querySelectorAll('#cartButtons .btn-primary, #cartButtons .btn-secondary');
+    if (botones.length === 0) return;
+    
+    // Vibrar una vez (si el dispositivo lo soporta)
+    if (navigator.vibrate) navigator.vibrate(200);
+    
+    // Agregar clase de animación a cada botón
+    botones.forEach(btn => {
+        btn.classList.add('boton-destello');
+    });
+    
+    // Quitar la clase después de 2 segundos
+    setTimeout(() => {
+        botones.forEach(btn => {
+            btn.classList.remove('boton-destello');
+        });
+    }, 2000);
+}
+
+// ============================================
+// RENDERIZADO SÍNCRONO DE TARJETAS
 // ============================================
 function renderizarTarjetas(items) {
     return items.map(item => {
@@ -850,7 +884,7 @@ function renderizarMenuInmediato(filtroCategoria = null, filtroSubcategoria = nu
 }
 
 // ============================================
-// FUNCIONES DE SCROLL
+// FUNCIONES DE SCROLL (MODIFICADA LA DE irABotonesAccion)
 // ============================================
 function iniciarSeguimientoScroll() {
     if (scrollRafId) cancelAnimationFrame(scrollRafId);
@@ -905,7 +939,13 @@ function actualizarPosicionFlechas() {
 
 function irABotonesAccion() {
     const cartFooter = document.getElementById('cartFooter');
-    if (cartFooter) cartFooter.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    if (cartFooter) {
+        cartFooter.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        // Hacer destellar los botones después del scroll
+        setTimeout(() => {
+            hacerDestellarBotones();
+        }, 500);
+    }
 }
 
 function scrollAlItemAgregado(itemId) {
@@ -1345,7 +1385,7 @@ function actualizarCarritoUI() {
         html += `</div></div>`;
     });
     
-    const flechasHTML = `<div class="scroll-indicator-cascade" onclick="irABotonesAccion()"><i class="fas fa-chevron-down cascade-arrow"></i><i class="fas fa-chevron-down cascade-arrow"></i><i class="fas fa-chevron-down cascade-arrow"></i><span class="cascade-text">Toca para ir a los botones</span></div>`;
+    const flechasHTML = `<div class="scroll-indicator-cascade" onclick="irABotonesAccion()"><i class="fas fa-chevron-down cascade-arrow"></i><i class="fas fa-chevron-down cascade-arrow"></i><i class="fas fa-chevron-down cascade-arrow"></i><span class="cascade-text">Toca y haz tu pedido</span></div>`;
     if (carrito.length > 0) {
         html += flechasHTML;
         iniciarSeguimientoScroll();
