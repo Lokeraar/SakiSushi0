@@ -1,4 +1,4 @@
-// supabase-config.js - VERSIÓN FINAL CON UUID Y LOGS Y ZONA HORARIA GMT-4
+// supabase-config.js - VERSIÓN FINAL CON UUID, GMT-4 Y OPTIMIZACIONES
 window.SUPABASE_URL = 'https://iqwwoihiiyrtypyqzhgy.supabase.co';
 window.SUPABASE_ANON_KEY = 'sb_publishable_m4WcF4gmkj1olAj95HMLlA_4yKqPFXm';
 
@@ -26,13 +26,53 @@ window.configGlobal = {
 };
 
 // ============================================
+// CACHÉ GLOBAL COMPARTIDO
+// ============================================
+window.appCache = {
+    stock: { data: {}, lastUpdate: 0, duration: 5000 },
+    platillos: new Map(),
+    pedidos: new Map(),
+    suscripciones: [],
+    
+    getStock: function(ingredienteId) {
+        const ahora = Date.now();
+        if (ahora - this.stock.lastUpdate > this.stock.duration) this.stock.data = {};
+        return this.stock.data[ingredienteId];
+    },
+    
+    setStock: function(ingredienteId, valor) {
+        this.stock.data[ingredienteId] = valor;
+        this.stock.lastUpdate = Date.now();
+    },
+    
+    invalidateStock: function() {
+        this.stock.data = {};
+        this.stock.lastUpdate = 0;
+        this.platillos.clear();
+    },
+    
+    limpiarTodo: function() {
+        this.stock.data = {};
+        this.stock.lastUpdate = 0;
+        this.platillos.clear();
+        this.pedidos.clear();
+    }
+};
+
+// Compatibilidad hacia atrás
+window.stockCache = {
+    get: (id) => window.appCache.getStock(id),
+    set: (id, v) => window.appCache.setStock(id, v),
+    invalidate: () => window.appCache.invalidateStock(),
+    clear: () => { window.appCache.stock.data = {}; window.appCache.stock.lastUpdate = 0; }
+};
+
+// ============================================
 // FUNCIONES DE ZONA HORARIA GMT-4
 // ============================================
-
 window.getFechaGMT4 = function() {
     const fecha = new Date();
-    const fechaGMT4 = new Date(fecha.toLocaleString('en-US', { timeZone: 'America/Caracas' }));
-    return fechaGMT4;
+    return new Date(fecha.toLocaleString('en-US', { timeZone: 'America/Caracas' }));
 };
 
 window.formatearFechaGMT4 = function(timestamp) {
@@ -78,13 +118,15 @@ window.utcToGMT4 = function(utcTimestamp) {
     if (!utcTimestamp) return null;
     try {
         const fecha = new Date(utcTimestamp);
-        const fechaGMT4 = new Date(fecha.getTime() - (4 * 60 * 60 * 1000));
-        return fechaGMT4;
+        return new Date(fecha.getTime() - (4 * 60 * 60 * 1000));
     } catch (e) {
         return new Date(utcTimestamp);
     }
 };
 
+// ============================================
+// FUNCIONES DE CONFIGURACIÓN
+// ============================================
 window.cargarConfiguracion = async function() {
     try {
         const { data, error } = await window.supabaseClient
@@ -101,6 +143,9 @@ window.cargarConfiguracion = async function() {
     }
 };
 
+// ============================================
+// FUNCIONES DE STORAGE
+// ============================================
 window.subirImagenPlatillo = async function(archivoImagen, carpetaAdicional = '') {
     try {
         if (!archivoImagen) return { success: false, error: 'No se proporcionó archivo' };
@@ -165,6 +210,9 @@ window.subirComprobante = async function(file, tipo, onProgress) {
     }
 };
 
+// ============================================
+// FUNCIONES DE FORMATO
+// ============================================
 window.formatBs = function(monto) {
     try {
         const valor = Math.round((monto || 0) * 100) / 100;
@@ -177,7 +225,11 @@ window.formatBs = function(monto) {
 };
 
 window.formatUSD = function(monto) {
-    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 }).format(monto);
+    try {
+        return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 }).format(monto);
+    } catch (e) {
+        return '$ ' + (monto || 0).toFixed(2);
+    }
 };
 
 window.generarId = function(prefix = '') {
@@ -213,27 +265,9 @@ window.bsToUsd = function(bs, tasa) {
     return bs / tasaActual;
 };
 
-window.stockCache = {
-    data: {}, lastUpdate: 0, duration: 5000,
-    get: function(ingredienteId) {
-        const ahora = Date.now();
-        if (ahora - this.lastUpdate > this.duration) this.clear();
-        return this.data[ingredienteId];
-    },
-    set: function(ingredienteId, valor) {
-        this.data[ingredienteId] = valor;
-        this.lastUpdate = Date.now();
-    },
-    clear: function() {
-        this.data = {};
-        this.lastUpdate = Date.now();
-    },
-    invalidate: function() {
-        this.data = {};
-        this.lastUpdate = 0;
-    }
-};
-
+// ============================================
+// DATOS ESTÁTICOS
+// ============================================
 window.parroquiasDelivery = [
     { nombre: "San Bernardino", precioUSD: 2 }, { nombre: "San José", precioUSD: 2 },
     { nombre: "San Agustín", precioUSD: 2 }, { nombre: "Candelaria", precioUSD: 2 },
@@ -262,6 +296,9 @@ window.categoriasMenu = {
     "Ofertas Especiales": [], "Para Niños": [], "Combo Ejecutivo": []
 };
 
+// ============================================
+// FUNCIÓN DE VERIFICACIÓN FORZADA DE NOTIFICACIONES
+// ============================================
 window.verificarNotificacionesForzadas = async function(sessionId) {
     try {
         console.log('🔍 Verificación forzada para session:', sessionId);
@@ -288,12 +325,9 @@ window.verificarNotificacionesForzadas = async function(sessionId) {
 };
 
 // ============================================
-// VERIFICACIÓN DE FUNCIONES CARGADAS
+// VERIFICACIÓN DE FUNCIONES
 // ============================================
 console.log('✅ supabase-config.js cargado correctamente');
-console.log('   Funciones disponibles:');
 console.log('   - formatearFechaGMT4:', typeof window.formatearFechaGMT4 === 'function' ? '✅' : '❌');
 console.log('   - formatearHora12GMT4:', typeof window.formatearHora12GMT4 === 'function' ? '✅' : '❌');
-console.log('   - getFechaGMT4:', typeof window.getFechaGMT4 === 'function' ? '✅' : '❌');
-console.log('   - getTimestampISO_GMT4:', typeof window.getTimestampISO_GMT4 === 'function' ? '✅' : '❌');
-console.log('   - utcToGMT4:', typeof window.utcToGMT4 === 'function' ? '✅' : '❌');
+console.log('   - appCache:', window.appCache ? '✅' : '❌');
