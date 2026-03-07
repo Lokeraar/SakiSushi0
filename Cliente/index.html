@@ -11,9 +11,75 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         *{margin:0;padding:0;box-sizing:border-box}
-        :root{--primary:#D32F2F;--secondary:#212121;--accent:#FF9800;--light-bg:#F5F5F5;--dark-bg:#121212;--success:#388E3C;--info:#1976D2;--warning:#F57C00;--danger:#ef4444;--text-light:#ffffff;--text-dark:#333333;--gray-100:#f8f9fa;--gray-200:#e9ecef;--gray-300:#dee2e6;--gray-400:#ced4da;--gray-500:#adb5bd;--gray-600:#6c757d;--gray-700:#495057;--gray-800:#343a40;--gray-900:#212529;--shadow-sm:0 2px 4px rgba(0,0,0,0.1);--shadow-md:0 4px 8px rgba(0,0,0,0.15);--shadow-lg:0 8px 16px rgba(0,0,0,0.2);--radius-sm:8px;--radius-md:12px;--radius-lg:16px;--nivel1-bg:linear-gradient(135deg,var(--primary),#b71c1c);--nivel1-text:white;--nivel2-bg:#FFF3E0;--nivel2-border:#FFB74D;--nivel2-text:#E65100;--nivel3-bg:white;--nivel3-border:var(--gray-200)}
-        body{font-family:'Roboto',sans-serif;background-image:url('https://userscontent2.emaze.com/images/28851f51-ec90-466c-ad3a-51e653c9f058/c862bd8c3df982859d9f75ed46af72e1.jpg');background-size:cover;background-attachment:fixed;background-position:center;color:var(--text-dark);min-height:100vh;display:flex;flex-direction:column}
-        body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:linear-gradient(135deg,rgba(26,26,46,0.85)0%,rgba(22,33,62,0.9)100%);pointer-events:none;z-index:-1}
+        :root{
+            --primary:#D32F2F;
+            --secondary:#212121;
+            --accent:#FF9800;
+            --light-bg:#F5F5F5;
+            --dark-bg:#121212;
+            --success:#388E3C;
+            --info:#1976D2;
+            --warning:#F57C00;
+            --danger:#ef4444;
+            --text-light:#ffffff;
+            --text-dark:#333333;
+            --gray-100:#f8f9fa;
+            --gray-200:#e9ecef;
+            --gray-300:#dee2e6;
+            --gray-400:#ced4da;
+            --gray-500:#adb5bd;
+            --gray-600:#6c757d;
+            --gray-700:#495057;
+            --gray-800:#343a40;
+            --gray-900:#212529;
+            --shadow-sm:0 2px 4px rgba(0,0,0,0.1);
+            --shadow-md:0 4px 8px rgba(0,0,0,0.15);
+            --shadow-lg:0 8px 16px rgba(0,0,0,0.2);
+            --radius-sm:8px;
+            --radius-md:12px;
+            --radius-lg:16px;
+            --nivel1-bg:linear-gradient(135deg,var(--primary),#b71c1c);
+            --nivel1-text:white;
+            --nivel2-bg:#FFF3E0;
+            --nivel2-border:#FFB74D;
+            --nivel2-text:#E65100;
+            --nivel3-bg:white;
+            --nivel3-border:var(--gray-200);
+            --bg-overlay:rgba(26,26,46,0.85);
+            --card-bg:rgba(255,255,255,.05);
+            --text-primary:#fff;
+            --text-secondary:var(--gray-400);
+        }
+        
+        /* MODO CLARO */
+        body.tema-claro {
+            --bg-overlay:rgba(255,255,255,0.9);
+            --card-bg:rgba(0,0,0,.03);
+            --text-primary:#333;
+            --text-secondary:#666;
+            --nivel3-bg:#f8f9fa;
+            --nivel3-border:#dee2e6;
+        }
+        body.tema-claro .menu-card-title,
+        body.tema-claro .category-title h2,
+        body.tema-claro .section-title,
+        body.tema-claro .cart-header h3,
+        body.tema-claro .cart-total span,
+        body.tema-claro .notification-title {
+            color: var(--text-dark);
+        }
+        body.tema-claro .menu-card-description,
+        body.tema-claro .stock-info,
+        body.tema-claro .item-info .item-name {
+            color: var(--text-secondary);
+        }
+        body.tema-claro .footer {
+            background: var(--gray-200);
+            color: var(--text-dark);
+        }
+        
+        body{font-family:'Roboto',sans-serif;background-image:url('https://userscontent2.emaze.com/images/28851f51-ec90-466c-ad3a-51e653c9f058/c862bd8c3df982859d9f75ed46af72e1.jpg');background-size:cover;background-attachment:fixed;background-position:center;color:var(--text-primary);min-height:100vh;display:flex;flex-direction:column}
+        body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:var(--bg-overlay);pointer-events:none;z-index:-1}
         h1,h2,h3,h4,h5,h6{font-family:'Montserrat',sans-serif}
         .slogan-text{font-family:'Playfair Display',serif;font-style:italic;font-weight:500;letter-spacing:.5px;color:var(--accent)}
         .overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);z-index:800;display:none;backdrop-filter:blur(3px)}
@@ -35,15 +101,21 @@
         .header-icons.left-aligned{margin-left:auto}
         .icon-button{background:rgba(255,255,255,.15);border:none;color:white;width:50px;height:50px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .3s;font-size:1.4rem;position:relative;backdrop-filter:blur(5px);flex-shrink:0}
         .icon-button:hover{background:rgba(255,255,255,.25);transform:scale(1.1)}
+        .theme-toggle{background:rgba(255,255,255,.15);border:none;color:white;width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .3s;font-size:1.1rem}
+        .theme-toggle:hover{background:rgba(255,255,255,.25);transform:scale(1.1)}
         .notification-badge{position:absolute;top:-5px;right:-5px;background-color:var(--accent);color:white;font-size:.7rem;padding:.2rem .5rem;border-radius:20px;min-width:20px;text-align:center;font-weight:600;box-shadow:var(--shadow-sm)}
         .notification-badge.has-unread{animation:vibrate .3s ease}
+        .notification-badge.pop{animation:pop 0.3s ease}
         @keyframes vibrate{0%,100%{transform:scale(1)}10%,30%,50%,70%,90%{transform:scale(1.1)}20%,40%,60%,80%{transform:scale(.95)}}
+        @keyframes pop{0%{transform:scale(1)}50%{transform:scale(1.3)}100%{transform:scale(1)}}
         .cart-badge{position:absolute;top:-5px;right:-5px;background-color:var(--accent);color:white;font-size:.7rem;padding:.2rem .5rem;border-radius:20px;min-width:20px;text-align:center;font-weight:600;box-shadow:var(--shadow-sm)}
+        .cart-badge.pop{animation:pop 0.3s ease}
         .table-badge{background:var(--accent);color:var(--secondary);padding:.4rem 1rem;border-radius:25px;font-weight:700;font-family:'Montserrat',sans-serif;font-size:1rem;display:inline-block;white-space:nowrap}
         .content-wrapper{width:100%;flex:1;display:flex;flex-direction:column;background:transparent}
         .main-layout{display:flex;flex:1;position:relative;background:transparent;overflow:hidden}
         #sidebarContainer{position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none;z-index:900}
         .category-sidebar{width:280px;background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%);border-right:1px solid rgba(255,255,255,.1);overflow-y:auto;transition:transform .3s ease;box-shadow:2px 0 8px rgba(0,0,0,.5);position:absolute;left:0;top:0;bottom:0;display:flex;flex-direction:column;backdrop-filter:blur(10px);pointer-events:auto;height:100%}
+        body.tema-claro .category-sidebar{background:linear-gradient(135deg,#f5f5f5 0%,#e0e0e0 100%);border-right:1px solid rgba(0,0,0,.1)}
         @media (max-width:992px){.category-sidebar{transform:translateX(-100%)}.category-sidebar.open{transform:translateX(0);box-shadow:var(--shadow-lg)}}
         @media (min-width:993px){.category-sidebar{transform:translateX(0)!important}}
         .category-header{padding:1rem 1.5rem;display:flex;align-items:center;justify-content:space-between;color:var(--gray-300);font-weight:600;font-size:1.1rem;background:rgba(0,0,0,.2);border-bottom:1px solid rgba(255,255,255,.1);flex-shrink:0}
@@ -66,6 +138,7 @@
         .subcategory-item.active{color:var(--accent);font-weight:500}
         .subcategory-item.active::before{content:'•';position:absolute;left:2.5rem;color:var(--accent);font-weight:700}
         .cart-sidebar{width:320px;background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%);border-left:1px solid rgba(255,255,255,.1);display:flex;flex-direction:column;transition:transform .3s ease;position:absolute;right:0;top:0;bottom:0;box-shadow:-2px 0 8px rgba(0,0,0,.5);backdrop-filter:blur(10px);pointer-events:auto;height:100%}
+        body.tema-claro .cart-sidebar{background:linear-gradient(135deg,#f5f5f5 0%,#e0e0e0 100%);border-left:1px solid rgba(0,0,0,.1)}
         @media (max-width:992px){.cart-sidebar{transform:translateX(100%)}.cart-sidebar.open{transform:translateX(0);box-shadow:var(--shadow-lg)}}
         @media (min-width:993px){.cart-sidebar{transform:translateX(0)!important}}
         .cart-header{padding:1rem 1.2rem;border-bottom:1px solid rgba(255,255,255,.1);display:flex;align-items:center;justify-content:space-between;background:rgba(0,0,0,.2);flex-shrink:0}
@@ -117,13 +190,43 @@
         .cart-total{display:flex;justify-content:space-between;font-weight:700;font-size:1.2rem;margin-bottom:1.2rem;color:var(--gray-100)}
         .cart-total span:last-child{color:var(--accent)}
         .cart-buttons{display:flex;gap:.5rem;flex-wrap:wrap}
-        .btn-primary,.btn-secondary{flex:1;padding:.8rem;border:none;border-radius:50px;font-weight:600;font-size:.9rem;cursor:pointer;transition:all .3s;display:flex;align-items:center;justify-content:center;gap:.5rem;min-width:120px}
+        .btn-primary,.btn-secondary{flex:1;padding:.8rem;border:none;border-radius:50px;font-weight:600;font-size:.9rem;cursor:pointer;transition:all .3s;display:flex;align-items:center;justify-content:center;gap:.5rem;min-width:120px;position:relative}
         .btn-primary{background:linear-gradient(135deg,var(--primary),#b71c1c);color:white;box-shadow:var(--shadow-sm)}
         .btn-primary:hover:not(:disabled){transform:translateY(-2px);box-shadow:var(--shadow-md)}
         .btn-primary:disabled{opacity:.5;cursor:not-allowed;background:var(--gray-400)}
         .btn-secondary{background:var(--accent);color:white}
         .btn-secondary:hover:not(:disabled){background:#e68900;transform:translateY(-2px)}
         .btn-secondary:disabled{opacity:.5;cursor:not-allowed}
+        
+        /* TOOLTIPS */
+        [data-tooltip] {
+            position: relative;
+            cursor: pointer;
+        }
+        [data-tooltip]:before {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 5px 10px;
+            background: var(--secondary);
+            color: white;
+            font-size: 0.75rem;
+            border-radius: 4px;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.2s;
+            pointer-events: none;
+            z-index: 1000;
+            box-shadow: var(--shadow-md);
+        }
+        [data-tooltip]:hover:before {
+            opacity: 1;
+            visibility: visible;
+        }
+        
         .main-content{flex:1;padding:0;transition:margin-left .3s,margin-right .3s;margin-left:0;margin-right:0;width:100%;max-width:100%;background:transparent;overflow-y:auto}
         @media (min-width:993px){.main-content{margin-left:280px;margin-right:320px;width:calc(100% - 600px)}}
         .tagline-section{padding:1rem 1.5rem .5rem 1.5rem;background:transparent}
@@ -134,10 +237,14 @@
         @keyframes neonPulse{0%,100%{box-shadow:0 0 5px #fff3cd,0 0 10px #fff3cd,0 0 15px var(--accent),0 0 20px var(--accent);border-color:var(--accent)}50%{box-shadow:0 0 10px #fff3cd,0 0 20px #fff3cd,0 0 30px var(--primary),0 0 40px var(--primary);border-color:var(--primary)}}
         @media (max-width:480px){.tagline-item{font-size:.75rem;padding:.4rem .8rem}}
         .search-section{padding:0 1.5rem 1rem 1.5rem;background:transparent}
-        .search-bar{position:relative;max-width:600px;margin:0 auto}
+        .search-bar{position:relative;max-width:600px;margin:0 auto;display:flex;align-items:center}
         .search-bar input{width:100%;padding:.8rem 1rem .8rem 3rem;border:2px solid rgba(255,255,255,.1);border-radius:50px;font-size:1rem;outline:none;background:rgba(0,0,0,.3);color:#fff;transition:all .3s;box-shadow:var(--shadow-sm)}
         .search-bar input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(255,152,0,.2)}
         .search-bar i{position:absolute;left:1.2rem;top:50%;transform:translateY(-50%);color:var(--gray-400);font-size:1.2rem}
+        .voice-search-btn{position:absolute;right:1rem;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--accent);font-size:1.2rem;cursor:pointer;padding:.5rem;border-radius:50%;transition:all .2s}
+        .voice-search-btn:hover{background:rgba(255,255,255,.1)}
+        .voice-search-btn.listening{color:var(--danger);animation:pulse 1s infinite}
+        @keyframes pulse{0%{opacity:1}50%{opacity:0.5}100%{opacity:1}}
         .category-title{margin:0 1.5rem 1rem 1.5rem;background:rgba(0,0,0,.2);padding:1.2rem;border-radius:var(--radius-lg);border:1px solid rgba(255,255,255,.1);text-align:center}
         .category-title h2{font-size:1.8rem;color:var(--accent);margin-bottom:.3rem}
         .menu-section{padding:0 1.5rem 1.5rem 1.5rem;position:relative}
@@ -150,9 +257,9 @@
         .pagination-btn:hover:not(:disabled){background:var(--accent);color:var(--secondary);transform:translateY(-2px)}
         .pagination-btn:disabled{opacity:.3;cursor:not-allowed}
         .pagination-info{color:#fff;font-size:1rem;background:rgba(0,0,0,.3);padding:.5rem 1rem;border-radius:50px}
-        .menu-card{background:rgba(255,255,255,.05);border-radius:var(--radius-md);overflow:hidden;box-shadow:var(--shadow-sm);transition:all .3s;position:relative;border:1px solid rgba(255,255,255,.1);display:flex;flex-direction:column;backdrop-filter:blur(5px);height:100%;will-change:transform;transform:translateZ(0)}
+        .menu-card{background:var(--card-bg);border-radius:var(--radius-md);overflow:hidden;box-shadow:var(--shadow-sm);transition:all .3s;position:relative;border:1px solid rgba(255,255,255,.1);display:flex;flex-direction:column;backdrop-filter:blur(5px);height:100%;will-change:transform;transform:translateZ(0)}
         .menu-card:hover{transform:translateY(-3px);box-shadow:var(--shadow-md)}
-        .menu-card-image{height:160px;background-size:cover;background-position:center;position:relative;background-color:rgba(0,0,0,.5)}
+        .menu-card-image{height:160px;background-size:cover;background-position:center;position:relative;background-color:rgba(0,0,0,.5);cursor:pointer}
         .menu-card-badge{position:absolute;top:.8rem;right:.8rem;background:rgba(0,0,0,.7);color:white;padding:.2rem .6rem;border-radius:20px;font-size:.75rem;font-weight:500;backdrop-filter:blur(4px);display:flex;align-items:center;gap:.3rem}
         .menu-card-badge i{font-size:.7rem}
         .menu-card-badge.agotado{background:rgba(239,68,68,.9)}
@@ -161,9 +268,12 @@
         .menu-card-badge.sold-out{background:var(--danger)}
         .menu-card-content{padding:1rem;flex:1;display:flex;flex-direction:column}
         .menu-card-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.5rem}
-        .menu-card-title{font-size:1.1rem;font-weight:600;color:#fff;line-height:1.3}
+        .menu-card-title{font-size:1.1rem;font-weight:600;color:var(--text-primary);line-height:1.3}
+        .favorite-btn{background:none;border:none;color:var(--gray-400);cursor:pointer;font-size:1rem;transition:all .2s;padding:.2rem;margin-right:.3rem}
+        .favorite-btn.active{color:var(--accent)}
+        .favorite-btn:hover{transform:scale(1.2)}
         .menu-card-price{font-weight:700;color:var(--accent);font-size:1.2rem;white-space:nowrap}
-        .menu-card-description{font-size:.85rem;color:var(--gray-400);margin-bottom:.8rem;line-height:1.4;flex:1}
+        .menu-card-description{font-size:.85rem;color:var(--text-secondary);margin-bottom:.8rem;line-height:1.4;flex:1}
         .menu-card-footer{display:flex;align-items:center;justify-content:space-between;margin-top:auto;gap:.5rem}
         .btn-add{background:var(--accent);color:white;border:none;width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;font-size:1rem;box-shadow:var(--shadow-sm);flex-shrink:0}
         .btn-add:hover:not(:disabled){background:#e68900;transform:scale(1.1)}
@@ -172,12 +282,13 @@
         .btn-customize:hover:not(:disabled){background:#b71c1c;transform:translateY(-2px)}
         .btn-customize:disabled{background:var(--gray-400);cursor:not-allowed}
         .btn-customize i{font-size:.8rem}
-        .stock-info{font-size:.75rem;color:var(--gray-400);display:flex;align-items:center;gap:.3rem;margin-top:.5rem}
+        .stock-info{font-size:.75rem;color:var(--text-secondary);display:flex;align-items:center;gap:.3rem;margin-top:.5rem}
         .stock-info i.available{color:var(--success)}
         .stock-info i.low{color:var(--warning)}
         .stock-info i.sold-out{color:var(--danger)}
         .notifications-wrapper{position:relative;display:inline-block}
         .notifications-panel{position:fixed;top:100px;right:20px;width:320px;background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%);border-radius:var(--radius-md);box-shadow:var(--shadow-lg);display:none;max-height:calc(100vh - 120px);overflow-y:auto;z-index:1001;border:1px solid rgba(255,255,255,.1);backdrop-filter:blur(10px)}
+        body.tema-claro .notifications-panel{background:linear-gradient(135deg,#f5f5f5 0%,#e0e0e0 100%)}
         @media (max-width:480px){.notifications-panel{width:280px;right:10px}}
         .notifications-panel.active{display:block}
         .notifications-header{padding:1rem;border-bottom:1px solid rgba(255,255,255,.1);display:flex;align-items:center;justify-content:space-between;background:rgba(0,0,0,.2);border-radius:var(--radius-md) var(--radius-md) 0 0;position:sticky;top:0;z-index:10}
@@ -199,6 +310,7 @@
         .modal-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.8);z-index:2000;align-items:center;justify-content:center;backdrop-filter:blur(5px)}
         .modal-overlay.active{display:flex}
         .modal-container{background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%);border-radius:var(--radius-lg);max-width:500px;width:95%;max-height:90vh;overflow-y:auto;position:relative;animation:modalSlideIn .3s ease;box-shadow:var(--shadow-lg);border:1px solid rgba(255,255,255,.1)}
+        body.tema-claro .modal-container{background:linear-gradient(135deg,#f5f5f5 0%,#e0e0e0 100%)}
         @media (max-width:480px){.modal-container{width:100%;max-height:100vh;border-radius:0}}
         @keyframes modalSlideIn{from{opacity:0;transform:translateY(-30px)}to{opacity:1;transform:translateY(0)}}
         .modal-header{padding:1.2rem;border-bottom:1px solid rgba(255,255,255,.1);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:rgba(0,0,0,.2);z-index:10;border-radius:var(--radius-lg) var(--radius-lg) 0 0}
@@ -318,21 +430,117 @@
             animation: destelloBorde 1s ease 2;
             border: 2px solid var(--accent) !important;
         }
+
+        /* Historial de pedidos */
+        .historial-pedidos {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0,0,0,.7);
+            backdrop-filter: blur(10px);
+            border-radius: 30px;
+            padding: 8px 15px;
+            color: white;
+            font-size: .9rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            z-index: 900;
+            border: 1px solid rgba(255,255,255,.1);
+        }
+        .historial-pedidos:hover {
+            background: rgba(0,0,0,.9);
+        }
+        .historial-pedidos i {
+            color: var(--accent);
+        }
+        .historial-pedidos span {
+            font-weight: 600;
+        }
+        .historial-modal .pedido-item {
+            padding: 1rem;
+            border-bottom: 1px solid rgba(255,255,255,.1);
+            cursor: pointer;
+            transition: background .2s;
+        }
+        .historial-modal .pedido-item:hover {
+            background: rgba(255,255,255,.05);
+        }
+        .historial-modal .pedido-fecha {
+            font-size: .8rem;
+            color: var(--gray-400);
+        }
+        .historial-modal .pedido-total {
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        /* Vista previa de platillo */
+        .preview-modal .preview-image {
+            width: 100%;
+            height: 250px;
+            background-size: cover;
+            background-position: center;
+            border-radius: var(--radius-md);
+            margin-bottom: 1rem;
+        }
+        .preview-modal .preview-ingredientes {
+            background: rgba(0,0,0,.2);
+            padding: 1rem;
+            border-radius: var(--radius-md);
+            margin: 1rem 0;
+        }
+        .preview-modal .preview-ingredientes h4 {
+            color: var(--accent);
+            margin-bottom: .5rem;
+        }
+        .preview-modal .preview-ingredientes ul {
+            list-style: none;
+            display: flex;
+            flex-wrap: wrap;
+            gap: .5rem;
+        }
+        .preview-modal .preview-ingredientes li {
+            background: rgba(255,255,255,.1);
+            padding: .3rem .8rem;
+            border-radius: 20px;
+            font-size: .8rem;
+        }
     </style>
 </head>
 <body>
     <div class="overlay" id="overlay" onclick="cerrarTodosLosPaneles()"></div>
     <div class="toast" id="toast"></div>
+    
+    <!-- Historial de pedidos flotante -->
+    <div class="historial-pedidos" id="historialPedidosBtn" onclick="abrirHistorialPedidos()" style="display:none">
+        <i class="fas fa-history"></i>
+        <span>Pedidos anteriores</span>
+        <span id="historialCount">0</span>
+    </div>
+    
     <header class="header">
-        <div class="header-left"><button class="menu-hamburguesa" id="menuToggle" title="Categorías"><i class="fas fa-bars"></i></button></div>
-        <div class="logo-area" onclick="resetToAllCategories()"><img src="https://lh3.googleusercontent.com/pw/AP1GczPrZAoWxmsOGRD9xl1hO5Q65JXuwUZzoR6gUk-cw5lVmarxQe_-lwqpA60tTKLlXfpvIjAJlKC6jFls-xETJOPkebLIIPhbGlUkknmhrRbdhMUll2UViGSUj3WmHKg2YEsZlAfxBPPTjIHhScjD0jfe=w1439-h1439-s-no-gm" alt="Saki Sushi" class="logo"><h1>Saki Sushi</h1><span class="header-slogan">"Adictos al universo saki"</span></div>
+        <div class="header-left">
+            <button class="menu-hamburguesa" id="menuToggle" title="Categorías" data-tooltip="Ver categorías">
+                <i class="fas fa-bars"></i>
+            </button>
+            <button class="theme-toggle" id="themeToggle" onclick="toggleTema()" data-tooltip="Cambiar tema">
+                <i class="fas fa-moon"></i>
+            </button>
+        </div>
+        <div class="logo-area" onclick="resetToAllCategories()">
+            <img src="https://lh3.googleusercontent.com/pw/AP1GczPrZAoWxmsOGRD9xl1hO5Q65JXuwUZzoR6gUk-cw5lVmarxQe_-lwqpA60tTKLlXfpvIjAJlKC6jFls-xETJOPkebLIIPhbGlUkknmhrRbdhMUll2UViGSUj3WmHKg2YEsZlAfxBPPTjIHhScjD0jfe=w1439-h1439-s-no-gm" alt="Saki Sushi" class="logo">
+            <h1>Saki Sushi</h1>
+            <span class="header-slogan">"Adictos al universo saki"</span>
+        </div>
         <div class="header-icons" id="headerIcons">
             <div style="position:relative">
-                <button class="icon-button" id="notificationBell"><i class="fas fa-bell"></i></button>
+                <button class="icon-button" id="notificationBell" data-tooltip="Notificaciones"><i class="fas fa-bell"></i></button>
                 <span class="notification-badge" id="notificationBadge" style="display:none">0</span>
             </div>
             <div style="position:relative">
-                <button class="icon-button" id="cartToggle" title="Carrito"><i class="fas fa-shopping-cart"></i></button>
+                <button class="icon-button" id="cartToggle" title="Carrito" data-tooltip="Ver carrito"><i class="fas fa-shopping-cart"></i></button>
                 <span class="cart-badge" id="cartBadge" style="display:none;">0</span>
             </div>
             <div class="table-badge" id="tableBadge" style="display:none;">Mesa <span id="tableNumber">--</span></div>
@@ -377,6 +585,9 @@
                     <div class="search-bar">
                         <i class="fas fa-search"></i>
                         <input type="text" id="searchInput" placeholder="Buscar platillos...">
+                        <button class="voice-search-btn" id="voiceSearchBtn" onclick="iniciarBusquedaPorVoz()" data-tooltip="Buscar por voz">
+                            <i class="fas fa-microphone"></i>
+                        </button>
                     </div>
                 </div>
                 <div class="category-title">
@@ -624,6 +835,35 @@
                 </div>
             </div>
         </div>
+        
+        <!-- Modal de vista previa de platillo -->
+        <div class="modal-overlay" id="previewModal">
+            <div class="modal-container preview-modal">
+                <div class="modal-header">
+                    <h3 id="previewTitle"><i class="fas fa-eye"></i> Vista previa</h3>
+                    <button class="modal-close" id="closePreviewModal">&times;</button>
+                </div>
+                <div class="modal-body" id="previewModalBody"></div>
+                <div class="modal-footer">
+                    <button class="btn-secondary" onclick="cerrarPreview()">Cerrar</button>
+                    <button class="btn-primary" id="previewAddToCart"><i class="fas fa-cart-plus"></i> Agregar</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Modal de historial de pedidos -->
+        <div class="modal-overlay" id="historialModal">
+            <div class="modal-container historial-modal">
+                <div class="modal-header">
+                    <h3><i class="fas fa-history"></i> Historial de pedidos</h3>
+                    <button class="modal-close" onclick="cerrarHistorial()">&times;</button>
+                </div>
+                <div class="modal-body" id="historialModalBody"></div>
+                <div class="modal-footer">
+                    <button class="btn-secondary" onclick="cerrarHistorial()">Cerrar</button>
+                </div>
+            </div>
+        </div>
     </div>
     
     <div class="notifications-panel" id="notificationsPanel">
@@ -741,6 +981,9 @@ let currentCustomizeItem = null, mesaId = null, nivel1Activo = null, nivel2Activ
 let timersActivos = {}, intervalosTimer = {};
 let scrollRafId = null, ultimaPosicionFlechas = 0, scrollTimeout = null;
 let renderPending = false, ultimoRenderKey = '';
+let favoritos = JSON.parse(localStorage.getItem('saki_favoritos') || '[]');
+let historialPedidos = JSON.parse(localStorage.getItem('saki_historial') || '[]');
+let reconocimientoVoz = null;
 
 const preciosPorParroquia = {"Altagracia":3,"Antímano":7,"Candelaria":2,"Caricuao":7,"Caucagüita":7,"Catedral":3,"Chacao":5,"Coche":5,"El Cafetal":6,"El Junquito":7,"El Paraíso":4,"El Recreo":4,"El Valle":5,"Fila de Mariches":6,"La Dolorita":6,"La Pastora":3,"La Vega":4,"Las Minas":5,"Leoncio Martínez":6,"Macarao":7,"Nuestra Señora del Rosario":7,"Petare":6,"San Agustín":2,"San Bernardino":2,"San José":2,"San Juan":3,"San Pedro":4,"Santa Rosalía":3,"Santa Rosalía de Palermo":3,"Santa Teresa":3,"Sucre":7,"23 de Enero":4};
 const mensajesEstado = {'approved':{titulo:'✅ Pago confirmado',icono:'check-circle'},'rejected':{titulo:'❌ Pedido rechazado',icono:'times-circle'},'pending':{titulo:'⏳ Pedido pendiente',icono:'clock'}};
@@ -758,10 +1001,240 @@ let historialEstados = [];
 let manejandoPopState = false;
 
 // ============================================
+// FUNCIONES DE TEMA (MODO CLARO/OSCURO)
+// ============================================
+function toggleTema() {
+    document.body.classList.toggle('tema-claro');
+    const icono = document.querySelector('#themeToggle i');
+    if (document.body.classList.contains('tema-claro')) {
+        icono.className = 'fas fa-sun';
+        localStorage.setItem('saki_tema', 'claro');
+    } else {
+        icono.className = 'fas fa-moon';
+        localStorage.setItem('saki_tema', 'oscuro');
+    }
+}
+
+function cargarTemaGuardado() {
+    const tema = localStorage.getItem('saki_tema');
+    if (tema === 'claro') {
+        document.body.classList.add('tema-claro');
+        document.querySelector('#themeToggle i').className = 'fas fa-sun';
+    }
+}
+
+// ============================================
+// FUNCIONES DE FAVORITOS
+// ============================================
+function toggleFavorito(platilloId) {
+    const index = favoritos.indexOf(platilloId);
+    if (index === -1) {
+        favoritos.push(platilloId);
+        mostrarToast('⭐ Agregado a favoritos', 'success');
+    } else {
+        favoritos.splice(index, 1);
+        mostrarToast('⭐ Eliminado de favoritos', 'info');
+    }
+    localStorage.setItem('saki_favoritos', JSON.stringify(favoritos));
+    renderizarMenuInmediato(
+        document.querySelector('.category-item.active')?.dataset.categoria,
+        null,
+        document.getElementById('searchInput').value
+    );
+}
+
+function esFavorito(platilloId) {
+    return favoritos.includes(platilloId);
+}
+
+// ============================================
+// FUNCIONES DE BÚSQUEDA POR VOZ
+// ============================================
+function iniciarBusquedaPorVoz() {
+    if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
+        mostrarToast('❌ Tu navegador no soporta búsqueda por voz', 'error');
+        return;
+    }
+    
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    reconocimientoVoz = new SpeechRecognition();
+    reconocimientoVoz.lang = 'es-ES';
+    reconocimientoVoz.continuous = false;
+    reconocimientoVoz.interimResults = false;
+    
+    const btn = document.getElementById('voiceSearchBtn');
+    btn.classList.add('listening');
+    btn.querySelector('i').className = 'fas fa-microphone-alt';
+    
+    reconocimientoVoz.onresult = function(event) {
+        const transcripcion = event.results[0][0].transcript;
+        document.getElementById('searchInput').value = transcripcion;
+        document.getElementById('searchInput').dispatchEvent(new Event('input'));
+        mostrarToast(`🔊 Buscando: "${transcripcion}"`, 'info');
+        btn.classList.remove('listening');
+        btn.querySelector('i').className = 'fas fa-microphone';
+    };
+    
+    reconocimientoVoz.onerror = function() {
+        btn.classList.remove('listening');
+        btn.querySelector('i').className = 'fas fa-microphone';
+        mostrarToast('❌ No se pudo reconocer la voz', 'error');
+    };
+    
+    reconocimientoVoz.onend = function() {
+        btn.classList.remove('listening');
+        btn.querySelector('i').className = 'fas fa-microphone';
+    };
+    
+    reconocimientoVoz.start();
+}
+
+// ============================================
+// FUNCIONES DE HISTORIAL DE PEDIDOS
+// ============================================
+function agregarPedidoAHistorial(pedido) {
+    const nuevoPedido = {
+        id: pedido.id,
+        fecha: new Date().toISOString(),
+        total: pedido.total,
+        items: pedido.items,
+        tipo: pedido.tipo
+    };
+    historialPedidos.unshift(nuevoPedido);
+    if (historialPedidos.length > 5) historialPedidos.pop();
+    localStorage.setItem('saki_historial', JSON.stringify(historialPedidos));
+    actualizarBotonHistorial();
+}
+
+function actualizarBotonHistorial() {
+    const btn = document.getElementById('historialPedidosBtn');
+    const count = document.getElementById('historialCount');
+    if (historialPedidos.length > 0) {
+        btn.style.display = 'flex';
+        count.textContent = historialPedidos.length;
+    } else {
+        btn.style.display = 'none';
+    }
+}
+
+function abrirHistorialPedidos() {
+    const modal = document.getElementById('historialModal');
+    const body = document.getElementById('historialModalBody');
+    
+    if (historialPedidos.length === 0) {
+        body.innerHTML = '<div class="empty-state"><i class="fas fa-history"></i><p>No hay pedidos anteriores</p></div>';
+    } else {
+        body.innerHTML = historialPedidos.map(p => `
+            <div class="pedido-item" onclick="repetirPedido('${p.id}')">
+                <div style="display:flex; justify-content:space-between">
+                    <span><strong>${window.formatearFechaGMT4(p.fecha)}</strong></span>
+                    <span class="pedido-total">${formatBs(usdToBs(p.total))}</span>
+                </div>
+                <div class="pedido-fecha">${p.tipo} - ${p.items?.length || 0} items</div>
+                <div style="margin-top:.5rem; font-size:.8rem">
+                    ${p.items?.slice(0,2).map(i => i.nombre).join(', ')}${p.items?.length > 2 ? '...' : ''}
+                </div>
+            </div>
+        `).join('');
+    }
+    
+    modal.classList.add('active');
+    agregarEstadoHistorial('historial');
+}
+
+function cerrarHistorial() {
+    document.getElementById('historialModal').classList.remove('active');
+    limpiarEstadoHistorial('historial');
+}
+
+async function repetirPedido(pedidoId) {
+    const pedido = historialPedidos.find(p => p.id === pedidoId);
+    if (!pedido || !pedido.items) return;
+    
+    // Limpiar carrito actual
+    carrito = [];
+    
+    // Agregar items del historial
+    for (const item of pedido.items) {
+        const platillo = menuItems.find(p => p.id === item.platilloId);
+        if (platillo) {
+            for (let i = 0; i < (item.cantidad || 1); i++) {
+                const nuevaInstancia = {
+                    id: generarId('inst_'),
+                    platilloId: platillo.id,
+                    nombre: platillo.nombre,
+                    personalizacion: item.personalizacion || [],
+                    imagen: platillo.imagen,
+                    precioUnitarioUSD: platillo.precio,
+                    precioUnitarioBs: usdToBs(platillo.precio),
+                    subtotal: usdToBs(platillo.precio),
+                    selectionType: item.personalizacion?.length ? 'personalizado' : 'completo'
+                };
+                carrito.push(nuevaInstancia);
+            }
+        }
+    }
+    
+    guardarCarrito();
+    actualizarCarritoUI();
+    actualizarCarritoBadge();
+    cerrarHistorial();
+    mostrarToast('🔄 Pedido anterior restaurado', 'success');
+    
+    if (window.innerWidth <= 992) {
+        document.getElementById('cartSidebar').classList.add('open');
+        document.getElementById('overlay').classList.add('active');
+    }
+}
+
+// ============================================
+// FUNCIONES DE VISTA PREVIA
+// ============================================
+function abrirPreview(platilloId) {
+    const platillo = menuItems.find(p => p.id === platilloId);
+    if (!platillo) return;
+    
+    agregarEstadoHistorial('preview');
+    const modal = document.getElementById('previewModal');
+    const body = document.getElementById('previewModalBody');
+    const { stock, faltantes } = getStockPrecalculado(platillo.id);
+    
+    const ingredientesHtml = platillo.ingredientes ? Object.entries(platillo.ingredientes).map(([ingId, ingInfo]) => {
+        const ingrediente = inventario.find(i => i.id === ingId);
+        return `<li>${ingInfo.nombre || ingrediente?.nombre || ingId}</li>`;
+    }).join('') : '<li>Sin ingredientes específicos</li>';
+    
+    body.innerHTML = `
+        <div class="preview-image" style="background-image:url('${platillo.imagen || 'https://via.placeholder.com/400x300?text=Sushi'}')"></div>
+        <h3 style="color:var(--accent); margin-bottom:.5rem">${platillo.nombre}</h3>
+        <p style="margin-bottom:1rem">${platillo.descripcion || 'Delicioso platillo de nuestra carta'}</p>
+        <div class="preview-ingredientes">
+            <h4><i class="fas fa-utensils"></i> Ingredientes</h4>
+            <ul>${ingredientesHtml}</ul>
+        </div>
+        <div style="display:flex; justify-content:space-between; align-items:center">
+            <span style="font-size:1.5rem; font-weight:700; color:var(--accent)">${formatBs(usdToBs(platillo.precio))}</span>
+            <span class="stock-info"><i class="fas fa-box ${stock <= 0 ? 'sold-out' : (stock < 5 ? 'low' : 'available')}"></i> ${stock <= 0 ? 'Agotado' : (stock + ' disponibles')}</span>
+        </div>
+    `;
+    
+    document.getElementById('previewAddToCart').onclick = () => {
+        agregarAlCarrito(platilloId);
+        cerrarPreview();
+    };
+    
+    modal.classList.add('active');
+}
+
+function cerrarPreview() {
+    document.getElementById('previewModal').classList.remove('active');
+    limpiarEstadoHistorial('preview');
+}
+
+// ============================================
 // FUNCIÓN PARA MANEJAR EL BOTÓN ATRÁS
 // ============================================
 function setupBackButtonHandler() {
-    // Agregar estado inicial al cargar la página
     window.history.replaceState({ tipo: 'inicio' }, '');
     
     window.addEventListener('popstate', function(event) {
@@ -770,32 +1243,23 @@ function setupBackButtonHandler() {
         
         console.log('🔙 Botón atrás presionado', event.state);
         
-        // Verificar si hay modales abiertos
-        const modales = ['customizeModal', 'confirmMesaModal', 'deliveryModal', 'reservaModal'];
+        const modales = ['customizeModal', 'confirmMesaModal', 'deliveryModal', 'reservaModal', 'previewModal', 'historialModal'];
         for (const modalId of modales) {
             const modal = document.getElementById(modalId);
             if (modal && modal.classList.contains('active')) {
                 event.preventDefault();
                 modal.classList.remove('active');
                 
-                // Limpiar estado específico del modal
-                if (modalId === 'customizeModal') {
-                    currentCustomizeItem = null;
-                }
+                if (modalId === 'customizeModal') currentCustomizeItem = null;
                 if (modalId === 'deliveryModal') detenerTimer('delivery');
                 if (modalId === 'reservaModal') detenerTimer('reserva');
                 
-                // Eliminar último estado del historial
-                if (historialEstados.length > 0) {
-                    historialEstados.pop();
-                }
-                
+                if (historialEstados.length > 0) historialEstados.pop();
                 manejandoPopState = false;
                 return;
             }
         }
         
-        // Verificar si hay paneles laterales abiertos (solo en móvil)
         if (window.innerWidth <= 992) {
             const categorySidebar = document.getElementById('categorySidebar');
             const cartSidebar = document.getElementById('cartSidebar');
@@ -835,27 +1299,16 @@ function setupBackButtonHandler() {
     });
 }
 
-// ============================================
-// FUNCIÓN PARA AGREGAR ESTADO AL HISTORIAL
-// ============================================
 function agregarEstadoHistorial(tipo) {
-    // Evitar duplicados - si el último estado es el mismo, no agregar
-    if (historialEstados.length > 0 && historialEstados[historialEstados.length - 1] === tipo) {
-        return;
-    }
+    if (historialEstados.length > 0 && historialEstados[historialEstados.length - 1] === tipo) return;
     historialEstados.push(tipo);
     window.history.pushState({ tipo: tipo }, '');
-    console.log('📌 Estado agregado:', tipo, 'Historial:', historialEstados);
 }
 
-// ============================================
-// FUNCIÓN PARA LIMPIAR ESTADO DEL HISTORIAL
-// ============================================
 function limpiarEstadoHistorial(tipo) {
     const index = historialEstados.lastIndexOf(tipo);
     if (index !== -1) {
         historialEstados.splice(index, 1);
-        console.log('🧹 Estado limpiado:', tipo, 'Historial:', historialEstados);
     }
 }
 
@@ -891,30 +1344,20 @@ function getStockPrecalculado(platilloId) {
     return stockPrecalculado.get(platilloId) || { stock: 0, faltantes: [] };
 }
 
-// ============================================
-// FUNCIÓN PARA DESTELLO DE BOTONES
-// ============================================
 function hacerDestellarBotones() {
     const botones = document.querySelectorAll('.cart-buttons .btn-primary, .cart-buttons .btn-secondary');
     if (botones.length === 0) return;
     
-    // Vibrar si el dispositivo lo soporta
     if (navigator.vibrate) navigator.vibrate(200);
     
-    // Aplicar clase de animación a todos los botones
     botones.forEach(btn => {
         btn.classList.add('btn-destello');
-        
-        // Quitar la clase después de 2 segundos (duración de la animación)
         setTimeout(() => {
             btn.classList.remove('btn-destello');
         }, 2000);
     });
 }
 
-// ============================================
-// RENDERIZADO SÍNCRONO DE TARJETAS
-// ============================================
 function renderizarTarjetas(items) {
     return items.map(item => {
         const { stock, faltantes } = getStockPrecalculado(item.id);
@@ -923,20 +1366,27 @@ function renderizarTarjetas(items) {
         if (agotado) stockClass = 'sold-out';
         else if (stock < 5) stockClass = 'low';
         
+        const favorito = esFavorito(item.id) ? 'active' : '';
+        
         return `<div class="menu-card ${agotado ? 'agotado' : ''}" data-id="${item.id}">
-            <div class="menu-card-image" style="background-image:url('${item.imagen || 'https://via.placeholder.com/400x300?text=Sushi'}')">
+            <div class="menu-card-image" style="background-image:url('${item.imagen || 'https://via.placeholder.com/400x300?text=Sushi'}')" onclick="abrirPreview('${item.id}')">
                 ${agotado ? '<div class="menu-card-badge sold-out"><i class="fas fa-times-circle"></i> Agotado</div>' : (stockClass === 'low' ? '<div class="menu-card-badge low"><i class="fas fa-exclamation-triangle"></i> Últimas</div>' : '')}
             </div>
             <div class="menu-card-content">
                 <div class="menu-card-header">
-                    <h3 class="menu-card-title">${item.nombre}</h3>
+                    <div style="display:flex; align-items:center">
+                        <button class="favorite-btn ${favorito}" onclick="event.stopPropagation(); toggleFavorito('${item.id}')" data-tooltip="${favorito ? 'Quitar de favoritos' : 'Agregar a favoritos'}">
+                            <i class="fas fa-star"></i>
+                        </button>
+                        <h3 class="menu-card-title">${item.nombre}</h3>
+                    </div>
                     <span class="menu-card-price">${formatBs(usdToBs(item.precio))}</span>
                 </div>
                 <p class="menu-card-description">${item.descripcion || ''}</p>
                 <div class="menu-card-footer">
                     ${!agotado ?
-                        `<button class="btn-add" onclick="agregarAlCarrito('${item.id}')" title="Agregar"><i class="fas fa-plus"></i></button>
-                         <button class="btn-customize" onclick="abrirPersonalizacion('${item.id}')" title="Personalizar"><i class="fas fa-star"></i> Personalizar</button>`
+                        `<button class="btn-add" onclick="agregarAlCarrito('${item.id}')" title="Agregar" data-tooltip="Agregar al carrito"><i class="fas fa-plus"></i></button>
+                         <button class="btn-customize" onclick="abrirPersonalizacion('${item.id}')" title="Personalizar" data-tooltip="Personalizar ingredientes"><i class="fas fa-star"></i> Personalizar</button>`
                         : `<span class="stock-info" title="${faltantes.join(', ')}"><i class="fas fa-info-circle"></i> Sin stock</span>`
                     }
                 </div>
@@ -990,11 +1440,15 @@ function renderizarMenuInmediato(filtroCategoria = null, filtroSubcategoria = nu
     document.getElementById('pageInfo').textContent = `Página ${currentPage} de ${totalPages}`;
     document.getElementById('prevPageBtn').disabled = currentPage === 1;
     document.getElementById('nextPageBtn').disabled = currentPage === totalPages;
+    
+    // Guardar última categoría
+    if (filtroCategoria) {
+        localStorage.setItem('saki_ultima_categoria', filtroCategoria);
+    } else if (filtroCategoria === null) {
+        localStorage.setItem('saki_ultima_categoria', 'todos');
+    }
 }
 
-// ============================================
-// FUNCIONES DE SCROLL
-// ============================================
 function iniciarSeguimientoScroll() {
     if (scrollRafId) cancelAnimationFrame(scrollRafId);
     scrollRafId = requestAnimationFrame(actualizarPosicionFlechas);
@@ -1050,7 +1504,6 @@ function irABotonesAccion() {
     const cartFooter = document.getElementById('cartFooter');
     if (cartFooter) {
         cartFooter.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        // Hacer destellar los botones después del scroll
         setTimeout(() => {
             hacerDestellarBotones();
         }, 500);
@@ -1064,9 +1517,6 @@ function scrollAlItemAgregado(itemId) {
     }, 300);
 }
 
-// ============================================
-// FUNCIONES DE NOTIFICACIONES REALTIME
-// ============================================
 let suscripcionesRealtime = [];
 
 function setupRealtimeSubscriptions() {
@@ -1209,9 +1659,6 @@ function verificarPermisosAudio() {
     audio.volume = 1;
 }
 
-// ============================================
-// FUNCIONES DE CARGA DE DATOS
-// ============================================
 async function cargarMenu() {
     try {
         const { data, error } = await window.supabaseClient.from('menu').select('*').eq('disponible', true);
@@ -1219,7 +1666,20 @@ async function cargarMenu() {
         menuItems = data || [];
         menuItems.sort((a, b) => a.nombre.localeCompare(b.nombre));
         await precargarStock();
-        renderizarMenuInmediato();
+        
+        // Restaurar última categoría
+        const ultimaCategoria = localStorage.getItem('saki_ultima_categoria');
+        if (ultimaCategoria && ultimaCategoria !== 'todos') {
+            renderizarMenuInmediato(ultimaCategoria);
+            const categoriaItem = document.querySelector(`.category-item[data-categoria="${ultimaCategoria}"]`);
+            if (categoriaItem) {
+                document.querySelectorAll('.category-item').forEach(c => c.classList.remove('active'));
+                categoriaItem.classList.add('active');
+                document.getElementById('categoryTitle').textContent = categoriaItem.querySelector('span').textContent.replace(/^[^\s]+\s/, '');
+            }
+        } else {
+            renderizarMenuInmediato();
+        }
     } catch (error) { console.error('Error cargando menú:', error); mostrarToast('Error al cargar el menú', 'error'); }
 }
 
@@ -1285,10 +1745,10 @@ async function crearPedidoTransaccional(pedido) {
         if (error) throw error;
         if (data && data.success) {
             mostrarToast('✅ Pedido realizado', 'success');
+            agregarPedidoAHistorial(pedido);
             if (window.innerWidth <= 992) {
                 document.getElementById('cartSidebar').classList.remove('open');
                 document.getElementById('overlay').classList.remove('active');
-                // Limpiar estado del carrito
                 limpiarEstadoHistorial('carrito');
             }
             detenerSeguimientoScroll();
@@ -1302,9 +1762,6 @@ async function crearPedidoTransaccional(pedido) {
     }
 }
 
-// ============================================
-// FUNCIONES DE CATEGORÍAS Y NAVEGACIÓN
-// ============================================
 function cargarCategorias() {
     const categoryList = document.getElementById('categoryList');
     let html = '';
@@ -1381,14 +1838,17 @@ function cambiarPagina(direccion) {
     );
 }
 
-// ============================================
-// FUNCIONES DEL CARRITO
-// ============================================
 function actualizarCarritoBadge() {
     const cartBadge = document.getElementById('cartBadge');
     const totalItems = carrito.length;
-    if (totalItems > 0) { cartBadge.textContent = totalItems; cartBadge.style.display = 'block'; }
-    else cartBadge.style.display = 'none';
+    if (totalItems > 0) { 
+        cartBadge.textContent = totalItems; 
+        cartBadge.style.display = 'block';
+        cartBadge.classList.add('pop');
+        setTimeout(() => cartBadge.classList.remove('pop'), 300);
+    } else {
+        cartBadge.style.display = 'none';
+    }
 }
 
 async function agregarAlCarrito(platilloId) {
@@ -1492,9 +1952,9 @@ function actualizarCarritoUI() {
     cartButtons.innerHTML = '';
     
     if (mesaId) {
-        cartButtons.innerHTML = `<button class="btn-primary" onclick="abrirConfirmacionMesa()"><i class="fas fa-check"></i> Pedir en Mesa</button>`;
+        cartButtons.innerHTML = `<button class="btn-primary" onclick="abrirConfirmacionMesa()" data-tooltip="Pedir para llevar a la mesa"><i class="fas fa-check"></i> Pedir en Mesa</button>`;
     } else {
-        cartButtons.innerHTML = `<button class="btn-primary" onclick="iniciarProcesoDelivery()"><i class="fas fa-motorcycle"></i> Pedir Delivery</button><button class="btn-secondary" onclick="iniciarProcesoReserva()"><i class="fas fa-calendar-alt"></i> Hacer Reserva</button>`;
+        cartButtons.innerHTML = `<button class="btn-primary" onclick="iniciarProcesoDelivery()" data-tooltip="Solicitar delivery a domicilio"><i class="fas fa-motorcycle"></i> Pedir Delivery</button><button class="btn-secondary" onclick="iniciarProcesoReserva()" data-tooltip="Reservar para fecha futura"><i class="fas fa-calendar-alt"></i> Hacer Reserva</button>`;
     }
 }
 
@@ -1588,13 +2048,8 @@ function toggleNivel2(subgrupoId, grupoPadreId) {
     }
 }
 
-// ============================================
-// FUNCIONES DE PERSONALIZACIÓN (CORREGIDAS)
-// ============================================
 function abrirPersonalizacion(platilloId) {
-    // Asegurar que currentCustomizeItem esté limpio
     currentCustomizeItem = null;
-    
     agregarEstadoHistorial('customize');
     const platillo = menuItems.find(p => p.id === platilloId);
     if (!platillo) return;
@@ -1691,10 +2146,7 @@ async function agregarPersonalizadoAlCarrito() {
     window.appCache.invalidateStock();
     await precargarStock();
     document.getElementById('customizeModal').classList.remove('active');
-    
-    // Limpiar estado del modal
     limpiarEstadoHistorial('customize');
-    
     currentCustomizeItem = null;
     mostrarToast(`${currentCustomizeItem?.cantidad || 1} agregado(s)`, 'success');
     
@@ -1707,9 +2159,6 @@ async function agregarPersonalizadoAlCarrito() {
     if (nuevasInstancias.length > 0) scrollAlItemAgregado(nuevasInstancias[0].id);
 }
 
-// ============================================
-// FUNCIONES DE PEDIDOS
-// ============================================
 function abrirConfirmacionMesa() {
     agregarEstadoHistorial('mesa');
     const summary = document.getElementById('mesaOrderSummary');
@@ -1747,7 +2196,6 @@ async function confirmarPedidoMesa() {
         window.appCache.invalidateStock();
         await precargarStock();
         limpiarDatosFormulario();
-        // Limpiar estado del modal
         limpiarEstadoHistorial('mesa');
     } else mostrarToast('❌ Error: ' + resultado.error, 'error');
 }
@@ -1938,7 +2386,6 @@ async function confirmarPedidoDelivery() {
         carrito = []; guardarCarrito(); actualizarCarritoUI(); actualizarCarritoBadge();
         document.getElementById('deliveryModal').classList.remove('active');
         window.appCache.invalidateStock(); await precargarStock(); limpiarDatosFormulario();
-        // Limpiar estado del modal
         limpiarEstadoHistorial('delivery');
     } else { mostrarToast('❌ Error: ' + resultado.error, 'error'); iniciarTimerFrontend('delivery', 20); }
 }
@@ -1955,7 +2402,6 @@ async function confirmarPedidoReserva() {
         carrito = []; guardarCarrito(); actualizarCarritoUI(); actualizarCarritoBadge();
         document.getElementById('reservaModal').classList.remove('active');
         window.appCache.invalidateStock(); await precargarStock(); limpiarDatosFormulario();
-        // Limpiar estado del modal
         limpiarEstadoHistorial('reserva');
     } else { mostrarToast('❌ Error: ' + resultado.error, 'error'); iniciarTimerFrontend('reserva', 20); }
 }
@@ -2131,9 +2577,6 @@ function copiarAlPortapapeles(texto, boton) {
     }).catch(err => { console.error('Error al copiar:', err); mostrarToast('❌ Error al copiar', 'error'); });
 }
 
-// ============================================
-// FUNCIONES DE UI Y EVENTOS (MODIFICADAS)
-// ============================================
 function toggleMenuCategorias() {
     const menu = document.getElementById('categorySidebar'), carrito = document.getElementById('cartSidebar'), overlay = document.getElementById('overlay');
     if (window.innerWidth <= 992) {
@@ -2141,7 +2584,6 @@ function toggleMenuCategorias() {
             menu.classList.remove('open');
             if (!carrito.classList.contains('open') && !document.getElementById('notificationsPanel').classList.contains('active')) {
                 overlay.classList.remove('active');
-                // Limpiar estado del menú
                 limpiarEstadoHistorial('menu');
             }
         } else {
@@ -2159,7 +2601,6 @@ function cerrarMenuCategorias() {
         document.getElementById('categorySidebar').classList.remove('open');
         if (!document.getElementById('cartSidebar').classList.contains('open') && !document.getElementById('notificationsPanel').classList.contains('active')) {
             document.getElementById('overlay').classList.remove('active');
-            // Limpiar estado del menú
             limpiarEstadoHistorial('menu');
         }
     }
@@ -2172,7 +2613,6 @@ function toggleCarrito() {
             carrito.classList.remove('open');
             if (!menu.classList.contains('open') && !document.getElementById('notificationsPanel').classList.contains('active')) {
                 overlay.classList.remove('active');
-                // Limpiar estado del carrito
                 limpiarEstadoHistorial('carrito');
             }
         } else {
@@ -2191,7 +2631,6 @@ function cerrarCarrito() {
         document.getElementById('cartSidebar').classList.remove('open');
         if (!document.getElementById('categorySidebar').classList.contains('open') && !document.getElementById('notificationsPanel').classList.contains('active')) {
             document.getElementById('overlay').classList.remove('active');
-            // Limpiar estado del carrito
             limpiarEstadoHistorial('carrito');
         }
     }
@@ -2205,7 +2644,6 @@ function toggleNotifications() {
         if (window.innerWidth <= 992) {
             if (!document.getElementById('categorySidebar').classList.contains('open') && !document.getElementById('cartSidebar').classList.contains('open')) {
                 overlay.classList.remove('active');
-                // Limpiar estado de notificaciones
                 limpiarEstadoHistorial('notificaciones');
             }
         }
@@ -2223,7 +2661,6 @@ function cerrarNotificaciones() {
     if (window.innerWidth <= 992) {
         if (!document.getElementById('categorySidebar').classList.contains('open') && !document.getElementById('cartSidebar').classList.contains('open')) {
             overlay.classList.remove('active');
-            // Limpiar estado de notificaciones
             limpiarEstadoHistorial('notificaciones');
         }
     }
@@ -2234,7 +2671,6 @@ function cerrarTodosLosPaneles() {
         document.getElementById('categorySidebar').classList.remove('open');
         document.getElementById('cartSidebar').classList.remove('open');
         document.getElementById('overlay').classList.remove('active');
-        // Limpiar historial de estados laterales
         ['menu', 'carrito', 'notificaciones'].forEach(tipo => limpiarEstadoHistorial(tipo));
     }
     document.getElementById('notificationsPanel').classList.remove('active');
@@ -2289,13 +2725,11 @@ function setupEventListeners() {
     document.getElementById('closeCustomizeModal').addEventListener('click', () => { 
         document.getElementById('customizeModal').classList.remove('active'); 
         currentCustomizeItem = null;
-        // Limpiar estado del modal
         limpiarEstadoHistorial('customize');
     });
     document.getElementById('cancelCustomize').addEventListener('click', () => { 
         document.getElementById('customizeModal').classList.remove('active'); 
         currentCustomizeItem = null;
-        // Limpiar estado del modal
         limpiarEstadoHistorial('customize');
     });
     document.getElementById('addToCartFromModal').addEventListener('click', agregarPersonalizadoAlCarrito);
@@ -2303,28 +2737,27 @@ function setupEventListeners() {
     document.getElementById('closeDeliveryModal').addEventListener('click', () => { 
         detenerTimer('delivery'); 
         document.getElementById('deliveryModal').classList.remove('active');
-        // Limpiar estado del modal
         limpiarEstadoHistorial('delivery');
     });
     document.getElementById('cancelDelivery').addEventListener('click', () => { 
         detenerTimer('delivery'); 
         document.getElementById('deliveryModal').classList.remove('active');
-        // Limpiar estado del modal
         limpiarEstadoHistorial('delivery');
     });
     
     document.getElementById('closeReservaModal').addEventListener('click', () => { 
         detenerTimer('reserva'); 
         document.getElementById('reservaModal').classList.remove('active');
-        // Limpiar estado del modal
         limpiarEstadoHistorial('reserva');
     });
     document.getElementById('cancelReserva').addEventListener('click', () => { 
         detenerTimer('reserva'); 
         document.getElementById('reservaModal').classList.remove('active');
-        // Limpiar estado del modal
         limpiarEstadoHistorial('reserva');
     });
+    
+    document.getElementById('closePreviewModal').addEventListener('click', cerrarPreview);
+    document.getElementById('closePreviewModal').addEventListener('click', cerrarPreview);
     
     setupReferenceInputs();
     
@@ -2339,12 +2772,10 @@ function setupEventListeners() {
     
     document.getElementById('cancelMesaOrder').addEventListener('click', () => { 
         document.getElementById('confirmMesaModal').classList.remove('active');
-        // Limpiar estado del modal
         limpiarEstadoHistorial('mesa');
     });
     document.getElementById('closeConfirmMesaModal').addEventListener('click', () => { 
         document.getElementById('confirmMesaModal').classList.remove('active');
-        // Limpiar estado del modal
         limpiarEstadoHistorial('mesa');
     });
     
@@ -2354,12 +2785,13 @@ function setupEventListeners() {
                 if (modal.id === 'deliveryModal') detenerTimer('delivery');
                 if (modal.id === 'reservaModal') detenerTimer('reserva');
                 modal.classList.remove('active');
-                // Limpiar estado del modal correspondiente
                 const tipoMap = {
                     'customizeModal': 'customize',
                     'confirmMesaModal': 'mesa',
                     'deliveryModal': 'delivery',
-                    'reservaModal': 'reserva'
+                    'reservaModal': 'reserva',
+                    'previewModal': 'preview',
+                    'historialModal': 'historial'
                 };
                 const tipo = tipoMap[modal.id];
                 if (tipo) limpiarEstadoHistorial(tipo);
@@ -2377,7 +2809,6 @@ function setupEventListeners() {
                 if (window.innerWidth <= 992) {
                     if (!document.getElementById('categorySidebar').classList.contains('open') && !document.getElementById('cartSidebar').classList.contains('open')) {
                         document.getElementById('overlay').classList.remove('active');
-                        // Limpiar estado de notificaciones
                         limpiarEstadoHistorial('notificaciones');
                     }
                 }
@@ -2390,7 +2821,6 @@ function setupEventListeners() {
             document.getElementById('categorySidebar').classList.remove('open');
             document.getElementById('cartSidebar').classList.remove('open');
             document.getElementById('overlay').classList.remove('active');
-            // Limpiar historial de estados laterales
             ['menu', 'carrito', 'notificaciones'].forEach(tipo => limpiarEstadoHistorial(tipo));
         }
     });
@@ -2403,7 +2833,6 @@ function setupEventListeners() {
         }, 100);
     }, { passive: true });
     
-    // Configurar manejador del botón atrás
     setupBackButtonHandler();
 }
 
@@ -2437,12 +2866,12 @@ function restaurarDatosFormulario() {
     }
 }
 
-// ============================================
-// INICIALIZACIÓN
-// ============================================
 document.addEventListener('DOMContentLoaded', async () => {
     console.log('1️⃣ Inicializando cliente...');
     console.log('⏰ Zona horaria configurada: GMT-4 (Venezuela/Caracas)');
+    
+    cargarTemaGuardado();
+    console.log('🌓 Tema cargado');
     
     await cargarConfiguracion();
     console.log('2️⃣ Configuración cargada');
@@ -2466,7 +2895,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     console.log('8️⃣ Suscripciones Realtime configuradas');
     
     setupEventListeners();
-    console.log('9️⃣ Event listeners configurados (incluye botón atrás)');
+    console.log('9️⃣ Event listeners configurados');
     
     restaurarCarrito();
     console.log('🔟 Carrito restaurado');
@@ -2474,6 +2903,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     actualizarCarritoUI();
     actualizarCarritoBadge();
     verificarPermisosAudio();
+    actualizarBotonHistorial();
     
     const hoy = new Date().toISOString().split('T')[0];
     document.getElementById('fechaReserva').min = hoy;
