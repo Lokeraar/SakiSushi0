@@ -307,11 +307,362 @@
     </style>
 </head>
 <body>
-    <!-- [TODO EL HTML EXISTENTE SE MANTIENE IGUAL - DESDE AQUÍ HASTA EL FINAL DEL BODY] -->
-    <!-- ... (todo el contenido HTML previo se mantiene idéntico) ... -->
+    <div class="overlay" id="overlay" onclick="cerrarTodosLosPaneles()"></div>
+    <div class="toast" id="toast"></div>
+    <header class="header">
+        <div class="header-left"><button class="menu-hamburguesa" id="menuToggle" title="Categorías"><i class="fas fa-bars"></i></button></div>
+        <div class="logo-area" onclick="resetToAllCategories()"><img src="https://lh3.googleusercontent.com/pw/AP1GczPrZAoWxmsOGRD9xl1hO5Q65JXuwUZzoR6gUk-cw5lVmarxQe_-lwqpA60tTKLlXfpvIjAJlKC6jFls-xETJOPkebLIIPhbGlUkknmhrRbdhMUll2UViGSUj3WmHKg2YEsZlAfxBPPTjIHhScjD0jfe=w1439-h1439-s-no-gm" alt="Saki Sushi" class="logo"><h1>Saki Sushi</h1><span class="header-slogan">"Adictos al universo saki"</span></div>
+        <div class="header-icons" id="headerIcons">
+            <div style="position:relative">
+                <button class="icon-button" id="notificationBell"><i class="fas fa-bell"></i></button>
+                <span class="notification-badge" id="notificationBadge" style="display:none">0</span>
+            </div>
+            <div style="position:relative">
+                <button class="icon-button" id="cartToggle" title="Carrito"><i class="fas fa-shopping-cart"></i></button>
+                <span class="cart-badge" id="cartBadge" style="display:none;">0</span>
+            </div>
+            <div class="table-badge" id="tableBadge" style="display:none;">Mesa <span id="tableNumber">--</span></div>
+        </div>
+    </header>
+    <div class="content-wrapper">
+        <div class="main-layout">
+            <div id="sidebarContainer">
+                <div class="category-sidebar" id="categorySidebar">
+                    <div class="category-header">
+                        <span><i class="fas fa-utensils"></i> Categorías</span>
+                        <i class="fas fa-times" id="closeCategoryMenu"></i>
+                    </div>
+                    <ul class="category-list" id="categoryList">
+                        <li class="loading-container"><div class="loading-spinner"></div><p>Cargando categorías...</p></li>
+                    </ul>
+                </div>
+                <div class="cart-sidebar" id="cartSidebar">
+                    <div class="cart-header">
+                        <h3><i class="fas fa-shopping-cart"></i> Tu Pedido</h3>
+                        <button id="closeCart"><i class="fas fa-times"></i></button>
+                    </div>
+                    <div class="cart-items" id="cartItems">
+                        <div class="cart-empty"><i class="fas fa-shopping-basket"></i><p>Tu carrito está vacío</p><small>¡Agrega algunos platillos!</small></div>
+                    </div>
+                    <div class="cart-footer" id="cartFooter" style="display:none;">
+                        <div class="cart-total"><span>Total:</span><span id="cartTotal">Bs. 0,00</span></div>
+                        <div class="cart-buttons" id="cartButtons"></div>
+                    </div>
+                </div>
+            </div>
+            <main class="main-content" id="mainContent">
+                <div class="tagline-section">
+                    <div class="tagline">
+                        <div class="tagline-item ofertas" onclick="selectCategoria('ofertas')">🔥 OFERTAS ESPECIALES</div>
+                        <div class="tagline-item">🐟 Fresco del día</div>
+                        <div class="tagline-item">🎌 Tradicional</div>
+                        <div class="tagline-item">👨‍🍳 Chef experto</div>
+                    </div>
+                </div>
+                <div class="search-section">
+                    <div class="search-bar">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="searchInput" placeholder="Buscar platillos...">
+                    </div>
+                </div>
+                <div class="category-title">
+                    <h2 id="categoryTitle">Menú</h2>
+                </div>
+                <div class="menu-section">
+                    <div class="menu-grid" id="menuGrid">
+                        <div class="loading-container"><div class="loading-spinner"></div><p>Cargando deliciosas opciones...</p></div>
+                    </div>
+                    <div class="pagination-controls" id="paginationControls">
+                        <button class="pagination-btn" id="prevPageBtn" disabled><i class="fas fa-chevron-left"></i> Anterior</button>
+                        <span class="pagination-info" id="pageInfo">Página 1 de 1</span>
+                        <button class="pagination-btn" id="nextPageBtn" disabled>Siguiente <i class="fas fa-chevron-right"></i></button>
+                    </div>
+                </div>
+            </main>
+        </div>
+        
+        <div class="modal-overlay" id="customizeModal">
+            <div class="modal-container">
+                <div class="modal-header">
+                    <h3><i class="fas fa-star text-accent"></i> Personalizar</h3>
+                    <button class="modal-close" id="closeCustomizeModal">&times;</button>
+                </div>
+                <div class="modal-body" id="customizeModalBody"></div>
+                <div class="modal-footer">
+                    <button class="btn-secondary" id="cancelCustomize">Cancelar</button>
+                    <button class="btn-primary" id="addToCartFromModal"><i class="fas fa-cart-plus"></i> Añadir</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="modal-overlay" id="confirmMesaModal">
+            <div class="modal-container">
+                <div class="modal-header">
+                    <h3><i class="fas fa-store"></i> Confirmar Pedido</h3>
+                    <button class="modal-close" id="closeConfirmMesaModal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="info-box mesa"><i class="fas fa-info-circle"></i> Pedido para <strong>Mesa <span id="confirmTableNumber">#--</span></strong></div>
+                    <div style="margin:1rem 0">
+                        <h4 style="margin-bottom:.8rem">Resumen:</h4>
+                        <div id="mesaOrderSummary" style="background:rgba(0,0,0,.2); padding:.8rem; border-radius:var(--radius-sm)"></div>
+                    </div>
+                    <div class="info-box mesa" style="margin-top:.5rem"><i class="fas fa-clock"></i> Por favor, pasa a caja a cancelar.</div>
+                    <div style="margin:1rem 0">
+                        <label for="clienteNombre" style="display:block; margin-bottom:.3rem; font-weight:600; color:#fff">Tu nombre (opcional):</label>
+                        <input type="text" id="clienteNombre" placeholder="Ej: Juan" style="width:100%; padding:.7rem; border:1px solid rgba(255,255,255,.1); border-radius:var(--radius-sm); background:rgba(0,0,0,.3); color:#fff">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn-secondary" id="cancelMesaOrder">Cancelar</button>
+                    <button class="btn-primary" id="confirmMesaOrder"><i class="fas fa-check"></i> Hacer Pedido</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="modal-overlay" id="deliveryModal">
+            <div class="modal-container">
+                <div class="modal-header">
+                    <h3><i class="fas fa-motorcycle"></i> Delivery</h3>
+                    <button class="modal-close" id="closeDeliveryModal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="payment-timer" id="deliveryTimer" style="display:block">
+                        <i class="fas fa-hourglass-half"></i> 20 min para pagar
+                        <div class="timer-display" id="deliveryTimerDisplay">20:00</div>
+                    </div>
+                    <div class="payment-info">
+                        <h4><i class="fas fa-credit-card"></i> Datos de Pago - Pago Móvil</h4>
+                        <div class="payment-details">
+                            <p><i class="fas fa-university"></i><strong>Banco:</strong><span class="valor">Banesco</span></p>
+                            <p><i class="fas fa-phone-alt"></i><strong>Teléfono:</strong><span class="valor" id="telefonoPago">0424-1525233</span><button class="btn-copy" onclick="copiarAlPortapapeles('0424-1525233', this)" title="Copiar teléfono"><i class="fas fa-copy"></i></button></p>
+                            <p><i class="fas fa-id-card"></i><strong>RIF:</strong><span class="valor" id="rifPago">J-501519838</span><button class="btn-copy" onclick="copiarAlPortapapeles('J-501519838', this)" title="Copiar RIF"><i class="fas fa-copy"></i></button></p>
+                            <p><i class="fas fa-dollar-sign"></i><strong>Monto:</strong><span class="valor-placeholder" id="montoPago">Primero seleccione Parroquia a enviar</span></p>
+                        </div>
+                        <div class="payment-note">
+                            <i class="fas fa-info-circle"></i><strong>Sólo se aceptan pagos por Pago Móvil</strong>
+                            <p>Por favor, asegúrese de que su dirección y teléfono sean los correctos para garantizar que su pedido llegue a sus manos sin inconvenientes.</p>
+                        </div>
+                    </div>
+                    <form id="deliveryForm">
+                        <div style="margin-bottom:1.5rem">
+                            <label style="display:block; margin-bottom:.5rem; font-weight:600; color:#fff">Parroquia a enviar: <span class="asterisk">*</span></label>
+                            <div class="parroquia-selector">
+                                <div class="selected-parroquia" onclick="toggleParroquiaSelect()">
+                                    <span id="selectedParroquiaText">Seleccionar parroquia</span>
+                                    <i class="fas fa-chevron-down" id="parroquiaChevron"></i>
+                                </div>
+                                <input type="text" id="parroquiaSearch" class="parroquia-search" placeholder="Buscar parroquia..." style="display:none">
+                                <select id="parroquiaSelect" class="parroquia-select" size="5" style="display:none" onchange="seleccionarParroquia(this)">
+                                    <option value="">Seleccionar parroquia</option>
+                                    <option value="Altagracia">Altagracia</option>
+                                    <option value="Antímano">Antímano</option>
+                                    <option value="Candelaria">Candelaria</option>
+                                    <option value="Caricuao">Caricuao</option>
+                                    <option value="Caucagüita">Caucagüita</option>
+                                    <option value="Catedral">Catedral</option>
+                                    <option value="Chacao">Chacao</option>
+                                    <option value="Coche">Coche</option>
+                                    <option value="El Cafetal">El Cafetal</option>
+                                    <option value="El Junquito">El Junquito</option>
+                                    <option value="El Paraíso">El Paraíso</option>
+                                    <option value="El Recreo">El Recreo</option>
+                                    <option value="El Valle">El Valle</option>
+                                    <option value="Fila de Mariches">Fila de Mariches</option>
+                                    <option value="La Dolorita">La Dolorita</option>
+                                    <option value="La Pastora">La Pastora</option>
+                                    <option value="La Vega">La Vega</option>
+                                    <option value="Las Minas">Las Minas</option>
+                                    <option value="Leoncio Martínez">Leoncio Martínez</option>
+                                    <option value="Macarao">Macarao</option>
+                                    <option value="Nuestra Señora del Rosario">Nuestra Señora del Rosario</option>
+                                    <option value="Petare">Petare</option>
+                                    <option value="San Agustín">San Agustín</option>
+                                    <option value="San Bernardino">San Bernardino</option>
+                                    <option value="San José">San José</option>
+                                    <option value="San Juan">San Juan</option>
+                                    <option value="San Pedro">San Pedro</option>
+                                    <option value="Santa Rosalía">Santa Rosalía</option>
+                                    <option value="Santa Rosalía de Palermo">Santa Rosalía de Palermo</option>
+                                    <option value="Santa Teresa">Santa Teresa</option>
+                                    <option value="Sucre">Sucre</option>
+                                    <option value="23 de Enero">23 de Enero</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="delivery-price-display" id="deliveryPriceDisplay">Primero seleccione Parroquia a enviar</div>
+                        <div style="margin-bottom:1.5rem">
+                            <label for="direccion" style="display:block; margin-bottom:.5rem; font-weight:600; color:#fff">Dirección completa <span class="asterisk">*</span></label>
+                            <textarea id="direccion" required minlength="20" placeholder="Introduce tu dirección completa (mínimo 20 caracteres)" style="width:100%; padding:.8rem; border:2px solid rgba(255,255,255,.1); border-radius:var(--radius-sm); font-size:1rem; transition:border .2s; background:rgba(0,0,0,.3); color:#fff" rows="3" oninput="actualizarContadorDireccion()"></textarea>
+                            <div style="display:flex; justify-content:flex-end; margin-top:.3rem"><small id="direccionCounter" style="color:var(--gray-400); font-weight:500">0/20 caracteres</small></div>
+                        </div>
+                        <div style="margin-bottom:1.5rem">
+                            <label for="telefono" style="display:block; margin-bottom:.5rem; font-weight:600; color:#fff">Teléfono (máx 14 dígitos) <span class="asterisk">*</span></label>
+                            <input type="tel" id="telefono" required pattern="\+[0-9]{11,14}" maxlength="15" placeholder="Ej: +5804121234567 o 04121234567" inputmode="numeric" style="width:100%; padding:.8rem; border:2px solid rgba(255,255,255,.1); border-radius:var(--radius-sm); font-size:1rem; background:rgba(0,0,0,.3); color:#fff" oninput="this.value=this.value.replace(/[^0-9+]/g,''); if(this.value.indexOf('+')!==0&&this.value.length>0){this.value='+'+this.value.replace(/\+/g,'')} validarFormularioDelivery()">
+                        </div>
+                        <div style="margin-bottom:1.5rem">
+                            <label style="display:block; margin-bottom:.5rem; font-weight:600; color:#fff">Referencia (6 dígitos) <span class="asterisk">*</span></label>
+                            <div style="display:flex; gap:.5rem; justify-content:center">
+                                <input type="text" maxlength="1" class="ref-digit" data-type="delivery" data-index="0" style="width:50px; height:50px; text-align:center; padding:.5rem; border:2px solid rgba(255,255,255,.1); border-radius:var(--radius-sm); font-size:1.4rem; font-weight:600; background:rgba(0,0,0,.3); color:#fff" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this,'delivery',0); validarFormularioDelivery()">
+                                <input type="text" maxlength="1" class="ref-digit" data-type="delivery" data-index="1" style="width:50px; height:50px; text-align:center; padding:.5rem; border:2px solid rgba(255,255,255,.1); border-radius:var(--radius-sm); font-size:1.4rem; font-weight:600; background:rgba(0,0,0,.3); color:#fff" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this,'delivery',1); validarFormularioDelivery()">
+                                <input type="text" maxlength="1" class="ref-digit" data-type="delivery" data-index="2" style="width:50px; height:50px; text-align:center; padding:.5rem; border:2px solid rgba(255,255,255,.1); border-radius:var(--radius-sm); font-size:1.4rem; font-weight:600; background:rgba(0,0,0,.3); color:#fff" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this,'delivery',2); validarFormularioDelivery()">
+                                <input type="text" maxlength="1" class="ref-digit" data-type="delivery" data-index="3" style="width:50px; height:50px; text-align:center; padding:.5rem; border:2px solid rgba(255,255,255,.1); border-radius:var(--radius-sm); font-size:1.4rem; font-weight:600; background:rgba(0,0,0,.3); color:#fff" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this,'delivery',3); validarFormularioDelivery()">
+                                <input type="text" maxlength="1" class="ref-digit" data-type="delivery" data-index="4" style="width:50px; height:50px; text-align:center; padding:.5rem; border:2px solid rgba(255,255,255,.1); border-radius:var(--radius-sm); font-size:1.4rem; font-weight:600; background:rgba(0,0,0,.3); color:#fff" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this,'delivery',4); validarFormularioDelivery()">
+                                <input type="text" maxlength="1" class="ref-digit" data-type="delivery" data-index="5" style="width:50px; height:50px; text-align:center; padding:.5rem; border:2px solid rgba(255,255,255,.1); border-radius:var(--radius-sm); font-size:1.4rem; font-weight:600; background:rgba(0,0,0,.3); color:#fff" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this,'delivery',5); validarFormularioDelivery()">
+                            </div>
+                        </div>
+                        <div style="margin-bottom:1.5rem">
+                            <label for="comprobante" style="display:block; margin-bottom:.5rem; font-weight:600; color:#fff">Comprobante de pago <span class="asterisk">*</span></label>
+                            <div class="file-input-wrapper">
+                                <input type="file" id="comprobante" accept="image/*" style="display:none" onchange="handleComprobanteSelect(this)">
+                                <label for="comprobante" class="file-input-label" id="comprobanteLabel">
+                                    <i class="fas fa-cloud-upload-alt"></i>
+                                    <span>Haz clic para seleccionar una imagen</span>
+                                    <small>JPG, PNG, GIF (max. 5MB)</small>
+                                </label>
+                                <div class="upload-progress" id="uploadProgress" style="display:none">
+                                    <div class="upload-progress-bar" id="uploadProgressBar" style="width:0%"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div style="padding:1rem; background:rgba(0,0,0,.2); border-radius:var(--radius-md); border:2px solid var(--primary)">
+                            <div style="display:flex; justify-content:space-between; align-items:center">
+                                <span style="font-weight:600; font-size:1.1rem; color:#fff">Total a pagar:</span>
+                                <span style="font-weight:700; color:var(--accent); font-size:1.4rem" id="deliveryTotal">Primero seleccione parroquia a enviar</span>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn-secondary" id="cancelDelivery">Cancelar</button>
+                    <button class="btn-primary" id="confirmDelivery" disabled><i class="fas fa-check"></i> Confirmar Pedido</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="modal-overlay" id="reservaModal">
+            <div class="modal-container">
+                <div class="modal-header">
+                    <h3><i class="fas fa-calendar-alt"></i> Reserva</h3>
+                    <button class="modal-close" id="closeReservaModal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="payment-timer" id="reservaTimer" style="display:block">
+                        <i class="fas fa-hourglass-half"></i> 20 min para pagar
+                        <div class="timer-display" id="reservaTimerDisplay">20:00</div>
+                    </div>
+                    <div class="payment-info">
+                        <h4><i class="fas fa-credit-card"></i> Datos de Pago - Pago Móvil</h4>
+                        <div class="payment-details">
+                            <p><i class="fas fa-university"></i><strong>Banco:</strong><span class="valor">Banesco</span></p>
+                            <p><i class="fas fa-phone-alt"></i><strong>Teléfono:</strong><span class="valor" id="telefonoPagoReserva">0424-1525233</span><button class="btn-copy" onclick="copiarAlPortapapeles('0424-1525233', this)" title="Copiar teléfono"><i class="fas fa-copy"></i></button></p>
+                            <p><i class="fas fa-id-card"></i><strong>RIF:</strong><span class="valor" id="rifPagoReserva">J-501519838</span><button class="btn-copy" onclick="copiarAlPortapapeles('J-501519838', this)" title="Copiar RIF"><i class="fas fa-copy"></i></button></p>
+                            <p><i class="fas fa-dollar-sign"></i><strong>Monto:</strong><span class="valor" id="montoReserva">Bs. 0,00</span><button class="btn-copy" onclick="copiarAlPortapapeles(document.getElementById('montoReserva').textContent.replace('Bs. ', ''), this)" title="Copiar monto"><i class="fas fa-copy"></i></button></p>
+                        </div>
+                        <div class="payment-note">
+                            <i class="fas fa-info-circle"></i><strong>Sólo se aceptan pagos por Pago Móvil</strong>
+                            <p>Por favor, asegúrese de que su dirección y teléfono sean los correctos para garantizar que su pedido llegue a sus manos sin inconvenientes.</p>
+                        </div>
+                    </div>
+                    <form id="reservaForm">
+                        <div style="margin-bottom:1.5rem">
+                            <label for="fechaReserva" style="display:block; margin-bottom:.5rem; font-weight:600; color:#fff">Fecha de la reserva <span class="asterisk">*</span></label>
+                            <input type="date" id="fechaReserva" required min="" style="width:100%; padding:.8rem; border:2px solid rgba(255,255,255,.1); border-radius:var(--radius-sm); font-size:1rem; background:rgba(0,0,0,.3); color:#fff" onchange="validarFormularioReserva()">
+                        </div>
+                        <div style="margin-bottom:1.5rem">
+                            <label for="nombreReserva" style="display:block; margin-bottom:.5rem; font-weight:600; color:#fff">Nombre completo <span class="asterisk">*</span></label>
+                            <input type="text" id="nombreReserva" required placeholder="Tu nombre" style="width:100%; padding:.8rem; border:2px solid rgba(255,255,255,.1); border-radius:var(--radius-sm); font-size:1rem; background:rgba(0,0,0,.3); color:#fff" oninput="validarFormularioReserva()">
+                        </div>
+                        <div style="margin-bottom:1.5rem">
+                            <label style="display:block; margin-bottom:.5rem; font-weight:600; color:#fff">Referencia (6 dígitos) <span class="asterisk">*</span></label>
+                            <div style="display:flex; gap:.5rem; justify-content:center">
+                                <input type="text" maxlength="1" class="ref-digit" data-type="reserva" data-index="0" style="width:50px; height:50px; text-align:center; padding:.5rem; border:2px solid rgba(255,255,255,.1); border-radius:var(--radius-sm); font-size:1.4rem; font-weight:600; background:rgba(0,0,0,.3); color:#fff" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this,'reserva',0); validarFormularioReserva()">
+                                <input type="text" maxlength="1" class="ref-digit" data-type="reserva" data-index="1" style="width:50px; height:50px; text-align:center; padding:.5rem; border:2px solid rgba(255,255,255,.1); border-radius:var(--radius-sm); font-size:1.4rem; font-weight:600; background:rgba(0,0,0,.3); color:#fff" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this,'reserva',1); validarFormularioReserva()">
+                                <input type="text" maxlength="1" class="ref-digit" data-type="reserva" data-index="2" style="width:50px; height:50px; text-align:center; padding:.5rem; border:2px solid rgba(255,255,255,.1); border-radius:var(--radius-sm); font-size:1.4rem; font-weight:600; background:rgba(0,0,0,.3); color:#fff" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this,'reserva',2); validarFormularioReserva()">
+                                <input type="text" maxlength="1" class="ref-digit" data-type="reserva" data-index="3" style="width:50px; height:50px; text-align:center; padding:.5rem; border:2px solid rgba(255,255,255,.1); border-radius:var(--radius-sm); font-size:1.4rem; font-weight:600; background:rgba(0,0,0,.3); color:#fff" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this,'reserva',3); validarFormularioReserva()">
+                                <input type="text" maxlength="1" class="ref-digit" data-type="reserva" data-index="4" style="width:50px; height:50px; text-align:center; padding:.5rem; border:2px solid rgba(255,255,255,.1); border-radius:var(--radius-sm); font-size:1.4rem; font-weight:600; background:rgba(0,0,0,.3); color:#fff" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this,'reserva',4); validarFormularioReserva()">
+                                <input type="text" maxlength="1" class="ref-digit" data-type="reserva" data-index="5" style="width:50px; height:50px; text-align:center; padding:.5rem; border:2px solid rgba(255,255,255,.1); border-radius:var(--radius-sm); font-size:1.4rem; font-weight:600; background:rgba(0,0,0,.3); color:#fff" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this,'reserva',5); validarFormularioReserva()">
+                            </div>
+                        </div>
+                        <div style="margin-bottom:1.5rem">
+                            <label for="comprobanteReserva" style="display:block; margin-bottom:.5rem; font-weight:600; color:#fff">Comprobante de pago <span class="asterisk">*</span></label>
+                            <div class="file-input-wrapper">
+                                <input type="file" id="comprobanteReserva" accept="image/*" style="display:none" onchange="handleComprobanteReservaSelect(this)">
+                                <label for="comprobanteReserva" class="file-input-label" id="comprobanteReservaLabel">
+                                    <i class="fas fa-cloud-upload-alt"></i>
+                                    <span>Haz clic para seleccionar una imagen</span>
+                                    <small>JPG, PNG, GIF (max. 5MB)</small>
+                                </label>
+                                <div class="upload-progress" id="uploadProgressReserva" style="display:none">
+                                    <div class="upload-progress-bar" id="uploadProgressBarReserva" style="width:0%"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div style="padding:1rem; background:rgba(0,0,0,.2); border-radius:var(--radius-md); border:2px solid var(--primary)">
+                            <div style="display:flex; justify-content:space-between; align-items:center">
+                                <span style="font-weight:600; font-size:1.1rem; color:#fff">Total a pagar:</span>
+                                <span style="font-weight:700; color:var(--accent); font-size:1.4rem" id="reservaTotal">Bs. 0,00</span>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn-secondary" id="cancelReserva">Cancelar</button>
+                    <button class="btn-primary" id="confirmReserva" disabled><i class="fas fa-check"></i> Confirmar Reserva</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="notifications-panel" id="notificationsPanel">
+        <div class="notifications-header">
+            <h4>Notificaciones</h4>
+            <span id="notificationsCount">0</span>
+        </div>
+        <div class="notifications-list" id="notificationsList"></div>
+    </div>
+    
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-section">
+                <img src="https://lh3.googleusercontent.com/pw/AP1GczPrZAoWxmsOGRD9xl1hO5Q65JXuwUZzoR6gUk-cw5lVmarxQe_-lwqpA60tTKLlXfpvIjAJlKC6jFls-xETJOPkebLIIPhbGlUkknmhrRbdhMUll2UViGSUj3WmHKg2YEsZlAfxBPPTjIHhScjD0jfe=w1439-h1439-s-no-gm" alt="Saki Sushi" class="footer-brand-logo" style="width:140px; height:155px;">
+                <div class="footer-brand-slogan">"Adictos al universo saki"</div>
+            </div>
+            <div class="footer-section">
+                <h4>Av Universidad</h4>
+                <p><i class="fas fa-clock"></i> Lunes a Domingo: 11:00 AM - 10:00 PM</p>
+                <a href="https://wa.me/5804242884773" class="whatsapp-link" target="_blank"><i class="fab fa-whatsapp"></i> +58 0424-2884773</a>
+                <a href="https://wa.me/5804242884772" class="whatsapp-link" target="_blank"><i class="fab fa-whatsapp"></i> +58 0424-2884772</a>
+                <p><i class="fas fa-map-marker-alt"></i> Caracas</p>
+            </div>
+            <div class="footer-section">
+                <h4>San Bernardino</h4>
+                <p><i class="fas fa-clock"></i> Lunes a Domingo: 11:00 AM - 10:00 PM</p>
+                <a href="https://wa.me/5804241722322" class="whatsapp-link" target="_blank"><i class="fab fa-whatsapp"></i> +58 0424-1722322</a>
+                <a href="https://wa.me/5804241722339" class="whatsapp-link" target="_blank"><i class="fab fa-whatsapp"></i> +58 0424-1722339</a>
+                <p><i class="fas fa-map-marker-alt"></i> Caracas</p>
+            </div>
+            <div class="footer-section">
+                <h4>Síguenos</h4>
+                <div class="social-icons" style="justify-content:center; gap:2rem; margin-top:0.5rem;">
+                    <a href="https://www.instagram.com/sakisushiccs/?hl=es" target="_blank" class="instagram-link" style="background:rgba(255,255,255,.1); width:90px; height:90px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; text-decoration:none;">
+                        <i class="fab fa-instagram" style="font-size:3.5rem; line-height:1; display:flex; align-items:center; justify-content:center; width:100%; height:100%;"></i>
+                    </a>
+                    <a href="https://www.tiktok.com/@sakisushiccs" target="_blank" class="tiktok-link" style="background:rgba(255,255,255,.1); width:90px; height:90px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:white; text-decoration:none;">
+                        <i class="fab fa-tiktok" style="font-size:3.5rem; line-height:1; display:flex; align-items:center; justify-content:center; width:100%; height:100%;"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+        <div class="footer-brand">
+            <div class="footer-copyright">© 2021 Saki Sushi. Todos los derechos reservados.</div>
+        </div>
+    </footer>
+    
+    <audio id="notificationSound" src="https://iqwwoihiiyrtypyqzhgy.supabase.co/storage/v1/object/public/alarma/IPHONE%20NOTIFICATION%20SOUND%20EFFECT%20(PING_DING).mp3" preload="auto"></audio>
     
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="../supabase-config.js"></script>
+    <script src="../supabase-config.js"></script>  <!-- RUTA CORREGIDA: un nivel arriba -->
     <script>
 // ============================================
 // VERIFICACIÓN DE FUNCIONES GMT-4
