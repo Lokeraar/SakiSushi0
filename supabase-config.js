@@ -1,4 +1,4 @@
-// supabase-config.js - VERSIÓN FINAL CON UUID, GMT-4 Y NOTIFICACIONES PUSH
+// supabase-config.js - VERSIÓN CON MEJOR MANEJO DE ERRORES PARA BRAVE
 window.SUPABASE_URL = 'https://iqwwoihiiyrtypyqzhgy.supabase.co';
 window.SUPABASE_ANON_KEY = 'sb_publishable_m4WcF4gmkj1olAj95HMLlA_4yKqPFXm';
 
@@ -124,10 +124,10 @@ window.utcToGMT4 = function(utcTimestamp) {
 };
 
 // ============================================
-// FUNCIONES DE NOTIFICACIONES PUSH
+// FUNCIONES DE NOTIFICACIONES PUSH (MEJORADAS)
 // ============================================
 
-// 🔑 CLAVE PÚBLICA VAPID GENERADA - ¡ACTUALIZADA!
+// 🔑 CLAVE PÚBLICA VAPID GENERADA
 window.VAPID_PUBLIC_KEY = 'BC6oJ4E+5pGIn4icpzCBLMi6/nk+1JJenrUA41uJrAs1ELraSw5ctvRAlh8sHVldqzBXUtEwEeFKBm0/hmuM9EY=';
 
 // Convertir clave pública a Uint8Array
@@ -142,12 +142,33 @@ function urlBase64ToUint8Array(base64String) {
     return outputArray;
 }
 
-// Función UI para el botón
+// Detectar Brave
+window.esBrave = function() {
+    return navigator.brave && typeof navigator.brave.isBrave === 'function';
+};
+
+// Función para verificar si los escudos de Brave están activos
+window.verificarBraveShields = async function() {
+    if (window.esBrave()) {
+        console.log('🦁 Navegador Brave detectado');
+        // No podemos detectar shields directamente, pero mostramos un mensaje
+        return true;
+    }
+    return false;
+};
+
+// Función UI para el botón (MEJORADA)
 window.solicitarPermisoPushUI = async function() {
     const sessionId = localStorage.getItem('saki_session_id');
     if (!sessionId) {
         console.error('❌ No hay session_id');
         return;
+    }
+    
+    // Verificar si es Brave
+    if (window.esBrave()) {
+        console.log('🦁 Brave detectado - mostrando instrucciones');
+        window.mostrarToast('🦁 En Brave, haz clic en el león 🦁 y desactiva el bloqueo de notificaciones', 'warning');
     }
     
     const resultado = await window.solicitarPermisoPush(sessionId);
@@ -162,13 +183,17 @@ window.solicitarPermisoPushUI = async function() {
         btn.classList.add('denied');
         btn.innerHTML = '<i class="fas fa-bell-slash"></i>';
         btn.setAttribute('data-tooltip', 'Notificaciones desactivadas');
-        if (resultado?.error !== 'denied') {
+        
+        // Mensaje específico para Brave
+        if (window.esBrave()) {
+            window.mostrarToast('🦁 Brave: Haz clic en el león y permite notificaciones', 'warning');
+        } else {
             window.mostrarToast('❌ No se pudieron activar las notificaciones', 'error');
         }
     }
 };
 
-// Solicitar permiso y registrar suscripción
+// Solicitar permiso y registrar suscripción (MEJORADA)
 window.solicitarPermisoPush = async function(sessionId) {
     if (!('Notification' in window)) {
         console.log('❌ Este navegador no soporta notificaciones');
@@ -201,13 +226,33 @@ window.solicitarPermisoPush = async function(sessionId) {
         
         await navigator.serviceWorker.ready;
         
+        // Verificar si ya hay suscripción
         let subscription = await registration.pushManager.getSubscription();
         
         if (!subscription) {
-            subscription = await registration.pushManager.subscribe({
-                userVisibleOnly: true,
-                applicationServerKey: urlBase64ToUint8Array(window.VAPID_PUBLIC_KEY)
-            });
+            console.log('📨 Creando nueva suscripción...');
+            try {
+                subscription = await registration.pushManager.subscribe({
+                    userVisibleOnly: true,
+                    applicationServerKey: urlBase64ToUint8Array(window.VAPID_PUBLIC_KEY)
+                });
+                console.log('✅ Suscripción creada exitosamente');
+            } catch (subscribeError) {
+                console.error('❌ Error en subscribe:', subscribeError);
+                
+                // Mensaje específico para Brave
+                if (window.esBrave()) {
+                    return { 
+                        success: false, 
+                        error: 'brave_blocked',
+                        message: 'Brave está bloqueando las notificaciones. Haz clic en el león 🦁 y desactiva el bloqueo.'
+                    };
+                }
+                
+                return { success: false, error: subscribeError.message };
+            }
+        } else {
+            console.log('📨 Usando suscripción existente');
         }
         
         console.log('📨 Suscripción obtenida:', subscription);
@@ -475,3 +520,4 @@ console.log('   - appCache:', window.appCache ? '✅' : '❌');
 console.log('   - VAPID Public Key:', window.VAPID_PUBLIC_KEY ? '✅' : '❌');
 console.log('   - Longitud VAPID:', window.VAPID_PUBLIC_KEY?.length || 0, 'caracteres');
 console.log('   - solicitarPermisoPush:', typeof window.solicitarPermisoPush === 'function' ? '✅' : '❌');
+console.log('   - esBrave:', typeof window.esBrave === 'function' ? '✅' : '❌');
