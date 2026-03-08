@@ -522,16 +522,17 @@
     
 	<header class="header">
 		<div class="header-left">
-		<button class="menu-hamburguesa" id="menuToggle" title="Categorías" data-tooltip="Ver categorías">
-			<i class="fas fa-bars"></i>
-		</button>
-		<button class="theme-toggle" id="themeToggle" onclick="toggleTema()" data-tooltip="Cambiar tema">
-			<i class="fas fa-moon"></i>
-		</button>
-		<!-- 👇 AGREGA ESTA LÍNEA -->
-		<button class="push-permission-btn" id="pushPermissionBtn" onclick="solicitarPermisoPushUI()" data-tooltip="Activar notificaciones">
-			<i class="fas fa-bell"></i>
-		</button>
+			<button class="menu-hamburguesa" id="menuToggle" title="Categorías" data-tooltip="Ver categorías">
+				<i class="fas fa-bars"></i>
+			</button>
+			<button class="theme-toggle" id="themeToggle" onclick="toggleTema()" data-tooltip="Cambiar tema">
+				<i class="fas fa-moon"></i>
+			</button>
+			<!-- Botón de notificaciones push con tooltip dinámico -->
+			<button class="push-permission-btn" id="pushPermissionBtn" onclick="window.solicitarPermisoPushUI()" data-tooltip="Activar notificaciones">
+				<i class="fas fa-bell"></i>
+			</button>
+		</div>
 	</div>
         <div class="logo-area" onclick="resetToAllCategories()">
             <img src="https://lh3.googleusercontent.com/pw/AP1GczPrZAoWxmsOGRD9xl1hO5Q65JXuwUZzoR6gUk-cw5lVmarxQe_-lwqpA60tTKLlXfpvIjAJlKC6jFls-xETJOPkebLIIPhbGlUkknmhrRbdhMUll2UViGSUj3WmHKg2YEsZlAfxBPPTjIHhScjD0jfe=w1439-h1439-s-no-gm" alt="Saki Sushi" class="logo">
