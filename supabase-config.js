@@ -1,4 +1,4 @@
-// supabase-config.js - VERSIÓN FINAL CON UUID, GMT-4 Y OPTIMIZACIONES
+// supabase-config.js - VERSIÓN COMPLETA CON PUSH
 window.SUPABASE_URL = 'https://iqwwoihiiyrtypyqzhgy.supabase.co';
 window.SUPABASE_ANON_KEY = 'sb_publishable_m4WcF4gmkj1olAj95HMLlA_4yKqPFXm';
 
@@ -59,7 +59,6 @@ window.appCache = {
     }
 };
 
-// Compatibilidad hacia atrás
 window.stockCache = {
     get: (id) => window.appCache.getStock(id),
     set: (id, v) => window.appCache.setStock(id, v),
@@ -125,7 +124,161 @@ window.utcToGMT4 = function(utcTimestamp) {
 };
 
 // ============================================
-// FUNCIONES DE CONFIGURACIÓN
+// FUNCIONES DE NOTIFICACIONES PUSH
+// ============================================
+
+// Clave pública VAPID (generada con SQL)
+window.VAPID_PUBLIC_KEY = 'BFe7ZSW9FKydRNtQzBBqmMzte1cyPAtOcQvIBHgREFMCo=';
+
+// Convertir clave pública a Uint8Array
+function urlBase64ToUint8Array(base64String) {
+    const padding = '='.repeat((4 - base64String.length % 4) % 4);
+    const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+    const rawData = window.atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+    for (let i = 0; i < rawData.length; ++i) {
+        outputArray[i] = rawData.charCodeAt(i);
+    }
+    return outputArray;
+}
+
+// Función UI para el botón
+window.solicitarPermisoPushUI = async function() {
+    const sessionId = localStorage.getItem('saki_session_id');
+    if (!sessionId) {
+        console.error('❌ No hay session_id');
+        return;
+    }
+    
+    const resultado = await window.solicitarPermisoPush(sessionId);
+    const btn = document.getElementById('pushPermissionBtn');
+    
+    if (resultado && resultado.success) {
+        btn.classList.add('active');
+        btn.innerHTML = '<i class="fas fa-bell"></i>';
+        btn.setAttribute('data-tooltip', 'Notificaciones activadas');
+        window.mostrarToast('✅ Notificaciones activadas', 'success');
+    } else {
+        btn.classList.add('denied');
+        btn.innerHTML = '<i class="fas fa-bell-slash"></i>';
+        btn.setAttribute('data-tooltip', 'Notificaciones desactivadas');
+        if (resultado?.error !== 'denied') {
+            window.mostrarToast('❌ No se pudieron activar las notificaciones', 'error');
+        }
+    }
+};
+
+// Solicitar permiso y registrar suscripción
+window.solicitarPermisoPush = async function(sessionId) {
+    if (!('Notification' in window)) {
+        console.log('❌ Este navegador no soporta notificaciones');
+        return { success: false, error: 'no_support' };
+    }
+    
+    if (!('serviceWorker' in navigator)) {
+        console.log('❌ Service Workers no soportados');
+        return { success: false, error: 'no_sw' };
+    }
+    
+    if (location.protocol !== 'https:' && location.hostname !== 'localhost') {
+        console.log('❌ Las notificaciones push requieren HTTPS');
+        if (window.mostrarToast) window.mostrarToast('❌ Las notificaciones requieren HTTPS', 'error');
+        return { success: false, error: 'no_https' };
+    }
+    
+    try {
+        const permiso = await Notification.requestPermission();
+        if (permiso !== 'granted') {
+            console.log('❌ Permiso denegado');
+            return { success: false, error: 'denied' };
+        }
+        
+        console.log('✅ Permiso concedido');
+        
+        const swUrl = '/SakiSushi0/sw.js';
+        const registration = await navigator.serviceWorker.register(swUrl);
+        console.log('📦 Service Worker registrado:', swUrl);
+        
+        await navigator.serviceWorker.ready;
+        
+        let subscription = await registration.pushManager.getSubscription();
+        
+        if (!subscription) {
+            subscription = await registration.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: urlBase64ToUint8Array(window.VAPID_PUBLIC_KEY)
+            });
+        }
+        
+        console.log('📨 Suscripción obtenida:', subscription);
+        
+        const p256dh = btoa(String.fromCharCode.apply(null, 
+            new Uint8Array(subscription.getKey('p256dh'))));
+        const auth = btoa(String.fromCharCode.apply(null, 
+            new Uint8Array(subscription.getKey('auth'))));
+        
+        const { error } = await window.supabaseClient
+            .from('push_subscriptions')
+            .upsert([{
+                session_id: sessionId,
+                endpoint: subscription.endpoint,
+                p256dh: p256dh,
+                auth: auth,
+                user_agent: navigator.userAgent
+            }], { onConflict: 'endpoint' });
+            
+        if (error) throw error;
+        
+        console.log('✅ Suscripción guardada en BD');
+        return { success: true, subscription };
+        
+    } catch (error) {
+        console.error('❌ Error en push:', error);
+        return { success: false, error: error.message };
+    }
+};
+
+window.tienePermisoPush = function() {
+    return Notification.permission === 'granted';
+};
+
+window.actualizarEstadoPushUI = function() {
+    const btn = document.getElementById('pushPermissionBtn');
+    if (!btn) return;
+    
+    if (window.tienePermisoPush()) {
+        btn.classList.add('active');
+        btn.innerHTML = '<i class="fas fa-bell"></i>';
+        btn.setAttribute('data-tooltip', 'Notificaciones activadas');
+    } else {
+        btn.classList.remove('active');
+        btn.innerHTML = '<i class="fas fa-bell"></i>';
+        btn.setAttribute('data-tooltip', 'Activar notificaciones');
+    }
+};
+
+window.verificarServiceWorker = async function() {
+    if (!('serviceWorker' in navigator)) return false;
+    const registrations = await navigator.serviceWorker.getRegistrations();
+    return registrations.some(reg => 
+        reg.active && reg.active.scriptURL.includes('sw.js')
+    );
+};
+
+window.verificarNotificacionPush = function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const notifSession = urlParams.get('notif');
+    
+    if (notifSession) {
+        setTimeout(() => {
+            if (window.toggleNotifications) window.toggleNotifications();
+            console.log('🔔 Abierto desde notificación push:', notifSession);
+        }, 1000);
+    }
+};
+
+// ============================================
+// RESTO DE FUNCIONES (sin cambios)
 // ============================================
 window.cargarConfiguracion = async function() {
     try {
@@ -143,9 +296,6 @@ window.cargarConfiguracion = async function() {
     }
 };
 
-// ============================================
-// FUNCIONES DE STORAGE
-// ============================================
 window.subirImagenPlatillo = async function(archivoImagen, carpetaAdicional = '') {
     try {
         if (!archivoImagen) return { success: false, error: 'No se proporcionó archivo' };
@@ -210,9 +360,6 @@ window.subirComprobante = async function(file, tipo, onProgress) {
     }
 };
 
-// ============================================
-// FUNCIONES DE FORMATO
-// ============================================
 window.formatBs = function(monto) {
     try {
         const valor = Math.round((monto || 0) * 100) / 100;
@@ -265,9 +412,6 @@ window.bsToUsd = function(bs, tasa) {
     return bs / tasaActual;
 };
 
-// ============================================
-// DATOS ESTÁTICOS
-// ============================================
 window.parroquiasDelivery = [
     { nombre: "San Bernardino", precioUSD: 2 }, { nombre: "San José", precioUSD: 2 },
     { nombre: "San Agustín", precioUSD: 2 }, { nombre: "Candelaria", precioUSD: 2 },
@@ -296,9 +440,6 @@ window.categoriasMenu = {
     "Ofertas Especiales": [], "Para Niños": [], "Combo Ejecutivo": []
 };
 
-// ============================================
-// FUNCIÓN DE VERIFICACIÓN FORZADA DE NOTIFICACIONES
-// ============================================
 window.verificarNotificacionesForzadas = async function(sessionId) {
     try {
         console.log('🔍 Verificación forzada para session:', sessionId);
@@ -331,3 +472,5 @@ console.log('✅ supabase-config.js cargado correctamente');
 console.log('   - formatearFechaGMT4:', typeof window.formatearFechaGMT4 === 'function' ? '✅' : '❌');
 console.log('   - formatearHora12GMT4:', typeof window.formatearHora12GMT4 === 'function' ? '✅' : '❌');
 console.log('   - appCache:', window.appCache ? '✅' : '❌');
+console.log('   - VAPID Public Key:', window.VAPID_PUBLIC_KEY ? '✅' : '❌');
+console.log('   - solicitarPermisoPush:', typeof window.solicitarPermisoPush === 'function' ? '✅' : '❌');
