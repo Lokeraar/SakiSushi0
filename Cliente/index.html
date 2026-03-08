@@ -4,12 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
     <title>🍣 Saki Sushi - Menú Cliente</title>
+    <link rel="manifest" href="/SakiSushi0/manifest.json">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Roboto:wght@300;400;500&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
+        /* Mismos estilos que tenías antes - sin cambios */
         *{margin:0;padding:0;box-sizing:border-box}
         :root{
             --primary:#D32F2F;
@@ -101,6 +103,10 @@
         .header-icons.left-aligned{margin-left:auto}
         .icon-button{background:rgba(255,255,255,.15);border:none;color:white;width:50px;height:50px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .3s;font-size:1.4rem;position:relative;backdrop-filter:blur(5px);flex-shrink:0}
         .icon-button:hover{background:rgba(255,255,255,.25);transform:scale(1.1)}
+        .push-permission-btn{background:rgba(255,255,255,.15);border:none;color:white;width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .3s;font-size:1.1rem;margin-right:.3rem}
+        .push-permission-btn:hover{background:rgba(255,255,255,.25);transform:scale(1.1)}
+        .push-permission-btn.active{background:var(--success)}
+        .push-permission-btn.denied{background:var(--danger);opacity:.5}
         .theme-toggle{background:rgba(255,255,255,.15);border:none;color:white;width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .3s;font-size:1.1rem}
         .theme-toggle:hover{background:rgba(255,255,255,.25);transform:scale(1.1)}
         .notification-badge{position:absolute;top:-5px;right:-5px;background-color:var(--accent);color:white;font-size:.7rem;padding:.2rem .5rem;border-radius:20px;min-width:20px;text-align:center;font-weight:600;box-shadow:var(--shadow-sm)}
@@ -520,20 +526,18 @@
         <span id="historialCount">0</span>
     </div>
     
-	<header class="header">
-		<div class="header-left">
-			<button class="menu-hamburguesa" id="menuToggle" title="Categorías" data-tooltip="Ver categorías">
-				<i class="fas fa-bars"></i>
-			</button>
-			<button class="theme-toggle" id="themeToggle" onclick="toggleTema()" data-tooltip="Cambiar tema">
-				<i class="fas fa-moon"></i>
-			</button>
-			<!-- Botón de notificaciones push con tooltip dinámico -->
-			<button class="push-permission-btn" id="pushPermissionBtn" onclick="window.solicitarPermisoPushUI()" data-tooltip="Activar notificaciones">
-				<i class="fas fa-bell"></i>
-			</button>
-		</div>
-	</div>
+    <header class="header">
+        <div class="header-left">
+            <button class="menu-hamburguesa" id="menuToggle" title="Categorías" data-tooltip="Ver categorías">
+                <i class="fas fa-bars"></i>
+            </button>
+            <button class="theme-toggle" id="themeToggle" onclick="toggleTema()" data-tooltip="Cambiar tema">
+                <i class="fas fa-moon"></i>
+            </button>
+            <button class="push-permission-btn" id="pushPermissionBtn" onclick="solicitarPermisoPushUI()" data-tooltip="Activar notificaciones">
+                <i class="fas fa-bell"></i>
+            </button>
+        </div>
         <div class="logo-area" onclick="resetToAllCategories()">
             <img src="https://lh3.googleusercontent.com/pw/AP1GczPrZAoWxmsOGRD9xl1hO5Q65JXuwUZzoR6gUk-cw5lVmarxQe_-lwqpA60tTKLlXfpvIjAJlKC6jFls-xETJOPkebLIIPhbGlUkknmhrRbdhMUll2UViGSUj3WmHKg2YEsZlAfxBPPTjIHhScjD0jfe=w1439-h1439-s-no-gm" alt="Saki Sushi" class="logo">
             <h1>Saki Sushi</h1>
@@ -1029,6 +1033,56 @@ function cargarTemaGuardado() {
 }
 
 // ============================================
+// FUNCIONES DE NOTIFICACIONES PUSH
+// ============================================
+async function solicitarPermisoPushUI() {
+    const resultado = await window.solicitarPermisoPush(sessionId);
+    const btn = document.getElementById('pushPermissionBtn');
+    
+    if (resultado.success) {
+        btn.classList.add('active');
+        btn.innerHTML = '<i class="fas fa-bell"></i>';
+        btn.setAttribute('data-tooltip', 'Notificaciones activadas');
+        mostrarToast('✅ Notificaciones activadas', 'success');
+    } else {
+        btn.classList.add('denied');
+        btn.innerHTML = '<i class="fas fa-bell-slash"></i>';
+        btn.setAttribute('data-tooltip', 'Notificaciones desactivadas');
+        if (resultado.error !== 'denied') {
+            mostrarToast('❌ No se pudieron activar las notificaciones', 'error');
+        }
+    }
+}
+
+function actualizarEstadoPushUI() {
+    const btn = document.getElementById('pushPermissionBtn');
+    if (window.tienePermisoPush()) {
+        btn.classList.add('active');
+        btn.innerHTML = '<i class="fas fa-bell"></i>';
+        btn.setAttribute('data-tooltip', 'Notificaciones activadas');
+    } else {
+        btn.classList.remove('active');
+        btn.innerHTML = '<i class="fas fa-bell"></i>';
+        btn.setAttribute('data-tooltip', 'Activar notificaciones');
+    }
+}
+
+// Verificar si venimos de una notificación
+function verificarNotificacionPush() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const notifSession = urlParams.get('notif');
+    
+    if (notifSession) {
+        // Abrir el panel de notificaciones automáticamente
+        setTimeout(() => {
+            toggleNotifications();
+            // Resaltar la notificación si es posible
+            console.log('🔔 Abierto desde notificación push:', notifSession);
+        }, 1000);
+    }
+}
+
+// ============================================
 // FUNCIONES DE FAVORITOS
 // ============================================
 function toggleFavorito(platilloId) {
@@ -1156,10 +1210,8 @@ async function repetirPedido(pedidoId) {
     const pedido = historialPedidos.find(p => p.id === pedidoId);
     if (!pedido || !pedido.items) return;
     
-    // Limpiar carrito actual
     carrito = [];
     
-    // Agregar items del historial
     for (const item of pedido.items) {
         const platillo = menuItems.find(p => p.id === item.platilloId);
         if (platillo) {
@@ -1446,7 +1498,6 @@ function renderizarMenuInmediato(filtroCategoria = null, filtroSubcategoria = nu
     document.getElementById('prevPageBtn').disabled = currentPage === 1;
     document.getElementById('nextPageBtn').disabled = currentPage === totalPages;
     
-    // Guardar última categoría
     if (filtroCategoria) {
         localStorage.setItem('saki_ultima_categoria', filtroCategoria);
     } else if (filtroCategoria === null) {
@@ -1672,7 +1723,6 @@ async function cargarMenu() {
         menuItems.sort((a, b) => a.nombre.localeCompare(b.nombre));
         await precargarStock();
         
-        // Restaurar última categoría
         const ultimaCategoria = localStorage.getItem('saki_ultima_categoria');
         if (ultimaCategoria && ultimaCategoria !== 'todos') {
             renderizarMenuInmediato(ultimaCategoria);
@@ -2762,7 +2812,6 @@ function setupEventListeners() {
     });
     
     document.getElementById('closePreviewModal').addEventListener('click', cerrarPreview);
-    document.getElementById('closePreviewModal').addEventListener('click', cerrarPreview);
     
     setupReferenceInputs();
     
@@ -2909,6 +2958,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     actualizarCarritoBadge();
     verificarPermisosAudio();
     actualizarBotonHistorial();
+    actualizarEstadoPushUI();
+    verificarNotificacionPush();
     
     const hoy = new Date().toISOString().split('T')[0];
     document.getElementById('fechaReserva').min = hoy;
