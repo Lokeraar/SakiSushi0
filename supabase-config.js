@@ -1,4 +1,4 @@
-// supabase-config.js - VERSIÓN COMPLETA CON PUSH
+// supabase-config.js - VERSIÓN FINAL CON UUID, GMT-4 Y NOTIFICACIONES PUSH
 window.SUPABASE_URL = 'https://iqwwoihiiyrtypyqzhgy.supabase.co';
 window.SUPABASE_ANON_KEY = 'sb_publishable_m4WcF4gmkj1olAj95HMLlA_4yKqPFXm';
 
@@ -127,8 +127,8 @@ window.utcToGMT4 = function(utcTimestamp) {
 // FUNCIONES DE NOTIFICACIONES PUSH
 // ============================================
 
-// Clave pública VAPID (generada con SQL)
-window.VAPID_PUBLIC_KEY = 'BFe7ZSW9FKydRNtQzBBqmMzte1cyPAtOcQvIBHgREFMCo=';
+// 🔑 CLAVE PÚBLICA VAPID GENERADA - ¡ACTUALIZADA!
+window.VAPID_PUBLIC_KEY = 'BC6oJ4E+5pGIn4icpzCBLMi6/nk+1JJenrUA41uJrAs1ELraSw5ctvRAlh8sHVldqzBXUtEwEeFKBm0/hmuM9EY=';
 
 // Convertir clave pública a Uint8Array
 function urlBase64ToUint8Array(base64String) {
@@ -473,4 +473,5 @@ console.log('   - formatearFechaGMT4:', typeof window.formatearFechaGMT4 === 'fu
 console.log('   - formatearHora12GMT4:', typeof window.formatearHora12GMT4 === 'function' ? '✅' : '❌');
 console.log('   - appCache:', window.appCache ? '✅' : '❌');
 console.log('   - VAPID Public Key:', window.VAPID_PUBLIC_KEY ? '✅' : '❌');
+console.log('   - Longitud VAPID:', window.VAPID_PUBLIC_KEY?.length || 0, 'caracteres');
 console.log('   - solicitarPermisoPush:', typeof window.solicitarPermisoPush === 'function' ? '✅' : '❌');
