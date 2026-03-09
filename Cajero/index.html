@@ -314,7 +314,6 @@
         .modal-body{padding:25px;color:var(--text-primary)}
         .modal-footer{padding:20px 25px;border-top:2px solid var(--border-color);display:flex;gap:15px}
         
-        /* Nuevos estilos para mesoneros en propinas */
         .mesoneros-list{
             display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));
             gap:12px;margin-bottom:20px;max-height:350px;overflow-y:auto;padding:5px
@@ -818,7 +817,7 @@
     <!-- MODAL DE CONFIRMACIÓN DE SESIÓN -->
     <div class="modal-overlay" id="confirmSessionModal">
         <div class="modal-content" style="max-width: 400px;">
-            <div class="modal-header">
+            <div class="modal-header" style="background:linear-gradient(135deg,var(--warning),#F57C00)">
                 <h2><i class="fas fa-exclamation-triangle"></i> Sesión Activa</h2>
                 <button class="modal-close" onclick="window.cerrarModal('confirmSessionModal')"><i class="fas fa-times"></i></button>
             </div>
@@ -1131,36 +1130,40 @@ window.verificarYControlarAlarma = function() {
 };
 
 // ============================================
-// FUNCIONES DE LOGIN CON SESIÓN ÚNICA
+// FUNCIONES DE LOGIN CON SESIÓN ÚNICA (CORREGIDAS)
 // ============================================
-window.registrarSesion = async function(userId) {
+window.registrarSesion = async function(userId, userNombre) {
     try {
+        console.log('Registrando sesión para usuario:', userId, userNombre);
+        
         // Primero verificar si hay sesiones activas para este usuario
-        const { data: sesiones } = await window.supabaseClient
+        const { data: sesiones, error: selectError } = await window.supabaseClient
             .from('sesiones_activas')
             .select('*')
             .eq('usuario_id', userId)
             .eq('activa', true);
         
+        if (selectError) throw selectError;
+        
         if (sesiones && sesiones.length > 0) {
-            // Ya hay una sesión activa, preguntar al usuario
+            // Ya hay una sesión activa, retornar la primera
             return { success: false, sesionActiva: sesiones[0] };
         }
         
         // No hay sesión activa, registrar esta
-        const { error } = await window.supabaseClient
+        const { error: insertError } = await window.supabaseClient
             .from('sesiones_activas')
             .insert([{
                 id: window.currentSessionId,
                 usuario_id: userId,
-                usuario_nombre: window.currentUser.nombre,
+                usuario_nombre: userNombre,
                 iniciada: new Date().toISOString(),
                 ultimo_acceso: new Date().toISOString(),
                 activa: true,
                 user_agent: navigator.userAgent
             }]);
         
-        if (error) throw error;
+        if (insertError) throw insertError;
         return { success: true };
         
     } catch (e) {
@@ -1183,7 +1186,20 @@ window.cerrarSesionesUsuario = async function(userId, exceptoSessionId = null) {
         
         await query;
         
-        // Notificar a otras pestañas (opcional - se maneja con Realtime)
+        // Insertar notificación para la sesión que se va a cerrar
+        if (exceptoSessionId) {
+            await window.supabaseClient
+                .from('notificaciones')
+                .insert([{
+                    tipo: 'session_closed',
+                    titulo: '🔒 Sesión cerrada',
+                    mensaje: 'Tu sesión fue cerrada porque alguien inició sesión en otro dispositivo',
+                    timestamp: new Date().toISOString(),
+                    session_id: exceptoSessionId,
+                    leida: false
+                }]);
+        }
+        
         return true;
         
     } catch (e) {
@@ -1195,33 +1211,47 @@ window.cerrarSesionesUsuario = async function(userId, exceptoSessionId = null) {
 window.forzarLogin = async function() {
     if (!window.pendingLoginData) return;
     
-    const { userId, username, password, userData } = window.pendingLoginData;
+    const { userId, userData } = window.pendingLoginData;
     
-    // Cerrar todas las sesiones anteriores de este usuario
-    await window.cerrarSesionesUsuario(userId);
+    // Mostrar loading
+    const btn = document.getElementById('forceLoginBtn');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
+    btn.disabled = true;
     
-    // Registrar nueva sesión
-    const resultado = await window.registrarSesion(userId);
-    
-    if (resultado.success) {
-        window.currentUser = userData;
-        sessionStorage.setItem('cajero_user', JSON.stringify(userData));
-        sessionStorage.setItem('cajero_session_id', window.currentSessionId);
+    try {
+        // Cerrar todas las sesiones anteriores de este usuario (excepto la actual)
+        await window.cerrarSesionesUsuario(userId, window.currentSessionId);
         
-        document.getElementById('loginContainer').classList.add('hidden');
-        document.getElementById('panelContainer').classList.remove('hidden');
-        document.getElementById('currentUserDisplay').textContent = userData.nombre;
+        // Registrar nueva sesión
+        const resultado = await window.registrarSesion(userId, userData.nombre);
         
-        window.cerrarModal('confirmSessionModal');
-        window.mostrarToast('✅ Bienvenido ' + userData.nombre, 'success');
-        
-        setTimeout(async () => {
-            await window.cargarDatosIniciales();
-            window.setupEventListeners();
-            window.setupRealtimeSubscriptions();
-        }, 500);
-    } else {
-        window.mostrarToast('❌ Error al iniciar sesión', 'error');
+        if (resultado.success) {
+            window.currentUser = userData;
+            sessionStorage.setItem('cajero_user', JSON.stringify(userData));
+            sessionStorage.setItem('cajero_session_id', window.currentSessionId);
+            
+            document.getElementById('loginContainer').classList.add('hidden');
+            document.getElementById('panelContainer').classList.remove('hidden');
+            document.getElementById('currentUserDisplay').textContent = userData.nombre;
+            
+            window.cerrarModal('confirmSessionModal');
+            window.mostrarToast('✅ Bienvenido ' + userData.nombre, 'success');
+            
+            setTimeout(async () => {
+                await window.cargarDatosIniciales();
+                window.setupEventListeners();
+                window.setupRealtimeSubscriptions();
+            }, 500);
+        } else {
+            window.mostrarToast('❌ Error al iniciar sesión: ' + (resultado.error || 'Error desconocido'), 'error');
+        }
+    } catch (e) {
+        console.error('Error en forzarLogin:', e);
+        window.mostrarToast('❌ Error al procesar la solicitud', 'error');
+    } finally {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
     }
     
     window.pendingLoginData = null;
@@ -1230,12 +1260,17 @@ window.forzarLogin = async function() {
 window.hacerLogin = async function() {
     const username = document.getElementById('username')?.value.trim();
     const password = document.getElementById('password')?.value.trim();
-    const statusDiv = document.getElementById('loginStatus');
     
     if (!username || !password) {
         window.mostrarToast('Ingresa usuario y contraseña', 'error');
         return;
     }
+    
+    // Mostrar loading
+    const loginBtn = document.querySelector('#loginForm button');
+    const originalText = loginBtn.innerHTML;
+    loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verificando...';
+    loginBtn.disabled = true;
     
     try {
         if (!window.supabaseClient) {
@@ -1259,7 +1294,7 @@ window.hacerLogin = async function() {
         }
         
         // Verificar si ya hay sesión activa
-        const resultado = await window.registrarSesion(data.id);
+        const resultado = await window.registrarSesion(data.id, data.nombre);
         
         if (resultado.success) {
             // No hay sesión activa, iniciar normalmente
@@ -1283,17 +1318,23 @@ window.hacerLogin = async function() {
             // Ya hay una sesión activa, preguntar
             window.pendingLoginData = {
                 userId: data.id,
-                username,
-                password,
                 userData: data
             };
+            
+            const sesion = resultado.sesionActiva;
+            const fechaInicio = new Date(sesion.iniciada).toLocaleString();
             
             const modalBody = document.getElementById('confirmSessionBody');
             modalBody.innerHTML = `
                 <p style="margin-bottom:15px">Ya hay una sesión activa con el usuario <strong>${data.nombre}</strong> en otro dispositivo.</p>
-                <p>Dispositivo: ${resultado.sesionActiva.user_agent || 'Desconocido'}</p>
-                <p style="margin-top:15px">¿Deseas cerrar esa sesión y continuar aquí?</p>
-                <p style="font-size:.8rem; color:var(--text-secondary); margin-top:10px">Al confirmar, el otro dispositivo recibirá una notificación y su sesión será cerrada.</p>
+                <div style="background:rgba(0,0,0,.2); padding:10px; border-radius:8px; margin-bottom:15px">
+                    <p><strong>Dispositivo:</strong> ${sesion.user_agent || 'Desconocido'}</p>
+                    <p><strong>Iniciada:</strong> ${fechaInicio}</p>
+                </div>
+                <p>¿Deseas cerrar esa sesión y continuar aquí?</p>
+                <p style="font-size:.8rem; color:var(--text-secondary); margin-top:10px">
+                    <i class="fas fa-info-circle"></i> Al confirmar, el otro dispositivo recibirá una notificación y su sesión será cerrada.
+                </p>
             `;
             
             document.getElementById('confirmSessionModal').classList.add('active');
@@ -1302,6 +1343,9 @@ window.hacerLogin = async function() {
     } catch (error) {
         console.error('Error en login:', error);
         window.mostrarToast('Error al conectar: ' + (error.message || 'Error desconocido'), 'error');
+    } finally {
+        loginBtn.innerHTML = originalText;
+        loginBtn.disabled = false;
     }
 };
 
@@ -1805,7 +1849,7 @@ window.mostrarCobro = function(pedidoId) {
     if (!window.currentPedido) return;
     
     window.enProcesoDeCobro = true;
-    window.enterPressCount = 0; // Reiniciar contador de Enter
+    window.enterPressCount = 0;
     
     if (window.alarmaActiva) {
         window.alarmaAudio.pause();
@@ -2197,7 +2241,7 @@ window.recalcularTotales = function() {
     if (esInvitacion) {
         confirmarActivo = true;
     } else if (diferencia === 0) {
-        confirmarActivo = true; // Monto exacto, habilitar sin checks
+        confirmarActivo = true;
     } else if (diferencia > 0 && condonarActivo) {
         confirmarActivo = true;
     } else if (diferencia < 0 && favorActivo) {
@@ -2210,7 +2254,6 @@ window.recalcularTotales = function() {
     
     document.getElementById('confirmCobroBtn').disabled = !confirmarActivo;
     
-    // Si es monto exacto, ocultar checks de condonar/favor si no son necesarios
     if (diferencia === 0) {
         condonarCheckbox.style.display = 'none';
         favorCheckbox.style.display = 'none';
@@ -2409,7 +2452,6 @@ window.abrirPropinaModal = async function() {
         }
     });
     
-    // Generar lista de mesoneros con acumulado
     const mesonerosList = window.mesoneros.map(m => {
         const acumulado = acumuladoMesoneros[m.id] || 0;
         return `
@@ -2650,7 +2692,6 @@ window.crearTarjetaPropina = function(propina) {
     }
 };
 
-// Sobrescribir abrirModalDetalle para propinas
 const originalAbrirModalDetalle = window.abrirModalDetalle;
 window.abrirModalDetalle = function(tipo) {
     if (tipo === 'propinas' || tipo === 'propinasDetalle') {
@@ -3522,10 +3563,8 @@ window.setupRealtimeSubscriptions = function() {
             window.actualizarEstadisticas();
         });
         
-        // Suscripción a sesiones activas para notificar cierre
         crearSuscripcion('cajero-sesiones', 'sesiones_activas', (payload) => {
             if (payload.eventType === 'UPDATE' && payload.new.activa === false && payload.new.id === window.currentSessionId) {
-                // Esta sesión fue cerrada desde otro lugar
                 window.mostrarToast('⚠️ Tu sesión fue cerrada desde otro dispositivo', 'warning');
                 setTimeout(() => window.cerrarSesion(), 2000);
             }
@@ -3552,7 +3591,6 @@ window.setupEventListeners = function() {
         }
         
         if (e.key === 'Enter') {
-            // Manejo especial para cobroModal (doble Enter)
             if (document.getElementById('cobroModal')?.classList.contains('active')) {
                 const btn = document.getElementById('confirmCobroBtn');
                 if (btn && !btn.disabled) {
@@ -3563,7 +3601,6 @@ window.setupEventListeners = function() {
                     if (window.enterPressTimer) clearTimeout(window.enterPressTimer);
                     
                     if (window.enterPressCount === 1) {
-                        // Primer Enter - mostrar indicación visual
                         btn.style.transform = 'scale(0.95)';
                         btn.style.transition = 'transform 0.2s';
                         
@@ -3573,7 +3610,6 @@ window.setupEventListeners = function() {
                         }, 500);
                         
                     } else if (window.enterPressCount >= 2) {
-                        // Segundo Enter - confirmar
                         btn.style.transform = '';
                         window.enterPressCount = 0;
                         if (window.enterPressTimer) clearTimeout(window.enterPressTimer);
@@ -3582,7 +3618,6 @@ window.setupEventListeners = function() {
                 }
             }
             
-            // Para otros modales, mantener Enter simple
             if (document.getElementById('confirmModal')?.classList.contains('active')) {
                 const btn = document.getElementById('confirmActionBtn');
                 if (btn && !btn.disabled) {
@@ -3641,7 +3676,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             window.currentUser = JSON.parse(usuarioGuardado);
             window.currentSessionId = sessionIdGuardado;
             
-            // Verificar que la sesión sigue activa en la BD
             const { data } = await window.supabaseClient
                 .from('sesiones_activas')
                 .select('*')
@@ -3654,7 +3688,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 window.mostrarPanel();
                 document.getElementById('currentUserDisplay').textContent = window.currentUser.nombre;
             } else {
-                // Sesión expirada o cerrada
                 sessionStorage.removeItem('cajero_user');
                 sessionStorage.removeItem('cajero_session_id');
                 window.mostrarLogin();
