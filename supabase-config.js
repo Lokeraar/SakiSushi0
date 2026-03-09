@@ -1,6 +1,6 @@
-// supabase-config.js - VERSIÓN FINAL COMPLETA
+// supabase-config.js - VERSIÓN CORREGIDA
 window.SUPABASE_URL = 'https://iqwwoihiiyrtypyqzhgy.supabase.co';
-window.SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlxd3dvaWhpaXlydHlweXF6aGd5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE0NTcwNDksImV4cCI6MjA4NzAzMzA0OX0.4uUpfAtc1PimH_cHmLuf5c3_cF-3udFZ5W_VLm-0p3g';
+window.SUPABASE_ANON_KEY = 'sb_publishable_m4WcF4gmkj1olAj95HMLlA_4yKqPFXm';
 
 if (!window.supabaseClient) {
     window.supabaseClient = window.supabase.createClient(
