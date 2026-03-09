@@ -6,7 +6,7 @@
     <title>🍣 Saki Sushi - Menú Cliente</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Roboto:wght@300;400;500&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Roboto:wght@300;400;500;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
@@ -24,7 +24,8 @@
             --propina:#9C27B0;
             --delivery:#00ACC1;
             --text-light:#ffffff;
-            --text-dark:#333333;
+            --text-dark:#1e1e2e;
+            --text-muted:#4a4a5e;
             --gray-100:#f8f9fa;
             --gray-200:#e9ecef;
             --gray-300:#dee2e6;
@@ -53,32 +54,79 @@
             --text-secondary:var(--gray-400);
         }
         
-        /* MODO CLARO */
+        /* MODO CLARO - CON MEJOR CONTRASTE */
         body.tema-claro {
-            --bg-overlay:rgba(255,255,255,0.9);
-            --card-bg:rgba(0,0,0,.03);
-            --text-primary:#333;
-            --text-secondary:#666;
-            --nivel3-bg:#f8f9fa;
-            --nivel3-border:#dee2e6;
+            --bg-overlay:rgba(255,255,255,0.92);
+            --card-bg:rgba(255,255,255,0.7);
+            --text-primary:#1a1a2e;
+            --text-secondary:#2d2d44;
+            --nivel3-bg:#ffffff;
+            --nivel3-border:#d1d1e0;
             background-image:url('https://userscontent2.emaze.com/images/28851f51-ec90-466c-ad3a-51e653c9f058/c862bd8c3df982859d9f75ed46af72e1.jpg');
         }
-        body.tema-claro .menu-card-title,
+        body.tema-claro .menu-card {
+            border:1px solid rgba(0,0,0,0.1);
+            background: rgba(255,255,255,0.85);
+            backdrop-filter: blur(8px);
+        }
+        body.tema-claro .menu-card-title {
+            color: #1a1a2e;
+            font-weight: 700;
+            text-shadow: none;
+        }
+        body.tema-claro .menu-card-description {
+            color: #2d2d44;
+            font-weight: 500;
+        }
+        body.tema-claro .menu-card-price {
+            color: var(--primary);
+            font-weight: 700;
+        }
         body.tema-claro .category-title h2,
         body.tema-claro .section-title,
         body.tema-claro .cart-header h3,
-        body.tema-claro .cart-total span,
-        body.tema-claro .notification-title {
-            color: var(--text-dark);
+        body.tema-claro .cart-total span {
+            color: #1a1a2e;
+            font-weight: 700;
         }
-        body.tema-claro .menu-card-description,
-        body.tema-claro .stock-info,
+        body.tema-claro .stock-info {
+            color: #2d2d44;
+            font-weight: 500;
+        }
+        body.tema-claro .cart-items {
+            color: #1a1a2e;
+        }
         body.tema-claro .item-info .item-name {
-            color: var(--text-secondary);
+            color: #1a1a2e;
+            font-weight: 600;
+        }
+        body.tema-claro .item-info .personalizacion {
+            color: #4a4a5e;
+        }
+        body.tema-claro .item-precio {
+            color: var(--primary);
+            font-weight: 700;
         }
         body.tema-claro .footer {
             background: var(--gray-200);
-            color: var(--text-dark);
+            color: #1a1a2e;
+        }
+        body.tema-claro .footer-section h4 {
+            color: var(--primary);
+        }
+        body.tema-claro .footer-section p,
+        body.tema-claro .footer-section a {
+            color: #2d2d44;
+        }
+        body.tema-claro .notification-title {
+            color: #1a1a2e;
+        }
+        body.tema-claro .notification-message {
+            color: #2d2d44;
+        }
+        body.tema-claro .toast {
+            background: #1a1a2e;
+            color: white;
         }
         
         body{font-family:'Roboto',sans-serif;background-image:url('https://userscontent2.emaze.com/images/28851f51-ec90-466c-ad3a-51e653c9f058/c862bd8c3df982859d9f75ed46af72e1.jpg');background-size:cover;background-attachment:fixed;background-position:center;color:var(--text-primary);min-height:100vh;display:flex;flex-direction:column}
@@ -98,7 +146,7 @@
         .logo-area{display:flex;align-items:center;gap:1rem;cursor:pointer;flex:1;justify-content:center;flex-wrap:wrap}
         .logo{width:70px;height:70px;border-radius:14px;box-shadow:var(--shadow-md);transform:rotate(-5deg);transition:transform .3s;object-fit:cover}
         .logo:hover{transform:rotate(0) scale(1.05)}
-        .logo-area h1{font-size:2rem;font-weight:800;letter-spacing:.5px;white-space:nowrap;cursor:pointer;line-height:1.2}
+        .logo-area h1{font-size:2rem;font-weight:800;letter-spacing:.5px;white-space:nowrap;cursor:pointer;line-height:1.2;color:white}
         .header-slogan{font-family:'Playfair Display',serif;font-style:italic;font-size:1.1rem;color:var(--accent);margin-left:.5rem;white-space:nowrap;border-left:2px solid rgba(255,255,255,.3);padding-left:1rem}
         @media (max-width:992px){.logo{width:60px;height:60px}.logo-area h1{font-size:1.6rem}.header-slogan{font-size:1rem}}
         @media (max-width:768px){.logo-area{flex-direction:column;gap:.3rem}.logo-area h1{font-size:1.4rem;white-space:normal}.header-slogan{font-size:.9rem;border-left:none;padding-left:0;width:100%;text-align:center}}
@@ -121,7 +169,8 @@
         .main-layout{display:flex;flex:1;position:relative;background:transparent;overflow:hidden}
         #sidebarContainer{position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none;z-index:900}
         .category-sidebar{width:280px;background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%);border-right:1px solid rgba(255,255,255,.1);overflow-y:auto;transition:transform .3s ease;box-shadow:2px 0 8px rgba(0,0,0,.5);position:absolute;left:0;top:0;bottom:0;display:flex;flex-direction:column;backdrop-filter:blur(10px);pointer-events:auto;height:100%}
-        body.tema-claro .category-sidebar{background:linear-gradient(135deg,#f5f5f5 0%,#e0e0e0 100%);border-right:1px solid rgba(0,0,0,.1)}
+        body.tema-claro .category-sidebar{background:linear-gradient(135deg,#f0f0f5 0%,#e0e0e8 100%);border-right:1px solid rgba(0,0,0,.1)}
+        body.tema-claro .category-sidebar .category-item{color:#1a1a2e}
         @media (max-width:992px){.category-sidebar{transform:translateX(-100%)}.category-sidebar.open{transform:translateX(0);box-shadow:var(--shadow-lg)}}
         @media (min-width:993px){.category-sidebar{transform:translateX(0)!important}}
         .category-header{padding:1rem 1.5rem;display:flex;align-items:center;justify-content:space-between;color:var(--gray-300);font-weight:600;font-size:1.1rem;background:rgba(0,0,0,.2);border-bottom:1px solid rgba(255,255,255,.1);flex-shrink:0}
@@ -146,7 +195,9 @@
         .subcategory-item.active{color:var(--accent);font-weight:500}
         .subcategory-item.active::before{content:'•';position:absolute;left:2.5rem;color:var(--accent);font-weight:700}
         .cart-sidebar{width:320px;background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%);border-left:1px solid rgba(255,255,255,.1);display:flex;flex-direction:column;transition:transform .3s ease;position:absolute;right:0;top:0;bottom:0;box-shadow:-2px 0 8px rgba(0,0,0,.5);backdrop-filter:blur(10px);pointer-events:auto;height:100%}
-        body.tema-claro .cart-sidebar{background:linear-gradient(135deg,#f5f5f5 0%,#e0e0e0 100%);border-left:1px solid rgba(0,0,0,.1)}
+        body.tema-claro .cart-sidebar{background:linear-gradient(135deg,#f0f0f5 0%,#e0e0e8 100%);border-left:1px solid rgba(0,0,0,.1)}
+        body.tema-claro .cart-sidebar .cart-header h3{color:#1a1a2e}
+        body.tema-claro .cart-sidebar .cart-total span{color:#1a1a2e}
         @media (max-width:992px){.cart-sidebar{transform:translateX(100%)}.cart-sidebar.open{transform:translateX(0);box-shadow:var(--shadow-lg)}}
         @media (min-width:993px){.cart-sidebar{transform:translateX(0)!important}}
         .cart-header{padding:1rem 1.2rem;border-bottom:1px solid rgba(255,255,255,.1);display:flex;align-items:center;justify-content:space-between;background:rgba(0,0,0,.2);flex-shrink:0}
@@ -274,7 +325,9 @@
         .stock-info i.sold-out{color:var(--danger)}
         .notifications-wrapper{position:relative;display:inline-block}
         .notifications-panel{position:fixed;top:100px;right:20px;width:320px;background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%);border-radius:var(--radius-md);box-shadow:var(--shadow-lg);display:none;max-height:calc(100vh - 120px);overflow-y:auto;z-index:1001;border:1px solid rgba(255,255,255,.1);backdrop-filter:blur(10px)}
-        body.tema-claro .notifications-panel{background:linear-gradient(135deg,#f5f5f5 0%,#e0e0e0 100%)}
+        body.tema-claro .notifications-panel{background:linear-gradient(135deg,#f0f0f5 0%,#e0e0e8 100%);color:#1a1a2e}
+        body.tema-claro .notification-title{color:#1a1a2e}
+        body.tema-claro .notification-message{color:#2d2d44}
         @media (max-width:480px){.notifications-panel{width:280px;right:10px}}
         .notifications-panel.active{display:block}
         .notifications-header{padding:1rem;border-bottom:1px solid rgba(255,255,255,.1);display:flex;align-items:center;justify-content:space-between;background:rgba(0,0,0,.2);border-radius:var(--radius-md) var(--radius-md) 0 0;position:sticky;top:0;z-index:10}
@@ -296,7 +349,7 @@
         .modal-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.8);z-index:2000;align-items:center;justify-content:center;backdrop-filter:blur(5px)}
         .modal-overlay.active{display:flex}
         .modal-container{background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%);border-radius:var(--radius-lg);max-width:500px;width:95%;max-height:90vh;overflow-y:auto;position:relative;animation:modalSlideIn .3s ease;box-shadow:var(--shadow-lg);border:1px solid rgba(255,255,255,.1)}
-        body.tema-claro .modal-container{background:linear-gradient(135deg,#f5f5f5 0%,#e0e0e0 100%)}
+        body.tema-claro .modal-container{background:linear-gradient(135deg,#f0f0f5 0%,#e0e0e8 100%);color:#1a1a2e}
         @media (max-width:480px){.modal-container{width:100%;max-height:100vh;border-radius:0}}
         @keyframes modalSlideIn{from{opacity:0;transform:translateY(-30px)}to{opacity:1;transform:translateY(0)}}
         .modal-header{padding:1.2rem;border-bottom:1px solid rgba(255,255,255,.1);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:rgba(0,0,0,.2);z-index:10;border-radius:var(--radius-lg) var(--radius-lg) 0 0}
@@ -833,9 +886,10 @@ if (!sessionId || !sessionId.includes('-')) {
 }
 
 let menuItems = [], inventario = [], carrito = [], notificaciones = [], notificacionesCache = [], notificacionesNoLeidas = 0;
+let notificacionesCompletas = [], ultimaActualizacion = Date.now(), paginaVisible = true, intervaloNotificaciones = null;
 let currentCustomizeItem = null, mesaId = null, nivel1Activo = null, nivel2Activo = null;
 let timersActivos = {}, intervalosTimer = {};
-let scrollRafId = null, ultimaPosicionFlechas = 0;
+let scrollRafId = null, ultimaPosicionFlechas = 0, scrollTimeout = null;
 let favoritos = JSON.parse(localStorage.getItem('saki_favoritos') || '[]');
 let historialPedidos = JSON.parse(localStorage.getItem('saki_historial') || '[]');
 let reconocimientoVoz = null;
@@ -1706,7 +1760,7 @@ function scrollAlItemAgregado(itemId) {
 }
 
 // ============================================
-// FUNCIONES DE NOTIFICACIONES
+// FUNCIONES DE NOTIFICACIONES (POLLING CADA 2 SEGUNDOS)
 // ============================================
 function reproducirAlertaNotificacion() {
     const audio = document.getElementById('notificationSound');
@@ -1750,10 +1804,51 @@ async function recargarNotificacionesCompletas() {
         const { data, error } = await window.supabaseClient.from('notificaciones').select('*').eq('session_id', sessionId).order('timestamp', { ascending: false });
         if (error) throw error;
         notificaciones = data || [];
+        notificacionesCompletas = data || [];
         notificacionesNoLeidas = notificaciones.filter(n => !n.leida).length;
         notificacionesCache = notificaciones.map(n => ({ id: n.id, leida: n.leida, timestamp: n.timestamp }));
         actualizarNotificacionesUI();
     } catch (error) { console.error('Error recargando notificaciones:', error); }
+}
+
+async function verificarNotificaciones() {
+    if (!paginaVisible) return;
+    console.log('🔍 Verificando notificaciones para session_id:', sessionId);
+    try {
+        const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
+        const manana = new Date(hoy); manana.setDate(manana.getDate() + 1);
+        const { data, error } = await window.supabaseClient
+            .from('notificaciones')
+            .select('id, leida, timestamp')
+            .eq('session_id', sessionId)
+            .gte('timestamp', hoy.toISOString())
+            .lt('timestamp', manana.toISOString())
+            .order('timestamp', { ascending: false });
+        if (error) throw error;
+        let hayCambios = false;
+        if (data.length !== notificacionesCache.length) { hayCambios = true; }
+        else {
+            const mapaCache = new Map(notificacionesCache.map(n => [n.id, n.leida]));
+            for (const n of data) {
+                if (mapaCache.get(n.id) !== n.leida) { hayCambios = true; break; }
+            }
+        }
+        if (hayCambios) {
+            console.log('🔔 ¡CAMBIOS DETECTADOS! Recargando notificaciones...');
+            const notificacionesNuevas = data.filter(n => !notificacionesCache.some(c => c.id === n.id));
+            await recargarNotificacionesCompletas();
+            notificacionesNuevas.forEach(n => { if (!n.leida) reproducirAlertaNotificacion(); });
+            ultimaActualizacion = Date.now();
+        }
+    } catch (error) { console.error('❌ Error en verificarNotificaciones:', error); }
+}
+
+function iniciarVerificacionPeriodica() {
+    if (intervaloNotificaciones) clearInterval(intervaloNotificaciones);
+    intervaloNotificaciones = setInterval(async() => {
+        if (paginaVisible) await verificarNotificaciones();
+    }, 2000);
+    console.log('⏱️ Polling de notificaciones iniciado (cada 2s)');
 }
 
 async function marcarTodasComoLeidas() {
@@ -2475,6 +2570,28 @@ function restaurarDatosFormulario() {
     }
 }
 
+function generarId(prefix = '') {
+    return window.crypto?.randomUUID ? prefix + crypto.randomUUID() : prefix + Date.now() + '_' + Math.random().toString(36).substring(2, 9);
+}
+
+function formatBs(monto) {
+    try {
+        const valor = Math.round((monto || 0) * 100) / 100;
+        let [entero, decimal] = valor.toFixed(2).split('.');
+        entero = entero.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+        return `Bs ${entero},${decimal}`;
+    } catch (e) {
+        return 'Bs ' + (monto || 0).toFixed(2);
+    }
+}
+
+function usdToBs(usd) {
+    return usd * (configGlobal?.tasa_efectiva || 400);
+}
+
+// ============================================
+// INICIALIZACIÓN
+// ============================================
 document.addEventListener('DOMContentLoaded', async () => {
     console.log('1️⃣ Inicializando cliente...');
     console.log('⏰ Zona horaria configurada: GMT-4');
@@ -2500,14 +2617,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     await recargarNotificacionesCompletas();
     console.log('7️⃣ Notificaciones cargadas');
     
-    // Auto-solicitar permisos push
+    // Auto-solicitar permisos push (sin botón visible)
     solicitarPermisoPushAuto();
     
+    // Iniciar polling de notificaciones
+    iniciarVerificacionPeriodica();
+    console.log('8️⃣ Polling de notificaciones iniciado');
+    
     setupEventListeners();
-    console.log('8️⃣ Event listeners configurados');
+    console.log('9️⃣ Event listeners configurados');
     
     restaurarCarrito();
-    console.log('9️⃣ Carrito restaurado');
+    console.log('🔟 Carrito restaurado');
     
     actualizarCarritoUI();
     actualizarCarritoBadge();
@@ -2540,6 +2661,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 window.addEventListener('beforeunload', () => {
+    if (intervaloNotificaciones) clearInterval(intervaloNotificaciones);
     Object.values(intervalosTimer).forEach(clearInterval);
     detenerSeguimientoScroll();
     if (scrollTimeout) clearTimeout(scrollTimeout);
@@ -2551,6 +2673,7 @@ window.addEventListener('visibilitychange', function() {
         detenerSeguimientoScroll();
     } else {
         paginaVisible = true;
+        verificarNotificaciones();
         if (carrito.length > 0 && document.getElementById('cartSidebar').classList.contains('open')) iniciarSeguimientoScroll();
     }
 });
