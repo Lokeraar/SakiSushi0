@@ -8,7 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* ... (estilos existentes, sin cambios) ... */
+        /* ... (ESTILOS EXISTENTES - SIN CAMBIOS) ... */
         :root {
             --primary: #D32F2F;
             --secondary: #212121;
@@ -816,13 +816,13 @@
             gap: 15px;
         }
         
-        /* Estilos para la lista de mesoneros */
+        /* NUEVO: Estilos para la lista de mesoneros en el modal de propinas */
         .mesoneros-list {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
             gap: 10px;
             margin-bottom: 20px;
-            max-height: 300px;
+            max-height: 400px;
             overflow-y: auto;
             padding: 5px;
         }
@@ -862,13 +862,14 @@
             font-size: 0.85rem;
             color: var(--accent);
             font-weight: 600;
-            background: rgba(0,0,0,0.3);
-            padding: 4px 8px;
+            background: rgba(255, 152, 0, 0.2);
+            padding: 3px 8px;
             border-radius: 20px;
-            width: 100%;
+            width: fit-content;
+            margin-top: 5px;
         }
         
-        /* Estilos para el formulario de propina */
+        /* NUEVO: Estilos para el formulario de propina dentro del modal */
         .propina-form-container {
             background: rgba(0,0,0,.2);
             border-radius: 12px;
@@ -1454,10 +1455,6 @@
             color: var(--info);
         }
         
-        .toast.warning i {
-            color: var(--warning);
-        }
-        
         .loading-spinner {
             display: inline-block;
             width: 30px;
@@ -1787,8 +1784,8 @@
         <div class="login-box">
             <h2><i class="fas fa-cash-register"></i> Cajero Saki Sushi</h2>
             <form class="login-form" id="loginForm" onsubmit="event.preventDefault(); window.hacerLogin()">
-                <input type="text" id="username" placeholder="Usuario" autocomplete="off">
-                <input type="password" id="password" placeholder="Contraseña" autocomplete="off">
+                <input type="text" id="username" placeholder="Usuario">
+                <input type="password" id="password" placeholder="Contraseña">
                 <button type="submit">Iniciar Sesión</button>
             </form>
         </div>
@@ -1856,7 +1853,7 @@
                         <span class="stat-value" id="statPlatillos">0</span>
                         <span class="stat-label">Platillos Vend.</span>
                     </button>
-                    <button class="stat-button cuatro" onclick="window.abrirPropinaModal()" data-tooltip="Propinas del día">
+                    <button class="stat-button cuatro" onclick="window.abrirModalDetalle('propinas')" data-tooltip="Propinas del día">
                         <span class="stat-icon propinas"><i class="fas fa-hand-holding-heart"></i></span>
                         <span class="stat-value" id="statPropinas">Bs 0</span>
                         <span class="stat-label">Propinas Hoy</span>
@@ -2027,9 +2024,9 @@
         </div>
     </div>
     
-    <!-- NUEVO MODAL DE PROPINA -->
+    <!-- NUEVO MODAL DE PROPINA (interactivo) -->
     <div class="modal-overlay" id="propinaModal">
-        <div class="modal-content" style="max-width: 550px;">
+        <div class="modal-content" style="max-width: 600px;">
             <div class="modal-header propina">
                 <h2><i class="fas fa-hand-holding-heart"></i> Registrar Propina</h2>
                 <button class="modal-close" onclick="window.cerrarModal('propinaModal')" data-tooltip="Cerrar (ESC)"><i class="fas fa-times"></i></button>
@@ -2176,6 +2173,7 @@ window.pedidoParaAccion = null;
 window.accionPendiente = null;
 window.pagosMixtos = [];
 window.tasaEfectiva = 400;
+window.currentPropinaPedido = null;
 window.mesoneros = [];
 window.deliverys = [];
 window.alarmaAudio = document.getElementById('alarmaSonido');
@@ -2187,13 +2185,13 @@ window.reconectando = false;
 window.intervaloVerificacion = null;
 window.ultimaActualizacion = Date.now();
 
-// Variables para doble confirmación de Enter
-window.cobroEnterCount = 0;
-window.cobroEnterTimeout = null;
-
 // Variables para el nuevo sistema de propinas
 window.propinaSeleccionada = { mesonero: null, metodo: 'efectivo_bs', monto: 0, referencia: '' };
 window.referenciaPropina = ['', '', '', '', '', ''];
+
+// Variables para control de Enter doble en cobro
+window.enterCount = 0;
+window.enterTimeout = null;
 
 // Cache de stock
 window.stockCache = {
@@ -2252,7 +2250,7 @@ function actualizarTooltips() {
 // ============================================
 // FUNCIONES DE UTILIDAD
 // ============================================
-window.mostrarToast = function(mensaje, tipo = 'success') {
+window.mostrarToast = function(mensaje, tipo = 'success', duracion = 3000) {
     try {
         const toast = document.getElementById('toast');
         const toastText = document.getElementById('toastText');
@@ -2263,17 +2261,14 @@ window.mostrarToast = function(mensaje, tipo = 'success') {
             if (tipo === 'error') {
                 icon.style.color = 'var(--danger)';
                 toast.style.borderLeftColor = 'var(--danger)';
-            } else if (tipo === 'warning') {
-                icon.style.color = 'var(--warning)';
-                toast.style.borderLeftColor = 'var(--warning)';
-            } else if (tipo === 'info') {
-                icon.style.color = 'var(--info)';
-                toast.style.borderLeftColor = 'var(--info)';
-            } else {
+            } else if (tipo === 'success') {
                 icon.style.color = 'var(--success)';
                 toast.style.borderLeftColor = 'var(--success)';
+            } else {
+                icon.style.color = 'var(--info)';
+                toast.style.borderLeftColor = 'var(--info)';
             }
-            setTimeout(() => toast.classList.remove('show'), 3000);
+            setTimeout(() => toast.classList.remove('show'), duracion);
         } else {
             alert(mensaje);
         }
@@ -2318,12 +2313,13 @@ window.cerrarModal = function(modalId) {
         window.accionPendiente = null;
     }
     if (modalId === 'propinaModal') {
+        // Reiniciar datos de propina al cerrar
         window.propinaSeleccionada = { mesonero: null, metodo: 'efectivo_bs', monto: 0, referencia: '' };
         window.referenciaPropina = ['', '', '', '', '', ''];
     }
     if (modalId === 'cobroModal') {
-        window.cobroEnterCount = 0;
-        if (window.cobroEnterTimeout) clearTimeout(window.cobroEnterTimeout);
+        window.enterCount = 0;
+        if (window.enterTimeout) clearTimeout(window.enterTimeout);
     }
 };
 
@@ -2367,23 +2363,79 @@ window.verificarYControlarAlarma = function() {
 // ============================================
 // FUNCIONES DE LOGIN (MEJORADAS)
 // ============================================
+window.verificarSesionActiva = async function(username) {
+    try {
+        // Verificar si ya hay una sesión activa para este usuario
+        const { data, error } = await window.supabaseClient
+            .from('sesiones_activas')
+            .select('*')
+            .eq('username', username)
+            .eq('activa', true)
+            .maybeSingle();
+            
+        if (error && error.code !== 'PGRST116') throw error;
+        
+        return data ? true : false;
+    } catch (e) {
+        console.error('Error verificando sesión activa:', e);
+        return false;
+    }
+};
+
+window.registrarSesionActiva = async function(username, sessionId) {
+    try {
+        // Insertar o actualizar sesión activa
+        const { error } = await window.supabaseClient
+            .from('sesiones_activas')
+            .upsert({
+                username: username,
+                session_id: sessionId,
+                activa: true,
+                ultimo_acceso: new Date().toISOString()
+            }, { onConflict: 'username' });
+            
+        if (error) throw error;
+    } catch (e) {
+        console.error('Error registrando sesión activa:', e);
+    }
+};
+
+window.cerrarSesionActiva = async function(username) {
+    try {
+        const { error } = await window.supabaseClient
+            .from('sesiones_activas')
+            .update({ activa: false })
+            .eq('username', username);
+            
+        if (error) throw error;
+    } catch (e) {
+        console.error('Error cerrando sesión activa:', e);
+    }
+};
+
 window.hacerLogin = async function() {
-    const username = document.getElementById('username')?.value.trim();
-    const password = document.getElementById('password')?.value.trim();
+    const username = document.getElementById('username')?.value;
+    const password = document.getElementById('password')?.value;
     
     if (!username || !password) {
-        window.mostrarToast('Ingresa usuario y contraseña', 'error');
+        window.mostrarToast('⚠️ Ingresa usuario y contraseña', 'error');
         return;
     }
     
     try {
         if (!window.supabaseClient) {
-            window.mostrarToast('Error: Cliente Supabase no inicializado', 'error');
+            window.mostrarToast('❌ Error: Cliente Supabase no inicializado', 'error');
             return;
         }
         
-        // 1. Verificar credenciales
-        const { data: user, error } = await window.supabaseClient
+        // Verificar si ya hay una sesión activa
+        const sesionActiva = await window.verificarSesionActiva(username);
+        if (sesionActiva) {
+            window.mostrarToast('⚠️ Este usuario ya tiene una sesión activa en otro dispositivo', 'error', 4000);
+            return;
+        }
+        
+        const { data, error } = await window.supabaseClient
             .from('usuarios')
             .select('*')
             .eq('username', username)
@@ -2392,34 +2444,21 @@ window.hacerLogin = async function() {
             .maybeSingle();
         
         if (error) throw error;
-        if (!user) {
-            window.mostrarToast('Usuario o contraseña incorrectos', 'error');
+        if (!data) {
+            window.mostrarToast('❌ Usuario o contraseña incorrectos', 'error');
             return;
         }
         
-        // 2. Verificar sesión única (usando función RPC que debe crearse en la BD)
-        // Si la función no existe, se omite la verificación
-        try {
-            const { data: sessionCheck, error: sessionError } = await window.supabaseClient
-                .rpc('verificar_sesion_cajero', { 
-                    p_usuario_id: user.id,
-                    p_dispositivo_id: generarId('dev_')
-                });
-            
-            if (sessionError) throw sessionError;
-            
-            if (!sessionCheck?.success) {
-                window.mostrarToast('⚠️ Este usuario ya tiene una sesión activa en otro dispositivo', 'error');
-                return;
-            }
-        } catch (e) {
-            console.warn('No se pudo verificar sesión única (función RPC no existe?)', e);
-            // Continuar de todas formas si la función no existe
-        }
+        window.currentUser = data;
         
-        window.currentUser = user;
-        sessionStorage.setItem('cajero_user', JSON.stringify(user));
-        window.mostrarToast('✅ Bienvenido ' + user.nombre, 'success');
+        // Registrar sesión activa
+        const sessionId = 'cajero_' + Date.now() + '_' + Math.random().toString(36).substring(2, 15);
+        await window.registrarSesionActiva(username, sessionId);
+        
+        sessionStorage.setItem('cajero_user', JSON.stringify(data));
+        sessionStorage.setItem('cajero_session_id', sessionId);
+        
+        window.mostrarToast(`✅ Bienvenido ${data.nombre}`, 'success');
         
         setTimeout(async () => {
             try {
@@ -2427,14 +2466,14 @@ window.hacerLogin = async function() {
                 window.mostrarPanel();
             } catch (e) {
                 console.error('Error cargando datos:', e);
-                window.mostrarToast('Error cargando datos: ' + e.message, 'error');
+                window.mostrarToast('⚠️ Error cargando datos: ' + e.message, 'error');
                 window.mostrarPanel();
             }
         }, 500);
         
     } catch (error) {
         console.error('Error en login:', error);
-        window.mostrarToast('Error al conectar: ' + (error.message || 'Error desconocido'), 'error');
+        window.mostrarToast('❌ Error al conectar: ' + (error.message || 'Error desconocido'), 'error');
     }
 };
 
@@ -2447,22 +2486,15 @@ window.mostrarPanel = function() {
 };
 
 window.cerrarSesion = async function() {
-    // Limpiar sesión activa en BD si es posible
     if (window.currentUser) {
-        try {
-            await window.supabaseClient
-                .from('sesiones_activas')
-                .delete()
-                .eq('usuario_id', window.currentUser.id);
-        } catch (e) {
-            console.warn('No se pudo limpiar sesión activa', e);
-        }
+        await window.cerrarSesionActiva(window.currentUser.username);
     }
-    
     sessionStorage.removeItem('cajero_user');
+    sessionStorage.removeItem('cajero_session_id');
     window.currentUser = null;
     window.detenerAlarma();
     window.mostrarLogin();
+    window.mostrarToast('👋 Sesión cerrada', 'info');
 };
 
 window.showSection = function(section) {
@@ -2755,6 +2787,32 @@ window.obtenerAcumuladoDeliverysHoy = async function() {
     }
 };
 
+window.obtenerAcumuladoPropinasMesoneros = async function() {
+    try {
+        const hoy = new Date();
+        hoy.setHours(0, 0, 0, 0);
+        const manana = new Date(hoy);
+        manana.setDate(manana.getDate() + 1);
+        
+        const { data, error } = await window.supabaseClient
+            .from('propinas')
+            .select('mesonero_id, monto_bs')
+            .gte('fecha', hoy.toISOString())
+            .lt('fecha', manana.toISOString());
+        
+        if (error) throw error;
+        
+        const acumulado = {};
+        (data || []).forEach(p => {
+            acumulado[p.mesonero_id] = (acumulado[p.mesonero_id] || 0) + (p.monto_bs || 0);
+        });
+        return acumulado;
+    } catch (e) {
+        console.error('Error obteniendo acumulado propinas:', e);
+        return {};
+    }
+};
+
 window.abrirModalDeliverys = async function() {
     try {
         const acumulado = await window.obtenerAcumuladoDeliverysHoy();
@@ -2931,15 +2989,15 @@ window.crearTarjetaPedidoCompacta = function(pedido, tipo) {
 };
 
 // ============================================
-// FUNCIONES DE COBRO (MEJORADAS)
+// FUNCIONES DE COBRO (MEJORADAS CON DOBLE ENTER)
 // ============================================
 window.mostrarCobro = function(pedidoId) {
     window.currentPedido = (window.pedidos || []).find(p => p.id === pedidoId);
     if (!window.currentPedido) return;
     
     window.enProcesoDeCobro = true;
-    window.cobroEnterCount = 0;
-    if (window.cobroEnterTimeout) clearTimeout(window.cobroEnterTimeout);
+    window.enterCount = 0;
+    if (window.enterTimeout) clearTimeout(window.enterTimeout);
     
     if (window.alarmaActiva) {
         window.alarmaAudio.pause();
@@ -3009,7 +3067,7 @@ window.mostrarCobro = function(pedidoId) {
                 <i class="fas fa-plus"></i> Agregar Método de Pago
             </button>
             <div id="extrasSection">
-                <div class="pagos-resumen-row" id="vueltoRow">
+                <div class="pagos-resumen-row" id="vueltoRow" style="display:none;">
                     <div class="input-group">
                         <label>Vuelto a entregar (Bs)</label>
                         <input type="text" id="vueltoInput" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,'');window.calcularConVuelto()">
@@ -3019,11 +3077,11 @@ window.mostrarCobro = function(pedidoId) {
                         <span id="vueltoRestante">Bs 0.00</span>
                     </div>
                 </div>
-                <div class="pagos-checkbox" id="condonarCheckbox">
+                <div class="pagos-checkbox" id="condonarCheckbox" style="display:none;">
                     <input type="checkbox" id="condonarCheck">
                     <label><strong>Condonar monto restante</strong> <span class="badge" id="condonarMonto">Bs 0.00</span></label>
                 </div>
-                <div class="pagos-checkbox" id="favorCheckbox">
+                <div class="pagos-checkbox" id="favorCheckbox" style="display:none;">
                     <input type="checkbox" id="favorCheck">
                     <label><strong>A favor de caja</strong> <span class="badge favor" id="favorMonto">Bs 0.00</span></label>
                 </div>
@@ -3041,11 +3099,11 @@ window.mostrarCobro = function(pedidoId) {
                     <span>Sobrante:</span>
                     <span id="sobrante" style="color:var(--success)">Bs 0.00</span>
                 </div>
-                <div class="pagos-resumen" id="condonadoDisplay">
+                <div class="pagos-resumen" id="condonadoDisplay" style="display:none;">
                     <span>Condonado:</span>
                     <span id="condonadoValue" style="color:var(--condonar)">Bs 0.00</span>
                 </div>
-                <div class="pagos-resumen" id="favorDisplay">
+                <div class="pagos-resumen" id="favorDisplay" style="display:none;">
                     <span>A favor caja:</span>
                     <span id="favorValue" style="color:var(--favordecaja)">Bs 0.00</span>
                 </div>
@@ -3307,13 +3365,21 @@ window.recalcularTotales = function() {
         montoPendiente = 0;
     }
     
-    // Determinar si mostrar los checks
-    const mostrarCondonar = diferencia > 0 || (diferencia < 0 && montoPendiente > 0);
-    const mostrarFavor = diferencia < 0 && (montoSobrante > 0 || montoPendiente > 0);
-    const pagoExacto = Math.abs(diferencia) < 0.01; // Si la diferencia es prácticamente cero
+    // Mostrar/ocultar checkboxes según corresponda
+    let mostrarCondonar = diferencia > 0 || (diferencia < 0 && montoPendiente > 0);
+    let mostrarFavor = diferencia < 0;
     
     condonarCheckbox.style.display = mostrarCondonar ? 'flex' : 'none';
     favorCheckbox.style.display = mostrarFavor ? 'flex' : 'none';
+    
+    // Si los pagos cubren exactamente el total, ocultar todos los checkboxes y habilitar confirmar
+    const pagoExacto = Math.abs(diferencia) < 0.01; // Tolerancia para errores de punto flotante
+    
+    if (pagoExacto && !invitacionCheck?.checked) {
+        condonarCheckbox.style.display = 'none';
+        favorCheckbox.style.display = 'none';
+        vueltoRow.style.display = 'none';
+    }
     
     condonarMontoSpan.textContent = window.formatBs(montoCondonar);
     favorMontoSpan.textContent = window.formatBs(montoFavor);
@@ -3332,8 +3398,7 @@ window.recalcularTotales = function() {
     
     if (esInvitacion) {
         confirmarActivo = true;
-    } else if (pagoExacto && totalRecibidoBs > 0) {
-        // Pago exacto sin necesidad de checks
+    } else if (pagoExacto) {
         confirmarActivo = true;
     } else if (diferencia > 0 && condonarActivo) {
         confirmarActivo = true;
@@ -3355,23 +3420,7 @@ window.calcularConVuelto = function() {
 window.confirmarCobro = async function() {
     if (!window.currentPedido) return;
     
-    // Doble confirmación con Enter
-    if (window.cobroEnterCount === 0) {
-        window.cobroEnterCount = 1;
-        window.mostrarToast('⚠️ Presiona Enter nuevamente para confirmar el cobro', 'warning');
-        
-        if (window.cobroEnterTimeout) clearTimeout(window.cobroEnterTimeout);
-        window.cobroEnterTimeout = setTimeout(() => {
-            window.cobroEnterCount = 0;
-        }, 3000);
-        return;
-    }
-    
-    // Segunda presión de Enter, proceder con el cobro
-    window.cobroEnterCount = 0;
-    if (window.cobroEnterTimeout) clearTimeout(window.cobroEnterTimeout);
-    
-    console.log('?? COBRANDO PEDIDO:', window.currentPedido.id);
+    console.log('💰 COBRANDO PEDIDO:', window.currentPedido.id);
     console.log('   Session ID:', window.currentPedido.session_id);
     
     const invitacionCheck = document.getElementById('invitacionCheck');
@@ -3490,20 +3539,20 @@ window.confirmarCobro = async function() {
         
         let tituloNotif, mensajeNotif;
         if (esInvitacion) {
-            tituloNotif = '? Pedido por invitación';
-            mensajeNotif = 'Tu pedido ha sido procesado. ?Disfruta!';
+            tituloNotif = '🎁 Pedido por invitación';
+            mensajeNotif = 'Tu pedido ha sido procesado. ¡Disfruta!';
         } else if (window.currentPedido.tipo === 'delivery') {
-            tituloNotif = '? Pago confirmado';
+            tituloNotif = '✅ Pago confirmado';
             mensajeNotif = 'Tu delivery está en camino';
         } else if (window.currentPedido.tipo === 'reserva') {
-            tituloNotif = '? Reserva confirmada';
+            tituloNotif = '✅ Reserva confirmada';
             mensajeNotif = 'Tu reserva ha sido confirmada';
         } else {
-            tituloNotif = '? Pago confirmado';
+            tituloNotif = '✅ Pago confirmado';
             mensajeNotif = 'Tu pedido está en preparación';
         }
         
-        console.log('?? Insertando notificación en cobro:');
+        console.log('📢 Insertando notificación en cobro:');
         console.log('   Session ID:', window.currentPedido.session_id);
         console.log('   Pedido ID:', window.currentPedido.id);
         console.log('   Título:', tituloNotif);
@@ -3520,14 +3569,15 @@ window.confirmarCobro = async function() {
                 leida: false
             }]);
         
-        if (error) console.error('? Error insertando notificación:', error);
-        else console.log('? Notificación insertada correctamente');
+        if (error) console.error('❌ Error insertando notificación:', error);
+        else console.log('✅ Notificación insertada correctamente');
         
         document.getElementById('cobroModal').classList.remove('active');
-        window.mostrarToast('? Cobro procesado');
+        window.mostrarToast('💰 Cobro procesado');
         window.enProcesoDeCobro = false;
         window.currentPedido = null;
         window.pagosMixtos = [];
+        window.enterCount = 0;
         
         await window.recargarPedidosCompletos();
         await window.cargarMenu();
@@ -3535,7 +3585,7 @@ window.confirmarCobro = async function() {
         
     } catch (e) {
         console.error('Error en cobro:', e);
-        window.mostrarToast('? Error al procesar el cobro', 'error');
+        window.mostrarToast('❌ Error al procesar el cobro', 'error');
     }
 };
 
@@ -3544,33 +3594,28 @@ window.cerrarCobroModal = function() {
     window.enProcesoDeCobro = false;
     window.currentPedido = null;
     window.pagosMixtos = [];
-    window.cobroEnterCount = 0;
-    if (window.cobroEnterTimeout) clearTimeout(window.cobroEnterTimeout);
+    window.enterCount = 0;
+    if (window.enterTimeout) clearTimeout(window.enterTimeout);
     setTimeout(() => window.verificarYControlarAlarma(), 100);
 };
 
 // ============================================
-// NUEVO SISTEMA DE PROPINAS (con acumulado)
+// NUEVO SISTEMA DE PROPINAS (CON ACUMULADO)
 // ============================================
-window.abrirPropinaModal = function() {
+window.abrirPropinaModal = async function() {
     const modalBody = document.getElementById('propinaModalBody');
     
-    // Calcular acumulado por mesonero
-    const acumuladoPorMesonero = {};
-    window.propinas.forEach(p => {
-        if (p.mesonero_id) {
-            acumuladoPorMesonero[p.mesonero_id] = (acumuladoPorMesonero[p.mesonero_id] || 0) + (p.monto_bs || 0);
-        }
-    });
+    // Obtener acumulado de propinas por mesonero
+    const acumulado = await window.obtenerAcumuladoPropinasMesoneros();
     
     // Generar lista de mesoneros con su acumulado
     const mesonerosList = window.mesoneros.map(m => {
-        const acumulado = acumuladoPorMesonero[m.id] || 0;
+        const montoAcumulado = acumulado[m.id] || 0;
         return `
             <div class="mesonero-item" onclick="window.seleccionarMesoneroPropina('${m.id}', '${m.nombre}')">
                 <i class="fas fa-user-tie"></i>
                 <span class="nombre">${m.nombre}</span>
-                <span class="acumulado">${window.formatBs(acumulado)}</span>
+                <span class="acumulado">${window.formatBs(montoAcumulado)}</span>
             </div>
         `;
     }).join('');
@@ -3659,12 +3704,14 @@ window.seleccionarMesoneroPropina = function(id, nombre) {
 window.seleccionarMetodoPropina = function(metodo) {
     window.propinaSeleccionada.metodo = metodo;
     
+    // Actualizar UI de botones
     document.querySelectorAll('.metodo-pago-btn').forEach(btn => btn.classList.remove('active'));
     const index = ['efectivo_bs', 'efectivo_usd', 'pago_movil', 'punto_venta'].indexOf(metodo);
     if (index !== -1) {
         document.querySelectorAll('.metodo-pago-btn')[index]?.classList.add('active');
     }
     
+    // Mostrar/ocultar referencia
     const refGroup = document.getElementById('propinaReferenciaGroup');
     if (refGroup) {
         refGroup.style.display = metodo === 'pago_movil' ? 'block' : 'none';
@@ -3693,6 +3740,7 @@ window.actualizarPropinaUI = function() {
     document.getElementById('propinaTotalBs').textContent = window.formatBs(montoBs);
     document.getElementById('propinaDetalleConversion').textContent = conversionText;
     
+    // Validar formulario
     const montoValido = monto > 0;
     const referenciaValida = window.propinaSeleccionada.metodo !== 'pago_movil' || 
         window.referenciaPropina.every(d => d && d.length === 1);
@@ -3705,6 +3753,7 @@ window.moverRefPropina = function(input, index) {
         document.querySelector(`.ref-digit-propina[data-index="${index + 1}"]`).focus();
     }
     
+    // Actualizar array de referencia
     window.referenciaPropina[index] = input.value;
     window.propinaSeleccionada.referencia = window.referenciaPropina.join('');
     window.actualizarPropinaUI();
@@ -3750,6 +3799,7 @@ window.guardarPropina = async function() {
         window.cerrarModal('propinaModal');
         window.mostrarToast('✅ Propina registrada', 'success');
         
+        // Reiniciar datos
         window.propinaSeleccionada = { mesonero: null, metodo: 'efectivo_bs', monto: 0, referencia: '' };
         window.referenciaPropina = ['', '', '', '', '', ''];
         
@@ -3763,6 +3813,7 @@ window.guardarPropina = async function() {
     }
 };
 
+// Modificar la función de renderizado de propinas
 window.renderizarPropinas = function() {
     const total = window.propinas.reduce((sum, p) => sum + (p.monto_bs || p.monto || 0), 0);
     const cantidad = window.propinas.length;
@@ -3803,6 +3854,16 @@ window.crearTarjetaPropina = function(propina) {
         console.error('Error creando tarjeta de propina:', e);
         return '';
     }
+};
+
+// Sobrescribir abrirModalDetalle para el caso 'propinasDetalle' para que use el nuevo modal
+const originalAbrirModalDetalle = window.abrirModalDetalle;
+window.abrirModalDetalle = function(tipo) {
+    if (tipo === 'propinas' || tipo === 'propinasDetalle') {
+        window.abrirPropinaModal();
+        return;
+    }
+    originalAbrirModalDetalle.call(this, tipo);
 };
 
 // ============================================
@@ -3951,7 +4012,7 @@ window.crearDetallePedidoResumido = function(pedido) {
 window.ejecutarConfirmacion = async function() {
     if (!window.pedidoParaAccion) return;
     
-    console.log('? CONFIRMANDO ACCIÓN:', window.accionPendiente);
+    console.log('✅ CONFIRMANDO ACCIÓN:', window.accionPendiente);
     console.log('   Pedido ID:', window.pedidoParaAccion.id);
     console.log('   Session ID:', window.pedidoParaAccion.session_id);
     
@@ -3959,7 +4020,7 @@ window.ejecutarConfirmacion = async function() {
         let tituloNotif, mensajeNotif;
         
         if (window.accionPendiente === 'entregado') {
-            tituloNotif = '?? Pedido entregado';
+            tituloNotif = '🍣 Pedido entregado';
             mensajeNotif = '¡Buen Provecho! Gracias por elegir Saki Sushi';
             await window.supabaseClient
                 .from('pedidos')
@@ -3975,6 +4036,7 @@ window.ejecutarConfirmacion = async function() {
             const delivery = window.deliverys.find(d => d.id == deliveryId);
             const costoDelivery = window.pedidoParaAccion.costo_delivery_bs || window.pedidoParaAccion.costoDelivery || 0;
             
+            // Insertar en entregas_delivery
             await window.supabaseClient
                 .from('entregas_delivery')
                 .insert([{
@@ -3984,6 +4046,7 @@ window.ejecutarConfirmacion = async function() {
                     fecha_entrega: new Date().toISOString()
                 }]);
             
+            // Actualizar pedido con el nombre del motorizado y estado enviado
             await window.supabaseClient
                 .from('pedidos')
                 .update({ 
@@ -3993,27 +4056,27 @@ window.ejecutarConfirmacion = async function() {
                 })
                 .eq('id', window.pedidoParaAccion.id);
             
-            tituloNotif = '? Delivery en camino';
+            tituloNotif = '🛵 Delivery en camino';
             mensajeNotif = delivery ? `Tu pedido está siendo entregado por ${delivery.nombre}` : 'El repartidor ya salió';
             
             await window.cargarDeliverys();
             window.renderizarDeliverysStats();
         } else if (window.accionPendiente === 'reserva_atendida') {
-            tituloNotif = '? Reserva Confirmada';
+            tituloNotif = '✅ Reserva Confirmada';
             mensajeNotif = 'En breve tu pedido te será entregado, ¡Gracias por preferirnos!';
             await window.supabaseClient
                 .from('pedidos')
                 .update({ estado: 'reserva_atendida' })
                 .eq('id', window.pedidoParaAccion.id);
         } else if (window.accionPendiente === 'reserva_completada') {
-            tituloNotif = '?? Pedido entregado';
+            tituloNotif = '🍣 Pedido entregado';
             mensajeNotif = '¡Buen Provecho! Gracias por elegir Saki Sushi';
             await window.supabaseClient
                 .from('pedidos')
                 .update({ estado: 'reserva_completada' })
                 .eq('id', window.pedidoParaAccion.id);
         } else {
-            tituloNotif = '? Estado actualizado';
+            tituloNotif = '✅ Estado actualizado';
             mensajeNotif = 'Tu pedido ha sido actualizado';
             await window.supabaseClient
                 .from('pedidos')
@@ -4021,7 +4084,7 @@ window.ejecutarConfirmacion = async function() {
                 .eq('id', window.pedidoParaAccion.id);
         }
         
-        console.log('?? Insertando notificación en confirmación:');
+        console.log('📢 Insertando notificación en confirmación:');
         console.log('   Session ID:', window.pedidoParaAccion.session_id);
         console.log('   Pedido ID:', window.pedidoParaAccion.id);
         console.log('   Título:', tituloNotif);
@@ -4038,18 +4101,18 @@ window.ejecutarConfirmacion = async function() {
                 leida: false
             }]);
         
-        if (error) console.error('? Error insertando notificación:', error);
-        else console.log('? Notificación insertada correctamente');
+        if (error) console.error('❌ Error insertando notificación:', error);
+        else console.log('✅ Notificación insertada correctamente');
         
         window.cerrarModal('confirmModal');
-        window.mostrarToast('? Estado actualizado');
+        window.mostrarToast('✅ Estado actualizado');
         
         await window.recargarPedidosCompletos();
         window.verificarYControlarAlarma();
         
     } catch (e) {
         console.error('Error:', e);
-        window.mostrarToast('? Error', 'error');
+        window.mostrarToast('❌ Error', 'error');
     }
 };
 
@@ -4087,7 +4150,7 @@ window.confirmarRechazo = async function() {
             fuera_horario: 'Fuera de horario'
         };
         
-        console.log('?? Insertando notificación en rechazo:');
+        console.log('📢 Insertando notificación en rechazo:');
         console.log('   Session ID:', window.pedidoParaAccion.session_id);
         console.log('   Pedido ID:', window.pedidoParaAccion.id);
         
@@ -4096,25 +4159,25 @@ window.confirmarRechazo = async function() {
             .insert([{
                 pedido_id: window.pedidoParaAccion.id,
                 tipo: 'rejected',
-                titulo: '? Pedido rechazado',
+                titulo: '❌ Pedido rechazado',
                 mensaje: `Motivo: ${mensajes[razon] || razon}`,
                 timestamp: new Date().toISOString(),
                 session_id: window.pedidoParaAccion.session_id,
                 leida: false
             }]);
         
-        if (error) console.error('? Error insertando notificación:', error);
-        else console.log('? Notificación insertada correctamente');
+        if (error) console.error('❌ Error insertando notificación:', error);
+        else console.log('✅ Notificación insertada correctamente');
         
         window.cerrarModal('rechazoModal');
-        window.mostrarToast('??? Pedido rechazado');
+        window.mostrarToast('🚫 Pedido rechazado');
         
         await window.recargarPedidosCompletos();
         window.verificarYControlarAlarma();
         
     } catch (e) {
         console.error('Error al rechazar:', e);
-        window.mostrarToast('? Error al rechazar', 'error');
+        window.mostrarToast('❌ Error al rechazar', 'error');
     }
 };
 
@@ -4293,6 +4356,7 @@ window.verComprobante = async function(pedidoId) {
 // FUNCIONES DE DETALLE MODAL
 // ============================================
 window.abrirModalDetalle = async function(tipo) {
+    // Si es propinas, abrir el nuevo modal
     if (tipo === 'propinas' || tipo === 'propinasDetalle') {
         window.abrirPropinaModal();
         return;
@@ -4353,16 +4417,16 @@ window.abrirModalDetalle = async function(tipo) {
                     ${favorTotal > 0 ? `<p><strong class="favor-tag">A favor de caja:</strong> ${window.formatBs(favorTotal)}</p>` : ''}
                     <h4>Desglose por método:</h4>
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:20px">
-                        <div class="payment-tag" style="justify-content:space-between;padding:6px">
+                        <div class="detail-metodo-tag" style="justify-content:space-between;padding:6px">
                             <span>Efectivo Bs</span><span>${window.formatBs(efectivoBs)}</span>
                         </div>
-                        <div class="payment-tag" style="justify-content:space-between;padding:6px">
+                        <div class="detail-metodo-tag" style="justify-content:space-between;padding:6px">
                             <span>Efectivo USD</span><span>${window.formatBs(efectivoUsd)}</span>
                         </div>
-                        <div class="payment-tag" style="justify-content:space-between;padding:6px">
+                        <div class="detail-metodo-tag" style="justify-content:space-between;padding:6px">
                             <span>Pago Móvil</span><span>${window.formatBs(pm)}</span>
                         </div>
-                        <div class="payment-tag" style="justify-content:space-between;padding:6px">
+                        <div class="detail-metodo-tag" style="justify-content:space-between;padding:6px">
                             <span>Punto Venta</span><span>${window.formatBs(pv)}</span>
                         </div>
                     </div>
@@ -4590,7 +4654,7 @@ window.verificarCambiosPedidos = async function() {
             }
             
             if (cambios) {
-                console.log('?? Cambios detectados en pedidos, recargando...');
+                console.log('📢 Cambios detectados en pedidos, recargando...');
                 await window.recargarPedidosCompletos();
                 window.ultimaActualizacion = Date.now();
             }
@@ -4692,7 +4756,7 @@ window.setupRealtimeSubscriptions = function() {
 };
 
 // ============================================
-// EVENT LISTENERS
+// EVENT LISTENERS (MEJORADO CON DOBLE ENTER)
 // ============================================
 window.setupEventListeners = function() {
     document.addEventListener('keydown', (e) => {
@@ -4708,16 +4772,37 @@ window.setupEventListeners = function() {
         }
         
         if (e.key === 'Enter') {
+            // Para cobro modal, implementar doble Enter
+            if (document.getElementById('cobroModal')?.classList.contains('active')) {
+                const btn = document.getElementById('confirmCobroBtn');
+                if (btn && !btn.disabled) {
+                    e.preventDefault();
+                    
+                    window.enterCount++;
+                    
+                    if (window.enterCount === 1) {
+                        // Primer Enter: mostrar mensaje y reiniciar contador después de 2 segundos
+                        window.mostrarToast('⚠️ Presiona Enter nuevamente para confirmar el cobro', 'warning', 1500);
+                        
+                        if (window.enterTimeout) clearTimeout(window.enterTimeout);
+                        window.enterTimeout = setTimeout(() => {
+                            window.enterCount = 0;
+                        }, 2000);
+                    } else if (window.enterCount === 2) {
+                        // Segundo Enter: ejecutar cobro
+                        clearTimeout(window.enterTimeout);
+                        window.confirmarCobro();
+                        window.enterCount = 0;
+                    }
+                }
+            }
+            
             if (document.getElementById('confirmModal')?.classList.contains('active')) {
                 const btn = document.getElementById('confirmActionBtn');
                 if (btn && !btn.disabled) {
                     e.preventDefault();
                     window.ejecutarConfirmacion();
                 }
-            }
-            if (document.getElementById('cobroModal')?.classList.contains('active') && !document.getElementById('confirmCobroBtn').disabled) {
-                e.preventDefault();
-                window.confirmarCobro(); // Aquí se maneja la doble confirmación
             }
         }
     });
@@ -4752,13 +4837,6 @@ window.setupEventListeners = function() {
         });
     }
 };
-
-// ============================================
-// FUNCIÓN PARA GENERAR ID
-// ============================================
-function generarId(prefix = '') {
-    return prefix + Date.now() + '_' + Math.random().toString(36).substring(2, 9);
-}
 
 // ============================================
 // INICIALIZACIÓN
