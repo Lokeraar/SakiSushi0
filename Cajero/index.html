@@ -8,7 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* ... (ESTILOS EXISTENTES - SIN CAMBIOS) ... */
+        /* ... (estilos existentes, sin cambios) ... */
         :root {
             --primary: #D32F2F;
             --secondary: #212121;
@@ -816,10 +816,10 @@
             gap: 15px;
         }
         
-        /* NUEVO: Estilos para la lista de mesoneros en el modal de propinas */
+        /* Estilos para la lista de mesoneros */
         .mesoneros-list {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
             gap: 10px;
             margin-bottom: 20px;
             max-height: 300px;
@@ -858,7 +858,17 @@
             color: var(--text-primary);
         }
         
-        /* NUEVO: Estilos para el formulario de propina dentro del modal */
+        .mesonero-item .acumulado {
+            font-size: 0.85rem;
+            color: var(--accent);
+            font-weight: 600;
+            background: rgba(0,0,0,0.3);
+            padding: 4px 8px;
+            border-radius: 20px;
+            width: 100%;
+        }
+        
+        /* Estilos para el formulario de propina */
         .propina-form-container {
             background: rgba(0,0,0,.2);
             border-radius: 12px;
@@ -1444,6 +1454,10 @@
             color: var(--info);
         }
         
+        .toast.warning i {
+            color: var(--warning);
+        }
+        
         .loading-spinner {
             display: inline-block;
             width: 30px;
@@ -1773,8 +1787,8 @@
         <div class="login-box">
             <h2><i class="fas fa-cash-register"></i> Cajero Saki Sushi</h2>
             <form class="login-form" id="loginForm" onsubmit="event.preventDefault(); window.hacerLogin()">
-                <input type="text" id="username" placeholder="Usuario">
-                <input type="password" id="password" placeholder="Contrase?a">
+                <input type="text" id="username" placeholder="Usuario" autocomplete="off">
+                <input type="password" id="password" placeholder="Contraseña" autocomplete="off">
                 <button type="submit">Iniciar Sesión</button>
             </form>
         </div>
@@ -1815,7 +1829,7 @@
         </div>
         
         <div class="content">
-            <!-- SECCIóN PEDIDOS -->
+            <!-- SECCIÓN PEDIDOS -->
             <div class="section active" id="section-pedidos">
                 <h2 class="section-title">
                     <i class="fas fa-clipboard-list"></i> Pedidos del Día
@@ -1842,7 +1856,7 @@
                         <span class="stat-value" id="statPlatillos">0</span>
                         <span class="stat-label">Platillos Vend.</span>
                     </button>
-                    <button class="stat-button cuatro" onclick="window.abrirModalDetalle('propinas')" data-tooltip="Propinas del día">
+                    <button class="stat-button cuatro" onclick="window.abrirPropinaModal()" data-tooltip="Propinas del día">
                         <span class="stat-icon propinas"><i class="fas fa-hand-holding-heart"></i></span>
                         <span class="stat-value" id="statPropinas">Bs 0</span>
                         <span class="stat-label">Propinas Hoy</span>
@@ -1917,7 +1931,7 @@
                 </div>
             </div>
             
-            <!-- SECCIóN MENú -->
+            <!-- SECCIÓN MENÚ -->
             <div class="section" id="section-menu">
                 <h2 class="section-title"><i class="fas fa-utensils"></i> Menú Actual</h2>
                 <div class="categorias-wrapper" id="categoriasWrapper">
@@ -1934,7 +1948,7 @@
                 </div>
             </div>
             
-            <!-- SECCIóN PROPINAS -->
+            <!-- SECCIÓN PROPINAS -->
             <div class="section" id="section-propinas">
                 <h2 class="section-title"><i class="fas fa-hand-holding-heart"></i> Propinas del Día</h2>
                 <div class="stats-grid-modern" style="margin-bottom:30px">
@@ -1957,7 +1971,7 @@
                 <div id="propinasContainer" class="pedidos-columns" style="grid-template-columns:1fr">
                     <div class="pedidos-column" style="max-height:500px">
                         <div class="column-header propina">
-                            <span><i class="fas fa-clock"></i> últimas Propinas</span>
+                            <span><i class="fas fa-clock"></i> Últimas Propinas</span>
                             <span class="count-badge" id="propinasListCount">0</span>
                         </div>
                         <div class="column-content" id="propinasListContainer"></div>
@@ -1965,7 +1979,7 @@
                 </div>
             </div>
             
-            <!-- SECCIóN DELIVERYS -->
+            <!-- SECCIÓN DELIVERYS -->
             <div class="section" id="section-deliverys">
                 <h2 class="section-title"><i class="fas fa-motorcycle" style="color:var(--delivery)"></i> Estadísticas de Deliverys</h2>
                 <div class="stats-grid-modern" style="margin-bottom:30px">
@@ -1988,7 +2002,7 @@
                 <div id="deliverysContainer" class="pedidos-columns" style="grid-template-columns:1fr">
                     <div class="pedidos-column" style="max-height:500px">
                         <div class="column-header delivery-stats">
-                            <span><i class="fas fa-clock"></i> últimas Entregas</span>
+                            <span><i class="fas fa-clock"></i> Últimas Entregas</span>
                             <span class="count-badge" id="deliverysListCount">0</span>
                         </div>
                         <div class="column-content" id="deliverysListContainer"></div>
@@ -2008,12 +2022,12 @@
             <div class="modal-body" id="cobroModalBody"></div>
             <div class="modal-footer">
                 <button class="btn btn-secondary" onclick="window.cerrarCobroModal()">Cancelar (ESC)</button>
-                <button class="btn btn-primary" id="confirmCobroBtn" onclick="window.confirmarCobro()" disabled>Confirmar Cobro (ENTER)</button>
+                <button class="btn btn-primary" id="confirmCobroBtn" onclick="window.confirmarCobro()" disabled>Confirmar Cobro (ENTER x2)</button>
             </div>
         </div>
     </div>
     
-    <!-- NUEVO MODAL DE PROPINA (interactivo) -->
+    <!-- NUEVO MODAL DE PROPINA -->
     <div class="modal-overlay" id="propinaModal">
         <div class="modal-content" style="max-width: 550px;">
             <div class="modal-header propina">
@@ -2162,7 +2176,6 @@ window.pedidoParaAccion = null;
 window.accionPendiente = null;
 window.pagosMixtos = [];
 window.tasaEfectiva = 400;
-window.currentPropinaPedido = null;
 window.mesoneros = [];
 window.deliverys = [];
 window.alarmaAudio = document.getElementById('alarmaSonido');
@@ -2173,6 +2186,10 @@ window.paginaVisible = true;
 window.reconectando = false;
 window.intervaloVerificacion = null;
 window.ultimaActualizacion = Date.now();
+
+// Variables para doble confirmación de Enter
+window.cobroEnterCount = 0;
+window.cobroEnterTimeout = null;
 
 // Variables para el nuevo sistema de propinas
 window.propinaSeleccionada = { mesonero: null, metodo: 'efectivo_bs', monto: 0, referencia: '' };
@@ -2246,6 +2263,12 @@ window.mostrarToast = function(mensaje, tipo = 'success') {
             if (tipo === 'error') {
                 icon.style.color = 'var(--danger)';
                 toast.style.borderLeftColor = 'var(--danger)';
+            } else if (tipo === 'warning') {
+                icon.style.color = 'var(--warning)';
+                toast.style.borderLeftColor = 'var(--warning)';
+            } else if (tipo === 'info') {
+                icon.style.color = 'var(--info)';
+                toast.style.borderLeftColor = 'var(--info)';
             } else {
                 icon.style.color = 'var(--success)';
                 toast.style.borderLeftColor = 'var(--success)';
@@ -2295,9 +2318,12 @@ window.cerrarModal = function(modalId) {
         window.accionPendiente = null;
     }
     if (modalId === 'propinaModal') {
-        // Reiniciar datos de propina al cerrar
         window.propinaSeleccionada = { mesonero: null, metodo: 'efectivo_bs', monto: 0, referencia: '' };
         window.referenciaPropina = ['', '', '', '', '', ''];
+    }
+    if (modalId === 'cobroModal') {
+        window.cobroEnterCount = 0;
+        if (window.cobroEnterTimeout) clearTimeout(window.cobroEnterTimeout);
     }
 };
 
@@ -2339,14 +2365,14 @@ window.verificarYControlarAlarma = function() {
 };
 
 // ============================================
-// FUNCIONES DE LOGIN
+// FUNCIONES DE LOGIN (MEJORADAS)
 // ============================================
 window.hacerLogin = async function() {
-    const username = document.getElementById('username')?.value;
-    const password = document.getElementById('password')?.value;
+    const username = document.getElementById('username')?.value.trim();
+    const password = document.getElementById('password')?.value.trim();
     
     if (!username || !password) {
-        window.mostrarToast('Ingresa usuario y contrase?a', 'error');
+        window.mostrarToast('Ingresa usuario y contraseña', 'error');
         return;
     }
     
@@ -2356,7 +2382,8 @@ window.hacerLogin = async function() {
             return;
         }
         
-        const { data, error } = await window.supabaseClient
+        // 1. Verificar credenciales
+        const { data: user, error } = await window.supabaseClient
             .from('usuarios')
             .select('*')
             .eq('username', username)
@@ -2365,14 +2392,34 @@ window.hacerLogin = async function() {
             .maybeSingle();
         
         if (error) throw error;
-        if (!data) {
-            window.mostrarToast('Credenciales inválidas', 'error');
+        if (!user) {
+            window.mostrarToast('Usuario o contraseña incorrectos', 'error');
             return;
         }
         
-        window.currentUser = data;
-        sessionStorage.setItem('cajero_user', JSON.stringify(data));
-        window.mostrarToast('? Bienvenido ' + data.nombre, 'success');
+        // 2. Verificar sesión única (usando función RPC que debe crearse en la BD)
+        // Si la función no existe, se omite la verificación
+        try {
+            const { data: sessionCheck, error: sessionError } = await window.supabaseClient
+                .rpc('verificar_sesion_cajero', { 
+                    p_usuario_id: user.id,
+                    p_dispositivo_id: generarId('dev_')
+                });
+            
+            if (sessionError) throw sessionError;
+            
+            if (!sessionCheck?.success) {
+                window.mostrarToast('⚠️ Este usuario ya tiene una sesión activa en otro dispositivo', 'error');
+                return;
+            }
+        } catch (e) {
+            console.warn('No se pudo verificar sesión única (función RPC no existe?)', e);
+            // Continuar de todas formas si la función no existe
+        }
+        
+        window.currentUser = user;
+        sessionStorage.setItem('cajero_user', JSON.stringify(user));
+        window.mostrarToast('✅ Bienvenido ' + user.nombre, 'success');
         
         setTimeout(async () => {
             try {
@@ -2399,7 +2446,19 @@ window.mostrarPanel = function() {
     setTimeout(() => window.verificarYControlarAlarma(), 100);
 };
 
-window.cerrarSesion = function() {
+window.cerrarSesion = async function() {
+    // Limpiar sesión activa en BD si es posible
+    if (window.currentUser) {
+        try {
+            await window.supabaseClient
+                .from('sesiones_activas')
+                .delete()
+                .eq('usuario_id', window.currentUser.id);
+        } catch (e) {
+            console.warn('No se pudo limpiar sesión activa', e);
+        }
+    }
+    
     sessionStorage.removeItem('cajero_user');
     window.currentUser = null;
     window.detenerAlarma();
@@ -2629,7 +2688,7 @@ window.calcularStockPlatillo = async function(platillo) {
 };
 
 // ============================================
-// FUNCIONES DE ESTADíSTICAS
+// FUNCIONES DE ESTADÍSTICAS
 // ============================================
 window.actualizarEstadisticas = function() {
     const preparacion = (window.pedidos || []).filter(p => 
@@ -2872,13 +2931,16 @@ window.crearTarjetaPedidoCompacta = function(pedido, tipo) {
 };
 
 // ============================================
-// FUNCIONES DE COBRO
+// FUNCIONES DE COBRO (MEJORADAS)
 // ============================================
 window.mostrarCobro = function(pedidoId) {
     window.currentPedido = (window.pedidos || []).find(p => p.id === pedidoId);
     if (!window.currentPedido) return;
     
     window.enProcesoDeCobro = true;
+    window.cobroEnterCount = 0;
+    if (window.cobroEnterTimeout) clearTimeout(window.cobroEnterTimeout);
+    
     if (window.alarmaActiva) {
         window.alarmaAudio.pause();
         window.alarmaAudio.currentTime = 0;
@@ -2990,7 +3052,7 @@ window.mostrarCobro = function(pedidoId) {
             </div>
         </div>
         <div class="keyboard-hint">
-            <span><kbd>ENTER</kbd> confirmar</span>
+            <span><kbd>ENTER x2</kbd> confirmar</span>
             <span><kbd>ESC</kbd> cancelar</span>
         </div>
     `;
@@ -3245,8 +3307,10 @@ window.recalcularTotales = function() {
         montoPendiente = 0;
     }
     
-    let mostrarCondonar = diferencia > 0 || (diferencia < 0 && montoPendiente > 0);
-    let mostrarFavor = diferencia < 0;
+    // Determinar si mostrar los checks
+    const mostrarCondonar = diferencia > 0 || (diferencia < 0 && montoPendiente > 0);
+    const mostrarFavor = diferencia < 0 && (montoSobrante > 0 || montoPendiente > 0);
+    const pagoExacto = Math.abs(diferencia) < 0.01; // Si la diferencia es prácticamente cero
     
     condonarCheckbox.style.display = mostrarCondonar ? 'flex' : 'none';
     favorCheckbox.style.display = mostrarFavor ? 'flex' : 'none';
@@ -3268,7 +3332,8 @@ window.recalcularTotales = function() {
     
     if (esInvitacion) {
         confirmarActivo = true;
-    } else if (diferencia === 0) {
+    } else if (pagoExacto && totalRecibidoBs > 0) {
+        // Pago exacto sin necesidad de checks
         confirmarActivo = true;
     } else if (diferencia > 0 && condonarActivo) {
         confirmarActivo = true;
@@ -3289,6 +3354,22 @@ window.calcularConVuelto = function() {
 
 window.confirmarCobro = async function() {
     if (!window.currentPedido) return;
+    
+    // Doble confirmación con Enter
+    if (window.cobroEnterCount === 0) {
+        window.cobroEnterCount = 1;
+        window.mostrarToast('⚠️ Presiona Enter nuevamente para confirmar el cobro', 'warning');
+        
+        if (window.cobroEnterTimeout) clearTimeout(window.cobroEnterTimeout);
+        window.cobroEnterTimeout = setTimeout(() => {
+            window.cobroEnterCount = 0;
+        }, 3000);
+        return;
+    }
+    
+    // Segunda presión de Enter, proceder con el cobro
+    window.cobroEnterCount = 0;
+    if (window.cobroEnterTimeout) clearTimeout(window.cobroEnterTimeout);
     
     console.log('?? COBRANDO PEDIDO:', window.currentPedido.id);
     console.log('   Session ID:', window.currentPedido.session_id);
@@ -3463,22 +3544,36 @@ window.cerrarCobroModal = function() {
     window.enProcesoDeCobro = false;
     window.currentPedido = null;
     window.pagosMixtos = [];
+    window.cobroEnterCount = 0;
+    if (window.cobroEnterTimeout) clearTimeout(window.cobroEnterTimeout);
     setTimeout(() => window.verificarYControlarAlarma(), 100);
 };
 
 // ============================================
-// NUEVO SISTEMA DE PROPINAS
+// NUEVO SISTEMA DE PROPINAS (con acumulado)
 // ============================================
 window.abrirPropinaModal = function() {
     const modalBody = document.getElementById('propinaModalBody');
     
-    // Generar lista de mesoneros
-    const mesonerosList = window.mesoneros.map(m => `
-        <div class="mesonero-item" onclick="window.seleccionarMesoneroPropina('${m.id}', '${m.nombre}')">
-            <i class="fas fa-user-tie"></i>
-            <span class="nombre">${m.nombre}</span>
-        </div>
-    `).join('');
+    // Calcular acumulado por mesonero
+    const acumuladoPorMesonero = {};
+    window.propinas.forEach(p => {
+        if (p.mesonero_id) {
+            acumuladoPorMesonero[p.mesonero_id] = (acumuladoPorMesonero[p.mesonero_id] || 0) + (p.monto_bs || 0);
+        }
+    });
+    
+    // Generar lista de mesoneros con su acumulado
+    const mesonerosList = window.mesoneros.map(m => {
+        const acumulado = acumuladoPorMesonero[m.id] || 0;
+        return `
+            <div class="mesonero-item" onclick="window.seleccionarMesoneroPropina('${m.id}', '${m.nombre}')">
+                <i class="fas fa-user-tie"></i>
+                <span class="nombre">${m.nombre}</span>
+                <span class="acumulado">${window.formatBs(acumulado)}</span>
+            </div>
+        `;
+    }).join('');
     
     modalBody.innerHTML = `
         <div style="margin-bottom:20px">
@@ -3564,14 +3659,12 @@ window.seleccionarMesoneroPropina = function(id, nombre) {
 window.seleccionarMetodoPropina = function(metodo) {
     window.propinaSeleccionada.metodo = metodo;
     
-    // Actualizar UI de botones
     document.querySelectorAll('.metodo-pago-btn').forEach(btn => btn.classList.remove('active'));
     const index = ['efectivo_bs', 'efectivo_usd', 'pago_movil', 'punto_venta'].indexOf(metodo);
     if (index !== -1) {
         document.querySelectorAll('.metodo-pago-btn')[index]?.classList.add('active');
     }
     
-    // Mostrar/ocultar referencia
     const refGroup = document.getElementById('propinaReferenciaGroup');
     if (refGroup) {
         refGroup.style.display = metodo === 'pago_movil' ? 'block' : 'none';
@@ -3600,7 +3693,6 @@ window.actualizarPropinaUI = function() {
     document.getElementById('propinaTotalBs').textContent = window.formatBs(montoBs);
     document.getElementById('propinaDetalleConversion').textContent = conversionText;
     
-    // Validar formulario
     const montoValido = monto > 0;
     const referenciaValida = window.propinaSeleccionada.metodo !== 'pago_movil' || 
         window.referenciaPropina.every(d => d && d.length === 1);
@@ -3613,7 +3705,6 @@ window.moverRefPropina = function(input, index) {
         document.querySelector(`.ref-digit-propina[data-index="${index + 1}"]`).focus();
     }
     
-    // Actualizar array de referencia
     window.referenciaPropina[index] = input.value;
     window.propinaSeleccionada.referencia = window.referenciaPropina.join('');
     window.actualizarPropinaUI();
@@ -3642,7 +3733,7 @@ window.guardarPropina = async function() {
         
         const propinaData = {
             mesonero_id: window.propinaSeleccionada.mesonero.id,
-            mesa: 'General', // Podrías pedir la mesa si quieres
+            mesa: 'General',
             metodo: window.propinaSeleccionada.metodo,
             monto_original: montoOriginal,
             moneda_original: monedaOriginal,
@@ -3651,7 +3742,7 @@ window.guardarPropina = async function() {
             referencia: window.propinaSeleccionada.referencia || null,
             cajero: window.currentUser.nombre,
             fecha: new Date().toISOString(),
-            entregado: true // Asumimos que se entrega inmediatamente
+            entregado: true
         };
         
         await window.supabaseClient.from('propinas').insert([propinaData]);
@@ -3659,7 +3750,6 @@ window.guardarPropina = async function() {
         window.cerrarModal('propinaModal');
         window.mostrarToast('✅ Propina registrada', 'success');
         
-        // Reiniciar datos
         window.propinaSeleccionada = { mesonero: null, metodo: 'efectivo_bs', monto: 0, referencia: '' };
         window.referenciaPropina = ['', '', '', '', '', ''];
         
@@ -3673,7 +3763,6 @@ window.guardarPropina = async function() {
     }
 };
 
-// Modificar la función de renderizado de propinas
 window.renderizarPropinas = function() {
     const total = window.propinas.reduce((sum, p) => sum + (p.monto_bs || p.monto || 0), 0);
     const cantidad = window.propinas.length;
@@ -3716,18 +3805,8 @@ window.crearTarjetaPropina = function(propina) {
     }
 };
 
-// Sobrescribir abrirModalDetalle para el caso 'propinasDetalle' para que use el nuevo modal
-const originalAbrirModalDetalle = window.abrirModalDetalle;
-window.abrirModalDetalle = function(tipo) {
-    if (tipo === 'propinas' || tipo === 'propinasDetalle') {
-        window.abrirPropinaModal();
-        return;
-    }
-    originalAbrirModalDetalle.call(this, tipo);
-};
-
 // ============================================
-// FUNCIONES DE CONFIRMACIóN (DELIVERY)
+// FUNCIONES DE CONFIRMACIÓN (DELIVERY)
 // ============================================
 window.mostrarConfirmacionDelivery = function(pedidoId) {
     const pedido = window.pedidos.find(p => p.id === pedidoId);
@@ -3809,19 +3888,19 @@ window.mostrarConfirmacion = function(pedidoId, accion) {
     
     if (accion === 'entregado') {
         titulo = 'Confirmar Entrega';
-        mensaje = '?Pedido entregado?';
+        mensaje = '¿Pedido entregado?';
         color = 'linear-gradient(135deg,var(--success),#2E7D32)';
     } else if (accion === 'reserva_atendida') {
         titulo = 'Cliente Confirmado';
-        mensaje = '?Cliente llegó?';
+        mensaje = '¿Cliente llegó?';
         color = 'linear-gradient(135deg,#9c27b0,#7b1fa2)';
     } else if (accion === 'reserva_completada') {
         titulo = 'Confirmar Entrega';
-        mensaje = '?Pedido entregado?';
+        mensaje = '¿Pedido entregado?';
         color = 'linear-gradient(135deg,var(--success),#2E7D32)';
     } else {
         titulo = 'Confirmar';
-        mensaje = '?Confirmar acción?';
+        mensaje = '¿Confirmar acción?';
         color = 'linear-gradient(135deg,var(--success),#2E7D32)';
     }
     
@@ -3872,7 +3951,7 @@ window.crearDetallePedidoResumido = function(pedido) {
 window.ejecutarConfirmacion = async function() {
     if (!window.pedidoParaAccion) return;
     
-    console.log('? CONFIRMANDO ACCIóN:', window.accionPendiente);
+    console.log('? CONFIRMANDO ACCIÓN:', window.accionPendiente);
     console.log('   Pedido ID:', window.pedidoParaAccion.id);
     console.log('   Session ID:', window.pedidoParaAccion.session_id);
     
@@ -3880,8 +3959,8 @@ window.ejecutarConfirmacion = async function() {
         let tituloNotif, mensajeNotif;
         
         if (window.accionPendiente === 'entregado') {
-            tituloNotif = '??? Pedido entregado';
-            mensajeNotif = '?Buen Provecho! Gracias por elegir Saki Sushi';
+            tituloNotif = '?? Pedido entregado';
+            mensajeNotif = '¡Buen Provecho! Gracias por elegir Saki Sushi';
             await window.supabaseClient
                 .from('pedidos')
                 .update({ estado: 'entregado' })
@@ -3896,7 +3975,6 @@ window.ejecutarConfirmacion = async function() {
             const delivery = window.deliverys.find(d => d.id == deliveryId);
             const costoDelivery = window.pedidoParaAccion.costo_delivery_bs || window.pedidoParaAccion.costoDelivery || 0;
             
-            // Insertar en entregas_delivery
             await window.supabaseClient
                 .from('entregas_delivery')
                 .insert([{
@@ -3906,7 +3984,6 @@ window.ejecutarConfirmacion = async function() {
                     fecha_entrega: new Date().toISOString()
                 }]);
             
-            // Actualizar pedido con el nombre del motorizado y estado enviado
             await window.supabaseClient
                 .from('pedidos')
                 .update({ 
@@ -3916,21 +3993,21 @@ window.ejecutarConfirmacion = async function() {
                 })
                 .eq('id', window.pedidoParaAccion.id);
             
-            tituloNotif = '?? Delivery en camino';
+            tituloNotif = '? Delivery en camino';
             mensajeNotif = delivery ? `Tu pedido está siendo entregado por ${delivery.nombre}` : 'El repartidor ya salió';
             
             await window.cargarDeliverys();
             window.renderizarDeliverysStats();
         } else if (window.accionPendiente === 'reserva_atendida') {
-            tituloNotif = '?? Reserva Confirmada';
-            mensajeNotif = 'En breve tu pedido te será entregado, ?Gracias por preferirnos!';
+            tituloNotif = '? Reserva Confirmada';
+            mensajeNotif = 'En breve tu pedido te será entregado, ¡Gracias por preferirnos!';
             await window.supabaseClient
                 .from('pedidos')
                 .update({ estado: 'reserva_atendida' })
                 .eq('id', window.pedidoParaAccion.id);
         } else if (window.accionPendiente === 'reserva_completada') {
-            tituloNotif = '??? Pedido entregado';
-            mensajeNotif = '?Buen Provecho! Gracias por elegir Saki Sushi';
+            tituloNotif = '?? Pedido entregado';
+            mensajeNotif = '¡Buen Provecho! Gracias por elegir Saki Sushi';
             await window.supabaseClient
                 .from('pedidos')
                 .update({ estado: 'reserva_completada' })
@@ -4042,7 +4119,7 @@ window.confirmarRechazo = async function() {
 };
 
 // ============================================
-// FUNCIONES DE MENú
+// FUNCIONES DE MENÚ
 // ============================================
 window.renderizarMenu = async function() {
     const menuGrid = document.getElementById('menuGrid');
@@ -4167,7 +4244,7 @@ window.crearTarjetaDelivery = function(pedido) {
 };
 
 // ============================================
-// FUNCIONES DE SELECCIóN DE MESA
+// FUNCIONES DE SELECCIÓN DE MESA
 // ============================================
 window.abrirSelectorMesa = async function() {
     await window.cargarMesas();
@@ -4216,7 +4293,6 @@ window.verComprobante = async function(pedidoId) {
 // FUNCIONES DE DETALLE MODAL
 // ============================================
 window.abrirModalDetalle = async function(tipo) {
-    // Si es propinas, abrir el nuevo modal
     if (tipo === 'propinas' || tipo === 'propinasDetalle') {
         window.abrirPropinaModal();
         return;
@@ -4448,7 +4524,7 @@ window.crearDetalleVentaCompacto = function(venta, pedido) {
         let pagosHtml = '';
         if (pedido.pagos_mixtos?.length) {
             pagosHtml = '<div style="margin-top:3px">' + pedido.pagos_mixtos.map(p => {
-                const icon = p.metodo === 'efectivo_bs' ? 'Bs' : (p.metodo === 'efectivo_usd' ? '$' : (p.metodo === 'pago_movil' ? '??' : '??'));
+                const icon = p.metodo === 'efectivo_bs' ? 'Bs' : (p.metodo === 'efectivo_usd' ? '$' : (p.metodo === 'pago_movil' ? '📱' : '💳'));
                 return `<span class="detail-metodo-tag">${icon} ${window.formatBs(p.monto)}</span>`;
             }).join('') + '</div>';
         }
@@ -4480,7 +4556,7 @@ window.crearDetalleVentaCompacto = function(venta, pedido) {
 };
 
 // ============================================
-// FUNCIONES DE VERIFICACIóN PERIóDICA
+// FUNCIONES DE VERIFICACIÓN PERIÓDICA
 // ============================================
 window.verificarCambiosPedidos = async function() {
     if (window.reconectando || window.enProcesoDeCobro) return;
@@ -4641,7 +4717,7 @@ window.setupEventListeners = function() {
             }
             if (document.getElementById('cobroModal')?.classList.contains('active') && !document.getElementById('confirmCobroBtn').disabled) {
                 e.preventDefault();
-                window.confirmarCobro();
+                window.confirmarCobro(); // Aquí se maneja la doble confirmación
             }
         }
     });
@@ -4678,7 +4754,14 @@ window.setupEventListeners = function() {
 };
 
 // ============================================
-// INICIALIZACIóN
+// FUNCIÓN PARA GENERAR ID
+// ============================================
+function generarId(prefix = '') {
+    return prefix + Date.now() + '_' + Math.random().toString(36).substring(2, 9);
+}
+
+// ============================================
+// INICIALIZACIÓN
 // ============================================
 document.addEventListener('DOMContentLoaded', async () => {
     console.log('DOM cargado, verificando sesión...');
