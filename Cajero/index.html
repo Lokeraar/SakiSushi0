@@ -1132,9 +1132,15 @@ window.verificarYControlarAlarma = function() {
 // ============================================
 // FUNCIONES DE LOGIN CON SESIÓN ÚNICA (CORREGIDAS)
 // ============================================
+
 window.registrarSesion = async function(userId, userNombre) {
     try {
-        console.log('Registrando sesión para usuario:', userId, userNombre);
+        console.log('📝 Registrando sesión para:', { userId, userNombre });
+        
+        if (!userId || !userNombre) {
+            console.error('❌ Datos de usuario inválidos:', { userId, userNombre });
+            return { success: false, error: 'Datos de usuario inválidos' };
+        }
         
         // Primero verificar si hay sesiones activas para este usuario
         const { data: sesiones, error: selectError } = await window.supabaseClient
@@ -1143,7 +1149,12 @@ window.registrarSesion = async function(userId, userNombre) {
             .eq('usuario_id', userId)
             .eq('activa', true);
         
-        if (selectError) throw selectError;
+        if (selectError) {
+            console.error('❌ Error consultando sesiones:', selectError);
+            throw selectError;
+        }
+        
+        console.log('📊 Sesiones activas encontradas:', sesiones?.length || 0);
         
         if (sesiones && sesiones.length > 0) {
             // Ya hay una sesión activa, retornar la primera
@@ -1151,10 +1162,15 @@ window.registrarSesion = async function(userId, userNombre) {
         }
         
         // No hay sesión activa, registrar esta
+        const sessionId = window.currentSessionId || 'sess_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9);
+        window.currentSessionId = sessionId;
+        
+        console.log('🆕 Creando nueva sesión:', sessionId);
+        
         const { error: insertError } = await window.supabaseClient
             .from('sesiones_activas')
             .insert([{
-                id: window.currentSessionId,
+                id: sessionId,
                 usuario_id: userId,
                 usuario_nombre: userNombre,
                 iniciada: new Date().toISOString(),
@@ -1163,17 +1179,24 @@ window.registrarSesion = async function(userId, userNombre) {
                 user_agent: navigator.userAgent
             }]);
         
-        if (insertError) throw insertError;
+        if (insertError) {
+            console.error('❌ Error insertando sesión:', insertError);
+            throw insertError;
+        }
+        
+        console.log('✅ Sesión registrada exitosamente');
         return { success: true };
         
     } catch (e) {
-        console.error('Error registrando sesión:', e);
+        console.error('❌ Error en registrarSesion:', e);
         return { success: false, error: e.message };
     }
 };
 
 window.cerrarSesionesUsuario = async function(userId, exceptoSessionId = null) {
     try {
+        console.log('🔒 Cerrando sesiones para usuario:', userId, 'excepto:', exceptoSessionId);
+        
         let query = window.supabaseClient
             .from('sesiones_activas')
             .update({ activa: false, cerrada: new Date().toISOString() })
@@ -1184,11 +1207,15 @@ window.cerrarSesionesUsuario = async function(userId, exceptoSessionId = null) {
             query = query.neq('id', exceptoSessionId);
         }
         
-        await query;
+        const { data, error } = await query.select();
+        
+        if (error) throw error;
+        
+        console.log('✅ Sesiones cerradas:', data?.length || 0);
         
         // Insertar notificación para la sesión que se va a cerrar
         if (exceptoSessionId) {
-            await window.supabaseClient
+            const { error: notifError } = await window.supabaseClient
                 .from('notificaciones')
                 .insert([{
                     tipo: 'session_closed',
@@ -1198,20 +1225,27 @@ window.cerrarSesionesUsuario = async function(userId, exceptoSessionId = null) {
                     session_id: exceptoSessionId,
                     leida: false
                 }]);
+            
+            if (notifError) console.error('❌ Error insertando notificación:', notifError);
         }
         
         return true;
         
     } catch (e) {
-        console.error('Error cerrando sesiones:', e);
+        console.error('❌ Error cerrando sesiones:', e);
         return false;
     }
 };
 
 window.forzarLogin = async function() {
-    if (!window.pendingLoginData) return;
+    if (!window.pendingLoginData) {
+        console.error('❌ No hay datos de login pendientes');
+        return;
+    }
     
     const { userId, userData } = window.pendingLoginData;
+    
+    console.log('🔄 Forzando login para:', { userId, userData });
     
     // Mostrar loading
     const btn = document.getElementById('forceLoginBtn');
@@ -1221,10 +1255,12 @@ window.forzarLogin = async function() {
     
     try {
         // Cerrar todas las sesiones anteriores de este usuario (excepto la actual)
-        await window.cerrarSesionesUsuario(userId, window.currentSessionId);
+        const cerradas = await window.cerrarSesionesUsuario(userId, window.currentSessionId);
+        console.log('📊 Sesiones cerradas:', cerradas);
         
         // Registrar nueva sesión
         const resultado = await window.registrarSesion(userId, userData.nombre);
+        console.log('📝 Resultado registro:', resultado);
         
         if (resultado.success) {
             window.currentUser = userData;
@@ -1247,7 +1283,7 @@ window.forzarLogin = async function() {
             window.mostrarToast('❌ Error al iniciar sesión: ' + (resultado.error || 'Error desconocido'), 'error');
         }
     } catch (e) {
-        console.error('Error en forzarLogin:', e);
+        console.error('❌ Error en forzarLogin:', e);
         window.mostrarToast('❌ Error al procesar la solicitud', 'error');
     } finally {
         btn.innerHTML = originalText;
@@ -1260,6 +1296,8 @@ window.forzarLogin = async function() {
 window.hacerLogin = async function() {
     const username = document.getElementById('username')?.value.trim();
     const password = document.getElementById('password')?.value.trim();
+    
+    console.log('🔑 Intentando login:', { username });
     
     if (!username || !password) {
         window.mostrarToast('Ingresa usuario y contraseña', 'error');
@@ -1278,6 +1316,8 @@ window.hacerLogin = async function() {
             return;
         }
         
+        console.log('🔍 Buscando usuario en BD...');
+        
         const { data, error } = await window.supabaseClient
             .from('usuarios')
             .select('*')
@@ -1286,15 +1326,22 @@ window.hacerLogin = async function() {
             .eq('activo', true)
             .maybeSingle();
         
-        if (error) throw error;
+        if (error) {
+            console.error('❌ Error en consulta:', error);
+            throw error;
+        }
         
         if (!data) {
+            console.log('❌ Usuario no encontrado o contraseña incorrecta');
             window.mostrarToast('❌ Usuario o contraseña incorrectos', 'error');
             return;
         }
         
+        console.log('✅ Usuario encontrado:', { id: data.id, nombre: data.nombre });
+        
         // Verificar si ya hay sesión activa
         const resultado = await window.registrarSesion(data.id, data.nombre);
+        console.log('📝 Resultado verificación sesión:', resultado);
         
         if (resultado.success) {
             // No hay sesión activa, iniciar normalmente
@@ -1316,6 +1363,8 @@ window.hacerLogin = async function() {
             
         } else if (resultado.sesionActiva) {
             // Ya hay una sesión activa, preguntar
+            console.log('⚠️ Sesión activa encontrada:', resultado.sesionActiva);
+            
             window.pendingLoginData = {
                 userId: data.id,
                 userData: data
@@ -1338,10 +1387,12 @@ window.hacerLogin = async function() {
             `;
             
             document.getElementById('confirmSessionModal').classList.add('active');
+        } else {
+            window.mostrarToast('❌ Error al verificar sesión: ' + (resultado.error || 'Error desconocido'), 'error');
         }
         
     } catch (error) {
-        console.error('Error en login:', error);
+        console.error('❌ Error en login:', error);
         window.mostrarToast('Error al conectar: ' + (error.message || 'Error desconocido'), 'error');
     } finally {
         loginBtn.innerHTML = originalText;
@@ -1350,6 +1401,8 @@ window.hacerLogin = async function() {
 };
 
 window.cerrarSesion = async function() {
+    console.log('👋 Cerrando sesión:', window.currentUser?.nombre);
+    
     if (window.currentUser) {
         try {
             await window.supabaseClient
@@ -1366,26 +1419,6 @@ window.cerrarSesion = async function() {
     window.currentUser = null;
     window.detenerAlarma();
     window.mostrarLogin();
-};
-
-window.mostrarPanel = function() {
-    document.getElementById('loginContainer').classList.add('hidden');
-    document.getElementById('panelContainer').classList.remove('hidden');
-    window.setupEventListeners();
-    window.setupRealtimeSubscriptions();
-    setTimeout(() => window.verificarYControlarAlarma(), 100);
-};
-
-window.showSection = function(section) {
-    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
-    document.getElementById(`section-${section}`).classList.add('active');
-    event.target.classList.add('active');
-    
-    if (section === 'pedidos') window.renderizarPedidos();
-    else if (section === 'menu') window.renderizarMenu();
-    else if (section === 'propinas') window.renderizarPropinas();
-    else if (section === 'deliverys') window.renderizarDeliverysStats();
 };
 
 // ============================================
