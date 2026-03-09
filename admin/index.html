@@ -123,6 +123,13 @@
                     return;
                 }
                 
+                // Verificar si ya hay una sesión de admin activa
+                const adminSession = sessionStorage.getItem('admin_authenticated');
+                if (adminSession === 'true') {
+                    window.mostrarToast('⚠️ Ya hay una sesión de administrador activa', 'warning');
+                    return;
+                }
+                
                 window.isAdminAuthenticated = true;
                 sessionStorage.setItem('admin_authenticated', 'true');
                 
@@ -160,6 +167,7 @@
     </script>
     
     <style>
+        /* ... (ESTILOS EXISTENTES - SIN CAMBIOS) ... */
         *{margin:0;padding:0;box-sizing:border-box}
         :root{--primary:#D32F2F;--secondary:#212121;--accent:#FF9800;--light-bg:#F5F5F5;--dark-bg:#121212;--success:#388E3C;--info:#1976D2;--warning:#F57C00;--danger:#ef4444;--delivery:#00ACC1;--propina:#9C27B0;--text-light:#ffffff;--text-dark:#333333;--gray-100:#f8f9fa;--gray-200:#e9ecef;--gray-300:#dee2e6;--gray-400:#ced4da;--gray-500:#adb5bd;--gray-600:#6c757d;--gray-700:#495057;--gray-800:#343a40;--gray-900:#212529}
         body{font-family:'Roboto',sans-serif;background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%);color:#fff;min-height:100vh}
