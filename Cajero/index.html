@@ -15,6 +15,21 @@
 <div class="toast" id="toast"><i class="fas fa-check-circle"></i><div><p id="toastText" style="margin:0;color:#fff">Operación completada</p></div></div>
 <script src="../supabase-config.js?v=20240310"></script>
 <script>
+// ============================================ BLOQUE ANTICACHE Y NEUTRALIZACIÓN ============================================
+console.log('🚀 CAJERO VERSIÓN FINAL CARGANDO...');
+// Eliminar cualquier rastro de la función problemática
+if(window.registrarSesion){
+    console.log('⚠️ Función antigua "registrarSesion" detectada. Eliminando...');
+    delete window.registrarSesion;
+    window.registrarSesion = function(){ console.warn('Función obsoleta'); return null; };
+    console.log('✅ Función antigua eliminada/neutralizada.');
+}
+// Forzar recarga de caché con hash en URL
+if(!window.location.hash.includes('vFinal')){
+    window.location.hash = 'vFinal';
+}
+console.log('✅ window.hacerLogin está lista y es funcional.');
+
 // ============================================ VARIABLES GLOBALES ============================================
 window.currentUser=null;window.pedidos=[];window.ventasHoy=[];window.propinas=[];window.menuItems=[];window.inventario=[];window.mesas=[];window.currentPedido=null;window.pedidoParaAccion=null;window.accionPendiente=null;window.pagosMixtos=[];window.tasaEfectiva=400;window.currentPropinaPedido=null;window.mesoneros=[];window.deliverys=[];window.alarmaAudio=document.getElementById('alarmaSonido');window.alarmaActiva=false;window.enProcesoDeCobro=false;window.suscripciones=[];window.paginaVisible=true;window.reconectando=false;window.intervaloVerificacion=null;window.ultimaActualizacion=Date.now();window.propinaSeleccionada={mesonero:null,metodo:'efectivo_bs',monto:0,referencia:''};window.referenciaPropina=['','','','','',''];window.cobroEnterCount=0;window.cobroEnterTimeout=null;window.pendingLoginUser=null;window.stockCache={data:{},lastUpdate:0,duration:5e3,get:function(id){var a=Date.now();if(a-this.lastUpdate>this.duration)this.clear();return this.data[id]},set:function(id,v){this.data[id]=v;this.lastUpdate=Date.now()},clear:function(){this.data={};this.lastUpdate=Date.now()},invalidate:function(){this.data={};this.lastUpdate=0}};
 
