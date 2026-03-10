@@ -1,121 +1,577 @@
-window.SUPABASE_URL='https://iqwwoihiiyrtypyqzhgy.supabase.co';
-window.SUPABASE_ANON_KEY='sb_publishable_m4WcF4gmkj1olAj95HMLlA_4yKqPFXm';
+// ============================================
+// SUPABASE CONFIGURACIÓN - VERSIÓN COMPLETA
+// ============================================
 
-if(!window.supabaseClient){
-    window.supabaseClient=window.supabase.createClient(
-        window.SUPABASE_URL,
-        window.SUPABASE_ANON_KEY,
-        {auth:{persistSession:false}}
-    );
-    console.log('📌 Cliente Supabase inicializado');
+window.SUPABASE_URL = 'https://iqwwoihiiyrtypyqzhgy.supabase.co';
+window.SUPABASE_ANON_KEY = 'sb_publishable_m4WcF4gmkj1olAj95HMLlA_4yKqPFXm';
+
+// Inicializar cliente Supabase (solo una vez)
+if (!window.supabaseClient) {
+    try {
+        window.supabaseClient = window.supabase.createClient(
+            window.SUPABASE_URL,
+            window.SUPABASE_ANON_KEY,
+            { auth: { persistSession: false } }
+        );
+        console.log('✅ Cliente Supabase inicializado correctamente');
+    } catch (e) {
+        console.error('❌ Error inicializando Supabase:', e);
+    }
 }
 
-window.configGlobal={
-    tasa_cambio:400,
-    tasa_efectiva:400,
-    aumento_diario:0,
-    aumento_acumulado:0,
-    aumento_activo:false,
-    aumento_detenido:false,
-    fecha_ultimo_aumento:null,
-    ultima_actualizacion:null,
-    admin_password:'654321',
-    recovery_email:'admin@sakisushi.com',
-    alerta_stock_minimo:5
+// ============================================
+// CONFIGURACIÓN GLOBAL
+// ============================================
+
+window.configGlobal = {
+    tasa_cambio: 400,
+    tasa_efectiva: 400,
+    aumento_diario: 0,
+    aumento_acumulado: 0,
+    aumento_activo: false,
+    aumento_detenido: false,
+    fecha_ultimo_aumento: null,
+    ultima_actualizacion: null,
+    admin_password: '654321',
+    recovery_email: 'admin@sakisushi.com',
+    alerta_stock_minimo: 5
 };
 
-window.appCache={
-    stock:{data:{},lastUpdate:0,duration:5e3},
-    platillos:new Map(),
-    pedidos:new Map(),
-    getStock:function(e){return Date.now()-this.stock.lastUpdate>this.stock.duration&&(this.stock.data={}),this.stock.data[e]},
-    setStock:function(e,t){this.stock.data[e]=t,this.stock.lastUpdate=Date.now()},
-    invalidateStock:function(){this.stock.data={},this.stock.lastUpdate=0,this.platillos.clear()},
-    limpiarTodo:function(){this.stock.data={},this.stock.lastUpdate=0,this.platillos.clear(),this.pedidos.clear()}
+// ============================================
+// CACHE GLOBAL
+// ============================================
+
+window.appCache = {
+    stock: { data: {}, lastUpdate: 0, duration: 5000 },
+    platillos: new Map(),
+    pedidos: new Map(),
+    
+    getStock: function(id) {
+        const ahora = Date.now();
+        if (ahora - this.stock.lastUpdate > this.stock.duration) {
+            this.stock.data = {};
+        }
+        return this.stock.data[id];
+    },
+    
+    setStock: function(id, valor) {
+        this.stock.data[id] = valor;
+        this.stock.lastUpdate = Date.now();
+    },
+    
+    invalidateStock: function() {
+        this.stock.data = {};
+        this.stock.lastUpdate = 0;
+        this.platillos.clear();
+    },
+    
+    limpiarTodo: function() {
+        this.stock.data = {};
+        this.stock.lastUpdate = 0;
+        this.platillos.clear();
+        this.pedidos.clear();
+    }
 };
 
-window.stockCache={
-    get:e=>window.appCache.getStock(e),
-    set:(e,t)=>window.appCache.setStock(e,t),
-    invalidate:()=>window.appCache.invalidateStock(),
-    clear:()=>{window.appCache.stock.data={},window.appCache.stock.lastUpdate=0}
+window.stockCache = {
+    get: (id) => window.appCache.getStock(id),
+    set: (id, valor) => window.appCache.setStock(id, valor),
+    invalidate: () => window.appCache.invalidateStock(),
+    clear: () => {
+        window.appCache.stock.data = {};
+        window.appCache.stock.lastUpdate = 0;
+    }
 };
 
-window.getFechaGMT4=function(){return new Date(new Date().toLocaleString('en-US',{timeZone:'America/Caracas'}))};
+// ============================================
+// FUNCIONES DE ZONA HORARIA GMT-4
+// ============================================
 
-window.formatearFechaGMT4=function(e){if(!e)return'N/A';try{let t=new Date(e),a=new Date(t.toLocaleString('en-US',{timeZone:'America/Caracas'}));return`${a.getDate().toString().padStart(2,'0')}/${(a.getMonth()+1).toString().padStart(2,'0')}/${a.getFullYear()} ${a.getHours().toString().padStart(2,'0')}:${a.getMinutes().toString().padStart(2,'0')}`}catch(t){return e}};
+window.getFechaGMT4 = function() {
+    return new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Caracas' }));
+};
 
-window.formatearHora12GMT4=function(e){if(!e)return'N/A';try{let t=new Date(e),a=new Date(t.toLocaleString('en-US',{timeZone:'America/Caracas'})),i=a.getHours(),l=a.getMinutes().toString().padStart(2,'0'),r=i>=12?'pm':'am';return i=i%12||12,`${i}:${l} ${r}`}catch(t){return e}};
+window.formatearFechaGMT4 = function(timestamp) {
+    if (!timestamp) return 'N/A';
+    try {
+        const fecha = new Date(timestamp);
+        const fechaGMT4 = new Date(fecha.toLocaleString('en-US', { timeZone: 'America/Caracas' }));
+        const dia = fechaGMT4.getDate().toString().padStart(2, '0');
+        const mes = (fechaGMT4.getMonth() + 1).toString().padStart(2, '0');
+        const año = fechaGMT4.getFullYear();
+        const horas = fechaGMT4.getHours().toString().padStart(2, '0');
+        const minutos = fechaGMT4.getMinutes().toString().padStart(2, '0');
+        return `${dia}/${mes}/${año} ${horas}:${minutos}`;
+    } catch (e) {
+        return timestamp;
+    }
+};
 
-window.getTimestampISO_GMT4=function(){let e=new Date(new Date().toLocaleString('en-US',{timeZone:'America/Caracas'}));return new Date(e.getTime()+144e5).toISOString()};
+window.formatearHora12GMT4 = function(timestamp) {
+    if (!timestamp) return 'N/A';
+    try {
+        const fecha = new Date(timestamp);
+        const fechaGMT4 = new Date(fecha.toLocaleString('en-US', { timeZone: 'America/Caracas' }));
+        let horas = fechaGMT4.getHours();
+        const minutos = fechaGMT4.getMinutes().toString().padStart(2, '0');
+        const ampm = horas >= 12 ? 'pm' : 'am';
+        horas = horas % 12 || 12;
+        return `${horas}:${minutos} ${ampm}`;
+    } catch (e) {
+        return timestamp;
+    }
+};
 
-window.utcToGMT4=function(e){if(!e)return null;try{return new Date(new Date(e).getTime()-144e5)}catch(t){return new Date(e)}};
+window.getTimestampISO_GMT4 = function() {
+    const fecha = new Date();
+    const fechaGMT4 = new Date(fecha.toLocaleString('en-US', { timeZone: 'America/Caracas' }));
+    return new Date(fechaGMT4.getTime() + (4 * 60 * 60 * 1000)).toISOString();
+};
 
-window.VAPID_PUBLIC_KEY='BC6oJ4E+5pGIn4icpzCBLMi6/nk+1JJenrUA41uJrAs1ELraSw5ctvRAlh8sHVldqzBXUtEwEeFKBm0/hmuM9EY=';
+window.utcToGMT4 = function(utcTimestamp) {
+    if (!utcTimestamp) return null;
+    try {
+        const fecha = new Date(utcTimestamp);
+        return new Date(fecha.getTime() - (4 * 60 * 60 * 1000));
+    } catch (e) {
+        return new Date(utcTimestamp);
+    }
+};
 
-function urlBase64ToUint8Array(e){const t='='.repeat((4-e.length%4)%4),a=(e+t).replace(/-/g,'+').replace(/_/g,'/'),i=window.atob(a),l=new Uint8Array(i.length);for(let e=0;e<i.length;++e)l[e]=i.charCodeAt(e);return l}
+// ============================================
+// NOTIFICACIONES PUSH
+// ============================================
 
-window.esBrave=function(){return navigator.brave&&'function'==typeof navigator.brave.isBrave};
+window.VAPID_PUBLIC_KEY = 'BC6oJ4E+5pGIn4icpzCBLMi6/nk+1JJenrUA41uJrAs1ELraSw5ctvRAlh8sHVldqzBXUtEwEeFKBm0/hmuM9EY=';
 
-window.solicitarPermisoPushUI=async function(){let e=localStorage.getItem('saki_session_id');if(!e){console.error('❌ No hay session_id');return}window.esBrave()&&window.mostrarToast?.('🦁 En Brave, haz clic en el león y permite notificaciones','warning');let t=await window.solicitarPermisoPush(e),a=document.getElementById('pushPermissionBtn');a&&(t&&t.success?(a.classList.add('active'),a.innerHTML='<i class="fas fa-bell"></i>',a.setAttribute('data-tooltip','Notificaciones activadas'),window.mostrarToast?.('✅ Notificaciones activadas','success')):(a.classList.remove('active'),a.innerHTML='<i class="fas fa-bell"></i>',a.setAttribute('data-tooltip','Activar notificaciones'),window.esBrave()?window.mostrarToast?.('🦁 Brave: Haz clic en el león y permite notificaciones','warning'):window.mostrarToast?.('❌ No se pudieron activar las notificaciones','error')))};
+function urlBase64ToUint8Array(base64String) {
+    const padding = '='.repeat((4 - base64String.length % 4) % 4);
+    const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+    const rawData = window.atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+    for (let i = 0; i < rawData.length; ++i) {
+        outputArray[i] = rawData.charCodeAt(i);
+    }
+    return outputArray;
+}
 
-window.solicitarPermisoPush=async function(e){if(!('Notification'in window))return{success:!1,error:'no_support'};if(!('serviceWorker'in navigator))return{success:!1,error:'no_sw'};if('https:'!==location.protocol&&'localhost'!==location.hostname)return{success:!1,error:'no_https'};try{if('granted'!==await Notification.requestPermission())return{success:!1,error:'denied'};let t=await navigator.serviceWorker.register('/SakiSushi0/sw.js');await navigator.serviceWorker.ready;let a=await t.pushManager.getSubscription();a||(a=await t.pushManager.subscribe({userVisibleOnly:!0,applicationServerKey:urlBase64ToUint8Array(window.VAPID_PUBLIC_KEY)}));let i=btoa(String.fromCharCode.apply(null,new Uint8Array(a.getKey('p256dh')))),l=btoa(String.fromCharCode.apply(null,new Uint8Array(a.getKey('auth'))));return(await window.supabaseClient.from('push_subscriptions').upsert([{session_id:e,endpoint:a.endpoint,p256dh:i,auth:l,user_agent:navigator.userAgent}],{onConflict:'endpoint'})).error?{success:!1,error:'db_error'}:{success:!0,subscription:a}}catch(t){return console.error('❌ Error en push:',t),window.esBrave()?{success:!1,error:'brave_blocked'}:{success:!1,error:t.message}}};
+window.esBrave = function() {
+    return navigator.brave && typeof navigator.brave.isBrave === 'function';
+};
 
-window.tienePermisoPush=function(){return'granted'===Notification.permission};
+window.solicitarPermisoPushUI = async function() {
+    const sessionId = localStorage.getItem('saki_session_id');
+    if (!sessionId) {
+        console.error('❌ No hay session_id');
+        return;
+    }
+    
+    if (window.esBrave()) {
+        window.mostrarToast?.('🦁 En Brave, haz clic en el león y permite notificaciones', 'warning');
+    }
+    
+    const resultado = await window.solicitarPermisoPush(sessionId);
+    const btn = document.getElementById('pushPermissionBtn');
+    if (!btn) return;
+    
+    if (resultado && resultado.success) {
+        btn.classList.add('active');
+        btn.innerHTML = '<i class="fas fa-bell"></i>';
+        btn.setAttribute('data-tooltip', 'Notificaciones activadas');
+        window.mostrarToast?.('✅ Notificaciones activadas', 'success');
+    } else {
+        btn.classList.remove('active');
+        btn.innerHTML = '<i class="fas fa-bell"></i>';
+        btn.setAttribute('data-tooltip', 'Activar notificaciones');
+        if (window.esBrave()) {
+            window.mostrarToast?.('🦁 Brave: Haz clic en el león y permite notificaciones', 'warning');
+        } else {
+            window.mostrarToast?.('❌ No se pudieron activar las notificaciones', 'error');
+        }
+    }
+};
 
-window.actualizarEstadoPushUI=function(){let e=document.getElementById('pushPermissionBtn');e&&(window.tienePermisoPush()?(e.classList.add('active'),e.innerHTML='<i class="fas fa-bell"></i>',e.setAttribute('data-tooltip','Notificaciones activadas')):(e.classList.remove('active'),e.innerHTML='<i class="fas fa-bell"></i>',e.setAttribute('data-tooltip','Activar notificaciones')))};
+window.solicitarPermisoPush = async function(sessionId) {
+    if (!('Notification' in window)) return { success: false, error: 'no_support' };
+    if (!('serviceWorker' in navigator)) return { success: false, error: 'no_sw' };
+    if (location.protocol !== 'https:' && location.hostname !== 'localhost') return { success: false, error: 'no_https' };
+    
+    try {
+        const permiso = await Notification.requestPermission();
+        if (permiso !== 'granted') return { success: false, error: 'denied' };
+        
+        const swUrl = '/SakiSushi0/sw.js';
+        const registration = await navigator.serviceWorker.register(swUrl);
+        await navigator.serviceWorker.ready;
+        
+        let subscription = await registration.pushManager.getSubscription();
+        if (!subscription) {
+            subscription = await registration.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: urlBase64ToUint8Array(window.VAPID_PUBLIC_KEY)
+            });
+        }
+        
+        const p256dh = btoa(String.fromCharCode.apply(null, new Uint8Array(subscription.getKey('p256dh'))));
+        const auth = btoa(String.fromCharCode.apply(null, new Uint8Array(subscription.getKey('auth'))));
+        
+        const { error } = await window.supabaseClient
+            .from('push_subscriptions')
+            .upsert([{
+                session_id: sessionId,
+                endpoint: subscription.endpoint,
+                p256dh: p256dh,
+                auth: auth,
+                user_agent: navigator.userAgent
+            }], { onConflict: 'endpoint' });
+            
+        if (error) throw error;
+        return { success: true, subscription };
+        
+    } catch (error) {
+        console.error('❌ Error en push:', error);
+        if (window.esBrave()) {
+            return { success: false, error: 'brave_blocked' };
+        }
+        return { success: false, error: error.message };
+    }
+};
 
-window.verificarServiceWorker=async function(){if(!('serviceWorker'in navigator))return!1;let e=await navigator.serviceWorker.getRegistrations();return e.some(e=>e.active&&e.active.scriptURL.includes('sw.js'))};
+window.tienePermisoPush = function() {
+    return Notification.permission === 'granted';
+};
 
-window.verificarNotificacionPush=function(){let e=new URLSearchParams(window.location.search).get('notif');e&&setTimeout(()=>{window.toggleNotifications?.()},1e3)};
+window.actualizarEstadoPushUI = function() {
+    const btn = document.getElementById('pushPermissionBtn');
+    if (!btn) return;
+    if (window.tienePermisoPush()) {
+        btn.classList.add('active');
+        btn.innerHTML = '<i class="fas fa-bell"></i>';
+        btn.setAttribute('data-tooltip', 'Notificaciones activadas');
+    } else {
+        btn.classList.remove('active');
+        btn.innerHTML = '<i class="fas fa-bell"></i>';
+        btn.setAttribute('data-tooltip', 'Activar notificaciones');
+    }
+};
 
-window.cargarConfiguracion=async function(){try{let{data:e,error:t}=await window.supabaseClient.from('config').select('*').eq('id',1).single();if(t)throw t;e&&(window.configGlobal={...window.configGlobal,...e})}catch(e){console.error('Error cargando configuración:',e)}return window.configGlobal};
+window.verificarServiceWorker = async function() {
+    if (!('serviceWorker' in navigator)) return false;
+    const registrations = await navigator.serviceWorker.getRegistrations();
+    return registrations.some(reg => reg.active && reg.active.scriptURL.includes('sw.js'));
+};
 
-window.subirImagenPlatillo=async function(e,t=''){try{if(!e)return{success:!1,error:'No se proporcionó archivo'};if(!['image/jpeg','image/png','image/jpg','image/webp','image/gif'].includes(e.type))return{success:!1,error:'Tipo de archivo no válido'};if(e.size>5242880)return{success:!1,error:'El archivo es demasiado grande. Máximo 5MB'};let a=Date.now(),i=Math.random().toString(36).substring(2,8),l=e.name.split('.').pop(),r=`${a}_${i}.${l}`,n=t?`${t}/${r}`:r,{error:s}=await window.supabaseClient.storage.from('imagenes-platillos').upload(n,e,{cacheControl:'3600',upsert:!1,contentType:e.type});if(s)throw s;let{data:o}=window.supabaseClient.storage.from('imagenes-platillos').getPublicUrl(n);return{success:!0,path:n,url:o.publicUrl}}catch(e){return console.error('Error subiendo imagen:',e),{success:!1,error:e.message}}};
+window.verificarNotificacionPush = function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const notifSession = urlParams.get('notif');
+    if (notifSession) {
+        setTimeout(() => {
+            if (window.toggleNotifications) window.toggleNotifications();
+        }, 1000);
+    }
+};
 
-window.eliminarImagenPlatillo=async function(e){try{if(!e)return{success:!0};let t='imagenes-platillos',a=e.indexOf(`/public/${t}/`);if(-1===a)return{success:!0};let i=e.substring(a+`/public/${t}/`.length);if(!i)return{success:!0};let{error:l}=await window.supabaseClient.storage.from(t).remove([i]);return l?{success:!1,error:l.message}:{success:!0}}catch(e){return console.error('Error eliminando imagen:',e),{success:!1,error:e.message}}};
+// ============================================
+// FUNCIONES DE CONFIGURACIÓN
+// ============================================
 
-window.subirComprobante=async function(e,t,a){try{if(!e)throw new Error('No se proporcionó archivo');if(!['image/jpeg','image/png','image/jpg','image/webp','image/gif'].includes(e.type))throw new Error('Tipo de archivo no válido');if(e.size>5242880)throw new Error('El archivo es demasiado grande. Máximo 5MB');let i=Date.now(),l=`${i}_${e.name.replace(/[^a-zA-Z0-9.]/g,'_')}`,r=`${t}/${l}`,{error:n}=await window.supabaseClient.storage.from('comprobantes').upload(r,e,{cacheControl:'3600',upsert:!1,contentType:e.type});if(n)throw new Error(n.message||'Error al subir el archivo');let{data:s}=window.supabaseClient.storage.from('comprobantes').getPublicUrl(r);return a&&a({loaded:e.size,total:e.size,percent:100}),{success:!0,url:s.publicUrl}}catch(e){return console.error('Error en subirComprobante:',e),{success:!1,error:e.message||'Error desconocido al subir el comprobante'}}};
+window.cargarConfiguracion = async function() {
+    try {
+        if (!window.supabaseClient) {
+            console.error('❌ Supabase no inicializado');
+            return window.configGlobal;
+        }
+        
+        const { data, error } = await window.supabaseClient
+            .from('config')
+            .select('*')
+            .eq('id', 1)
+            .single();
+            
+        if (error) throw error;
+        if (data) window.configGlobal = { ...window.configGlobal, ...data };
+        return window.configGlobal;
+    } catch (error) {
+        console.error('Error cargando configuración:', error);
+        return window.configGlobal;
+    }
+};
 
-window.formatBs=function(m){try{const v=Math.round(100*(m||0))/100;let [e,d]=v.toFixed(2).split('.');e=e.replace(/\B(?=(\d{3})+(?!\d))/g,'.');return`Bs ${e},${d}`}catch(e){return'Bs '+(m||0).toFixed(2)}};
+// ============================================
+// FUNCIONES DE IMÁGENES
+// ============================================
 
-window.formatUSD=function(m){try{return new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',minimumFractionDigits:2}).format(m)}catch(e){return'$ '+(m||0).toFixed(2)}};
+window.subirImagenPlatillo = async function(archivoImagen, carpetaAdicional = '') {
+    try {
+        if (!archivoImagen) return { success: false, error: 'No se proporcionó archivo' };
+        
+        const tipoValido = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp', 'image/gif'];
+        if (!tipoValido.includes(archivoImagen.type)) {
+            return { success: false, error: 'Tipo de archivo no válido' };
+        }
+        
+        const maxSize = 5 * 1024 * 1024;
+        if (archivoImagen.size > maxSize) {
+            return { success: false, error: 'El archivo es demasiado grande. Máximo 5MB' };
+        }
+        
+        const timestamp = Date.now();
+        const random = Math.random().toString(36).substring(2, 8);
+        const extension = archivoImagen.name.split('.').pop();
+        const nombreArchivo = `${timestamp}_${random}.${extension}`;
+        const ruta = carpetaAdicional ? `${carpetaAdicional}/${nombreArchivo}` : nombreArchivo;
+        
+        const { data, error } = await window.supabaseClient.storage
+            .from('imagenes-platillos')
+            .upload(ruta, archivoImagen, {
+                cacheControl: '3600',
+                upsert: false,
+                contentType: archivoImagen.type
+            });
+            
+        if (error) throw error;
+        
+        const { data: urlData } = window.supabaseClient.storage
+            .from('imagenes-platillos')
+            .getPublicUrl(ruta);
+            
+        return { success: true, path: ruta, url: urlData.publicUrl };
+    } catch (error) {
+        console.error('Error subiendo imagen:', error);
+        return { success: false, error: error.message };
+    }
+};
 
-window.generarId=(e='')=>window.crypto?.randomUUID?e+crypto.randomUUID():`${e}${Date.now()}_${Math.random().toString(36).substring(2,15)}`;
+window.eliminarImagenPlatillo = async function(urlImagen) {
+    try {
+        if (!urlImagen) return { success: true };
+        
+        const bucketName = 'imagenes-platillos';
+        const bucketIndex = urlImagen.indexOf(`/public/${bucketName}/`);
+        if (bucketIndex === -1) return { success: true };
+        
+        const rutaRelativa = urlImagen.substring(bucketIndex + `/public/${bucketName}/`.length);
+        if (!rutaRelativa) return { success: true };
+        
+        const { error } = await window.supabaseClient.storage
+            .from(bucketName)
+            .remove([rutaRelativa]);
+            
+        if (error) throw error;
+        return { success: true };
+    } catch (error) {
+        console.error('Error eliminando imagen:', error);
+        return { success: false, error: error.message };
+    }
+};
 
-window.validarTelefono=e=>/^(0412|0414|0424|0416|0426|0418|0422|0212|0234|0241|0243|0246|0251|0254|0255|0257|0261|0264|0265|0268|0271|0273|0274|0275|0276|0281)\d{7}$/.test(e.replace(/\D/g,''));
+window.subirComprobante = async function(file, tipo, onProgress) {
+    try {
+        if (!file) throw new Error('No se proporcionó archivo');
+        
+        const tipoValido = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp', 'image/gif'];
+        if (!tipoValido.includes(file.type)) {
+            throw new Error('Tipo de archivo no válido. Solo imágenes JPG, PNG, WEBP o GIF');
+        }
+        
+        const maxSize = 5 * 1024 * 1024;
+        if (file.size > maxSize) throw new Error('El archivo es demasiado grande. Máximo 5MB');
+        
+        const timestamp = Date.now();
+        const nombreArchivo = `${timestamp}_${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
+        const ruta = `${tipo}/${nombreArchivo}`;
+        
+        const { data, error } = await window.supabaseClient.storage
+            .from('comprobantes')
+            .upload(ruta, file, {
+                cacheControl: '3600',
+                upsert: false,
+                contentType: file.type
+            });
+            
+        if (error) throw new Error(error.message || 'Error al subir el archivo');
+        
+        const { data: urlData } = window.supabaseClient.storage
+            .from('comprobantes')
+            .getPublicUrl(ruta);
+            
+        if (onProgress) onProgress({ loaded: file.size, total: file.size, percent: 100 });
+        return { success: true, url: urlData.publicUrl };
+    } catch (error) {
+        console.error('Error en subirComprobante:', error);
+        return { success: false, error: error.message || 'Error desconocido al subir el comprobante' };
+    }
+};
 
-window.validarReferencia=e=>6===e.replace(/\D/g,'').length;
+// ============================================
+// FORMATO DE MONEDAS Y UTILIDADES
+// ============================================
 
-window.usdToBs=(e,t)=>e*(t||window.configGlobal.tasa_efectiva||400);
+window.formatBs = function(monto) {
+    try {
+        const valor = Math.round((monto || 0) * 100) / 100;
+        const partes = valor.toFixed(2).split('.');
+        let entero = partes[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+        return `Bs ${entero},${partes[1]}`;
+    } catch (e) {
+        return 'Bs ' + (monto || 0).toFixed(2);
+    }
+};
 
-window.bsToUsd=(e,t)=>e/(t||window.configGlobal.tasa_efectiva||400);
+window.formatUSD = function(monto) {
+    try {
+        return new Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency: 'USD',
+            minimumFractionDigits: 2
+        }).format(monto);
+    } catch (e) {
+        return '$ ' + (monto || 0).toFixed(2);
+    }
+};
 
-window.parroquiasDelivery=[
-    {nombre:"San Bernardino",precioUSD:2},{nombre:"San José",precioUSD:2},{nombre:"San Agustín",precioUSD:2},
-    {nombre:"Candelaria",precioUSD:2},{nombre:"San Juan",precioUSD:3},{nombre:"Catedral",precioUSD:3},
-    {nombre:"Santa Rosalía",precioUSD:3},{nombre:"El Recreo",precioUSD:4},{nombre:"La Candelaria",precioUSD:2},
-    {nombre:"San Pedro",precioUSD:4},{nombre:"El Paraíso",precioUSD:4},{nombre:"La Vega",precioUSD:4},
-    {nombre:"El Valle",precioUSD:5},{nombre:"Coche",precioUSD:5},{nombre:"Caricuao",precioUSD:7},
-    {nombre:"Antímano",precioUSD:7},{nombre:"Macarao",precioUSD:7},{nombre:"23 de Enero",precioUSD:4},
-    {nombre:"La Pastora",precioUSD:3},{nombre:"Altagracia",precioUSD:3},{nombre:"Santa Teresa",precioUSD:3},
-    {nombre:"Santa Rosalía de Palermo",precioUSD:3},{nombre:"Chacao",precioUSD:5},{nombre:"Leoncio Martínez",precioUSD:6},
-    {nombre:"Petare",precioUSD:6},{nombre:"La Dolorita",precioUSD:6},{nombre:"Fila de Mariches",precioUSD:6},
-    {nombre:"Caucagüita",precioUSD:7},{nombre:"El Cafetal",precioUSD:6},{nombre:"Las Minas",precioUSD:5},
-    {nombre:"Nuestra Señora del Rosario",precioUSD:7},{nombre:"Sucre",precioUSD:7},{nombre:"El Junquito",precioUSD:7}
+window.generarId = function(prefix = '') {
+    if (window.crypto && window.crypto.randomUUID) {
+        return prefix + crypto.randomUUID();
+    }
+    return prefix + Date.now() + '_' + Math.random().toString(36).substring(2, 15);
+};
+
+window.validarTelefono = function(telefono) {
+    const soloNumeros = telefono.replace(/\D/g, '');
+    const regex = /^(0412|0414|0424|0416|0426|0418|0422|0212|0234|0241|0243|0246|0251|0254|0255|0257|0261|0264|0265|0268|0271|0273|0274|0275|0276|0281)\d{7}$/;
+    return regex.test(soloNumeros);
+};
+
+window.validarReferencia = function(ref) {
+    const soloNumeros = ref.replace(/\D/g, '');
+    return soloNumeros.length === 6;
+};
+
+window.usdToBs = function(usd, tasa) {
+    const tasaActual = tasa || window.configGlobal.tasa_efectiva || 400;
+    return usd * tasaActual;
+};
+
+window.bsToUsd = function(bs, tasa) {
+    const tasaActual = tasa || window.configGlobal.tasa_efectiva || 400;
+    return bs / tasaActual;
+};
+
+// ============================================
+// DATOS DE PARROQUIAS PARA DELIVERY
+// ============================================
+
+window.parroquiasDelivery = [
+    { nombre: "San Bernardino", precioUSD: 2 },
+    { nombre: "San José", precioUSD: 2 },
+    { nombre: "San Agustín", precioUSD: 2 },
+    { nombre: "Candelaria", precioUSD: 2 },
+    { nombre: "San Juan", precioUSD: 3 },
+    { nombre: "Catedral", precioUSD: 3 },
+    { nombre: "Santa Rosalía", precioUSD: 3 },
+    { nombre: "El Recreo", precioUSD: 4 },
+    { nombre: "La Candelaria", precioUSD: 2 },
+    { nombre: "San Pedro", precioUSD: 4 },
+    { nombre: "El Paraíso", precioUSD: 4 },
+    { nombre: "La Vega", precioUSD: 4 },
+    { nombre: "El Valle", precioUSD: 5 },
+    { nombre: "Coche", precioUSD: 5 },
+    { nombre: "Caricuao", precioUSD: 7 },
+    { nombre: "Antímano", precioUSD: 7 },
+    { nombre: "Macarao", precioUSD: 7 },
+    { nombre: "23 de Enero", precioUSD: 4 },
+    { nombre: "La Pastora", precioUSD: 3 },
+    { nombre: "Altagracia", precioUSD: 3 },
+    { nombre: "Santa Teresa", precioUSD: 3 },
+    { nombre: "Santa Rosalía de Palermo", precioUSD: 3 },
+    { nombre: "Chacao", precioUSD: 5 },
+    { nombre: "Leoncio Martínez", precioUSD: 6 },
+    { nombre: "Petare", precioUSD: 6 },
+    { nombre: "La Dolorita", precioUSD: 6 },
+    { nombre: "Fila de Mariches", precioUSD: 6 },
+    { nombre: "Caucagüita", precioUSD: 7 },
+    { nombre: "El Cafetal", precioUSD: 6 },
+    { nombre: "Las Minas", precioUSD: 5 },
+    { nombre: "Nuestra Señora del Rosario", precioUSD: 7 },
+    { nombre: "Sucre", precioUSD: 7 },
+    { nombre: "El Junquito", precioUSD: 7 }
 ];
 
-window.categoriasMenu={
-    Entradas:[],Sushi:[],Rolls:["Rolls Fríos de 10 piezas","Rolls Tempura de 12 piezas"],
-    "Tragos y bebidas":[],Pokes:[],Ensaladas:[],
-    "Comida China":["Arroz Chino","Arroz Cantones","Chopsuey","Lomey","Chow Mein","Fideos de Arroz","Tallarines Cantones","Mariscos","Foo Yong","Sopas","Entremeses"],
-    "Comida Japonesa":["Yakimeshi","Yakisoba","Pasta Udon","Churrasco"],
-    "Ofertas Especiales":[],"Para Niños":[],"Combo Ejecutivo":[]
+// ============================================
+// CATEGORÍAS DEL MENÚ
+// ============================================
+
+window.categoriasMenu = {
+    "Entradas": [],
+    "Sushi": [],
+    "Rolls": ["Rolls Fríos de 10 piezas", "Rolls Tempura de 12 piezas"],
+    "Tragos y bebidas": [],
+    "Pokes": [],
+    "Ensaladas": [],
+    "Comida China": [
+        "Arroz Chino",
+        "Arroz Cantones",
+        "Chopsuey",
+        "Lomey",
+        "Chow Mein",
+        "Fideos de Arroz",
+        "Tallarines Cantones",
+        "Mariscos",
+        "Foo Yong",
+        "Sopas",
+        "Entremeses"
+    ],
+    "Comida Japonesa": [
+        "Yakimeshi",
+        "Yakisoba",
+        "Pasta Udon",
+        "Churrasco"
+    ],
+    "Ofertas Especiales": [],
+    "Para Niños": [],
+    "Combo Ejecutivo": []
 };
 
-window.verificarNotificacionesForzadas=async function(e){try{let t=window.getFechaGMT4();t.setHours(0,0,0,0);let a=new Date(t);a.setDate(a.getDate()+1);let i=new Date(t.getTime()-144e5),l=new Date(a.getTime()-144e5),{data:r,error:n}=await window.supabaseClient.from('notificaciones').select('*').eq('session_id',e).gte('fecha',i.toISOString()).lt('fecha',l.toISOString()).order('fecha',{ascending:!1});return n?[]:r||[]}catch(e){return console.error('❌ Error en verificación forzada:',e),[]}};
+// ============================================
+// FUNCIÓN DE VERIFICACIÓN DE NOTIFICACIONES
+// ============================================
+
+window.verificarNotificacionesForzadas = async function(sessionId) {
+    try {
+        const hoy = window.getFechaGMT4();
+        hoy.setHours(0, 0, 0, 0);
+        
+        const manana = new Date(hoy);
+        manana.setDate(manana.getDate() + 1);
+        
+        const hoyUTC = new Date(hoy.getTime() - (4 * 60 * 60 * 1000));
+        const mananaUTC = new Date(manana.getTime() - (4 * 60 * 60 * 1000));
+        
+        const { data, error } = await window.supabaseClient
+            .from('notificaciones')
+            .select('*')
+            .eq('session_id', sessionId)
+            .gte('fecha', hoyUTC.toISOString())
+            .lt('fecha', mananaUTC.toISOString())
+            .order('fecha', { ascending: false });
+            
+        if (error) throw error;
+        return data || [];
+    } catch (error) {
+        console.error('❌ Error en verificación forzada:', error);
+        return [];
+    }
+};
+
+// ============================================
+// VERIFICACIÓN FINAL
+// ============================================
 
 console.log('✅ supabase-config.js cargado correctamente');
-console.log('   - VAPID Public Key:',window.VAPID_PUBLIC_KEY?'✅':'❌');
-console.log('   - GMT-4 functions:',typeof window.formatearFechaGMT4==='function'?'✅':'❌');
-console.log('   - Push functions:',typeof window.solicitarPermisoPush==='function'?'✅':'❌');
+console.log('   - Cliente Supabase:', window.supabaseClient ? '✅' : '❌');
+console.log('   - VAPID Public Key:', window.VAPID_PUBLIC_KEY ? '✅' : '❌');
+console.log('   - GMT-4 functions:', typeof window.formatearFechaGMT4 === 'function' ? '✅' : '❌');
+console.log('   - Push functions:', typeof window.solicitarPermisoPush === 'function' ? '✅' : '❌');
+console.log('   - Parroquias delivery:', window.parroquiasDelivery.length);
+console.log('   - Categorías menú:', Object.keys(window.categoriasMenu).length);
