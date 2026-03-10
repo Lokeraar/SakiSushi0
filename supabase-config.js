@@ -1,32 +1,121 @@
-window.SUPABASE_URL='https://iqwwoihiiyrtypyqzhgy.supabase.co';window.SUPABASE_ANON_KEY='sb_publishable_m4WcF4gmkj1olAj95HMLlA_4yKqPFXm';if(!window.supabaseClient){window.supabaseClient=window.supabase.createClient(window.SUPABASE_URL,window.SUPABASE_ANON_KEY,{auth:{persistSession:false}});console.log('📌 Cliente Supabase inicializado');}
-window.configGlobal={tasa_cambio:400,tasa_efectiva:400,aumento_diario:0,aumento_acumulado:0,aumento_activo:false,aumento_detenido:false,fecha_ultimo_aumento:null,ultima_actualizacion:null,admin_password:'654321',recovery_email:'admin@sakisushi.com',alerta_stock_minimo:5};
-window.appCache={stock:{data:{},lastUpdate:0,duration:5e3},platillos:new Map(),pedidos:new Map(),getStock:function(e){return Date.now()-this.stock.lastUpdate>this.stock.duration&&(this.stock.data={}),this.stock.data[e]},setStock:function(e,t){this.stock.data[e]=t,this.stock.lastUpdate=Date.now()},invalidateStock:function(){this.stock.data={},this.stock.lastUpdate=0,this.platillos.clear()},limpiarTodo:function(){this.stock.data={},this.stock.lastUpdate=0,this.platillos.clear(),this.pedidos.clear()}};window.stockCache={get:e=>window.appCache.getStock(e),set:(e,t)=>window.appCache.setStock(e,t),invalidate:()=>window.appCache.invalidateStock(),clear:()=>{window.appCache.stock.data={},window.appCache.stock.lastUpdate=0}};
+window.SUPABASE_URL='https://iqwwoihiiyrtypyqzhgy.supabase.co';
+window.SUPABASE_ANON_KEY='sb_publishable_m4WcF4gmkj1olAj95HMLlA_4yKqPFXm';
+
+if(!window.supabaseClient){
+    window.supabaseClient=window.supabase.createClient(
+        window.SUPABASE_URL,
+        window.SUPABASE_ANON_KEY,
+        {auth:{persistSession:false}}
+    );
+    console.log('📌 Cliente Supabase inicializado');
+}
+
+window.configGlobal={
+    tasa_cambio:400,
+    tasa_efectiva:400,
+    aumento_diario:0,
+    aumento_acumulado:0,
+    aumento_activo:false,
+    aumento_detenido:false,
+    fecha_ultimo_aumento:null,
+    ultima_actualizacion:null,
+    admin_password:'654321',
+    recovery_email:'admin@sakisushi.com',
+    alerta_stock_minimo:5
+};
+
+window.appCache={
+    stock:{data:{},lastUpdate:0,duration:5e3},
+    platillos:new Map(),
+    pedidos:new Map(),
+    getStock:function(e){return Date.now()-this.stock.lastUpdate>this.stock.duration&&(this.stock.data={}),this.stock.data[e]},
+    setStock:function(e,t){this.stock.data[e]=t,this.stock.lastUpdate=Date.now()},
+    invalidateStock:function(){this.stock.data={},this.stock.lastUpdate=0,this.platillos.clear()},
+    limpiarTodo:function(){this.stock.data={},this.stock.lastUpdate=0,this.platillos.clear(),this.pedidos.clear()}
+};
+
+window.stockCache={
+    get:e=>window.appCache.getStock(e),
+    set:(e,t)=>window.appCache.setStock(e,t),
+    invalidate:()=>window.appCache.invalidateStock(),
+    clear:()=>{window.appCache.stock.data={},window.appCache.stock.lastUpdate=0}
+};
+
 window.getFechaGMT4=function(){return new Date(new Date().toLocaleString('en-US',{timeZone:'America/Caracas'}))};
+
 window.formatearFechaGMT4=function(e){if(!e)return'N/A';try{let t=new Date(e),a=new Date(t.toLocaleString('en-US',{timeZone:'America/Caracas'}));return`${a.getDate().toString().padStart(2,'0')}/${(a.getMonth()+1).toString().padStart(2,'0')}/${a.getFullYear()} ${a.getHours().toString().padStart(2,'0')}:${a.getMinutes().toString().padStart(2,'0')}`}catch(t){return e}};
+
 window.formatearHora12GMT4=function(e){if(!e)return'N/A';try{let t=new Date(e),a=new Date(t.toLocaleString('en-US',{timeZone:'America/Caracas'})),i=a.getHours(),l=a.getMinutes().toString().padStart(2,'0'),r=i>=12?'pm':'am';return i=i%12||12,`${i}:${l} ${r}`}catch(t){return e}};
+
 window.getTimestampISO_GMT4=function(){let e=new Date(new Date().toLocaleString('en-US',{timeZone:'America/Caracas'}));return new Date(e.getTime()+144e5).toISOString()};
+
 window.utcToGMT4=function(e){if(!e)return null;try{return new Date(new Date(e).getTime()-144e5)}catch(t){return new Date(e)}};
+
 window.VAPID_PUBLIC_KEY='BC6oJ4E+5pGIn4icpzCBLMi6/nk+1JJenrUA41uJrAs1ELraSw5ctvRAlh8sHVldqzBXUtEwEeFKBm0/hmuM9EY=';
+
 function urlBase64ToUint8Array(e){const t='='.repeat((4-e.length%4)%4),a=(e+t).replace(/-/g,'+').replace(/_/g,'/'),i=window.atob(a),l=new Uint8Array(i.length);for(let e=0;e<i.length;++e)l[e]=i.charCodeAt(e);return l}
+
 window.esBrave=function(){return navigator.brave&&'function'==typeof navigator.brave.isBrave};
+
 window.solicitarPermisoPushUI=async function(){let e=localStorage.getItem('saki_session_id');if(!e){console.error('❌ No hay session_id');return}window.esBrave()&&window.mostrarToast?.('🦁 En Brave, haz clic en el león y permite notificaciones','warning');let t=await window.solicitarPermisoPush(e),a=document.getElementById('pushPermissionBtn');a&&(t&&t.success?(a.classList.add('active'),a.innerHTML='<i class="fas fa-bell"></i>',a.setAttribute('data-tooltip','Notificaciones activadas'),window.mostrarToast?.('✅ Notificaciones activadas','success')):(a.classList.remove('active'),a.innerHTML='<i class="fas fa-bell"></i>',a.setAttribute('data-tooltip','Activar notificaciones'),window.esBrave()?window.mostrarToast?.('🦁 Brave: Haz clic en el león y permite notificaciones','warning'):window.mostrarToast?.('❌ No se pudieron activar las notificaciones','error')))};
+
 window.solicitarPermisoPush=async function(e){if(!('Notification'in window))return{success:!1,error:'no_support'};if(!('serviceWorker'in navigator))return{success:!1,error:'no_sw'};if('https:'!==location.protocol&&'localhost'!==location.hostname)return{success:!1,error:'no_https'};try{if('granted'!==await Notification.requestPermission())return{success:!1,error:'denied'};let t=await navigator.serviceWorker.register('/SakiSushi0/sw.js');await navigator.serviceWorker.ready;let a=await t.pushManager.getSubscription();a||(a=await t.pushManager.subscribe({userVisibleOnly:!0,applicationServerKey:urlBase64ToUint8Array(window.VAPID_PUBLIC_KEY)}));let i=btoa(String.fromCharCode.apply(null,new Uint8Array(a.getKey('p256dh')))),l=btoa(String.fromCharCode.apply(null,new Uint8Array(a.getKey('auth'))));return(await window.supabaseClient.from('push_subscriptions').upsert([{session_id:e,endpoint:a.endpoint,p256dh:i,auth:l,user_agent:navigator.userAgent}],{onConflict:'endpoint'})).error?{success:!1,error:'db_error'}:{success:!0,subscription:a}}catch(t){return console.error('❌ Error en push:',t),window.esBrave()?{success:!1,error:'brave_blocked'}:{success:!1,error:t.message}}};
+
 window.tienePermisoPush=function(){return'granted'===Notification.permission};
+
 window.actualizarEstadoPushUI=function(){let e=document.getElementById('pushPermissionBtn');e&&(window.tienePermisoPush()?(e.classList.add('active'),e.innerHTML='<i class="fas fa-bell"></i>',e.setAttribute('data-tooltip','Notificaciones activadas')):(e.classList.remove('active'),e.innerHTML='<i class="fas fa-bell"></i>',e.setAttribute('data-tooltip','Activar notificaciones')))};
+
 window.verificarServiceWorker=async function(){if(!('serviceWorker'in navigator))return!1;let e=await navigator.serviceWorker.getRegistrations();return e.some(e=>e.active&&e.active.scriptURL.includes('sw.js'))};
+
 window.verificarNotificacionPush=function(){let e=new URLSearchParams(window.location.search).get('notif');e&&setTimeout(()=>{window.toggleNotifications?.()},1e3)};
+
 window.cargarConfiguracion=async function(){try{let{data:e,error:t}=await window.supabaseClient.from('config').select('*').eq('id',1).single();if(t)throw t;e&&(window.configGlobal={...window.configGlobal,...e})}catch(e){console.error('Error cargando configuración:',e)}return window.configGlobal};
+
 window.subirImagenPlatillo=async function(e,t=''){try{if(!e)return{success:!1,error:'No se proporcionó archivo'};if(!['image/jpeg','image/png','image/jpg','image/webp','image/gif'].includes(e.type))return{success:!1,error:'Tipo de archivo no válido'};if(e.size>5242880)return{success:!1,error:'El archivo es demasiado grande. Máximo 5MB'};let a=Date.now(),i=Math.random().toString(36).substring(2,8),l=e.name.split('.').pop(),r=`${a}_${i}.${l}`,n=t?`${t}/${r}`:r,{error:s}=await window.supabaseClient.storage.from('imagenes-platillos').upload(n,e,{cacheControl:'3600',upsert:!1,contentType:e.type});if(s)throw s;let{data:o}=window.supabaseClient.storage.from('imagenes-platillos').getPublicUrl(n);return{success:!0,path:n,url:o.publicUrl}}catch(e){return console.error('Error subiendo imagen:',e),{success:!1,error:e.message}}};
+
 window.eliminarImagenPlatillo=async function(e){try{if(!e)return{success:!0};let t='imagenes-platillos',a=e.indexOf(`/public/${t}/`);if(-1===a)return{success:!0};let i=e.substring(a+`/public/${t}/`.length);if(!i)return{success:!0};let{error:l}=await window.supabaseClient.storage.from(t).remove([i]);return l?{success:!1,error:l.message}:{success:!0}}catch(e){return console.error('Error eliminando imagen:',e),{success:!1,error:e.message}}};
+
 window.subirComprobante=async function(e,t,a){try{if(!e)throw new Error('No se proporcionó archivo');if(!['image/jpeg','image/png','image/jpg','image/webp','image/gif'].includes(e.type))throw new Error('Tipo de archivo no válido');if(e.size>5242880)throw new Error('El archivo es demasiado grande. Máximo 5MB');let i=Date.now(),l=`${i}_${e.name.replace(/[^a-zA-Z0-9.]/g,'_')}`,r=`${t}/${l}`,{error:n}=await window.supabaseClient.storage.from('comprobantes').upload(r,e,{cacheControl:'3600',upsert:!1,contentType:e.type});if(n)throw new Error(n.message||'Error al subir el archivo');let{data:s}=window.supabaseClient.storage.from('comprobantes').getPublicUrl(r);return a&&a({loaded:e.size,total:e.size,percent:100}),{success:!0,url:s.publicUrl}}catch(e){return console.error('Error en subirComprobante:',e),{success:!1,error:e.message||'Error desconocido al subir el comprobante'}}};
+
 window.formatBs=function(m){try{const v=Math.round(100*(m||0))/100;let [e,d]=v.toFixed(2).split('.');e=e.replace(/\B(?=(\d{3})+(?!\d))/g,'.');return`Bs ${e},${d}`}catch(e){return'Bs '+(m||0).toFixed(2)}};
+
 window.formatUSD=function(m){try{return new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',minimumFractionDigits:2}).format(m)}catch(e){return'$ '+(m||0).toFixed(2)}};
+
 window.generarId=(e='')=>window.crypto?.randomUUID?e+crypto.randomUUID():`${e}${Date.now()}_${Math.random().toString(36).substring(2,15)}`;
+
 window.validarTelefono=e=>/^(0412|0414|0424|0416|0426|0418|0422|0212|0234|0241|0243|0246|0251|0254|0255|0257|0261|0264|0265|0268|0271|0273|0274|0275|0276|0281)\d{7}$/.test(e.replace(/\D/g,''));
+
 window.validarReferencia=e=>6===e.replace(/\D/g,'').length;
+
 window.usdToBs=(e,t)=>e*(t||window.configGlobal.tasa_efectiva||400);
+
 window.bsToUsd=(e,t)=>e/(t||window.configGlobal.tasa_efectiva||400);
-window.parroquiasDelivery=[{nombre:"San Bernardino",precioUSD:2},{nombre:"San José",precioUSD:2},{nombre:"San Agustín",precioUSD:2},{nombre:"Candelaria",precioUSD:2},{nombre:"San Juan",precioUSD:3},{nombre:"Catedral",precioUSD:3},{nombre:"Santa Rosalía",precioUSD:3},{nombre:"El Recreo",precioUSD:4},{nombre:"La Candelaria",precioUSD:2},{nombre:"San Pedro",precioUSD:4},{nombre:"El Paraíso",precioUSD:4},{nombre:"La Vega",precioUSD:4},{nombre:"El Valle",precioUSD:5},{nombre:"Coche",precioUSD:5},{nombre:"Caricuao",precioUSD:7},{nombre:"Antímano",precioUSD:7},{nombre:"Macarao",precioUSD:7},{nombre:"23 de Enero",precioUSD:4},{nombre:"La Pastora",precioUSD:3},{nombre:"Altagracia",precioUSD:3},{nombre:"Santa Teresa",precioUSD:3},{nombre:"Santa Rosalía de Palermo",precioUSD:3},{nombre:"Chacao",precioUSD:5},{nombre:"Leoncio Martínez",precioUSD:6},{nombre:"Petare",precioUSD:6},{nombre:"La Dolorita",precioUSD:6},{nombre:"Fila de Mariches",precioUSD:6},{nombre:"Caucagüita",precioUSD:7},{nombre:"El Cafetal",precioUSD:6},{nombre:"Las Minas",precioUSD:5},{nombre:"Nuestra Señora del Rosario",precioUSD:7},{nombre:"Sucre",precioUSD:7},{nombre:"El Junquito",precioUSD:7}];
-window.categoriasMenu={Entradas:[],Sushi:[],Rolls:["Rolls Fríos de 10 piezas","Rolls Tempura de 12 piezas"],"Tragos y bebidas":[],Pokes:[],Ensaladas:[],"Comida China":["Arroz Chino","Arroz Cantones","Chopsuey","Lomey","Chow Mein","Fideos de Arroz","Tallarines Cantones","Mariscos","Foo Yong","Sopas","Entremeses"],"Comida Japonesa":["Yakimeshi","Yakisoba","Pasta Udon","Churrasco"],"Ofertas Especiales":[],"Para Niños":[],"Combo Ejecutivo":[]};
-window.verificarNotificacionesForzadas=async function(e){try{let t=window.getFechaGMT4();t.setHours(0,0,0,0);let a=new Date(t);a.setDate(a.getDate()+1);let i=new Date(t.getTime()-144e5),l=new Date(a.getTime()-144e5),{data:r,error:n}=await window.supabaseClient.from('notificaciones').select('*').eq('session_id',e).gte('timestamp',i.toISOString()).lt('timestamp',l.toISOString()).order('timestamp',{ascending:!1});return n?[]:r||[]}catch(e){return console.error('❌ Error en verificación forzada:',e),[]}};
+
+window.parroquiasDelivery=[
+    {nombre:"San Bernardino",precioUSD:2},{nombre:"San José",precioUSD:2},{nombre:"San Agustín",precioUSD:2},
+    {nombre:"Candelaria",precioUSD:2},{nombre:"San Juan",precioUSD:3},{nombre:"Catedral",precioUSD:3},
+    {nombre:"Santa Rosalía",precioUSD:3},{nombre:"El Recreo",precioUSD:4},{nombre:"La Candelaria",precioUSD:2},
+    {nombre:"San Pedro",precioUSD:4},{nombre:"El Paraíso",precioUSD:4},{nombre:"La Vega",precioUSD:4},
+    {nombre:"El Valle",precioUSD:5},{nombre:"Coche",precioUSD:5},{nombre:"Caricuao",precioUSD:7},
+    {nombre:"Antímano",precioUSD:7},{nombre:"Macarao",precioUSD:7},{nombre:"23 de Enero",precioUSD:4},
+    {nombre:"La Pastora",precioUSD:3},{nombre:"Altagracia",precioUSD:3},{nombre:"Santa Teresa",precioUSD:3},
+    {nombre:"Santa Rosalía de Palermo",precioUSD:3},{nombre:"Chacao",precioUSD:5},{nombre:"Leoncio Martínez",precioUSD:6},
+    {nombre:"Petare",precioUSD:6},{nombre:"La Dolorita",precioUSD:6},{nombre:"Fila de Mariches",precioUSD:6},
+    {nombre:"Caucagüita",precioUSD:7},{nombre:"El Cafetal",precioUSD:6},{nombre:"Las Minas",precioUSD:5},
+    {nombre:"Nuestra Señora del Rosario",precioUSD:7},{nombre:"Sucre",precioUSD:7},{nombre:"El Junquito",precioUSD:7}
+];
+
+window.categoriasMenu={
+    Entradas:[],Sushi:[],Rolls:["Rolls Fríos de 10 piezas","Rolls Tempura de 12 piezas"],
+    "Tragos y bebidas":[],Pokes:[],Ensaladas:[],
+    "Comida China":["Arroz Chino","Arroz Cantones","Chopsuey","Lomey","Chow Mein","Fideos de Arroz","Tallarines Cantones","Mariscos","Foo Yong","Sopas","Entremeses"],
+    "Comida Japonesa":["Yakimeshi","Yakisoba","Pasta Udon","Churrasco"],
+    "Ofertas Especiales":[],"Para Niños":[],"Combo Ejecutivo":[]
+};
+
+window.verificarNotificacionesForzadas=async function(e){try{let t=window.getFechaGMT4();t.setHours(0,0,0,0);let a=new Date(t);a.setDate(a.getDate()+1);let i=new Date(t.getTime()-144e5),l=new Date(a.getTime()-144e5),{data:r,error:n}=await window.supabaseClient.from('notificaciones').select('*').eq('session_id',e).gte('fecha',i.toISOString()).lt('fecha',l.toISOString()).order('fecha',{ascending:!1});return n?[]:r||[]}catch(e){return console.error('❌ Error en verificación forzada:',e),[]}};
+
 console.log('✅ supabase-config.js cargado correctamente');
+console.log('   - VAPID Public Key:',window.VAPID_PUBLIC_KEY?'✅':'❌');
+console.log('   - GMT-4 functions:',typeof window.formatearFechaGMT4==='function'?'✅':'❌');
+console.log('   - Push functions:',typeof window.solicitarPermisoPush==='function'?'✅':'❌');
