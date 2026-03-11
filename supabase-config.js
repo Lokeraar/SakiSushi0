@@ -1,27 +1,28 @@
-// ============================================
-// SUPABASE CONFIGURACIÓN - VERSIÓN COMPLETA
-// ============================================
-
+// supabase-config.js - VERSIÓN CON AUTENTICACIÓN JWT
 window.SUPABASE_URL = 'https://iqwwoihiiyrtypyqzhgy.supabase.co';
 window.SUPABASE_ANON_KEY = 'sb_publishable_m4WcF4gmkj1olAj95HMLlA_4yKqPFXm';
 
-// Inicializar cliente Supabase (solo una vez)
-if (!window.supabaseClient) {
-    try {
-        window.supabaseClient = window.supabase.createClient(
-            window.SUPABASE_URL,
-            window.SUPABASE_ANON_KEY,
-            { auth: { persistSession: false } }
-        );
-        console.log('✅ Cliente Supabase inicializado correctamente');
-    } catch (e) {
-        console.error('❌ Error inicializando Supabase:', e);
+// Función para inicializar el cliente con un token JWT opcional
+window.inicializarSupabaseCliente = (jwtToken = null) => {
+    const options = { auth: { persistSession: false } };
+    if (jwtToken) {
+        options.global = {
+            headers: {
+                Authorization: `Bearer ${jwtToken}`
+            }
+        };
     }
-}
+    window.supabaseClient = window.supabase.createClient(
+        window.SUPABASE_URL,
+        window.SUPABASE_ANON_KEY,
+        options
+    );
+    console.log(jwtToken ? '📌 Cliente Supabase inicializado con JWT' : '📌 Cliente Supabase inicializado (anónimo)');
+    return window.supabaseClient;
+};
 
-// ============================================
-// CONFIGURACIÓN GLOBAL
-// ============================================
+// Inicializar cliente por defecto (sin token)
+window.supabaseClient = window.inicializarSupabaseCliente();
 
 window.configGlobal = {
     tasa_cambio: 400,
@@ -38,24 +39,21 @@ window.configGlobal = {
 };
 
 // ============================================
-// CACHE GLOBAL
+// CACHÉ GLOBAL
 // ============================================
-
 window.appCache = {
     stock: { data: {}, lastUpdate: 0, duration: 5000 },
     platillos: new Map(),
     pedidos: new Map(),
     
-    getStock: function(id) {
+    getStock: function(ingredienteId) {
         const ahora = Date.now();
-        if (ahora - this.stock.lastUpdate > this.stock.duration) {
-            this.stock.data = {};
-        }
-        return this.stock.data[id];
+        if (ahora - this.stock.lastUpdate > this.stock.duration) this.stock.data = {};
+        return this.stock.data[ingredienteId];
     },
     
-    setStock: function(id, valor) {
-        this.stock.data[id] = valor;
+    setStock: function(ingredienteId, valor) {
+        this.stock.data[ingredienteId] = valor;
         this.stock.lastUpdate = Date.now();
     },
     
@@ -75,20 +73,17 @@ window.appCache = {
 
 window.stockCache = {
     get: (id) => window.appCache.getStock(id),
-    set: (id, valor) => window.appCache.setStock(id, valor),
+    set: (id, v) => window.appCache.setStock(id, v),
     invalidate: () => window.appCache.invalidateStock(),
-    clear: () => {
-        window.appCache.stock.data = {};
-        window.appCache.stock.lastUpdate = 0;
-    }
+    clear: () => { window.appCache.stock.data = {}; window.appCache.stock.lastUpdate = 0; }
 };
 
 // ============================================
 // FUNCIONES DE ZONA HORARIA GMT-4
 // ============================================
-
 window.getFechaGMT4 = function() {
-    return new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Caracas' }));
+    const fecha = new Date();
+    return new Date(fecha.toLocaleString('en-US', { timeZone: 'America/Caracas' }));
 };
 
 window.formatearFechaGMT4 = function(timestamp) {
@@ -115,7 +110,8 @@ window.formatearHora12GMT4 = function(timestamp) {
         let horas = fechaGMT4.getHours();
         const minutos = fechaGMT4.getMinutes().toString().padStart(2, '0');
         const ampm = horas >= 12 ? 'pm' : 'am';
-        horas = horas % 12 || 12;
+        horas = horas % 12;
+        horas = horas ? horas : 12;
         return `${horas}:${minutos} ${ampm}`;
     } catch (e) {
         return timestamp;
@@ -125,7 +121,8 @@ window.formatearHora12GMT4 = function(timestamp) {
 window.getTimestampISO_GMT4 = function() {
     const fecha = new Date();
     const fechaGMT4 = new Date(fecha.toLocaleString('en-US', { timeZone: 'America/Caracas' }));
-    return new Date(fechaGMT4.getTime() + (4 * 60 * 60 * 1000)).toISOString();
+    const fechaUTC = new Date(fechaGMT4.getTime() + (4 * 60 * 60 * 1000));
+    return fechaUTC.toISOString();
 };
 
 window.utcToGMT4 = function(utcTimestamp) {
@@ -139,9 +136,8 @@ window.utcToGMT4 = function(utcTimestamp) {
 };
 
 // ============================================
-// NOTIFICACIONES PUSH
+// FUNCIONES DE NOTIFICACIONES PUSH
 // ============================================
-
 window.VAPID_PUBLIC_KEY = 'BC6oJ4E+5pGIn4icpzCBLMi6/nk+1JJenrUA41uJrAs1ELraSw5ctvRAlh8sHVldqzBXUtEwEeFKBm0/hmuM9EY=';
 
 function urlBase64ToUint8Array(base64String) {
@@ -274,20 +270,13 @@ window.verificarNotificacionPush = function() {
 // ============================================
 // FUNCIONES DE CONFIGURACIÓN
 // ============================================
-
 window.cargarConfiguracion = async function() {
     try {
-        if (!window.supabaseClient) {
-            console.error('❌ Supabase no inicializado');
-            return window.configGlobal;
-        }
-        
         const { data, error } = await window.supabaseClient
             .from('config')
             .select('*')
             .eq('id', 1)
             .single();
-            
         if (error) throw error;
         if (data) window.configGlobal = { ...window.configGlobal, ...data };
         return window.configGlobal;
@@ -297,44 +286,23 @@ window.cargarConfiguracion = async function() {
     }
 };
 
-// ============================================
-// FUNCIONES DE IMÁGENES
-// ============================================
-
 window.subirImagenPlatillo = async function(archivoImagen, carpetaAdicional = '') {
     try {
         if (!archivoImagen) return { success: false, error: 'No se proporcionó archivo' };
-        
         const tipoValido = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp', 'image/gif'];
-        if (!tipoValido.includes(archivoImagen.type)) {
-            return { success: false, error: 'Tipo de archivo no válido' };
-        }
-        
+        if (!tipoValido.includes(archivoImagen.type)) return { success: false, error: 'Tipo de archivo no válido' };
         const maxSize = 5 * 1024 * 1024;
-        if (archivoImagen.size > maxSize) {
-            return { success: false, error: 'El archivo es demasiado grande. Máximo 5MB' };
-        }
-        
+        if (archivoImagen.size > maxSize) return { success: false, error: 'El archivo es demasiado grande. Máximo 5MB' };
         const timestamp = Date.now();
         const random = Math.random().toString(36).substring(2, 8);
         const extension = archivoImagen.name.split('.').pop();
         const nombreArchivo = `${timestamp}_${random}.${extension}`;
         const ruta = carpetaAdicional ? `${carpetaAdicional}/${nombreArchivo}` : nombreArchivo;
-        
         const { data, error } = await window.supabaseClient.storage
             .from('imagenes-platillos')
-            .upload(ruta, archivoImagen, {
-                cacheControl: '3600',
-                upsert: false,
-                contentType: archivoImagen.type
-            });
-            
+            .upload(ruta, archivoImagen, { cacheControl: '3600', upsert: false, contentType: archivoImagen.type });
         if (error) throw error;
-        
-        const { data: urlData } = window.supabaseClient.storage
-            .from('imagenes-platillos')
-            .getPublicUrl(ruta);
-            
+        const { data: urlData } = window.supabaseClient.storage.from('imagenes-platillos').getPublicUrl(ruta);
         return { success: true, path: ruta, url: urlData.publicUrl };
     } catch (error) {
         console.error('Error subiendo imagen:', error);
@@ -345,18 +313,12 @@ window.subirImagenPlatillo = async function(archivoImagen, carpetaAdicional = ''
 window.eliminarImagenPlatillo = async function(urlImagen) {
     try {
         if (!urlImagen) return { success: true };
-        
         const bucketName = 'imagenes-platillos';
         const bucketIndex = urlImagen.indexOf(`/public/${bucketName}/`);
         if (bucketIndex === -1) return { success: true };
-        
         const rutaRelativa = urlImagen.substring(bucketIndex + `/public/${bucketName}/`.length);
         if (!rutaRelativa) return { success: true };
-        
-        const { error } = await window.supabaseClient.storage
-            .from(bucketName)
-            .remove([rutaRelativa]);
-            
+        const { error } = await window.supabaseClient.storage.from(bucketName).remove([rutaRelativa]);
         if (error) throw error;
         return { success: true };
     } catch (error) {
@@ -368,33 +330,18 @@ window.eliminarImagenPlatillo = async function(urlImagen) {
 window.subirComprobante = async function(file, tipo, onProgress) {
     try {
         if (!file) throw new Error('No se proporcionó archivo');
-        
         const tipoValido = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp', 'image/gif'];
-        if (!tipoValido.includes(file.type)) {
-            throw new Error('Tipo de archivo no válido. Solo imágenes JPG, PNG, WEBP o GIF');
-        }
-        
+        if (!tipoValido.includes(file.type)) throw new Error('Tipo de archivo no válido. Solo imágenes JPG, PNG, WEBP o GIF');
         const maxSize = 5 * 1024 * 1024;
         if (file.size > maxSize) throw new Error('El archivo es demasiado grande. Máximo 5MB');
-        
         const timestamp = Date.now();
         const nombreArchivo = `${timestamp}_${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
         const ruta = `${tipo}/${nombreArchivo}`;
-        
         const { data, error } = await window.supabaseClient.storage
             .from('comprobantes')
-            .upload(ruta, file, {
-                cacheControl: '3600',
-                upsert: false,
-                contentType: file.type
-            });
-            
+            .upload(ruta, file, { cacheControl: '3600', upsert: false, contentType: file.type });
         if (error) throw new Error(error.message || 'Error al subir el archivo');
-        
-        const { data: urlData } = window.supabaseClient.storage
-            .from('comprobantes')
-            .getPublicUrl(ruta);
-            
+        const { data: urlData } = window.supabaseClient.storage.from('comprobantes').getPublicUrl(ruta);
         if (onProgress) onProgress({ loaded: file.size, total: file.size, percent: 100 });
         return { success: true, url: urlData.publicUrl };
     } catch (error) {
@@ -403,16 +350,12 @@ window.subirComprobante = async function(file, tipo, onProgress) {
     }
 };
 
-// ============================================
-// FORMATO DE MONEDAS Y UTILIDADES
-// ============================================
-
 window.formatBs = function(monto) {
     try {
         const valor = Math.round((monto || 0) * 100) / 100;
-        const partes = valor.toFixed(2).split('.');
-        let entero = partes[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-        return `Bs ${entero},${partes[1]}`;
+        let [entero, decimal] = valor.toFixed(2).split('.');
+        entero = entero.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+        return `Bs ${entero},${decimal}`;
     } catch (e) {
         return 'Bs ' + (monto || 0).toFixed(2);
     }
@@ -420,11 +363,7 @@ window.formatBs = function(monto) {
 
 window.formatUSD = function(monto) {
     try {
-        return new Intl.NumberFormat('en-US', {
-            style: 'currency',
-            currency: 'USD',
-            minimumFractionDigits: 2
-        }).format(monto);
+        return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 }).format(monto);
     } catch (e) {
         return '$ ' + (monto || 0).toFixed(2);
     }
@@ -432,9 +371,9 @@ window.formatUSD = function(monto) {
 
 window.generarId = function(prefix = '') {
     if (window.crypto && window.crypto.randomUUID) {
-        return prefix + crypto.randomUUID();
+        return `${prefix}${crypto.randomUUID()}`;
     }
-    return prefix + Date.now() + '_' + Math.random().toString(36).substring(2, 15);
+    return `${prefix}${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
 };
 
 window.validarTelefono = function(telefono) {
@@ -458,104 +397,49 @@ window.bsToUsd = function(bs, tasa) {
     return bs / tasaActual;
 };
 
-// ============================================
-// DATOS DE PARROQUIAS PARA DELIVERY
-// ============================================
-
 window.parroquiasDelivery = [
-    { nombre: "San Bernardino", precioUSD: 2 },
-    { nombre: "San José", precioUSD: 2 },
-    { nombre: "San Agustín", precioUSD: 2 },
-    { nombre: "Candelaria", precioUSD: 2 },
-    { nombre: "San Juan", precioUSD: 3 },
-    { nombre: "Catedral", precioUSD: 3 },
-    { nombre: "Santa Rosalía", precioUSD: 3 },
-    { nombre: "El Recreo", precioUSD: 4 },
-    { nombre: "La Candelaria", precioUSD: 2 },
-    { nombre: "San Pedro", precioUSD: 4 },
-    { nombre: "El Paraíso", precioUSD: 4 },
-    { nombre: "La Vega", precioUSD: 4 },
-    { nombre: "El Valle", precioUSD: 5 },
-    { nombre: "Coche", precioUSD: 5 },
-    { nombre: "Caricuao", precioUSD: 7 },
-    { nombre: "Antímano", precioUSD: 7 },
-    { nombre: "Macarao", precioUSD: 7 },
-    { nombre: "23 de Enero", precioUSD: 4 },
-    { nombre: "La Pastora", precioUSD: 3 },
-    { nombre: "Altagracia", precioUSD: 3 },
-    { nombre: "Santa Teresa", precioUSD: 3 },
-    { nombre: "Santa Rosalía de Palermo", precioUSD: 3 },
-    { nombre: "Chacao", precioUSD: 5 },
-    { nombre: "Leoncio Martínez", precioUSD: 6 },
-    { nombre: "Petare", precioUSD: 6 },
-    { nombre: "La Dolorita", precioUSD: 6 },
-    { nombre: "Fila de Mariches", precioUSD: 6 },
-    { nombre: "Caucagüita", precioUSD: 7 },
-    { nombre: "El Cafetal", precioUSD: 6 },
-    { nombre: "Las Minas", precioUSD: 5 },
-    { nombre: "Nuestra Señora del Rosario", precioUSD: 7 },
-    { nombre: "Sucre", precioUSD: 7 },
+    { nombre: "San Bernardino", precioUSD: 2 }, { nombre: "San José", precioUSD: 2 },
+    { nombre: "San Agustín", precioUSD: 2 }, { nombre: "Candelaria", precioUSD: 2 },
+    { nombre: "San Juan", precioUSD: 3 }, { nombre: "Catedral", precioUSD: 3 },
+    { nombre: "Santa Rosalía", precioUSD: 3 }, { nombre: "El Recreo", precioUSD: 4 },
+    { nombre: "La Candelaria", precioUSD: 2 }, { nombre: "San Pedro", precioUSD: 4 },
+    { nombre: "El Paraíso", precioUSD: 4 }, { nombre: "La Vega", precioUSD: 4 },
+    { nombre: "El Valle", precioUSD: 5 }, { nombre: "Coche", precioUSD: 5 },
+    { nombre: "Caricuao", precioUSD: 7 }, { nombre: "Antímano", precioUSD: 7 },
+    { nombre: "Macarao", precioUSD: 7 }, { nombre: "23 de Enero", precioUSD: 4 },
+    { nombre: "La Pastora", precioUSD: 3 }, { nombre: "Altagracia", precioUSD: 3 },
+    { nombre: "Santa Teresa", precioUSD: 3 }, { nombre: "Santa Rosalía de Palermo", precioUSD: 3 },
+    { nombre: "Chacao", precioUSD: 5 }, { nombre: "Leoncio Martínez", precioUSD: 6 },
+    { nombre: "Petare", precioUSD: 6 }, { nombre: "La Dolorita", precioUSD: 6 },
+    { nombre: "Fila de Mariches", precioUSD: 6 }, { nombre: "Caucagüita", precioUSD: 7 },
+    { nombre: "El Cafetal", precioUSD: 6 }, { nombre: "Las Minas", precioUSD: 5 },
+    { nombre: "Nuestra Señora del Rosario", precioUSD: 7 }, { nombre: "Sucre", precioUSD: 7 },
     { nombre: "El Junquito", precioUSD: 7 }
 ];
 
-// ============================================
-// CATEGORÍAS DEL MENÚ
-// ============================================
-
 window.categoriasMenu = {
-    "Entradas": [],
-    "Sushi": [],
-    "Rolls": ["Rolls Fríos de 10 piezas", "Rolls Tempura de 12 piezas"],
-    "Tragos y bebidas": [],
-    "Pokes": [],
-    "Ensaladas": [],
-    "Comida China": [
-        "Arroz Chino",
-        "Arroz Cantones",
-        "Chopsuey",
-        "Lomey",
-        "Chow Mein",
-        "Fideos de Arroz",
-        "Tallarines Cantones",
-        "Mariscos",
-        "Foo Yong",
-        "Sopas",
-        "Entremeses"
-    ],
-    "Comida Japonesa": [
-        "Yakimeshi",
-        "Yakisoba",
-        "Pasta Udon",
-        "Churrasco"
-    ],
-    "Ofertas Especiales": [],
-    "Para Niños": [],
-    "Combo Ejecutivo": []
+    "Entradas": [], "Sushi": [], "Rolls": ["Rolls Fríos de 10 piezas", "Rolls Tempura de 12 piezas"],
+    "Tragos y bebidas": [], "Pokes": [], "Ensaladas": [],
+    "Comida China": ["Arroz Chino", "Arroz Cantones", "Chopsuey", "Lomey", "Chow Mein", "Fideos de Arroz", "Tallarines Cantones", "Mariscos", "Foo Yong", "Sopas", "Entremeses"],
+    "Comida Japonesa": ["Yakimeshi", "Yakisoba", "Pasta Udon", "Churrasco"],
+    "Ofertas Especiales": [], "Para Niños": [], "Combo Ejecutivo": []
 };
-
-// ============================================
-// FUNCIÓN DE VERIFICACIÓN DE NOTIFICACIONES
-// ============================================
 
 window.verificarNotificacionesForzadas = async function(sessionId) {
     try {
         const hoy = window.getFechaGMT4();
-        hoy.setHours(0, 0, 0, 0);
-        
+        hoy.setHours(0,0,0,0);
         const manana = new Date(hoy);
         manana.setDate(manana.getDate() + 1);
-        
         const hoyUTC = new Date(hoy.getTime() - (4 * 60 * 60 * 1000));
         const mananaUTC = new Date(manana.getTime() - (4 * 60 * 60 * 1000));
-        
         const { data, error } = await window.supabaseClient
             .from('notificaciones')
             .select('*')
             .eq('session_id', sessionId)
-            .gte('fecha', hoyUTC.toISOString())
-            .lt('fecha', mananaUTC.toISOString())
-            .order('fecha', { ascending: false });
-            
+            .gte('timestamp', hoyUTC.toISOString())
+            .lt('timestamp', mananaUTC.toISOString())
+            .order('timestamp', { ascending: false });
         if (error) throw error;
         return data || [];
     } catch (error) {
@@ -564,14 +448,7 @@ window.verificarNotificacionesForzadas = async function(sessionId) {
     }
 };
 
-// ============================================
-// VERIFICACIÓN FINAL
-// ============================================
-
 console.log('✅ supabase-config.js cargado correctamente');
-console.log('   - Cliente Supabase:', window.supabaseClient ? '✅' : '❌');
 console.log('   - VAPID Public Key:', window.VAPID_PUBLIC_KEY ? '✅' : '❌');
 console.log('   - GMT-4 functions:', typeof window.formatearFechaGMT4 === 'function' ? '✅' : '❌');
 console.log('   - Push functions:', typeof window.solicitarPermisoPush === 'function' ? '✅' : '❌');
-console.log('   - Parroquias delivery:', window.parroquiasDelivery.length);
-console.log('   - Categorías menú:', Object.keys(window.categoriasMenu).length);
