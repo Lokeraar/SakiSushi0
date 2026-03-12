@@ -1,10 +1,16 @@
-// supabase-config.js - VERSIÓN CON AUTENTICACIÓN JWT
+// supabase-config.js - VERSIÓN COMPLETA CON TODAS LAS FUNCIONES RESTAURADAS
 window.SUPABASE_URL = 'https://iqwwoihiiyrtypyqzhgy.supabase.co';
-window.SUPABASE_ANON_KEY = 'sb_publishable_m4WcF4gmkj1olAj95HMLlA_4yKqPFXm';
+window.SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlxd3dvaGlpeXJ0eXB5cXpoZ3kiLCJyb2xlIjoiYW5vbiIsImlhdCI6MTczNDU4MDMyMCwiZXhwIjoyMDUwMTU2MzIwfQ.VHaKks6rVlE9DIBGf5HY-qgXk1NILFmThi4R4s1Rw_4';
 
 // Función para inicializar el cliente con un token JWT opcional
 window.inicializarSupabaseCliente = (jwtToken = null) => {
-    const options = { auth: { persistSession: false } };
+    const options = { 
+        auth: { 
+            persistSession: false,
+            autoRefreshToken: false,
+            detectSessionInUrl: false
+        } 
+    };
     if (jwtToken) {
         options.global = {
             headers: {
@@ -22,7 +28,9 @@ window.inicializarSupabaseCliente = (jwtToken = null) => {
 };
 
 // Inicializar cliente por defecto (sin token)
-window.supabaseClient = window.inicializarSupabaseCliente();
+if (!window.supabaseClient) {
+    window.supabaseClient = window.inicializarSupabaseCliente();
+}
 
 window.configGlobal = {
     tasa_cambio: 400,
@@ -39,16 +47,19 @@ window.configGlobal = {
 };
 
 // ============================================
-// CACHÉ GLOBAL
+// CACHÉ GLOBAL MEJORADO
 // ============================================
 window.appCache = {
     stock: { data: {}, lastUpdate: 0, duration: 5000 },
     platillos: new Map(),
     pedidos: new Map(),
+    notificaciones: new Map(),
     
     getStock: function(ingredienteId) {
         const ahora = Date.now();
-        if (ahora - this.stock.lastUpdate > this.stock.duration) this.stock.data = {};
+        if (ahora - this.stock.lastUpdate > this.stock.duration) {
+            this.stock.data = {};
+        }
         return this.stock.data[ingredienteId];
     },
     
@@ -68,6 +79,7 @@ window.appCache = {
         this.stock.lastUpdate = 0;
         this.platillos.clear();
         this.pedidos.clear();
+        this.notificaciones.clear();
     }
 };
 
@@ -75,7 +87,10 @@ window.stockCache = {
     get: (id) => window.appCache.getStock(id),
     set: (id, v) => window.appCache.setStock(id, v),
     invalidate: () => window.appCache.invalidateStock(),
-    clear: () => { window.appCache.stock.data = {}; window.appCache.stock.lastUpdate = 0; }
+    clear: () => { 
+        window.appCache.stock.data = {}; 
+        window.appCache.stock.lastUpdate = 0; 
+    }
 };
 
 // ============================================
@@ -136,7 +151,7 @@ window.utcToGMT4 = function(utcTimestamp) {
 };
 
 // ============================================
-// FUNCIONES DE NOTIFICACIONES PUSH
+// FUNCIONES DE NOTIFICACIONES PUSH (COMPLETAS)
 // ============================================
 window.VAPID_PUBLIC_KEY = 'BC6oJ4E+5pGIn4icpzCBLMi6/nk+1JJenrUA41uJrAs1ELraSw5ctvRAlh8sHVldqzBXUtEwEeFKBm0/hmuM9EY=';
 
@@ -277,7 +292,7 @@ window.cargarConfiguracion = async function() {
             .select('*')
             .eq('id', 1)
             .single();
-        if (error) throw error;
+        if (error && error.code !== 'PGRST116') throw error;
         if (data) window.configGlobal = { ...window.configGlobal, ...data };
         return window.configGlobal;
     } catch (error) {
@@ -448,7 +463,43 @@ window.verificarNotificacionesForzadas = async function(sessionId) {
     }
 };
 
+// ============================================
+// FUNCIÓN PARA REPRODUCIR SONIDO DE NOTIFICACIÓN
+// ============================================
+window.reproducirSonidoNotificacion = function() {
+    const audio = document.getElementById('notificationSound');
+    if (audio) {
+        audio.pause();
+        audio.currentTime = 0;
+        audio.play().catch(e => console.log('Error reproduciendo sonido:', e));
+    }
+    if (navigator.vibrate) {
+        navigator.vibrate([200, 100, 200]);
+    }
+};
+
+// ============================================
+// FUNCIÓN PARA ACTUALIZAR BADGE DE NOTIFICACIONES
+// ============================================
+window.actualizarBadgeNotificaciones = function(conteo) {
+    const badge = document.getElementById('notificationBadge');
+    if (badge) {
+        if (conteo > 0) {
+            badge.textContent = conteo;
+            badge.style.display = 'block';
+            badge.classList.add('has-unread');
+            badge.style.animation = 'none';
+            badge.offsetHeight;
+            badge.style.animation = 'vibrate .3s ease';
+        } else {
+            badge.style.display = 'none';
+            badge.classList.remove('has-unread');
+        }
+    }
+};
+
 console.log('✅ supabase-config.js cargado correctamente');
 console.log('   - VAPID Public Key:', window.VAPID_PUBLIC_KEY ? '✅' : '❌');
 console.log('   - GMT-4 functions:', typeof window.formatearFechaGMT4 === 'function' ? '✅' : '❌');
 console.log('   - Push functions:', typeof window.solicitarPermisoPush === 'function' ? '✅' : '❌');
+console.log('   - Notificaciones: COMPLETAS');
