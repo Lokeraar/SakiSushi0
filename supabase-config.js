@@ -1,6 +1,6 @@
-// supabase-config.js - VERSIÓN COMPLETA CON TODAS LAS FUNCIONES RESTAURADAS
+// supabase-config.js - VERSIÓN CORRECTA
 window.SUPABASE_URL = 'https://iqwwoihiiyrtypyqzhgy.supabase.co';
-window.SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlxd3dvaGlpeXJ0eXB5cXpoZ3kiLCJyb2xlIjoiYW5vbiIsImlhdCI6MTczNDU4MDMyMCwiZXhwIjoyMDUwMTU2MzIwfQ.VHaKks6rVlE9DIBGf5HY-qgXk1NILFmThi4R4s1Rw_4';
+window.SUPABASE_ANON_KEY = 'sb_publishable_m4WcF4gmkj1olAj95HMLlA_4yKqPFXm';
 
 // Función para inicializar el cliente con un token JWT opcional
 window.inicializarSupabaseCliente = (jwtToken = null) => {
