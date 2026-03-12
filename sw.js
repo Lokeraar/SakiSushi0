@@ -1,4 +1,4 @@
-// sw.js - Service Worker para notificaciones push - VERSIÓN FINAL CON SESIONES
+// sw.js - Service Worker para notificaciones push - VERSIÓN COMPLETA
 const CACHE_NAME = 'saki-sushi-v2';
 const STATIC_ASSETS = [
   '/SakiSushi0/Cliente/',
@@ -83,17 +83,26 @@ self.addEventListener('push', (event) => {
     case 'approved':
       opciones.icon = 'https://iqwwoihiiyrtypyqzhgy.supabase.co/storage/v1/object/public/imagenes-platillos/icono-success.png';
       opciones.badge = 'https://iqwwoihiiyrtypyqzhgy.supabase.co/storage/v1/object/public/imagenes-platillos/badge-success.png';
-      opciones.actions = [{ action: 'ver', title: '👀 Ver' }, { action: 'cerrar', title: '❌ Cerrar' }];
+      opciones.actions = [
+        { action: 'ver', title: '👀 Ver pedido' },
+        { action: 'cerrar', title: '❌ Cerrar' }
+      ];
       break;
     case 'rejected':
       opciones.icon = 'https://iqwwoihiiyrtypyqzhgy.supabase.co/storage/v1/object/public/imagenes-platillos/icono-error.png';
       opciones.badge = 'https://iqwwoihiiyrtypyqzhgy.supabase.co/storage/v1/object/public/imagenes-platillos/badge-error.png';
-      opciones.actions = [{ action: 'ver', title: '👀 Ver' }, { action: 'cerrar', title: '❌ Cerrar' }];
+      opciones.actions = [
+        { action: 'ver', title: '👀 Ver motivo' },
+        { action: 'cerrar', title: '❌ Cerrar' }
+      ];
       break;
     case 'pending':
       opciones.icon = 'https://iqwwoihiiyrtypyqzhgy.supabase.co/storage/v1/object/public/imagenes-platillos/icono-pending.png';
       opciones.badge = 'https://iqwwoihiiyrtypyqzhgy.supabase.co/storage/v1/object/public/imagenes-platillos/badge-pending.png';
-      opciones.actions = [{ action: 'ver', title: '👀 Ver' }, { action: 'cerrar', title: '❌ Cerrar' }];
+      opciones.actions = [
+        { action: 'ver', title: '👀 Ver estado' },
+        { action: 'cerrar', title: '❌ Cerrar' }
+      ];
       break;
     case 'session_closed':
       opciones.icon = 'https://iqwwoihiiyrtypyqzhgy.supabase.co/storage/v1/object/public/imagenes-platillos/icono-warning.png';
@@ -105,13 +114,22 @@ self.addEventListener('push', (event) => {
       ];
       break;
     default:
-      opciones.actions = [{ action: 'abrir', title: '🔔 Ver' }, { action: 'cerrar', title: '❌ Cerrar' }];
+      opciones.actions = [
+        { action: 'abrir', title: '🔔 Abrir' },
+        { action: 'cerrar', title: '❌ Cerrar' }
+      ];
   }
 
   event.waitUntil(self.registration.showNotification(data.titulo || '🍣 Saki Sushi', opciones));
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true })
-      .then(clients => clients.forEach(c => c.postMessage({ type: 'PUSH_RECEIVED', data })))
+      .then(clients => clients.forEach(c => c.postMessage({ 
+        type: 'PUSH_RECEIVED', 
+        data: {
+          ...data,
+          timestamp: Date.now()
+        }
+      })))
   );
 });
 
@@ -128,7 +146,11 @@ self.addEventListener('notificationclick', (event) => {
       clients.matchAll({ type: 'window', includeUncontrolled: true })
         .then(clients => clients.forEach(c => {
           if (c.url.includes('/SakiSushi0/Cajero/')) {
-            c.postMessage({ type: 'FORCE_LOGOUT', reason: 'Sesión cerrada desde otro dispositivo' });
+            c.postMessage({ 
+              type: 'FORCE_LOGOUT', 
+              reason: 'Sesión cerrada desde otro dispositivo',
+              timestamp: Date.now()
+            });
           }
         }))
     );
@@ -157,9 +179,22 @@ self.addEventListener('notificationclick', (event) => {
 
 self.addEventListener('message', (event) => {
   if (event.data?.type === 'PING') {
-    event.source.postMessage({ type: 'PONG', timestamp: Date.now() });
+    event.source.postMessage({ 
+      type: 'PONG', 
+      timestamp: Date.now(),
+      swVersion: 'v2'
+    });
   }
-  if (event.data?.type === 'SKIP_WAITING') self.skipWaiting();
+  if (event.data?.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
+  if (event.data?.type === 'GET_NOTIFICATIONS') {
+    // Puedes implementar lógica para enviar notificaciones almacenadas
+    event.source.postMessage({
+      type: 'NOTIFICATIONS_STATUS',
+      active: true
+    });
+  }
 });
 
 self.addEventListener('error', (e) => console.error('SW Error:', e.error));
