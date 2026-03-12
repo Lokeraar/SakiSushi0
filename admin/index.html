@@ -83,7 +83,7 @@
         };
     </script>
     
-    <!-- FUNCIÓN HACER LOGIN (REESCRITA) -->
+    <!-- FUNCIÓN HACER LOGIN (ACTUALIZADA PARA USAR EDGE FUNCTION) -->
     <script>
         window.hacerLogin = async function() {
             console.log('🔑 Intentando login admin...');
@@ -96,25 +96,26 @@
             }
             
             try {
-                if (!window.supabaseClient) {
-                    console.error('Cliente Supabase no inicializado');
-                    window.mostrarToast('Error: Cliente Supabase no inicializado', 'error');
-                    return;
-                }
-
-                const { data, error } = await window.supabaseClient.rpc('login_usuario', {
-                    p_username: 'admin',
-                    p_password: password
+                const response = await fetch('https://iqwwoihiiyrtypyqzhgy.supabase.co/functions/v1/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ 
+                        username: 'admin',
+                        password: password 
+                    })
                 });
 
-                if (error) {
-                    console.error('Error en RPC login:', error);
-                    window.mostrarToast('Error al conectar con la base de datos', 'error');
+                const data = await response.json();
+
+                if (!response.ok) {
+                    window.mostrarToast('❌ ' + (data.error || 'Error en el login'), 'error');
                     return;
                 }
 
                 if (!data.success) {
-                    window.mostrarToast(data.error || 'Contraseña incorrecta', 'error');
+                    window.mostrarToast('❌ ' + (data.error || 'Contraseña incorrecta'), 'error');
                     return;
                 }
 
@@ -170,7 +171,7 @@
     </script>
     
     <style>
-        /* ... (ESTILOS EXISTENTES - SIN CAMBIOS) ... */
+        /* ESTILOS EXISTENTES - SIN CAMBIOS */
         *{margin:0;padding:0;box-sizing:border-box}
         :root{--primary:#D32F2F;--secondary:#212121;--accent:#FF9800;--light-bg:#F5F5F5;--dark-bg:#121212;--success:#388E3C;--info:#1976D2;--warning:#F57C00;--danger:#ef4444;--delivery:#00ACC1;--propina:#9C27B0;--text-light:#ffffff;--text-dark:#333333;--gray-100:#f8f9fa;--gray-200:#e9ecef;--gray-300:#dee2e6;--gray-400:#ced4da;--gray-500:#adb5bd;--gray-600:#6c757d;--gray-700:#495057;--gray-800:#343a40;--gray-900:#212529}
         body{font-family:'Roboto',sans-serif;background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%);color:#fff;min-height:100vh}
@@ -532,7 +533,7 @@
     
     <script src="../supabase-config.js"></script>
     <script>
-        // ==================== RESTAURAR SESIÓN ADMIN (NUEVO) ====================
+        // ==================== RESTAURAR SESIÓN ADMIN ====================
         window.restaurarSesionAdmin = function() {
             const token = sessionStorage.getItem('admin_jwt_token');
             const userData = sessionStorage.getItem('admin_user');
