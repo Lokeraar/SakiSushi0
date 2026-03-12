@@ -44,7 +44,145 @@ window.mostrarLogin=function(){document.getElementById('username').value='';docu
 window.detenerAlarma=function(){if(window.alarmaAudio&&window.alarmaActiva){try{window.alarmaAudio.pause();window.alarmaAudio.currentTime=0}catch(e){}window.alarmaActiva=false}};
 window.verificarYControlarAlarma=function(){if(!window.alarmaAudio)window.alarmaAudio=document.getElementById('alarmaSonido');if(!window.alarmaAudio)return;const pendientes=(window.pedidos||[]).filter(p=>p.estado==='pendiente').length;if(pendientes>0&&!window.enProcesoDeCobro){if(!window.alarmaActiva){window.alarmaAudio.play().then(()=>{window.alarmaActiva=true}).catch(()=>{})}}else if(window.alarmaActiva&&(pendientes===0||window.enProcesoDeCobro)){window.alarmaAudio.pause();window.alarmaAudio.currentTime=0;window.alarmaActiva=false}};
 // ============================================ LOGIN CORREGIDO ============================================
-window.hacerLogin=async function(){const username=document.getElementById('username')?.value,password=document.getElementById('password')?.value;if(!username||!password){window.mostrarToast('⚠️ Ingresa usuario y contraseña','error');return}try{const response=await fetch('https://iqwwoihiiyrtypyqzhgy.supabase.co/functions/v1/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({username,password})});const data=await response.json();if(!response.ok){window.mostrarToast('❌ '+(data.error||'Error en el login'),'error');return}if(!data.success){window.mostrarToast('❌ '+(data.error||'Usuario o contraseña incorrectos'),'error');return}window.jwtToken=data.token;window.currentUser=data.user;sessionStorage.setItem('saki_jwt_token',window.jwtToken);sessionStorage.setItem('saki_user',JSON.stringify(window.currentUser));window.mostrarToast(`✅ Bienvenido ${window.currentUser.nombre}`,'success');window.supabaseClient=window.inicializarSupabaseCliente(window.jwtToken);setTimeout(async()=>{try{await window.cargarDatosIniciales();window.mostrarPanel()}catch(e){console.error('Error cargando datos:',e);window.mostrarToast('Error cargando datos: '+e.message,'error');window.mostrarPanel()}},500)}catch(error){console.error('Error en login:',error);window.mostrarToast('❌ Error al conectar: '+(error.message||'Error desconocido'),'error')}};
+// ============================================ LOGIN CORREGIDO CON MEJOR MANEJO DE ERRORES ============================================
+window.hacerLogin = async function() {
+    const username = document.getElementById('username')?.value?.trim();
+    const password = document.getElementById('password')?.value?.trim();
+    
+    if (!username || !password) {
+        window.mostrarToast('⚠️ Ingresa usuario y contraseña', 'error');
+        return;
+    }
+    
+    // Deshabilitar botón para evitar múltiples envíos
+    const loginBtn = document.querySelector('#loginForm button[type="submit"]');
+    if (loginBtn) {
+        loginBtn.disabled = true;
+        loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Conectando...';
+    }
+    
+    try {
+        console.log('🔑 Intentando login para:', username);
+        
+        const response = await fetch('https://iqwwoihiiyrtypyqzhgy.supabase.co/functions/v1/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ 
+                username: username,
+                password: password 
+            })
+        });
+
+        console.log('📡 Respuesta recibida, status:', response.status);
+        
+        // Verificar si la respuesta es OK
+        if (!response.ok) {
+            let errorMsg = `Error ${response.status}: ${response.statusText}`;
+            try {
+                const errorData = await response.json();
+                errorMsg = errorData.error || errorMsg;
+            } catch (e) {
+                // Si no se puede parsear JSON, usar el texto de la respuesta
+                try {
+                    const text = await response.text();
+                    if (text) errorMsg = text;
+                } catch (textError) {}
+            }
+            throw new Error(errorMsg);
+        }
+
+        // Intentar parsear la respuesta JSON
+        let data;
+        try {
+            data = await response.json();
+        } catch (parseError) {
+            console.error('❌ Error parseando JSON:', parseError);
+            const textResponse = await response.text();
+            console.error('Respuesta textual:', textResponse);
+            throw new Error('Respuesta del servidor en formato incorrecto');
+        }
+
+        console.log('📦 Datos recibidos:', data);
+
+        // Validar estructura de datos
+        if (!data || typeof data !== 'object') {
+            throw new Error('Respuesta del servidor inválida');
+        }
+
+        if (!data.success) {
+            window.mostrarToast('❌ ' + (data.error || 'Usuario o contraseña incorrectos'), 'error');
+            return;
+        }
+
+        if (!data.token || !data.user) {
+            console.error('❌ Datos incompletos:', data);
+            throw new Error('Respuesta del servidor incompleta');
+        }
+
+        // Login exitoso
+        window.jwtToken = data.token;
+        window.currentUser = data.user;
+
+        // Guardar en sessionStorage
+        try {
+            sessionStorage.setItem('saki_jwt_token', window.jwtToken);
+            sessionStorage.setItem('saki_user', JSON.stringify(window.currentUser));
+        } catch (storageError) {
+            console.warn('⚠️ Error guardando en sessionStorage:', storageError);
+        }
+
+        window.mostrarToast(`✅ Bienvenido ${window.currentUser.nombre || 'Usuario'}`, 'success');
+
+        // Reconfigurar cliente Supabase con el token
+        try {
+            window.supabaseClient = window.inicializarSupabaseCliente(window.jwtToken);
+        } catch (supabaseError) {
+            console.error('❌ Error configurando Supabase:', supabaseError);
+            // Continuar de todas formas
+        }
+
+        // Cargar datos y mostrar panel
+        setTimeout(async () => {
+            try {
+                await window.cargarDatosIniciales();
+                window.mostrarPanel();
+            } catch (e) {
+                console.error('Error cargando datos:', e);
+                window.mostrarToast('Error cargando datos: ' + (e.message || 'Error desconocido'), 'error');
+                window.mostrarPanel(); // Mostrar panel aunque falle la carga
+            }
+        }, 500);
+
+    } catch (error) {
+        console.error('❌ Error detallado en login:', error);
+        console.error('Stack trace:', error.stack);
+        
+        // Mensaje de error amigable
+        let errorMessage = 'Error al conectar con el servidor';
+        if (error.message) {
+            if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+                errorMessage = 'No se pudo conectar con el servidor. Verifica tu conexión a internet.';
+            } else if (error.message.includes('401')) {
+                errorMessage = 'Usuario o contraseña incorrectos';
+            } else if (error.message.includes('500')) {
+                errorMessage = 'Error interno del servidor. Intenta más tarde.';
+            } else {
+                errorMessage = error.message;
+            }
+        }
+        
+        window.mostrarToast('❌ ' + errorMessage, 'error');
+        
+    } finally {
+        // Restaurar botón
+        if (loginBtn) {
+            loginBtn.disabled = false;
+            loginBtn.innerHTML = 'Iniciar Sesión';
+        }
+    }
+};
 window.restaurarSesion=async function(){const token=sessionStorage.getItem('saki_jwt_token'),userData=sessionStorage.getItem('saki_user');if(token&&userData){try{window.jwtToken=token;window.currentUser=JSON.parse(userData);window.supabaseClient=window.inicializarSupabaseCliente(window.jwtToken);await window.cargarDatosIniciales();window.mostrarPanel();return true}catch(e){console.error('Error restaurando sesión:',e);window.cerrarSesion()}}return false};
 window.forzarCierreSesionAnterior=async function(){window.cerrarModal('confirmLogoutModal');if(!window.pendingLoginUser)return;try{const channel=window.supabaseClient.channel(`user_${window.pendingLoginUser.id}`);await channel.subscribe((status)=>{if(status==='SUBSCRIBED'){channel.send({type:'broadcast',event:'force_logout',payload:{userId:window.pendingLoginUser.id}})}});setTimeout(()=>{channel.unsubscribe()},500)}catch(e){console.error('Error notificando cierre de sesión:',e)}const oldSessionKey=`saki_session_${window.pendingLoginUser.id}`;sessionStorage.removeItem(oldSessionKey);await window.procesarLoginExitoso(window.pendingLoginUser);window.pendingLoginUser=null};
 window.cerrarSesion=function(){sessionStorage.removeItem('saki_jwt_token');sessionStorage.removeItem('saki_user');window.currentUser=null;window.jwtToken=null;window.detenerAlarma();window.mostrarLogin();window.supabaseClient=window.inicializarSupabaseCliente()};
