@@ -1,7 +1,8 @@
-// supabase-config.js - VERSIÓN COMPLETA CON TODAS LAS FUNCIONES
+// supabase-config.js - VERSIÓN COMPLETA Y CORREGIDA
 window.SUPABASE_URL = 'https://iqwwoihiiyrtypyqzhgy.supabase.co';
-window.SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlxd3dvaGlpeXJ0eXB5cXpoZ3kiLCJyb2xlIjoiYW5vbiIsImlhdCI6MTczNDU4MDMyMCwiZXhwIjoyMDUwMTU2MzIwfQ.VHaKks6rVlE9DIBGf5HY-qgXk1NILFmThi4R4s1Rw_4';
+window.SUPABASE_ANON_KEY = 'sb_publishable_m4WcF4gmkj1olAj95HMLlA_4yKqPFXm';
 
+// FUNCIÓN PARA INICIALIZAR EL CLIENTE CON UN TOKEN JWT OPCIONAL
 window.inicializarSupabaseCliente = (jwtToken = null) => {
     const options = { 
         auth: { 
@@ -26,10 +27,14 @@ window.inicializarSupabaseCliente = (jwtToken = null) => {
     return window.supabaseClient;
 };
 
+// Inicializar cliente por defecto (sin token)
 if (!window.supabaseClient) {
     window.supabaseClient = window.inicializarSupabaseCliente();
 }
 
+// ============================================
+// CONFIGURACIÓN GLOBAL
+// ============================================
 window.configGlobal = {
     tasa_cambio: 400,
     tasa_efectiva: 400,
@@ -44,6 +49,9 @@ window.configGlobal = {
     alerta_stock_minimo: 5
 };
 
+// ============================================
+// CACHÉ GLOBAL MEJORADO
+// ============================================
 window.appCache = {
     stock: { data: {}, lastUpdate: 0, duration: 5000 },
     platillos: new Map(),
@@ -88,6 +96,9 @@ window.stockCache = {
     }
 };
 
+// ============================================
+// FUNCIONES DE ZONA HORARIA GMT-4
+// ============================================
 window.getFechaGMT4 = function() {
     const fecha = new Date();
     return new Date(fecha.toLocaleString('en-US', { timeZone: 'America/Caracas' }));
@@ -142,6 +153,9 @@ window.utcToGMT4 = function(utcTimestamp) {
     }
 };
 
+// ============================================
+// FUNCIONES DE NOTIFICACIONES PUSH
+// ============================================
 window.VAPID_PUBLIC_KEY = 'BC6oJ4E+5pGIn4icpzCBLMi6/nk+1JJenrUA41uJrAs1ELraSw5ctvRAlh8sHVldqzBXUtEwEeFKBm0/hmuM9EY=';
 
 function urlBase64ToUint8Array(base64String) {
@@ -204,6 +218,9 @@ window.tienePermisoPush = function() {
     return Notification.permission === 'granted';
 };
 
+// ============================================
+// FUNCIONES DE CARGA DE CONFIGURACIÓN
+// ============================================
 window.cargarConfiguracion = async function() {
     try {
         const { data, error } = await window.supabaseClient
@@ -220,6 +237,9 @@ window.cargarConfiguracion = async function() {
     }
 };
 
+// ============================================
+// FUNCIONES DE SUBIDA DE IMÁGENES Y COMPROBANTES
+// ============================================
 window.subirImagenPlatillo = async function(archivoImagen, carpetaAdicional = '') {
     try {
         if (!archivoImagen) return { success: false, error: 'No se proporcionó archivo' };
@@ -284,6 +304,9 @@ window.subirComprobante = async function(file, tipo, onProgress) {
     }
 };
 
+// ============================================
+// FUNCIONES DE FORMATO Y VALIDACIÓN
+// ============================================
 window.formatBs = function(monto) {
     try {
         const valor = Math.round((monto || 0) * 100) / 100;
@@ -331,6 +354,9 @@ window.bsToUsd = function(bs, tasa) {
     return bs / tasaActual;
 };
 
+// ============================================
+// DATOS DE PARROQUIAS Y CATEGORÍAS
+// ============================================
 window.parroquiasDelivery = [
     { nombre: "San Bernardino", precioUSD: 2 }, { nombre: "San José", precioUSD: 2 },
     { nombre: "San Agustín", precioUSD: 2 }, { nombre: "Candelaria", precioUSD: 2 },
@@ -359,6 +385,9 @@ window.categoriasMenu = {
     "Ofertas Especiales": [], "Para Niños": [], "Combo Ejecutivo": []
 };
 
+// ============================================
+// FUNCIONES DE NOTIFICACIONES (SONIDO Y BADGE)
+// ============================================
 window.reproducirSonidoNotificacion = function() {
     const audio = document.getElementById('notificationSound');
     if (audio) {
@@ -389,3 +418,6 @@ window.actualizarBadgeNotificaciones = function(conteo) {
 };
 
 console.log('✅ supabase-config.js cargado correctamente');
+console.log('   - Anon key:', window.SUPABASE_ANON_KEY ? '✅' : '❌');
+console.log('   - VAPID Public Key:', window.VAPID_PUBLIC_KEY ? '✅' : '❌');
+console.log('   - GMT-4 functions:', typeof window.formatearFechaGMT4 === 'function' ? '✅' : '❌');
