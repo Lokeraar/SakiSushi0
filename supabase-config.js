@@ -1,8 +1,7 @@
-// supabase-config.js - VERSIÓN CORRECTA
+// supabase-config.js - VERSIÓN COMPLETA CON TODAS LAS FUNCIONES
 window.SUPABASE_URL = 'https://iqwwoihiiyrtypyqzhgy.supabase.co';
-window.SUPABASE_ANON_KEY = 'sb_publishable_m4WcF4gmkj1olAj95HMLlA_4yKqPFXm';
+window.SUPABASE_ANON_KEY = 'sb_publishable_m4WcF4gmkj1olAj95HMLlA_4yKqPFXm;
 
-// Función para inicializar el cliente con un token JWT opcional
 window.inicializarSupabaseCliente = (jwtToken = null) => {
     const options = { 
         auth: { 
@@ -23,11 +22,10 @@ window.inicializarSupabaseCliente = (jwtToken = null) => {
         window.SUPABASE_ANON_KEY,
         options
     );
-    console.log(jwtToken ? '📌 Cliente Supabase inicializado con JWT' : '📌 Cliente Supabase inicializado (anónimo)');
+    console.log(jwtToken ? ' Cliente Supabase inicializado con JWT' : ' Cliente Supabase inicializado (anónimo)');
     return window.supabaseClient;
 };
 
-// Inicializar cliente por defecto (sin token)
 if (!window.supabaseClient) {
     window.supabaseClient = window.inicializarSupabaseCliente();
 }
@@ -46,9 +44,6 @@ window.configGlobal = {
     alerta_stock_minimo: 5
 };
 
-// ============================================
-// CACHÉ GLOBAL MEJORADO
-// ============================================
 window.appCache = {
     stock: { data: {}, lastUpdate: 0, duration: 5000 },
     platillos: new Map(),
@@ -93,9 +88,6 @@ window.stockCache = {
     }
 };
 
-// ============================================
-// FUNCIONES DE ZONA HORARIA GMT-4
-// ============================================
 window.getFechaGMT4 = function() {
     const fecha = new Date();
     return new Date(fecha.toLocaleString('en-US', { timeZone: 'America/Caracas' }));
@@ -150,9 +142,6 @@ window.utcToGMT4 = function(utcTimestamp) {
     }
 };
 
-// ============================================
-// FUNCIONES DE NOTIFICACIONES PUSH (COMPLETAS)
-// ============================================
 window.VAPID_PUBLIC_KEY = 'BC6oJ4E+5pGIn4icpzCBLMi6/nk+1JJenrUA41uJrAs1ELraSw5ctvRAlh8sHVldqzBXUtEwEeFKBm0/hmuM9EY=';
 
 function urlBase64ToUint8Array(base64String) {
@@ -160,46 +149,12 @@ function urlBase64ToUint8Array(base64String) {
     const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
     const rawData = window.atob(base64);
     const outputArray = new Uint8Array(rawData.length);
-    for (let i = 0; i < rawData.length; ++i) {
-        outputArray[i] = rawData.charCodeAt(i);
-    }
+    for (let i = 0; i < rawData.length; ++i) outputArray[i] = rawData.charCodeAt(i);
     return outputArray;
 }
 
 window.esBrave = function() {
     return navigator.brave && typeof navigator.brave.isBrave === 'function';
-};
-
-window.solicitarPermisoPushUI = async function() {
-    const sessionId = localStorage.getItem('saki_session_id');
-    if (!sessionId) {
-        console.error('❌ No hay session_id');
-        return;
-    }
-    
-    if (window.esBrave()) {
-        window.mostrarToast?.('🦁 En Brave, haz clic en el león y permite notificaciones', 'warning');
-    }
-    
-    const resultado = await window.solicitarPermisoPush(sessionId);
-    const btn = document.getElementById('pushPermissionBtn');
-    if (!btn) return;
-    
-    if (resultado && resultado.success) {
-        btn.classList.add('active');
-        btn.innerHTML = '<i class="fas fa-bell"></i>';
-        btn.setAttribute('data-tooltip', 'Notificaciones activadas');
-        window.mostrarToast?.('✅ Notificaciones activadas', 'success');
-    } else {
-        btn.classList.remove('active');
-        btn.innerHTML = '<i class="fas fa-bell"></i>';
-        btn.setAttribute('data-tooltip', 'Activar notificaciones');
-        if (window.esBrave()) {
-            window.mostrarToast?.('🦁 Brave: Haz clic en el león y permite notificaciones', 'warning');
-        } else {
-            window.mostrarToast?.('❌ No se pudieron activar las notificaciones', 'error');
-        }
-    }
 };
 
 window.solicitarPermisoPush = async function(sessionId) {
@@ -240,10 +195,7 @@ window.solicitarPermisoPush = async function(sessionId) {
         return { success: true, subscription };
         
     } catch (error) {
-        console.error('❌ Error en push:', error);
-        if (window.esBrave()) {
-            return { success: false, error: 'brave_blocked' };
-        }
+        console.error(' Error en push:', error);
         return { success: false, error: error.message };
     }
 };
@@ -252,39 +204,6 @@ window.tienePermisoPush = function() {
     return Notification.permission === 'granted';
 };
 
-window.actualizarEstadoPushUI = function() {
-    const btn = document.getElementById('pushPermissionBtn');
-    if (!btn) return;
-    if (window.tienePermisoPush()) {
-        btn.classList.add('active');
-        btn.innerHTML = '<i class="fas fa-bell"></i>';
-        btn.setAttribute('data-tooltip', 'Notificaciones activadas');
-    } else {
-        btn.classList.remove('active');
-        btn.innerHTML = '<i class="fas fa-bell"></i>';
-        btn.setAttribute('data-tooltip', 'Activar notificaciones');
-    }
-};
-
-window.verificarServiceWorker = async function() {
-    if (!('serviceWorker' in navigator)) return false;
-    const registrations = await navigator.serviceWorker.getRegistrations();
-    return registrations.some(reg => reg.active && reg.active.scriptURL.includes('sw.js'));
-};
-
-window.verificarNotificacionPush = function() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const notifSession = urlParams.get('notif');
-    if (notifSession) {
-        setTimeout(() => {
-            if (window.toggleNotifications) window.toggleNotifications();
-        }, 1000);
-    }
-};
-
-// ============================================
-// FUNCIONES DE CONFIGURACIÓN
-// ============================================
 window.cargarConfiguracion = async function() {
     try {
         const { data, error } = await window.supabaseClient
@@ -440,32 +359,6 @@ window.categoriasMenu = {
     "Ofertas Especiales": [], "Para Niños": [], "Combo Ejecutivo": []
 };
 
-window.verificarNotificacionesForzadas = async function(sessionId) {
-    try {
-        const hoy = window.getFechaGMT4();
-        hoy.setHours(0,0,0,0);
-        const manana = new Date(hoy);
-        manana.setDate(manana.getDate() + 1);
-        const hoyUTC = new Date(hoy.getTime() - (4 * 60 * 60 * 1000));
-        const mananaUTC = new Date(manana.getTime() - (4 * 60 * 60 * 1000));
-        const { data, error } = await window.supabaseClient
-            .from('notificaciones')
-            .select('*')
-            .eq('session_id', sessionId)
-            .gte('timestamp', hoyUTC.toISOString())
-            .lt('timestamp', mananaUTC.toISOString())
-            .order('timestamp', { ascending: false });
-        if (error) throw error;
-        return data || [];
-    } catch (error) {
-        console.error('❌ Error en verificación forzada:', error);
-        return [];
-    }
-};
-
-// ============================================
-// FUNCIÓN PARA REPRODUCIR SONIDO DE NOTIFICACIÓN
-// ============================================
 window.reproducirSonidoNotificacion = function() {
     const audio = document.getElementById('notificationSound');
     if (audio) {
@@ -478,9 +371,6 @@ window.reproducirSonidoNotificacion = function() {
     }
 };
 
-// ============================================
-// FUNCIÓN PARA ACTUALIZAR BADGE DE NOTIFICACIONES
-// ============================================
 window.actualizarBadgeNotificaciones = function(conteo) {
     const badge = document.getElementById('notificationBadge');
     if (badge) {
@@ -498,8 +388,4 @@ window.actualizarBadgeNotificaciones = function(conteo) {
     }
 };
 
-console.log('✅ supabase-config.js cargado correctamente');
-console.log('   - VAPID Public Key:', window.VAPID_PUBLIC_KEY ? '✅' : '❌');
-console.log('   - GMT-4 functions:', typeof window.formatearFechaGMT4 === 'function' ? '✅' : '❌');
-console.log('   - Push functions:', typeof window.solicitarPermisoPush === 'function' ? '✅' : '❌');
-console.log('   - Notificaciones: COMPLETAS');
+console.log(' supabase-config.js cargado correctamente');
