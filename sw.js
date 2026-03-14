@@ -189,7 +189,6 @@ self.addEventListener('message', (event) => {
     self.skipWaiting();
   }
   if (event.data?.type === 'GET_NOTIFICATIONS') {
-    // Puedes implementar lógica para enviar notificaciones almacenadas
     event.source.postMessage({
       type: 'NOTIFICATIONS_STATUS',
       active: true
@@ -198,4 +197,4 @@ self.addEventListener('message', (event) => {
 });
 
 self.addEventListener('error', (e) => console.error('SW Error:', e.error));
-self.addEventListener('unhandledrejection', (e) => console.error('SW Rejection:', e.reason));
+self.addEventListener('unhandledrejection', (e) => console.error('SW Rejection:', e.reason))
