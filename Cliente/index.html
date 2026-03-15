@@ -1462,9 +1462,6 @@
             };
             carrito.push(nuevaInstancia);
             guardarCarrito();
-            // Pre-expandir ANTES de renderizar para que el grupo aparezca abierto desde el primer frame
-            _enfocarUltimoItemCarrito(nuevaInstancia);
-            actualizarCarritoUI();
             actualizarCarritoBadge();
             window.stockCache.invalidate();
             mostrarToast('Agregado', 'success');
@@ -1475,6 +1472,10 @@
             } else {
                 iniciarSeguimientoScroll();
             }
+            // _enfocarUltimoItemCarrito setea nivel1Activo/nivel2Activo y llama
+            // a actualizarCarritoUI internamente para que el HTML nazca expandido,
+            // luego hace scroll al ítem en el siguiente frame de pintura.
+            _enfocarUltimoItemCarrito(nuevaInstancia);
         }
 
         function guardarCarrito() {
@@ -1735,9 +1736,6 @@
                 nuevasInstancias.push(nuevaInstancia);
             }
             guardarCarrito();
-            // Pre-expandir ANTES de renderizar
-            if (nuevasInstancias.length > 0) _enfocarUltimoItemCarrito(nuevasInstancias[nuevasInstancias.length - 1]);
-            actualizarCarritoUI();
             actualizarCarritoBadge();
             window.stockCache.invalidate();
             const cantidadAgregada = nuevasInstancias.length;
@@ -1751,6 +1749,7 @@
             } else {
                 iniciarSeguimientoScroll();
             }
+            if (nuevasInstancias.length > 0) _enfocarUltimoItemCarrito(nuevasInstancias[nuevasInstancias.length - 1]);
         }
 
         // ============================================
@@ -1823,33 +1822,32 @@
         function _enfocarUltimoItemCarrito(instancia) {
             if (!instancia) return;
 
-            // --- Pre-expandir: calcular los IDs igual que agruparItemsJerarquicamente ---
+            // 1. Calcular los IDs de grupo y subgrupo (misma lógica que agruparItemsJerarquicamente)
             const n1Id = instancia.platilloId.replace(/[^a-zA-Z0-9]/g, '_');
             const personalizacionKey = (instancia.personalizacion || []).slice().sort().join('|');
             const n2Id = `${instancia.platilloId}_${personalizacionKey.replace(/[^a-zA-Z0-9]/g, '_')}`;
+
+            // 2. Marcar estos niveles como activos ANTES de re-renderizar
             nivel1Activo = n1Id;
             nivel2Activo = n2Id;
 
-            // --- Scroll: esperar que el DOM esté pintado ---
-            // En móvil con carrito recién abierto esperamos que la transición CSS termine (300ms + margen).
-            // En desktop el carrito siempre es visible, solo necesitamos el repintado del DOM.
-            const esMobil    = window.innerWidth <= 992;
-            const cartSidebar = document.getElementById('cartSidebar');
-            const yaAbierto  = cartSidebar && cartSidebar.classList.contains('open');
-            const delay      = (esMobil && !yaAbierto) ? 380 : 60;
+            // 3. Re-renderizar el carrito para que el HTML nazca con clase 'expanded'
+            //    en los contenedores correctos — offsetTop será real desde el primer frame
+            actualizarCarritoUI();
 
-            setTimeout(function() {
-                const cartItemsEl = document.getElementById('cartItems');
-                const itemEl      = document.querySelector(`[data-instancia-id="${instancia.id}"]`);
-                if (!cartItemsEl || !itemEl) return;
-
-                // scrollTop = posición del ítem relativa al contenedor, centrado
-                const containerRect = cartItemsEl.getBoundingClientRect();
-                const itemRect      = itemEl.getBoundingClientRect();
-                const relTop        = itemRect.top - containerRect.top + cartItemsEl.scrollTop;
-                const destino       = relTop - (cartItemsEl.clientHeight / 2) + (itemEl.offsetHeight / 2);
-                cartItemsEl.scrollTo({ top: Math.max(0, destino), behavior: 'smooth' });
-            }, delay);
+            // 4. Scroll: dos rAF garantizan que el navegador ya pintó el layout
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    const cartItemsEl = document.getElementById('cartItems');
+                    const itemEl = document.querySelector(`[data-instancia-id="${instancia.id}"]`);
+                    if (!cartItemsEl || !itemEl) return;
+                    // offsetTop es relativo al offsetParent; acumulamos hasta llegar a cartItemsEl
+                    let top = 0, el = itemEl;
+                    while (el && el !== cartItemsEl) { top += el.offsetTop; el = el.offsetParent; }
+                    const destino = top - (cartItemsEl.clientHeight / 2) + (itemEl.offsetHeight / 2);
+                    cartItemsEl.scrollTo({ top: Math.max(0, destino), behavior: 'smooth' });
+                });
+            });
         }
 
         // ============================================
