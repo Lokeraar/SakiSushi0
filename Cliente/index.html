@@ -1462,20 +1462,19 @@
             };
             carrito.push(nuevaInstancia);
             guardarCarrito();
+            // Pre-expandir ANTES de renderizar para que el grupo aparezca abierto desde el primer frame
+            _enfocarUltimoItemCarrito(nuevaInstancia);
             actualizarCarritoUI();
             actualizarCarritoBadge();
             window.stockCache.invalidate();
             mostrarToast('Agregado', 'success');
             if (window.innerWidth <= 992) {
-                // Abrir el sidebar primero — _enfocarUltimoItemCarrito detectará que
-                // ya está abierto y usará el delay correcto para la transición.
                 document.getElementById('cartSidebar').classList.add('open');
                 document.getElementById('overlay').classList.add('active');
                 document.getElementById('categorySidebar').classList.remove('open');
             } else {
                 iniciarSeguimientoScroll();
             }
-            _enfocarUltimoItemCarrito(nuevaInstancia);
         }
 
         function guardarCarrito() {
@@ -1736,6 +1735,8 @@
                 nuevasInstancias.push(nuevaInstancia);
             }
             guardarCarrito();
+            // Pre-expandir ANTES de renderizar
+            if (nuevasInstancias.length > 0) _enfocarUltimoItemCarrito(nuevasInstancias[nuevasInstancias.length - 1]);
             actualizarCarritoUI();
             actualizarCarritoBadge();
             window.stockCache.invalidate();
@@ -1750,7 +1751,6 @@
             } else {
                 iniciarSeguimientoScroll();
             }
-            if (nuevasInstancias.length > 0) _enfocarUltimoItemCarrito(nuevasInstancias[nuevasInstancias.length - 1]);
         }
 
         // ============================================
@@ -1817,63 +1817,38 @@
             }, 300);
         }
 
+        // Pre-expande el grupo de la instancia en nivel1Activo/nivel2Activo ANTES de
+        // que actualizarCarritoUI renderice, para que el ítem aparezca visible desde el
+        // primer frame. Luego scrollea al ítem dentro del contenedor.
         function _enfocarUltimoItemCarrito(instancia) {
             if (!instancia) return;
 
-            const esMobil        = window.innerWidth <= 992;
-            const cartSidebar    = document.getElementById('cartSidebar');
-            const yaAbierto      = cartSidebar && cartSidebar.classList.contains('open');
+            // --- Pre-expandir: calcular los IDs igual que agruparItemsJerarquicamente ---
+            const n1Id = instancia.platilloId.replace(/[^a-zA-Z0-9]/g, '_');
+            const personalizacionKey = (instancia.personalizacion || []).slice().sort().join('|');
+            const n2Id = `${instancia.platilloId}_${personalizacionKey.replace(/[^a-zA-Z0-9]/g, '_')}`;
+            nivel1Activo = n1Id;
+            nivel2Activo = n2Id;
 
-            // La transición del sidebar es .3s; la de max-height nivel1 es .5s, nivel2 .4s.
-            // En móvil y carrito recién abierto esperamos 600ms para que todo esté pintado.
-            // En desktop o carrito ya visible 80ms bastan para el repintado del DOM.
-            const delay = (esMobil && !yaAbierto) ? 620 : 80;
+            // --- Scroll: esperar que el DOM esté pintado ---
+            // En móvil con carrito recién abierto esperamos que la transición CSS termine (300ms + margen).
+            // En desktop el carrito siempre es visible, solo necesitamos el repintado del DOM.
+            const esMobil    = window.innerWidth <= 992;
+            const cartSidebar = document.getElementById('cartSidebar');
+            const yaAbierto  = cartSidebar && cartSidebar.classList.contains('open');
+            const delay      = (esMobil && !yaAbierto) ? 380 : 60;
 
             setTimeout(function() {
                 const cartItemsEl = document.getElementById('cartItems');
                 const itemEl      = document.querySelector(`[data-instancia-id="${instancia.id}"]`);
                 if (!cartItemsEl || !itemEl) return;
 
-                // --- Expandir nivel1 si está colapsado ---
-                const n1Container = itemEl.closest('.nivel2-container');
-                if (n1Container && !n1Container.classList.contains('expanded')) {
-                    const n1Id = n1Container.id.replace('nivel1-', '');
-                    nivel1Activo = n1Id;
-                    n1Container.classList.add('expanded');
-                    const ic1 = document.getElementById(`icon1-${n1Id}`);
-                    if (ic1) ic1.classList.add('rotated');
-                }
-
-                // --- Expandir nivel2 si está colapsado ---
-                const n2Container = itemEl.closest('.nivel3-container');
-                if (n2Container && !n2Container.classList.contains('expanded')) {
-                    const n2Id = n2Container.id.replace('nivel2-', '');
-                    nivel2Activo = n2Id;
-                    n2Container.classList.add('expanded');
-                    const ic2 = document.getElementById(`icon2-${n2Id}`);
-                    if (ic2) ic2.classList.add('rotated');
-                }
-
-                // --- Esperar a que las transiciones de max-height terminen ---
-                // nivel2-container: 500ms, nivel3-container: 400ms → usamos 520ms de margen
-                setTimeout(function() {
-                    const cartItemsEl2 = document.getElementById('cartItems');
-                    const itemEl2      = document.querySelector(`[data-instancia-id="${instancia.id}"]`);
-                    if (!cartItemsEl2 || !itemEl2) return;
-
-                    // scrollTop correcto: posición del item relativa al contenedor
-                    const containerTop = cartItemsEl2.getBoundingClientRect().top;
-                    const itemTop      = itemEl2.getBoundingClientRect().top;
-                    const itemH        = itemEl2.offsetHeight;
-                    const containerH   = cartItemsEl2.clientHeight;
-
-                    const scrollActual = cartItemsEl2.scrollTop;
-                    const itemRelTop   = itemTop - containerTop + scrollActual;
-                    const destino      = itemRelTop - (containerH / 2) + (itemH / 2);
-
-                    cartItemsEl2.scrollTo({ top: Math.max(0, destino), behavior: 'smooth' });
-                }, 520);
-
+                // scrollTop = posición del ítem relativa al contenedor, centrado
+                const containerRect = cartItemsEl.getBoundingClientRect();
+                const itemRect      = itemEl.getBoundingClientRect();
+                const relTop        = itemRect.top - containerRect.top + cartItemsEl.scrollTop;
+                const destino       = relTop - (cartItemsEl.clientHeight / 2) + (itemEl.offsetHeight / 2);
+                cartItemsEl.scrollTo({ top: Math.max(0, destino), behavior: 'smooth' });
             }, delay);
         }
 
