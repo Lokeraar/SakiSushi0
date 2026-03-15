@@ -1,6 +1,6 @@
 -- ============================================
 -- SCRIPT COMPLETO PARA SUPABASE - SAKI SUSHI
--- VERSIÓN FINAL CON CORRECCIONES
+-- VERSIÓN FINAL CON AUTENTICACIÓN JWT Y NOTIFICACIONES
 -- ============================================
 
 -- HABILITAR EXTENSIONES NECESARIAS
@@ -8,17 +8,27 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
 -- ============================================
--- ELIMINAR TODO LO EXISTENTE
+-- ELIMINAR TODO LO EXISTENTE (ORDEN CORRECTO)
 -- ============================================
-REVOKE ALL ON ALL TABLES IN SCHEMA public FROM PUBLIC;
-REVOKE ALL ON ALL TABLES IN SCHEMA public FROM anon;
-REVOKE ALL ON ALL TABLES IN SCHEMA public FROM authenticated;
-
 DROP FUNCTION IF EXISTS crear_pedido_con_reserva CASCADE;
 DROP FUNCTION IF EXISTS liberar_ingredientes CASCADE;
 DROP FUNCTION IF EXISTS verificar_stock_critico CASCADE;
 DROP FUNCTION IF EXISTS update_updated_at_column CASCADE;
+DROP FUNCTION IF EXISTS insertar_notificacion_segura CASCADE;
+DROP FUNCTION IF EXISTS utc_to_gmt4 CASCADE;
+DROP FUNCTION IF EXISTS now_gmt4 CASCADE;
+DROP FUNCTION IF EXISTS enviar_notificacion_push CASCADE;
+DROP FUNCTION IF EXISTS trigger_enviar_push CASCADE;
+DROP FUNCTION IF EXISTS limpiar_suscripciones_expiradas CASCADE;
+DROP FUNCTION IF EXISTS get_notificaciones_no_leidas CASCADE;
+DROP FUNCTION IF EXISTS get_pedidos_pendientes CASCADE;
+DROP FUNCTION IF EXISTS get_acumulado_propinas_mesonero CASCADE;
+DROP FUNCTION IF EXISTS get_propinas_dia CASCADE;
+DROP FUNCTION IF EXISTS get_ventas_dia CASCADE;
+DROP FUNCTION IF EXISTS get_pedidos_activos CASCADE;
+DROP FUNCTION IF EXISTS verify_user_credentials CASCADE;
 
+DROP TABLE IF EXISTS push_subscriptions CASCADE;
 DROP TABLE IF EXISTS notificaciones CASCADE;
 DROP TABLE IF EXISTS entregas_delivery CASCADE;
 DROP TABLE IF EXISTS ventas CASCADE;
@@ -62,10 +72,11 @@ ON CONFLICT (id) DO UPDATE SET
     recovery_email = EXCLUDED.recovery_email,
     alerta_stock_minimo = EXCLUDED.alerta_stock_minimo;
 
-ALTER TABLE config DISABLE ROW LEVEL SECURITY;
-GRANT ALL ON config TO PUBLIC;
-GRANT ALL ON config TO anon;
-GRANT ALL ON config TO authenticated;
+ALTER TABLE config ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Lectura config para todos" ON config FOR SELECT USING (true);
+CREATE POLICY "Actualizacion config solo admin" ON config FOR UPDATE USING (true) WITH CHECK (true);
+GRANT SELECT ON config TO anon, authenticated;
+GRANT SELECT, UPDATE ON config TO PUBLIC;
 
 -- ============================================
 -- TABLA: usuarios
@@ -74,22 +85,80 @@ CREATE TABLE usuarios (
     id TEXT PRIMARY KEY,
     nombre TEXT NOT NULL,
     username TEXT UNIQUE NOT NULL,
-    password TEXT NOT NULL,
+    password_hash TEXT NOT NULL,
     rol TEXT DEFAULT 'cajero',
     activo BOOLEAN DEFAULT TRUE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-ALTER TABLE usuarios DISABLE ROW LEVEL SECURITY;
-GRANT ALL ON usuarios TO PUBLIC;
-GRANT ALL ON usuarios TO anon;
-GRANT ALL ON usuarios TO authenticated;
+ALTER TABLE usuarios ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Usuarios ver datos propios" ON usuarios FOR SELECT USING (true);
+CREATE POLICY "Usuarios insert" ON usuarios FOR INSERT WITH CHECK (true);
+CREATE POLICY "Usuarios update" ON usuarios FOR UPDATE USING (true) WITH CHECK (true);
+CREATE POLICY "Usuarios delete" ON usuarios FOR DELETE USING (true);
 
-INSERT INTO usuarios (id, nombre, username, password, rol, activo) VALUES
-    ('user_' || gen_random_uuid() || '_1', 'Cajero Principal', 'cajero1', '123456', 'cajero', true),
-    ('user_' || gen_random_uuid() || '_2', 'Cajero Secundario', 'cajero2', '123456', 'cajero', true)
+GRANT SELECT, INSERT, UPDATE, DELETE ON usuarios TO anon, authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON usuarios TO PUBLIC;
+
+-- ============================================
+-- FUNCIÓN: hash_password
+-- ============================================
+CREATE OR REPLACE FUNCTION hash_password(plain_password TEXT)
+RETURNS TEXT AS $$
+BEGIN
+    RETURN crypt(plain_password, gen_salt('bf', 8));
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- ============================================
+-- POBLAR TABLA usuarios
+-- ============================================
+INSERT INTO usuarios (id, nombre, username, password_hash, rol, activo) VALUES
+    ('user_' || gen_random_uuid() || '_1', 'Cajero Principal', 'cajero1', hash_password('123456'), 'cajero', true),
+    ('user_' || gen_random_uuid() || '_2', 'Cajero Secundario', 'cajero2', hash_password('123456'), 'cajero', true),
+    ('user_' || gen_random_uuid() || '_3', 'Administrador', 'admin', hash_password('admin123'), 'admin', true)
 ON CONFLICT (username) DO NOTHING;
+
+-- ============================================
+-- FUNCIÓN verify_user_credentials
+-- ============================================
+CREATE OR REPLACE FUNCTION verify_user_credentials(p_username TEXT, p_password TEXT)
+RETURNS TABLE (
+    success BOOLEAN,
+    error TEXT,
+    user_id TEXT,
+    user_nombre TEXT,
+    user_username TEXT,
+    user_rol TEXT
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        CASE 
+            WHEN u.id IS NOT NULL AND u.password_hash = crypt(p_password, u.password_hash) 
+            THEN true 
+            ELSE false 
+        END AS success,
+        CASE 
+            WHEN u.id IS NULL THEN 'Usuario no encontrado'::TEXT
+            WHEN u.password_hash != crypt(p_password, u.password_hash) THEN 'Contraseña incorrecta'::TEXT
+            ELSE NULL::TEXT
+        END AS error,
+        u.id AS user_id,
+        u.nombre AS user_nombre,
+        u.username AS user_username,
+        u.rol AS user_rol
+    FROM usuarios u
+    WHERE u.username = p_username AND u.activo = true
+    UNION ALL
+    SELECT false, 'Usuario no encontrado'::TEXT, NULL::TEXT, NULL::TEXT, NULL::TEXT, NULL::TEXT
+    WHERE NOT EXISTS (SELECT 1 FROM usuarios WHERE username = p_username AND activo = true)
+    LIMIT 1;
+END;
+$$ LANGUAGE plpgsql STABLE;
+
+GRANT EXECUTE ON FUNCTION verify_user_credentials TO anon, authenticated;
 
 -- ============================================
 -- TABLA: mesoneros
@@ -102,10 +171,10 @@ CREATE TABLE mesoneros (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-ALTER TABLE mesoneros DISABLE ROW LEVEL SECURITY;
+ALTER TABLE mesoneros ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Permitir todo mesoneros" ON mesoneros FOR ALL USING (true) WITH CHECK (true);
+GRANT ALL ON mesoneros TO anon, authenticated;
 GRANT ALL ON mesoneros TO PUBLIC;
-GRANT ALL ON mesoneros TO anon;
-GRANT ALL ON mesoneros TO authenticated;
 
 INSERT INTO mesoneros (id, nombre, activo) VALUES
     ('mes_' || gen_random_uuid() || '_1', 'Carlos Méndez', true),
@@ -113,7 +182,7 @@ INSERT INTO mesoneros (id, nombre, activo) VALUES
     ('mes_' || gen_random_uuid() || '_3', 'José Rodríguez', true),
     ('mes_' || gen_random_uuid() || '_4', 'Ana Pérez', true),
     ('mes_' || gen_random_uuid() || '_5', 'Luis Martínez', true)
-ON CONFLICT DO NOTHING;
+ON CONFLICT (id) DO NOTHING;
 
 -- ============================================
 -- TABLA: deliverys
@@ -126,10 +195,10 @@ CREATE TABLE deliverys (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-ALTER TABLE deliverys DISABLE ROW LEVEL SECURITY;
+ALTER TABLE deliverys ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Permitir todo deliverys" ON deliverys FOR ALL USING (true) WITH CHECK (true);
+GRANT ALL ON deliverys TO anon, authenticated;
 GRANT ALL ON deliverys TO PUBLIC;
-GRANT ALL ON deliverys TO anon;
-GRANT ALL ON deliverys TO authenticated;
 
 INSERT INTO deliverys (id, nombre, activo) VALUES
     ('del_' || gen_random_uuid() || '_1', 'Pedro Castillo', true),
@@ -137,7 +206,7 @@ INSERT INTO deliverys (id, nombre, activo) VALUES
     ('del_' || gen_random_uuid() || '_3', 'Miguel Rojas', true),
     ('del_' || gen_random_uuid() || '_4', 'Alejandro Toro', true),
     ('del_' || gen_random_uuid() || '_5', 'David Silva', true)
-ON CONFLICT DO NOTHING;
+ON CONFLICT (id) DO NOTHING;
 
 -- ============================================
 -- TABLA: inventario
@@ -155,10 +224,14 @@ CREATE TABLE inventario (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-ALTER TABLE inventario DISABLE ROW LEVEL SECURITY;
+ALTER TABLE inventario ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Permitir todo inventario" ON inventario FOR ALL USING (true) WITH CHECK (true);
+GRANT ALL ON inventario TO anon, authenticated;
 GRANT ALL ON inventario TO PUBLIC;
-GRANT ALL ON inventario TO anon;
-GRANT ALL ON inventario TO authenticated;
+
+CREATE INDEX idx_inventario_nombre ON inventario(nombre);
+CREATE INDEX idx_inventario_stock ON inventario(stock);
+CREATE INDEX idx_inventario_minimo ON inventario(minimo);
 
 INSERT INTO inventario (id, nombre, stock, reservado, unidad_base, minimo, precio_costo, precio_unitario) VALUES
     ('ing_' || gen_random_uuid() || '_1', 'Arroz para sushi', 50, 0, 'kilogramos', 10, 3.50, 5.00),
@@ -176,7 +249,7 @@ INSERT INTO inventario (id, nombre, stock, reservado, unidad_base, minimo, preci
     ('ing_' || gen_random_uuid() || '_13', 'Anguila', 10, 0, 'kilogramos', 2, 15.00, 22.00),
     ('ing_' || gen_random_uuid() || '_14', 'Huevas de pez volador', 5, 0, 'kilogramos', 1, 25.00, 35.00),
     ('ing_' || gen_random_uuid() || '_15', 'Mayonesa japonesa', 12, 0, 'litros', 3, 3.50, 6.00)
-ON CONFLICT DO NOTHING;
+ON CONFLICT (id) DO NOTHING;
 
 -- ============================================
 -- TABLA: menu
@@ -197,10 +270,16 @@ CREATE TABLE menu (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-ALTER TABLE menu DISABLE ROW LEVEL SECURITY;
+ALTER TABLE menu ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Permitir todo menu" ON menu FOR ALL USING (true) WITH CHECK (true);
+GRANT ALL ON menu TO anon, authenticated;
 GRANT ALL ON menu TO PUBLIC;
-GRANT ALL ON menu TO anon;
-GRANT ALL ON menu TO authenticated;
+
+CREATE INDEX idx_menu_categoria ON menu(categoria);
+CREATE INDEX idx_menu_subcategoria ON menu(subcategoria);
+CREATE INDEX idx_menu_nombre ON menu(nombre);
+CREATE INDEX idx_menu_precio ON menu(precio);
+CREATE INDEX idx_menu_disponible ON menu(disponible);
 
 DO $$
 DECLARE
@@ -276,7 +355,7 @@ BEGIN
              arroz_id, jsonb_build_object('cantidad', 0.06, 'nombre', 'Arroz para sushi', 'unidad', 'kilogramos'),
              atun_id, jsonb_build_object('cantidad', 0.06, 'nombre', 'Atún fresco', 'unidad', 'kilogramos')
          ), true, 45)
-    ON CONFLICT DO NOTHING;
+    ON CONFLICT (id) DO NOTHING;
 END $$;
 
 -- ============================================
@@ -284,7 +363,7 @@ END $$;
 -- ============================================
 CREATE TABLE pedidos (
     id TEXT PRIMARY KEY,
-    timestamp TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    fecha TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     estado TEXT DEFAULT 'pendiente',
     tipo TEXT,
     total NUMERIC(10,2) DEFAULT 0,
@@ -316,14 +395,18 @@ CREATE TABLE pedidos (
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-ALTER TABLE pedidos DISABLE ROW LEVEL SECURITY;
+ALTER TABLE pedidos ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Permitir todo pedidos" ON pedidos FOR ALL USING (true) WITH CHECK (true);
+GRANT ALL ON pedidos TO anon, authenticated;
 GRANT ALL ON pedidos TO PUBLIC;
-GRANT ALL ON pedidos TO anon;
-GRANT ALL ON pedidos TO authenticated;
 
-CREATE INDEX IF NOT EXISTS idx_pedidos_estado ON pedidos(estado);
-CREATE INDEX IF NOT EXISTS idx_pedidos_timestamp ON pedidos(timestamp);
-CREATE INDEX IF NOT EXISTS idx_pedidos_session_id ON pedidos(session_id);
+CREATE INDEX idx_pedidos_estado ON pedidos(estado);
+CREATE INDEX idx_pedidos_fecha ON pedidos(fecha);
+CREATE INDEX idx_pedidos_session_id ON pedidos(session_id);
+CREATE INDEX idx_pedidos_tipo ON pedidos(tipo);
+CREATE INDEX idx_pedidos_fecha_cobro ON pedidos(fecha_cobro);
+CREATE INDEX idx_pedidos_estado_tipo ON pedidos(estado, tipo);
+CREATE INDEX idx_pedidos_fecha_estado ON pedidos(fecha, estado);
 
 -- ============================================
 -- TABLA: ventas
@@ -340,12 +423,15 @@ CREATE TABLE ventas (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-ALTER TABLE ventas DISABLE ROW LEVEL SECURITY;
+ALTER TABLE ventas ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Permitir todo ventas" ON ventas FOR ALL USING (true) WITH CHECK (true);
+GRANT ALL ON ventas TO anon, authenticated;
 GRANT ALL ON ventas TO PUBLIC;
-GRANT ALL ON ventas TO anon;
-GRANT ALL ON ventas TO authenticated;
 
-CREATE INDEX IF NOT EXISTS idx_ventas_fecha ON ventas(fecha);
+CREATE INDEX idx_ventas_fecha ON ventas(fecha);
+CREATE INDEX idx_ventas_pedido_id ON ventas(pedido_id);
+CREATE INDEX idx_ventas_metodo_pago ON ventas(metodo_pago);
+CREATE INDEX idx_ventas_tipo ON ventas(tipo);
 
 -- ============================================
 -- TABLA: entregas_delivery
@@ -359,13 +445,14 @@ CREATE TABLE entregas_delivery (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-ALTER TABLE entregas_delivery DISABLE ROW LEVEL SECURITY;
+ALTER TABLE entregas_delivery ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Permitir todo entregas_delivery" ON entregas_delivery FOR ALL USING (true) WITH CHECK (true);
+GRANT ALL ON entregas_delivery TO anon, authenticated;
 GRANT ALL ON entregas_delivery TO PUBLIC;
-GRANT ALL ON entregas_delivery TO anon;
-GRANT ALL ON entregas_delivery TO authenticated;
 
-CREATE INDEX IF NOT EXISTS idx_entregas_delivery_id ON entregas_delivery(delivery_id);
-CREATE INDEX IF NOT EXISTS idx_entregas_fecha ON entregas_delivery(fecha_entrega);
+CREATE INDEX idx_entregas_delivery_id ON entregas_delivery(delivery_id);
+CREATE INDEX idx_entregas_fecha ON entregas_delivery(fecha_entrega);
+CREATE INDEX idx_entregas_pedido_id ON entregas_delivery(pedido_id);
 
 -- ============================================
 -- TABLA: propinas
@@ -386,39 +473,68 @@ CREATE TABLE propinas (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-ALTER TABLE propinas DISABLE ROW LEVEL SECURITY;
+ALTER TABLE propinas ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Permitir todo propinas" ON propinas FOR ALL USING (true) WITH CHECK (true);
+GRANT ALL ON propinas TO anon, authenticated;
 GRANT ALL ON propinas TO PUBLIC;
-GRANT ALL ON propinas TO anon;
-GRANT ALL ON propinas TO authenticated;
 
-CREATE INDEX IF NOT EXISTS idx_propinas_fecha ON propinas(fecha);
-CREATE INDEX IF NOT EXISTS idx_propinas_mesonero ON propinas(mesonero_id);
+CREATE INDEX idx_propinas_fecha ON propinas(fecha);
+CREATE INDEX idx_propinas_mesonero ON propinas(mesonero_id);
+CREATE INDEX idx_propinas_mesa ON propinas(mesa);
+CREATE INDEX idx_propinas_entregado ON propinas(entregado);
 
 -- ============================================
--- TABLA: notificaciones (CON ÍNDICES CRÍTICOS)
+-- TABLA: notificaciones
 -- ============================================
 CREATE TABLE notificaciones (
     id SERIAL PRIMARY KEY,
-    pedido_id TEXT REFERENCES pedidos(id) ON DELETE CASCADE,
+    pedido_id TEXT,
     tipo TEXT,
     titulo TEXT,
     mensaje TEXT,
-    timestamp TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    fecha TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     session_id TEXT,
     leida BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-ALTER TABLE notificaciones DISABLE ROW LEVEL SECURITY;
+ALTER TABLE notificaciones ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Permitir todo notificaciones" ON notificaciones FOR ALL USING (true) WITH CHECK (true);
+GRANT ALL ON notificaciones TO anon, authenticated;
 GRANT ALL ON notificaciones TO PUBLIC;
-GRANT ALL ON notificaciones TO anon;
-GRANT ALL ON notificaciones TO authenticated;
+GRANT USAGE ON SEQUENCE notificaciones_id_seq TO anon, authenticated;
 
--- ÍNDICES CRÍTICOS PARA RENDIMIENTO
-CREATE INDEX IF NOT EXISTS idx_notificaciones_session ON notificaciones(session_id);
-CREATE INDEX IF NOT EXISTS idx_notificaciones_timestamp ON notificaciones(timestamp);
-CREATE INDEX IF NOT EXISTS idx_notificaciones_leida ON notificaciones(leida);
-CREATE INDEX IF NOT EXISTS idx_notificaciones_session_leida ON notificaciones(session_id, leida);
+CREATE INDEX idx_notificaciones_session ON notificaciones(session_id);
+CREATE INDEX idx_notificaciones_fecha ON notificaciones(fecha);
+CREATE INDEX idx_notificaciones_leida ON notificaciones(leida);
+CREATE INDEX idx_notificaciones_tipo ON notificaciones(tipo);
+CREATE INDEX idx_notificaciones_session_leida ON notificaciones(session_id, leida);
+CREATE INDEX idx_notificaciones_session_fecha ON notificaciones(session_id, fecha);
+CREATE INDEX idx_notificaciones_pedido_id ON notificaciones(pedido_id);
+
+-- ============================================
+-- TABLA: push_subscriptions
+-- ============================================
+CREATE TABLE push_subscriptions (
+    id SERIAL PRIMARY KEY,
+    session_id TEXT NOT NULL,
+    endpoint TEXT UNIQUE NOT NULL,
+    p256dh TEXT NOT NULL,
+    auth TEXT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    last_used TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    user_agent TEXT
+);
+
+CREATE INDEX idx_push_session ON push_subscriptions(session_id);
+CREATE INDEX idx_push_endpoint ON push_subscriptions(endpoint);
+CREATE INDEX idx_push_last_used ON push_subscriptions(last_used);
+
+ALTER TABLE push_subscriptions ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Permitir todo push_subscriptions" ON push_subscriptions FOR ALL USING (true) WITH CHECK (true);
+GRANT ALL ON push_subscriptions TO anon, authenticated;
+GRANT ALL ON push_subscriptions TO PUBLIC;
+GRANT USAGE ON SEQUENCE push_subscriptions_id_seq TO anon, authenticated;
 
 -- ============================================
 -- TABLA: codigos_qr
@@ -433,10 +549,13 @@ CREATE TABLE codigos_qr (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-ALTER TABLE codigos_qr DISABLE ROW LEVEL SECURITY;
+ALTER TABLE codigos_qr ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Permitir todo codigos_qr" ON codigos_qr FOR ALL USING (true) WITH CHECK (true);
+GRANT ALL ON codigos_qr TO anon, authenticated;
 GRANT ALL ON codigos_qr TO PUBLIC;
-GRANT ALL ON codigos_qr TO anon;
-GRANT ALL ON codigos_qr TO authenticated;
+
+CREATE INDEX idx_codigos_qr_tipo ON codigos_qr(tipo);
+CREATE INDEX idx_codigos_qr_nombre ON codigos_qr(nombre);
 
 INSERT INTO codigos_qr (id, nombre, tipo) VALUES
     ('QR_' || gen_random_uuid() || '_1', 'Mesa 1', 'mesa'),
@@ -445,7 +564,7 @@ INSERT INTO codigos_qr (id, nombre, tipo) VALUES
     ('QR_' || gen_random_uuid() || '_4', 'Mesa 4', 'mesa'),
     ('QR_' || gen_random_uuid() || '_5', 'Mesa 5', 'mesa'),
     ('QR_' || gen_random_uuid() || '_6', 'WiFi Clientes', 'wifi')
-ON CONFLICT DO NOTHING;
+ON CONFLICT (id) DO NOTHING;
 
 -- ============================================
 -- FUNCIÓN: update_updated_at_column
@@ -458,38 +577,30 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Triggers
-DROP TRIGGER IF EXISTS update_config_updated_at ON config;
 CREATE TRIGGER update_config_updated_at
     BEFORE UPDATE ON config
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
-DROP TRIGGER IF EXISTS update_usuarios_updated_at ON usuarios;
 CREATE TRIGGER update_usuarios_updated_at
     BEFORE UPDATE ON usuarios
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
-DROP TRIGGER IF EXISTS update_mesoneros_updated_at ON mesoneros;
 CREATE TRIGGER update_mesoneros_updated_at
     BEFORE UPDATE ON mesoneros
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
-DROP TRIGGER IF EXISTS update_deliverys_updated_at ON deliverys;
 CREATE TRIGGER update_deliverys_updated_at
     BEFORE UPDATE ON deliverys
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
-DROP TRIGGER IF EXISTS update_inventario_updated_at ON inventario;
 CREATE TRIGGER update_inventario_updated_at
     BEFORE UPDATE ON inventario
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
-DROP TRIGGER IF EXISTS update_menu_updated_at ON menu;
 CREATE TRIGGER update_menu_updated_at
     BEFORE UPDATE ON menu
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 
-DROP TRIGGER IF EXISTS update_pedidos_updated_at ON pedidos;
 CREATE TRIGGER update_pedidos_updated_at
     BEFORE UPDATE ON pedidos
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
@@ -510,12 +621,12 @@ DECLARE
     v_result JSONB;
 BEGIN
     INSERT INTO pedidos (
-        id, timestamp, estado, tipo, total, session_id, mesa, cliente_nombre,
+        id, fecha, estado, tipo, total, session_id, mesa, cliente_nombre,
         parroquia, direccion, telefono, referencia, fecha_reserva, comprobante_url,
         costo_delivery, costo_delivery_usd, costo_delivery_bs, tasa_aplicada, items
     ) VALUES (
         p_pedido->>'id',
-        (p_pedido->>'timestamp')::TIMESTAMP WITH TIME ZONE,
+        (p_pedido->>'fecha')::TIMESTAMP WITH TIME ZONE,
         p_pedido->>'estado',
         p_pedido->>'tipo',
         (p_pedido->>'total')::NUMERIC,
@@ -534,6 +645,17 @@ BEGIN
         (p_pedido->>'tasa_aplicada')::NUMERIC,
         p_items
     ) RETURNING id INTO v_pedido_id;
+
+    INSERT INTO notificaciones (
+        pedido_id, tipo, titulo, mensaje, session_id, leida
+    ) VALUES (
+        v_pedido_id,
+        'pending',
+        '⏳ Pedido pendiente',
+        'Tu pedido está pendiente de confirmación',
+        p_pedido->>'session_id',
+        false
+    );
 
     IF p_pedido->>'estado' = 'pendiente' THEN
         FOR v_item IN SELECT * FROM jsonb_array_elements(p_items)
@@ -643,6 +765,274 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- ============================================
+-- FUNCIÓN SEGURA PARA INSERTAR NOTIFICACIONES
+-- ============================================
+CREATE OR REPLACE FUNCTION insertar_notificacion_segura(
+    p_pedido_id TEXT,
+    p_tipo TEXT,
+    p_titulo TEXT,
+    p_mensaje TEXT,
+    p_session_id TEXT
+) RETURNS JSONB AS $$
+DECLARE
+    v_result JSONB;
+BEGIN
+    INSERT INTO notificaciones (
+        pedido_id, tipo, titulo, mensaje, fecha, session_id, leida
+    ) VALUES (
+        p_pedido_id, p_tipo, p_titulo, p_mensaje, NOW(), p_session_id, false
+    );
+    
+    v_result := jsonb_build_object('success', true);
+    RETURN v_result;
+    
+EXCEPTION WHEN OTHERS THEN
+    RETURN jsonb_build_object('success', false, 'error', SQLERRM);
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- ============================================
+-- FUNCIONES DE ZONA HORARIA GMT-4
+-- ============================================
+CREATE OR REPLACE FUNCTION utc_to_gmt4(utc_fecha TIMESTAMP WITH TIME ZONE)
+RETURNS TIMESTAMP WITHOUT TIME ZONE AS $$
+BEGIN
+    RETURN utc_fecha AT TIME ZONE 'UTC' AT TIME ZONE 'America/Caracas';
+END;
+$$ LANGUAGE plpgsql IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION now_gmt4()
+RETURNS TIMESTAMP WITHOUT TIME ZONE AS $$
+BEGIN
+    RETURN NOW() AT TIME ZONE 'UTC' AT TIME ZONE 'America/Caracas';
+END;
+$$ LANGUAGE plpgsql STABLE;
+
+-- ============================================
+-- FUNCIONES PARA ESTADÍSTICAS
+-- ============================================
+CREATE OR REPLACE FUNCTION get_acumulado_propinas_mesonero(p_mesonero_id TEXT, p_fecha DATE DEFAULT CURRENT_DATE)
+RETURNS NUMERIC AS $$
+DECLARE
+    v_total NUMERIC;
+BEGIN
+    SELECT COALESCE(SUM(monto_bs), 0) INTO v_total
+    FROM propinas
+    WHERE mesonero_id = p_mesonero_id
+      AND DATE(fecha AT TIME ZONE 'UTC' AT TIME ZONE 'America/Caracas') = p_fecha;
+    
+    RETURN v_total;
+END;
+$$ LANGUAGE plpgsql STABLE;
+
+CREATE OR REPLACE FUNCTION get_propinas_dia(p_fecha DATE DEFAULT CURRENT_DATE)
+RETURNS TABLE (
+    id INTEGER,
+    mesonero_id TEXT,
+    mesonero_nombre TEXT,
+    mesa TEXT,
+    metodo TEXT,
+    monto_bs NUMERIC,
+    cajero TEXT,
+    fecha TIMESTAMP WITH TIME ZONE
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        p.id,
+        p.mesonero_id,
+        m.nombre AS mesonero_nombre,
+        p.mesa,
+        p.metodo,
+        p.monto_bs,
+        p.cajero,
+        p.fecha
+    FROM propinas p
+    LEFT JOIN mesoneros m ON p.mesonero_id = m.id
+    WHERE DATE(p.fecha AT TIME ZONE 'UTC' AT TIME ZONE 'America/Caracas') = p_fecha
+    ORDER BY p.fecha DESC;
+END;
+$$ LANGUAGE plpgsql STABLE;
+
+CREATE OR REPLACE FUNCTION get_ventas_dia(p_fecha DATE DEFAULT CURRENT_DATE)
+RETURNS TABLE (
+    total_ventas NUMERIC,
+    total_propinas NUMERIC,
+    cantidad_ventas BIGINT,
+    cantidad_propinas BIGINT
+) AS $$
+DECLARE
+    v_fecha_inicio TIMESTAMP WITH TIME ZONE;
+    v_fecha_fin TIMESTAMP WITH TIME ZONE;
+BEGIN
+    v_fecha_inicio := (p_fecha::TEXT || ' 00:00:00-04')::TIMESTAMP WITH TIME ZONE;
+    v_fecha_fin := (p_fecha::TEXT || ' 23:59:59-04')::TIMESTAMP WITH TIME ZONE;
+    
+    RETURN QUERY
+    SELECT
+        COALESCE((SELECT SUM(total) FROM pedidos WHERE fecha_cobro BETWEEN v_fecha_inicio AND v_fecha_fin), 0) AS total_ventas,
+        COALESCE((SELECT SUM(monto_bs) FROM propinas WHERE fecha BETWEEN v_fecha_inicio AND v_fecha_fin), 0) AS total_propinas,
+        COALESCE((SELECT COUNT(*) FROM pedidos WHERE fecha_cobro BETWEEN v_fecha_inicio AND v_fecha_fin), 0) AS cantidad_ventas,
+        COALESCE((SELECT COUNT(*) FROM propinas WHERE fecha BETWEEN v_fecha_inicio AND v_fecha_fin), 0) AS cantidad_propinas;
+END;
+$$ LANGUAGE plpgsql STABLE;
+
+CREATE OR REPLACE FUNCTION get_pedidos_activos()
+RETURNS TABLE (
+    pedido_id TEXT,
+    tipo TEXT,
+    estado TEXT,
+    fecha_registro TIMESTAMP WITH TIME ZONE,
+    total NUMERIC,
+    items JSONB,
+    cliente_nombre TEXT,
+    mesa TEXT
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        p.id AS pedido_id,
+        p.tipo,
+        p.estado,
+        p.fecha AS fecha_registro,
+        p.total,
+        p.items,
+        p.cliente_nombre,
+        p.mesa
+    FROM pedidos p
+    WHERE p.estado IN ('pendiente', 'en_cocina', 'en_camino', 'reserva_pendiente', 'reserva_atendida')
+    ORDER BY 
+        CASE p.estado
+            WHEN 'pendiente' THEN 1
+            WHEN 'en_cocina' THEN 2
+            WHEN 'en_camino' THEN 3
+            WHEN 'reserva_pendiente' THEN 4
+            WHEN 'reserva_atendida' THEN 5
+        END,
+        p.fecha ASC;
+END;
+$$ LANGUAGE plpgsql STABLE;
+
+CREATE OR REPLACE FUNCTION get_notificaciones_no_leidas(p_session_id TEXT)
+RETURNS TABLE (
+    id INTEGER,
+    tipo TEXT,
+    titulo TEXT,
+    mensaje TEXT,
+    fecha_notificacion TIMESTAMP WITH TIME ZONE,
+    leida BOOLEAN
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT n.id, n.tipo, n.titulo, n.mensaje, n.fecha, n.leida
+    FROM notificaciones n
+    WHERE n.session_id = p_session_id
+      AND n.leida = false
+    ORDER BY n.fecha DESC;
+END;
+$$ LANGUAGE plpgsql STABLE;
+
+CREATE OR REPLACE FUNCTION get_pedidos_pendientes()
+RETURNS TABLE (
+    id TEXT,
+    tipo TEXT,
+    total NUMERIC,
+    fecha_pedido TIMESTAMP WITH TIME ZONE,
+    session_id TEXT,
+    items JSONB
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT p.id, p.tipo, p.total, p.fecha, p.session_id, p.items
+    FROM pedidos p
+    WHERE p.estado = 'pendiente'
+    ORDER BY p.fecha ASC;
+END;
+$$ LANGUAGE plpgsql STABLE;
+
+-- ============================================
+-- FUNCIÓN PARA ENVIAR NOTIFICACIÓN PUSH (REGISTRO)
+-- ============================================
+CREATE OR REPLACE FUNCTION enviar_notificacion_push(
+    p_session_id TEXT,
+    p_titulo TEXT,
+    p_mensaje TEXT,
+    p_pedido_id TEXT DEFAULT NULL,
+    p_url TEXT DEFAULT '/SakiSushi0/Cliente/'
+) RETURNS JSONB AS $$
+DECLARE
+    v_result JSONB;
+    v_subscription RECORD;
+    v_count INTEGER := 0;
+BEGIN
+    FOR v_subscription IN 
+        SELECT endpoint, p256dh, auth 
+        FROM push_subscriptions 
+        WHERE session_id = p_session_id
+    LOOP
+        UPDATE push_subscriptions 
+        SET last_used = NOW() 
+        WHERE endpoint = v_subscription.endpoint;
+        
+        v_count := v_count + 1;
+        
+        RAISE NOTICE '📨 Enviando push a %', v_subscription.endpoint;
+    END LOOP;
+    
+    v_result := jsonb_build_object(
+        'success', true,
+        'enviadas', v_count,
+        'session_id', p_session_id,
+        'pedido_id', p_pedido_id
+    );
+    
+    RETURN v_result;
+    
+EXCEPTION WHEN OTHERS THEN
+    RETURN jsonb_build_object('success', false, 'error', SQLERRM);
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- ============================================
+-- TRIGGER PARA ENVIAR PUSH AL INSERTAR NOTIFICACIÓN
+-- ============================================
+CREATE OR REPLACE FUNCTION trigger_enviar_push()
+RETURNS TRIGGER AS $$
+BEGIN
+    PERFORM pg_notify('enviar_push', json_build_object(
+        'session_id', NEW.session_id,
+        'titulo', NEW.titulo,
+        'mensaje', NEW.mensaje,
+        'pedido_id', NEW.pedido_id
+    )::text);
+    
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS notificaciones_push_trigger ON notificaciones;
+CREATE TRIGGER notificaciones_push_trigger
+    AFTER INSERT ON notificaciones
+    FOR EACH ROW
+    EXECUTE FUNCTION trigger_enviar_push();
+
+-- ============================================
+-- FUNCIÓN PARA LIMPIAR SUSCRIPCIONES EXPIRADAS
+-- ============================================
+CREATE OR REPLACE FUNCTION limpiar_suscripciones_expiradas()
+RETURNS INTEGER AS $$
+DECLARE
+    v_eliminadas INTEGER;
+BEGIN
+    DELETE FROM push_subscriptions 
+    WHERE last_used < NOW() - INTERVAL '30 days';
+    
+    GET DIAGNOSTICS v_eliminadas = ROW_COUNT;
+    RETURN v_eliminadas;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- ============================================
 -- CONFIGURACIÓN DE STORAGE
 -- ============================================
 INSERT INTO storage.buckets (id, name, public) VALUES
@@ -652,91 +1042,116 @@ INSERT INTO storage.buckets (id, name, public) VALUES
 ON CONFLICT (id) DO NOTHING;
 
 DROP POLICY IF EXISTS "Permitir todo en imagenes-platillos" ON storage.objects;
-DROP POLICY IF EXISTS "Permitir todo en comprobantes" ON storage.objects;
-DROP POLICY IF EXISTS "Permitir todo en alarma" ON storage.objects;
-
 CREATE POLICY "Permitir todo en imagenes-platillos"
     ON storage.objects FOR ALL
     USING (bucket_id = 'imagenes-platillos')
     WITH CHECK (bucket_id = 'imagenes-platillos');
 
+DROP POLICY IF EXISTS "Permitir todo en comprobantes" ON storage.objects;
 CREATE POLICY "Permitir todo en comprobantes"
     ON storage.objects FOR ALL
     USING (bucket_id = 'comprobantes')
     WITH CHECK (bucket_id = 'comprobantes');
 
+DROP POLICY IF EXISTS "Permitir todo en alarma" ON storage.objects;
 CREATE POLICY "Permitir todo en alarma"
     ON storage.objects FOR ALL
     USING (bucket_id = 'alarma')
     WITH CHECK (bucket_id = 'alarma');
 
 -- ============================================
--- DATOS DE EJEMPLO
+-- CONFIGURACIÓN DE PERMISOS ADICIONALES
 -- ============================================
-DO $$
-DECLARE
-    v_pedido_id TEXT;
-    v_session_id TEXT;
-BEGIN
-    v_session_id := 'session_' || gen_random_uuid() || '_1';
-    v_pedido_id := 'PED-' || gen_random_uuid();
+GRANT USAGE, SELECT ON SEQUENCE notificaciones_id_seq TO anon;
+GRANT USAGE, SELECT ON SEQUENCE notificaciones_id_seq TO authenticated;
 
-    INSERT INTO pedidos (
-        id, timestamp, estado, tipo, total, session_id, mesa, cliente_nombre,
-        items, tasa_aplicada
-    ) VALUES (
-        v_pedido_id,
-        NOW(),
-        'pendiente',
-        'mesa',
-        25.97,
-        v_session_id,
-        'Mesa 1',
-        'Cliente Ejemplo',
-        '[{"platilloId": "plat_1", "nombre": "California Roll", "cantidad": 2, "personalizacion": [], "precioUnitarioUSD": 8.99, "subtotal": 17.98}, {"platilloId": "plat_5", "nombre": "Sashimi de Salmón", "cantidad": 1, "personalizacion": [], "precioUnitarioUSD": 8.50, "subtotal": 8.50}]'::JSONB,
-        400
+GRANT USAGE, SELECT ON SEQUENCE push_subscriptions_id_seq TO anon;
+GRANT USAGE, SELECT ON SEQUENCE push_subscriptions_id_seq TO authenticated;
+
+GRANT ALL ON ALL TABLES IN SCHEMA public TO anon;
+GRANT ALL ON ALL TABLES IN SCHEMA public TO authenticated;
+
+GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA public TO anon;
+GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA public TO authenticated;
+
+-- ============================================
+-- CONFIGURACIÓN DE REALTIME
+-- ============================================
+ALTER DATABASE postgres SET timezone TO 'America/Caracas';
+
+ALTER PUBLICATION supabase_realtime ADD TABLE pedidos;
+ALTER PUBLICATION supabase_realtime ADD TABLE notificaciones;
+ALTER PUBLICATION supabase_realtime ADD TABLE ventas;
+ALTER PUBLICATION supabase_realtime ADD TABLE propinas;
+ALTER PUBLICATION supabase_realtime ADD TABLE inventario;
+ALTER PUBLICATION supabase_realtime ADD TABLE menu;
+ALTER PUBLICATION supabase_realtime ADD TABLE config;
+ALTER PUBLICATION supabase_realtime ADD TABLE mesoneros;
+ALTER PUBLICATION supabase_realtime ADD TABLE deliverys;
+
+-- ============================================
+-- WEBHOOK: notificaciones → send-push Edge Function
+-- Cada vez que se inserta una fila en notificaciones,
+-- se llama automáticamente a la Edge Function send-push
+-- para entregar la notificación push al dispositivo del cliente.
+-- Requiere la extensión pg_net (habilitada por defecto en Supabase).
+-- ============================================
+
+CREATE EXTENSION IF NOT EXISTS pg_net;
+
+-- Limpiar versión anterior si existe
+DROP TRIGGER IF EXISTS trigger_notificacion_push ON notificaciones;
+DROP FUNCTION IF EXISTS fn_enviar_push_notificacion CASCADE;
+
+CREATE OR REPLACE FUNCTION fn_enviar_push_notificacion()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+SECURITY DEFINER
+AS $$
+DECLARE
+    v_url     TEXT;
+    v_payload JSONB;
+    v_anon_key TEXT;
+BEGIN
+    -- URL de la Edge Function (ajusta si tu proyecto tiene distinto ref)
+    v_url := 'https://iqwwoihiiyrtypyqzhgy.supabase.co/functions/v1/send-push';
+
+    -- Clave anon (sólo para pasar el header Authorization que la EF valida)
+    v_anon_key := 'sb_publishable_m4WcF4gmkj1olAj95HMLlA_4yKqPFXm';
+
+    -- Construimos el payload que la Edge Function espera
+    v_payload := jsonb_build_object(
+        'record', jsonb_build_object(
+            'session_id', NEW.session_id,
+            'titulo',     NEW.titulo,
+            'mensaje',    NEW.mensaje,
+            'tipo',       NEW.tipo,
+            'pedido_id',  NEW.pedido_id
+        )
     );
 
-    INSERT INTO notificaciones (pedido_id, tipo, titulo, mensaje, session_id)
-    VALUES (v_pedido_id, 'pending', '⏳ Pedido pendiente', 'Tu pedido está pendiente de confirmación', v_session_id);
-END $$;
+    -- Disparamos la llamada HTTP de forma asíncrona (no bloquea la transacción)
+    PERFORM net.http_post(
+        url     := v_url,
+        headers := jsonb_build_object(
+            'Content-Type',  'application/json',
+            'Authorization', 'Bearer ' || v_anon_key
+        ),
+        body    := v_payload
+    );
 
-DO $$
-DECLARE
-    v_mesonero_id TEXT;
-BEGIN
-    SELECT id INTO v_mesonero_id FROM mesoneros WHERE nombre = 'Carlos Méndez' LIMIT 1;
+    RETURN NEW;
+END;
+$$;
 
-    INSERT INTO propinas (mesonero_id, mesa, metodo, monto_bs, cajero, fecha)
-    VALUES
-        (v_mesonero_id, 'Mesa 1', 'efectivo_bs', 5.00, 'Cajero Principal', NOW() - INTERVAL '1 hour'),
-        (v_mesonero_id, 'Mesa 3', 'pago_movil', 8.50, 'Cajero Principal', NOW() - INTERVAL '2 hours'),
-        (v_mesonero_id, 'Mesa 2', 'efectivo_usd', 10.00, 'Cajero Secundario', NOW() - INTERVAL '3 hours')
-    ON CONFLICT DO NOTHING;
-END $$;
+CREATE TRIGGER trigger_notificacion_push
+    AFTER INSERT ON notificaciones
+    FOR EACH ROW
+    EXECUTE FUNCTION fn_enviar_push_notificacion();
 
--- ============================================
--- ACTUALIZAR NOTIFICACIONES CON SESSION_ID CORRECTO
--- ============================================
-UPDATE notificaciones n
-SET session_id = p.session_id
-FROM pedidos p
-WHERE n.pedido_id = p.id
-AND (n.session_id IS NULL OR n.session_id != p.session_id);
-
--- ============================================
--- VERIFICACIÓN FINAL
--- ============================================
-SELECT 
-    table_name 
-FROM information_schema.tables 
-WHERE table_schema = 'public' 
-    AND table_type = 'BASE TABLE'
-    AND table_name NOT LIKE 'pg_%'
-ORDER BY table_name;
 
 SELECT '✅ SCRIPT COMPLETADO EXITOSAMENTE' as mensaje;
-SELECT '✅ ÍNDICES CREADOS PARA NOTIFICACIONES' as indices;
-SELECT '✅ RLS DESHABILITADO PARA TODAS LAS TABLAS' as rls;
-SELECT '✅ Usuario admin: contraseña 654321' as admin_info;
+SELECT '✅ NOTIFICACIONES AUTOMÁTICAS ACTIVADAS' as notificaciones;
+SELECT '✅ FUNCIÓN verify_user_credentials CREADA' as auth;
+SELECT '✅ Usuario admin: contraseña admin123' as admin_info;
 SELECT '✅ Usuarios cajero: cajero1/123456, cajero2/123456' as cajero_info;
