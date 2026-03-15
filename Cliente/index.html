@@ -459,6 +459,31 @@
         .text-accent{color:var(--accent)}
         .bg-light{background:var(--light-bg)}
         .text-center{text-align:center}
+
+        /* ── Animaciones botones de acción del carrito ── */
+        @keyframes btn-borde-vibrar {
+            0%,100% { box-shadow: 0 0 0 0 transparent; transform: translateX(0); }
+            10%      { transform: translateX(-3px); box-shadow: 0 0 0 3px var(--accent); }
+            20%      { transform: translateX(3px);  box-shadow: 0 0 0 3px var(--accent); }
+            30%      { transform: translateX(-3px); box-shadow: 0 0 0 3px var(--accent); }
+            40%      { transform: translateX(3px);  box-shadow: 0 0 0 3px var(--accent); }
+            50%      { transform: translateX(-2px); box-shadow: 0 0 0 3px var(--accent); }
+            60%      { transform: translateX(2px);  box-shadow: 0 0 0 3px var(--accent); }
+            70%      { transform: translateX(-1px); box-shadow: 0 0 0 3px var(--accent); }
+            80%      { transform: translateX(1px);  box-shadow: 0 0 0 2px var(--accent); }
+            90%      { transform: translateX(0);    box-shadow: 0 0 0 1px var(--accent); }
+        }
+        @keyframes btn-destello {
+            0%,100% { filter: brightness(1); }
+            25%      { filter: brightness(1.6) saturate(1.4); }
+            50%      { filter: brightness(1); }
+            75%      { filter: brightness(1.5) saturate(1.3); }
+        }
+        .btn-accion-animate {
+            animation:
+                btn-borde-vibrar 0.9s ease forwards,
+                btn-destello     0.9s ease forwards;
+        }
     </style>
 </head>
 <body>
@@ -1444,6 +1469,8 @@
             actualizarCarritoBadge();
             window.stockCache.invalidate();
             mostrarToast('Agregado', 'success');
+            // Expandir el grupo del ítem recién agregado y desplazar la vista hacia él
+            _enfocarUltimoItemCarrito(nuevaInstancia);
             if (window.innerWidth <= 992) {
                 document.getElementById('cartSidebar').classList.add('open');
                 document.getElementById('overlay').classList.add('active');
@@ -1714,13 +1741,14 @@
             window.stockCache.invalidate();
             document.getElementById('customizeModal').classList.remove('active');
             currentCustomizeItem = null;
-            mostrarToast(`${currentCustomizeItem?.cantidad || 1} agregado(s)`, 'success');
+            mostrarToast(`Agregado al carrito`, 'success');
             if (window.innerWidth <= 992) {
                 document.getElementById('cartSidebar').classList.add('open');
                 document.getElementById('overlay').classList.add('active');
                 document.getElementById('categorySidebar').classList.remove('open');
             } else iniciarSeguimientoScroll();
-            if (nuevasInstancias.length > 0) scrollAlItemAgregado(nuevasInstancias[0].id);
+            // Enfocar el último ítem agregado (el más reciente en caso de cantidad > 1)
+            if (nuevasInstancias.length > 0) _enfocarUltimoItemCarrito(nuevasInstancias[nuevasInstancias.length - 1]);
         }
 
         // ============================================
@@ -1768,6 +1796,57 @@
         function irABotonesAccion() {
             const cartFooter = document.getElementById('cartFooter');
             if (cartFooter) cartFooter.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+            // Animar los botones de acción: vibración de borde + destello durante 1 segundo
+            setTimeout(() => {
+                const botonesAccion = document.querySelectorAll('#cartButtons .btn-primary, #cartButtons .btn-secondary');
+                botonesAccion.forEach(btn => {
+                    btn.classList.remove('btn-accion-animate');
+                    // Forzar reflow para reiniciar la animación si se pulsa varias veces
+                    void btn.offsetWidth;
+                    btn.classList.add('btn-accion-animate');
+                    btn.addEventListener('animationend', () => btn.classList.remove('btn-accion-animate'), { once: true });
+                });
+            }, 350); // pequeño delay para que el scroll termine antes de animar
+        }
+
+        // Expande el grupo nivel1 y nivel2 del ítem recién agregado y hace scroll hacia él.
+        // Se llama tanto desde agregarAlCarrito (directo) como desde el modal de personalización.
+        function _enfocarUltimoItemCarrito(instancia) {
+            if (!instancia) return;
+            // El DOM acaba de ser reescrito por actualizarCarritoUI — esperamos un frame
+            setTimeout(() => {
+                const itemEl = document.querySelector(`[data-instancia-id="${instancia.id}"]`);
+                if (!itemEl) return;
+
+                // Abrir nivel1 si está cerrado
+                const nivel2Container = itemEl.closest('.nivel3-container');
+                const nivel1Container = itemEl.closest('.nivel2-container');
+                if (nivel1Container && !nivel1Container.classList.contains('expanded')) {
+                    const nivel1Id = nivel1Container.id.replace('nivel1-', '');
+                    nivel1Activo = nivel1Id;
+                    nivel1Container.classList.add('expanded');
+                    const icon = document.getElementById(`icon1-${nivel1Id}`);
+                    if (icon) icon.classList.add('rotated');
+                }
+                // Abrir nivel2 si está cerrado
+                if (nivel2Container && !nivel2Container.classList.contains('expanded')) {
+                    const nivel2Id = nivel2Container.id.replace('nivel2-', '');
+                    nivel2Activo = nivel2Id;
+                    nivel2Container.classList.add('expanded');
+                    const icon = document.getElementById(`icon2-${nivel2Id}`);
+                    if (icon) icon.classList.add('rotated');
+                }
+
+                // Scroll suave al ítem dentro del sidebar del carrito
+                const cartItemsEl = document.getElementById('cartItems');
+                if (cartItemsEl) {
+                    const itemRect  = itemEl.getBoundingClientRect();
+                    const cartRect  = cartItemsEl.getBoundingClientRect();
+                    const scrollTo  = cartItemsEl.scrollTop + (itemRect.top - cartRect.top) - cartRect.height / 2 + itemRect.height / 2;
+                    cartItemsEl.scrollTo({ top: scrollTo, behavior: 'smooth' });
+                }
+            }, 80);
         }
 
         function scrollAlItemAgregado(itemId) {
@@ -1810,7 +1889,7 @@
                         `<div class="notification-item ${n.tipo} ${!n.leida ? 'unread' : ''}" onclick="marcarNotificacionLeida('${n.id}')">
                             <div class="notification-title"><i class="fas fa-${mensajesEstado[n.tipo]?.icono || 'bell'}"></i> ${n.titulo}</div>
                             <div class="notification-message">${n.mensaje}</div>
-                            <div class="notification-time">${window.formatearFechaGMT4(n.fecha)}</div>
+                            <div class="notification-time">${window.formatearFechaGMT4(n.timestamp)}</div>
                         </div>`
                     ).join('');
                 }
@@ -1819,70 +1898,43 @@
 
         async function recargarNotificacionesCompletas() {
             try {
-                const { data, error } = await window.supabaseClient.from('notificaciones').select('*').eq('session_id', sessionId).order('fecha', { ascending: false });
+                const { data, error } = await window.supabaseClient.from('notificaciones').select('*').eq('session_id', sessionId).order('timestamp', { ascending: false });
                 if (error) throw error;
                 notificaciones = data || [];
                 notificacionesCompletas = data || [];
                 notificacionesNoLeidas = notificaciones.filter(n => !n.leida).length;
-                notificacionesCache = notificaciones.map(n => ({ id: n.id, leida: n.leida, fecha: n.fecha }));
+                notificacionesCache = notificaciones.map(n => ({ id: n.id, leida: n.leida, timestamp: n.timestamp }));
                 actualizarNotificacionesUI();
             } catch (error) { console.error('Error recargando notificaciones:', error); }
         }
 
         async function verificarNotificaciones() {
-            // El polling corre siempre, en primer y segundo plano.
-            // En segundo plano, las alertas se delegan al Service Worker.
+            if (!paginaVisible) return;
+            console.log('🔍 Verificando notificaciones para session_id:', sessionId);
             try {
-                // Rango "hoy" calculado en GMT-4 y convertido a UTC para la query
-                const ahoraCaracas = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Caracas' }));
-                const hoyCaracas   = new Date(ahoraCaracas); hoyCaracas.setHours(0, 0, 0, 0);
-                const offsetMs     = ahoraCaracas.getTime() - new Date().getTime();
-                const hoyUTC       = new Date(hoyCaracas.getTime() - offsetMs);
-                const mananaUTC    = new Date(hoyUTC.getTime() + 24 * 60 * 60 * 1000);
-
+                const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
+                const manana = new Date(hoy); manana.setDate(manana.getDate() + 1);
                 const { data, error } = await window.supabaseClient
                     .from('notificaciones')
-                    .select('id, leida, fecha')
+                    .select('id, leida, timestamp')
                     .eq('session_id', sessionId)
-                    .gte('fecha', hoyUTC.toISOString())
-                    .lt('fecha',  mananaUTC.toISOString())
-                    .order('fecha', { ascending: false });
+                    .gte('timestamp', hoy.toISOString())
+                    .lt('timestamp', manana.toISOString())
+                    .order('timestamp', { ascending: false });
                 if (error) throw error;
-
-                // Detectar cambios comparando contra el caché local
                 let hayCambios = false;
-                if (data.length !== notificacionesCache.length) {
-                    hayCambios = true;
-                } else {
+                if (data.length !== notificacionesCache.length) { hayCambios = true; }
+                else {
                     const mapaCache = new Map(notificacionesCache.map(n => [n.id, n.leida]));
                     for (const n of data) {
                         if (mapaCache.get(n.id) !== n.leida) { hayCambios = true; break; }
                     }
                 }
-
                 if (hayCambios) {
-                    console.log('🔔 Cambios detectados en notificaciones, recargando...');
-                    const idsEnCache       = new Set(notificacionesCache.map(n => n.id));
-                    const notifNuevas      = data.filter(n => !idsEnCache.has(n.id) && !n.leida);
+                    console.log('🔔 ¡CAMBIOS DETECTADOS! Recargando notificaciones...');
+                    const notificacionesNuevas = data.filter(n => !notificacionesCache.some(c => c.id === n.id));
                     await recargarNotificacionesCompletas();
-
-                    if (notifNuevas.length > 0) {
-                        if (paginaVisible) {
-                            // Página al frente: sonido + vibración + badge animado
-                            reproducirAlertaNotificacion();
-                        } else {
-                            // Página al fondo: notificación local vía Service Worker
-                            const ultima = notifNuevas[0];
-                            if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-                                navigator.serviceWorker.controller.postMessage({
-                                    type:    'SHOW_LOCAL_NOTIFICATION',
-                                    titulo:  ultima.titulo  || '🍣 Saki Sushi',
-                                    mensaje: ultima.mensaje || 'Tienes una nueva notificación',
-                                    url:     window.location.href
-                                });
-                            }
-                        }
-                    }
+                    notificacionesNuevas.forEach(n => { if (!n.leida) reproducirAlertaNotificacion(); });
                     ultimaActualizacion = Date.now();
                 }
             } catch (error) { console.error('❌ Error en verificarNotificaciones:', error); }
@@ -1890,9 +1942,10 @@
 
         function iniciarVerificacionPeriodica() {
             if (intervaloNotificaciones) clearInterval(intervaloNotificaciones);
-            // El intervalo no se condiciona a paginaVisible: corre siempre.
-            intervaloNotificaciones = setInterval(verificarNotificaciones, 2000);
-            console.log('⏱️ Polling de notificaciones iniciado (cada 2s, primer y segundo plano)');
+            intervaloNotificaciones = setInterval(async() => {
+                if (paginaVisible) await verificarNotificaciones();
+            }, 2000);
+            console.log('⏱️ Polling de notificaciones iniciado (cada 2s)');
         }
 
         async function marcarTodasComoLeidas() {
@@ -1986,7 +2039,7 @@
             }));
             return {
                 id: generarId('PED-'),
-                fecha: new Date().toISOString(),
+                timestamp: new Date().toISOString(),
                 estado: 'pendiente',
                 tipo: tipo,
                 items: items,
@@ -2001,7 +2054,7 @@
             try {
                 const pedidoParaRPC = {
                     id: pedido.id,
-                    fecha: pedido.fecha,
+                    timestamp: pedido.timestamp,
                     estado: pedido.estado,
                     tipo: pedido.tipo,
                     total: pedido.total,
@@ -2016,8 +2069,7 @@
                     comprobante_url: pedido.comprobante_url || null,
                     costo_delivery: pedido.costo_delivery || 0,
                     costo_delivery_usd: pedido.costo_delivery_usd || 0,
-                    costo_delivery_bs: pedido.costo_delivery_bs || 0,
-                    tasa_aplicada: pedido.tasa_aplicada || configGlobal?.tasa_efectiva || 400
+                    costo_delivery_bs: pedido.costo_delivery_bs || 0
                 };
                 const { data, error } = await window.supabaseClient.rpc('crear_pedido_con_reserva', { p_pedido: pedidoParaRPC, p_items: pedido.items });
                 if (error) throw error;
@@ -2587,11 +2639,11 @@
                 titulo: '🔔 Notificación de prueba',
                 mensaje: 'Esto es una prueba del sistema de notificaciones',
                 tipo: 'approved',
-                fecha: new Date().toISOString(),
+                timestamp: new Date().toISOString(),
                 leida: false
             };
             notificaciones.unshift(notifPrueba);
-            notificacionesCache.unshift({ id: notifPrueba.id, leida: notifPrueba.leida, fecha: notifPrueba.fecha });
+            notificacionesCache.unshift({ id: notifPrueba.id, leida: notifPrueba.leida, timestamp: notifPrueba.timestamp });
             notificacionesNoLeidas++;
             actualizarNotificacionesUI();
             reproducirAlertaNotificacion();
@@ -2608,7 +2660,7 @@
             if (savedNotificaciones) {
                 try {
                     notificaciones = JSON.parse(savedNotificaciones);
-                    notificacionesCache = notificaciones.map(n => ({ id: n.id, leida: n.leida, fecha: n.fecha }));
+                    notificacionesCache = notificaciones.map(n => ({ id: n.id, leida: n.leida, timestamp: n.timestamp }));
                     notificacionesNoLeidas = notificaciones.filter(n => !n.leida).length;
                     actualizarNotificacionesUI();
                 } catch (e) { console.error('Error restaurando notificaciones:', e); }
@@ -2712,19 +2764,12 @@
 
         window.addEventListener('visibilitychange', function() {
             if (document.hidden) {
-                // Segundo plano: pausar sólo efectos visuales y scroll.
-                // El polling de notificaciones continúa para detectar cambios;
-                // las alertas se delegan al Service Worker mientras la página no es visible.
                 paginaVisible = false;
                 detenerSeguimientoScroll();
             } else {
-                // Primer plano: forzar verificación inmediata para ponerse al día
-                // con cualquier notificación llegada mientras estaba en segundo plano.
                 paginaVisible = true;
                 verificarNotificaciones();
-                if (carrito.length > 0 && document.getElementById('cartSidebar').classList.contains('open')) {
-                    iniciarSeguimientoScroll();
-                }
+                if (carrito.length > 0 && document.getElementById('cartSidebar').classList.contains('open')) iniciarSeguimientoScroll();
             }
         });
     </script>
