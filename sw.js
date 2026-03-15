@@ -1,200 +1,113 @@
-// sw.js - Service Worker para notificaciones push - VERSIÓN COMPLETA
-const CACHE_NAME = 'saki-sushi-v2';
-const STATIC_ASSETS = [
-  '/SakiSushi0/Cliente/',
-  '/SakiSushi0/Cajero/',
-  '/SakiSushi0/Admin%202.0.html',
-  '/SakiSushi0/supabase-config.js',
-  'https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Roboto:wght@300;400;500&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap',
-  'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css',
-  'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2'
-];
+// sw.js — Service Worker para Saki Sushi
+// Maneja: notificaciones push entrantes (vía VAPID) y
+//         notificaciones locales solicitadas por la página cuando está en segundo plano.
 
+const CACHE_NAME = 'saki-sushi-v1';
+
+// ─────────────────────────────────────────
+// INSTALACIÓN Y ACTIVACIÓN
+// ─────────────────────────────────────────
 self.addEventListener('install', (event) => {
-  console.log('📦 Service Worker instalado - Saki Sushi v2');
-  self.skipWaiting();
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then(cache => cache.addAll(STATIC_ASSETS).catch(() => Promise.resolve()))
-  );
+    console.log('[SW] Instalado');
+    self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
-  console.log('🚀 Service Worker activado');
-  event.waitUntil(clients.claim());
-  event.waitUntil(
-    caches.keys().then(cacheNames => Promise.all(
-      cacheNames.map(cacheName => {
-        if (cacheName !== CACHE_NAME) return caches.delete(cacheName);
-      })
-    ))
-  );
+    console.log('[SW] Activado');
+    event.waitUntil(clients.claim());
 });
 
-self.addEventListener('fetch', (event) => {
-  if (event.request.url.startsWith(self.location.origin) || 
-      event.request.url.includes('fonts.googleapis.com') ||
-      event.request.url.includes('cdnjs.cloudflare.com') ||
-      event.request.url.includes('cdn.jsdelivr.net')) {
-    event.respondWith(
-      caches.match(event.request)
-        .then(cached => cached || fetch(event.request).then(response => {
-          const resClone = response.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(event.request, resClone));
-          return response;
-        }))
-        .catch(() => new Response('Offline', { status: 503 }))
-    );
-  }
-});
-
+// ─────────────────────────────────────────
+// NOTIFICACIONES PUSH (servidor → dispositivo)
+// Disparadas por la Edge Function send-push vía VAPID.
+// ─────────────────────────────────────────
 self.addEventListener('push', (event) => {
-  console.log('📨 Push recibido:', event);
-  let data = {};
-  try {
-    data = event.data.json();
-  } catch {
-    data = {
-      titulo: '🍣 Saki Sushi',
-      mensaje: event.data?.text() || 'Nueva notificación',
-      tipo: 'info',
-      url: '/SakiSushi0/Cliente/'
+    console.log('[SW] Push recibido');
+
+    let data = {};
+    try {
+        data = event.data ? event.data.json() : {};
+    } catch (e) {
+        data = { titulo: '🍣 Saki Sushi', mensaje: event.data ? event.data.text() : 'Nueva notificación' };
+    }
+
+    const titulo  = data.titulo  || '🍣 Saki Sushi';
+    const mensaje = data.mensaje || 'Tienes una nueva notificación';
+    const url     = data.url     || '/SakiSushi0/Cliente/';
+    const icon    = data.icon    || '/SakiSushi0/icons/icon-192x192.png';
+    const badge   = data.badge   || '/SakiSushi0/icons/badge-72x72.png';
+
+    const options = {
+        body:    mensaje,
+        icon:    icon,
+        badge:   badge,
+        vibrate: [200, 100, 200],
+        tag:     'saki-notif-' + (data.pedido_id || Date.now()),
+        renotify: true,
+        data: { url, pedido_id: data.pedido_id, tipo: data.tipo },
+        actions: [
+            { action: 'ver', title: '👁 Ver pedido' },
+            { action: 'cerrar', title: 'Cerrar' }
+        ]
     };
-  }
 
-  const opciones = {
-    body: data.mensaje,
-    icon: 'https://iqwwoihiiyrtypyqzhgy.supabase.co/storage/v1/object/public/imagenes-platillos/icono-192x192.png',
-    badge: 'https://iqwwoihiiyrtypyqzhgy.supabase.co/storage/v1/object/public/imagenes-platillos/badge-72x72.png',
-    vibrate: [200, 100, 200],
-    data: {
-      url: data.url || '/SakiSushi0/Cliente/',
-      sessionId: data.session_id,
-      pedidoId: data.pedido_id,
-      tipo: data.tipo
-    },
-    tag: `saki-${data.pedido_id || data.session_id || Date.now()}`,
-    renotify: true,
-    requireInteraction: true,
-    actions: []
-  };
-
-  switch (data.tipo) {
-    case 'approved':
-      opciones.icon = 'https://iqwwoihiiyrtypyqzhgy.supabase.co/storage/v1/object/public/imagenes-platillos/icono-success.png';
-      opciones.badge = 'https://iqwwoihiiyrtypyqzhgy.supabase.co/storage/v1/object/public/imagenes-platillos/badge-success.png';
-      opciones.actions = [
-        { action: 'ver', title: '👀 Ver pedido' },
-        { action: 'cerrar', title: '❌ Cerrar' }
-      ];
-      break;
-    case 'rejected':
-      opciones.icon = 'https://iqwwoihiiyrtypyqzhgy.supabase.co/storage/v1/object/public/imagenes-platillos/icono-error.png';
-      opciones.badge = 'https://iqwwoihiiyrtypyqzhgy.supabase.co/storage/v1/object/public/imagenes-platillos/badge-error.png';
-      opciones.actions = [
-        { action: 'ver', title: '👀 Ver motivo' },
-        { action: 'cerrar', title: '❌ Cerrar' }
-      ];
-      break;
-    case 'pending':
-      opciones.icon = 'https://iqwwoihiiyrtypyqzhgy.supabase.co/storage/v1/object/public/imagenes-platillos/icono-pending.png';
-      opciones.badge = 'https://iqwwoihiiyrtypyqzhgy.supabase.co/storage/v1/object/public/imagenes-platillos/badge-pending.png';
-      opciones.actions = [
-        { action: 'ver', title: '👀 Ver estado' },
-        { action: 'cerrar', title: '❌ Cerrar' }
-      ];
-      break;
-    case 'session_closed':
-      opciones.icon = 'https://iqwwoihiiyrtypyqzhgy.supabase.co/storage/v1/object/public/imagenes-platillos/icono-warning.png';
-      opciones.badge = 'https://iqwwoihiiyrtypyqzhgy.supabase.co/storage/v1/object/public/imagenes-platillos/badge-warning.png';
-      opciones.tag = 'saki-session-closed';
-      opciones.actions = [
-        { action: 'cerrar_sesion', title: '🔒 Cerrar sesión' },
-        { action: 'ignorar', title: '❌ Ignorar' }
-      ];
-      break;
-    default:
-      opciones.actions = [
-        { action: 'abrir', title: '🔔 Abrir' },
-        { action: 'cerrar', title: '❌ Cerrar' }
-      ];
-  }
-
-  event.waitUntil(self.registration.showNotification(data.titulo || '🍣 Saki Sushi', opciones));
-  event.waitUntil(
-    clients.matchAll({ type: 'window', includeUncontrolled: true })
-      .then(clients => clients.forEach(c => c.postMessage({ 
-        type: 'PUSH_RECEIVED', 
-        data: {
-          ...data,
-          timestamp: Date.now()
-        }
-      })))
-  );
-});
-
-self.addEventListener('notificationclick', (event) => {
-  const notif = event.notification;
-  const action = event.action;
-  const data = notif.data || {};
-  notif.close();
-
-  if (action === 'cerrar' || action === 'ignorar') return;
-
-  if (action === 'cerrar_sesion' || data.tipo === 'session_closed') {
     event.waitUntil(
-      clients.matchAll({ type: 'window', includeUncontrolled: true })
-        .then(clients => clients.forEach(c => {
-          if (c.url.includes('/SakiSushi0/Cajero/')) {
-            c.postMessage({ 
-              type: 'FORCE_LOGOUT', 
-              reason: 'Sesión cerrada desde otro dispositivo',
-              timestamp: Date.now()
-            });
-          }
-        }))
+        self.registration.showNotification(titulo, options)
     );
-    return;
-  }
-
-  const urlBase = 'https://lokeraar.github.io';
-  const urlDestino = data.url || '/SakiSushi0/Cliente/';
-  const params = new URLSearchParams();
-  if (data.sessionId) params.append('notif', data.sessionId);
-  if (data.pedidoId) params.append('pedido', data.pedidoId);
-  const urlCompleta = urlBase + urlDestino + (params.toString() ? '?' + params.toString() : '');
-
-  event.waitUntil(
-    clients.matchAll({ type: 'window', includeUncontrolled: true })
-      .then(clients => {
-        for (const c of clients) {
-          if (c.url.includes('/SakiSushi0/') && 'focus' in c) {
-            return c.navigate(urlCompleta).then(() => c.focus());
-          }
-        }
-        return clients.openWindow(urlCompleta);
-      })
-  );
 });
 
+// ─────────────────────────────────────────
+// NOTIFICACIONES LOCALES (página en segundo plano → SW)
+// La página detecta una notificación nueva vía polling y
+// le envía un postMessage al SW para que la muestre.
+// ─────────────────────────────────────────
 self.addEventListener('message', (event) => {
-  if (event.data?.type === 'PING') {
-    event.source.postMessage({ 
-      type: 'PONG', 
-      timestamp: Date.now(),
-      swVersion: 'v2'
-    });
-  }
-  if (event.data?.type === 'SKIP_WAITING') {
-    self.skipWaiting();
-  }
-  if (event.data?.type === 'GET_NOTIFICATIONS') {
-    event.source.postMessage({
-      type: 'NOTIFICATIONS_STATUS',
-      active: true
-    });
-  }
+    if (!event.data) return;
+
+    if (event.data.type === 'SHOW_LOCAL_NOTIFICATION') {
+        const titulo  = event.data.titulo  || '🍣 Saki Sushi';
+        const mensaje = event.data.mensaje || 'Tienes una nueva notificación';
+        const url     = event.data.url     || '/SakiSushi0/Cliente/';
+
+        const options = {
+            body:    mensaje,
+            icon:    '/SakiSushi0/icons/icon-192x192.png',
+            badge:   '/SakiSushi0/icons/badge-72x72.png',
+            vibrate: [200, 100, 200],
+            tag:     'saki-local-' + Date.now(),
+            renotify: true,
+            data: { url }
+        };
+
+        event.waitUntil(
+            self.registration.showNotification(titulo, options)
+        );
+    }
 });
 
-self.addEventListener('error', (e) => console.error('SW Error:', e.error));
-self.addEventListener('unhandledrejection', (e) => console.error('SW Rejection:', e.reason))
+// ─────────────────────────────────────────
+// CLIC EN NOTIFICACIÓN
+// Abre o enfoca la pestaña del cliente al hacer clic.
+// ─────────────────────────────────────────
+self.addEventListener('notificationclick', (event) => {
+    event.notification.close();
+
+    if (event.action === 'cerrar') return;
+
+    const urlDestino = event.notification.data?.url || '/SakiSushi0/Cliente/';
+
+    event.waitUntil(
+        clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
+            // Si ya hay una pestaña abierta con esa URL, la enfocamos
+            for (const client of clientList) {
+                if (client.url.includes('/Cliente/') && 'focus' in client) {
+                    return client.focus();
+                }
+            }
+            // Si no hay ninguna, abrimos una nueva
+            if (clients.openWindow) {
+                return clients.openWindow(urlDestino);
+            }
+        })
+    );
+});
