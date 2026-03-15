@@ -1810,7 +1810,7 @@
                         `<div class="notification-item ${n.tipo} ${!n.leida ? 'unread' : ''}" onclick="marcarNotificacionLeida('${n.id}')">
                             <div class="notification-title"><i class="fas fa-${mensajesEstado[n.tipo]?.icono || 'bell'}"></i> ${n.titulo}</div>
                             <div class="notification-message">${n.mensaje}</div>
-                            <div class="notification-time">${window.formatearFechaGMT4(n.timestamp)}</div>
+                            <div class="notification-time">${window.formatearFechaGMT4(n.fecha)}</div>
                         </div>`
                     ).join('');
                 }
@@ -1819,64 +1819,69 @@
 
         async function recargarNotificacionesCompletas() {
             try {
-                const { data, error } = await window.supabaseClient.from('notificaciones').select('*').eq('session_id', sessionId).order('timestamp', { ascending: false });
+                const { data, error } = await window.supabaseClient.from('notificaciones').select('*').eq('session_id', sessionId).order('fecha', { ascending: false });
                 if (error) throw error;
                 notificaciones = data || [];
                 notificacionesCompletas = data || [];
                 notificacionesNoLeidas = notificaciones.filter(n => !n.leida).length;
-                notificacionesCache = notificaciones.map(n => ({ id: n.id, leida: n.leida, timestamp: n.timestamp }));
+                notificacionesCache = notificaciones.map(n => ({ id: n.id, leida: n.leida, fecha: n.fecha }));
                 actualizarNotificacionesUI();
             } catch (error) { console.error('Error recargando notificaciones:', error); }
         }
 
         async function verificarNotificaciones() {
-            // El polling corre siempre; si la página está en segundo plano
-            // sólo omitimos la actualización de la UI pero seguimos detectando cambios.
-            console.log('🔍 Verificando notificaciones para session_id:', sessionId);
+            // El polling corre siempre, en primer y segundo plano.
+            // En segundo plano, las alertas se delegan al Service Worker.
             try {
-                // Usamos la zona horaria GMT-4 (America/Caracas) para delimitar "hoy"
+                // Rango "hoy" calculado en GMT-4 y convertido a UTC para la query
                 const ahoraCaracas = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Caracas' }));
-                const hoyCaracas = new Date(ahoraCaracas); hoyCaracas.setHours(0, 0, 0, 0);
-                // Convertimos de vuelta a UTC para la query
-                const offsetMs = ahoraCaracas.getTime() - new Date().getTime();
-                const hoyUTC = new Date(hoyCaracas.getTime() - offsetMs);
-                const mananaUTC = new Date(hoyUTC.getTime() + 24 * 60 * 60 * 1000);
+                const hoyCaracas   = new Date(ahoraCaracas); hoyCaracas.setHours(0, 0, 0, 0);
+                const offsetMs     = ahoraCaracas.getTime() - new Date().getTime();
+                const hoyUTC       = new Date(hoyCaracas.getTime() - offsetMs);
+                const mananaUTC    = new Date(hoyUTC.getTime() + 24 * 60 * 60 * 1000);
 
                 const { data, error } = await window.supabaseClient
                     .from('notificaciones')
                     .select('id, leida, fecha')
                     .eq('session_id', sessionId)
                     .gte('fecha', hoyUTC.toISOString())
-                    .lt('fecha', mananaUTC.toISOString())
+                    .lt('fecha',  mananaUTC.toISOString())
                     .order('fecha', { ascending: false });
                 if (error) throw error;
+
+                // Detectar cambios comparando contra el caché local
                 let hayCambios = false;
-                if (data.length !== notificacionesCache.length) { hayCambios = true; }
-                else {
+                if (data.length !== notificacionesCache.length) {
+                    hayCambios = true;
+                } else {
                     const mapaCache = new Map(notificacionesCache.map(n => [n.id, n.leida]));
                     for (const n of data) {
                         if (mapaCache.get(n.id) !== n.leida) { hayCambios = true; break; }
                     }
                 }
+
                 if (hayCambios) {
-                    console.log('🔔 ¡CAMBIOS DETECTADOS! Recargando notificaciones...');
-                    const notificacionesNuevas = data.filter(n => !notificacionesCache.some(c => c.id === n.id));
+                    console.log('🔔 Cambios detectados en notificaciones, recargando...');
+                    const idsEnCache       = new Set(notificacionesCache.map(n => n.id));
+                    const notifNuevas      = data.filter(n => !idsEnCache.has(n.id) && !n.leida);
                     await recargarNotificacionesCompletas();
-                    if (paginaVisible) {
-                        // Página en primer plano: sonido + vibración + UI
-                        notificacionesNuevas.forEach(n => { if (!n.leida) reproducirAlertaNotificacion(); });
-                    } else {
-                        // Página en segundo plano: intentar notificación local vía SW
-                        notificacionesNuevas.forEach(n => {
-                            if (!n.leida && 'serviceWorker' in navigator && navigator.serviceWorker.controller) {
+
+                    if (notifNuevas.length > 0) {
+                        if (paginaVisible) {
+                            // Página al frente: sonido + vibración + badge animado
+                            reproducirAlertaNotificacion();
+                        } else {
+                            // Página al fondo: notificación local vía Service Worker
+                            const ultima = notifNuevas[0];
+                            if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
                                 navigator.serviceWorker.controller.postMessage({
-                                    type: 'SHOW_LOCAL_NOTIFICATION',
-                                    titulo: n.titulo || '🍣 Saki Sushi',
-                                    mensaje: n.mensaje || 'Tienes una nueva notificación',
-                                    url: window.location.href
+                                    type:    'SHOW_LOCAL_NOTIFICATION',
+                                    titulo:  ultima.titulo  || '🍣 Saki Sushi',
+                                    mensaje: ultima.mensaje || 'Tienes una nueva notificación',
+                                    url:     window.location.href
                                 });
                             }
-                        });
+                        }
                     }
                     ultimaActualizacion = Date.now();
                 }
@@ -1885,12 +1890,8 @@
 
         function iniciarVerificacionPeriodica() {
             if (intervaloNotificaciones) clearInterval(intervaloNotificaciones);
-            // El polling corre en todo momento: primer plano Y segundo plano.
-            // En segundo plano el intervalo del navegador puede reducir la frecuencia
-            // a ~1 min; las notificaciones push (vía webhook DB) cubren ese hueco.
-            intervaloNotificaciones = setInterval(async() => {
-                await verificarNotificaciones();
-            }, 2000);
+            // El intervalo no se condiciona a paginaVisible: corre siempre.
+            intervaloNotificaciones = setInterval(verificarNotificaciones, 2000);
             console.log('⏱️ Polling de notificaciones iniciado (cada 2s, primer y segundo plano)');
         }
 
@@ -1985,7 +1986,7 @@
             }));
             return {
                 id: generarId('PED-'),
-                timestamp: new Date().toISOString(),
+                fecha: new Date().toISOString(),
                 estado: 'pendiente',
                 tipo: tipo,
                 items: items,
@@ -2000,7 +2001,7 @@
             try {
                 const pedidoParaRPC = {
                     id: pedido.id,
-                    timestamp: pedido.timestamp,
+                    fecha: pedido.fecha,
                     estado: pedido.estado,
                     tipo: pedido.tipo,
                     total: pedido.total,
@@ -2015,7 +2016,8 @@
                     comprobante_url: pedido.comprobante_url || null,
                     costo_delivery: pedido.costo_delivery || 0,
                     costo_delivery_usd: pedido.costo_delivery_usd || 0,
-                    costo_delivery_bs: pedido.costo_delivery_bs || 0
+                    costo_delivery_bs: pedido.costo_delivery_bs || 0,
+                    tasa_aplicada: pedido.tasa_aplicada || configGlobal?.tasa_efectiva || 400
                 };
                 const { data, error } = await window.supabaseClient.rpc('crear_pedido_con_reserva', { p_pedido: pedidoParaRPC, p_items: pedido.items });
                 if (error) throw error;
@@ -2585,11 +2587,11 @@
                 titulo: '🔔 Notificación de prueba',
                 mensaje: 'Esto es una prueba del sistema de notificaciones',
                 tipo: 'approved',
-                timestamp: new Date().toISOString(),
+                fecha: new Date().toISOString(),
                 leida: false
             };
             notificaciones.unshift(notifPrueba);
-            notificacionesCache.unshift({ id: notifPrueba.id, leida: notifPrueba.leida, timestamp: notifPrueba.timestamp });
+            notificacionesCache.unshift({ id: notifPrueba.id, leida: notifPrueba.leida, fecha: notifPrueba.fecha });
             notificacionesNoLeidas++;
             actualizarNotificacionesUI();
             reproducirAlertaNotificacion();
@@ -2606,7 +2608,7 @@
             if (savedNotificaciones) {
                 try {
                     notificaciones = JSON.parse(savedNotificaciones);
-                    notificacionesCache = notificaciones.map(n => ({ id: n.id, leida: n.leida, timestamp: n.timestamp }));
+                    notificacionesCache = notificaciones.map(n => ({ id: n.id, leida: n.leida, fecha: n.fecha }));
                     notificacionesNoLeidas = notificaciones.filter(n => !n.leida).length;
                     actualizarNotificacionesUI();
                 } catch (e) { console.error('Error restaurando notificaciones:', e); }
@@ -2710,15 +2712,19 @@
 
         window.addEventListener('visibilitychange', function() {
             if (document.hidden) {
-                // Página en segundo plano: sólo pausamos efectos visuales/sonido y scroll.
-                // El polling de notificaciones CONTINÚA corriendo para detectar cambios.
+                // Segundo plano: pausar sólo efectos visuales y scroll.
+                // El polling de notificaciones continúa para detectar cambios;
+                // las alertas se delegan al Service Worker mientras la página no es visible.
                 paginaVisible = false;
                 detenerSeguimientoScroll();
             } else {
-                // Página vuelve al primer plano: forzar verificación inmediata y reanudar scroll si aplica.
+                // Primer plano: forzar verificación inmediata para ponerse al día
+                // con cualquier notificación llegada mientras estaba en segundo plano.
                 paginaVisible = true;
                 verificarNotificaciones();
-                if (carrito.length > 0 && document.getElementById('cartSidebar').classList.contains('open')) iniciarSeguimientoScroll();
+                if (carrito.length > 0 && document.getElementById('cartSidebar').classList.contains('open')) {
+                    iniciarSeguimientoScroll();
+                }
             }
         });
     </script>
