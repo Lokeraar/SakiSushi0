@@ -462,27 +462,26 @@
 
         /* ── Animaciones botones de acción del carrito ── */
         @keyframes btn-borde-vibrar {
-            0%,100% { box-shadow: 0 0 0 0 transparent; transform: translateX(0); }
-            10%      { transform: translateX(-3px); box-shadow: 0 0 0 3px var(--accent); }
-            20%      { transform: translateX(3px);  box-shadow: 0 0 0 3px var(--accent); }
-            30%      { transform: translateX(-3px); box-shadow: 0 0 0 3px var(--accent); }
-            40%      { transform: translateX(3px);  box-shadow: 0 0 0 3px var(--accent); }
-            50%      { transform: translateX(-2px); box-shadow: 0 0 0 3px var(--accent); }
-            60%      { transform: translateX(2px);  box-shadow: 0 0 0 3px var(--accent); }
-            70%      { transform: translateX(-1px); box-shadow: 0 0 0 3px var(--accent); }
-            80%      { transform: translateX(1px);  box-shadow: 0 0 0 2px var(--accent); }
-            90%      { transform: translateX(0);    box-shadow: 0 0 0 1px var(--accent); }
+            0%,100% { box-shadow:0 0 0 0 transparent; transform:translateX(0); }
+            10%     { transform:translateX(-3px); box-shadow:0 0 0 3px var(--accent); }
+            20%     { transform:translateX( 3px); box-shadow:0 0 0 3px var(--accent); }
+            30%     { transform:translateX(-3px); box-shadow:0 0 0 3px var(--accent); }
+            40%     { transform:translateX( 3px); box-shadow:0 0 0 3px var(--accent); }
+            50%     { transform:translateX(-2px); box-shadow:0 0 0 3px var(--accent); }
+            60%     { transform:translateX( 2px); box-shadow:0 0 0 3px var(--accent); }
+            70%     { transform:translateX(-1px); box-shadow:0 0 0 3px var(--accent); }
+            80%     { transform:translateX( 1px); box-shadow:0 0 0 2px var(--accent); }
+            90%     { transform:translateX(0);    box-shadow:0 0 0 1px var(--accent); }
         }
         @keyframes btn-destello {
-            0%,100% { filter: brightness(1); }
-            25%      { filter: brightness(1.6) saturate(1.4); }
-            50%      { filter: brightness(1); }
-            75%      { filter: brightness(1.5) saturate(1.3); }
+            0%,100% { filter:brightness(1); }
+            25%     { filter:brightness(1.6) saturate(1.4); }
+            50%     { filter:brightness(1); }
+            75%     { filter:brightness(1.5) saturate(1.3); }
         }
         .btn-accion-animate {
-            animation:
-                btn-borde-vibrar 0.9s ease forwards,
-                btn-destello     0.9s ease forwards;
+            animation: btn-borde-vibrar 0.9s ease forwards,
+                       btn-destello     0.9s ease forwards;
         }
     </style>
 </head>
@@ -1469,13 +1468,17 @@
             actualizarCarritoBadge();
             window.stockCache.invalidate();
             mostrarToast('Agregado', 'success');
-            // Expandir el grupo del ítem recién agregado y desplazar la vista hacia él
-            _enfocarUltimoItemCarrito(nuevaInstancia);
             if (window.innerWidth <= 992) {
                 document.getElementById('cartSidebar').classList.add('open');
                 document.getElementById('overlay').classList.add('active');
                 document.getElementById('categorySidebar').classList.remove('open');
-            } else iniciarSeguimientoScroll();
+                // En móvil esperamos a que la transición CSS del sidebar (≈300ms) termine
+                setTimeout(() => _enfocarUltimoItemCarrito(nuevaInstancia), 350);
+            } else {
+                iniciarSeguimientoScroll();
+                // En desktop el carrito ya está visible, sin espera
+                _enfocarUltimoItemCarrito(nuevaInstancia);
+            }
         }
 
         function guardarCarrito() {
@@ -1740,15 +1743,20 @@
             actualizarCarritoBadge();
             window.stockCache.invalidate();
             document.getElementById('customizeModal').classList.remove('active');
+            const cantidadAgregada = nuevasInstancias.length;
             currentCustomizeItem = null;
-            mostrarToast(`Agregado al carrito`, 'success');
+            mostrarToast(`${cantidadAgregada} agregado(s)`, 'success');
+            const ultimaInstancia = nuevasInstancias[nuevasInstancias.length - 1];
             if (window.innerWidth <= 992) {
                 document.getElementById('cartSidebar').classList.add('open');
                 document.getElementById('overlay').classList.add('active');
                 document.getElementById('categorySidebar').classList.remove('open');
-            } else iniciarSeguimientoScroll();
-            // Enfocar el último ítem agregado (el más reciente en caso de cantidad > 1)
-            if (nuevasInstancias.length > 0) _enfocarUltimoItemCarrito(nuevasInstancias[nuevasInstancias.length - 1]);
+                // Esperar transición del sidebar antes de calcular posiciones
+                if (ultimaInstancia) setTimeout(() => _enfocarUltimoItemCarrito(ultimaInstancia), 350);
+            } else {
+                iniciarSeguimientoScroll();
+                if (ultimaInstancia) _enfocarUltimoItemCarrito(ultimaInstancia);
+            }
         }
 
         // ============================================
@@ -1796,64 +1804,75 @@
         function irABotonesAccion() {
             const cartFooter = document.getElementById('cartFooter');
             if (cartFooter) cartFooter.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        function scrollAlItemAgregado(itemId) {
+            // Mantida por compatibilidad — usa la función principal
+            _enfocarUltimoItemCarrito({ id: itemId });
+        }
+
+        // Expande nivel1 y nivel2 del ítem recién agregado y hace scroll hacia él
+        // dentro del contenedor #cartItems (no en la ventana global).
+        function _enfocarUltimoItemCarrito(instancia) {
+            if (!instancia) return;
+            const cartItemsEl = document.getElementById('cartItems');
+            if (!cartItemsEl) return;
+
+            const ejecutar = () => {
+                const itemEl = cartItemsEl.querySelector(`[data-instancia-id="${instancia.id}"]`);
+                if (!itemEl) return;
+
+                // Expandir nivel2-container padre si está colapsado
+                const nivel3Cont = itemEl.closest('.nivel3-container');
+                if (nivel3Cont && !nivel3Cont.classList.contains('expanded')) {
+                    const nivel2Id = nivel3Cont.id.replace('nivel2-', '');
+                    nivel2Activo = nivel2Id;
+                    nivel3Cont.classList.add('expanded');
+                    const icon2 = document.getElementById(`icon2-${nivel2Id}`);
+                    if (icon2) icon2.classList.add('rotated');
+                }
+
+                // Expandir nivel2-container (del nivel1) padre si está colapsado
+                const nivel2Cont = itemEl.closest('.nivel2-container');
+                if (nivel2Cont && !nivel2Cont.classList.contains('expanded')) {
+                    const nivel1Id = nivel2Cont.id.replace('nivel1-', '');
+                    nivel1Activo = nivel1Id;
+                    nivel2Cont.classList.add('expanded');
+                    const icon1 = document.getElementById(`icon1-${nivel1Id}`);
+                    if (icon1) icon1.classList.add('rotated');
+                }
+
+                // Esperar un frame para que las transiciones CSS de expansión comiencen
+                requestAnimationFrame(() => {
+                    const itemRect  = itemEl.getBoundingClientRect();
+                    const cartRect  = cartItemsEl.getBoundingClientRect();
+                    // Centro del ítem relativo al scroll container
+                    const scrollTo  = cartItemsEl.scrollTop
+                                    + (itemRect.top  - cartRect.top)
+                                    - (cartRect.height / 2)
+                                    + (itemRect.height / 2);
+                    cartItemsEl.scrollTo({ top: Math.max(0, scrollTo), behavior: 'smooth' });
+                });
+            };
+
+            // Dar tiempo al DOM para reflejar actualizarCarritoUI y la apertura del sidebar
+            setTimeout(ejecutar, 60);
+        }
+
+        function irABotonesAccion() {
+            const cartFooter = document.getElementById('cartFooter');
+            if (cartFooter) cartFooter.scrollIntoView({ behavior: 'smooth', block: 'center' });
 
             // Animar los botones de acción: vibración de borde + destello durante 1 segundo
             setTimeout(() => {
                 const botonesAccion = document.querySelectorAll('#cartButtons .btn-primary, #cartButtons .btn-secondary');
                 botonesAccion.forEach(btn => {
                     btn.classList.remove('btn-accion-animate');
-                    // Forzar reflow para reiniciar la animación si se pulsa varias veces
-                    void btn.offsetWidth;
+                    void btn.offsetWidth; // forzar reflow para reiniciar si se pulsa varias veces
                     btn.classList.add('btn-accion-animate');
                     btn.addEventListener('animationend', () => btn.classList.remove('btn-accion-animate'), { once: true });
                 });
-            }, 350); // pequeño delay para que el scroll termine antes de animar
-        }
-
-        // Expande el grupo nivel1 y nivel2 del ítem recién agregado y hace scroll hacia él.
-        // Se llama tanto desde agregarAlCarrito (directo) como desde el modal de personalización.
-        function _enfocarUltimoItemCarrito(instancia) {
-            if (!instancia) return;
-            // El DOM acaba de ser reescrito por actualizarCarritoUI — esperamos un frame
-            setTimeout(() => {
-                const itemEl = document.querySelector(`[data-instancia-id="${instancia.id}"]`);
-                if (!itemEl) return;
-
-                // Abrir nivel1 si está cerrado
-                const nivel2Container = itemEl.closest('.nivel3-container');
-                const nivel1Container = itemEl.closest('.nivel2-container');
-                if (nivel1Container && !nivel1Container.classList.contains('expanded')) {
-                    const nivel1Id = nivel1Container.id.replace('nivel1-', '');
-                    nivel1Activo = nivel1Id;
-                    nivel1Container.classList.add('expanded');
-                    const icon = document.getElementById(`icon1-${nivel1Id}`);
-                    if (icon) icon.classList.add('rotated');
-                }
-                // Abrir nivel2 si está cerrado
-                if (nivel2Container && !nivel2Container.classList.contains('expanded')) {
-                    const nivel2Id = nivel2Container.id.replace('nivel2-', '');
-                    nivel2Activo = nivel2Id;
-                    nivel2Container.classList.add('expanded');
-                    const icon = document.getElementById(`icon2-${nivel2Id}`);
-                    if (icon) icon.classList.add('rotated');
-                }
-
-                // Scroll suave al ítem dentro del sidebar del carrito
-                const cartItemsEl = document.getElementById('cartItems');
-                if (cartItemsEl) {
-                    const itemRect  = itemEl.getBoundingClientRect();
-                    const cartRect  = cartItemsEl.getBoundingClientRect();
-                    const scrollTo  = cartItemsEl.scrollTop + (itemRect.top - cartRect.top) - cartRect.height / 2 + itemRect.height / 2;
-                    cartItemsEl.scrollTo({ top: scrollTo, behavior: 'smooth' });
-                }
-            }, 80);
-        }
-
-        function scrollAlItemAgregado(itemId) {
-            setTimeout(() => {
-                const itemElement = document.querySelector(`[data-instancia-id="${itemId}"]`);
-                if (itemElement) itemElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            }, 300);
+            }, 350);
         }
 
         // ============================================
@@ -2772,6 +2791,190 @@
                 if (carrito.length > 0 && document.getElementById('cartSidebar').classList.contains('open')) iniciarSeguimientoScroll();
             }
         });
+
+        // ============================================
+        // HISTORIAL DE NAVEGACIÓN — Botón Atrás / Gesto táctil
+        // Cada capa que se abre hace pushState. popstate la cierra
+        // en orden inverso sin salir de la página.
+        // ============================================
+        const _historyStack = [];
+
+        function _pushLayer(id) {
+            // Evitar duplicados consecutivos del mismo id
+            if (_historyStack[_historyStack.length - 1] === id) return;
+            _historyStack.push(id);
+            history.pushState({ sakilayer: id }, '');
+        }
+
+        function _cerrarCapaActual(id) {
+            switch (id) {
+                // Modales overlay
+                case 'customizeModal':
+                    document.getElementById('customizeModal')?.classList.remove('active');
+                    break;
+                case 'confirmMesaModal':
+                    document.getElementById('confirmMesaModal')?.classList.remove('active');
+                    break;
+                case 'deliveryModal':
+                    document.getElementById('deliveryModal')?.classList.remove('active');
+                    break;
+                case 'reservaModal':
+                    document.getElementById('reservaModal')?.classList.remove('active');
+                    break;
+                case 'previewModal':
+                    document.getElementById('previewModal')?.classList.remove('active');
+                    break;
+                case 'historialModal':
+                    document.getElementById('historialModal')?.classList.remove('active');
+                    break;
+                // Panel de notificaciones
+                case 'notificaciones':
+                    cerrarNotificaciones();
+                    break;
+                // Carrito: niveles anidados primero, luego el sidebar completo
+                case 'carrito-nivel2':
+                    if (nivel2Activo) {
+                        const c2 = document.getElementById(`nivel2-${nivel2Activo}`);
+                        const i2 = document.getElementById(`icon2-${nivel2Activo}`);
+                        if (c2) c2.classList.remove('expanded');
+                        if (i2) i2.classList.remove('rotated');
+                        nivel2Activo = null;
+                    }
+                    break;
+                case 'carrito-nivel1':
+                    if (nivel1Activo) {
+                        // Colapsar nivel2 primero
+                        if (nivel2Activo) {
+                            const c2 = document.getElementById(`nivel2-${nivel2Activo}`);
+                            const i2 = document.getElementById(`icon2-${nivel2Activo}`);
+                            if (c2) c2.classList.remove('expanded');
+                            if (i2) i2.classList.remove('rotated');
+                            nivel2Activo = null;
+                        }
+                        const c1 = document.getElementById(`nivel1-${nivel1Activo}`);
+                        const i1 = document.getElementById(`icon1-${nivel1Activo}`);
+                        if (c1) c1.classList.remove('expanded');
+                        if (i1) i1.classList.remove('rotated');
+                        nivel1Activo = null;
+                    }
+                    break;
+                case 'carrito':
+                    cerrarCarrito();
+                    break;
+                // Menú hamburguesa: subcategorías primero, luego el sidebar
+                case 'menu-subcategoria':
+                    document.querySelectorAll('.subcategory-list.expanded').forEach(l => l.classList.remove('expanded'));
+                    break;
+                case 'menu':
+                    cerrarMenuCategorias();
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        window.addEventListener('popstate', function(e) {
+            // Si el state no es nuestro (navegación real) o la pila está vacía, dejamos pasar
+            if (!e.state?.sakilayer && _historyStack.length === 0) return;
+
+            const id = _historyStack.pop();
+            if (id) {
+                _cerrarCapaActual(id);
+                // Evitar que el navegador retroceda realmente: volvemos a poner un estado neutral
+                history.pushState({ sakilayer: null }, '');
+            }
+        });
+
+        // Empujamos un estado base al cargar para que el primer popstate
+        // siempre tenga adónde volver dentro de la página
+        history.replaceState({ sakilayer: null }, '');
+
+        // ── Parchear las funciones de apertura para que registren su capa ──
+
+        // Guardar referencias originales
+        const _origToggleMenuCategorias = toggleMenuCategorias;
+        toggleMenuCategorias = function() {
+            _origToggleMenuCategorias();
+            const menu = document.getElementById('categorySidebar');
+            if (menu?.classList.contains('open')) _pushLayer('menu');
+            else { const idx = _historyStack.lastIndexOf('menu'); if (idx !== -1) _historyStack.splice(idx, 1); }
+        };
+
+        const _origToggleCarrito = toggleCarrito;
+        toggleCarrito = function() {
+            _origToggleCarrito();
+            const cart = document.getElementById('cartSidebar');
+            if (cart?.classList.contains('open')) _pushLayer('carrito');
+            else { const idx = _historyStack.lastIndexOf('carrito'); if (idx !== -1) _historyStack.splice(idx, 1); }
+        };
+
+        const _origToggleNivel1 = toggleNivel1;
+        toggleNivel1 = function(grupoId) {
+            _origToggleNivel1(grupoId);
+            if (nivel1Activo) _pushLayer('carrito-nivel1');
+            else { const idx = _historyStack.lastIndexOf('carrito-nivel1'); if (idx !== -1) _historyStack.splice(idx, 1); }
+        };
+
+        const _origToggleNivel2 = toggleNivel2;
+        toggleNivel2 = function(subgrupoId, grupoPadreId) {
+            _origToggleNivel2(subgrupoId, grupoPadreId);
+            if (nivel2Activo) _pushLayer('carrito-nivel2');
+            else { const idx = _historyStack.lastIndexOf('carrito-nivel2'); if (idx !== -1) _historyStack.splice(idx, 1); }
+        };
+
+        const _origToggleNotifications = toggleNotifications;
+        toggleNotifications = function() {
+            _origToggleNotifications();
+            const panel = document.getElementById('notificationsPanel');
+            if (panel?.classList.contains('active')) _pushLayer('notificaciones');
+            else { const idx = _historyStack.lastIndexOf('notificaciones'); if (idx !== -1) _historyStack.splice(idx, 1); }
+        };
+
+        // Registrar apertura de modales (los cierres ya existen — no los tocamos)
+        const _origAbrirPersonalizacion = abrirPersonalizacion;
+        abrirPersonalizacion = function(platilloId) {
+            _origAbrirPersonalizacion(platilloId);
+            // El modal se abre async; esperamos el frame donde classList recibe 'active'
+            setTimeout(() => {
+                if (document.getElementById('customizeModal')?.classList.contains('active'))
+                    _pushLayer('customizeModal');
+            }, 100);
+        };
+
+        const _origAbrirConfirmacionMesa = abrirConfirmacionMesa;
+        abrirConfirmacionMesa = function() {
+            _origAbrirConfirmacionMesa();
+            setTimeout(() => {
+                if (document.getElementById('confirmMesaModal')?.classList.contains('active'))
+                    _pushLayer('confirmMesaModal');
+            }, 50);
+        };
+
+        const _origIniciarProcesoDelivery = iniciarProcesoDelivery;
+        iniciarProcesoDelivery = function() {
+            _origIniciarProcesoDelivery();
+            _pushLayer('deliveryModal');
+        };
+
+        const _origIniciarProcesoReserva = iniciarProcesoReserva;
+        iniciarProcesoReserva = function() {
+            _origIniciarProcesoReserva();
+            _pushLayer('reservaModal');
+        };
+
+        // Subcategorías del menú hamburguesa
+        document.addEventListener('click', function(e) {
+            const header = e.target.closest('.category-item[data-has-sub]') || e.target.closest('.category-item');
+            if (!header) return;
+            const subList = header.nextElementSibling;
+            if (!subList?.classList.contains('subcategory-list')) return;
+            // Si se está abriendo (quedó expanded tras el toggle original)
+            setTimeout(() => {
+                if (subList.classList.contains('expanded')) _pushLayer('menu-subcategoria');
+                else { const idx = _historyStack.lastIndexOf('menu-subcategoria'); if (idx !== -1) _historyStack.splice(idx, 1); }
+            }, 10);
+        }, true);
+
     </script>
 </body>
 </html>
