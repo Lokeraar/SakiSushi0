@@ -1812,14 +1812,16 @@
             }, 300);
         }
 
-        // Expande nivel1 y nivel2 del ítem y hace scroll correcto dentro del contenedor
+        // Abre el carrito (si no está visible), expande los niveles del ítem
+        // y hace scroll hasta él dentro del contenedor scrollable.
         function _enfocarUltimoItemCarrito(instancia) {
             if (!instancia) return;
-            setTimeout(() => {
+
+            function _scrollAlItem() {
                 const itemEl = document.querySelector(`[data-instancia-id="${instancia.id}"]`);
                 if (!itemEl) return;
 
-                // Abrir nivel2-container si está colapsado
+                // Expandir nivel2-container (nivel3 en el DOM) si está colapsado
                 const nivel2Container = itemEl.closest('.nivel3-container');
                 if (nivel2Container && !nivel2Container.classList.contains('expanded')) {
                     const nivel2Id = nivel2Container.id.replace('nivel2-', '');
@@ -1828,8 +1830,7 @@
                     const icon2 = document.getElementById(`icon2-${nivel2Id}`);
                     if (icon2) icon2.classList.add('rotated');
                 }
-
-                // Abrir nivel1-container (nivel2 en el DOM) si está colapsado
+                // Expandir nivel1-container (nivel2 en el DOM) si está colapsado
                 const nivel1Container = itemEl.closest('.nivel2-container');
                 if (nivel1Container && !nivel1Container.classList.contains('expanded')) {
                     const nivel1Id = nivel1Container.id.replace('nivel1-', '');
@@ -1839,21 +1840,34 @@
                     if (icon1) icon1.classList.add('rotated');
                 }
 
-                // Scroll dentro del contenedor scrollable #cartItems usando offsetTop
+                // Scroll dentro del contenedor scrollable #cartItems por offsetTop
                 const cartItemsEl = document.getElementById('cartItems');
                 if (!cartItemsEl) return;
 
-                // Calcular la posición acumulada del elemento respecto al contenedor
                 let offsetAccum = 0;
                 let el = itemEl;
                 while (el && el !== cartItemsEl) {
                     offsetAccum += el.offsetTop;
                     el = el.offsetParent;
                 }
-                // Centrar el ítem en el área visible del contenedor
                 const targetScroll = offsetAccum - (cartItemsEl.clientHeight / 2) + (itemEl.offsetHeight / 2);
                 cartItemsEl.scrollTo({ top: Math.max(0, targetScroll), behavior: 'smooth' });
-            }, 120); // esperar a que las animaciones CSS de expand estén en marcha
+            }
+
+            const esMobil = window.innerWidth <= 992;
+            const cartSidebar = document.getElementById('cartSidebar');
+            const carritoYaAbierto = cartSidebar && cartSidebar.classList.contains('open');
+
+            if (esMobil && !carritoYaAbierto) {
+                // En móvil el carrito se acaba de abrir (o se abrirá justo después de esta llamada).
+                // Esperamos a que la transición CSS de deslizamiento termine (~350 ms) antes de
+                // calcular posiciones, porque hasta ese momento offsetTop/clientHeight son 0.
+                setTimeout(_scrollAlItem, 380);
+            } else {
+                // Desktop (siempre visible) o carrito ya estaba abierto: espera mínima solo
+                // para que actualizarCarritoUI haya pintado el DOM.
+                setTimeout(_scrollAlItem, 80);
+            }
         }
 
         // ============================================
@@ -2775,99 +2789,23 @@
 
         // ============================================
         // INTERCEPCIÓN DEL BOTÓN ATRÁS (History API)
-        // Cada apertura de capa hace pushState.
-        // popstate cierra la capa más reciente en lugar de salir de la página.
+        // Regla única: siempre hay exactamente UN estado pushado en el stack
+        // mientras alguna capa esté abierta. Nunca más de uno.
         // ============================================
         (function() {
-            // Empujamos un estado base al cargar para que siempre haya algo que "deshacer"
-            history.replaceState({ saki: true, nivel: 0 }, '');
+            let _capaEnStack = false; // true = ya hay un pushState en el historial
 
-            // ── Helpers para empujar/limpiar estado ──
-            function pushCapaAbierta() {
-                history.pushState({ saki: true, nivel: 1 }, '');
-            }
+            history.replaceState({ saki: true }, '');
 
-            // ── Detectar qué está abierto, de mayor a menor prioridad ──
-            function cerrarCapaMasReciente() {
-                // 1. Modal con .active visible
-                const modalesActivos = Array.from(document.querySelectorAll('.modal-overlay.active'));
-                if (modalesActivos.length > 0) {
-                    const modal = modalesActivos[modalesActivos.length - 1];
-                    if (modal.id === 'deliveryModal') detenerTimer('delivery');
-                    if (modal.id === 'reservaModal')  detenerTimer('reserva');
-                    modal.classList.remove('active');
-                    // Si quedan más capas abiertas, reempujar para que el próximo atrás siga funcionando
-                    if (_hayCapasAbiertas()) pushCapaAbierta();
-                    return;
+            function _asegurarEstadoEnStack() {
+                if (!_capaEnStack) {
+                    history.pushState({ saki: true }, '');
+                    _capaEnStack = true;
                 }
-                // 2. Panel de notificaciones
-                const notifPanel = document.getElementById('notificationsPanel');
-                if (notifPanel && notifPanel.classList.contains('active')) {
-                    notifPanel.classList.remove('active');
-                    if (window.innerWidth <= 992 &&
-                        !document.getElementById('categorySidebar').classList.contains('open') &&
-                        !document.getElementById('cartSidebar').classList.contains('open')) {
-                        document.getElementById('overlay').classList.remove('active');
-                    }
-                    if (_hayCapasAbiertas()) pushCapaAbierta();
-                    return;
-                }
-                // 3. Nivel2 del carrito expandido
-                if (nivel2Activo) {
-                    const nivel2El = document.getElementById(`nivel2-${nivel2Activo}`);
-                    const icon2El  = document.getElementById(`icon2-${nivel2Activo}`);
-                    if (nivel2El) nivel2El.classList.remove('expanded');
-                    if (icon2El)  icon2El.classList.remove('rotated');
-                    nivel2Activo = null;
-                    if (_hayCapasAbiertas()) pushCapaAbierta();
-                    return;
-                }
-                // 4. Nivel1 del carrito expandido
-                if (nivel1Activo) {
-                    const nivel1El = document.getElementById(`nivel1-${nivel1Activo}`);
-                    const icon1El  = document.getElementById(`icon1-${nivel1Activo}`);
-                    if (nivel1El) nivel1El.classList.remove('expanded');
-                    if (icon1El)  icon1El.classList.remove('rotated');
-                    nivel1Activo = null;
-                    if (_hayCapasAbiertas()) pushCapaAbierta();
-                    return;
-                }
-                // 5. Carrito abierto
-                const cartSidebar = document.getElementById('cartSidebar');
-                if (cartSidebar && cartSidebar.classList.contains('open')) {
-                    cartSidebar.classList.remove('open');
-                    if (!document.getElementById('categorySidebar').classList.contains('open') &&
-                        !document.getElementById('notificationsPanel').classList.contains('active')) {
-                        document.getElementById('overlay').classList.remove('active');
-                    }
-                    detenerSeguimientoScroll();
-                    if (_hayCapasAbiertas()) pushCapaAbierta();
-                    return;
-                }
-                // 6. Subcategoría expandida en el menú hamburguesa
-                const subExpanded = document.querySelector('.subcategory-list.expanded');
-                if (subExpanded) {
-                    subExpanded.classList.remove('expanded');
-                    if (_hayCapasAbiertas()) pushCapaAbierta();
-                    return;
-                }
-                // 7. Menú hamburguesa abierto
-                const categorySidebar = document.getElementById('categorySidebar');
-                if (categorySidebar && categorySidebar.classList.contains('open')) {
-                    categorySidebar.classList.remove('open');
-                    if (!document.getElementById('cartSidebar').classList.contains('open') &&
-                        !document.getElementById('notificationsPanel').classList.contains('active')) {
-                        document.getElementById('overlay').classList.remove('active');
-                    }
-                    if (_hayCapasAbiertas()) pushCapaAbierta();
-                    return;
-                }
-                // Si no había nada abierto, dejamos que el navegador retroceda normalmente
-                history.back();
             }
 
             function _hayCapasAbiertas() {
-                return (
+                return !!(
                     document.querySelector('.modal-overlay.active') ||
                     document.getElementById('notificationsPanel')?.classList.contains('active') ||
                     document.getElementById('cartSidebar')?.classList.contains('open') ||
@@ -2878,61 +2816,160 @@
                 );
             }
 
-            // ── Escuchar popstate (botón atrás del navegador / gesto táctil) ──
+            function cerrarCapaMasReciente() {
+                // 1. Modal activo
+                const modalesActivos = Array.from(document.querySelectorAll('.modal-overlay.active'));
+                if (modalesActivos.length > 0) {
+                    const modal = modalesActivos[modalesActivos.length - 1];
+                    if (modal.id === 'deliveryModal') detenerTimer('delivery');
+                    if (modal.id === 'reservaModal')  detenerTimer('reserva');
+                    modal.classList.remove('active');
+                    _sincronizarStack();
+                    return;
+                }
+                // 2. Panel de notificaciones
+                const notifPanel = document.getElementById('notificationsPanel');
+                if (notifPanel?.classList.contains('active')) {
+                    notifPanel.classList.remove('active');
+                    if (window.innerWidth <= 992 &&
+                        !document.getElementById('categorySidebar').classList.contains('open') &&
+                        !document.getElementById('cartSidebar').classList.contains('open')) {
+                        document.getElementById('overlay').classList.remove('active');
+                    }
+                    _sincronizarStack();
+                    return;
+                }
+                // 3. Nivel2 del carrito expandido
+                if (nivel2Activo) {
+                    const n2 = document.getElementById(`nivel2-${nivel2Activo}`);
+                    const i2 = document.getElementById(`icon2-${nivel2Activo}`);
+                    if (n2) n2.classList.remove('expanded');
+                    if (i2) i2.classList.remove('rotated');
+                    nivel2Activo = null;
+                    _sincronizarStack();
+                    return;
+                }
+                // 4. Nivel1 del carrito expandido
+                if (nivel1Activo) {
+                    const n1 = document.getElementById(`nivel1-${nivel1Activo}`);
+                    const i1 = document.getElementById(`icon1-${nivel1Activo}`);
+                    if (n1) n1.classList.remove('expanded');
+                    if (i1) i1.classList.remove('rotated');
+                    nivel1Activo = null;
+                    _sincronizarStack();
+                    return;
+                }
+                // 5. Carrito abierto
+                const cartSidebar = document.getElementById('cartSidebar');
+                if (cartSidebar?.classList.contains('open')) {
+                    cartSidebar.classList.remove('open');
+                    if (!document.getElementById('categorySidebar').classList.contains('open') &&
+                        !document.getElementById('notificationsPanel').classList.contains('active')) {
+                        document.getElementById('overlay').classList.remove('active');
+                    }
+                    detenerSeguimientoScroll();
+                    _sincronizarStack();
+                    return;
+                }
+                // 6. Subcategoría expandida
+                const subExpanded = document.querySelector('.subcategory-list.expanded');
+                if (subExpanded) {
+                    subExpanded.classList.remove('expanded');
+                    _sincronizarStack();
+                    return;
+                }
+                // 7. Menú hamburguesa abierto
+                const categorySidebar = document.getElementById('categorySidebar');
+                if (categorySidebar?.classList.contains('open')) {
+                    categorySidebar.classList.remove('open');
+                    if (!document.getElementById('cartSidebar').classList.contains('open') &&
+                        !document.getElementById('notificationsPanel').classList.contains('active')) {
+                        document.getElementById('overlay').classList.remove('active');
+                    }
+                    _sincronizarStack();
+                    return;
+                }
+                // Nada abierto: marcar stack vacío (el popstate ya consumió el estado)
+                _capaEnStack = false;
+            }
+
+            // Mantiene el stack sincronizado: si hay capas abiertas garantiza que hay
+            // exactamente un estado pushado; si no hay ninguna, lo marca vacío.
+            function _sincronizarStack() {
+                if (_hayCapasAbiertas()) {
+                    if (!_capaEnStack) {
+                        history.pushState({ saki: true }, '');
+                        _capaEnStack = true;
+                    }
+                } else {
+                    _capaEnStack = false;
+                }
+            }
+
+            // ── popstate: el navegador ya consumió el estado, cerrar capa ──
             window.addEventListener('popstate', function(e) {
                 if (e.state && e.state.saki) {
+                    _capaEnStack = false; // el estado fue consumido por el back
                     cerrarCapaMasReciente();
                 }
             });
 
-            // ── Empujar estado cada vez que se abre una capa ──
-            // Parcheamos las funciones de apertura existentes para que llamen pushCapaAbierta()
-
-            const _toggleCarritoOrig = window.toggleCarrito;
-            window.toggleCarrito = function() {
-                _toggleCarritoOrig && _toggleCarritoOrig.apply(this, arguments);
-                if (document.getElementById('cartSidebar').classList.contains('open')) pushCapaAbierta();
-            };
-
-            const _toggleMenuOrig = window.toggleMenuCategorias;
-            window.toggleMenuCategorias = function() {
-                _toggleMenuOrig && _toggleMenuOrig.apply(this, arguments);
-                if (document.getElementById('categorySidebar').classList.contains('open')) pushCapaAbierta();
-            };
-
-            const _toggleNotifOrig = window.toggleNotifications;
-            window.toggleNotifications = function() {
-                _toggleNotifOrig && _toggleNotifOrig.apply(this, arguments);
-                if (document.getElementById('notificationsPanel').classList.contains('active')) pushCapaAbierta();
-            };
-
-            // Modales: observar cuando se añade clase 'active'
-            const modalObserver = new MutationObserver(mutations => {
+            // ── Observar aperturas para mantener el stack ──
+            // Usamos MutationObserver SOLO para los elementos que no tienen función parchada
+            const observer = new MutationObserver(mutations => {
                 mutations.forEach(m => {
-                    if (m.type === 'attributes' && m.attributeName === 'class') {
-                        const el = m.target;
-                        if (el.classList.contains('active') || el.classList.contains('open')) {
-                            pushCapaAbierta();
-                        }
-                    }
+                    if (m.attributeName !== 'class') return;
+                    const el = m.target;
+                    const abierto = el.classList.contains('active') || el.classList.contains('open');
+                    if (abierto) _asegurarEstadoEnStack();
+                    // Si se cerró, sincronizar (podría haber otras capas todavía)
+                    else _sincronizarStack();
                 });
             });
-            document.querySelectorAll('.modal-overlay, #notificationsPanel, #cartSidebar, #categorySidebar').forEach(el => {
-                modalObserver.observe(el, { attributes: true, attributeFilter: ['class'] });
+            // Solo observar modales; carrito y sidebar se cubren con parches de función
+            document.querySelectorAll('.modal-overlay, #notificationsPanel').forEach(el => {
+                observer.observe(el, { attributes: true, attributeFilter: ['class'] });
             });
 
-            // toggleNivel1 y toggleNivel2 ya manejan nivel1Activo/nivel2Activo;
-            // los parcheamos para empujar estado al expandir
-            const _toggleNivel1Orig = window.toggleNivel1;
+            // ── Parches de funciones de toggle ──
+            const _origToggleCarrito = window.toggleCarrito;
+            window.toggleCarrito = function() {
+                _origToggleCarrito?.apply(this, arguments);
+                _sincronizarStack();
+            };
+            const _origToggleMenu = window.toggleMenuCategorias;
+            window.toggleMenuCategorias = function() {
+                _origToggleMenu?.apply(this, arguments);
+                _sincronizarStack();
+            };
+            const _origToggleNotif = window.toggleNotifications;
+            window.toggleNotifications = function() {
+                _origToggleNotif?.apply(this, arguments);
+                _sincronizarStack();
+            };
+            const _origToggleNivel1 = window.toggleNivel1;
             window.toggleNivel1 = function(grupoId) {
-                _toggleNivel1Orig && _toggleNivel1Orig(grupoId);
-                if (nivel1Activo) pushCapaAbierta();
+                _origToggleNivel1?.(grupoId);
+                _sincronizarStack();
             };
-            const _toggleNivel2Orig = window.toggleNivel2;
+            const _origToggleNivel2 = window.toggleNivel2;
             window.toggleNivel2 = function(subgrupoId, grupoPadreId) {
-                _toggleNivel2Orig && _toggleNivel2Orig(subgrupoId, grupoPadreId);
-                if (nivel2Activo) pushCapaAbierta();
+                _origToggleNivel2?.(subgrupoId, grupoPadreId);
+                _sincronizarStack();
             };
+            // Las subcategorías del menú hamburguesa se expanden con classList.toggle
+            // directamente en el event listener — observamos su contenedor padre
+            const catSidebarEl = document.getElementById('categorySidebar');
+            if (catSidebarEl) {
+                observer.observe(catSidebarEl, { attributes: true, attributeFilter: ['class'] });
+                // Observar cambios en hijos para detectar subcategorías expandidas
+                const subObserver = new MutationObserver(() => _sincronizarStack());
+                subObserver.observe(catSidebarEl, { subtree: true, attributes: true, attributeFilter: ['class'] });
+            }
+            const cartSidebarEl = document.getElementById('cartSidebar');
+            if (cartSidebarEl) {
+                observer.observe(cartSidebarEl, { attributes: true, attributeFilter: ['class'] });
+            }
 
         })();
     </script>
