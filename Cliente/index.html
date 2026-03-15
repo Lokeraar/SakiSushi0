@@ -1830,18 +1830,25 @@
         }
 
         async function verificarNotificaciones() {
-            if (!paginaVisible) return;
+            // El polling corre siempre; si la página está en segundo plano
+            // sólo omitimos la actualización de la UI pero seguimos detectando cambios.
             console.log('🔍 Verificando notificaciones para session_id:', sessionId);
             try {
-                const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
-                const manana = new Date(hoy); manana.setDate(manana.getDate() + 1);
+                // Usamos la zona horaria GMT-4 (America/Caracas) para delimitar "hoy"
+                const ahoraCaracas = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Caracas' }));
+                const hoyCaracas = new Date(ahoraCaracas); hoyCaracas.setHours(0, 0, 0, 0);
+                // Convertimos de vuelta a UTC para la query
+                const offsetMs = ahoraCaracas.getTime() - new Date().getTime();
+                const hoyUTC = new Date(hoyCaracas.getTime() - offsetMs);
+                const mananaUTC = new Date(hoyUTC.getTime() + 24 * 60 * 60 * 1000);
+
                 const { data, error } = await window.supabaseClient
                     .from('notificaciones')
-                    .select('id, leida, timestamp')
+                    .select('id, leida, fecha')
                     .eq('session_id', sessionId)
-                    .gte('timestamp', hoy.toISOString())
-                    .lt('timestamp', manana.toISOString())
-                    .order('timestamp', { ascending: false });
+                    .gte('fecha', hoyUTC.toISOString())
+                    .lt('fecha', mananaUTC.toISOString())
+                    .order('fecha', { ascending: false });
                 if (error) throw error;
                 let hayCambios = false;
                 if (data.length !== notificacionesCache.length) { hayCambios = true; }
@@ -1855,7 +1862,22 @@
                     console.log('🔔 ¡CAMBIOS DETECTADOS! Recargando notificaciones...');
                     const notificacionesNuevas = data.filter(n => !notificacionesCache.some(c => c.id === n.id));
                     await recargarNotificacionesCompletas();
-                    notificacionesNuevas.forEach(n => { if (!n.leida) reproducirAlertaNotificacion(); });
+                    if (paginaVisible) {
+                        // Página en primer plano: sonido + vibración + UI
+                        notificacionesNuevas.forEach(n => { if (!n.leida) reproducirAlertaNotificacion(); });
+                    } else {
+                        // Página en segundo plano: intentar notificación local vía SW
+                        notificacionesNuevas.forEach(n => {
+                            if (!n.leida && 'serviceWorker' in navigator && navigator.serviceWorker.controller) {
+                                navigator.serviceWorker.controller.postMessage({
+                                    type: 'SHOW_LOCAL_NOTIFICATION',
+                                    titulo: n.titulo || '🍣 Saki Sushi',
+                                    mensaje: n.mensaje || 'Tienes una nueva notificación',
+                                    url: window.location.href
+                                });
+                            }
+                        });
+                    }
                     ultimaActualizacion = Date.now();
                 }
             } catch (error) { console.error('❌ Error en verificarNotificaciones:', error); }
@@ -1863,10 +1885,13 @@
 
         function iniciarVerificacionPeriodica() {
             if (intervaloNotificaciones) clearInterval(intervaloNotificaciones);
+            // El polling corre en todo momento: primer plano Y segundo plano.
+            // En segundo plano el intervalo del navegador puede reducir la frecuencia
+            // a ~1 min; las notificaciones push (vía webhook DB) cubren ese hueco.
             intervaloNotificaciones = setInterval(async() => {
-                if (paginaVisible) await verificarNotificaciones();
+                await verificarNotificaciones();
             }, 2000);
-            console.log('⏱️ Polling de notificaciones iniciado (cada 2s)');
+            console.log('⏱️ Polling de notificaciones iniciado (cada 2s, primer y segundo plano)');
         }
 
         async function marcarTodasComoLeidas() {
@@ -2685,9 +2710,12 @@
 
         window.addEventListener('visibilitychange', function() {
             if (document.hidden) {
+                // Página en segundo plano: sólo pausamos efectos visuales/sonido y scroll.
+                // El polling de notificaciones CONTINÚA corriendo para detectar cambios.
                 paginaVisible = false;
                 detenerSeguimientoScroll();
             } else {
+                // Página vuelve al primer plano: forzar verificación inmediata y reanudar scroll si aplica.
                 paginaVisible = true;
                 verificarNotificaciones();
                 if (carrito.length > 0 && document.getElementById('cartSidebar').classList.contains('open')) iniciarSeguimientoScroll();
