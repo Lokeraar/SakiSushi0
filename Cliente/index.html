@@ -1826,42 +1826,31 @@
             const persKey    = (instancia.personalizacion || []).slice().sort().join('|');
             const subgrupoId = `${grupoId}_${instancia.platilloId}_${persKey.replace(/[^a-zA-Z0-9]/g, '_')}`;
 
-            console.log('[FOCO] instancia.id:', instancia.id);
-            console.log('[FOCO] grupoId calculado:', grupoId);
-            console.log('[FOCO] subgrupoId calculado:', subgrupoId);
-
             nivel1Activo = grupoId;
             nivel2Activo = subgrupoId;
 
             actualizarCarritoUI();
 
-            requestAnimationFrame(() => {
+            // En móvil el cartSidebar tiene una transición CSS de 300ms (transform).
+            // Esperamos a que termine antes de intentar medir y hacer scroll.
+            const esMobil = window.innerWidth <= 992;
+            const espera  = esMobil ? 350 : 80; // ms
+
+            setTimeout(() => {
                 requestAnimationFrame(() => {
                     const cartItemsEl = document.getElementById('cartItems');
-                    const itemEl = document.querySelector(`[data-instancia-id="${instancia.id}"]`);
-
-                    console.log('[FOCO] cartItemsEl:', cartItemsEl, 'clientHeight:', cartItemsEl?.clientHeight);
-                    console.log('[FOCO] itemEl encontrado:', !!itemEl);
-
-                    // Verificar si los contenedores están expanded
-                    const n1 = document.getElementById(`nivel1-${grupoId}`);
-                    const n2 = document.getElementById(`nivel2-${subgrupoId}`);
-                    console.log('[FOCO] nivel1-container expanded:', n1?.classList.contains('expanded'), 'id:', `nivel1-${grupoId}`);
-                    console.log('[FOCO] nivel2-container expanded:', n2?.classList.contains('expanded'), 'id:', `nivel2-${subgrupoId}`);
-
-                    // Mostrar todos los nivel2-container presentes en el DOM
-                    document.querySelectorAll('[id^="nivel2-"]').forEach(el => {
-                        console.log('[FOCO] DOM nivel2 id encontrado:', el.id, 'expanded:', el.classList.contains('expanded'));
-                    });
+                    const itemEl      = document.querySelector(`[data-instancia-id="${instancia.id}"]`);
 
                     if (!cartItemsEl || !itemEl) return;
+
+                    // Calcular posición del ítem relativa al contenedor scrolleable
                     let top = 0, el = itemEl;
                     while (el && el !== cartItemsEl) { top += el.offsetTop; el = el.offsetParent; }
-                    console.log('[FOCO] offsetTop acumulado:', top, '| destino scroll:', top - (cartItemsEl.clientHeight/2) + (itemEl.offsetHeight/2));
+
                     const destino = top - (cartItemsEl.clientHeight / 2) + (itemEl.offsetHeight / 2);
                     cartItemsEl.scrollTo({ top: Math.max(0, destino), behavior: 'smooth' });
                 });
-            });
+            }, espera);
         }
 
         // ============================================
