@@ -1466,12 +1466,16 @@
             actualizarCarritoBadge();
             window.stockCache.invalidate();
             mostrarToast('Agregado', 'success');
-            _enfocarUltimoItemCarrito(nuevaInstancia);
             if (window.innerWidth <= 992) {
+                // Abrir el sidebar primero — _enfocarUltimoItemCarrito detectará que
+                // ya está abierto y usará el delay correcto para la transición.
                 document.getElementById('cartSidebar').classList.add('open');
                 document.getElementById('overlay').classList.add('active');
                 document.getElementById('categorySidebar').classList.remove('open');
-            } else iniciarSeguimientoScroll();
+            } else {
+                iniciarSeguimientoScroll();
+            }
+            _enfocarUltimoItemCarrito(nuevaInstancia);
         }
 
         function guardarCarrito() {
@@ -1743,8 +1747,9 @@
                 document.getElementById('cartSidebar').classList.add('open');
                 document.getElementById('overlay').classList.add('active');
                 document.getElementById('categorySidebar').classList.remove('open');
-            } else iniciarSeguimientoScroll();
-            // Enfocar el último ítem agregado (el más reciente cuando cantidad > 1)
+            } else {
+                iniciarSeguimientoScroll();
+            }
             if (nuevasInstancias.length > 0) _enfocarUltimoItemCarrito(nuevasInstancias[nuevasInstancias.length - 1]);
         }
 
@@ -1812,62 +1817,64 @@
             }, 300);
         }
 
-        // Abre el carrito (si no está visible), expande los niveles del ítem
-        // y hace scroll hasta él dentro del contenedor scrollable.
         function _enfocarUltimoItemCarrito(instancia) {
             if (!instancia) return;
 
-            function _scrollAlItem() {
-                const itemEl = document.querySelector(`[data-instancia-id="${instancia.id}"]`);
-                if (!itemEl) return;
+            const esMobil        = window.innerWidth <= 992;
+            const cartSidebar    = document.getElementById('cartSidebar');
+            const yaAbierto      = cartSidebar && cartSidebar.classList.contains('open');
 
-                // Expandir nivel2-container (nivel3 en el DOM) si está colapsado
-                const nivel2Container = itemEl.closest('.nivel3-container');
-                if (nivel2Container && !nivel2Container.classList.contains('expanded')) {
-                    const nivel2Id = nivel2Container.id.replace('nivel2-', '');
-                    nivel2Activo = nivel2Id;
-                    nivel2Container.classList.add('expanded');
-                    const icon2 = document.getElementById(`icon2-${nivel2Id}`);
-                    if (icon2) icon2.classList.add('rotated');
-                }
-                // Expandir nivel1-container (nivel2 en el DOM) si está colapsado
-                const nivel1Container = itemEl.closest('.nivel2-container');
-                if (nivel1Container && !nivel1Container.classList.contains('expanded')) {
-                    const nivel1Id = nivel1Container.id.replace('nivel1-', '');
-                    nivel1Activo = nivel1Id;
-                    nivel1Container.classList.add('expanded');
-                    const icon1 = document.getElementById(`icon1-${nivel1Id}`);
-                    if (icon1) icon1.classList.add('rotated');
-                }
+            // La transición del sidebar es .3s; la de max-height nivel1 es .5s, nivel2 .4s.
+            // En móvil y carrito recién abierto esperamos 600ms para que todo esté pintado.
+            // En desktop o carrito ya visible 80ms bastan para el repintado del DOM.
+            const delay = (esMobil && !yaAbierto) ? 620 : 80;
 
-                // Scroll dentro del contenedor scrollable #cartItems por offsetTop
+            setTimeout(function() {
                 const cartItemsEl = document.getElementById('cartItems');
-                if (!cartItemsEl) return;
+                const itemEl      = document.querySelector(`[data-instancia-id="${instancia.id}"]`);
+                if (!cartItemsEl || !itemEl) return;
 
-                let offsetAccum = 0;
-                let el = itemEl;
-                while (el && el !== cartItemsEl) {
-                    offsetAccum += el.offsetTop;
-                    el = el.offsetParent;
+                // --- Expandir nivel1 si está colapsado ---
+                const n1Container = itemEl.closest('.nivel2-container');
+                if (n1Container && !n1Container.classList.contains('expanded')) {
+                    const n1Id = n1Container.id.replace('nivel1-', '');
+                    nivel1Activo = n1Id;
+                    n1Container.classList.add('expanded');
+                    const ic1 = document.getElementById(`icon1-${n1Id}`);
+                    if (ic1) ic1.classList.add('rotated');
                 }
-                const targetScroll = offsetAccum - (cartItemsEl.clientHeight / 2) + (itemEl.offsetHeight / 2);
-                cartItemsEl.scrollTo({ top: Math.max(0, targetScroll), behavior: 'smooth' });
-            }
 
-            const esMobil = window.innerWidth <= 992;
-            const cartSidebar = document.getElementById('cartSidebar');
-            const carritoYaAbierto = cartSidebar && cartSidebar.classList.contains('open');
+                // --- Expandir nivel2 si está colapsado ---
+                const n2Container = itemEl.closest('.nivel3-container');
+                if (n2Container && !n2Container.classList.contains('expanded')) {
+                    const n2Id = n2Container.id.replace('nivel2-', '');
+                    nivel2Activo = n2Id;
+                    n2Container.classList.add('expanded');
+                    const ic2 = document.getElementById(`icon2-${n2Id}`);
+                    if (ic2) ic2.classList.add('rotated');
+                }
 
-            if (esMobil && !carritoYaAbierto) {
-                // En móvil el carrito se acaba de abrir (o se abrirá justo después de esta llamada).
-                // Esperamos a que la transición CSS de deslizamiento termine (~350 ms) antes de
-                // calcular posiciones, porque hasta ese momento offsetTop/clientHeight son 0.
-                setTimeout(_scrollAlItem, 380);
-            } else {
-                // Desktop (siempre visible) o carrito ya estaba abierto: espera mínima solo
-                // para que actualizarCarritoUI haya pintado el DOM.
-                setTimeout(_scrollAlItem, 80);
-            }
+                // --- Esperar a que las transiciones de max-height terminen ---
+                // nivel2-container: 500ms, nivel3-container: 400ms → usamos 520ms de margen
+                setTimeout(function() {
+                    const cartItemsEl2 = document.getElementById('cartItems');
+                    const itemEl2      = document.querySelector(`[data-instancia-id="${instancia.id}"]`);
+                    if (!cartItemsEl2 || !itemEl2) return;
+
+                    // scrollTop correcto: posición del item relativa al contenedor
+                    const containerTop = cartItemsEl2.getBoundingClientRect().top;
+                    const itemTop      = itemEl2.getBoundingClientRect().top;
+                    const itemH        = itemEl2.offsetHeight;
+                    const containerH   = cartItemsEl2.clientHeight;
+
+                    const scrollActual = cartItemsEl2.scrollTop;
+                    const itemRelTop   = itemTop - containerTop + scrollActual;
+                    const destino      = itemRelTop - (containerH / 2) + (itemH / 2);
+
+                    cartItemsEl2.scrollTo({ top: Math.max(0, destino), behavior: 'smooth' });
+                }, 520);
+
+            }, delay);
         }
 
         // ============================================
