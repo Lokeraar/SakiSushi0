@@ -126,20 +126,25 @@ window.showSection=function(section){document.querySelectorAll('.section').forEa
 window.cargarDatosIniciales=async function(){try{await window.cargarConfiguracion();window.tasaEfectiva=(window.configGlobal&&window.configGlobal.tasa_efectiva)||400;await window.cargarPedidos();await window.cargarVentasHoy();await window.cargarPropinas();await window.cargarMenu();await window.cargarInventario();await window.cargarMesas();await window.cargarMesoneros();await window.cargarDeliverys();window.actualizarEstadisticas();window.renderizarPedidos();window.renderizarPropinas();window.renderizarDeliverysStats();window.iniciarVerificacionPeriodica()}catch(e){console.error('Error cargando datos:',e)}};
 window.cargarPedidos = async function() {
     try {
-        const hoy = new Date();
-        hoy.setHours(0, 0, 0, 0);
-        const manana = new Date(hoy);
-        manana.setDate(manana.getDate() + 2);
+        // Calculamos "hoy" en GMT-4 (America/Caracas) y lo convertimos a UTC para la query.
+        // Así un pedido hecho a las 11:50 PM en Caracas (= 03:50 AM UTC del día siguiente)
+        // no queda fuera del rango.
+        const ahoraCaracas = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Caracas' }));
+        const hoyCaracas = new Date(ahoraCaracas); hoyCaracas.setHours(0, 0, 0, 0);
+        const offsetMs = ahoraCaracas.getTime() - new Date().getTime();
+        const hoyUTC = new Date(hoyCaracas.getTime() - offsetMs);
+        // Extendemos a +2 días UTC para cubrir el desfase nocturno completo
+        const mananaUTC = new Date(hoyUTC.getTime() + 2 * 24 * 60 * 60 * 1000);
         const { data, error } = await window.supabaseClient
             .from('pedidos')
             .select('*')
-            .gte('fecha', hoy.toISOString())  
-            .lt('fecha', manana.toISOString()) 
-            .order('fecha', { ascending: false }); 
+            .gte('fecha', hoyUTC.toISOString())
+            .lt('fecha', mananaUTC.toISOString())
+            .order('fecha', { ascending: false });
         if (error) throw error;
         window.pedidos = data || [];
-    } catch (e) { 
-        console.error('Error cargando pedidos:', e); 
+    } catch (e) {
+        console.error('Error cargando pedidos:', e);
     }
 };
 window.cargarVentasHoy=async function(){try{const hoy=new Date();hoy.setHours(0,0,0,0);const manana=new Date(hoy);manana.setDate(manana.getDate()+1);const{data,error}=await window.supabaseClient.from('ventas').select('*').gte('fecha',hoy.toISOString()).lt('fecha',manana.toISOString()).order('fecha',{ascending:false});if(error)throw error;window.ventasHoy=data||[]}catch(e){console.error('Error cargando ventas:',e)}};
@@ -249,7 +254,7 @@ return`<div class="detail-item-compact"><div class="detail-header-compact"><span
 window.crearDetalleVentaCompacto=function(venta,pedido){if(!pedido)return'';try{const hora=new Date(pedido.fecha).toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'}),itemsHtml=(pedido.items||[]).map(item=>`<div class="detail-item-row-compact"><span>${item.cantidad||1}x ${item.nombre}</span><span>${window.formatBs(window.usdToBs((item.precioUnitarioUSD||0)*(item.cantidad||1)))}</span></div>`).join('');let pagosHtml='';if(pedido.pagos_mixtos?.length){pagosHtml='<div style="margin-top:3px">'+pedido.pagos_mixtos.map(p=>{const icon=p.metodo==='efectivo_bs'?'Bs':(p.metodo==='efectivo_usd'?'$':(p.metodo==='pago_movil'?'📱':'💳'));return`<span class="detail-metodo-tag">${icon} ${window.formatBs(p.monto)}</span>`}).join('')+'</div>'}
 let extrasHtml='';if(pedido.condonado>0)extrasHtml+=`<span class="condonar-tag"><i class="fas fa-gift"></i> Condonado: ${window.formatBs(pedido.condonado)}</span>`;if(pedido.a_favor_caja>0)extrasHtml+=`<span class="favor-tag"><i class="fas fa-piggy-bank"></i> A favor: ${window.formatBs(pedido.a_favor_caja)}</span>`;const deliveryNombre=pedido.delivery_nombre||(window.deliverys?.find(d=>d.id==pedido.delivery_id)?.nombre)||'No asignado';return`<div class="detail-item-compact"><div class="detail-header-compact"><span>${hora}</span><span class="detail-metodo-tag">${venta.tipo}</span></div><div class="detail-items-compact">${itemsHtml}</div>${pedido.tipo==='delivery'?`<div style="margin-top:3px;font-size:.75rem"><span class="delivery-tag"><i class="fas fa-motorcycle"></i> ${deliveryNombre}</span> - ${window.formatBs(pedido.costo_delivery_bs||0)}</div>`:''}<div class="detail-total-compact">Total: ${window.formatBs(venta.subtotal_platillos||(venta.total*window.tasaEfectiva))}</div>${pagosHtml}${extrasHtml?`<div style="margin-top:5px">${extrasHtml}</div>`:''}</div>`}catch(e){return''}};
 // ============================================ VERIFICACIÓN ============================================
-window.verificarCambiosPedidos=async function(){if(window.reconectando||window.enProcesoDeCobro)return;try{const hoy=new Date();hoy.setHours(0,0,0,0);const manana=new Date(hoy);manana.setDate(manana.getDate()+2);const{data,error}=await window.supabaseClient.from('pedidos').select('id, estado, fecha').gte('fecha',hoy.toISOString()).lt('fecha',manana.toISOString());if(error)throw error;if(data){let cambios=false;if(data.length!==(window.pedidos||[]).length){cambios=true}else{const estadoMap=new Map((window.pedidos||[]).map(p=>[p.id,p.estado]));for(const p of data){if(estadoMap.get(p.id)!==p.estado){cambios=true;break}}}
+window.verificarCambiosPedidos=async function(){if(window.reconectando||window.enProcesoDeCobro)return;try{const ahoraCaracas=new Date(new Date().toLocaleString('en-US',{timeZone:'America/Caracas'}));const hoyCaracas=new Date(ahoraCaracas);hoyCaracas.setHours(0,0,0,0);const offsetMs=ahoraCaracas.getTime()-new Date().getTime();const hoyUTC=new Date(hoyCaracas.getTime()-offsetMs);const mananaUTC=new Date(hoyUTC.getTime()+2*24*60*60*1000);const{data,error}=await window.supabaseClient.from('pedidos').select('id, estado, fecha').gte('fecha',hoyUTC.toISOString()).lt('fecha',mananaUTC.toISOString());if(error)throw error;if(data){let cambios=false;if(data.length!==(window.pedidos||[]).length){cambios=true}else{const estadoMap=new Map((window.pedidos||[]).map(p=>[p.id,p.estado]));for(const p of data){if(estadoMap.get(p.id)!==p.estado){cambios=true;break}}}
 if(cambios){console.log('🔄 Cambios detectados en pedidos, recargando...');await window.recargarPedidosCompletos();window.ultimaActualizacion=Date.now()}}}catch(e){console.error('Error verificando cambios:',e)}};
 window.recargarPedidosCompletos=async function(){try{await window.cargarPedidos();await window.cargarVentasHoy();window.actualizarEstadisticas();window.renderizarPedidos();window.verificarYControlarAlarma()}catch(e){console.error('Error recargando pedidos:',e)}};
 window.iniciarVerificacionPeriodica=function(){if(window.intervaloVerificacion)clearInterval(window.intervaloVerificacion);window.intervaloVerificacion=setInterval(async()=>{if(window.paginaVisible&&!window.enProcesoDeCobro){await window.verificarCambiosPedidos()}},3e3)};
