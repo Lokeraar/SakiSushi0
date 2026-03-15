@@ -1828,31 +1828,38 @@
 
             nivel1Activo = grupoId;
             nivel2Activo = subgrupoId;
-
             actualizarCarritoUI();
 
-            requestAnimationFrame(() => {
-                requestAnimationFrame(() => {
-                    const cartItemsEl = document.getElementById('cartItems');
-                    const itemEl = document.querySelector(`[data-instancia-id="${instancia.id}"]`);
-                    if (!cartItemsEl || !itemEl) return;
+            function hacerScroll() {
+                const cartItemsEl = document.getElementById('cartItems');
+                const itemEl = document.querySelector(`[data-instancia-id="${instancia.id}"]`);
+                if (!cartItemsEl || !itemEl) return;
 
-                    // clientHeight es incorrecto en móvil porque el sidebar tiene position:absolute
-                    // y hereda toda la altura del main-layout aunque esté fuera de pantalla.
-                    // Usamos la altura visual real: pantalla menos header.
-                    const headerEl = document.querySelector('header') || document.querySelector('.header');
-                    const headerH  = headerEl ? headerEl.getBoundingClientRect().height : 110;
-                    const alturaVisible = window.innerHeight - headerH;
+                const headerEl = document.querySelector('header') || document.querySelector('.header');
+                const headerH  = headerEl ? headerEl.getBoundingClientRect().height : 110;
+                const alturaVisible = window.innerHeight - headerH;
 
-                    // offsetTop del ítem acumulado dentro de cartItems
-                    let top = 0, el = itemEl;
-                    while (el && el !== cartItemsEl) { top += el.offsetTop; el = el.offsetParent; }
+                let top = 0, el = itemEl;
+                while (el && el !== cartItemsEl) { top += el.offsetTop; el = el.offsetParent; }
 
-                    // Centrar el ítem en el área visible real
-                    const destino = top - (alturaVisible / 2) + (itemEl.offsetHeight / 2);
-                    cartItemsEl.scrollTo({ top: Math.max(0, destino), behavior: 'smooth' });
+                const destino = top - (alturaVisible / 2) + (itemEl.offsetHeight / 2);
+                cartItemsEl.scrollTo({ top: Math.max(0, destino), behavior: 'smooth' });
+            }
+
+            const cartSidebarEl = document.getElementById('cartSidebar');
+            const esMobil = window.innerWidth <= 992;
+
+            if (esMobil && cartSidebarEl) {
+                // Esperar exactamente a que termine la transición CSS del sidebar (transform .3s)
+                cartSidebarEl.addEventListener('transitionend', function onEnd(e) {
+                    if (e.propertyName !== 'transform') return;
+                    cartSidebarEl.removeEventListener('transitionend', onEnd);
+                    requestAnimationFrame(() => requestAnimationFrame(hacerScroll));
                 });
-            });
+            } else {
+                // Desktop: el carrito siempre está visible, solo esperar el repintado
+                requestAnimationFrame(() => requestAnimationFrame(hacerScroll));
+            }
         }
 
         // ============================================
