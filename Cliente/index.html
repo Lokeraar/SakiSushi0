@@ -1826,10 +1826,6 @@
             const persKey    = (instancia.personalizacion || []).slice().sort().join('|');
             const subgrupoId = `${grupoId}_${instancia.platilloId}_${persKey.replace(/[^a-zA-Z0-9]/g, '_')}`;
 
-            console.log('[FOCO] instancia.id:', instancia.id);
-            console.log('[FOCO] grupoId calculado:', grupoId);
-            console.log('[FOCO] subgrupoId calculado:', subgrupoId);
-
             nivel1Activo = grupoId;
             nivel2Activo = subgrupoId;
 
@@ -1839,26 +1835,21 @@
                 requestAnimationFrame(() => {
                     const cartItemsEl = document.getElementById('cartItems');
                     const itemEl = document.querySelector(`[data-instancia-id="${instancia.id}"]`);
-
-                    console.log('[FOCO] cartItemsEl:', cartItemsEl, 'clientHeight:', cartItemsEl?.clientHeight);
-                    console.log('[FOCO] itemEl encontrado:', !!itemEl);
-
-                    // Verificar si los contenedores están expanded
-                    const n1 = document.getElementById(`nivel1-${grupoId}`);
-                    const n2 = document.getElementById(`nivel2-${subgrupoId}`);
-                    console.log('[FOCO] nivel1-container expanded:', n1?.classList.contains('expanded'), 'id:', `nivel1-${grupoId}`);
-                    console.log('[FOCO] nivel2-container expanded:', n2?.classList.contains('expanded'), 'id:', `nivel2-${subgrupoId}`);
-
-                    // Mostrar todos los nivel2-container presentes en el DOM
-                    document.querySelectorAll('[id^="nivel2-"]').forEach(el => {
-                        console.log('[FOCO] DOM nivel2 id encontrado:', el.id, 'expanded:', el.classList.contains('expanded'));
-                    });
-
                     if (!cartItemsEl || !itemEl) return;
+
+                    // clientHeight es incorrecto en móvil porque el sidebar tiene position:absolute
+                    // y hereda toda la altura del main-layout aunque esté fuera de pantalla.
+                    // Usamos la altura visual real: pantalla menos header.
+                    const headerEl = document.querySelector('header') || document.querySelector('.header');
+                    const headerH  = headerEl ? headerEl.getBoundingClientRect().height : 110;
+                    const alturaVisible = window.innerHeight - headerH;
+
+                    // offsetTop del ítem acumulado dentro de cartItems
                     let top = 0, el = itemEl;
                     while (el && el !== cartItemsEl) { top += el.offsetTop; el = el.offsetParent; }
-                    console.log('[FOCO] offsetTop acumulado:', top, '| destino scroll:', top - (cartItemsEl.clientHeight/2) + (itemEl.offsetHeight/2));
-                    const destino = top - (cartItemsEl.clientHeight / 2) + (itemEl.offsetHeight / 2);
+
+                    // Centrar el ítem en el área visible real
+                    const destino = top - (alturaVisible / 2) + (itemEl.offsetHeight / 2);
                     cartItemsEl.scrollTo({ top: Math.max(0, destino), behavior: 'smooth' });
                 });
             });
@@ -1897,7 +1888,7 @@
                         `<div class="notification-item ${n.tipo} ${!n.leida ? 'unread' : ''}" onclick="marcarNotificacionLeida('${n.id}')">
                             <div class="notification-title"><i class="fas fa-${mensajesEstado[n.tipo]?.icono || 'bell'}"></i> ${n.titulo}</div>
                             <div class="notification-message">${n.mensaje}</div>
-                            <div class="notification-time">${window.formatearFechaGMT4(n.timestamp)}</div>
+                            <div class="notification-time">${window.formatearFechaGMT4(n.fecha)}</div>
                         </div>`
                     ).join('');
                 }
@@ -1906,29 +1897,30 @@
 
         async function recargarNotificacionesCompletas() {
             try {
-                const { data, error } = await window.supabaseClient.from('notificaciones').select('*').eq('session_id', sessionId).order('timestamp', { ascending: false });
+                const { data, error } = await window.supabaseClient.from('notificaciones').select('*').eq('session_id', sessionId).order('fecha', { ascending: false });
                 if (error) throw error;
                 notificaciones = data || [];
                 notificacionesCompletas = data || [];
                 notificacionesNoLeidas = notificaciones.filter(n => !n.leida).length;
-                notificacionesCache = notificaciones.map(n => ({ id: n.id, leida: n.leida, timestamp: n.timestamp }));
+                notificacionesCache = notificaciones.map(n => ({ id: n.id, leida: n.leida, fecha: n.fecha }));
                 actualizarNotificacionesUI();
             } catch (error) { console.error('Error recargando notificaciones:', error); }
         }
 
         async function verificarNotificaciones() {
-            if (!paginaVisible) return;
-            console.log('🔍 Verificando notificaciones para session_id:', sessionId);
             try {
-                const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
-                const manana = new Date(hoy); manana.setDate(manana.getDate() + 1);
+                const ahoraCaracas = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Caracas' }));
+                const hoyCaracas   = new Date(ahoraCaracas); hoyCaracas.setHours(0, 0, 0, 0);
+                const offsetMs     = ahoraCaracas.getTime() - new Date().getTime();
+                const hoyUTC       = new Date(hoyCaracas.getTime() - offsetMs);
+                const mananaUTC    = new Date(hoyUTC.getTime() + 24 * 60 * 60 * 1000);
                 const { data, error } = await window.supabaseClient
                     .from('notificaciones')
-                    .select('id, leida, timestamp')
+                    .select('id, leida, fecha')
                     .eq('session_id', sessionId)
-                    .gte('timestamp', hoy.toISOString())
-                    .lt('timestamp', manana.toISOString())
-                    .order('timestamp', { ascending: false });
+                    .gte('fecha', hoyUTC.toISOString())
+                    .lt('fecha',  mananaUTC.toISOString())
+                    .order('fecha', { ascending: false });
                 if (error) throw error;
                 let hayCambios = false;
                 if (data.length !== notificacionesCache.length) { hayCambios = true; }
@@ -1939,10 +1931,22 @@
                     }
                 }
                 if (hayCambios) {
-                    console.log('🔔 ¡CAMBIOS DETECTADOS! Recargando notificaciones...');
-                    const notificacionesNuevas = data.filter(n => !notificacionesCache.some(c => c.id === n.id));
+                    const idsEnCache  = new Set(notificacionesCache.map(n => n.id));
+                    const notifNuevas = data.filter(n => !idsEnCache.has(n.id) && !n.leida);
                     await recargarNotificacionesCompletas();
-                    notificacionesNuevas.forEach(n => { if (!n.leida) reproducirAlertaNotificacion(); });
+                    if (notifNuevas.length > 0) {
+                        if (paginaVisible) {
+                            reproducirAlertaNotificacion();
+                        } else if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+                            const ultima = notifNuevas[0];
+                            navigator.serviceWorker.controller.postMessage({
+                                type: 'SHOW_LOCAL_NOTIFICATION',
+                                titulo: ultima.titulo || '🍣 Saki Sushi',
+                                mensaje: ultima.mensaje || 'Tienes una nueva notificación',
+                                url: window.location.href
+                            });
+                        }
+                    }
                     ultimaActualizacion = Date.now();
                 }
             } catch (error) { console.error('❌ Error en verificarNotificaciones:', error); }
@@ -2651,7 +2655,7 @@
                 leida: false
             };
             notificaciones.unshift(notifPrueba);
-            notificacionesCache.unshift({ id: notifPrueba.id, leida: notifPrueba.leida, timestamp: notifPrueba.timestamp });
+            notificacionesCache.unshift({ id: notifPrueba.id, leida: notifPrueba.leida, fecha: notifPrueba.fecha });
             notificacionesNoLeidas++;
             actualizarNotificacionesUI();
             reproducirAlertaNotificacion();
@@ -2668,7 +2672,7 @@
             if (savedNotificaciones) {
                 try {
                     notificaciones = JSON.parse(savedNotificaciones);
-                    notificacionesCache = notificaciones.map(n => ({ id: n.id, leida: n.leida, timestamp: n.timestamp }));
+                    notificacionesCache = notificaciones.map(n => ({ id: n.id, leida: n.leida, fecha: n.fecha }));
                     notificacionesNoLeidas = notificaciones.filter(n => !n.leida).length;
                     actualizarNotificacionesUI();
                 } catch (e) { console.error('Error restaurando notificaciones:', e); }
@@ -2968,4 +2972,4 @@
         })();
     </script>
 </body>
-</html> 
+</html>
