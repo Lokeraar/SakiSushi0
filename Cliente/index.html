@@ -1051,11 +1051,16 @@
         // HISTORIAL DE PEDIDOS
         // ============================================
         function agregarPedidoAHistorial(pedido) {
+            // Enriquecer los items con imagen desde menuItems (por si no viene en pedido.items)
+            const itemsConImagen = (pedido.items || []).map(item => {
+                const platillo = menuItems.find(p => p.id === item.platilloId);
+                return { ...item, imagen: item.imagen || platillo?.imagen || '' };
+            });
             const nuevoPedido = {
                 id: pedido.id,
                 fecha: new Date().toISOString(),
                 total: pedido.total,
-                items: pedido.items,
+                items: itemsConImagen,
                 tipo: pedido.tipo
             };
             historialPedidos.unshift(nuevoPedido);
@@ -1104,26 +1109,32 @@
 
         async function repetirPedido(pedidoId) {
             const pedido = historialPedidos.find(p => p.id === pedidoId);
-            if (!pedido || !pedido.items) return;
+            if (!pedido || !pedido.items || pedido.items.length === 0) return;
             carrito = [];
             for (const item of pedido.items) {
                 const platillo = menuItems.find(p => p.id === item.platilloId);
-                if (platillo) {
-                    for (let i = 0; i < (item.cantidad || 1); i++) {
-                        const nuevaInstancia = {
-                            id: generarId('inst_'),
-                            platilloId: platillo.id,
-                            nombre: platillo.nombre,
-                            personalizacion: item.personalizacion || [],
-                            imagen: platillo.imagen,
-                            precioUnitarioUSD: platillo.precio,
-                            precioUnitarioBs: usdToBs(platillo.precio),
-                            subtotal: usdToBs(platillo.precio),
-                            selectionType: item.personalizacion?.length ? 'personalizado' : 'completo'
-                        };
-                        carrito.push(nuevaInstancia);
-                    }
+                // Si el platillo sigue en el menú, usamos sus datos actuales (precio, imagen)
+                // Si fue desactivado o eliminado, usamos los datos guardados en el historial
+                const nombre  = platillo?.nombre  || item.nombre;
+                const imagen  = platillo?.imagen  || item.imagen  || '';
+                const precio  = platillo?.precio  || item.precioUnitarioUSD || 0;
+                for (let i = 0; i < (item.cantidad || 1); i++) {
+                    carrito.push({
+                        id: generarId('inst_'),
+                        platilloId: item.platilloId,
+                        nombre,
+                        personalizacion: item.personalizacion || [],
+                        imagen,
+                        precioUnitarioUSD: precio,
+                        precioUnitarioBs: usdToBs(precio),
+                        subtotal: usdToBs(precio),
+                        selectionType: (item.personalizacion?.length > 0) ? 'personalizado' : 'completo'
+                    });
                 }
+            }
+            if (carrito.length === 0) {
+                mostrarToast('❌ No se pudo restaurar el pedido', 'error');
+                return;
             }
             guardarCarrito();
             actualizarCarritoUI();
