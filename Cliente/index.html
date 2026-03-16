@@ -247,7 +247,7 @@
         .cart-footer{padding:1.2rem;border-top:2px solid rgba(255,255,255,.1);background:rgba(0,0,0,.2);flex-shrink:0}
         .cart-total{display:flex;justify-content:space-between;font-weight:700;font-size:1.2rem;margin-bottom:1.2rem;color:var(--gray-100)}
         .cart-total span:last-child{color:var(--accent)}
-        .cart-buttons{display:flex;gap:.5rem;flex-wrap:wrap}
+        .cart-buttons{display:flex;gap:.5rem;flex-wrap:wrap;overflow:visible}
         .btn-primary,.btn-secondary{flex:1;padding:.8rem;border:none;border-radius:50px;font-weight:600;font-size:.9rem;cursor:pointer;transition:all .3s;display:flex;align-items:center;justify-content:center;gap:.5rem;min-width:120px;position:relative}
         .btn-primary{background:linear-gradient(135deg,var(--primary),#b71c1c);color:white;box-shadow:var(--shadow-sm)}
         .btn-primary:hover:not(:disabled){transform:translateY(-2px);box-shadow:var(--shadow-md)}
@@ -463,24 +463,27 @@
 
         /* ── Animación nudge estilo MSN Messenger ── */
         @keyframes btn-zumbido {
-            0%          { transform: rotate(0deg);   box-shadow: 0 0 0 0 transparent;          border-color: transparent; }
-            6%          { transform: rotate(-45deg);  box-shadow: 0 0 8px 3px var(--accent);    border-color: var(--accent); }
-            12%         { transform: rotate(45deg);   box-shadow: 0 0 12px 5px var(--accent);   border-color: var(--accent); }
-            18%         { transform: rotate(-40deg);  box-shadow: 0 0 10px 4px var(--accent);   border-color: var(--accent); }
-            24%         { transform: rotate(40deg);   box-shadow: 0 0 12px 5px var(--accent);   border-color: var(--accent); }
-            30%         { transform: rotate(-30deg);  box-shadow: 0 0 8px 3px var(--accent);    border-color: var(--accent); }
-            36%         { transform: rotate(30deg);   box-shadow: 0 0 10px 4px var(--accent);   border-color: var(--accent); }
-            42%         { transform: rotate(-18deg);  box-shadow: 0 0 6px 2px var(--accent);    border-color: var(--accent); }
-            48%         { transform: rotate(18deg);   box-shadow: 0 0 6px 2px var(--accent);    border-color: var(--accent); }
-            54%         { transform: rotate(-8deg);   box-shadow: 0 0 4px 1px var(--accent);    border-color: var(--accent); }
-            60%         { transform: rotate(8deg);    box-shadow: 0 0 4px 1px var(--accent);    border-color: var(--accent); }
-            70%,100%    { transform: rotate(0deg);   box-shadow: 0 0 0 0 transparent;          border-color: transparent; }
+            0%          { transform: rotate(0deg);    box-shadow: 0 0 0 0 transparent;        border-color: transparent; }
+            6%          { transform: rotate(-45deg);  box-shadow: 0 0 8px 3px var(--accent);  border-color: var(--accent); }
+            12%         { transform: rotate(45deg);   box-shadow: 0 0 12px 5px var(--accent); border-color: var(--accent); }
+            18%         { transform: rotate(-40deg);  box-shadow: 0 0 10px 4px var(--accent); border-color: var(--accent); }
+            24%         { transform: rotate(40deg);   box-shadow: 0 0 12px 5px var(--accent); border-color: var(--accent); }
+            30%         { transform: rotate(-30deg);  box-shadow: 0 0 8px 3px var(--accent);  border-color: var(--accent); }
+            36%         { transform: rotate(30deg);   box-shadow: 0 0 10px 4px var(--accent); border-color: var(--accent); }
+            42%         { transform: rotate(-18deg);  box-shadow: 0 0 6px 2px var(--accent);  border-color: var(--accent); }
+            48%         { transform: rotate(18deg);   box-shadow: 0 0 6px 2px var(--accent);  border-color: var(--accent); }
+            54%         { transform: rotate(-8deg);   box-shadow: 0 0 4px 1px var(--accent);  border-color: var(--accent); }
+            60%         { transform: rotate(8deg);    box-shadow: 0 0 4px 1px var(--accent);  border-color: var(--accent); }
+            70%,100%    { transform: rotate(0deg);    box-shadow: 0 0 0 0 transparent;        border-color: transparent; }
         }
         .btn-accion-animate {
             animation: btn-zumbido 0.7s ease forwards;
-            display: inline-block;
-            transform-origin: center bottom;
+            transform-origin: center center;
+            transform-box: fill-box;
             border: 2px solid transparent;
+            will-change: transform;
+            position: relative;
+            z-index: 1;
         }
     </style>
 </head>
@@ -1807,12 +1810,21 @@
         function irABotonesAccion() {
             const cartFooter = document.getElementById('cartFooter');
             if (cartFooter) cartFooter.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            // Animar botones de acción: vibración de borde + destello durante ~1 s
             setTimeout(() => {
                 const botonesAccion = document.querySelectorAll('#cartButtons .btn-primary, #cartButtons .btn-secondary');
                 botonesAccion.forEach(btn => {
+                    // Envolver el botón en un span que reserve el espacio fijo en el layout.
+                    // El rotate se aplica al botón internamente — el span no se mueve.
+                    let wrapper = btn.parentElement;
+                    if (!wrapper || !wrapper.classList.contains('btn-nudge-wrapper')) {
+                        wrapper = document.createElement('span');
+                        wrapper.className = 'btn-nudge-wrapper';
+                        wrapper.style.cssText = 'display:inline-flex;flex:1;min-width:0;';
+                        btn.parentElement.insertBefore(wrapper, btn);
+                        wrapper.appendChild(btn);
+                    }
                     btn.classList.remove('btn-accion-animate');
-                    void btn.offsetWidth; // reflow para reiniciar si se pulsa varias veces
+                    void btn.offsetWidth;
                     btn.classList.add('btn-accion-animate');
                     btn.addEventListener('animationend', () => btn.classList.remove('btn-accion-animate'), { once: true });
                 });
