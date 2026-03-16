@@ -1113,9 +1113,10 @@
             carrito = [];
             for (const item of pedido.items) {
                 const platillo = menuItems.find(p => p.id === item.platilloId);
-                // Si el platillo sigue en el menú, usamos sus datos actuales (precio, imagen)
-                // Si fue desactivado o eliminado, usamos los datos guardados en el historial
                 const nombre  = platillo?.nombre  || item.nombre;
+                // La imagen SIEMPRE se toma de menuItems primero (fuente de verdad),
+                // luego del historial como fallback. crearPedidoBase no guarda imagen
+                // en sus items, por eso el historial puede tenerla vacía.
                 const imagen  = platillo?.imagen  || item.imagen  || '';
                 const precio  = platillo?.precio  || item.precioUnitarioUSD || 0;
                 for (let i = 0; i < (item.cantidad || 1); i++) {
@@ -1137,7 +1138,6 @@
                 return;
             }
             guardarCarrito();
-            actualizarCarritoUI();
             actualizarCarritoBadge();
             cerrarHistorial();
             mostrarToast('🔄 Pedido anterior restaurado', 'success');
@@ -1145,6 +1145,8 @@
                 document.getElementById('cartSidebar').classList.add('open');
                 document.getElementById('overlay').classList.add('active');
             }
+            // Enfocar el último ítem restaurado (igual que al agregar un platillo)
+            _enfocarUltimoItemCarrito(carrito[carrito.length - 1]);
         }
 
         // ============================================
