@@ -387,9 +387,8 @@
         .toast.info{background:var(--info)}
         .toast.warning{background:var(--warning)}
         @keyframes slideUp{from{transform:translate(-50%,20px);opacity:0}to{transform:translate(-50%,0);opacity:1}}
-        .scroll-indicator-cascade{display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;margin:0;cursor:pointer;opacity:0.9;transition:opacity 0.3s;position:relative;bottom:auto;z-index:10;background:rgba(26,26,46,.9);border-radius:30px;padding:5px 0;backdrop-filter:blur(5px);box-shadow:0 -5px 15px rgba(0,0,0,.3);pointer-events:auto}
+        .scroll-indicator-cascade{display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;margin-top:.5rem;cursor:pointer;opacity:0.9;transition:opacity 0.3s;background:rgba(26,26,46,.9);border-radius:30px;padding:5px 0;backdrop-filter:blur(5px);box-shadow:0 -5px 15px rgba(0,0,0,.3);pointer-events:auto;flex-shrink:0}
         .scroll-indicator-cascade.hidden{display:none}
-        .scroll-indicator-cascade.fixed-bottom{position:sticky;bottom:10px}
         .scroll-indicator-cascade:hover{opacity:1}
         .cascade-arrow{font-size:1.5rem;color:var(--accent);filter:drop-shadow(0 0 5px rgba(255,152,0,0.5));animation:cascadeDown 1.5s infinite}
         .cascade-arrow:nth-child(1){animation-delay:0s}
@@ -1780,29 +1779,18 @@
         function actualizarPosicionFlechas() {
             const flechas = document.querySelector('.scroll-indicator-cascade');
             const cartItems = document.getElementById('cartItems');
-            const cartFooter = document.getElementById('cartFooter');
-            if (!flechas || !cartItems || !cartFooter || carrito.length === 0) {
-                if (scrollRafId) cancelAnimationFrame(scrollRafId);
-                scrollRafId = null;
+            if (!flechas || !cartItems || carrito.length === 0) {
+                if (scrollRafId) { cancelAnimationFrame(scrollRafId); scrollRafId = null; }
                 return;
             }
-            const ultimoItem = cartItems.querySelector('.nivel3-item:last-child');
-            if (!ultimoItem) { scrollRafId = requestAnimationFrame(actualizarPosicionFlechas); return; }
-            const ultimoItemRect = ultimoItem.getBoundingClientRect();
-            const footerRect = cartFooter.getBoundingClientRect();
-            const flechasRect = flechas.getBoundingClientRect();
-            const cartRect = cartItems.getBoundingClientRect();
-            const posicionBase = ultimoItemRect.bottom - cartRect.top + 10;
-            const espacioVisible = cartItems.clientHeight;
-            const scrollActual = cartItems.scrollTop;
-            const limiteInferior = cartItems.scrollHeight - espacioVisible;
-            let nuevaPosicion = posicionBase;
-            if (scrollActual > 0 && (ultimoItemRect.bottom > cartRect.bottom || ultimoItemRect.top < cartRect.top)) {
-                nuevaPosicion = Math.min(Math.max(scrollActual + 10, posicionBase), limiteInferior - flechasRect.height - 10);
-            }
-            if (Math.abs(nuevaPosicion - ultimaPosicionFlechas) > 1) {
-                flechas.style.transform = `translateY(${nuevaPosicion}px)`;
-                ultimaPosicionFlechas = nuevaPosicion;
+            // Ocultar las flechas si el contenido supera el área visible (hay que hacer scroll)
+            // Mostrarlas siempre que el contenido quepa sin scroll
+            const hayOverflow = cartItems.scrollHeight > cartItems.clientHeight + 4;
+            if (hayOverflow) {
+                flechas.classList.add('hidden');
+            } else {
+                flechas.classList.remove('hidden');
+                flechas.style.transform = ''; // limpiar cualquier transform residual
             }
             scrollRafId = requestAnimationFrame(actualizarPosicionFlechas);
         }
