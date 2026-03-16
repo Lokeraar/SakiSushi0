@@ -1,8 +1,8 @@
-// supabase-config.js - VERSIÓN COMPLETA Y CORREGIDA
+// supabase-config.js - VERSI�N COMPLETA Y CORREGIDA
 window.SUPABASE_URL = 'https://iqwwoihiiyrtypyqzhgy.supabase.co';
 window.SUPABASE_ANON_KEY = 'sb_publishable_m4WcF4gmkj1olAj95HMLlA_4yKqPFXm';
 
-// FUNCIÓN PARA INICIALIZAR EL CLIENTE CON UN TOKEN JWT OPCIONAL
+// FUNCI�N PARA INICIALIZAR EL CLIENTE CON UN TOKEN JWT OPCIONAL
 window.inicializarSupabaseCliente = (jwtToken = null) => {
     const options = { 
         auth: { 
@@ -23,7 +23,7 @@ window.inicializarSupabaseCliente = (jwtToken = null) => {
         window.SUPABASE_ANON_KEY,
         options
     );
-    console.log(jwtToken ? '📌 Cliente Supabase inicializado con JWT' : '📌 Cliente Supabase inicializado (anónimo)');
+    console.log(jwtToken ? ' Cliente Supabase inicializado con JWT' : ' Cliente Supabase inicializado (an�nimo)');
     return window.supabaseClient;
 };
 
@@ -33,7 +33,7 @@ if (!window.supabaseClient) {
 }
 
 // ============================================
-// CONFIGURACIÓN GLOBAL
+// CONFIGURACI�N GLOBAL
 // ============================================
 window.configGlobal = {
     tasa_cambio: 400,
@@ -50,7 +50,7 @@ window.configGlobal = {
 };
 
 // ============================================
-// CACHÉ GLOBAL MEJORADO
+// CACH� GLOBAL MEJORADO
 // ============================================
 window.appCache = {
     stock: { data: {}, lastUpdate: 0, duration: 5000 },
@@ -107,14 +107,16 @@ window.getFechaGMT4 = function() {
 window.formatearFechaGMT4 = function(timestamp) {
     if (!timestamp) return 'N/A';
     try {
-        const fecha = new Date(timestamp);
-        const fechaGMT4 = new Date(fecha.toLocaleString('en-US', { timeZone: 'America/Caracas' }));
-        const dia = fechaGMT4.getDate().toString().padStart(2, '0');
-        const mes = (fechaGMT4.getMonth() + 1).toString().padStart(2, '0');
-        const año = fechaGMT4.getFullYear();
-        const horas = fechaGMT4.getHours().toString().padStart(2, '0');
-        const minutos = fechaGMT4.getMinutes().toString().padStart(2, '0');
-        return `${dia}/${mes}/${año} ${horas}:${minutos}`;
+        // Si no tiene offset ni Z, forzar UTC
+        let ts = timestamp;
+        if (typeof ts === 'string' && !ts.endsWith('Z') && !/[+\-]\d{2}:\d{2}$/.test(ts)) ts += 'Z';
+        const fecha = new Date(ts);
+        const opts  = z => fecha.toLocaleString('en-US', { timeZone: 'America/Caracas', ...z });
+        const dia     = String(opts({ day:    'numeric' })).padStart(2, '0');
+        const mes     = String(opts({ month:  'numeric' })).padStart(2, '0');
+        const ano     = opts({ year: 'numeric' });
+        const hhmm    = opts({ hour: '2-digit', minute: '2-digit', hour12: false });
+        return `${dia}/${mes}/${ano} ${hhmm}`;
     } catch (e) {
         return timestamp;
     }
@@ -123,14 +125,15 @@ window.formatearFechaGMT4 = function(timestamp) {
 window.formatearHora12GMT4 = function(timestamp) {
     if (!timestamp) return 'N/A';
     try {
-        const fecha = new Date(timestamp);
-        const fechaGMT4 = new Date(fecha.toLocaleString('en-US', { timeZone: 'America/Caracas' }));
-        let horas = fechaGMT4.getHours();
-        const minutos = fechaGMT4.getMinutes().toString().padStart(2, '0');
-        const ampm = horas >= 12 ? 'pm' : 'am';
-        horas = horas % 12;
-        horas = horas ? horas : 12;
-        return `${horas}:${minutos} ${ampm}`;
+        let ts = timestamp;
+        if (typeof ts === 'string' && !ts.endsWith('Z') && !/[+\-]\d{2}:\d{2}$/.test(ts)) ts += 'Z';
+        const fecha = new Date(ts);
+        return fecha.toLocaleString('en-US', {
+            timeZone: 'America/Caracas',
+            hour:     'numeric',
+            minute:   '2-digit',
+            hour12:   true
+        }).toLowerCase();
     } catch (e) {
         return timestamp;
     }
@@ -209,7 +212,7 @@ window.solicitarPermisoPush = async function(sessionId) {
         return { success: true, subscription };
         
     } catch (error) {
-        console.error('❌ Error en push:', error);
+        console.error(' Error en push:', error);
         return { success: false, error: error.message };
     }
 };
@@ -219,7 +222,7 @@ window.tienePermisoPush = function() {
 };
 
 // ============================================
-// FUNCIONES DE CARGA DE CONFIGURACIÓN
+// FUNCIONES DE CARGA DE CONFIGURACI�N
 // ============================================
 window.cargarConfiguracion = async function() {
     try {
@@ -232,21 +235,21 @@ window.cargarConfiguracion = async function() {
         if (data) window.configGlobal = { ...window.configGlobal, ...data };
         return window.configGlobal;
     } catch (error) {
-        console.error('Error cargando configuración:', error);
+        console.error('Error cargando configuraci�n:', error);
         return window.configGlobal;
     }
 };
 
 // ============================================
-// FUNCIONES DE SUBIDA DE IMÁGENES Y COMPROBANTES
+// FUNCIONES DE SUBIDA DE IM�GENES Y COMPROBANTES
 // ============================================
 window.subirImagenPlatillo = async function(archivoImagen, carpetaAdicional = '') {
     try {
-        if (!archivoImagen) return { success: false, error: 'No se proporcionó archivo' };
+        if (!archivoImagen) return { success: false, error: 'No se proporcion� archivo' };
         const tipoValido = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp', 'image/gif'];
-        if (!tipoValido.includes(archivoImagen.type)) return { success: false, error: 'Tipo de archivo no válido' };
+        if (!tipoValido.includes(archivoImagen.type)) return { success: false, error: 'Tipo de archivo no v�lido' };
         const maxSize = 5 * 1024 * 1024;
-        if (archivoImagen.size > maxSize) return { success: false, error: 'El archivo es demasiado grande. Máximo 5MB' };
+        if (archivoImagen.size > maxSize) return { success: false, error: 'El archivo es demasiado grande. M�ximo 5MB' };
         const timestamp = Date.now();
         const random = Math.random().toString(36).substring(2, 8);
         const extension = archivoImagen.name.split('.').pop();
@@ -283,11 +286,11 @@ window.eliminarImagenPlatillo = async function(urlImagen) {
 
 window.subirComprobante = async function(file, tipo, onProgress) {
     try {
-        if (!file) throw new Error('No se proporcionó archivo');
+        if (!file) throw new Error('No se proporcion� archivo');
         const tipoValido = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp', 'image/gif'];
-        if (!tipoValido.includes(file.type)) throw new Error('Tipo de archivo no válido. Solo imágenes JPG, PNG, WEBP o GIF');
+        if (!tipoValido.includes(file.type)) throw new Error('Tipo de archivo no v�lido. Solo im�genes JPG, PNG, WEBP o GIF');
         const maxSize = 5 * 1024 * 1024;
-        if (file.size > maxSize) throw new Error('El archivo es demasiado grande. Máximo 5MB');
+        if (file.size > maxSize) throw new Error('El archivo es demasiado grande. M�ximo 5MB');
         const timestamp = Date.now();
         const nombreArchivo = `${timestamp}_${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
         const ruta = `${tipo}/${nombreArchivo}`;
@@ -305,7 +308,7 @@ window.subirComprobante = async function(file, tipo, onProgress) {
 };
 
 // ============================================
-// FUNCIONES DE FORMATO Y VALIDACIÓN
+// FUNCIONES DE FORMATO Y VALIDACI�N
 // ============================================
 window.formatBs = function(monto) {
     try {
@@ -355,34 +358,34 @@ window.bsToUsd = function(bs, tasa) {
 };
 
 // ============================================
-// DATOS DE PARROQUIAS Y CATEGORÍAS
+// DATOS DE PARROQUIAS Y CATEGOR�AS
 // ============================================
 window.parroquiasDelivery = [
-    { nombre: "San Bernardino", precioUSD: 2 }, { nombre: "San José", precioUSD: 2 },
-    { nombre: "San Agustín", precioUSD: 2 }, { nombre: "Candelaria", precioUSD: 2 },
+    { nombre: "San Bernardino", precioUSD: 2 }, { nombre: "San Jos�", precioUSD: 2 },
+    { nombre: "San Agust�n", precioUSD: 2 }, { nombre: "Candelaria", precioUSD: 2 },
     { nombre: "San Juan", precioUSD: 3 }, { nombre: "Catedral", precioUSD: 3 },
-    { nombre: "Santa Rosalía", precioUSD: 3 }, { nombre: "El Recreo", precioUSD: 4 },
+    { nombre: "Santa Rosal�a", precioUSD: 3 }, { nombre: "El Recreo", precioUSD: 4 },
     { nombre: "La Candelaria", precioUSD: 2 }, { nombre: "San Pedro", precioUSD: 4 },
-    { nombre: "El Paraíso", precioUSD: 4 }, { nombre: "La Vega", precioUSD: 4 },
+    { nombre: "El Para�so", precioUSD: 4 }, { nombre: "La Vega", precioUSD: 4 },
     { nombre: "El Valle", precioUSD: 5 }, { nombre: "Coche", precioUSD: 5 },
-    { nombre: "Caricuao", precioUSD: 7 }, { nombre: "Antímano", precioUSD: 7 },
+    { nombre: "Caricuao", precioUSD: 7 }, { nombre: "Ant�mano", precioUSD: 7 },
     { nombre: "Macarao", precioUSD: 7 }, { nombre: "23 de Enero", precioUSD: 4 },
     { nombre: "La Pastora", precioUSD: 3 }, { nombre: "Altagracia", precioUSD: 3 },
-    { nombre: "Santa Teresa", precioUSD: 3 }, { nombre: "Santa Rosalía de Palermo", precioUSD: 3 },
-    { nombre: "Chacao", precioUSD: 5 }, { nombre: "Leoncio Martínez", precioUSD: 6 },
+    { nombre: "Santa Teresa", precioUSD: 3 }, { nombre: "Santa Rosal�a de Palermo", precioUSD: 3 },
+    { nombre: "Chacao", precioUSD: 5 }, { nombre: "Leoncio Mart�nez", precioUSD: 6 },
     { nombre: "Petare", precioUSD: 6 }, { nombre: "La Dolorita", precioUSD: 6 },
-    { nombre: "Fila de Mariches", precioUSD: 6 }, { nombre: "Caucagüita", precioUSD: 7 },
+    { nombre: "Fila de Mariches", precioUSD: 6 }, { nombre: "Caucag�ita", precioUSD: 7 },
     { nombre: "El Cafetal", precioUSD: 6 }, { nombre: "Las Minas", precioUSD: 5 },
-    { nombre: "Nuestra Señora del Rosario", precioUSD: 7 }, { nombre: "Sucre", precioUSD: 7 },
+    { nombre: "Nuestra Se�ora del Rosario", precioUSD: 7 }, { nombre: "Sucre", precioUSD: 7 },
     { nombre: "El Junquito", precioUSD: 7 }
 ];
 
 window.categoriasMenu = {
-    "Entradas": [], "Sushi": [], "Rolls": ["Rolls Fríos de 10 piezas", "Rolls Tempura de 12 piezas"],
+    "Entradas": [], "Sushi": [], "Rolls": ["Rolls Fr�os de 10 piezas", "Rolls Tempura de 12 piezas"],
     "Tragos y bebidas": [], "Pokes": [], "Ensaladas": [],
     "Comida China": ["Arroz Chino", "Arroz Cantones", "Chopsuey", "Lomey", "Chow Mein", "Fideos de Arroz", "Tallarines Cantones", "Mariscos", "Foo Yong", "Sopas", "Entremeses"],
     "Comida Japonesa": ["Yakimeshi", "Yakisoba", "Pasta Udon", "Churrasco"],
-    "Ofertas Especiales": [], "Para Niños": [], "Combo Ejecutivo": []
+    "Ofertas Especiales": [], "Para Ni�os": [], "Combo Ejecutivo": []
 };
 
 // ============================================
@@ -417,7 +420,7 @@ window.actualizarBadgeNotificaciones = function(conteo) {
     }
 };
 
-console.log('✅ supabase-config.js cargado correctamente');
-console.log('   - Anon key:', window.SUPABASE_ANON_KEY ? '✅' : '❌');
-console.log('   - VAPID Public Key:', window.VAPID_PUBLIC_KEY ? '✅' : '❌');
-console.log('   - GMT-4 functions:', typeof window.formatearFechaGMT4 === 'function' ? '✅' : '❌');
+console.log(' supabase-config.js cargado correctamente');
+console.log('   - Anon key:', window.SUPABASE_ANON_KEY ? '' : '');
+console.log('   - VAPID Public Key:', window.VAPID_PUBLIC_KEY ? '' : '');
+console.log('   - GMT-4 functions:', typeof window.formatearFechaGMT4 === 'function' ? '' : '');
