@@ -2087,7 +2087,7 @@
             try {
                 const pedidoParaRPC = {
                     id: pedido.id,
-                    timestamp: pedido.timestamp,
+                    fecha: pedido.fecha || new Date().toISOString(),
                     estado: pedido.estado,
                     tipo: pedido.tipo,
                     total: pedido.total,
@@ -2102,7 +2102,8 @@
                     comprobante_url: pedido.comprobante_url || null,
                     costo_delivery: pedido.costo_delivery || 0,
                     costo_delivery_usd: pedido.costo_delivery_usd || 0,
-                    costo_delivery_bs: pedido.costo_delivery_bs || 0
+                    costo_delivery_bs: pedido.costo_delivery_bs || 0,
+                    tasa_aplicada: pedido.tasa_aplicada || configGlobal?.tasa_efectiva || 400
                 };
                 const { data, error } = await window.supabaseClient.rpc('crear_pedido_con_reserva', { p_pedido: pedidoParaRPC, p_items: pedido.items });
                 if (error) throw error;
