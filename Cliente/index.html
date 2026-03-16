@@ -1430,6 +1430,7 @@
                     item.classList.add('active');
                     document.querySelectorAll('.subcategory-list').forEach(list => list.classList.remove('expanded'));
                     document.getElementById('categoryTitle').textContent = categoria === 'todos' ? 'Menú' : item.querySelector('span').textContent.replace(/^[^\s]+\s/, '');
+                    document.getElementById('searchInput').value = '';
                     renderizarMenuPaginado(categoria === 'todos' ? null : categoria);
                     if (window.innerWidth <= 992) cerrarMenuCategorias();
                 });
@@ -1445,6 +1446,7 @@
                     document.querySelectorAll('.subcategory-item').forEach(s => s.classList.remove('active'));
                     item.classList.add('active');
                     document.getElementById('categoryTitle').textContent = subcategoria;
+                    document.getElementById('searchInput').value = '';
                     renderizarMenuPaginado(categoria, subcategoria);
                     if (window.innerWidth <= 992) cerrarMenuCategorias();
                 });
