@@ -273,10 +273,12 @@
         .voice-search-btn:hover{background:rgba(255,255,255,.1)}
         .voice-search-btn.listening{color:var(--danger);animation:pulse 1s infinite}
         @keyframes pulse{0%{opacity:1}50%{opacity:0.5}100%{opacity:1}}
-        .historial-pedidos{position:fixed;bottom:20px;left:20px;background:rgba(0,0,0,.7);backdrop-filter:blur(10px);border-radius:30px;padding:8px 15px;color:white;font-size:.9rem;display:flex;align-items:center;gap:10px;cursor:pointer;z-index:900;border:1px solid rgba(255,255,255,.1)}
+        .historial-pedidos{position:fixed;bottom:20px;left:20px;background:rgba(0,0,0,.7);backdrop-filter:blur(10px);border-radius:30px;padding:8px 15px;color:white;font-size:.9rem;display:flex;align-items:center;gap:10px;cursor:pointer;z-index:900;border:1px solid rgba(255,255,255,.1);transition:padding .3s ease,gap .3s ease}
         .historial-pedidos:hover{background:rgba(0,0,0,.9)}
         .historial-pedidos i{color:var(--accent)}
-        .historial-pedidos span{font-weight:600}
+        .historial-pedidos span{font-weight:600;transition:opacity .2s ease,max-width .3s ease,margin .3s ease;overflow:hidden;white-space:nowrap}
+        .historial-pedidos.comprimido{padding:8px 12px;gap:0}
+        .historial-pedidos.comprimido span{opacity:0;max-width:0;margin:0}
         .historial-modal .pedido-item{padding:1rem;border-bottom:1px solid rgba(255,255,255,.1);cursor:pointer;transition:background .2s}
         .historial-modal .pedido-item:hover{background:rgba(255,255,255,.05)}
         .historial-modal .pedido-fecha{font-size:.8rem;color:var(--gray-400)}
@@ -459,26 +461,23 @@
         .bg-light{background:var(--light-bg)}
         .text-center{text-align:center}
 
-        /* ── Animaciones botones de acción del carrito ── */
-        @keyframes btn-borde-vibrar {
-            0%,100%{ box-shadow:0 0 0 0 transparent; transform:translateX(0); }
-            10%    { transform:translateX(-3px); box-shadow:0 0 0 3px var(--accent); }
-            20%    { transform:translateX(3px);  box-shadow:0 0 0 3px var(--accent); }
-            30%    { transform:translateX(-3px); box-shadow:0 0 0 3px var(--accent); }
-            40%    { transform:translateX(3px);  box-shadow:0 0 0 3px var(--accent); }
-            55%    { transform:translateX(-2px); box-shadow:0 0 0 3px var(--accent); }
-            70%    { transform:translateX(2px);  box-shadow:0 0 0 2px var(--accent); }
-            85%    { transform:translateX(-1px); box-shadow:0 0 0 1px var(--accent); }
-        }
-        @keyframes btn-destello {
-            0%,100%{ filter:brightness(1); }
-            25%    { filter:brightness(1.65) saturate(1.4); }
-            50%    { filter:brightness(1); }
-            75%    { filter:brightness(1.5) saturate(1.3); }
+        /* ── Animación nudge estilo MSN Messenger ── */
+        @keyframes btn-zumbido {
+            0%              { transform: translateX(0); }
+            6%              { transform: translateX(-18px); }
+            12%             { transform: translateX(18px); }
+            18%             { transform: translateX(-15px); }
+            24%             { transform: translateX(15px); }
+            30%             { transform: translateX(-10px); }
+            36%             { transform: translateX(10px); }
+            42%             { transform: translateX(-6px); }
+            48%             { transform: translateX(6px); }
+            54%             { transform: translateX(-3px); }
+            60%             { transform: translateX(3px); }
+            70%,100%        { transform: translateX(0); }
         }
         .btn-accion-animate {
-            animation: btn-borde-vibrar 0.9s ease forwards,
-                        btn-destello     0.9s ease forwards;
+            animation: btn-zumbido 0.7s ease forwards;
         }
     </style>
 </head>
@@ -1080,9 +1079,11 @@
         }
 
         function abrirHistorialPedidos() {
+            // Expandir el botón al abrir
+            const btn = document.getElementById('historialPedidosBtn');
+            if (btn) btn.classList.remove('comprimido');
             const modal = document.getElementById('historialModal');
             const body = document.getElementById('historialModalBody');
-            
             if (historialPedidos.length === 0) {
                 body.innerHTML = '<div class="empty-state"><i class="fas fa-history"></i><p>No hay pedidos anteriores</p></div>';
             } else {
@@ -1104,6 +1105,11 @@
 
         function cerrarHistorial() {
             document.getElementById('historialModal').classList.remove('active');
+            // Comprimir el botón 3 segundos después de cerrar el modal
+            setTimeout(() => {
+                const btn = document.getElementById('historialPedidosBtn');
+                if (btn && btn.style.display !== 'none') btn.classList.add('comprimido');
+            }, 3000);
         }
 
         async function repetirPedido(pedidoId) {
@@ -2428,9 +2434,16 @@
             });
             document.getElementById('confirmarPedidoAnterior').addEventListener('click', () => {
                 if (window.pedidoAnterior && window.pedidoAnterior.length > 0) {
-                    carrito = window.pedidoAnterior; guardarCarrito(); actualizarCarritoUI(); actualizarCarritoBadge();
+                    carrito = window.pedidoAnterior;
+                    guardarCarrito();
+                    actualizarCarritoBadge();
                     window.stockCache.invalidate();
                     mostrarToast('🔄 Pedido anterior restaurado', 'success');
+                    if (window.innerWidth <= 992) {
+                        document.getElementById('cartSidebar').classList.add('open');
+                        document.getElementById('overlay').classList.add('active');
+                    }
+                    _enfocarUltimoItemCarrito(carrito[carrito.length - 1]);
                 }
                 document.getElementById('continuarDialogo').remove();
                 window.pedidoAnterior = null;
@@ -2739,6 +2752,11 @@
             actualizarCarritoBadge();
             verificarPermisosAudio();
             actualizarBotonHistorial();
+            // Comprimir el botón de historial 3 segundos después de cargar la página
+            setTimeout(() => {
+                const btn = document.getElementById('historialPedidosBtn');
+                if (btn && btn.style.display !== 'none') btn.classList.add('comprimido');
+            }, 3000);
             
             const hoy = new Date().toISOString().split('T')[0];
             document.getElementById('fechaReserva').min = hoy;
