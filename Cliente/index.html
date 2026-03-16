@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
+        /* ... (Estilos existentes - sin cambios para mantener la respuesta compacta) ... */
         *{margin:0;padding:0;box-sizing:border-box}
         :root{
             --primary:#D32F2F;
@@ -1472,9 +1473,7 @@
             } else {
                 iniciarSeguimientoScroll();
             }
-            // _enfocarUltimoItemCarrito setea nivel1Activo/nivel2Activo y llama
-            // a actualizarCarritoUI internamente para que el HTML nazca expandido,
-            // luego hace scroll al ítem en el siguiente frame de pintura.
+            // Enfocar el último ítem agregado
             _enfocarUltimoItemCarrito(nuevaInstancia);
         }
 
@@ -1749,7 +1748,10 @@
             } else {
                 iniciarSeguimientoScroll();
             }
-            if (nuevasInstancias.length > 0) _enfocarUltimoItemCarrito(nuevasInstancias[nuevasInstancias.length - 1]);
+            // Enfocar el último ítem agregado del lote
+            if (nuevasInstancias.length > 0) {
+                _enfocarUltimoItemCarrito(nuevasInstancias[nuevasInstancias.length - 1]);
+            }
         }
 
         // ============================================
