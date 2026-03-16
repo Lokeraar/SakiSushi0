@@ -10,7 +10,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        /* ... (Estilos existentes - sin cambios para mantener la respuesta compacta) ... */
         *{margin:0;padding:0;box-sizing:border-box}
         :root{
             --primary:#D32F2F;
@@ -1473,7 +1472,9 @@
             } else {
                 iniciarSeguimientoScroll();
             }
-            // Enfocar el último ítem agregado
+            // _enfocarUltimoItemCarrito setea nivel1Activo/nivel2Activo y llama
+            // a actualizarCarritoUI internamente para que el HTML nazca expandido,
+            // luego hace scroll al ítem en el siguiente frame de pintura.
             _enfocarUltimoItemCarrito(nuevaInstancia);
         }
 
@@ -1748,10 +1749,7 @@
             } else {
                 iniciarSeguimientoScroll();
             }
-            // Enfocar el último ítem agregado del lote
-            if (nuevasInstancias.length > 0) {
-                _enfocarUltimoItemCarrito(nuevasInstancias[nuevasInstancias.length - 1]);
-            }
+            if (nuevasInstancias.length > 0) _enfocarUltimoItemCarrito(nuevasInstancias[nuevasInstancias.length - 1]);
         }
 
         // ============================================
@@ -1824,43 +1822,33 @@
         function _enfocarUltimoItemCarrito(instancia) {
             if (!instancia) return;
 
+            // Pre-expandir niveles con los IDs exactos que genera el render
             const grupoId    = instancia.platilloId.replace(/[^a-zA-Z0-9]/g, '_');
             const persKey    = (instancia.personalizacion || []).slice().sort().join('|');
             const subgrupoId = `${grupoId}_${instancia.platilloId}_${persKey.replace(/[^a-zA-Z0-9]/g, '_')}`;
-
             nivel1Activo = grupoId;
             nivel2Activo = subgrupoId;
             actualizarCarritoUI();
 
-            function hacerScroll() {
-                const cartItemsEl = document.getElementById('cartItems');
+            // Scroll al ítem usando scrollIntoView — la misma técnica que funcionaba antes.
+            // En móvil esperamos que termine la transición CSS del sidebar (transform .3s ease)
+            // antes de ejecutarlo; en desktop basta con un setTimeout mínimo.
+            function ejecutarScroll() {
                 const itemEl = document.querySelector(`[data-instancia-id="${instancia.id}"]`);
-                if (!cartItemsEl || !itemEl) return;
-
-                const headerEl = document.querySelector('header') || document.querySelector('.header');
-                const headerH  = headerEl ? headerEl.getBoundingClientRect().height : 110;
-                const alturaVisible = window.innerHeight - headerH;
-
-                let top = 0, el = itemEl;
-                while (el && el !== cartItemsEl) { top += el.offsetTop; el = el.offsetParent; }
-
-                const destino = top - (alturaVisible / 2) + (itemEl.offsetHeight / 2);
-                cartItemsEl.scrollTo({ top: Math.max(0, destino), behavior: 'smooth' });
+                if (itemEl) itemEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }
 
             const cartSidebarEl = document.getElementById('cartSidebar');
             const esMobil = window.innerWidth <= 992;
 
-            if (esMobil && cartSidebarEl) {
-                // Esperar exactamente a que termine la transición CSS del sidebar (transform .3s)
+            if (esMobil && cartSidebarEl && cartSidebarEl.classList.contains('open')) {
                 cartSidebarEl.addEventListener('transitionend', function onEnd(e) {
                     if (e.propertyName !== 'transform') return;
                     cartSidebarEl.removeEventListener('transitionend', onEnd);
-                    requestAnimationFrame(() => requestAnimationFrame(hacerScroll));
+                    ejecutarScroll();
                 });
             } else {
-                // Desktop: el carrito siempre está visible, solo esperar el repintado
-                requestAnimationFrame(() => requestAnimationFrame(hacerScroll));
+                setTimeout(ejecutarScroll, 50);
             }
         }
 
