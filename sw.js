@@ -68,15 +68,21 @@ self.addEventListener('message', (event) => {
         const titulo  = event.data.titulo  || '🍣 Saki Sushi';
         const mensaje = event.data.mensaje || 'Tienes una nueva notificación';
         const url     = event.data.url     || '/SakiSushi0/Cliente/';
+        const tipo    = event.data.tipo    || 'info';
 
         const options = {
             body:    mensaje,
             icon:    '/SakiSushi0/icons/icon-192x192.png',
             badge:   '/SakiSushi0/icons/badge-72x72.png',
             vibrate: [200, 100, 200],
+            silent:  false,
             tag:     'saki-local-' + Date.now(),
             renotify: true,
-            data: { url }
+            data: { url, tipo },
+            actions: [
+                { action: 'ver', title: '👁 Ver pedido' },
+                { action: 'cerrar', title: 'Cerrar' }
+            ]
         };
 
         event.waitUntil(
