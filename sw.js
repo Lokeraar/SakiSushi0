@@ -34,8 +34,8 @@ self.addEventListener('push', (event) => {
     const titulo  = data.titulo  || '🍣 Saki Sushi';
     const mensaje = data.mensaje || 'Tienes una nueva notificación';
     const url     = data.url     || '/SakiSushi0/Cliente/';
-    const icon    = data.icon    || '/SakiSushi0/icons/icon-192x192.png';
-    const badge   = data.badge   || '/SakiSushi0/icons/badge-72x72.png';
+    const icon    = data.icon    || 'https://lh3.googleusercontent.com/pw/AP1GczPrZAoWxmsOGRD9xl1hO5Q65JXuwUZzoR6gUk-cw5lVmarxQe_-lwqpA60tTKLlXfpvIjAJlKC6jFls-xETJOPkebLIIPhbGlUkknmhrRbdhMUll2UViGSUj3WmHKg2YEsZlAfxBPPTjIHhScjD0jfe=w1439-h1439-s-no-gm';
+    const badge   = data.badge   || 'https://lh3.googleusercontent.com/pw/AP1GczPrZAoWxmsOGRD9xl1hO5Q65JXuwUZzoR6gUk-cw5lVmarxQe_-lwqpA60tTKLlXfpvIjAJlKC6jFls-xETJOPkebLIIPhbGlUkknmhrRbdhMUll2UViGSUj3WmHKg2YEsZlAfxBPPTjIHhScjD0jfe=w1439-h1439-s-no-gm';
 
     const options = {
         body:    mensaje,
@@ -72,8 +72,8 @@ self.addEventListener('message', (event) => {
 
         const options = {
             body:    mensaje,
-            icon:    '/SakiSushi0/icons/icon-192x192.png',
-            badge:   '/SakiSushi0/icons/badge-72x72.png',
+            icon:    'https://lh3.googleusercontent.com/pw/AP1GczPrZAoWxmsOGRD9xl1hO5Q65JXuwUZzoR6gUk-cw5lVmarxQe_-lwqpA60tTKLlXfpvIjAJlKC6jFls-xETJOPkebLIIPhbGlUkknmhrRbdhMUll2UViGSUj3WmHKg2YEsZlAfxBPPTjIHhScjD0jfe=w1439-h1439-s-no-gm',
+            badge:   'https://lh3.googleusercontent.com/pw/AP1GczPrZAoWxmsOGRD9xl1hO5Q65JXuwUZzoR6gUk-cw5lVmarxQe_-lwqpA60tTKLlXfpvIjAJlKC6jFls-xETJOPkebLIIPhbGlUkknmhrRbdhMUll2UViGSUj3WmHKg2YEsZlAfxBPPTjIHhScjD0jfe=w1439-h1439-s-no-gm',
             vibrate: [200, 100, 200],
             silent:  false,
             tag:     'saki-local-' + Date.now(),
