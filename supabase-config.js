@@ -4,26 +4,26 @@ window.SUPABASE_ANON_KEY = 'sb_publishable_m4WcF4gmkj1olAj95HMLlA_4yKqPFXm';
 
 // FUNCI�N PARA INICIALIZAR EL CLIENTE CON UN TOKEN JWT OPCIONAL
 window.inicializarSupabaseCliente = (jwtToken = null) => {
-    const options = { 
-        auth: { 
+    const options = {
+        auth: {
             persistSession: false,
             autoRefreshToken: false,
             detectSessionInUrl: false
-        } 
+        },
+        realtime: {
+            heartbeatIntervalMs: 60000,
+            reconnectAfterMs: (tries) => Math.min(tries * 2000, 30000)
+        }
     };
     if (jwtToken) {
-        options.global = {
-            headers: {
-                Authorization: `Bearer ${jwtToken}`
-            }
-        };
+        options.global = { headers: { Authorization: `Bearer ${jwtToken}` } };
     }
     window.supabaseClient = window.supabase.createClient(
         window.SUPABASE_URL,
         window.SUPABASE_ANON_KEY,
         options
     );
-    console.log(jwtToken ? ' Cliente Supabase inicializado con JWT' : ' Cliente Supabase inicializado (an�nimo)');
+    console.log(jwtToken ? 'Cliente Supabase con JWT' : 'Cliente Supabase anonimo');
     return window.supabaseClient;
 };
 
