@@ -1779,10 +1779,14 @@
             document.querySelectorAll('.ingrediente-check').forEach(cb => cb.checked = false);
             const completoOption = document.querySelector('#ingredientesList').previousElementSibling;
             if (completoOption) {
-                completoOption.style.background = 'rgba(56,142,60,.1)';
+                completoOption.style.background = 'rgba(56,142,60,.12)';
                 completoOption.style.borderColor = 'var(--success)';
                 const circle = completoOption.querySelector('div > div:first-child');
                 if (circle) { circle.style.background = 'var(--success)'; circle.innerHTML = '<i class="fas fa-check" style="font-size:.7rem"></i>'; }
+                const titulo = completoOption.querySelector('div > div:last-child > div:first-child');
+                const subtitulo = completoOption.querySelector('div > div:last-child > div:last-child');
+                if (titulo) titulo.style.color = 'var(--customize-text)';
+                if (subtitulo) subtitulo.style.color = 'var(--customize-subtext)';
             }
             calcularPrecioPersonalizado();
         }
@@ -1792,10 +1796,14 @@
             currentCustomizeItem.selectionType = 'personalizado';
             const completoOption = document.querySelector('#ingredientesList').previousElementSibling;
             if (completoOption) {
-                completoOption.style.background = 'rgba(0,0,0,.2)';
+                completoOption.style.background = 'var(--customize-row-bg)';
                 completoOption.style.borderColor = 'transparent';
                 const circle = completoOption.querySelector('div > div:first-child');
-                if (circle) { circle.style.background = 'var(--gray-300)'; circle.innerHTML = ''; }
+                if (circle) { circle.style.background = 'var(--gray-400)'; circle.innerHTML = ''; }
+                const titulo = completoOption.querySelector('div > div:last-child > div:first-child');
+                const subtitulo = completoOption.querySelector('div > div:last-child > div:last-child');
+                if (titulo) titulo.style.color = 'var(--customize-text)';
+                if (subtitulo) subtitulo.style.color = 'var(--customize-subtext)';
             }
             calcularPrecioPersonalizado();
         }
