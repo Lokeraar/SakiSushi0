@@ -263,29 +263,19 @@
         .nivel1-header .header-details i{font-size:.8rem}
         .nivel2-container{max-height:0;overflow:hidden;transition:max-height .3s ease-out;background:rgba(0,0,0,.2)}
         .nivel2-container.expanded{max-height:1000px;transition:max-height .5s ease-in}
-        /* Nivel 2 y nivel 3 ocupan el mismo ancho que nivel 1 — sin indentación */
-        .nivel2-group{border-radius:0;overflow:hidden;border:none;border-top:1px solid rgba(255,255,255,.08);margin:0}
-        .nivel2-header{background:var(--nivel2-bg);color:var(--nivel2-text);padding:.8rem 1rem;display:flex;flex-direction:column;gap:.3rem;cursor:pointer;transition:background .2s}
+        .nivel2-group{margin:.5rem;border-radius:var(--radius-sm);overflow:hidden;border:1px solid var(--nivel2-border)}
+        .nivel2-header{background:var(--nivel2-bg);color:var(--nivel2-text);padding:.6rem 1rem;display:flex;flex-direction:column;gap:.2rem;cursor:pointer;transition:background .2s}
         .nivel2-header:hover{background:#FFE0B2}
         .nivel2-header .header-row{display:flex;align-items:center;justify-content:space-between;width:100%}
-        .nivel2-header .header-row .nombre{display:flex;align-items:center;gap:.5rem;font-weight:600;font-size:1rem}
-        .nivel2-header .header-row .nombre i{font-size:1rem;width:20px;transition:transform .3s}
+        .nivel2-header .header-row .nombre{display:flex;align-items:center;gap:.5rem;font-weight:600;font-size:.95rem}
+        .nivel2-header .header-row .nombre i{font-size:.9rem;width:18px;transition:transform .3s}
         .nivel2-header .header-row .nombre i.rotated{transform:rotate(90deg)}
-        .nivel2-header .header-details{display:flex;align-items:center;gap:1rem;font-size:.9rem;color:var(--nivel2-text);padding-left:1.8rem}
+        .nivel2-header .header-details{display:flex;align-items:center;gap:.8rem;font-size:.85rem;color:var(--nivel2-text);padding-left:1.8rem}
         .nivel2-header .header-details span{display:flex;align-items:center;gap:.3rem}
-        /* Columna derecha del header: unidades + basurero apilados */
-        .nivel-header-right{display:flex;flex-direction:column;align-items:center;gap:.25rem;flex-shrink:0}
         .nivel3-container{max-height:0;overflow:hidden;transition:max-height .3s ease-out;background:var(--nivel3-bg)}
         .nivel3-container.expanded{max-height:500px;transition:max-height .4s ease-in}
-        /* Nivel 3: imagen | nombre+num (flex wrap) | precio | basurero */
-        .nivel3-item{display:grid;grid-template-columns:40px 1fr auto auto;grid-template-rows:auto;align-items:start;gap:.5rem .6rem;padding:.8rem;border-bottom:1px solid var(--nivel3-border);background:var(--nivel3-bg)}
+        .nivel3-item{display:flex;align-items:center;gap:.8rem;padding:.8rem;border-bottom:1px solid var(--nivel3-border);background:var(--nivel3-bg)}
         .nivel3-item:last-child{border-bottom:none}
-        .nivel3-item .item-image{width:40px;height:40px;border-radius:var(--radius-sm);background-size:cover;background-position:center;background-color:var(--gray-200);grid-row:1;grid-column:1;flex-shrink:0}
-        .nivel3-item .item-info{grid-column:2;grid-row:1;min-width:0;word-break:break-word}
-        .nivel3-item .item-precio{grid-column:3;grid-row:1;font-weight:600;color:var(--secondary);font-size:.9rem;white-space:nowrap;text-align:right;padding-top:2px}
-        .nivel3-item .btn-remove-item{grid-column:4;grid-row:1;margin-top:0;padding-top:2px}
-        .btn-borrar-grupo{background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.3);color:var(--danger);cursor:pointer;font-size:.7rem;padding:.25rem .5rem;border-radius:20px;opacity:.85;transition:all .2s;display:flex;align-items:center;gap:.25rem;white-space:nowrap;font-weight:600}
-        .btn-borrar-grupo:hover{opacity:1;background:rgba(239,68,68,.22);border-color:var(--danger)}
         .item-image{width:40px;height:40px;border-radius:var(--radius-sm);background-size:cover;background-position:center;background-color:var(--gray-200);flex-shrink:0}
         .item-info{flex:1;min-width:0}
         .item-info .item-number{font-weight:700;color:var(--primary);font-size:.85rem;margin-right:.5rem}
@@ -465,11 +455,8 @@
         .toast.info{background:var(--info)}
         .toast.warning{background:var(--warning)}
         @keyframes slideUp{from{transform:translate(-50%,20px);opacity:0}to{transform:translate(-50%,0);opacity:1}}
-        #cartIndicatorContainer{display:none}
-        /* Flechas sticky: se pegan al top del scroll dentro de cart-items */
-        .scroll-indicator-cascade{display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;cursor:pointer;opacity:0.9;transition:opacity 0.3s;background:rgba(20,20,40,.97);border-radius:0 0 18px 18px;padding:8px 0 6px;backdrop-filter:blur(10px);box-shadow:0 4px 20px rgba(0,0,0,.5);pointer-events:auto;position:sticky;top:0;z-index:10;margin-bottom:.5rem}
-        /* Tema claro: fondo oscuro para garantizar contraste en cualquier tema */
-        body.tema-claro .scroll-indicator-cascade{background:rgba(20,20,40,.93)}
+        .scroll-indicator-cascade{display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;margin-top:.5rem;cursor:pointer;opacity:0.9;transition:opacity 0.3s;background:rgba(26,26,46,.9);border-radius:30px;padding:5px 0;backdrop-filter:blur(5px);box-shadow:0 -5px 15px rgba(0,0,0,.3);pointer-events:auto;flex-shrink:0;position:sticky;bottom:0;z-index:5}
+        body.tema-claro .scroll-indicator-cascade{background:rgba(220,220,235,.95)}
         .scroll-indicator-cascade.hidden{display:none}
         .scroll-indicator-cascade:hover{opacity:1}
         .cascade-arrow{font-size:1.5rem;color:var(--accent);filter:drop-shadow(0 0 5px rgba(255,152,0,0.5));animation:cascadeDown 1.5s infinite}
@@ -477,8 +464,7 @@
         .cascade-arrow:nth-child(2){animation-delay:0.2s}
         .cascade-arrow:nth-child(3){animation-delay:0.4s}
         @keyframes cascadeDown{0%{transform:translateY(0);opacity:0.3}50%{transform:translateY(8px);opacity:1}100%{transform:translateY(0);opacity:0.3}}
-        /* Texto siempre blanco sobre fondo oscuro — legible en ambos temas */
-        .cascade-text{font-size:0.75rem;color:#ffffff;margin-top:0.1rem;font-weight:600;letter-spacing:1px;text-shadow:0 1px 3px rgba(0,0,0,.8)}
+        .cascade-text{font-size:0.75rem;color:var(--gray-300);margin-top:0.1rem;font-weight:500;letter-spacing:1px}
         .payment-timer{background:linear-gradient(135deg,var(--warning),#F57C00);color:white;padding:1rem;border-radius:10px;text-align:center;margin-bottom:1rem;font-family:'Montserrat',sans-serif}
         .timer-display{font-size:1.8rem;font-weight:700;margin-top:5px;font-family:monospace}
         .asterisk{color:var(--danger);margin-left:2px;font-weight:bold}
@@ -640,7 +626,6 @@
                         <h3><i class="fas fa-shopping-cart"></i> Tu Pedido</h3>
                         <button id="closeCart"><i class="fas fa-times"></i></button>
                     </div>
-                    <div id="cartIndicatorContainer" style="display:none;"></div>
                     <div class="cart-items" id="cartItems">
                         <div class="cart-empty"><i class="fas fa-shopping-basket"></i><p>Tu carrito está vacío</p><small>¡Agrega algunos platillos!</small></div>
                     </div>
@@ -1631,8 +1616,8 @@
                 cartFooter.style.display = 'none';
                 nivel1Activo = null; nivel2Activo = null;
                 detenerSeguimientoScroll();
-                const indicatorContainer = document.getElementById('cartIndicatorContainer');
-                if (indicatorContainer) { indicatorContainer.innerHTML = ''; indicatorContainer.style.display = 'none'; }
+                const flechas = document.querySelector('.scroll-indicator-cascade');
+                if (flechas) flechas.classList.add('hidden');
                 return;
             }
             
@@ -1643,7 +1628,7 @@
             grupos.forEach(grupo => {
                 totalGeneral += grupo.subtotal;
                 const nivel1Expandido = nivel1Activo === grupo.id;
-                html += `<div class="nivel1-group"><div class="nivel1-header" onclick="toggleNivel1('${grupo.id}')"><div class="header-row"><div class="nombre"><i class="fas fa-chevron-right" id="icon1-${grupo.id}" ${nivel1Expandido ? 'class="rotated"' : ''}></i><span>🍣 ${grupo.nombre}</span></div><div class="nivel-header-right"><span class="cantidad-total">${grupo.cantidad} unid.</span><button class="btn-borrar-grupo" onclick="event.stopPropagation();borrarGrupoNivel1('${grupo.id}')" title="Eliminar todos"><i class="fas fa-trash-alt"></i> Borrar todos</button></div></div><div class="header-details"><span><i class="fas fa-tag"></i> Total: ${formatBs(grupo.subtotal)}</span></div></div><div class="nivel2-container ${nivel1Expandido ? 'expanded' : ''}" id="nivel1-${grupo.id}">`;
+                html += `<div class="nivel1-group"><div class="nivel1-header" onclick="toggleNivel1('${grupo.id}')"><div class="header-row"><div class="nombre"><i class="fas fa-chevron-right" id="icon1-${grupo.id}" ${nivel1Expandido ? 'class="rotated"' : ''}></i><span>🍣 ${grupo.nombre}</span></div><span class="cantidad-total">${grupo.cantidad} unid.</span></div><div class="header-details"><span><i class="fas fa-tag"></i> Total: ${formatBs(grupo.subtotal)}</span></div></div><div class="nivel2-container ${nivel1Expandido ? 'expanded' : ''}" id="nivel1-${grupo.id}">`;
                 
                 grupo.subgrupos.forEach(subgrupo => {
                     const subgrupoId = `${grupo.id}_${subgrupo.id}`;
@@ -1653,7 +1638,7 @@
                         const ingredientesNombres = subgrupo.personalizacion.map(p => inventario.find(i => i.id === p)?.nombre || p).join(', ');
                         descripcionPersonalizacion = `Sin: ${ingredientesNombres}`;
                     }
-                    html += `<div class="nivel2-group"><div class="nivel2-header" onclick="toggleNivel2('${subgrupoId}','${grupo.id}')"><div class="header-row"><div class="nombre"><i class="fas fa-chevron-right" id="icon2-${subgrupoId}" ${nivel2Expandido ? 'class="rotated"' : ''}></i><span>🔹 ${descripcionPersonalizacion}</span></div><div class="nivel-header-right"><span class="cantidad-subtotal">${subgrupo.cantidad} unid.</span><button class="btn-borrar-grupo" onclick="event.stopPropagation();borrarGrupoNivel2('${subgrupoId}')" title="Eliminar todos"><i class="fas fa-trash-alt"></i> Borrar todos</button></div></div><div class="header-details"><span><i class="fas fa-tag"></i> Subtotal: ${formatBs(subgrupo.subtotal)}</span></div></div><div class="nivel3-container ${nivel2Expandido ? 'expanded' : ''}" id="nivel2-${subgrupoId}">`;
+                    html += `<div class="nivel2-group"><div class="nivel2-header" onclick="toggleNivel2('${subgrupoId}','${grupo.id}')"><div class="header-row"><div class="nombre"><i class="fas fa-chevron-right" id="icon2-${subgrupoId}" ${nivel2Expandido ? 'class="rotated"' : ''}></i><span>🔹 ${descripcionPersonalizacion}</span></div><span class="cantidad-subtotal">${subgrupo.cantidad} unid.</span></div><div class="header-details"><span><i class="fas fa-tag"></i> Subtotal: ${formatBs(subgrupo.subtotal)}</span></div></div><div class="nivel3-container ${nivel2Expandido ? 'expanded' : ''}" id="nivel2-${subgrupoId}">`;
                     
                     subgrupo.items.forEach((item, index) => {
                         const ingredientesNombres = item.personalizacion.map(p => inventario.find(i => i.id === p)?.nombre || p).join(', ');
@@ -1666,14 +1651,11 @@
             
             const flechasHTML = `<div class="scroll-indicator-cascade" onclick="irABotonesAccion()"><i class="fas fa-chevron-down cascade-arrow"></i><i class="fas fa-chevron-down cascade-arrow"></i><i class="fas fa-chevron-down cascade-arrow"></i><span class="cascade-text">Toca y haz tu pedido</span></div>`;
             if (carrito.length > 0) {
-                cartItems.innerHTML = flechasHTML + html;
-                // Registrar listener de scroll para mostrar/ocultar flechas según visibilidad de botones
-                setTimeout(() => _registrarScrollCarrito(), 100);
-            } else {
-                cartItems.innerHTML = html;
+                html += flechasHTML;
+                iniciarSeguimientoScroll();
             }
-            const indicatorContainer = document.getElementById('cartIndicatorContainer');
-            if (indicatorContainer) indicatorContainer.innerHTML = '';
+            
+            cartItems.innerHTML = html;
             cartTotal.textContent = formatBs(totalGeneral);
             cartButtons.innerHTML = '';
             
@@ -1818,27 +1800,7 @@
             calcularPrecioPersonalizado();
         }
 
-        function borrarGrupoNivel1(grupoId) {
-            carrito = carrito.filter(inst => {
-                const gId = inst.platilloId.replace(/[^a-zA-Z0-9]/g, '_');
-                return gId !== grupoId;
-            });
-            guardarCarrito(); actualizarCarritoUI(); actualizarCarritoBadge();
-            window.stockCache.invalidate();
-        }
-
-        function borrarGrupoNivel2(subgrupoId) {
-            // subgrupoId = grupoId_platilloId_persKey
-            const partes = subgrupoId.split('_');
-            carrito = carrito.filter(inst => {
-                const gId = inst.platilloId.replace(/[^a-zA-Z0-9]/g, '_');
-                const persKey = (inst.personalizacion || []).slice().sort().join('|').replace(/[^a-zA-Z0-9]/g, '_');
-                const instSubgrupoId = `${gId}_${inst.platilloId.replace(/[^a-zA-Z0-9]/g, '_')}_${persKey}`;
-                return instSubgrupoId !== subgrupoId;
-            });
-            guardarCarrito(); actualizarCarritoUI(); actualizarCarritoBadge();
-            window.stockCache.invalidate();
-        }
+        function actualizarCantidadPersonalizacion(delta) {
             if (!currentCustomizeItem) return;
             currentCustomizeItem.cantidad = Math.max(1, currentCustomizeItem.cantidad + delta);
             document.getElementById('customizeCantidad').textContent = currentCustomizeItem.cantidad;
@@ -1899,41 +1861,24 @@
         // ============================================
         function iniciarSeguimientoScroll() {
             if (scrollRafId) cancelAnimationFrame(scrollRafId);
-            _registrarScrollCarrito();
+            scrollRafId = requestAnimationFrame(actualizarPosicionFlechas);
         }
 
         function detenerSeguimientoScroll() {
             if (scrollRafId) { cancelAnimationFrame(scrollRafId); scrollRafId = null; }
-            const cartItemsEl = document.getElementById('cartItems');
-            if (cartItemsEl) cartItemsEl.removeEventListener('scroll', _onCartScroll);
-        }
-
-        function _onCartScroll() {
-            const cartFooter = document.getElementById('cartFooter');
-            const cascade = document.querySelector('.scroll-indicator-cascade');
-            if (!cascade || !cartFooter) return;
-            const footerRect = cartFooter.getBoundingClientRect();
-            const cartItemsEl = document.getElementById('cartItems');
-            const cartRect = cartItemsEl ? cartItemsEl.getBoundingClientRect() : null;
-            // Ocultar flechas si el footer (botones) ya es visible dentro del área del carrito
-            if (cartRect && footerRect.top < cartRect.bottom + 10) {
-                cascade.classList.add('hidden');
-            } else {
-                cascade.classList.remove('hidden');
-            }
-        }
-
-        function _registrarScrollCarrito() {
-            const cartItemsEl = document.getElementById('cartItems');
-            if (!cartItemsEl) return;
-            cartItemsEl.removeEventListener('scroll', _onCartScroll);
-            cartItemsEl.addEventListener('scroll', _onCartScroll, { passive: true });
-            // Evaluar estado inicial
-            _onCartScroll();
         }
 
         function actualizarPosicionFlechas() {
-            if (scrollRafId) { cancelAnimationFrame(scrollRafId); scrollRafId = null; }
+            const flechas = document.querySelector('.scroll-indicator-cascade');
+            const cartItems = document.getElementById('cartItems');
+            if (!flechas || !cartItems || carrito.length === 0) {
+                if (scrollRafId) { cancelAnimationFrame(scrollRafId); scrollRafId = null; }
+                return;
+            }
+            // Con position:sticky las flechas se mantienen siempre visibles al fondo del scroll
+            // Solo nos aseguramos de que estén visibles
+            flechas.classList.remove('hidden');
+            scrollRafId = requestAnimationFrame(actualizarPosicionFlechas);
         }
 
         function irABotonesAccion() {
