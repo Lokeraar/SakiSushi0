@@ -309,8 +309,8 @@
         .tagline{display:flex;justify-content:center;gap:1rem;margin:0 auto;max-width:900px;flex-wrap:wrap}
         .tagline-item{background:rgba(255,255,255,.05);padding:.6rem 1.2rem;border-radius:50px;font-size:.9rem;font-family:'Montserrat',sans-serif;font-weight:600;color:#fff;cursor:default;transition:all .2s;border:1px solid rgba(255,255,255,.1);white-space:nowrap;flex:0 1 auto}
         .tagline-item:hover{background:rgba(255,255,255,.1);transform:translateY(-2px);box-shadow:var(--shadow-md)}
-        .tagline-item.ofertas{text-transform:uppercase;font-weight:800;background:linear-gradient(145deg,#fff3cd,#ffe0b2);border:2px solid var(--accent);color:var(--secondary);animation:neonPulse 1.5s ease-in-out infinite;box-shadow:0 0 10px rgba(255,152,0,.5);cursor:pointer}
-        @keyframes neonPulse{0%,100%{box-shadow:0 0 5px #fff3cd,0 0 10px #fff3cd,0 0 15px var(--accent),0 0 20px var(--accent);border-color:var(--accent)}50%{box-shadow:0 0 10px #fff3cd,0 0 20px #fff3cd,0 0 30px var(--primary),0 0 40px var(--primary);border-color:var(--primary)}}
+        .tagline-item.ofertas{text-transform:uppercase;font-weight:800;background:linear-gradient(145deg,#fff3cd,#ffe0b2);border:2px solid var(--accent);color:var(--secondary);animation:neonPulse 2s ease-in-out infinite;box-shadow:0 0 8px rgba(255,152,0,.4);cursor:pointer;will-change:box-shadow}
+        @keyframes neonPulse{0%,100%{box-shadow:0 0 6px rgba(255,152,0,.5);border-color:var(--accent)}50%{box-shadow:0 0 14px rgba(211,47,47,.6);border-color:var(--primary)}}
         @media (max-width:480px){.tagline-item{font-size:.75rem;padding:.4rem .8rem}}
         .search-section{padding:0 1.5rem 1rem 1.5rem;background:transparent}
         .search-bar{position:relative;max-width:600px;margin:0 auto;display:flex;align-items:center}
@@ -409,7 +409,7 @@
         .notification-time{font-size:.7rem;color:var(--gray-500);display:flex;align-items:center;gap:.3rem}
         .modal-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.8);z-index:2000;align-items:center;justify-content:center;backdrop-filter:blur(5px)}
         .modal-overlay.active{display:flex}
-        .modal-container{background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%);border-radius:var(--radius-lg);max-width:500px;width:95%;max-height:90vh;overflow-y:auto;position:relative;animation:modalSlideIn .3s ease;box-shadow:var(--shadow-lg);border:1px solid rgba(255,255,255,.1)}
+        .modal-container{background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%);border-radius:var(--radius-lg);max-width:500px;width:95%;max-height:90vh;overflow-y:auto;position:relative;animation:modalSlideIn .3s ease;box-shadow:var(--shadow-lg);border:1px solid rgba(255,255,255,.1);will-change:transform,opacity}
         body.tema-claro .modal-container{background:linear-gradient(135deg,#f0f0f5 0%,#e0e0e8 100%);color:#1a1a2e}
         body.tema-claro .modal-header{background:rgba(0,0,0,.08);border-bottom:1px solid rgba(0,0,0,.1)}
         body.tema-claro .modal-header h3{color:#1a1a2e}
@@ -469,7 +469,7 @@
         body.tema-claro .cascade-arrow{color:var(--accent) !important}
         .scroll-indicator-cascade.hidden{display:none}
         .scroll-indicator-cascade:hover{opacity:1}
-        .cascade-arrow{font-size:1.5rem;color:var(--accent);filter:drop-shadow(0 0 5px rgba(255,152,0,0.5));animation:cascadeDown 1.5s infinite}
+        .cascade-arrow{font-size:1.5rem;color:var(--accent);animation:cascadeDown 1.5s infinite;will-change:transform,opacity}
         .cascade-arrow:nth-child(1){animation-delay:0s}
         .cascade-arrow:nth-child(2){animation-delay:0.2s}
         .cascade-arrow:nth-child(3){animation-delay:0.4s}
@@ -1341,7 +1341,7 @@
                         auth: auth,
                         user_agent: navigator.userAgent
                     }], { onConflict: 'endpoint' });
-                } catch (e) { console.log('Push no disponible:', e); }
+                } catch (e) { /* push no disponible */ }
             } else if (Notification.permission === 'default') {
                 Notification.requestPermission().then(perm => {
                     if (perm === 'granted') window.location.reload();
@@ -1892,18 +1892,11 @@
         // ============================================
         // FUNCIONES DE SCROLL
         // ============================================
-        function iniciarSeguimientoScroll() {
-            if (scrollRafId) cancelAnimationFrame(scrollRafId);
-            scrollRafId = requestAnimationFrame(actualizarPosicionFlechas);
-        }
-
+        function iniciarSeguimientoScroll() { /* flechas con sticky CSS — sin RAF */ }
         function detenerSeguimientoScroll() {
             if (scrollRafId) { cancelAnimationFrame(scrollRafId); scrollRafId = null; }
         }
-
         function actualizarPosicionFlechas() {
-            // Las flechas están en #cartIndicatorContainer, posición fija entre cart-items y cart-footer
-            // No se necesita ningún cálculo de posición
             if (scrollRafId) { cancelAnimationFrame(scrollRafId); scrollRafId = null; }
         }
 
@@ -2026,57 +2019,58 @@
             } catch (error) { console.error('Error recargando notificaciones:', error); }
         }
 
-        async function verificarNotificaciones() {
-            try {
-                const ahoraCaracas = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Caracas' }));
-                const hoyCaracas   = new Date(ahoraCaracas); hoyCaracas.setHours(0, 0, 0, 0);
-                const offsetMs     = ahoraCaracas.getTime() - new Date().getTime();
-                const hoyUTC       = new Date(hoyCaracas.getTime() - offsetMs);
-                const mananaUTC    = new Date(hoyUTC.getTime() + 24 * 60 * 60 * 1000);
-                const { data, error } = await window.supabaseClient
-                    .from('notificaciones')
-                    .select('id, leida, fecha')
-                    .eq('session_id', sessionId)
-                    .gte('fecha', hoyUTC.toISOString())
-                    .lt('fecha',  mananaUTC.toISOString())
-                    .order('fecha', { ascending: false });
-                if (error) throw error;
-                let hayCambios = false;
-                if (data.length !== notificacionesCache.length) { hayCambios = true; }
-                else {
-                    const mapaCache = new Map(notificacionesCache.map(n => [n.id, n.leida]));
-                    for (const n of data) {
-                        if (mapaCache.get(n.id) !== n.leida) { hayCambios = true; break; }
-                    }
-                }
-                if (hayCambios) {
-                    const idsEnCache  = new Set(notificacionesCache.map(n => n.id));
-                    const notifNuevas = data.filter(n => !idsEnCache.has(n.id) && !n.leida);
+        // ============================================
+        // NOTIFICACIONES — Realtime WebSocket (sin polling)
+        // ============================================
+        let _realtimeChannel = null;
+
+        function iniciarVerificacionPeriodica() {
+            // Cancelar canal anterior si existía
+            if (_realtimeChannel) {
+                window.supabaseClient.removeChannel(_realtimeChannel);
+                _realtimeChannel = null;
+            }
+            if (!sessionId) return;
+
+            // Suscripción Realtime: escucha INSERT en notificaciones de esta sesión
+            _realtimeChannel = window.supabaseClient
+                .channel('notif-' + sessionId)
+                .on('postgres_changes', {
+                    event: 'INSERT',
+                    schema: 'public',
+                    table: 'notificaciones',
+                    filter: `session_id=eq.${sessionId}`
+                }, async (payload) => {
+                    // Nueva notificación recibida por push — recargar sin polling
                     await recargarNotificacionesCompletas();
-                    if (notifNuevas.length > 0) {
+                    if (!payload.new.leida) {
                         if (paginaVisible) {
                             reproducirAlertaNotificacion();
                         } else if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-                            const ultima = notifNuevas[0];
                             navigator.serviceWorker.controller.postMessage({
                                 type: 'SHOW_LOCAL_NOTIFICATION',
-                                titulo: ultima.titulo || '🍣 Saki Sushi',
-                                mensaje: ultima.mensaje || 'Tienes una nueva notificación',
+                                titulo: payload.new.titulo || '🍣 Saki Sushi',
+                                mensaje: payload.new.mensaje || 'Tienes una nueva notificación',
                                 url: window.location.href
                             });
                         }
                     }
-                    ultimaActualizacion = Date.now();
-                }
-            } catch (error) { console.error('❌ Error en verificarNotificaciones:', error); }
+                })
+                .on('postgres_changes', {
+                    event: 'UPDATE',
+                    schema: 'public',
+                    table: 'notificaciones',
+                    filter: `session_id=eq.${sessionId}`
+                }, async () => {
+                    await recargarNotificacionesCompletas();
+                })
+                .subscribe();
         }
 
-        function iniciarVerificacionPeriodica() {
-            if (intervaloNotificaciones) clearInterval(intervaloNotificaciones);
-            intervaloNotificaciones = setInterval(async() => {
-                if (paginaVisible) await verificarNotificaciones();
-            }, 2000);
-            console.log('⏱️ Polling de notificaciones iniciado (cada 2s)');
+        // verificarNotificaciones se mantiene solo para la carga inicial y
+        // cuando la página vuelve a ser visible (por si se perdió conexión)
+        async function verificarNotificaciones() {
+            await recargarNotificacionesCompletas();
         }
 
         async function marcarTodasComoLeidas() {
@@ -2481,7 +2475,6 @@
                     label.classList.add('has-file');
                 } else throw new Error(result.error || 'Error al subir el archivo');
             } catch (error) {
-                console.error('Error subiendo comprobante:', error);
                 mostrarToast('❌ Error al subir el comprobante: ' + (error.message || 'Error desconocido'), 'error');
                 deliveryFormData.comprobante = null;
                 progressBarFill.style.width = '0%';
@@ -2520,7 +2513,6 @@
                     label.classList.add('has-file');
                 } else throw new Error(result.error || 'Error al subir el archivo');
             } catch (error) {
-                console.error('Error subiendo comprobante reserva:', error);
                 mostrarToast('❌ Error al subir el comprobante: ' + (error.message || 'Error desconocido'), 'error');
                 reservaFormData.comprobante = null;
                 progressBarFill.style.width = '0%';
@@ -2763,13 +2755,6 @@
                 }
             });
             
-            window.addEventListener('scroll', () => {
-                if (scrollTimeout) clearTimeout(scrollTimeout);
-                scrollTimeout = setTimeout(() => {
-                    if (scrollRafId) cancelAnimationFrame(scrollRafId);
-                    scrollRafId = requestAnimationFrame(actualizarPosicionFlechas);
-                }, 100);
-            }, { passive: true });
         }
 
         function probarNotificacion() {
@@ -2786,7 +2771,6 @@
             notificacionesNoLeidas++;
             actualizarNotificacionesUI();
             reproducirAlertaNotificacion();
-            console.log('🧪 Notificación de prueba enviada');
         }
         window.probarNotificacion = probarNotificacion;
 
@@ -2829,40 +2813,28 @@
         // INICIALIZACIÓN
         // ============================================
         document.addEventListener('DOMContentLoaded', async () => {
-            console.log('1️⃣ Inicializando cliente...');
-            console.log('⏰ Zona horaria configurada: GMT-4');
             
             cargarTemaGuardado();
-            console.log('🌓 Tema cargado');
             
             await cargarConfiguracion();
-            console.log('2️⃣ Configuración cargada');
             
             await cargarMenu();
-            console.log('3️⃣ Menú cargado');
             
             await cargarInventario();
-            console.log('4️⃣ Inventario cargado');
             
             cargarCategorias();
-            console.log('5️⃣ Categorías cargadas');
             
             restaurarDatosFormulario();
-            console.log('6️⃣ Notificaciones restauradas');
             
             await recargarNotificacionesCompletas();
-            console.log('7️⃣ Notificaciones cargadas');
             
             solicitarPermisoPushAuto();
             
             iniciarVerificacionPeriodica();
-            console.log('8️⃣ Polling de notificaciones iniciado');
             
             setupEventListeners();
-            console.log('9️⃣ Event listeners configurados');
             
             restaurarCarrito();
-            console.log('🔟 Carrito restaurado');
             
             actualizarCarritoUI();
             actualizarCarritoBadge();
@@ -2896,10 +2868,10 @@
             
             resetToAllCategories();
             cerrarTodosLosPaneles();
-            console.log('🎉 Cliente listo!');
         });
 
         window.addEventListener('beforeunload', () => {
+            if (_realtimeChannel) window.supabaseClient.removeChannel(_realtimeChannel);
             if (intervaloNotificaciones) clearInterval(intervaloNotificaciones);
             Object.values(intervalosTimer).forEach(clearInterval);
             detenerSeguimientoScroll();
@@ -2912,7 +2884,8 @@
                 detenerSeguimientoScroll();
             } else {
                 paginaVisible = true;
-                verificarNotificaciones();
+                // Al volver a visible, recargar una vez por si se perdió algún evento
+                recargarNotificacionesCompletas();
                 if (carrito.length > 0 && document.getElementById('cartSidebar').classList.contains('open')) iniciarSeguimientoScroll();
             }
         });
