@@ -6,6 +6,7 @@
 -- HABILITAR EXTENSIONES NECESARIAS
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+CREATE EXTENSION IF NOT EXISTS "pg_net";
 
 -- ============================================
 -- ELIMINAR TODO LO EXISTENTE (ORDEN CORRECTO)
@@ -996,19 +997,58 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 -- ============================================
 -- TRIGGER PARA ENVIAR PUSH AL INSERTAR NOTIFICACIÓN
 -- ============================================
+-- ⚠️ PASO PREVIO (ejecutar una sola vez en SQL Editor):
+-- Guardar la service_role_key en vault para que el trigger pueda usarla:
+--
+--   SELECT vault.create_secret('tu_service_role_key_aqui', 'service_role_key');
+--
+-- La service_role_key la encuentras en: Supabase → Settings → API → service_role (secret)
+-- ============================================
 CREATE OR REPLACE FUNCTION trigger_enviar_push()
 RETURNS TRIGGER AS $$
+DECLARE
+    v_service_key TEXT;
 BEGIN
-    PERFORM pg_notify('enviar_push', json_build_object(
-        'session_id', NEW.session_id,
-        'titulo', NEW.titulo,
-        'mensaje', NEW.mensaje,
-        'pedido_id', NEW.pedido_id
-    )::text);
-    
+    -- Obtener service key desde vault (si está configurado)
+    -- Para configurar: INSERT INTO vault.secrets (name, secret) VALUES ('service_role_key', 'tu_key');
+    BEGIN
+        SELECT decrypted_secret INTO v_service_key
+        FROM vault.decrypted_secrets
+        WHERE name = 'service_role_key'
+        LIMIT 1;
+    EXCEPTION WHEN OTHERS THEN
+        v_service_key := NULL;
+    END;
+
+    -- Si no hay vault, usar la anon key (la Edge Function valida Bearer)
+    IF v_service_key IS NULL OR v_service_key = '' THEN
+        v_service_key := current_setting('request.jwt.claim.role', true);
+    END IF;
+
+    -- Llamar a la Edge Function via pg_net
+    PERFORM net.http_post(
+        url     := 'https://iqwwoihiiyrtypyqzhgy.supabase.co/functions/v1/send-push',
+        headers := jsonb_build_object(
+            'Content-Type',  'application/json',
+            'Authorization', 'Bearer ' || COALESCE(v_service_key, '')
+        ),
+        body    := json_build_object(
+            'record', json_build_object(
+                'session_id', NEW.session_id,
+                'titulo',     NEW.titulo,
+                'mensaje',    NEW.mensaje,
+                'pedido_id',  NEW.pedido_id,
+                'tipo',       NEW.tipo
+            )
+        )::text
+    );
+
+    RETURN NEW;
+EXCEPTION WHEN OTHERS THEN
+    RAISE WARNING 'trigger_enviar_push error: %', SQLERRM;
     RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 
 DROP TRIGGER IF EXISTS notificaciones_push_trigger ON notificaciones;
 CREATE TRIGGER notificaciones_push_trigger
@@ -1090,66 +1130,8 @@ ALTER PUBLICATION supabase_realtime ADD TABLE mesoneros;
 ALTER PUBLICATION supabase_realtime ADD TABLE deliverys;
 
 -- ============================================
--- WEBHOOK: notificaciones → send-push Edge Function
--- Cada vez que se inserta una fila en notificaciones,
--- se llama automáticamente a la Edge Function send-push
--- para entregar la notificación push al dispositivo del cliente.
--- Requiere la extensión pg_net (habilitada por defecto en Supabase).
+-- VERIFICACIÓN FINAL
 -- ============================================
-
-CREATE EXTENSION IF NOT EXISTS pg_net;
-
--- Limpiar versión anterior si existe
-DROP TRIGGER IF EXISTS trigger_notificacion_push ON notificaciones;
-DROP FUNCTION IF EXISTS fn_enviar_push_notificacion CASCADE;
-
-CREATE OR REPLACE FUNCTION fn_enviar_push_notificacion()
-RETURNS TRIGGER
-LANGUAGE plpgsql
-SECURITY DEFINER
-AS $$
-DECLARE
-    v_url     TEXT;
-    v_payload JSONB;
-    v_anon_key TEXT;
-BEGIN
-    -- URL de la Edge Function (ajusta si tu proyecto tiene distinto ref)
-    v_url := 'https://iqwwoihiiyrtypyqzhgy.supabase.co/functions/v1/send-push';
-
-    -- Clave anon (sólo para pasar el header Authorization que la EF valida)
-    v_anon_key := 'sb_publishable_m4WcF4gmkj1olAj95HMLlA_4yKqPFXm';
-
-    -- Construimos el payload que la Edge Function espera
-    v_payload := jsonb_build_object(
-        'record', jsonb_build_object(
-            'session_id', NEW.session_id,
-            'titulo',     NEW.titulo,
-            'mensaje',    NEW.mensaje,
-            'tipo',       NEW.tipo,
-            'pedido_id',  NEW.pedido_id
-        )
-    );
-
-    -- Disparamos la llamada HTTP de forma asíncrona (no bloquea la transacción)
-    PERFORM net.http_post(
-        url     := v_url,
-        headers := jsonb_build_object(
-            'Content-Type',  'application/json',
-            'Authorization', 'Bearer ' || v_anon_key
-        ),
-        body    := v_payload
-    );
-
-    RETURN NEW;
-END;
-$$;
-
-CREATE TRIGGER trigger_notificacion_push
-    AFTER INSERT ON notificaciones
-    FOR EACH ROW
-    EXECUTE FUNCTION fn_enviar_push_notificacion();
-
-
 SELECT '✅ SCRIPT COMPLETADO EXITOSAMENTE' as mensaje;
 SELECT '✅ NOTIFICACIONES AUTOMÁTICAS ACTIVADAS' as notificaciones;
 SELECT '✅ FUNCIÓN verify_user_credentials CREADA' as auth;
