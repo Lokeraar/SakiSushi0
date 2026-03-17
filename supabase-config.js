@@ -109,7 +109,7 @@ window.formatearFechaGMT4 = function(timestamp) {
     try {
         // Si no tiene offset ni Z, forzar UTC
         let ts = timestamp;
-        if (typeof ts === 'string' && !ts.endsWith('Z') && !/[+\-]\d{2}:\d{2}$/.test(ts)) ts += 'Z';
+        if (typeof ts === 'string' && !ts.endsWith('Z') && !/[+\-]\d{2}(:\d{2})?$/.test(ts)) ts += 'Z';
         const fecha = new Date(ts);
         const opts  = z => fecha.toLocaleString('en-US', { timeZone: 'America/Caracas', ...z });
         const dia     = String(opts({ day:    'numeric' })).padStart(2, '0');
@@ -126,7 +126,7 @@ window.formatearHora12GMT4 = function(timestamp) {
     if (!timestamp) return 'N/A';
     try {
         let ts = timestamp;
-        if (typeof ts === 'string' && !ts.endsWith('Z') && !/[+\-]\d{2}:\d{2}$/.test(ts)) ts += 'Z';
+        if (typeof ts === 'string' && !ts.endsWith('Z') && !/[+\-]\d{2}(:\d{2})?$/.test(ts)) ts += 'Z';
         const fecha = new Date(ts);
         return fecha.toLocaleString('en-US', {
             timeZone: 'America/Caracas',
