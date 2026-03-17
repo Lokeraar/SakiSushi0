@@ -1688,7 +1688,18 @@
         }
 
         function resetToAllCategories() {
-            document.querySelector('.category-item[data-categoria="todos"]')?.click();
+            // Cerrar carrito y menú hamburguesa si están abiertos
+            cerrarTodosLosPaneles();
+            // Categoría "todos"
+            document.querySelectorAll('.category-item').forEach(c => c.classList.remove('active'));
+            const todosItem = document.querySelector('.category-item[data-categoria="todos"]');
+            if (todosItem) todosItem.classList.add('active');
+            document.querySelectorAll('.subcategory-list').forEach(l => l.classList.remove('expanded'));
+            document.getElementById('categoryTitle').textContent = 'Menú';
+            document.getElementById('searchInput').value = '';
+            renderizarMenuPaginado(null);
+            // Scroll al tope
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         function selectCategoria(cat) {
