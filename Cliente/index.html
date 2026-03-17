@@ -348,8 +348,7 @@
         .pagination-num.active{background:var(--accent);color:var(--secondary);border-color:var(--accent);transform:translateY(-2px);box-shadow:0 4px 12px rgba(245,124,0,.4)}
         body.tema-claro .pagination-btn,body.tema-claro .pagination-num{color:#1a1a2e;border-color:rgba(0,0,0,.2);background:rgba(0,0,0,.06)}
         body.tema-claro .pagination-num.active{background:var(--accent);color:#fff}
-        .menu-card{background:var(--card-bg);border-radius:var(--radius-md);overflow:hidden;box-shadow:var(--shadow-sm);transition:transform .3s,box-shadow .3s,opacity .25s;position:relative;border:1px solid rgba(255,255,255,.1);display:flex;flex-direction:column;backdrop-filter:blur(5px);height:100%;will-change:transform;transform:translateZ(0);opacity:0}
-        .menu-card.visible{opacity:1}
+        .menu-card{background:var(--card-bg);border-radius:var(--radius-md);overflow:hidden;box-shadow:var(--shadow-sm);transition:transform .3s,box-shadow .3s;position:relative;border:1px solid rgba(255,255,255,.1);display:flex;flex-direction:column;backdrop-filter:blur(5px);height:100%;will-change:transform;transform:translateZ(0)}
         .menu-card:hover{transform:translateY(-3px);box-shadow:var(--shadow-md)}
         /* Skeleton loader */
         .menu-card-skeleton{background:var(--card-bg);border-radius:var(--radius-md);overflow:hidden;border:1px solid rgba(255,255,255,.06);height:320px}
@@ -1076,7 +1075,9 @@
         let notificacionesCompletas = [], ultimaActualizacion = Date.now(), paginaVisible = true, intervaloNotificaciones = null;
         let currentCustomizeItem = null, mesaId = null, nivel1Activo = null, nivel2Activo = null;
         let timersActivos = {}, intervalosTimer = {};
-        let scrollRafId = null, ultimaPosicionFlechas = 0, scrollTimeout = null;
+        let scrollTimeout = null;
+        let filteredMenuItems = [];
+        let _stockPrecalculado = {};
         let favoritos = JSON.parse(localStorage.getItem('saki_favoritos') || '[]');
         let historialPedidos = JSON.parse(localStorage.getItem('saki_historial') || '[]');
         let reconocimientoVoz = null;
@@ -1371,11 +1372,11 @@
 
         async function solicitarPermisoPushAuto() {
             if (!('Notification' in window) || !('serviceWorker' in navigator) || location.protocol !== 'https:') return;
-            
-            // Brave bloquea push por defecto — detectar y advertir
+            // Si el permiso ya fue concedido en cualquier sesión anterior, solo registrar silenciosamente
+            // Si fue denegado, no volver a pedir jamás
+            if (Notification.permission === 'denied') return;
             const esBrave = navigator.brave && await navigator.brave.isBrave().catch(() => false);
-            
-            if (Notification.permission === 'granted') {
+            const registrarSuscripcion = async () => {
                 try {
                     const registration = await navigator.serviceWorker.register('/SakiSushi0/sw.js', { scope: '/SakiSushi0/' });
                     await navigator.serviceWorker.ready;
@@ -1386,30 +1387,22 @@
                             applicationServerKey: urlBase64ToUint8Array('BC6oJ4E+5pGIn4icpzCBLMi6/nk+1JJenrUA41uJrAs1ELraSw5ctvRAlh8sHVldqzBXUtEwEeFKBm0/hmuM9EY=')
                         });
                     }
-                    // Verificar que el endpoint no esté bloqueado por Brave
-                    if (esBrave && subscription.endpoint.includes('fcm.googleapis.com')) {
-                        console.warn('⚠️ Brave puede bloquear notificaciones push de Google FCM. Activa "Usar Google Services para mensajería push" en brave://settings/privacy');
-                    }
+                    if (esBrave && subscription.endpoint.includes('fcm.googleapis.com'))
+                        console.warn('⚠️ Brave: activa "Usar Google Services para mensajería push" en brave://settings/privacy');
                     const p256dh = btoa(String.fromCharCode.apply(null, new Uint8Array(subscription.getKey('p256dh'))));
                     const auth   = btoa(String.fromCharCode.apply(null, new Uint8Array(subscription.getKey('auth'))));
                     await window.supabaseClient.from('push_subscriptions').upsert([{
-                        session_id: sessionId,
-                        endpoint:   subscription.endpoint,
-                        p256dh,
-                        auth,
-                        user_agent: navigator.userAgent
+                        session_id: sessionId, endpoint: subscription.endpoint, p256dh, auth, user_agent: navigator.userAgent
                     }], { onConflict: 'endpoint' });
-                    console.log('✅ Suscripción push registrada:', subscription.endpoint.substring(0, 60) + '...');
-                } catch (e) {
-                    console.warn('⚠️ Push no disponible:', e.message);
-                    if (esBrave) {
-                        console.warn('Brave: ve a brave://settings/privacy → activa "Usar Google Services para mensajería push"');
-                    }
-                }
-            } else if (Notification.permission === 'default') {
-                Notification.requestPermission().then(perm => {
-                    if (perm === 'granted') solicitarPermisoPushAuto();
-                });
+                } catch (e) { console.warn('⚠️ Push no disponible:', e.message); }
+            };
+            if (Notification.permission === 'granted') {
+                // Permiso ya concedido — registrar sin mostrar ningún diálogo
+                await registrarSuscripcion();
+            } else {
+                // Primera vez — pedir permiso una sola vez
+                const perm = await Notification.requestPermission();
+                if (perm === 'granted') await registrarSuscripcion();
             }
         }
 
@@ -1437,22 +1430,29 @@
 
         function precalcularStockMenu() {
             _stockPrecalculado = {};
+            // Mapa de cuántas unidades reserva el carrito actual por ingrediente
+            const reservadoPorCarrito = {};
+            carrito.forEach(inst => {
+                const pl = menuItems.find(p => p.id === inst.platilloId);
+                if (!pl?.ingredientes) return;
+                Object.entries(pl.ingredientes).forEach(([ingId, ingInfo]) => {
+                    if (!inst.personalizacion?.includes(ingId))
+                        reservadoPorCarrito[ingId] = (reservadoPorCarrito[ingId] || 0) + (ingInfo.cantidad || 1);
+                });
+            });
             for (const item of menuItems) {
                 if (item.ingredientes && Object.keys(item.ingredientes).length > 0) {
                     let minStock = Infinity;
                     for (const [ingId, ingInfo] of Object.entries(item.ingredientes)) {
-                        const ingrediente = inventario.find(i => i.id === ingId);
-                        if (!ingrediente) { minStock = 0; break; }
-                        let reservadoCarrito = 0;
-                        carrito.forEach(inst => {
-                            const pl = menuItems.find(p => p.id === inst.platilloId);
-                            if (pl?.ingredientes?.[ingId] && !inst.personalizacion?.includes(ingId))
-                                reservadoCarrito += pl.ingredientes[ingId].cantidad || 1;
-                        });
-                        const disp = Math.floor(((ingrediente.stock || 0) - (ingrediente.reservado || 0) - reservadoCarrito) / (ingInfo.cantidad || 1));
-                        minStock = Math.min(minStock, disp);
+                        const ing = inventario.find(i => i.id === ingId);
+                        if (!ing) { minStock = 0; break; }
+                        // stock real del servidor ya descuenta lo confirmado; 
+                        // reservado = lo que otros clientes tienen pendiente de pago
+                        // reservadoPorCarrito = lo que este cliente ya puso en su carrito
+                        const libre = (ing.stock || 0) - (ing.reservado || 0) - (reservadoPorCarrito[ingId] || 0);
+                        minStock = Math.min(minStock, Math.floor(libre / (ingInfo.cantidad || 1)));
                     }
-                    _stockPrecalculado[item.id] = minStock === Infinity ? 999 : minStock;
+                    _stockPrecalculado[item.id] = minStock === Infinity ? 999 : Math.max(0, minStock);
                 } else {
                     _stockPrecalculado[item.id] = item.stock_maximo || 999;
                 }
@@ -1501,7 +1501,6 @@
         // ============================================
         const ITEMS_POR_PAGINA = 6;
         let _paginaActual = 1;
-        let _cardObserver = null;
         let _imageCache = new Set();
 
         function _precargarImagenes(items) {
@@ -1514,51 +1513,24 @@
             });
         }
 
-        function _iniciarObserver() {
-            if (_cardObserver) _cardObserver.disconnect();
-            _cardObserver = new IntersectionObserver((entries) => {
-                entries.forEach(e => {
-                    if (e.isIntersecting) {
-                        e.target.classList.add('visible');
-                        _cardObserver.unobserve(e.target);
-                    }
-                });
-            }, { rootMargin: '80px 0px', threshold: 0 });
-        }
-
         function _htmlTarjeta(item) {
-            const stockDisponible = _stockPrecalculado[item.id] ?? 999;
-            const agotado = stockDisponible <= 0;
-            const stockClass = agotado ? 'sold-out' : (stockDisponible < 5 ? 'low' : 'available');
-            const favorito = esFavorito(item.id) ? 'active' : '';
-            const imgUrl = item.imagen || 'https://via.placeholder.com/400x300?text=Sushi';
-            return `<div class="menu-card ${agotado ? 'agotado' : ''}">
-                <div class="menu-card-image" style="background-image:url('${imgUrl}')" ${agotado ? '' : `onclick="abrirPreview('${item.id}')"`}>
-                    ${agotado ? '<div class="menu-card-sold-overlay"><span>🚫 Agotado</span></div>'
-                              : (stockClass === 'low' ? '<div class="menu-card-badge low"><i class="fas fa-exclamation-triangle"></i> Últimas</div>' : '')}
-                </div>
-                <div class="menu-card-content">
-                    <div class="menu-card-header">
-                        <div style="display:flex;align-items:center">
-                            <button class="favorite-btn ${favorito}" onclick="event.stopPropagation();toggleFavorito('${item.id}')" data-tooltip="${favorito ? 'Quitar de favoritos' : 'Agregar a favoritos'}"><i class="fas fa-star"></i></button>
-                            <h3 class="menu-card-title">${item.nombre}</h3>
-                        </div>
-                        <span class="menu-card-price">${formatBs(usdToBs(item.precio))}</span>
-                    </div>
-                    <p class="menu-card-description">${item.descripcion || ''}</p>
-                    <div class="menu-card-footer">
-                        ${!agotado ? `<button class="btn-add" onclick="agregarAlCarrito('${item.id}')" data-tooltip="Agregar al carrito"><i class="fas fa-plus"></i></button>
-                        <button class="btn-customize" onclick="abrirPersonalizacion('${item.id}')" data-tooltip="Personalizar platillo y cantidades"><i class="fas fa-star"></i> Personalizar</button>`
-                        : `<span class="stock-info"><i class="fas fa-info-circle"></i> Sin stock</span>`}
-                    </div>
-                    ${!agotado ? `<div class="stock-info"><i class="fas fa-box ${stockClass}"></i><span>${stockDisponible} disponibles</span></div>` : ''}
-                </div>
-            </div>`;
+            const stock = _stockPrecalculado[item.id] ?? 999;
+            const agotado = stock <= 0;
+            const sc = agotado ? 'sold-out' : (stock < 5 ? 'low' : 'available');
+            const fav = esFavorito(item.id) ? 'active' : '';
+            const img = item.imagen || 'https://via.placeholder.com/400x300?text=Sushi';
+            const badge = agotado
+                ? '<div class="menu-card-sold-overlay"><span>🚫 Agotado</span></div>'
+                : (sc === 'low' ? '<div class="menu-card-badge low"><i class="fas fa-exclamation-triangle"></i> Últimas</div>' : '');
+            const footer = agotado
+                ? '<span class="stock-info"><i class="fas fa-info-circle"></i> Sin stock</span>'
+                : `<button class="btn-add" onclick="agregarAlCarrito('${item.id}')" data-tooltip="Agregar al carrito"><i class="fas fa-plus"></i></button><button class="btn-customize" onclick="abrirPersonalizacion('${item.id}')" data-tooltip="Personalizar platillo y cantidades"><i class="fas fa-star"></i> Personalizar</button>`;
+            const stockInfo = agotado ? '' : `<div class="stock-info"><i class="fas fa-box ${sc}"></i><span>${stock} disponibles</span></div>`;
+            return `<div class="menu-card${agotado?' agotado':''}"><div class="menu-card-image" style="background-image:url('${img}')"${agotado?'':` onclick="abrirPreview('${item.id}')"`}>${badge}</div><div class="menu-card-content"><div class="menu-card-header"><div style="display:flex;align-items:center"><button class="favorite-btn ${fav}" onclick="event.stopPropagation();toggleFavorito('${item.id}')" data-tooltip="${fav?'Quitar de favoritos':'Agregar a favoritos'}"><i class="fas fa-star"></i></button><h3 class="menu-card-title">${item.nombre}</h3></div><span class="menu-card-price">${formatBs(usdToBs(item.precio))}</span></div><p class="menu-card-description">${item.descripcion||''}</p><div class="menu-card-footer">${footer}</div>${stockInfo}</div></div>`;
         }
 
         function _htmlPaginacion(paginaActual, totalPaginas) {
             if (totalPaginas <= 1) return '';
-            // Generar hasta 4 números de página centrados alrededor de la actual
             let inicio = Math.max(1, paginaActual - 1);
             let fin    = Math.min(totalPaginas, inicio + 3);
             if (fin - inicio < 3) inicio = Math.max(1, fin - 3);
@@ -1566,11 +1538,7 @@
             for (let p = inicio; p <= fin; p++) {
                 nums += `<button class="pagination-num ${p === paginaActual ? 'active' : ''}" onclick="irAPagina(${p})">${p}</button>`;
             }
-            return `<div class="pagination-controls">
-                <button class="pagination-btn" onclick="irAPagina(${paginaActual - 1})" ${paginaActual === 1 ? 'disabled' : ''}><i class="fas fa-chevron-left"></i> Anterior</button>
-                <div class="pagination-nums">${nums}</div>
-                <button class="pagination-btn" onclick="irAPagina(${paginaActual + 1})" ${paginaActual === totalPaginas ? 'disabled' : ''}>Siguiente <i class="fas fa-chevron-right"></i></button>
-            </div>`;
+            return `<div class="pagination-controls"><button class="pagination-btn" onclick="irAPagina(${paginaActual - 1})" ${paginaActual === 1 ? 'disabled' : ''}><i class="fas fa-chevron-left"></i> Anterior</button><div class="pagination-nums">${nums}</div><button class="pagination-btn" onclick="irAPagina(${paginaActual + 1})" ${paginaActual === totalPaginas ? 'disabled' : ''}>Siguiente <i class="fas fa-chevron-right"></i></button></div>`;
         }
 
         function renderizarMenuPaginado(filtroCategoria = null, filtroSubcategoria = null, busqueda = '') {
@@ -1593,39 +1561,15 @@
         function renderizarPaginaActual() {
             const grid = document.getElementById('menuGrid');
             if (!grid) return;
-
             if (filteredMenuItems.length === 0) {
                 grid.innerHTML = '<div class="loading-container"><p>No hay platillos</p></div>';
                 return;
             }
-
             const totalPaginas = Math.ceil(filteredMenuItems.length / ITEMS_POR_PAGINA);
             _paginaActual = Math.max(1, Math.min(_paginaActual, totalPaginas));
-            const inicio   = (_paginaActual - 1) * ITEMS_POR_PAGINA;
-            const pagItems = filteredMenuItems.slice(inicio, inicio + ITEMS_POR_PAGINA);
-
-            // Skeletons instantáneos mientras se prepara el HTML real
-            grid.innerHTML = pagItems.map(() => `
-                <div class="menu-card-skeleton">
-                    <div class="skeleton-img"></div>
-                    <div class="skeleton-line medium"></div>
-                    <div class="skeleton-line short"></div>
-                    <div class="skeleton-line medium"></div>
-                </div>`).join('') + '<div id="paginationSlot"></div>';
-
-            // Tarjetas reales + paginación en el siguiente frame
-            requestAnimationFrame(() => {
-                const tarjetas = pagItems.map(_htmlTarjeta).join('');
-                const paginacion = _htmlPaginacion(_paginaActual, totalPaginas);
-                grid.innerHTML = tarjetas + paginacion;
-
-                _iniciarObserver();
-                grid.querySelectorAll('.menu-card').forEach(c => _cardObserver.observe(c));
-
-                // Scroll al inicio del menú al cambiar de página
-                const menuSection = document.getElementById('menuGrid');
-                if (menuSection) menuSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            });
+            const pagItems = filteredMenuItems.slice((_paginaActual - 1) * ITEMS_POR_PAGINA, _paginaActual * ITEMS_POR_PAGINA);
+            // Render directo, síncrono, sin observer ni RAF — tarjetas siempre visibles
+            grid.innerHTML = pagItems.map(_htmlTarjeta).join('') + _htmlPaginacion(_paginaActual, totalPaginas);
         }
 
         window.irAPagina = function(pagina) {
@@ -1633,6 +1577,7 @@
             if (pagina < 1 || pagina > totalPaginas) return;
             _paginaActual = pagina;
             renderizarPaginaActual();
+            document.getElementById('menuGrid')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
         };
 
         function cargarCategorias() {
@@ -1687,10 +1632,8 @@
             });
         }
 
-        function resetToAllCategories() {
-            // Cerrar carrito y menú hamburguesa si están abiertos
+        function resetToAllCategories(scroll = true) {
             cerrarTodosLosPaneles();
-            // Categoría "todos"
             document.querySelectorAll('.category-item').forEach(c => c.classList.remove('active'));
             const todosItem = document.querySelector('.category-item[data-categoria="todos"]');
             if (todosItem) todosItem.classList.add('active');
@@ -1698,8 +1641,7 @@
             document.getElementById('categoryTitle').textContent = 'Menú';
             document.getElementById('searchInput').value = '';
             renderizarMenuPaginado(null);
-            // Scroll al tope
-            window.scrollTo({ top: 0, behavior: 'smooth' });
+            if (scroll) window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         function selectCategoria(cat) {
@@ -2045,13 +1987,8 @@
         // ============================================
         // FUNCIONES DE SCROLL
         // ============================================
-        function iniciarSeguimientoScroll() { /* flechas con sticky CSS — sin RAF */ }
-        function detenerSeguimientoScroll() {
-            if (scrollRafId) { cancelAnimationFrame(scrollRafId); scrollRafId = null; }
-        }
-        function actualizarPosicionFlechas() {
-            if (scrollRafId) { cancelAnimationFrame(scrollRafId); scrollRafId = null; }
-        }
+        function iniciarSeguimientoScroll() {}
+        function detenerSeguimientoScroll() {}
 
         function irABotonesAccion() {
             const cartFooter = document.getElementById('cartFooter');
@@ -2195,14 +2132,11 @@
         let _realtimeChannel = null;
 
         function iniciarVerificacionPeriodica() {
-            // Cancelar canal anterior si existía
             if (_realtimeChannel) {
                 window.supabaseClient.removeChannel(_realtimeChannel);
                 _realtimeChannel = null;
             }
             if (!sessionId) return;
-
-            // Suscripción Realtime: escucha INSERT en notificaciones de esta sesión
             _realtimeChannel = window.supabaseClient
                 .channel('notif-' + sessionId)
                 .on('postgres_changes', {
@@ -2211,31 +2145,20 @@
                     table: 'notificaciones',
                     filter: `session_id=eq.${sessionId}`
                 }, async (payload) => {
-                    // Nueva notificación recibida por push — recargar sin polling
                     await recargarNotificacionesCompletas();
-                    if (!payload.new.leida) {
-                        if (paginaVisible) {
-                            reproducirAlertaNotificacion();
-                            // Toast enriquecido con logo y mensaje de la notificación
-                            mostrarToastNotificacion(payload.new.titulo, payload.new.mensaje);
-                        } else if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-                            navigator.serviceWorker.controller.postMessage({
-                                type: 'SHOW_LOCAL_NOTIFICATION',
-                                titulo: payload.new.titulo || '🍣 Saki Sushi',
-                                mensaje: payload.new.mensaje || 'Tienes una nueva notificación',
-                                url: window.location.href,
-                                tipo: payload.new.tipo
-                            });
-                        }
+                    if (payload.new.leida) return;
+                    if (paginaVisible) {
+                        reproducirAlertaNotificacion();
+                        mostrarToastNotificacion(payload.new.titulo, payload.new.mensaje);
+                    } else if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+                        navigator.serviceWorker.controller.postMessage({
+                            type: 'SHOW_LOCAL_NOTIFICATION',
+                            titulo: payload.new.titulo || '🍣 Saki Sushi',
+                            mensaje: payload.new.mensaje || 'Tienes una nueva notificación',
+                            url: window.location.href,
+                            tipo: payload.new.tipo
+                        });
                     }
-                })
-                .on('postgres_changes', {
-                    event: 'UPDATE',
-                    schema: 'public',
-                    table: 'notificaciones',
-                    filter: `session_id=eq.${sessionId}`
-                }, async () => {
-                    await recargarNotificacionesCompletas();
                 })
                 .subscribe();
         }
@@ -2582,21 +2505,21 @@
             deliveryFormData.direccion = document.getElementById('direccion').value;
             deliveryFormData.telefono = document.getElementById('telefono').value;
             deliveryFormData.referencia = getReferencia('delivery');
-            localStorage.setItem('saki_delivery_data', JSON.stringify(deliveryFormData));
+            sessionStorage.setItem('saki_delivery_data', JSON.stringify(deliveryFormData));
         }
 
         function guardarDatosReserva() {
             reservaFormData.fecha = document.getElementById('fechaReserva').value;
             reservaFormData.nombre = document.getElementById('nombreReserva').value;
             reservaFormData.referencia = getReferencia('reserva');
-            localStorage.setItem('saki_reserva_data', JSON.stringify(reservaFormData));
+            sessionStorage.setItem('saki_reserva_data', JSON.stringify(reservaFormData));
         }
 
         function limpiarDatosFormulario() {
             deliveryFormData = { parroquia: '', direccion: '', telefono: '', referencia: '', comprobante: null };
             reservaFormData = { fecha: '', nombre: '', referencia: '', comprobante: null };
-            localStorage.removeItem('saki_delivery_data');
-            localStorage.removeItem('saki_reserva_data');
+            sessionStorage.removeItem('saki_delivery_data');
+            sessionStorage.removeItem('saki_reserva_data');
             limpiarCampoComprobante('delivery');
             limpiarCampoComprobante('reserva');
             limpiarReferencias('delivery');
@@ -2808,7 +2731,6 @@
                 document.getElementById('overlay').classList.remove('active');
             }
             document.getElementById('notificationsPanel').classList.remove('active');
-            detenerSeguimientoScroll();
         }
 
         function setupReferenceInputs() {
@@ -2929,37 +2851,13 @@
             
         }
 
-        function probarNotificacion() {
-            const notifPrueba = {
-                id: 'test_' + Date.now(),
-                titulo: '🔔 Notificación de prueba',
-                mensaje: 'Esto es una prueba del sistema de notificaciones',
-                tipo: 'approved',
-                timestamp: new Date().toISOString(),
-                leida: false
-            };
-            notificaciones.unshift(notifPrueba);
-            notificacionesCache.unshift({ id: notifPrueba.id, leida: notifPrueba.leida, fecha: notifPrueba.fecha });
-            notificacionesNoLeidas++;
-            actualizarNotificacionesUI();
-            reproducirAlertaNotificacion();
-        }
-        window.probarNotificacion = probarNotificacion;
-
         function restaurarDatosFormulario() {
-            const savedDelivery = localStorage.getItem('saki_delivery_data');
-            if (savedDelivery) { try { deliveryFormData = JSON.parse(savedDelivery); } catch (e) { console.error('Error restaurando datos delivery:', e); } }
-            const savedReserva = localStorage.getItem('saki_reserva_data');
-            if (savedReserva) { try { reservaFormData = JSON.parse(savedReserva); } catch (e) { console.error('Error restaurando datos reserva:', e); } }
-            const savedNotificaciones = localStorage.getItem('saki_notificaciones');
-            if (savedNotificaciones) {
-                try {
-                    notificaciones = JSON.parse(savedNotificaciones);
-                    notificacionesCache = notificaciones.map(n => ({ id: n.id, leida: n.leida, fecha: n.fecha }));
-                    notificacionesNoLeidas = notificaciones.filter(n => !n.leida).length;
-                    actualizarNotificacionesUI();
-                } catch (e) { console.error('Error restaurando notificaciones:', e); }
-            }
+            // Solo restaura datos de formularios guardados en esta sesión activa
+            // sessionStorage se borra al cerrar el tab — no persiste entre sesiones
+            const savedDelivery = sessionStorage.getItem('saki_delivery_data');
+            if (savedDelivery) { try { deliveryFormData = JSON.parse(savedDelivery); } catch (e) {} }
+            const savedReserva = sessionStorage.getItem('saki_reserva_data');
+            if (savedReserva) { try { reservaFormData = JSON.parse(savedReserva); } catch (e) {} }
         }
 
         function generarId(prefix = '') {
@@ -3038,8 +2936,7 @@
                 headerIcons.classList.add('left-aligned');
             }
             
-            resetToAllCategories();
-            cerrarTodosLosPaneles();
+            resetToAllCategories(false);
         });
 
         window.addEventListener('beforeunload', () => {
@@ -3237,9 +3134,9 @@
             const catSidebarEl = document.getElementById('categorySidebar');
             if (catSidebarEl) {
                 observer.observe(catSidebarEl, { attributes: true, attributeFilter: ['class'] });
-                // Observar cambios en hijos para detectar subcategorías expandidas
+                // Observar solo hijos directos (subcategorías) sin subtree para no disparar en cada render
                 const subObserver = new MutationObserver(() => _sincronizarStack());
-                subObserver.observe(catSidebarEl, { subtree: true, attributes: true, attributeFilter: ['class'] });
+                subObserver.observe(catSidebarEl, { childList: false, subtree: false, attributes: true, attributeFilter: ['class'] });
             }
             const cartSidebarEl = document.getElementById('cartSidebar');
             if (cartSidebarEl) {
