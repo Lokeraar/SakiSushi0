@@ -461,9 +461,8 @@
         .toast.info{background:var(--info)}
         .toast.warning{background:var(--warning)}
         @keyframes slideUp{from{transform:translate(-50%,20px);opacity:0}to{transform:translate(-50%,0);opacity:1}}
-        #cartIndicatorContainer{flex-shrink:0;padding:.5rem 1.2rem;max-height:0;overflow:hidden;transition:max-height .2s ease}
-        #cartIndicatorContainer.active{max-height:100px}
-        .scroll-indicator-cascade{display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;cursor:pointer;opacity:0.9;transition:opacity 0.3s;background:rgba(26,26,46,.95);border-radius:30px;padding:8px 0;backdrop-filter:blur(8px);box-shadow:0 4px 12px rgba(0,0,0,.3);pointer-events:auto}
+        #cartIndicatorContainer{display:none}
+        .scroll-indicator-cascade{display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;cursor:pointer;opacity:0.9;transition:opacity 0.3s;background:rgba(26,26,46,.95);border-radius:30px;padding:8px 0;backdrop-filter:blur(8px);box-shadow:0 4px 12px rgba(0,0,0,.3);pointer-events:auto;position:sticky;top:8px;z-index:5;flex-shrink:0}
         body.tema-claro .scroll-indicator-cascade{background:rgba(30,30,55,.88)}
         body.tema-claro .cascade-text{color:#fff !important}
         body.tema-claro .cascade-arrow{color:var(--accent) !important}
@@ -639,7 +638,6 @@
                     <div class="cart-items" id="cartItems">
                         <div class="cart-empty"><i class="fas fa-shopping-basket"></i><p>Tu carrito está vacío</p><small>¡Agrega algunos platillos!</small></div>
                     </div>
-                    <div id="cartIndicatorContainer"></div>
                     <div class="cart-footer" id="cartFooter" style="display:none;">
                         <div class="cart-total"><span>Total:</span><span id="cartTotal">Bs. 0,00</span></div>
                         <div class="cart-buttons" id="cartButtons"></div>
@@ -1628,7 +1626,7 @@
                 nivel1Activo = null; nivel2Activo = null;
                 detenerSeguimientoScroll();
                 const indicatorContainer = document.getElementById('cartIndicatorContainer');
-                if (indicatorContainer) { indicatorContainer.innerHTML = ''; indicatorContainer.classList.remove('active'); }
+                if (indicatorContainer) indicatorContainer.innerHTML = '';
                 return;
             }
             
@@ -1661,16 +1659,10 @@
             });
             
             const flechasHTML = `<div class="scroll-indicator-cascade" onclick="irABotonesAccion()"><i class="fas fa-chevron-down cascade-arrow"></i><i class="fas fa-chevron-down cascade-arrow"></i><i class="fas fa-chevron-down cascade-arrow"></i><span class="cascade-text">Toca y haz tu pedido</span></div>`;
-            cartItems.innerHTML = html;
+            cartItems.innerHTML = carrito.length > 0 ? html + flechasHTML : html;
+            if (carrito.length > 0) iniciarSeguimientoScroll();
             const indicatorContainer = document.getElementById('cartIndicatorContainer');
-            if (carrito.length > 0) {
-                indicatorContainer.innerHTML = flechasHTML;
-                indicatorContainer.classList.add('active');
-                iniciarSeguimientoScroll();
-            } else {
-                indicatorContainer.innerHTML = '';
-                indicatorContainer.classList.remove('active');
-            }
+            if (indicatorContainer) indicatorContainer.innerHTML = '';
             cartTotal.textContent = formatBs(totalGeneral);
             cartButtons.innerHTML = '';
             
