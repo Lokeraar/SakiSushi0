@@ -1072,6 +1072,7 @@
         let historialPedidos = JSON.parse(localStorage.getItem('saki_historial') || '[]');
         let reconocimientoVoz = null;
         let currentPage = 1, itemsPerPage = 6, filteredMenuItems = [];
+        let _stockPrecalculado = {}; // Cache síncrono para render instantáneo
 
         const preciosPorParroquia = {"Altagracia":3,"Antímano":7,"Candelaria":2,"Caricuao":7,"Caucagüita":7,"Catedral":3,"Chacao":5,"Coche":5,"El Cafetal":6,"El Junquito":7,"El Paraíso":4,"El Recreo":4,"El Valle":5,"Fila de Mariches":6,"La Dolorita":6,"La Pastora":3,"La Vega":4,"Las Minas":5,"Leoncio Martínez":6,"Macarao":7,"Nuestra Señora del Rosario":7,"Petare":6,"San Agustín":2,"San Bernardino":2,"San José":2,"San Juan":3,"San Pedro":4,"Santa Rosalía":3,"Santa Rosalía de Palermo":3,"Santa Teresa":3,"Sucre":7,"23 de Enero":4};
         const mensajesEstado = {'approved':{titulo:'✅ Pago confirmado',icono:'check-circle'},'rejected':{titulo:'❌ Pedido rechazado',icono:'times-circle'},'pending':{titulo:'⏳ Pedido pendiente',icono:'clock'}};
@@ -1432,6 +1433,7 @@
                 menuItems = data || [];
                 menuItems.sort((a, b) => a.nombre.localeCompare(b.nombre));
                 filteredMenuItems = [...menuItems];
+                precalcularStockMenu(); // Primera pasada (inventario puede no estar aún)
                 const ultimaCategoria = localStorage.getItem('saki_ultima_categoria');
                 if (ultimaCategoria && ultimaCategoria !== 'todos') {
                     renderizarMenuPaginado(ultimaCategoria);
@@ -1451,6 +1453,7 @@
                 if (error) throw error;
                 inventario = data || [];
                 window.stockCache.invalidate();
+                precalcularStockMenu(); // Precálculo síncrono inmediato
             } catch (error) { console.error('Error cargando inventario:', error); }
         }
 
@@ -1475,7 +1478,33 @@
             else if (filtroCategoria === null) localStorage.setItem('saki_ultima_categoria', 'todos');
         }
 
-        async function renderizarPaginaActual() {
+        // Precalcula todo el stock de todos los platillos en un solo pass síncrono
+        // Debe llamarse después de cargar inventario, antes de renderizar
+        function precalcularStockMenu() {
+            _stockPrecalculado = {};
+            for (const item of menuItems) {
+                if (item.ingredientes && Object.keys(item.ingredientes).length > 0) {
+                    let minStock = Infinity;
+                    for (const [ingId, ingInfo] of Object.entries(item.ingredientes)) {
+                        const ingrediente = inventario.find(i => i.id === ingId);
+                        if (!ingrediente) { minStock = 0; break; }
+                        let reservadoCarrito = 0;
+                        carrito.forEach(inst => {
+                            const pl = menuItems.find(p => p.id === inst.platilloId);
+                            if (pl?.ingredientes?.[ingId] && !inst.personalizacion?.includes(ingId))
+                                reservadoCarrito += pl.ingredientes[ingId].cantidad || 1;
+                        });
+                        const disp = Math.floor(((ingrediente.stock || 0) - (ingrediente.reservado || 0) - reservadoCarrito) / (ingInfo.cantidad || 1));
+                        minStock = Math.min(minStock, disp);
+                    }
+                    _stockPrecalculado[item.id] = minStock === Infinity ? 999 : minStock;
+                } else {
+                    _stockPrecalculado[item.id] = item.stock_maximo || 999;
+                }
+            }
+        }
+
+        function renderizarPaginaActual() {
             const grid = document.getElementById('menuGrid');
             const totalItems = filteredMenuItems.length;
             const totalPages = Math.ceil(totalItems / itemsPerPage) || 1;
@@ -1489,26 +1518,14 @@
                 document.getElementById('paginationControls').style.display = 'none';
                 return;
             } else document.getElementById('paginationControls').style.display = 'flex';
-            
-            let html = '';
-            for (const item of itemsPagina) {
-                let stockDisponible = Infinity;
-                if (item.ingredientes && Object.keys(item.ingredientes).length > 0) {
-                    for (const [ingId, ingInfo] of Object.entries(item.ingredientes)) {
-                        const stockDisp = await getStockDisponible(ingId);
-                        const cantidadNecesaria = ingInfo.cantidad || 1;
-                        stockDisponible = Math.min(stockDisponible, Math.floor(stockDisp / cantidadNecesaria));
-                    }
-                } else stockDisponible = item.stock_maximo || 999;
-                
+
+            // Render 100% síncrono — sin awaits, sin queries
+            const html = itemsPagina.map(item => {
+                const stockDisponible = _stockPrecalculado[item.id] ?? 999;
                 const agotado = stockDisponible <= 0;
-                let stockClass = 'available';
-                if (agotado) stockClass = 'sold-out';
-                else if (stockDisponible < 5) stockClass = 'low';
-                
+                const stockClass = agotado ? 'sold-out' : (stockDisponible < 5 ? 'low' : 'available');
                 const favorito = esFavorito(item.id) ? 'active' : '';
-                
-                html += `
+                return `
                     <div class="menu-card ${agotado ? 'agotado' : ''}">
                         <div class="menu-card-image" style="background-image:url('${item.imagen || 'https://via.placeholder.com/400x300?text=Sushi'}')" ${agotado ? '' : `onclick="abrirPreview('${item.id}')"`}>
                             ${agotado
@@ -1535,9 +1552,9 @@
                             </div>
                             ${!agotado ? `<div class="stock-info"><i class="fas fa-box ${stockClass}"></i><span>${stockDisponible} disponibles</span></div>` : ''}
                         </div>
-                    </div>
-                `;
-            }
+                    </div>`;
+            }).join('');
+
             grid.innerHTML = html;
             document.getElementById('pageInfo').textContent = `Página ${currentPage} de ${totalPages}`;
             document.getElementById('prevPageBtn').disabled = currentPage === 1;
@@ -1657,6 +1674,7 @@
 
         function guardarCarrito() {
             localStorage.setItem('saki_carrito', JSON.stringify({ items: carrito, timestamp: Date.now() }));
+            precalcularStockMenu(); // Recalcular stock reservado al cambiar carrito
         }
 
         function restaurarCarrito() {
