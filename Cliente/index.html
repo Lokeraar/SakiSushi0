@@ -455,8 +455,8 @@
         .toast.info{background:var(--info)}
         .toast.warning{background:var(--warning)}
         @keyframes slideUp{from{transform:translate(-50%,20px);opacity:0}to{transform:translate(-50%,0);opacity:1}}
-        .scroll-indicator-cascade{display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;margin-top:.5rem;cursor:pointer;opacity:0.9;transition:opacity 0.3s;background:rgba(26,26,46,.9);border-radius:30px;padding:5px 0;backdrop-filter:blur(5px);box-shadow:0 -5px 15px rgba(0,0,0,.3);pointer-events:auto;flex-shrink:0;position:sticky;bottom:0;z-index:5}
-        body.tema-claro .scroll-indicator-cascade{background:rgba(220,220,235,.95)}
+        #cartIndicatorContainer{flex-shrink:0;padding:0 1.2rem .4rem 1.2rem}
+        .scroll-indicator-cascade{display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;cursor:pointer;opacity:0.9;transition:opacity 0.3s;background:rgba(26,26,46,.9);border-radius:30px;padding:5px 0;backdrop-filter:blur(5px);box-shadow:0 -5px 15px rgba(0,0,0,.3);pointer-events:auto}
         .scroll-indicator-cascade.hidden{display:none}
         .scroll-indicator-cascade:hover{opacity:1}
         .cascade-arrow{font-size:1.5rem;color:var(--accent);filter:drop-shadow(0 0 5px rgba(255,152,0,0.5));animation:cascadeDown 1.5s infinite}
@@ -629,6 +629,7 @@
                     <div class="cart-items" id="cartItems">
                         <div class="cart-empty"><i class="fas fa-shopping-basket"></i><p>Tu carrito está vacío</p><small>¡Agrega algunos platillos!</small></div>
                     </div>
+                    <div id="cartIndicatorContainer"></div>
                     <div class="cart-footer" id="cartFooter" style="display:none;">
                         <div class="cart-total"><span>Total:</span><span id="cartTotal">Bs. 0,00</span></div>
                         <div class="cart-buttons" id="cartButtons"></div>
@@ -1650,12 +1651,14 @@
             });
             
             const flechasHTML = `<div class="scroll-indicator-cascade" onclick="irABotonesAccion()"><i class="fas fa-chevron-down cascade-arrow"></i><i class="fas fa-chevron-down cascade-arrow"></i><i class="fas fa-chevron-down cascade-arrow"></i><span class="cascade-text">Toca y haz tu pedido</span></div>`;
-            if (carrito.length > 0) {
-                html += flechasHTML;
-                iniciarSeguimientoScroll();
-            }
-            
             cartItems.innerHTML = html;
+            const indicatorContainer = document.getElementById('cartIndicatorContainer');
+            if (carrito.length > 0) {
+                indicatorContainer.innerHTML = flechasHTML;
+                iniciarSeguimientoScroll();
+            } else {
+                indicatorContainer.innerHTML = '';
+            }
             cartTotal.textContent = formatBs(totalGeneral);
             cartButtons.innerHTML = '';
             
@@ -1869,16 +1872,9 @@
         }
 
         function actualizarPosicionFlechas() {
-            const flechas = document.querySelector('.scroll-indicator-cascade');
-            const cartItems = document.getElementById('cartItems');
-            if (!flechas || !cartItems || carrito.length === 0) {
-                if (scrollRafId) { cancelAnimationFrame(scrollRafId); scrollRafId = null; }
-                return;
-            }
-            // Con position:sticky las flechas se mantienen siempre visibles al fondo del scroll
-            // Solo nos aseguramos de que estén visibles
-            flechas.classList.remove('hidden');
-            scrollRafId = requestAnimationFrame(actualizarPosicionFlechas);
+            // Las flechas están en #cartIndicatorContainer, posición fija entre cart-items y cart-footer
+            // No se necesita ningún cálculo de posición
+            if (scrollRafId) { cancelAnimationFrame(scrollRafId); scrollRafId = null; }
         }
 
         function irABotonesAccion() {
