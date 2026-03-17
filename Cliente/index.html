@@ -246,7 +246,8 @@
         .cart-header button{background:none;border:none;font-size:1.2rem;cursor:pointer;color:var(--gray-400);transition:color .2s;width:35px;height:35px;border-radius:50%;display:flex;align-items:center;justify-content:center}
         .cart-header button:hover{background:rgba(255,255,255,.05);color:var(--danger)}
         @media (min-width:993px){.cart-header button#closeCart{display:none}}
-        .cart-items{flex:1;overflow-y:auto;padding:1.2rem;display:flex;flex-direction:column;gap:.8rem;position:relative;scroll-behavior:smooth}
+        .cart-items{flex:1;overflow-y:auto;position:relative;scroll-behavior:smooth}
+        .cart-items-inner{display:flex;flex-direction:column;gap:.8rem;padding:1.2rem}
         .cart-empty{text-align:center;padding:2rem 1rem;color:var(--gray-400)}
         .cart-empty i{font-size:3rem;margin-bottom:.8rem;opacity:.5}
         .cart-empty p{font-size:1rem}
@@ -1659,7 +1660,9 @@
             });
             
             const flechasHTML = `<div class="scroll-indicator-cascade" onclick="irABotonesAccion()"><i class="fas fa-chevron-down cascade-arrow"></i><i class="fas fa-chevron-down cascade-arrow"></i><i class="fas fa-chevron-down cascade-arrow"></i><span class="cascade-text">Toca y haz tu pedido</span></div>`;
-            cartItems.innerHTML = carrito.length > 0 ? html + flechasHTML : html;
+            cartItems.innerHTML = carrito.length > 0
+                ? `<div class="cart-items-inner">${html}</div>` + flechasHTML
+                : html;
             if (carrito.length > 0) iniciarSeguimientoScroll();
             const indicatorContainer = document.getElementById('cartIndicatorContainer');
             if (indicatorContainer) indicatorContainer.innerHTML = '';
