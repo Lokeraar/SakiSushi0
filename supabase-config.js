@@ -115,8 +115,8 @@ window.formatearFechaGMT4 = function(timestamp) {
         const dia     = String(opts({ day:    'numeric' })).padStart(2, '0');
         const mes     = String(opts({ month:  'numeric' })).padStart(2, '0');
         const ano     = opts({ year: 'numeric' });
-        const hhmm    = opts({ hour: '2-digit', minute: '2-digit', hour12: false });
-        return `${dia}/${mes}/${ano} ${hhmm}`;
+        const hhmm    = opts({ hour: 'numeric', minute: '2-digit', hour12: true });
+        return `${dia}/${mes}/${ano} ${hhmm}`.toLowerCase();
     } catch (e) {
         return timestamp;
     }
