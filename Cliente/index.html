@@ -419,13 +419,13 @@
         body.tema-claro .modal-footer{border-top:1px solid rgba(0,0,0,.1)}
         /* ── Clases de formulario para modales delivery/reserva ── */
         .modal-form-label{display:block;margin-bottom:.5rem;font-weight:600;color:#fff}
-        .modal-form-input{width:100%;padding:.8rem;border:2px solid rgba(255,255,255,.1);border-radius:var(--radius-sm);font-size:1rem;background:rgba(0,0,0,.3);color:#fff;transition:border .2s;font-family:inherit}
-        .modal-form-input:focus{outline:none;border-color:var(--accent)}
-        .modal-form-input::placeholder{color:var(--gray-500)}
-        .modal-form-ref-digit{width:50px;height:50px;text-align:center;padding:.5rem;border:2px solid rgba(255,255,255,.1);border-radius:var(--radius-sm);font-size:1.4rem;font-weight:600;background:rgba(0,0,0,.3);color:#fff;font-family:monospace}
+        .modal-form-input:not(.ref-digit){width:100%;padding:.8rem;border:2px solid rgba(255,255,255,.1);border-radius:var(--radius-sm);font-size:1rem;background:rgba(0,0,0,.3);color:#fff;transition:border .2s;font-family:inherit}
+        .modal-form-input:not(.ref-digit):focus{outline:none;border-color:var(--accent)}
+        .modal-form-input:not(.ref-digit)::placeholder{color:var(--gray-500)}
+        .modal-form-ref-digit{width:50px !important;height:50px;text-align:center;padding:.5rem;border:2px solid rgba(255,255,255,.1);border-radius:var(--radius-sm);font-size:1.4rem;font-weight:600;background:rgba(0,0,0,.3);color:#fff;font-family:monospace;flex-shrink:0}
         body.tema-claro .modal-form-label{color:#1a1a2e}
-        body.tema-claro .modal-form-input{background:rgba(255,255,255,.7);color:#1a1a2e;border-color:rgba(0,0,0,.2)}
-        body.tema-claro .modal-form-input::placeholder{color:#8a8a9e}
+        body.tema-claro .modal-form-input:not(.ref-digit){background:rgba(255,255,255,.7);color:#1a1a2e;border-color:rgba(0,0,0,.2)}
+        body.tema-claro .modal-form-input:not(.ref-digit)::placeholder{color:#8a8a9e}
         body.tema-claro .modal-form-ref-digit{background:rgba(255,255,255,.8);color:#1a1a2e;border-color:rgba(0,0,0,.25)}
         body.tema-claro .parroquia-trigger{background:rgba(255,255,255,.7) !important;color:#1a1a2e !important;border-color:rgba(0,0,0,.2) !important}
         body.tema-claro .payment-info{background:rgba(0,0,0,.05);border-color:var(--primary)}
