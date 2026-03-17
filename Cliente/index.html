@@ -417,7 +417,17 @@
         body.tema-claro .modal-body label{color:#1a1a2e}
         body.tema-claro .modal-body span{color:#2d2d44}
         body.tema-claro .modal-footer{border-top:1px solid rgba(0,0,0,.1)}
-        /* ── Tema claro: modales delivery / reserva ── */
+        /* ── Clases de formulario para modales delivery/reserva ── */
+        .modal-form-label{display:block;margin-bottom:.5rem;font-weight:600;color:#fff}
+        .modal-form-input{width:100%;padding:.8rem;border:2px solid rgba(255,255,255,.1);border-radius:var(--radius-sm);font-size:1rem;background:rgba(0,0,0,.3);color:#fff;transition:border .2s;font-family:inherit}
+        .modal-form-input:focus{outline:none;border-color:var(--accent)}
+        .modal-form-input::placeholder{color:var(--gray-500)}
+        .modal-form-ref-digit{width:50px;height:50px;text-align:center;padding:.5rem;border:2px solid rgba(255,255,255,.1);border-radius:var(--radius-sm);font-size:1.4rem;font-weight:600;background:rgba(0,0,0,.3);color:#fff;font-family:monospace}
+        body.tema-claro .modal-form-label{color:#1a1a2e}
+        body.tema-claro .modal-form-input{background:rgba(255,255,255,.7);color:#1a1a2e;border-color:rgba(0,0,0,.2)}
+        body.tema-claro .modal-form-input::placeholder{color:#8a8a9e}
+        body.tema-claro .modal-form-ref-digit{background:rgba(255,255,255,.8);color:#1a1a2e;border-color:rgba(0,0,0,.25)}
+        body.tema-claro .parroquia-trigger{background:rgba(255,255,255,.7) !important;color:#1a1a2e !important;border-color:rgba(0,0,0,.2) !important}
         body.tema-claro .payment-info{background:rgba(0,0,0,.05);border-color:var(--primary)}
         body.tema-claro .payment-info h4{color:#1a1a2e;border-bottom-color:rgba(0,0,0,.1)}
         body.tema-claro .payment-details{background:rgba(0,0,0,.04)}
@@ -488,6 +498,7 @@
         .toast.info{background:var(--info)}
         .toast.warning{background:var(--warning)}
         @keyframes slideUp{from{transform:translate(-50%,20px);opacity:0}to{transform:translate(-50%,0);opacity:1}}
+        @keyframes slideDown{from{transform:translateY(-20px);opacity:0}to{transform:translateY(0);opacity:1}}
         #cartIndicatorContainer{display:none}
         .scroll-indicator-cascade{display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;cursor:pointer;opacity:0.9;transition:opacity 0.3s;background:rgba(26,26,46,.95);border-radius:30px;padding:8px 0;backdrop-filter:blur(8px);box-shadow:0 4px 12px rgba(0,0,0,.3);pointer-events:auto;position:sticky;top:8px;z-index:5;flex-shrink:0}
         body.tema-claro .scroll-indicator-cascade{background:rgba(30,30,55,.88)}
@@ -774,7 +785,7 @@
                     
                     <form id="deliveryForm">
                         <div style="margin-bottom:1.5rem">
-                            <label style="display:block; margin-bottom:.5rem; font-weight:600; color:#fff">Parroquia a enviar: <span class="asterisk">*</span></label>
+                            <label class="modal-form-label">Parroquia a enviar: <span class="asterisk">*</span></label>
                             <div class="parroquia-selector">
                                 <div class="selected-parroquia" onclick="toggleParroquiaSelect()">
                                     <span id="selectedParroquiaText">Seleccionar parroquia</span>
@@ -822,30 +833,30 @@
                         <div class="delivery-price-display" id="deliveryPriceDisplay">Primero seleccione Parroquia a enviar</div>
                         
                         <div style="margin-bottom:1.5rem">
-                            <label for="direccion" style="display:block; margin-bottom:.5rem; font-weight:600; color:#fff">Dirección completa <span class="asterisk">*</span></label>
-                            <textarea id="direccion" required minlength="20" placeholder="Introduce tu dirección completa (mínimo 20 caracteres)" style="width:100%; padding:.8rem; border:2px solid rgba(255,255,255,.1); border-radius:var(--radius-sm); font-size:1rem; transition:border .2s; background:rgba(0,0,0,.3); color:#fff" rows="3" oninput="actualizarContadorDireccion()"></textarea>
+                            <label for="direccion" class="modal-form-label">Dirección completa <span class="asterisk">*</span></label>
+                            <textarea id="direccion" required minlength="20" placeholder="Introduce tu dirección completa (mínimo 20 caracteres)" class="modal-form-input" rows="3" oninput="actualizarContadorDireccion()"></textarea>
                             <div style="display:flex; justify-content:flex-end; margin-top:.3rem"><small id="direccionCounter" style="color:var(--gray-400); font-weight:500">0/20 caracteres</small></div>
                         </div>
                         
                         <div style="margin-bottom:1.5rem">
-                            <label for="telefono" style="display:block; margin-bottom:.5rem; font-weight:600; color:#fff">Teléfono (máx 14 dígitos) <span class="asterisk">*</span></label>
-                            <input type="tel" id="telefono" required pattern="\+[0-9]{11,14}" maxlength="15" placeholder="Ej: +5804121234567 o 04121234567" inputmode="numeric" style="width:100%; padding:.8rem; border:2px solid rgba(255,255,255,.1); border-radius:var(--radius-sm); font-size:1rem; background:rgba(0,0,0,.3); color:#fff" oninput="this.value=this.value.replace(/[^0-9+]/g,''); if(this.value.indexOf('+')!==0&&this.value.length>0){this.value='+'+this.value.replace(/\+/g,'')} validarFormularioDelivery()">
+                            <label for="telefono" class="modal-form-label">Teléfono (máx 14 dígitos) <span class="asterisk">*</span></label>
+                            <input type="tel" id="telefono" required pattern="\+[0-9]{11,14}" maxlength="15" placeholder="Ej: +5804121234567 o 04121234567" inputmode="numeric" class="modal-form-input" oninput="this.value=this.value.replace(/[^0-9+]/g,''); if(this.value.indexOf('+')!==0&&this.value.length>0){this.value='+'+this.value.replace(/\+/g,'')} validarFormularioDelivery()">
                         </div>
                         
                         <div style="margin-bottom:1.5rem">
-                            <label style="display:block; margin-bottom:.5rem; font-weight:600; color:#fff">Referencia (6 dígitos) <span class="asterisk">*</span></label>
+                            <label class="modal-form-label">Referencia (6 dígitos) <span class="asterisk">*</span></label>
                             <div style="display:flex; gap:.5rem; justify-content:center">
-                                <input type="text" maxlength="1" class="ref-digit" data-type="delivery" data-index="0" style="width:50px; height:50px; text-align:center; padding:.5rem; border:2px solid rgba(255,255,255,.1); border-radius:var(--radius-sm); font-size:1.4rem; font-weight:600; background:rgba(0,0,0,.3); color:#fff" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this,'delivery',0); validarFormularioDelivery()">
-                                <input type="text" maxlength="1" class="ref-digit" data-type="delivery" data-index="1" style="width:50px; height:50px; text-align:center; padding:.5rem; border:2px solid rgba(255,255,255,.1); border-radius:var(--radius-sm); font-size:1.4rem; font-weight:600; background:rgba(0,0,0,.3); color:#fff" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this,'delivery',1); validarFormularioDelivery()">
-                                <input type="text" maxlength="1" class="ref-digit" data-type="delivery" data-index="2" style="width:50px; height:50px; text-align:center; padding:.5rem; border:2px solid rgba(255,255,255,.1); border-radius:var(--radius-sm); font-size:1.4rem; font-weight:600; background:rgba(0,0,0,.3); color:#fff" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this,'delivery',2); validarFormularioDelivery()">
-                                <input type="text" maxlength="1" class="ref-digit" data-type="delivery" data-index="3" style="width:50px; height:50px; text-align:center; padding:.5rem; border:2px solid rgba(255,255,255,.1); border-radius:var(--radius-sm); font-size:1.4rem; font-weight:600; background:rgba(0,0,0,.3); color:#fff" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this,'delivery',3); validarFormularioDelivery()">
-                                <input type="text" maxlength="1" class="ref-digit" data-type="delivery" data-index="4" style="width:50px; height:50px; text-align:center; padding:.5rem; border:2px solid rgba(255,255,255,.1); border-radius:var(--radius-sm); font-size:1.4rem; font-weight:600; background:rgba(0,0,0,.3); color:#fff" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this,'delivery',4); validarFormularioDelivery()">
-                                <input type="text" maxlength="1" class="ref-digit" data-type="delivery" data-index="5" style="width:50px; height:50px; text-align:center; padding:.5rem; border:2px solid rgba(255,255,255,.1); border-radius:var(--radius-sm); font-size:1.4rem; font-weight:600; background:rgba(0,0,0,.3); color:#fff" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this,'delivery',5); validarFormularioDelivery()">
+                                <input type="text" maxlength="1" class="ref-digit" data-type="delivery" data-index="0" class="modal-form-ref-digit" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this,'delivery',0); validarFormularioDelivery()">
+                                <input type="text" maxlength="1" class="ref-digit" data-type="delivery" data-index="1" class="modal-form-ref-digit" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this,'delivery',1); validarFormularioDelivery()">
+                                <input type="text" maxlength="1" class="ref-digit" data-type="delivery" data-index="2" class="modal-form-ref-digit" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this,'delivery',2); validarFormularioDelivery()">
+                                <input type="text" maxlength="1" class="ref-digit" data-type="delivery" data-index="3" class="modal-form-ref-digit" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this,'delivery',3); validarFormularioDelivery()">
+                                <input type="text" maxlength="1" class="ref-digit" data-type="delivery" data-index="4" class="modal-form-ref-digit" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this,'delivery',4); validarFormularioDelivery()">
+                                <input type="text" maxlength="1" class="ref-digit" data-type="delivery" data-index="5" class="modal-form-ref-digit" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this,'delivery',5); validarFormularioDelivery()">
                             </div>
                         </div>
                         
                         <div style="margin-bottom:1.5rem">
-                            <label for="comprobante" style="display:block; margin-bottom:.5rem; font-weight:600; color:#fff">Comprobante de pago <span class="asterisk">*</span></label>
+                            <label for="comprobante" class="modal-form-label">Comprobante de pago <span class="asterisk">*</span></label>
                             <div class="file-input-wrapper">
                                 <input type="file" id="comprobante" accept="image/*" style="display:none" onchange="handleComprobanteSelect(this)">
                                 <label for="comprobante" class="file-input-label" id="comprobanteLabel">
@@ -901,29 +912,29 @@
                     
                     <form id="reservaForm">
                         <div style="margin-bottom:1.5rem">
-                            <label for="fechaReserva" style="display:block; margin-bottom:.5rem; font-weight:600; color:#fff">Fecha de la reserva <span class="asterisk">*</span></label>
-                            <input type="date" id="fechaReserva" required min="" style="width:100%; padding:.8rem; border:2px solid rgba(255,255,255,.1); border-radius:var(--radius-sm); font-size:1rem; background:rgba(0,0,0,.3); color:#fff" onchange="validarFormularioReserva()">
+                            <label for="fechaReserva" class="modal-form-label">Fecha de la reserva <span class="asterisk">*</span></label>
+                            <input type="date" id="fechaReserva" required min="" class="modal-form-input" onchange="validarFormularioReserva()">
                         </div>
                         
                         <div style="margin-bottom:1.5rem">
-                            <label for="nombreReserva" style="display:block; margin-bottom:.5rem; font-weight:600; color:#fff">Nombre completo <span class="asterisk">*</span></label>
-                            <input type="text" id="nombreReserva" required placeholder="Tu nombre" style="width:100%; padding:.8rem; border:2px solid rgba(255,255,255,.1); border-radius:var(--radius-sm); font-size:1rem; background:rgba(0,0,0,.3); color:#fff" oninput="validarFormularioReserva()">
+                            <label for="nombreReserva" class="modal-form-label">Nombre completo <span class="asterisk">*</span></label>
+                            <input type="text" id="nombreReserva" required placeholder="Tu nombre" class="modal-form-input" oninput="validarFormularioReserva()">
                         </div>
                         
                         <div style="margin-bottom:1.5rem">
-                            <label style="display:block; margin-bottom:.5rem; font-weight:600; color:#fff">Referencia (6 dígitos) <span class="asterisk">*</span></label>
+                            <label class="modal-form-label">Referencia (6 dígitos) <span class="asterisk">*</span></label>
                             <div style="display:flex; gap:.5rem; justify-content:center">
-                                <input type="text" maxlength="1" class="ref-digit" data-type="reserva" data-index="0" style="width:50px; height:50px; text-align:center; padding:.5rem; border:2px solid rgba(255,255,255,.1); border-radius:var(--radius-sm); font-size:1.4rem; font-weight:600; background:rgba(0,0,0,.3); color:#fff" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this,'reserva',0); validarFormularioReserva()">
-                                <input type="text" maxlength="1" class="ref-digit" data-type="reserva" data-index="1" style="width:50px; height:50px; text-align:center; padding:.5rem; border:2px solid rgba(255,255,255,.1); border-radius:var(--radius-sm); font-size:1.4rem; font-weight:600; background:rgba(0,0,0,.3); color:#fff" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this,'reserva',1); validarFormularioReserva()">
-                                <input type="text" maxlength="1" class="ref-digit" data-type="reserva" data-index="2" style="width:50px; height:50px; text-align:center; padding:.5rem; border:2px solid rgba(255,255,255,.1); border-radius:var(--radius-sm); font-size:1.4rem; font-weight:600; background:rgba(0,0,0,.3); color:#fff" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this,'reserva',2); validarFormularioReserva()">
-                                <input type="text" maxlength="1" class="ref-digit" data-type="reserva" data-index="3" style="width:50px; height:50px; text-align:center; padding:.5rem; border:2px solid rgba(255,255,255,.1); border-radius:var(--radius-sm); font-size:1.4rem; font-weight:600; background:rgba(0,0,0,.3); color:#fff" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this,'reserva',3); validarFormularioReserva()">
-                                <input type="text" maxlength="1" class="ref-digit" data-type="reserva" data-index="4" style="width:50px; height:50px; text-align:center; padding:.5rem; border:2px solid rgba(255,255,255,.1); border-radius:var(--radius-sm); font-size:1.4rem; font-weight:600; background:rgba(0,0,0,.3); color:#fff" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this,'reserva',4); validarFormularioReserva()">
-                                <input type="text" maxlength="1" class="ref-digit" data-type="reserva" data-index="5" style="width:50px; height:50px; text-align:center; padding:.5rem; border:2px solid rgba(255,255,255,.1); border-radius:var(--radius-sm); font-size:1.4rem; font-weight:600; background:rgba(0,0,0,.3); color:#fff" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this,'reserva',5); validarFormularioReserva()">
+                                <input type="text" maxlength="1" class="ref-digit" data-type="reserva" data-index="0" class="modal-form-ref-digit" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this,'reserva',0); validarFormularioReserva()">
+                                <input type="text" maxlength="1" class="ref-digit" data-type="reserva" data-index="1" class="modal-form-ref-digit" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this,'reserva',1); validarFormularioReserva()">
+                                <input type="text" maxlength="1" class="ref-digit" data-type="reserva" data-index="2" class="modal-form-ref-digit" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this,'reserva',2); validarFormularioReserva()">
+                                <input type="text" maxlength="1" class="ref-digit" data-type="reserva" data-index="3" class="modal-form-ref-digit" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this,'reserva',3); validarFormularioReserva()">
+                                <input type="text" maxlength="1" class="ref-digit" data-type="reserva" data-index="4" class="modal-form-ref-digit" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this,'reserva',4); validarFormularioReserva()">
+                                <input type="text" maxlength="1" class="ref-digit" data-type="reserva" data-index="5" class="modal-form-ref-digit" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this,'reserva',5); validarFormularioReserva()">
                             </div>
                         </div>
                         
                         <div style="margin-bottom:1.5rem">
-                            <label for="comprobanteReserva" style="display:block; margin-bottom:.5rem; font-weight:600; color:#fff">Comprobante de pago <span class="asterisk">*</span></label>
+                            <label for="comprobanteReserva" class="modal-form-label">Comprobante de pago <span class="asterisk">*</span></label>
                             <div class="file-input-wrapper">
                                 <input type="file" id="comprobanteReserva" accept="image/*" style="display:none" onchange="handleComprobanteReservaSelect(this)">
                                 <label for="comprobanteReserva" class="file-input-label" id="comprobanteReservaLabel">
@@ -2004,6 +2015,23 @@
             if (bell) { bell.classList.add('fa-shake'); setTimeout(() => bell.classList.remove('fa-shake'), 1000); }
         }
 
+        function mostrarToastNotificacion(titulo, mensaje) {
+            // Toast enriquecido con logo para notificaciones en primer plano
+            let toastNotif = document.getElementById('toastNotificacion');
+            if (!toastNotif) {
+                toastNotif = document.createElement('div');
+                toastNotif.id = 'toastNotificacion';
+                toastNotif.style.cssText = 'position:fixed;top:20px;right:16px;left:16px;max-width:360px;margin:0 auto;background:linear-gradient(135deg,#1a1a2e,#16213e);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:12px 14px;display:none;align-items:center;gap:12px;z-index:4000;box-shadow:0 8px 32px rgba(0,0,0,.4);animation:slideDown .3s ease;backdrop-filter:blur(10px)';
+                toastNotif.innerHTML = '<img src="/SakiSushi0/icons/icon-192x192.png" style="width:40px;height:40px;border-radius:10px;flex-shrink:0"><div style="flex:1;min-width:0"><div id="toastNotifTitulo" style="font-weight:700;font-size:.9rem;color:#fff;margin-bottom:2px"></div><div id="toastNotifMensaje" style="font-size:.8rem;color:rgba(255,255,255,.7);white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div></div><button onclick="this.parentElement.style.display=\'none\'" style="background:none;border:none;color:rgba(255,255,255,.5);font-size:1.1rem;cursor:pointer;flex-shrink:0;padding:4px">×</button>';
+                document.body.appendChild(toastNotif);
+            }
+            document.getElementById('toastNotifTitulo').textContent = titulo || '🍣 Saki Sushi';
+            document.getElementById('toastNotifMensaje').textContent = mensaje || 'Nueva notificación';
+            toastNotif.style.display = 'flex';
+            clearTimeout(toastNotif._timer);
+            toastNotif._timer = setTimeout(() => { toastNotif.style.display = 'none'; }, 5000);
+        }
+
         function actualizarNotificacionesUI() {
             const badge = document.getElementById('notificationBadge');
             const countSpan = document.getElementById('notificationsCount');
@@ -2072,12 +2100,15 @@
                     if (!payload.new.leida) {
                         if (paginaVisible) {
                             reproducirAlertaNotificacion();
+                            // Toast enriquecido con logo y mensaje de la notificación
+                            mostrarToastNotificacion(payload.new.titulo, payload.new.mensaje);
                         } else if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
                             navigator.serviceWorker.controller.postMessage({
                                 type: 'SHOW_LOCAL_NOTIFICATION',
                                 titulo: payload.new.titulo || '🍣 Saki Sushi',
                                 mensaje: payload.new.mensaje || 'Tienes una nueva notificación',
-                                url: window.location.href
+                                url: window.location.href,
+                                tipo: payload.new.tipo
                             });
                         }
                     }
