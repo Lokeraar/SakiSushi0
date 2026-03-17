@@ -263,19 +263,25 @@
         .nivel1-header .header-details i{font-size:.8rem}
         .nivel2-container{max-height:0;overflow:hidden;transition:max-height .3s ease-out;background:rgba(0,0,0,.2)}
         .nivel2-container.expanded{max-height:1000px;transition:max-height .5s ease-in}
-        .nivel2-group{margin:.5rem;border-radius:var(--radius-sm);overflow:hidden;border:1px solid var(--nivel2-border)}
-        .nivel2-header{background:var(--nivel2-bg);color:var(--nivel2-text);padding:.6rem 1rem;display:flex;flex-direction:column;gap:.2rem;cursor:pointer;transition:background .2s}
+        .nivel2-group{border-radius:0;overflow:hidden;border:none;border-top:1px solid rgba(255,255,255,.08)}
+        .nivel2-header{background:var(--nivel2-bg);color:var(--nivel2-text);padding:.8rem 1rem;display:flex;flex-direction:column;gap:.3rem;cursor:pointer;transition:background .2s}
         .nivel2-header:hover{background:#FFE0B2}
         .nivel2-header .header-row{display:flex;align-items:center;justify-content:space-between;width:100%}
-        .nivel2-header .header-row .nombre{display:flex;align-items:center;gap:.5rem;font-weight:600;font-size:.95rem}
-        .nivel2-header .header-row .nombre i{font-size:.9rem;width:18px;transition:transform .3s}
+        .nivel2-header .header-row .nombre{display:flex;align-items:center;gap:.5rem;font-weight:600;font-size:1rem}
+        .nivel2-header .header-row .nombre i{font-size:1rem;width:20px;transition:transform .3s}
         .nivel2-header .header-row .nombre i.rotated{transform:rotate(90deg)}
-        .nivel2-header .header-details{display:flex;align-items:center;gap:.8rem;font-size:.85rem;color:var(--nivel2-text);padding-left:1.8rem}
+        .nivel2-header .header-details{display:flex;align-items:center;gap:1rem;font-size:.9rem;color:var(--nivel2-text);padding-left:1.8rem}
         .nivel2-header .header-details span{display:flex;align-items:center;gap:.3rem}
         .nivel3-container{max-height:0;overflow:hidden;transition:max-height .3s ease-out;background:var(--nivel3-bg)}
         .nivel3-container.expanded{max-height:500px;transition:max-height .4s ease-in}
-        .nivel3-item{display:flex;align-items:center;gap:.8rem;padding:.8rem;border-bottom:1px solid var(--nivel3-border);background:var(--nivel3-bg)}
+        .nivel3-item{display:grid;grid-template-columns:40px 1fr auto auto;grid-template-rows:auto;align-items:center;gap:.6rem;padding:.8rem;border-bottom:1px solid var(--nivel3-border);background:var(--nivel3-bg)}
         .nivel3-item:last-child{border-bottom:none}
+        .nivel3-item .item-image{width:40px;height:40px;border-radius:var(--radius-sm);background-size:cover;background-position:center;background-color:var(--gray-200);grid-row:1;grid-column:1}
+        .nivel3-item .item-info{grid-column:2;grid-row:1;min-width:0}
+        .nivel3-item .item-precio{grid-column:3;grid-row:1;font-weight:600;color:var(--secondary);font-size:.9rem;white-space:nowrap;text-align:right}
+        .nivel3-item .btn-remove-item{grid-column:4;grid-row:1}
+        .btn-borrar-grupo{background:none;border:none;color:var(--danger);cursor:pointer;font-size:.75rem;padding:.2rem .4rem;border-radius:4px;opacity:.7;transition:all .2s;display:flex;align-items:center;gap:.3rem;white-space:nowrap}
+        .btn-borrar-grupo:hover{opacity:1;background:rgba(239,68,68,.1)}
         .item-image{width:40px;height:40px;border-radius:var(--radius-sm);background-size:cover;background-position:center;background-color:var(--gray-200);flex-shrink:0}
         .item-info{flex:1;min-width:0}
         .item-info .item-number{font-weight:700;color:var(--primary);font-size:.85rem;margin-right:.5rem}
@@ -455,8 +461,11 @@
         .toast.info{background:var(--info)}
         .toast.warning{background:var(--warning)}
         @keyframes slideUp{from{transform:translate(-50%,20px);opacity:0}to{transform:translate(-50%,0);opacity:1}}
-        .scroll-indicator-cascade{display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;margin-top:.5rem;cursor:pointer;opacity:0.9;transition:opacity 0.3s;background:rgba(26,26,46,.9);border-radius:30px;padding:5px 0;backdrop-filter:blur(5px);box-shadow:0 -5px 15px rgba(0,0,0,.3);pointer-events:auto;flex-shrink:0;position:sticky;bottom:0;z-index:5}
-        body.tema-claro .scroll-indicator-cascade{background:rgba(220,220,235,.95)}
+        #cartIndicatorContainer{display:none}
+        .scroll-indicator-cascade{display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;cursor:pointer;opacity:0.9;transition:opacity 0.3s;background:rgba(26,26,46,.95);border-radius:30px;padding:8px 0;backdrop-filter:blur(8px);box-shadow:0 4px 20px rgba(0,0,0,.4);pointer-events:auto;position:sticky;top:0;z-index:5;margin-bottom:.5rem}
+        body.tema-claro .scroll-indicator-cascade{background:rgba(30,30,55,.88)}
+        body.tema-claro .cascade-text{color:#fff !important}
+        body.tema-claro .cascade-arrow{color:var(--accent) !important}
         .scroll-indicator-cascade.hidden{display:none}
         .scroll-indicator-cascade:hover{opacity:1}
         .cascade-arrow{font-size:1.5rem;color:var(--accent);filter:drop-shadow(0 0 5px rgba(255,152,0,0.5));animation:cascadeDown 1.5s infinite}
@@ -626,6 +635,7 @@
                         <h3><i class="fas fa-shopping-cart"></i> Tu Pedido</h3>
                         <button id="closeCart"><i class="fas fa-times"></i></button>
                     </div>
+                    <div id="cartIndicatorContainer" style="display:none;"></div>
                     <div class="cart-items" id="cartItems">
                         <div class="cart-empty"><i class="fas fa-shopping-basket"></i><p>Tu carrito está vacío</p><small>¡Agrega algunos platillos!</small></div>
                     </div>
@@ -1616,8 +1626,8 @@
                 cartFooter.style.display = 'none';
                 nivel1Activo = null; nivel2Activo = null;
                 detenerSeguimientoScroll();
-                const flechas = document.querySelector('.scroll-indicator-cascade');
-                if (flechas) flechas.classList.add('hidden');
+                const indicatorContainer = document.getElementById('cartIndicatorContainer');
+                if (indicatorContainer) { indicatorContainer.innerHTML = ''; indicatorContainer.style.display = 'none'; }
                 return;
             }
             
@@ -1628,7 +1638,7 @@
             grupos.forEach(grupo => {
                 totalGeneral += grupo.subtotal;
                 const nivel1Expandido = nivel1Activo === grupo.id;
-                html += `<div class="nivel1-group"><div class="nivel1-header" onclick="toggleNivel1('${grupo.id}')"><div class="header-row"><div class="nombre"><i class="fas fa-chevron-right" id="icon1-${grupo.id}" ${nivel1Expandido ? 'class="rotated"' : ''}></i><span>🍣 ${grupo.nombre}</span></div><span class="cantidad-total">${grupo.cantidad} unid.</span></div><div class="header-details"><span><i class="fas fa-tag"></i> Total: ${formatBs(grupo.subtotal)}</span></div></div><div class="nivel2-container ${nivel1Expandido ? 'expanded' : ''}" id="nivel1-${grupo.id}">`;
+                html += `<div class="nivel1-group"><div class="nivel1-header" onclick="toggleNivel1('${grupo.id}')"><div class="header-row"><div class="nombre"><i class="fas fa-chevron-right" id="icon1-${grupo.id}" ${nivel1Expandido ? 'class="rotated"' : ''}></i><span>🍣 ${grupo.nombre}</span></div><div style="display:flex;align-items:center;gap:.5rem"><span class="cantidad-total">${grupo.cantidad} unid.</span><button class="btn-borrar-grupo" onclick="event.stopPropagation();borrarGrupoNivel1('${grupo.id}')" title="Eliminar todos"><i class="fas fa-trash-alt"></i></button></div></div><div class="header-details"><span><i class="fas fa-tag"></i> Total: ${formatBs(grupo.subtotal)}</span></div></div><div class="nivel2-container ${nivel1Expandido ? 'expanded' : ''}" id="nivel1-${grupo.id}">`;
                 
                 grupo.subgrupos.forEach(subgrupo => {
                     const subgrupoId = `${grupo.id}_${subgrupo.id}`;
@@ -1638,7 +1648,7 @@
                         const ingredientesNombres = subgrupo.personalizacion.map(p => inventario.find(i => i.id === p)?.nombre || p).join(', ');
                         descripcionPersonalizacion = `Sin: ${ingredientesNombres}`;
                     }
-                    html += `<div class="nivel2-group"><div class="nivel2-header" onclick="toggleNivel2('${subgrupoId}','${grupo.id}')"><div class="header-row"><div class="nombre"><i class="fas fa-chevron-right" id="icon2-${subgrupoId}" ${nivel2Expandido ? 'class="rotated"' : ''}></i><span>🔹 ${descripcionPersonalizacion}</span></div><span class="cantidad-subtotal">${subgrupo.cantidad} unid.</span></div><div class="header-details"><span><i class="fas fa-tag"></i> Subtotal: ${formatBs(subgrupo.subtotal)}</span></div></div><div class="nivel3-container ${nivel2Expandido ? 'expanded' : ''}" id="nivel2-${subgrupoId}">`;
+                    html += `<div class="nivel2-group"><div class="nivel2-header" onclick="toggleNivel2('${subgrupoId}','${grupo.id}')"><div class="header-row"><div class="nombre"><i class="fas fa-chevron-right" id="icon2-${subgrupoId}" ${nivel2Expandido ? 'class="rotated"' : ''}></i><span>🔹 ${descripcionPersonalizacion}</span></div><div style="display:flex;align-items:center;gap:.5rem"><span class="cantidad-subtotal">${subgrupo.cantidad} unid.</span><button class="btn-borrar-grupo" onclick="event.stopPropagation();borrarGrupoNivel2('${subgrupoId}')" title="Eliminar todos"><i class="fas fa-trash-alt"></i></button></div></div><div class="header-details"><span><i class="fas fa-tag"></i> Subtotal: ${formatBs(subgrupo.subtotal)}</span></div></div><div class="nivel3-container ${nivel2Expandido ? 'expanded' : ''}" id="nivel2-${subgrupoId}">`;
                     
                     subgrupo.items.forEach((item, index) => {
                         const ingredientesNombres = item.personalizacion.map(p => inventario.find(i => i.id === p)?.nombre || p).join(', ');
@@ -1651,11 +1661,13 @@
             
             const flechasHTML = `<div class="scroll-indicator-cascade" onclick="irABotonesAccion()"><i class="fas fa-chevron-down cascade-arrow"></i><i class="fas fa-chevron-down cascade-arrow"></i><i class="fas fa-chevron-down cascade-arrow"></i><span class="cascade-text">Toca y haz tu pedido</span></div>`;
             if (carrito.length > 0) {
-                html += flechasHTML;
+                cartItems.innerHTML = flechasHTML + html;
                 iniciarSeguimientoScroll();
+            } else {
+                cartItems.innerHTML = html;
             }
-            
-            cartItems.innerHTML = html;
+            const indicatorContainer = document.getElementById('cartIndicatorContainer');
+            if (indicatorContainer) indicatorContainer.innerHTML = '';
             cartTotal.textContent = formatBs(totalGeneral);
             cartButtons.innerHTML = '';
             
@@ -1800,6 +1812,28 @@
             calcularPrecioPersonalizado();
         }
 
+        function borrarGrupoNivel1(grupoId) {
+            carrito = carrito.filter(inst => {
+                const gId = inst.platilloId.replace(/[^a-zA-Z0-9]/g, '_');
+                return gId !== grupoId;
+            });
+            guardarCarrito(); actualizarCarritoUI(); actualizarCarritoBadge();
+            window.stockCache.invalidate();
+        }
+
+        function borrarGrupoNivel2(subgrupoId) {
+            // subgrupoId = grupoId_platilloId_persKey
+            const partes = subgrupoId.split('_');
+            carrito = carrito.filter(inst => {
+                const gId = inst.platilloId.replace(/[^a-zA-Z0-9]/g, '_');
+                const persKey = (inst.personalizacion || []).slice().sort().join('|').replace(/[^a-zA-Z0-9]/g, '_');
+                const instSubgrupoId = `${gId}_${inst.platilloId.replace(/[^a-zA-Z0-9]/g, '_')}_${persKey}`;
+                return instSubgrupoId !== subgrupoId;
+            });
+            guardarCarrito(); actualizarCarritoUI(); actualizarCarritoBadge();
+            window.stockCache.invalidate();
+        }
+
         function actualizarCantidadPersonalizacion(delta) {
             if (!currentCustomizeItem) return;
             currentCustomizeItem.cantidad = Math.max(1, currentCustomizeItem.cantidad + delta);
@@ -1869,16 +1903,9 @@
         }
 
         function actualizarPosicionFlechas() {
-            const flechas = document.querySelector('.scroll-indicator-cascade');
-            const cartItems = document.getElementById('cartItems');
-            if (!flechas || !cartItems || carrito.length === 0) {
-                if (scrollRafId) { cancelAnimationFrame(scrollRafId); scrollRafId = null; }
-                return;
-            }
-            // Con position:sticky las flechas se mantienen siempre visibles al fondo del scroll
-            // Solo nos aseguramos de que estén visibles
-            flechas.classList.remove('hidden');
-            scrollRafId = requestAnimationFrame(actualizarPosicionFlechas);
+            // Las flechas están en #cartIndicatorContainer, posición fija entre cart-items y cart-footer
+            // No se necesita ningún cálculo de posición
+            if (scrollRafId) { cancelAnimationFrame(scrollRafId); scrollRafId = null; }
         }
 
         function irABotonesAccion() {
