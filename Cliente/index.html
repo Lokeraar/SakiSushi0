@@ -186,6 +186,13 @@
         [data-tooltip]{position:relative;cursor:pointer}
         [data-tooltip]:before{content:attr(data-tooltip);position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);padding:5px 10px;background:rgba(20,20,30,.92);color:white;font-size:.75rem;border-radius:6px;white-space:nowrap;text-align:center;opacity:0;visibility:hidden;transition:opacity .2s;pointer-events:none;z-index:2000;box-shadow:var(--shadow-md)}
         [data-tooltip]:hover:before{opacity:1;visibility:visible}
+        /* En móvil táctil: deshabilitar tooltips en botones del header para evitar que aparezcan al tocar */
+        @media (hover:none) and (pointer:coarse) {
+            .menu-hamburguesa[data-tooltip]:before,
+            .theme-toggle[data-tooltip]:before,
+            .icon-button[data-tooltip]:before,
+            .voice-search-btn[data-tooltip]:before { display:none !important; }
+        }
         /* Evitar recorte en botones cerca del borde izquierdo */
         .btn-add[data-tooltip]:before,.favorite-btn[data-tooltip]:before{left:0;transform:translateX(0)}
         /* Evitar recorte en botones cerca del borde derecho */
@@ -570,7 +577,7 @@
     
     <header class="header">
         <div class="header-left">
-            <button class="menu-hamburguesa" id="menuToggle" title="Categorías" data-tooltip="Ver categorías">
+            <button class="menu-hamburguesa" id="menuToggle" aria-label="Ver categorías">
                 <i class="fas fa-bars"></i>
             </button>
             <button class="theme-toggle" id="themeToggle" onclick="toggleTema()" data-tooltip="Cambiar tema">
