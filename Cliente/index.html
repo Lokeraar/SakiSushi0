@@ -1358,9 +1358,13 @@
 
         async function solicitarPermisoPushAuto() {
             if (!('Notification' in window) || !('serviceWorker' in navigator) || location.protocol !== 'https:') return;
+            
+            // Brave bloquea push por defecto — detectar y advertir
+            const esBrave = navigator.brave && await navigator.brave.isBrave().catch(() => false);
+            
             if (Notification.permission === 'granted') {
                 try {
-                    const registration = await navigator.serviceWorker.register('/SakiSushi0/sw.js');
+                    const registration = await navigator.serviceWorker.register('/SakiSushi0/sw.js', { scope: '/SakiSushi0/' });
                     await navigator.serviceWorker.ready;
                     let subscription = await registration.pushManager.getSubscription();
                     if (!subscription) {
@@ -1369,19 +1373,29 @@
                             applicationServerKey: urlBase64ToUint8Array('BC6oJ4E+5pGIn4icpzCBLMi6/nk+1JJenrUA41uJrAs1ELraSw5ctvRAlh8sHVldqzBXUtEwEeFKBm0/hmuM9EY=')
                         });
                     }
+                    // Verificar que el endpoint no esté bloqueado por Brave
+                    if (esBrave && subscription.endpoint.includes('fcm.googleapis.com')) {
+                        console.warn('⚠️ Brave puede bloquear notificaciones push de Google FCM. Activa "Usar Google Services para mensajería push" en brave://settings/privacy');
+                    }
                     const p256dh = btoa(String.fromCharCode.apply(null, new Uint8Array(subscription.getKey('p256dh'))));
-                    const auth = btoa(String.fromCharCode.apply(null, new Uint8Array(subscription.getKey('auth'))));
+                    const auth   = btoa(String.fromCharCode.apply(null, new Uint8Array(subscription.getKey('auth'))));
                     await window.supabaseClient.from('push_subscriptions').upsert([{
                         session_id: sessionId,
-                        endpoint: subscription.endpoint,
-                        p256dh: p256dh,
-                        auth: auth,
+                        endpoint:   subscription.endpoint,
+                        p256dh,
+                        auth,
                         user_agent: navigator.userAgent
                     }], { onConflict: 'endpoint' });
-                } catch (e) { /* push no disponible */ }
+                    console.log('✅ Suscripción push registrada:', subscription.endpoint.substring(0, 60) + '...');
+                } catch (e) {
+                    console.warn('⚠️ Push no disponible:', e.message);
+                    if (esBrave) {
+                        console.warn('Brave: ve a brave://settings/privacy → activa "Usar Google Services para mensajería push"');
+                    }
+                }
             } else if (Notification.permission === 'default') {
                 Notification.requestPermission().then(perm => {
-                    if (perm === 'granted') window.location.reload();
+                    if (perm === 'granted') solicitarPermisoPushAuto();
                 });
             }
         }
@@ -2022,7 +2036,7 @@
                 toastNotif = document.createElement('div');
                 toastNotif.id = 'toastNotificacion';
                 toastNotif.style.cssText = 'position:fixed;top:20px;right:16px;left:16px;max-width:360px;margin:0 auto;background:linear-gradient(135deg,#1a1a2e,#16213e);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:12px 14px;display:none;align-items:center;gap:12px;z-index:4000;box-shadow:0 8px 32px rgba(0,0,0,.4);animation:slideDown .3s ease;backdrop-filter:blur(10px)';
-                toastNotif.innerHTML = '<img src="/SakiSushi0/icons/icon-192x192.png" style="width:40px;height:40px;border-radius:10px;flex-shrink:0"><div style="flex:1;min-width:0"><div id="toastNotifTitulo" style="font-weight:700;font-size:.9rem;color:#fff;margin-bottom:2px"></div><div id="toastNotifMensaje" style="font-size:.8rem;color:rgba(255,255,255,.7);white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div></div><button onclick="this.parentElement.style.display=\'none\'" style="background:none;border:none;color:rgba(255,255,255,.5);font-size:1.1rem;cursor:pointer;flex-shrink:0;padding:4px">×</button>';
+                toastNotif.innerHTML = '<img src="https://lh3.googleusercontent.com/pw/AP1GczPrZAoWxmsOGRD9xl1hO5Q65JXuwUZzoR6gUk-cw5lVmarxQe_-lwqpA60tTKLlXfpvIjAJlKC6jFls-xETJOPkebLIIPhbGlUkknmhrRbdhMUll2UViGSUj3WmHKg2YEsZlAfxBPPTjIHhScjD0jfe=w1439-h1439-s-no-gm" style="width:40px;height:40px;border-radius:10px;flex-shrink:0"><div style="flex:1;min-width:0"><div id="toastNotifTitulo" style="font-weight:700;font-size:.9rem;color:#fff;margin-bottom:2px"></div><div id="toastNotifMensaje" style="font-size:.8rem;color:rgba(255,255,255,.7);white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></div></div><button onclick="this.parentElement.style.display=\'none\'" style="background:none;border:none;color:rgba(255,255,255,.5);font-size:1.1rem;cursor:pointer;flex-shrink:0;padding:4px">×</button>';
                 document.body.appendChild(toastNotif);
             }
             document.getElementById('toastNotifTitulo').textContent = titulo || '🍣 Saki Sushi';
