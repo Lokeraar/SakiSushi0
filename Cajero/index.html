@@ -175,6 +175,7 @@ window.actualizarEstadisticas=function(){const preparacion=(window.pedidos||[]).
         return sum+(p.monto_bs||p.monto||0);
     },0);const deliverys=window.calcularTotalDeliverysHoy();document.getElementById('statPreparacion').textContent=preparacion;document.getElementById('statCobrados').textContent=cobrados;document.getElementById('statVentas').textContent=window.formatBs(ventas);document.getElementById('statPlatillos').textContent=platillos;document.getElementById('statPropinas').textContent=window.formatBs(propinas);document.getElementById('statDeliverysTotal').textContent=window.formatBs(deliverys)};
 window.calcularTotalDeliverysHoy=function(){try{const hoy=new Date();hoy.setHours(0,0,0,0);const manana=new Date(hoy);manana.setDate(manana.getDate()+1);return(window.pedidos||[]).filter(p=>p.tipo==='delivery'&&p.estado==='enviado'&&new Date(p.fecha)>=hoy&&new Date(p.fecha)<manana).reduce((sum,p)=>sum+(p.costo_delivery_bs||0),0)}catch(e){return 0}};
+window._toggleDetalle=function(id){var el=document.getElementById(id);if(el)el.style.display=el.style.display==='none'?'block':'none';};
 window.obtenerAcumuladoDeliverysHoy=async function(){try{const hoy=new Date();hoy.setHours(0,0,0,0);const manana=new Date(hoy);manana.setDate(manana.getDate()+1);const{data,error}=await window.supabaseClient.from('entregas_delivery').select('delivery_id, monto_bs').gte('fecha_entrega',hoy.toISOString()).lt('fecha_entrega',manana.toISOString());if(error)throw error;const acumulado={};(data||[]).forEach(e=>{acumulado[e.delivery_id]=(acumulado[e.delivery_id]||0)+e.monto_bs});return acumulado}catch(e){console.error('Error obteniendo acumulado deliverys:',e);return{}}};
 window.abrirModalDeliverys=async function(){try{
   const acumulado=await window.obtenerAcumuladoDeliverysHoy();
@@ -196,9 +197,610 @@ window.abrirModalDeliverys=async function(){try{
         return p.delivery_id==d.id&&(p.estado==='enviado'||p.estado==='en_camino')&&p.fecha_cobro;
       });
       var dId='det_'+String(d.id).replace(/[^a-z0-9]/gi,'_');
-      html+='<div style="margin-bottom:8px">';
-      html+='<div class="motorizado-item" style="opacity:'+(hayE?'1':'0.5')+';cursor:'+(hayE?'pointer':'default')+'"'
-           +(hayE?' data-detalle-id="'+dId+'" onclick="var el=document.getElementById(this.dataset.detalleId);if(el)el.style.display=el.style.display==='none'?'block':'none'"':'')+'>'
+      html+='<div style="margin-bottom:8px">'
+           +'<div class="motorizado-item" style="opacity:'+(hayE?'1':'0.5')+';cursor:'+(hayE?'pointer':'default')+'"'
+           +(hayE?' data-did="'+dId+'" onclick="window._toggleDetalle(this.dataset.did)"':'')+'>'
+           +'<span class="motorizado-nombre"><i class="fas fa-motorcycle" style="color:var(--delivery);margin-right:6px"></i>'+d.nombre+'</span>'
+           +'<span class="motorizado-monto" style="color:'+(hayE?'var(--accent)':'var(--text-secondary)')+'">'+window.formatBs(monto)
+           +(hayE?' <i class="fas fa-chevron-down" style="font-size:.7rem;margin-left:4px"></i>':'')
+           +'</span></div>';
+      if(hayE){
+        html+='<div id="'+dId+'" style="display:none;padding:8px 12px;background:rgba(0,0,0,.25);border-radius:0 0 6px 6px;border:1px solid var(--border-color);border-top:none">';
+        if(!peds.length){
+          html+='<p style="font-size:.78rem;color:var(--text-secondary);margin:0">Sin detalle disponible</p>';
+        } else {
+          peds.forEach(function(p){
+            var ts=p.fecha_cobro||p.fecha||'';
+            var h12='';
+            try{
+              if(ts&&typeof ts==='string'&&ts.indexOf('Z')===-1&&ts.indexOf('+')===-1)ts+='Z';
+              h12=new Date(ts).toLocaleString('en-US',{timeZone:'America/Caracas',hour:'numeric',minute:'2-digit',hour12:true}).toLowerCase();
+            }catch(ex){h12=ts;}
+            html+='<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:.78rem">'
+                 +'<span><i class="fas fa-map-marker-alt" style="color:var(--delivery);margin-right:4px"></i>'+(p.parroquia||'Sin parroquia')+'</span>'
+                 +'<span style="color:var(--text-secondary)">'+h12+'</span></div>';
+          });
+          html+='<div style="display:flex;justify-content:space-between;padding:5px 0;margin-top:4px;font-size:.78rem;font-weight:700">'
+               +'<span>'+peds.length+' entrega'+(peds.length>1?'s':'')+'</span>'
+               +'<span style="color:var(--accent)">'+window.formatBs(monto)+'</span></div>';
+        }
+        html+='</div>';
+      }
+      html+='</div>';
+    });
+    html+='</div>';
+  }
+  body.innerHTML=html;modal.classList.add('active');
+}catch(e){console.error('Error abriendo modal deliverys:',e);window.mostrarToast('Error al cargar datos de deliverys','error')}};
+// ============================================ RENDERIZAR PEDIDOS ============================================
+window.renderizarPedidos=function(){const mesaPendientes=window.pedidos.filter(p=>p.tipo==='mesa'&&p.estado==='pendiente'),deliveryPendientes=window.pedidos.filter(p=>p.tipo==='delivery'&&p.estado==='pendiente'),reservaPendientes=window.pedidos.filter(p=>p.tipo==='reserva'&&p.estado==='pendiente'),mesaCocina=window.pedidos.filter(p=>p.tipo==='mesa'&&p.estado==='en_cocina'),deliveryCamino=window.pedidos.filter(p=>p.tipo==='delivery'&&p.estado==='en_camino'),reservaPendiente=window.pedidos.filter(p=>p.tipo==='reserva'&&p.estado==='reserva_pendiente'),reservaAtendida=window.pedidos.filter(p=>p.tipo==='reserva'&&p.estado==='reserva_atendida');document.getElementById('mesaPendientesCount').textContent=mesaPendientes.length;document.getElementById('deliveryPendientesCount').textContent=deliveryPendientes.length;document.getElementById('reservaPendientesCount').textContent=reservaPendientes.length;document.getElementById('totalPendientesBadge').textContent=mesaPendientes.length+deliveryPendientes.length+reservaPendientes.length;document.getElementById('mesaCocinaCount').textContent=mesaCocina.length;document.getElementById('deliveryCaminoCount').textContent=deliveryCamino.length;document.getElementById('reservaProcesoCount').textContent=reservaPendiente.length+reservaAtendida.length;document.getElementById('totalPreparacionBadge').textContent=mesaCocina.length+deliveryCamino.length+reservaPendiente.length+reservaAtendida.length;document.getElementById('mesaPendientesContainer').innerHTML=mesaPendientes.length?mesaPendientes.map(p=>window.crearTarjetaPedidoCompacta(p,'pendiente')).join(''):'<div class="empty-state"><i class="fas fa-store"></i><p>No hay pedidos en mesa</p></div>';document.getElementById('deliveryPendientesContainer').innerHTML=deliveryPendientes.length?deliveryPendientes.map(p=>window.crearTarjetaPedidoCompacta(p,'pendiente')).join(''):'<div class="empty-state"><i class="fas fa-motorcycle"></i><p>No hay pedidos delivery</p></div>';document.getElementById('reservaPendientesContainer').innerHTML=reservaPendientes.length?reservaPendientes.map(p=>window.crearTarjetaPedidoCompacta(p,'pendiente')).join(''):'<div class="empty-state"><i class="fas fa-calendar-check"></i><p>No hay reservas</p></div>';document.getElementById('mesaCocinaContainer').innerHTML=mesaCocina.length?mesaCocina.map(p=>window.crearTarjetaPedidoCompacta(p,'preparacion')).join(''):'<div class="empty-state"><i class="fas fa-fire"></i><p>No hay pedidos en cocina</p></div>';document.getElementById('deliveryCaminoContainer').innerHTML=deliveryCamino.length?deliveryCamino.map(p=>window.crearTarjetaPedidoCompacta(p,'preparacion')).join(''):'<div class="empty-state"><i class="fas fa-motorcycle"></i><p>No hay deliveries en camino</p></div>';document.getElementById('reservaProcesoContainer').innerHTML=(reservaPendiente.length+reservaAtendida.length)?[...reservaPendiente,...reservaAtendida].map(p=>window.crearTarjetaPedidoCompacta(p,'preparacion')).join(''):'<div class="empty-state"><i class="fas fa-clock"></i><p>No hay reservas pendientes</p></div>'};
+window.formatearHora12=function(fecha){try{let ts=fecha;if(typeof ts==='string'&&!ts.endsWith('Z')&&!/[+\-]\d{2}(:\d{2})?$/.test(ts))ts+='Z';const d=new Date(ts);return d.toLocaleString('en-US',{timeZone:'America/Caracas',hour:'numeric',minute:'2-digit',hour12:true}).toLowerCase()}catch(e){return fecha}};
+window.crearTarjetaPedidoCompacta=function(pedido,tipo){try{const hora12=window.formatearHora12(pedido.fecha);let infoAdicional='';if(pedido.tipo==='mesa'){infoAdicional=`<div class="order-info-compact"><i class="fas fa-chair"></i> Mesa #${pedido.mesa||'N/A'}</div>`}else if(pedido.tipo==='delivery'){const parroquia=pedido.parroquia?` (${pedido.parroquia})`:'';const costoDelivery=pedido.costo_delivery_bs||pedido.costoDelivery||0;infoAdicional=`<div class="order-info-compact"><div><i class="fas fa-map-marker-alt"></i> ${pedido.direccion||''}</div><div><i class="fas fa-phone"></i> ${pedido.telefono||'N/A'}</div><div><i class="fas fa-building"></i> Parroquia: ${pedido.parroquia||'N/A'}${parroquia}</div><div><i class="fas fa-motorcycle"></i> Delivery: ${window.formatBs(costoDelivery)}</div>${pedido.referencia?`<div><i class="fas fa-hashtag"></i> Ref: ${pedido.referencia}</div>`:''}</div>`}else{infoAdicional=`<div class="order-info-compact"><div><i class="fas fa-user"></i> ${pedido.cliente_nombre||pedido.clienteNombre||'Cliente'}</div><div><i class="fas fa-calendar"></i> ${pedido.fecha_reserva?new Date(pedido.fecha_reserva).toLocaleDateString():(pedido.fechaReserva?new Date(pedido.fechaReserva).toLocaleDateString():'N/A')}</div>${pedido.referencia?`<div><i class="fas fa-hashtag"></i> Ref: ${pedido.referencia}</div>`:''}</div>`}
+const itemsHTML=(pedido.items||[]).slice(0,2).map(item=>`<div class="order-item-row-compact"><span class="item-name-compact">${item.cantidad||1}x ${item.nombre}</span><span class="item-price-compact">${window.formatBs(window.usdToBs((item.precioUnitarioUSD||0)*(item.cantidad||1)))}</span></div>`).join('');const totalItems=(pedido.items||[]).length;const masItemsHTML=totalItems>2?`<div class="order-item-row-compact" style="justify-content:center;color:var(--text-secondary)">+${totalItems-2} más</div>`:'';const totalBs=window.formatBs(window.usdToBs(pedido.total||0));const comprobanteHTML=pedido.comprobante_url&&(pedido.tipo==='delivery'||pedido.tipo==='reserva')?`<div class="comprobante-thumbnail" onclick="window.verComprobante('${pedido.id}')"><img src="${pedido.comprobante_url}" style="max-width:100%;cursor:pointer"></div>`:'';let accionesHTML='';if(tipo==='pendiente'){accionesHTML=`<button class="btn-compact btn-cobrar-compact" onclick="window.mostrarCobro('${pedido.id}')" data-tooltip="Cobrar pedido">Cobrar</button><button class="btn-compact btn-rechazar-compact" onclick="window.mostrarRechazo('${pedido.id}')" data-tooltip="Rechazar pedido">Rechazar</button>`}else if(pedido.tipo==='mesa'&&pedido.estado==='en_cocina'){accionesHTML=`<button class="btn-compact btn-entregar-compact" onclick="window.mostrarConfirmacion('${pedido.id}','entregado')" data-tooltip="Marcar como entregado"><i class="fas fa-check"></i> Entregado</button>`}else if(pedido.tipo==='delivery'&&pedido.estado==='en_camino'){accionesHTML=`<button class="btn-compact btn-enviar-compact" onclick="window.mostrarConfirmacionDelivery('${pedido.id}')" data-tooltip="Confirmar envío"><i class="fas fa-motorcycle"></i> Enviar</button>`}else if(pedido.tipo==='reserva'&&pedido.estado==='reserva_pendiente'){accionesHTML=`<button class="btn-compact btn-confirmar-compact" onclick="window.mostrarConfirmacion('${pedido.id}','reserva_atendida')" data-tooltip="Confirmar llegada del cliente"><i class="fas fa-user-check"></i> Confirmar</button>`}else if(pedido.tipo==='reserva'&&pedido.estado==='reserva_atendida'){accionesHTML=`<button class="btn-compact btn-entregar-compact" onclick="window.mostrarConfirmacion('${pedido.id}','reserva_completada')" data-tooltip="Marcar como entregado"><i class="fas fa-check"></i> Entregado</button>`}
+return`<div class="order-card-compact ${pedido.estado}"><div class="order-header-compact"><span class="order-time-compact"><i class="far fa-clock"></i> ${hora12}</span><span style="font-weight:600;color:var(--${pedido.tipo==='mesa'?'info':(pedido.tipo==='delivery'?'success':'accent')});font-size:.7rem;text-transform:uppercase">${pedido.tipo}</span></div>${infoAdicional}<div class="order-items-compact">${itemsHTML}${masItemsHTML}</div><div class="order-total-compact">${totalBs}</div>${comprobanteHTML}<div class="order-actions-compact">${accionesHTML}</div></div>`}catch(e){console.error('Error creando tarjeta:',e);return''}};
+// ============================================ COBRO ============================================
+window._cobro = { pagos: [], pedido: null, enterCount: 0, enterTimeout: null };
+
+
+window.verificarYControlarAlarma = function() {
+    if (!window.alarmaAudio) window.alarmaAudio = document.getElementById('alarmaSonido');
+    if (!window.alarmaAudio) return;
+    const pendientes = (window.pedidos || []).filter(p => p.estado === 'pendiente').length;
+    if (pendientes > 0 && !window.enProcesoDeCobro) {
+        if (!window.alarmaActiva) {
+            window.alarmaAudio.loop = true;
+            window.alarmaAudio.play().then(() => { window.alarmaActiva = true; }).catch(() => {});
+        }
+    } else if (window.alarmaActiva) {
+        window.alarmaAudio.pause();
+        window.alarmaAudio.loop = false;
+        window.alarmaAudio.currentTime = 0;
+        window.alarmaActiva = false;
+    }
+};
+
+window.mostrarCobro = function(pedidoId) {
+    const pedido = (window.pedidos || []).find(p => p.id === pedidoId);
+    if (!pedido) return;
+    window._cobro.pedido = pedido;
+    window._cobro.pagos = [];
+    window._cobro.enterCount = 0;
+    clearTimeout(window._cobro.enterTimeout);
+    window.enProcesoDeCobro = true;
+    if (window.alarmaActiva) { window.alarmaAudio.pause(); window.alarmaAudio.loop = false; window.alarmaAudio.currentTime = 0; window.alarmaActiva = false; }
+    const p = pedido;
+    const totalBs = window.usdToBs(p.total || 0);
+    const costoDeliveryBs = p.costo_delivery_bs || p.costoDelivery || 0;
+    const subtotalPlatillosBs = totalBs - costoDeliveryBs;
+    let resumen = '<div style="background:rgba(0,0,0,.25);border-radius:10px;padding:14px;margin-bottom:16px"><div style="font-weight:700;font-size:.95rem;margin-bottom:10px;color:var(--accent);display:flex;align-items:center;gap:8px"><i class="fas fa-receipt"></i> Resumen del Pedido</div>';
+    if (p.referencia) resumen += '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border-color);font-size:.85rem"><span><i class="fas fa-hashtag" style="color:var(--accent);width:14px"></i> Referencia</span><span style="font-family:monospace;font-weight:700;letter-spacing:2px">' + p.referencia + '</span></div>';
+    if (p.tipo === 'delivery' && p.parroquia) resumen += '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border-color);font-size:.85rem"><span><i class="fas fa-motorcycle" style="color:var(--delivery);width:14px"></i> Delivery — ' + p.parroquia + '</span><span style="font-weight:600;color:var(--delivery)">' + window.formatBs(costoDeliveryBs) + '</span></div>';
+    (p.items || []).forEach(function(item) { const monto = window.usdToBs((item.precioUnitarioUSD || 0) * (item.cantidad || 1)); resumen += '<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:.83rem"><span>' + (item.cantidad||1) + '\xd7 ' + item.nombre + '</span><span style="font-weight:600">' + window.formatBs(monto) + '</span></div>'; });
+    resumen += '<div style="display:flex;justify-content:space-between;margin-top:10px;padding-top:10px;border-top:2px solid var(--accent);font-weight:800;font-size:1rem"><span>Total a pagar</span><span style="color:var(--accent)" id="cobro-total-display">' + window.formatBs(totalBs) + '</span></div></div>';
+    const checkCasa = '<div style="padding:10px 14px;background:rgba(245,124,0,.1);border-left:3px solid var(--warning);border-radius:6px;margin-bottom:16px"><label style="display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none"><input type="checkbox" id="cobroInvitacionCheck" style="width:18px;height:18px;cursor:pointer" onchange="window._cobroOnInvitacion()"><div><div style="font-weight:700;font-size:.9rem">\uD83C\uDF81 Por parte de la casa (invitaci\xf3n)</div><div style="font-size:.75rem;color:var(--text-secondary);margin-top:2px">El cliente no paga \u2014 el restaurante asume el costo</div></div></label></div>';
+    const metodoPorDefecto = (p.tipo === 'delivery' || p.tipo === 'reserva') ? 'pago_movil' : 'punto_venta';
+    const seccionPagos = '<div id="cobro-pagos-section"><div style="font-weight:700;font-size:.88rem;color:var(--text-secondary);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px"><i class="fas fa-coins"></i> M\xe9todos de Pago</div><div id="cobro-pagos-lista"></div><button onclick="window._cobroAgregarPago()" id="cobro-btn-agregar" style="width:100%;padding:8px;background:rgba(255,255,255,.07);border:1px dashed var(--border-color);border-radius:6px;color:var(--text-secondary);cursor:pointer;font-size:.85rem;margin-top:8px;transition:all .2s" onmouseover="this.style.background=\'rgba(255,255,255,.12)\'" onmouseout="this.style.background=\'rgba(255,255,255,.07)\'"><i class="fas fa-plus"></i> Agregar m\xe9todo de pago</button><div id="cobro-vuelto-row" style="display:none;margin-top:14px;padding:10px 14px;background:rgba(0,172,193,.08);border-left:3px solid var(--delivery);border-radius:6px"><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><label style="font-size:.85rem;font-weight:600;white-space:nowrap"><i class="fas fa-exchange-alt"></i> Vuelto a entregar (Bs)</label><input type="text" id="cobro-vuelto-input" inputmode="numeric" placeholder="0" style="flex:1;min-width:100px;padding:7px 10px;border:1px solid var(--border-color);border-radius:5px;background:rgba(0,0,0,.4);color:var(--text-primary);font-size:.9rem" oninput="this.value=this.value.replace(/[^0-9.]/g,\'\');window._cobroRecalcular()"><span style="font-size:.8rem;color:var(--text-secondary)">Sobrante: <strong id="cobro-sobrante-label" style="color:var(--delivery)">Bs 0.00</strong></span></div></div><div id="cobro-favor-row" style="display:none;margin-top:8px;padding:8px 14px;background:rgba(78,205,196,.08);border-left:3px solid var(--favordecaja);border-radius:6px"><label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:.85rem;user-select:none"><input type="checkbox" id="cobro-favor-check" style="width:16px;height:16px" onchange="window._cobroRecalcular()"><span>A favor de caja \u2014 <strong id="cobro-favor-monto" style="color:var(--favordecaja)">Bs 0.00</strong></span></label></div><div id="cobro-pendiente-row" style="display:none;margin-top:8px;padding:8px 14px;background:rgba(239,68,68,.08);border-left:3px solid var(--danger);border-radius:6px"><div style="font-size:.85rem;display:flex;justify-content:space-between"><span style="color:var(--danger)"><i class="fas fa-exclamation-circle"></i> Pendiente por cubrir</span><strong id="cobro-pendiente-monto" style="color:var(--danger)">Bs 0.00</strong></div></div><div id="cobro-condonar-row" style="display:none;margin-top:8px;padding:8px 14px;background:rgba(255,107,107,.08);border-left:3px solid var(--condonar);border-radius:6px"><label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:.85rem;user-select:none"><input type="checkbox" id="cobro-condonar-check" style="width:16px;height:16px" onchange="window._cobroRecalcular()"><span>Condonar pendiente — <strong id="cobro-condonar-monto" style="color:var(--condonar)">Bs 0.00</strong></span></label></div><div style="margin-top:12px;padding:10px 14px;background:rgba(0,0,0,.2);border-radius:6px;font-size:.85rem;display:flex;justify-content:space-between"><span>Total recibido</span><strong id="cobro-recibido-display" style="color:var(--success)">Bs 0.00</strong></div></div>';
+    document.getElementById('cobroModalBody').innerHTML = resumen + checkCasa + seccionPagos;
+    document.getElementById('cobroModal').classList.add('active');
+    window._cobro.totalBs = totalBs;
+    window._cobro.subtotalPlatillosBs = subtotalPlatillosBs;
+    window._cobro.costoDeliveryBs = costoDeliveryBs;
+    window._cobro.metodoPorDefecto = metodoPorDefecto;
+    window._cobroAgregarPago(metodoPorDefecto);
+};
+
+window._cobroAgregarPago = function(metodoInicial) {
+    const id = 'p_' + Date.now() + '_' + Math.random().toString(36).slice(2,7);
+    window._cobro.pagos.push({ id: id, metodo: metodoInicial || 'pago_movil', monto: '', ref: ['','','','','',''] });
+    window._cobroRenderizarPagos();
+};
+
+window._cobroEliminarPago = function(id) {
+    window._cobro.pagos = window._cobro.pagos.filter(function(p) { return p.id !== id; });
+    window._cobroRenderizarPagos();
+};
+
+window._cobroRenderizarPagos = function() {
+    const lista = document.getElementById('cobro-pagos-lista');
+    if (!lista) return;
+    const refPedido = (window._cobro.pedido && window._cobro.pedido.referencia ? window._cobro.pedido.referencia : '').replace(/\D/g,'');
+    lista.innerHTML = window._cobro.pagos.map(function(pago) {
+        const canDelete = window._cobro.pagos.length > 1;
+        const placeholder = pago.metodo === 'efectivo_usd' ? 'Monto en USD' : 'Monto en Bs';
+        const showRef = pago.metodo === 'pago_movil';
+        const refDigits = [0,1,2,3,4,5].map(function(i) {
+            return '<input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]*" data-pago-id="' + pago.id + '" data-idx="' + i + '" value="' + (pago.ref[i]||'') + '" class="cobro-ref-digit" style="width:38px;height:38px;text-align:center;font-size:1.2rem;font-family:monospace;border:2px solid ' + (pago.ref[i] ? 'var(--accent)' : 'var(--border-color)') + ';border-radius:6px;background:rgba(0,0,0,.4);color:var(--text-primary)">';
+        }).join('');
+        return '<div class="cobro-pago-item" data-pago-id="' + pago.id + '" style="background:rgba(0,0,0,.2);border-radius:8px;padding:12px;margin-bottom:10px;border:1px solid var(--border-color);position:relative">' +
+            (canDelete ? '<button onclick="window._cobroEliminarPago(\'' + pago.id + '\')" style="position:absolute;top:8px;right:8px;background:var(--danger);color:#fff;border:none;width:22px;height:22px;border-radius:50%;cursor:pointer;font-size:.75rem;display:flex;align-items:center;justify-content:center"><i class="fas fa-times"></i></button>' : '') +
+            '<div style="display:flex;gap:8px;margin-bottom:8px"><select data-pago-id="' + pago.id + '" class="cobro-metodo-select" style="flex:1;padding:8px;border:1px solid var(--border-color);border-radius:5px;background:rgba(0,0,0,.5);color:var(--text-primary);font-size:.85rem"><option value="pago_movil"' + (pago.metodo==='pago_movil'?' selected':'') + '>\uD83D\uDCF1 Pago M\xf3vil</option><option value="punto_venta"' + (pago.metodo==='punto_venta'?' selected':'') + '>\uD83D\uDCB3 Punto de Venta</option><option value="efectivo_bs"' + (pago.metodo==='efectivo_bs'?' selected':'') + '>\uD83D\uDCB5 Efectivo Bs</option><option value="efectivo_usd"' + (pago.metodo==='efectivo_usd'?' selected':'') + '>\uD83D\uDCB5 Efectivo USD</option></select>' +
+            '<input type="text" inputmode="decimal" placeholder="' + placeholder + '" value="' + (pago.monto !== '' ? pago.monto : '') + '" data-pago-id="' + pago.id + '" class="cobro-monto-input" style="width:130px;padding:8px;border:1px solid var(--border-color);border-radius:5px;background:rgba(0,0,0,.5);color:var(--text-primary);font-size:.9rem;text-align:right"></div>' +
+            '<div class="cobro-ref-section" data-pago-id="' + pago.id + '" style="display:' + (showRef?'block':'none') + '">' +
+            '<div style="font-size:.75rem;color:var(--text-secondary);margin-bottom:6px"><i class="fas fa-hashtag"></i> Referencia (6 d\xedgitos)' + (refPedido ? ' <span style="color:var(--accent);margin-left:6px">\u2014 debe coincidir con: <strong>' + refPedido + '</strong></span>' : '') + '</div>' +
+            '<div style="display:flex;gap:6px">' + refDigits + '</div></div></div>';
+    }).join('');
+    lista.querySelectorAll('.cobro-metodo-select').forEach(function(sel) {
+        sel.addEventListener('change', function(e) {
+            const id = e.target.dataset.pagoId;
+            const pago = window._cobro.pagos.find(function(p){return p.id===id;});
+            if (!pago) return;
+            pago.metodo = e.target.value;
+            if (pago.metodo !== 'pago_movil') pago.ref = ['','','','','',''];
+            pago.monto = '';
+            window._cobroRenderizarPagos();
+        });
+    });
+    lista.querySelectorAll('.cobro-monto-input').forEach(function(inp) {
+        inp.addEventListener('input', function(e) {
+            const id = e.target.dataset.pagoId;
+            const pago = window._cobro.pagos.find(function(p){return p.id===id;});
+            if (!pago) return;
+            let v = e.target.value.replace(/[^0-9.]/g,'');
+            const pts = v.split('.');
+            if (pts.length > 2) v = pts[0]+'.'+pts.slice(1).join('');
+            if (pts[1] && pts[1].length > 2) v = pts[0]+'.'+pts[1].slice(0,2);
+            e.target.value = v;
+            pago.monto = v;
+            window._cobroRecalcular();
+        });
+    });
+    lista.querySelectorAll('.cobro-ref-digit').forEach(function(inp) {
+        inp.addEventListener('input', function(e) {
+            e.target.value = e.target.value.replace(/[^0-9]/g,'');
+            const id = e.target.dataset.pagoId;
+            const idx = parseInt(e.target.dataset.idx);
+            const pago = window._cobro.pagos.find(function(p){return p.id===id;});
+            if (!pago) return;
+            pago.ref[idx] = e.target.value;
+            e.target.style.borderColor = e.target.value ? 'var(--accent)' : 'var(--border-color)';
+            if (e.target.value && idx < 5) { const next = lista.querySelector('.cobro-ref-digit[data-pago-id="'+id+'"][data-idx="'+(idx+1)+'"]'); if (next) next.focus(); }
+            window._cobroRecalcular();
+        });
+        inp.addEventListener('keydown', function(e) {
+            if (e.key === 'Backspace' && !e.target.value) {
+                const id = e.target.dataset.pagoId; const idx = parseInt(e.target.dataset.idx);
+                if (idx > 0) { const prev = lista.querySelector('.cobro-ref-digit[data-pago-id="'+id+'"][data-idx="'+(idx-1)+'"]'); if (prev) { prev.value=''; prev.focus(); const pago=window._cobro.pagos.find(function(p){return p.id===id;}); if(pago)pago.ref[idx-1]=''; window._cobroRecalcular(); } }
+            }
+        });
+    });
+    window._cobroRecalcular();
+};
+
+window._cobroOnInvitacion = function() {
+    const esInv = document.getElementById('cobroInvitacionCheck') && document.getElementById('cobroInvitacionCheck').checked;
+    const sec = document.getElementById('cobro-pagos-section');
+    if (sec) { sec.style.opacity = esInv ? '0.4' : '1'; sec.style.pointerEvents = esInv ? 'none' : 'auto'; }
+    window._cobroRecalcular();
+};
+
+window._cobroRecalcular = function() {
+    const cobro = window._cobro;
+    if (!cobro.pedido) return;
+    const esInvitacion = document.getElementById('cobroInvitacionCheck') && document.getElementById('cobroInvitacionCheck').checked;
+    const btn = document.getElementById('confirmCobroBtn');
+    if (esInvitacion) {
+        if (btn) btn.disabled = false;
+        ['cobro-vuelto-row','cobro-favor-row','cobro-pendiente-row','cobro-condonar-row'].forEach(function(id){const el=document.getElementById(id);if(el)el.style.display='none';});
+        const rec=document.getElementById('cobro-recibido-display'); if(rec)rec.textContent=window.formatBs(0);
+        return;
+    }
+    const totalBs = cobro.totalBs;
+    const refPedido = ((cobro.pedido && cobro.pedido.referencia)||'').replace(/\D/g,'');
+    let totalRecibidoBs = 0, refOk = true;
+    cobro.pagos.forEach(function(pago) {
+        const monto = parseFloat(pago.monto)||0;
+        if (pago.metodo === 'efectivo_usd') { totalRecibidoBs += monto * (window.configGlobal && window.configGlobal.tasa_cambio ? window.configGlobal.tasa_cambio : window.tasaEfectiva); }
+        else { totalRecibidoBs += monto; }
+        if (pago.metodo === 'pago_movil') {
+            const refIng = pago.ref.join('');
+            if (refIng.length < 6) { refOk = false; }
+            else if (refPedido && refIng !== refPedido) { refOk = false; }
+        }
+    });
+    const diferencia = Math.round((totalBs - totalRecibidoBs)*100)/100;
+    const sobrante = diferencia < 0 ? Math.abs(diferencia) : 0;
+    const pendiente = diferencia > 0 ? diferencia : 0;
+    const vueltoVal = parseFloat((document.getElementById('cobro-vuelto-input')||{}).value)||0;
+    const sobrRestante = Math.max(0, sobrante - vueltoVal);
+    const vueltoRow=document.getElementById('cobro-vuelto-row'); if(vueltoRow)vueltoRow.style.display=sobrante>0?'flex':'none';
+    const sobranteLabel=document.getElementById('cobro-sobrante-label'); if(sobranteLabel)sobranteLabel.textContent=window.formatBs(sobrante);
+    const favorRow=document.getElementById('cobro-favor-row'); if(favorRow)favorRow.style.display=sobrRestante>0?'flex':'none';
+    const favorMonto=document.getElementById('cobro-favor-monto'); if(favorMonto)favorMonto.textContent=window.formatBs(sobrRestante);
+    const pendienteRow=document.getElementById('cobro-pendiente-row'); if(pendienteRow)pendienteRow.style.display=pendiente>0?'flex':'none';
+    const pendienteMonto=document.getElementById('cobro-pendiente-monto'); if(pendienteMonto)pendienteMonto.textContent=window.formatBs(pendiente);
+    const condonarRow=document.getElementById('cobro-condonar-row'); if(condonarRow)condonarRow.style.display=pendiente>0?'flex':'none';
+    const condonarMonto=document.getElementById('cobro-condonar-monto'); if(condonarMonto)condonarMonto.textContent=window.formatBs(pendiente);
+    const condonarCheck=document.getElementById('cobro-condonar-check');
+    const condonarActivo=condonarCheck&&condonarCheck.checked;
+    const recEl=document.getElementById('cobro-recibido-display'); if(recEl)recEl.textContent=window.formatBs(totalRecibidoBs);
+    // Sobrante resuelto = vuelto + a favor de caja cubren todo el sobrante
+    const favorActivoRec = document.getElementById('cobro-favor-check') && document.getElementById('cobro-favor-check').checked;
+    const sobranteResuelto = sobrante <= 0 || (vueltoVal + (favorActivoRec ? sobrRestante : 0) >= sobrante - 0.01);
+    // Pendiente resuelto = exacto, o condonar activo
+    const pendienteResuelto = pendiente <= 0.01 || condonarActivo;
+    const cubiertoExacto = refOk && sobranteResuelto && pendienteResuelto;
+    if (btn) btn.disabled = !cubiertoExacto;
+};
+
+window.confirmarCobro = async function() {
+    const cobro = window._cobro;
+    if (!cobro.pedido) return;
+    const esInvitacion = document.getElementById('cobroInvitacionCheck') && document.getElementById('cobroInvitacionCheck').checked;
+    const favorCheck = document.getElementById('cobro-favor-check');
+    const favorActivo = favorCheck && favorCheck.checked;
+    const vueltoVal = parseFloat((document.getElementById('cobro-vuelto-input')||{}).value)||0;
+    const p = cobro.pedido;
+    const totalBs = cobro.totalBs;
+    let nuevoEstado, metodoPago, pagosData, montoFavor=0, montoCondonado=0, vueltoEntregado=0, totalFinalUSD=p.total;
+    if (esInvitacion) {
+        nuevoEstado = p.tipo==='delivery'?'en_camino':(p.tipo==='reserva'?'reserva_pendiente':'en_cocina');
+        metodoPago='invitacion'; pagosData=[{metodo:'invitacion',monto:0,montoBs:0}]; totalFinalUSD=0;
+    } else {
+        let totalRecibidoBs=0;
+        pagosData = cobro.pagos.map(function(pago) {
+            const monto=parseFloat(pago.monto)||0;
+            const montoBs=pago.metodo==='efectivo_usd'?monto*(window.configGlobal&&window.configGlobal.tasa_cambio?window.configGlobal.tasa_cambio:window.tasaEfectiva):monto;
+            totalRecibidoBs+=montoBs;
+            return {metodo:pago.metodo,monto:monto,montoBs:montoBs,referencia:pago.ref.join('')||null};
+        });
+        const sobrante=Math.max(0,totalRecibidoBs-totalBs);
+        const condonarChk=document.getElementById('cobro-condonar-check');
+        const condonarActivo2=condonarChk&&condonarChk.checked;
+        if(sobrante>0){ vueltoEntregado=Math.min(vueltoVal,sobrante); const sobrRest=sobrante-vueltoEntregado; if(favorActivo&&sobrRest>0)montoFavor=sobrRest; }
+        const pendienteFinal=Math.max(0,totalBs-totalRecibidoBs);
+        if(condonarActivo2&&pendienteFinal>0)montoCondonado=pendienteFinal;
+        nuevoEstado=p.tipo==='delivery'?'en_camino':(p.tipo==='reserva'?'reserva_pendiente':'en_cocina');
+        metodoPago=pagosData.length===1?pagosData[0].metodo:'mixto';
+        const subtotalConFavor=cobro.subtotalPlatillosBs+montoFavor;
+        const subtotalCondonado=cobro.subtotalPlatillosBs-montoCondonado;
+        if(montoFavor>0) totalFinalUSD=subtotalConFavor/window.tasaEfectiva;
+        else if(montoCondonado>0) totalFinalUSD=Math.max(0,subtotalCondonado)/window.tasaEfectiva;
+        else totalFinalUSD=p.total;
+    }
+    try {
+        const {error:errP}=await window.supabaseClient.from('pedidos').update({estado:nuevoEstado,metodo_pago:metodoPago,pagos_mixtos:pagosData,cajero:window.currentUser&&window.currentUser.nombre?window.currentUser.nombre:'Cajero',fecha_cobro:new Date().toISOString(),a_favor_caja:montoFavor||0,condonado:montoCondonado||0,vuelto_entregado:vueltoEntregado||0,total:totalFinalUSD}).eq('id',p.id);
+        if(errP)throw errP;
+        const totalItems=(p.items||[]).reduce(function(s,i){return s+(i.cantidad||1);},0);
+        const subtotalUSD=(p.items||[]).reduce(function(s,i){return s+(i.precioUnitarioUSD||0)*(i.cantidad||1);},0);
+        const subtotalBs=window.usdToBs(subtotalUSD);
+        const {error:errV}=await window.supabaseClient.from('ventas').insert([{pedido_id:p.id,total:totalFinalUSD,subtotal_platillos:subtotalBs,items:totalItems,metodo_pago:metodoPago,tipo:p.tipo,fecha:new Date().toISOString()}]);
+        if(errV)throw errV;
+        let tituloN,mensajeN;
+        if(esInvitacion){tituloN='\uD83C\uDF81 Pedido por invitaci\xf3n';mensajeN='Tu pedido ha sido procesado. \xa1Disfruta!';}
+        else if(p.tipo==='delivery'){tituloN='\u2705 Pago confirmado';mensajeN='Tu pedido est\xe1 en preparaci\xf3n';}
+        else if(p.tipo==='reserva'){tituloN='\uD83D\uDCC5 Reserva confirmada';mensajeN='Tu reserva ha sido confirmada';}
+        else{tituloN='\u2705 Pago confirmado';mensajeN='Tu pedido est\xe1 en preparaci\xf3n';}
+        await window.supabaseClient.from('notificaciones').insert([{pedido_id:p.id,tipo:'approved',titulo:tituloN,mensaje:mensajeN,session_id:p.session_id,leida:false}]);
+        const ventaNueva={pedido_id:p.id,total:totalFinalUSD,subtotal_platillos:subtotalBs,items:totalItems,metodo_pago:metodoPago,tipo:p.tipo,fecha:new Date().toISOString()};
+        window.ventasHoy=[ventaNueva,...(window.ventasHoy||[])];
+        window.actualizarEstadisticas();
+        window.cerrarCobroModal();
+        window.mostrarToast('\uD83D\uDCB0 Cobro registrado correctamente','success');
+        await window.recargarPedidosCompletos();
+        await window.cargarMenu();
+        window.renderizarPropinas();
+    } catch(e) {
+        console.error('Error en cobro:',e);
+        window.mostrarToast('\u274c Error al registrar el cobro: '+(e.message||e),'error');
+    }
+};
+
+window.cerrarCobroModal = function() {
+    const modal=document.getElementById('cobroModal'); if(modal)modal.classList.remove('active');
+    window._cobro={pagos:[],pedido:null,enterCount:0,enterTimeout:null};
+    window.enProcesoDeCobro=false;
+    setTimeout(function(){window.verificarYControlarAlarma();},200);
+};
+
+// ============================================ PROPINAS ============================================
+window.abrirPropinaModal=async function(){
+    var modalBody=document.getElementById('propinaModalBody');
+    var tasaBcv=(window.configGlobal&&window.configGlobal.tasa_cambio)||window.tasaEfectiva||400;
+    var acumBs={},acumUsd={};
+    (window.propinas||[]).forEach(function(p){
+        var id=p.mesonero_id; if(!id)return;
+        if(p.moneda_original==='USD'||p.metodo==='efectivo_usd'){acumUsd[id]=(acumUsd[id]||0)+(p.monto_original||0);}
+        else{acumBs[id]=(acumBs[id]||0)+(p.monto_bs||0);}
+    });
+    var mesonerosList=(window.mesoneros||[]).map(function(m){
+        var bs=acumBs[m.id]||0, usd=acumUsd[m.id]||0;
+        var desglose='';
+        if(bs>0) desglose+='<div style="font-size:.78rem;color:var(--text-secondary)">Bs: <strong style="color:var(--propina)">'+window.formatBs(bs)+'</strong></div>';
+        if(usd>0) desglose+='<div style="font-size:.78rem;color:#4fc3f7">USD: <strong>'+usd.toFixed(2)+' USD</strong></div>';
+        if(!bs&&!usd) desglose='<div style="font-size:.75rem;color:var(--text-secondary)">Sin propinas hoy</div>';
+        return '<div class="motorizado-item" style="cursor:pointer;border-left-color:var(--propina);align-items:flex-start" onclick="window.seleccionarMesoneroPropina(\'' +m.id+ '\',\'' +m.nombre.replace(/'/g,"\\'")+ '\')">'
+            +'<div style="display:flex;align-items:center;gap:8px"><i class="fas fa-user-tie" style="color:var(--propina)"></i><span class="motorizado-nombre">'+m.nombre+'</span></div>'
+            +'<div style="text-align:right">'+desglose+'</div>'
+            +'</div>';
+    }).join('');
+    modalBody.innerHTML='<div style="margin-bottom:16px">'
+        +'<h4 style="color:var(--propina);margin-bottom:10px"><i class="fas fa-hand-holding-heart"></i> Selecciona el mesonero</h4>'
+        +'<div class="motorizados-list">'+(mesonerosList||'<p class="text-center">No hay mesoneros activos</p>')+'</div>'
+        +'</div><div id="propinaFormSection" style="display:none;"></div>';
+    document.getElementById('propinaModal').classList.add('active');
+}
+window.seleccionarMesoneroPropina=function(id,nombre){
+    window.propinaSeleccionada.mesonero={id:id,nombre:nombre};
+    window.propinaSeleccionada.mesa='';
+    var formSection=document.getElementById('propinaFormSection');
+    formSection.style.display='block';
+    var metodo=window.propinaSeleccionada.metodo||'efectivo_bs';
+    var isMovil=metodo==='pago_movil';
+    var mesasOpts='<option value="">Sin mesa asignada</option>'+(window.mesas||[]).map(function(m){return '<option value="'+m.nombre+'">'+m.nombre+'</option>';}).join('');
+    var refInputs=[0,1,2,3,4,5].map(function(i){return '<input type="text" class="ref-digit-propina" data-index="'+i+'" maxlength="1" inputmode="numeric" pattern="[0-9]*" value="'+(window.referenciaPropina[i]||'')+'" oninput="window.moverRefPropina(this,'+i+')">';}).join('');
+    formSection.innerHTML=
+        '<div class="propina-form-container">'+
+        '<h4><i class="fas fa-hand-holding-heart"></i> Registrar propina para '+nombre+'</h4>'+
+        '<div class="form-group"><label>Mesa</label>'+
+        '<select id="propinaMesaSelect" onchange="window.propinaSeleccionada.mesa=this.value" style="width:100%;padding:10px;border:2px solid var(--border-color);border-radius:8px;font-size:1rem;background:rgba(0,0,0,.5);color:var(--text-primary)">'+mesasOpts+'</select></div>'+
+        '<div class="form-group"><label>Monto *</label>'+
+        '<input type="number" id="propinaMonto" step="0.01" min="0.01" placeholder="0.00" oninput="window.actualizarPropinaUI()"></div>'+
+        '<div class="form-group"><label>Método de pago *</label>'+
+        '<div class="metodo-pago-group">'+
+        '<div class="metodo-pago-btn '+(metodo==='efectivo_bs'?'active':'')+'" onclick="window.seleccionarMetodoPropina(\"efectivo_bs\")"><i class="fas fa-money-bill-wave"></i><span>Efectivo Bs</span></div>'+
+        '<div class="metodo-pago-btn '+(metodo==='efectivo_usd'?'active':'')+'" onclick="window.seleccionarMetodoPropina(\"efectivo_usd\")"><i class="fas fa-dollar-sign"></i><span>Efectivo USD</span></div>'+
+        '<div class="metodo-pago-btn '+(metodo==='pago_movil'?'active':'')+'" onclick="window.seleccionarMetodoPropina(\"pago_movil\")"><i class="fas fa-mobile-alt"></i><span>Pago Móvil</span></div>'+
+        '<div class="metodo-pago-btn '+(metodo==='punto_venta'?'active':'')+'" onclick="window.seleccionarMetodoPropina(\"punto_venta\")"><i class="fas fa-credit-card"></i><span>Punto Venta</span></div>'+
+        '</div></div>'+
+        '<div id="propinaReferenciaGroup" style="display:'+(isMovil?'block':'none')+';margin-bottom:15px;">'+
+        '<label>Referencia (6 dígitos) *</label>'+
+        '<div class="referencia-inputs">'+refInputs+'</div></div>'+
+        '<div class="propina-total-display">'+
+        '<span class="label">Total a registrar (Bs):</span>'+
+        '<span class="valor" id="propinaTotalBs">Bs 0,00</span>'+
+        '<span class="small" id="propinaDetalleConversion"></span></div>'+
+        '<button class="btn-primary" style="width:100%;background:linear-gradient(135deg,var(--propina),#7B1FA2)" id="guardarPropinaBtn" onclick="window.guardarPropina()" disabled>Guardar Propina</button>'+
+        '</div>';
+    document.querySelectorAll('.ref-digit-propina').forEach(function(inp){
+        inp.addEventListener('keydown',function(e){
+            var index=parseInt(e.target.dataset.index);
+            if(e.key==='Backspace'&&e.target.value.length===0&&index>0){
+                document.querySelector('.ref-digit-propina[data-index="'+(index-1)+'"]').focus();
+            }
+        });
+    });
+    window.actualizarPropinaUI();};
+window.seleccionarMetodoPropina=function(metodo){window.propinaSeleccionada.metodo=metodo;document.querySelectorAll('.metodo-pago-btn').forEach(btn=>btn.classList.remove('active'));const index=['efectivo_bs','efectivo_usd','pago_movil','punto_venta'].indexOf(metodo);if(index!==-1){document.querySelectorAll('.metodo-pago-btn')[index]?.classList.add('active')}
+const refGroup=document.getElementById('propinaReferenciaGroup');if(refGroup){refGroup.style.display=metodo==='pago_movil'?'block':'none'}window.actualizarPropinaUI()};
+window.actualizarPropinaUI=function(){const montoInput=document.getElementById('propinaMonto');if(!montoInput)return;let monto=parseFloat(montoInput.value)||0,montoBs=0,conversionText='';if(window.propinaSeleccionada.metodo==='efectivo_usd'){const tasaBcvU=(window.configGlobal&&window.configGlobal.tasa_cambio)||window.tasaEfectiva||400;montoBs=monto*tasaBcvU;conversionText='Tasa BCV: '+tasaBcvU+' Bs/USD';}else{montoBs=monto;conversionText=''}
+window.propinaSeleccionada.monto=montoBs;document.getElementById('propinaTotalBs').textContent=window.formatBs(montoBs);document.getElementById('propinaDetalleConversion').textContent=conversionText;const montoValido=monto>0,referenciaValida=window.propinaSeleccionada.metodo!=='pago_movil'||window.referenciaPropina.every(d=>d&&d.length===1);document.getElementById('guardarPropinaBtn').disabled=!(montoValido&&referenciaValida&&window.propinaSeleccionada.mesonero)};
+window.moverRefPropina=function(input,index){if(input.value.length===1&&index<5){document.querySelector(`.ref-digit-propina[data-index="${index+1}"]`).focus()}window.referenciaPropina[index]=input.value;window.propinaSeleccionada.referencia=window.referenciaPropina.join('');window.actualizarPropinaUI()};
+window.guardarPropina=async function(){if(!window.currentUser||!window.propinaSeleccionada.mesonero){window.mostrarToast('Selecciona un mesonero','error');return}try{let montoOriginal=0,monedaOriginal='Bs',montoBs=window.propinaSeleccionada.monto,tasaAplicada=null;if(window.propinaSeleccionada.metodo==='efectivo_usd'){const montoUsd=parseFloat(document.getElementById('propinaMonto').value)||0;montoOriginal=montoUsd;monedaOriginal='USD';const tasaBcvP=(window.configGlobal&&window.configGlobal.tasa_cambio)||window.tasaEfectiva||400;tasaAplicada=tasaBcvP;montoBs=montoUsd*tasaBcvP}else{montoOriginal=window.propinaSeleccionada.monto}
+const mesoneroGuardado=window.propinaSeleccionada.mesonero;
+const propinaData={mesonero_id:mesoneroGuardado.id,mesa:window.propinaSeleccionada.mesa||'General',metodo:window.propinaSeleccionada.metodo,monto_original:montoOriginal,moneda_original:monedaOriginal,tasa_aplicada:tasaAplicada,monto_bs:montoBs,referencia:window.propinaSeleccionada.referencia||null,cajero:window.currentUser.nombre,fecha:new Date().toISOString(),entregado:true};
+const{error:errProp}=await window.supabaseClient.from('propinas').insert([propinaData]);
+if(errProp)throw errProp;
+// Actualizar en memoria inmediatamente con datos del mesonero incluidos
+propinaData.mesoneros={nombre:mesoneroGuardado.nombre};
+window.propinas=[propinaData,...(window.propinas||[])];
+window.cerrarModal('propinaModal');
+window.mostrarToast('💝 Propina registrada','success');
+window.propinaSeleccionada={mesonero:null,metodo:'efectivo_bs',monto:0,referencia:''};
+window.referenciaPropina=['','','','','',''];
+window.actualizarEstadisticas();
+window.renderizarPropinas();
+// Recargar desde BD en background para tener datos exactos
+window.cargarPropinas().then(function(){window.actualizarEstadisticas();window.renderizarPropinas();});
+}catch(e){console.error('Error guardando propina:',e);window.mostrarToast('❌ Error al registrar propina: '+(e.message||e),'error')}};
+window.renderizarPropinas=function(){const total=window.propinas.reduce((sum,p)=>sum+(p.monto_bs||p.monto||0),0),cantidad=window.propinas.length,promedio=cantidad>0?total/cantidad:0;document.getElementById('propinasTotal').textContent=window.formatBs(total);document.getElementById('propinasCantidad').textContent=cantidad;document.getElementById('propinasPromedio').textContent=window.formatBs(promedio);document.getElementById('propinasListCount').textContent=cantidad;document.getElementById('propinasListContainer').innerHTML=cantidad?window.propinas.map(p=>window.crearTarjetaPropina(p)).join(''):'<div class="empty-state"><i class="fas fa-hand-holding-heart"></i><p>No hay propinas hoy</p></div>'};
+window.crearTarjetaPropina=function(propina){try{const fecha=new Date(propina.fecha),hora=fecha.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'}),mesonero=propina.mesoneros?.nombre||'N/A';return`<div class="order-card-compact" style="border-left-color:var(--propina)"><div class="order-header-compact"><span class="order-time-compact"><i class="far fa-clock"></i> ${hora}</span><span class="propina-tag"><i class="fas fa-hand-holding-heart"></i> Propina</span></div><div class="order-info-compact"><div><i class="fas fa-user"></i> Mesonero: ${mesonero}</div><div><i class="fas fa-chair"></i> Mesa: ${propina.mesa||'N/A'}</div><div><i class="fas fa-${propina.metodo==='efectivo_bs'?'money-bill-wave':(propina.metodo==='efectivo_usd'?'dollar-sign':(propina.metodo==='pago_movil'?'mobile-alt':'credit-card'))}"></i> Método: ${propina.metodo}</div><div><i class="fas fa-user-tie"></i> Cajero: ${propina.cajero||'Cajero'}</div></div><div class="order-total-compact" style="color:var(--propina)">${window.formatBs(propina.monto_bs||propina.monto)}</div></div>`}catch(e){console.error('Error creando tarjeta de propina:',e);return''}};
+
+// ============================================ CONFIRMACIÓN ============================================
+window.mostrarConfirmacionDelivery=function(pedidoId){const pedido=window.pedidos.find(p=>p.id===pedidoId);if(!pedido)return;window.pedidoParaAccion=pedido;window.accionPendiente='enviado';const modal=document.getElementById('confirmModal'),title=document.getElementById('confirmModalTitle'),body=document.getElementById('confirmModalBody'),header=document.getElementById('confirmModalHeader');title.innerHTML='<i class="fas fa-motorcycle"></i> Asignar Delivery';header.style.background='linear-gradient(135deg, var(--delivery), #00838F)';const deliveryOptions=window.deliverys.map(d=>`<option value="${d.id}">${d.nombre}</option>`).join(''),costoDelivery=pedido.costo_delivery_bs||pedido.costoDelivery||0;body.innerHTML=`<p>Selecciona el motorizado que realizará el envío:</p><div class="delivery-selector" style="margin:20px 0"><select id="deliverySelector" style="width:100%;padding:10px;background:rgba(0,0,0,.5);color:var(--text-primary);border:2px solid var(--border-color);border-radius:8px;"><option value="">-- Seleccionar motorizado --</option>${deliveryOptions}</select></div><div style="background:rgba(0,0,0,.3);padding:15px;border-radius:8px;margin-bottom:20px"><div style="display:flex;justify-content:space-between;margin-bottom:8px"><span><i class="fas fa-map-marker-alt"></i> Dirección:</span><span>${pedido.direccion||'N/A'}</span></div><div style="display:flex;justify-content:space-between;margin-bottom:8px"><span><i class="fas fa-phone"></i> Teléfono:</span><span>${pedido.telefono||'N/A'}</span></div><div style="display:flex;justify-content:space-between;margin-bottom:8px"><span><i class="fas fa-building"></i> Parroquia:</span><span>${pedido.parroquia||'N/A'}</span></div><div style="display:flex;justify-content:space-between;font-weight:700;color:var(--accent)"><span><i class="fas fa-motorcycle"></i> Precio Delivery:</span><span>${window.formatBs(costoDelivery)}</span></div></div><div class="keyboard-hint"><span><kbd>ENTER</kbd> confirmar</span><span><kbd>ESC</kbd> cancelar</span></div>`;document.getElementById('confirmActionBtn').disabled=true;setTimeout(()=>{const selector=document.getElementById('deliverySelector');if(selector){selector.addEventListener('change',function(){document.getElementById('confirmActionBtn').disabled=!this.value})}},100);modal.classList.add('active')};
+window.mostrarConfirmacion=function(pedidoId,accion){const pedido=window.pedidos.find(p=>p.id===pedidoId);if(!pedido)return;window.pedidoParaAccion=pedido;window.accionPendiente=accion;const modal=document.getElementById('confirmModal'),title=document.getElementById('confirmModalTitle'),body=document.getElementById('confirmModalBody'),header=document.getElementById('confirmModalHeader');let titulo,mensaje,color;if(accion==='entregado'){titulo='Confirmar Entrega';mensaje='¿Pedido entregado?';color='linear-gradient(135deg,var(--success),#2E7D32)'}else if(accion==='reserva_atendida'){titulo='Cliente Confirmado';mensaje='¿Cliente llegó?';color='linear-gradient(135deg,#9c27b0,#7b1fa2)'}else if(accion==='reserva_completada'){titulo='Confirmar Entrega';mensaje='¿Pedido entregado?';color='linear-gradient(135deg,var(--success),#2E7D32)'}else{titulo='Confirmar';mensaje='¿Confirmar acción?';color='linear-gradient(135deg,var(--success),#2E7D32)'}
+title.innerHTML=`<i class="fas fa-check-circle"></i> ${titulo}`;header.style.background=color;body.innerHTML=`<p>${mensaje}</p><div style="background:rgba(0,0,0,.2);padding:15px;border-radius:8px;margin-top:20px">${window.crearDetallePedidoResumido(pedido)}</div><div class="keyboard-hint"><span><kbd>ENTER</kbd> confirmar</span><span><kbd>ESC</kbd> cancelar</span></div>`;document.getElementById('confirmActionBtn').disabled=false;modal.classList.add('active')};
+window.crearDetallePedidoResumido=function(pedido){try{let html=`<div><strong>Tipo:</strong> ${pedido.tipo}</div>`;if(pedido.tipo==='mesa'){html+=`<div><strong>Mesa:</strong> ${pedido.mesa||'N/A'}</div>`}else if(pedido.tipo==='delivery'){html+=`<div><strong>Dirección:</strong> ${pedido.direccion||'N/A'}</div><div><strong>Teléfono:</strong> ${pedido.telefono||'N/A'}</div>`}else{html+=`<div><strong>Fecha:</strong> ${pedido.fecha_reserva?new Date(pedido.fecha_reserva).toLocaleDateString():'N/A'}</div>`}
+html+='<div><strong>Items:</strong></div>';(pedido.items||[]).forEach(item=>{html+=`<div style="margin-left:10px">${item.cantidad||1}x ${item.nombre} - ${window.formatBs(window.usdToBs((item.precioUnitarioUSD||0)*(item.cantidad||1)))}</div>`});html+=`<div style="margin-top:10px"><strong>TOTAL:</strong> ${window.formatBs(window.usdToBs(pedido.total||0))}</div>`;return html}catch(e){return''}};
+window.ejecutarConfirmacion=async function(){if(!window.pedidoParaAccion)return;console.log('✅ CONFIRMANDO ACCIÓN:',window.accionPendiente);console.log('   Pedido ID:',window.pedidoParaAccion.id);console.log('   Session ID:',window.pedidoParaAccion.session_id);try{let tituloNotif,mensajeNotif;if(window.accionPendiente==='entregado'){tituloNotif='✅ ¡Pedido entregado!';mensajeNotif='¡Buen Provecho! Gracias por elegir Saki Sushi';await window.supabaseClient.from('pedidos').update({estado:'entregado'}).eq('id',window.pedidoParaAccion.id)}else if(window.accionPendiente==='enviado'){const deliveryId=document.getElementById('deliverySelector')?.value;if(!deliveryId){window.mostrarToast('Selecciona un motorizado','error');return}
+const delivery=window.deliverys.find(d=>d.id==deliveryId),costoDelivery=window.pedidoParaAccion.costo_delivery_bs||window.pedidoParaAccion.costoDelivery||0;await window.supabaseClient.from('entregas_delivery').insert([{pedido_id:window.pedidoParaAccion.id,delivery_id:deliveryId,monto_bs:costoDelivery,fecha_entrega:new Date().toISOString()}]);await window.supabaseClient.from('pedidos').update({estado:'enviado',delivery_nombre:delivery?.nombre,delivery_id:deliveryId}).eq('id',window.pedidoParaAccion.id);tituloNotif='🛵 Delivery en camino';mensajeNotif='Prepárate para disfrutar';
+// Actualizar acumulado en memoria de inmediato
+window._acumuladoDeliverysCache=(window._acumuladoDeliverysCache||0)+costoDelivery;
+document.getElementById('statDeliverysTotal').textContent=window.formatBs(window._acumuladoDeliverysCache);
+// Actualizar pedido en memoria para que renderizarDeliverysStats lo vea inmediatamente
+var pIdx=window.pedidos.findIndex(function(p){return p.id===window.pedidoParaAccion.id;});
+if(pIdx>-1){window.pedidos[pIdx].estado='enviado';window.pedidos[pIdx].delivery_nombre=delivery&&delivery.nombre?delivery.nombre:'';window.pedidos[pIdx].delivery_id=deliveryId;}
+window.renderizarDeliverysStats();
+await window.cargarDeliverys();window.renderizarDeliverysStats();await window.refrescarAcumuladoDeliverys()}else if(window.accionPendiente==='reserva_atendida'){tituloNotif='📅 Reserva Confirmada';mensajeNotif='En breve tu pedido te será entregado, ¡Gracias por preferirnos!';await window.supabaseClient.from('pedidos').update({estado:'reserva_atendida'}).eq('id',window.pedidoParaAccion.id)}else if(window.accionPendiente==='reserva_completada'){tituloNotif='✅ ¡Pedido entregado!';mensajeNotif='¡Buen Provecho! Gracias por elegir Saki Sushi';await window.supabaseClient.from('pedidos').update({estado:'reserva_completada'}).eq('id',window.pedidoParaAccion.id)}else{tituloNotif='🔄 Estado actualizado';mensajeNotif='Tu pedido ha sido actualizado';await window.supabaseClient.from('pedidos').update({estado:window.accionPendiente}).eq('id',window.pedidoParaAccion.id)}
+console.log('📢 Insertando notificación en confirmación:');console.log('   Session ID:',window.pedidoParaAccion.session_id);console.log('   Pedido ID:',window.pedidoParaAccion.id);console.log('   Título:',tituloNotif);const{error}=await window.supabaseClient.from('notificaciones').insert([{pedido_id:window.pedidoParaAccion.id,tipo:'approved',titulo:tituloNotif,mensaje:mensajeNotif,session_id:window.pedidoParaAccion.session_id,leida:false}]);if(error)console.error('❌ Error insertando notificación:',error);else console.log('✅ Notificación insertada correctamente')
+window.cerrarModal('confirmModal');window.mostrarToast('✅ Estado actualizado');await window.recargarPedidosCompletos();window.verificarYControlarAlarma()}catch(e){console.error('Error:',e);window.mostrarToast('❌ Error','error')}};
+window.mostrarRechazo=function(pedidoId){window.pedidoParaAccion=(window.pedidos||[]).find(p=>p.id===pedidoId);if(window.pedidoParaAccion){document.getElementById('rechazoModal').classList.add('active')}};
+window.confirmarRechazo=async function(){if(!window.pedidoParaAccion)return;const razon=document.querySelector('input[name="rejectionReason"]:checked')?.value;if(!razon){window.mostrarToast('Selecciona una razón','error');return}try{await window.supabaseClient.rpc('liberar_ingredientes',{p_pedido_id:window.pedidoParaAccion.id});await window.supabaseClient.from('pedidos').update({estado:'rechazado'}).eq('id',window.pedidoParaAccion.id);const mensajes={referencia_invalida:'Referencia inválida',monto_insuficiente:'Monto insuficiente',datos_incorrectos:'Datos incorrectos',no_disponible:'Producto no disponible',fuera_horario:'Fuera de horario'};console.log('📢 Insertando notificación en rechazo:');console.log('   Session ID:',window.pedidoParaAccion.session_id);console.log('   Pedido ID:',window.pedidoParaAccion.id);const{error}=await window.supabaseClient.from('notificaciones').insert([{pedido_id:window.pedidoParaAccion.id,tipo:'rejected',titulo:'❌ Pedido rechazado',mensaje:`Motivo: ${mensajes[razon]||razon}`,session_id:window.pedidoParaAccion.session_id,leida:false}]);if(error)console.error('❌ Error insertando notificación:',error);else console.log('✅ Notificación insertada correctamente')
+window.cerrarModal('rechazoModal');window.mostrarToast('🔄 Pedido rechazado');await window.recargarPedidosCompletos();window.verificarYControlarAlarma()}catch(e){console.error('Error al rechazar:',e);window.mostrarToast('❌ Error al rechazar','error')}};
+// ============================================ MENÚ ============================================
+window.renderizarMenu=async function(){const menuGrid=document.getElementById('menuGrid'),categoryList=document.getElementById('categoryList');if(!window.menuItems||!window.menuItems.length){menuGrid.innerHTML='<div class="empty-state"><i class="fas fa-utensils"></i><p>No hay platillos disponibles</p></div>';return}
+const categorias=[...new Set(window.menuItems.map(item=>item.categoria).filter(Boolean))];let html='<li class="category-item active" data-categoria="todos"><i class="fas fa-utensils"></i> Todos</li>';categorias.forEach(cat=>{html+=`<li class="category-item" data-categoria="${cat}"><i class="fas fa-${cat==='entradas'?'leaf':(cat==='sushi'?'fish':(cat==='rolls'?'egg':(cat==='tragos'?'wine-glass-alt':'utensils')))}"></i> ${cat}</li>`});categoryList.innerHTML=html;document.querySelectorAll('.category-item').forEach(item=>{item.addEventListener('click',function(){document.querySelectorAll('.category-item').forEach(c=>c.classList.remove('active'));this.classList.add('active');window.filtrarMenuPorCategoria(this.dataset.categoria)})});window.filtrarMenuPorCategoria('todos')};
+window.filtrarMenuPorCategoria=async function(categoria){let itemsFiltrados=[];if(categoria==='todos'){itemsFiltrados=window.menuItems}else{itemsFiltrados=window.menuItems.filter(item=>item.categoria===categoria)}
+const itemsConStock=await Promise.all(itemsFiltrados.map(async item=>{const stock=await window.calcularStockPlatillo(item);let stockClass='available',stockText='Disponible';if(stock<=0){stockClass='sold-out';stockText='Agotado'}else if(stock<5){stockClass='low';stockText=`últimas ${stock} unidades`}else{stockText=`${stock} disponibles`}
+return{...item,stock,stockClass,stockText}}));document.getElementById('menuGrid').innerHTML=itemsConStock.map(item=>`<div class="menu-card"><div class="menu-card-image" style="background-image:url('${item.imagen||'https://via.placeholder.com/300x150?text=Saki+Sushi'}')"></div><div class="menu-card-content"><div class="menu-card-header"><span class="menu-card-title">${item.nombre}</span><span class="menu-card-price">${window.formatBs(window.usdToBs(item.precio||0))}</span></div><p style="font-size:.85rem;color:var(--text-secondary);margin-bottom:.5rem">${item.descripcion||''}</p><div class="menu-card-stock ${item.stockClass}"><i class="fas fa-box"></i> ${item.stockText}</div></div></div>`).join('')};
+// ============================================ DELIVERYS ============================================
+window.renderizarDeliverysStats=function(){const entregasHoy=window.pedidos.filter(p=>p.tipo==='delivery'&&p.estado==='enviado'&&new Date(p.fecha).toDateString()===new Date().toDateString()),total=entregasHoy.reduce((sum,p)=>sum+(p.costo_delivery_bs||0),0),cantidad=entregasHoy.length,promedio=cantidad>0?total/cantidad:0;document.getElementById('deliverysTotalStats').textContent=window.formatBs(total);document.getElementById('deliverysCantidadStats').textContent=cantidad;document.getElementById('deliverysPromedioStats').textContent=window.formatBs(promedio);document.getElementById('deliverysListCount').textContent=cantidad;document.getElementById('deliverysListContainer').innerHTML=cantidad?entregasHoy.map(p=>window.crearTarjetaDelivery(p)).join(''):'<div class="empty-state"><i class="fas fa-motorcycle"></i><p>No hay entregas hoy</p></div>'};
+window.crearTarjetaDelivery=function(pedido){try{const fecha=new Date(pedido.fecha),hora=fecha.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'}),deliveryNombre=pedido.delivery_nombre||(window.deliverys.find(d=>d.id==pedido.delivery_id)?.nombre)||'No asignado';return`<div class="order-card-compact" style="border-left-color:var(--delivery)"><div class="order-header-compact"><span class="order-time-compact"><i class="far fa-clock"></i> ${hora}</span><span class="delivery-tag"><i class="fas fa-motorcycle"></i> Delivery</span></div><div class="order-info-compact"><div><i class="fas fa-map-marker-alt"></i> ${(pedido.direccion||'').substring(0,20)}...</div><div><i class="fas fa-phone"></i> ${pedido.telefono||'N/A'}</div><div><i class="fas fa-user"></i> Motorizado: ${deliveryNombre}</div><div><i class="fas fa-tag"></i> Pedido: ${pedido.id.substring(0,8)}</div></div><div class="order-total-compact" style="color:var(--delivery)">${window.formatBs(pedido.costo_delivery_bs||0)}</div></div>`}catch(e){return''}};
+// ============================================ MESA ============================================
+window.abrirSelectorMesa=async function(){await window.cargarMesas();const modal=document.getElementById('mesaModal'),mesaList=document.getElementById('mesaList');mesaList.innerHTML=(window.mesas||[]).length?window.mesas.map(m=>`<button class="mesa-btn" onclick="window.abrirMesa('${m.nombre}')"><i class="fas fa-chair"></i>${m.nombre}</button>`).join(''):'<p class="text-center">No hay mesas</p>';modal.classList.add('active')};
+window.abrirMesa=function(mesa){window.open(`${window.location.origin}/Cliente/index.html?mesa=${encodeURIComponent(mesa)}`,'_blank');window.cerrarModal('mesaModal')};
+// ============================================ COMPROBANTE ============================================
+window.verComprobante=async function(pedidoId){const pedido=window.pedidos.find(p=>p.id===pedidoId);if(!pedido||!pedido.comprobante_url){window.mostrarToast('No hay comprobante','error');return}
+const modal=document.getElementById('comprobanteModal');document.getElementById('comprobanteModalBody').innerHTML=`<div style="text-align:center"><img src="${pedido.comprobante_url}" style="max-width:100%;max-height:400px;border-radius:8px;margin-bottom:15px"><p><strong>Referencia:</strong> ${pedido.referencia||'N/A'}</p><p><strong>Teléfono:</strong> ${pedido.telefono||'N/A'}</p><p><strong>Total:</strong> ${window.formatBs(window.usdToBs(pedido.total||0))}</p></div><div class="keyboard-hint"><span><kbd>ESC</kbd> cerrar</span></div>`;modal.classList.add('active')};
+// ============================================ DETALLE MODAL ============================================
+window.abrirModalDetalle=async function(tipo){if(tipo==='propinas'||tipo==='propinasDetalle'){window.abrirPropinaModal();return}
+await window.cargarVentasHoy();await window.cargarPropinas();const modal=document.getElementById('detalleModal'),title=document.getElementById('detalleModalTitle'),body=document.getElementById('detalleModalBody');let contenido='';try{switch(tipo){case'preparacion':title.innerHTML='<i class="fas fa-fire"></i> Pedidos en Preparación';const preparacion=window.pedidos.filter(p=>['en_cocina','en_camino','reserva_pendiente','reserva_atendida'].includes(p.estado));contenido=preparacion.length?preparacion.map(p=>window.crearDetallePedidoCompacto(p)).join(''):'<div class="empty-state"><i class="fas fa-inbox"></i><p>No hay pedidos en preparación</p></div>';break;case'cobrados':{
+  title.innerHTML='<i class="fas fa-check-circle"></i> Cobrados Hoy';
+  if(!window.ventasHoy||!window.ventasHoy.length){
+    contenido='<div class="empty-state"><i class="fas fa-inbox"></i><p>No hay cobros registrados hoy</p></div>';
+  } else {
+    let cb_ebs=0,cb_eusd=0,cb_pm=0,cb_pv=0,cb_inv=0,cb_total=0;
+    window.ventasHoy.forEach(v=>{
+      const bs=v.subtotal_platillos||0; cb_total+=bs;
+      const m=v.metodo_pago||'';
+      if(m==='efectivo_bs')cb_ebs+=bs;
+      else if(m==='efectivo_usd')cb_eusd+=bs;
+      else if(m==='pago_movil')cb_pm+=bs;
+      else if(m==='punto_venta')cb_pv+=bs;
+      else if(m==='invitacion')cb_inv+=bs;
+    });
+    const mtag=(label,val,color)=>val>0?`<div style="display:flex;justify-content:space-between;padding:6px 8px;background:rgba(0,0,0,.2);border-radius:6px;margin-bottom:4px"><span>${label}</span><span style="font-weight:700;color:${color}">${window.formatBs(val)}</span></div>`:'';
+    contenido=`<div style="margin-bottom:16px;padding:12px;background:rgba(0,0,0,.3);border-radius:8px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px"><span style="font-weight:700">Total cobrado hoy</span><span style="font-weight:800;color:var(--accent);font-size:1.1rem">${window.formatBs(cb_total)}</span></div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:12px"><span>Cantidad de cobros</span><span style="font-weight:600">${window.ventasHoy.length}</span></div>
+      <div style="font-size:.85rem;color:var(--text-secondary);margin-bottom:6px;font-weight:600">Desglose por método:</div>
+      ${mtag('💵 Efectivo Bs',cb_ebs,'var(--success)')}
+      ${mtag('💵 Efectivo USD',cb_eusd,'var(--success)')}
+      ${mtag('📱 Pago Móvil',cb_pm,'var(--info)')}
+      ${mtag('💳 Punto de Venta',cb_pv,'var(--warning)')}
+      ${mtag('🎁 Invitación',cb_inv,'var(--propina)')}
+    </div>
+    <div style="font-size:.85rem;color:var(--text-secondary);margin-bottom:8px;font-weight:600">Detalle de cobros:</div>
+    ${window.ventasHoy.map(v=>{const pedido=window.pedidos.find(p=>p.id===v.pedido_id);return window.crearDetalleVentaCompacto(v,pedido)}).join('')}`;
+  }
+  break;}case'ventas':{
+  title.innerHTML='<i class="fas fa-dollar-sign"></i> Ventas Totales';
+  const totalVentas=window.ventasHoy.reduce((sum,v)=>sum+(v.subtotal_platillos||0),0);
+  let vt_ebs=0,vt_eusd=0,vt_pm=0,vt_pv=0,vt_cond=0,vt_favor=0;
+  window.ventasHoy.forEach(v=>{
+    const p=window.pedidos.find(p=>p.id===v.pedido_id);
+    if(p?.condonado>0)vt_cond+=p.condonado;
+    if(p?.a_favor_caja>0)vt_favor+=p.a_favor_caja;
+    const bs=v.subtotal_platillos||0;
+    if(v.metodo_pago==='efectivo_bs')vt_ebs+=bs;
+    else if(v.metodo_pago==='efectivo_usd')vt_eusd+=bs;
+    else if(v.metodo_pago==='pago_movil')vt_pm+=bs;
+    else if(v.metodo_pago==='punto_venta')vt_pv+=bs;
+  });
+  const vtag=(label,val,color)=>val>0?`<div style="display:flex;justify-content:space-between;padding:6px 8px;background:rgba(0,0,0,.2);border-radius:6px;margin-bottom:4px"><span>${label}</span><span style="font-weight:700;color:${color}">${window.formatBs(val)}</span></div>`:'';
+  contenido=`<div style="margin-bottom:16px;padding:12px;background:rgba(0,0,0,.3);border-radius:8px">
+    <div style="display:flex;justify-content:space-between;margin-bottom:8px"><span style="font-weight:700">Total vendido hoy (platillos)</span><span style="font-weight:800;color:var(--accent);font-size:1.1rem">${window.formatBs(totalVentas)}</span></div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:12px"><span>Pedidos cobrados</span><span style="font-weight:600">${window.ventasHoy.length}</span></div>
+    <div style="font-size:.85rem;color:var(--text-secondary);margin-bottom:6px;font-weight:600">Desglose por método de pago:</div>
+    ${vtag('💵 Efectivo Bs',vt_ebs,'var(--success)')}
+    ${vtag('💵 Efectivo USD',vt_eusd,'var(--success)')}
+    ${vtag('📱 Pago Móvil',vt_pm,'var(--info)')}
+    ${vtag('💳 Punto de Venta',vt_pv,'var(--warning)')}
+    ${vt_cond>0?vtag('🎁 Condonado',vt_cond,'var(--condonar)'):''}
+    ${vt_favor>0?vtag('🏦 A favor de caja',vt_favor,'var(--favordecaja)'):''}
+  </div>
+  <div style="font-size:.85rem;color:var(--text-secondary);margin-bottom:8px;font-weight:600">Detalle por cobro:</div>
+  ${window.ventasHoy.map(v=>{const p=window.pedidos.find(p=>p.id===v.pedido_id);return window.crearDetalleVentaCompacto(v,p)}).join('')}`;
+  break;}case'platillos':{
+  title.innerHTML='<i class="fas fa-utensils"></i> Platillos Vendidos Hoy';
+  // Usar ventasHoy para obtener solo los cobros confirmados del día
+  const conteo={};let totalUnidades=0;
+  window.ventasHoy.forEach(v=>{
+    const pedido=window.pedidos.find(p=>p.id===v.pedido_id);
+    (pedido?.items||[]).forEach(item=>{
+      const cant=item.cantidad||1;
+      conteo[item.nombre]=(conteo[item.nombre]||0)+cant;
+      totalUnidades+=cant;
+    });
+  });
+  const ranking=Object.entries(conteo).sort((a,b)=>b[1]-a[1]);
+  const maxVentas=ranking[0]?.[1]||0;
+  if(!ranking.length){
+    contenido='<div class="empty-state"><i class="fas fa-utensils"></i><p>No hay platillos vendidos hoy</p></div>';
+  } else {
+    contenido=`<div style="display:flex;justify-content:space-between;padding:8px 0;margin-bottom:12px;border-bottom:1px solid var(--border-color)"><span>Total unidades vendidas</span><span style="font-weight:700;color:var(--accent)">${totalUnidades}</span></div><div style="max-height:420px;overflow-y:auto">`;
+    ranking.forEach(([nombre,cantidad],index)=>{
+      contenido+=`<div class="ranking-bar"><div class="ranking-position">${index+1}</div><div class="ranking-info"><div class="ranking-name">${nombre}</div><div class="ranking-cantidad">${cantidad} unidad${cantidad>1?'es':''} vendida${cantidad>1?'s':''}</div></div><div class="ranking-bar-container"><div class="ranking-bar-fill" style="width:${(cantidad/maxVentas)*100}%"></div></div></div>`;
+    });
+    contenido+='</div>';
+  }
+  break;}case'propinasDetalle':break;case'propinasCantidad':title.innerHTML='<i class="fas fa-hashtag"></i> Cantidad de Propinas';contenido=`<p style="font-size:2em;text-align:center;color:var(--propina)">${window.propinas.length}</p><p style="text-align:center">propinas recibidas hoy</p>`;break;case'propinasPromedio':title.innerHTML='<i class="fas fa-chart-line"></i> Promedio de Propinas';const prom=window.propinas.length?window.propinas.reduce((s,p)=>s+(p.monto_bs||p.monto||0),0)/window.propinas.length:0;contenido=`<p style="font-size:2em;text-align:center;color:var(--propina)">${window.formatBs(prom)}</p><p style="text-align:center">promedio por propina</p>`;break;case'deliverysTotal':title.innerHTML='<i class="fas fa-motorcycle"></i> Total Deliverys';const totalDeliverys=window.calcularTotalDeliverysHoy();contenido=`<p style="font-size:2em;text-align:center;color:var(--delivery)">${window.formatBs(totalDeliverys)}</p><p style="text-align:center">acumulado en deliveries hoy</p>`;break;case'deliverysCantidad':title.innerHTML='<i class="fas fa-hashtag"></i> Entregas Hoy';const entregas=window.pedidos.filter(p=>p.tipo==='delivery'&&p.estado==='enviado'&&new Date(p.fecha).toDateString()===new Date().toDateString()).length;contenido=`<p style="font-size:2em;text-align:center;color:var(--delivery)">${entregas}</p><p style="text-align:center">entregas realizadas hoy</p>`;break;case'deliverysPromedio':title.innerHTML='<i class="fas fa-chart-line"></i> Promedio por Entrega';const enviados=window.pedidos.filter(p=>p.tipo==='delivery'&&p.estado==='enviado'&&new Date(p.fecha).toDateString()===new Date().toDateString()),total=enviados.reduce((s,p)=>s+(p.costo_delivery_bs||0),0),promDelivery=enviados.length>0?total/enviados.length:0;contenido=`<p style="font-size:2em;text-align:center;color:var(--delivery)">${window.formatBs(promDelivery)}</p><p style="text-align:center">promedio por entrega</p>`;break;default:contenido='<p>Selecciona una opción válida</p>'}
+body.innerHTML=contenido;modal.classList.add('active')}catch(e){console.error('Error en abrirModalDetalle:',e);body.innerHTML='<p>Error al cargar los datos</p>';modal.classList.add('active')}};
+window.crearDetallePedidoCompacto=function(pedido){try{const hora=new Date(pedido.fecha).toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'}),itemsHtml=(pedido.items||[]).map(item=>`<div class="detail-item-row-compact"><span>${item.cantidad||1}x ${item.nombre}</span><span>${window.formatBs(window.usdToBs((item.precioUnitarioUSD||0)*(item.cantidad||1)))}</span></div>`).join('');let extraInfo='';if(pedido.tipo==='delivery'&&pedido.parroquia){extraInfo=`<div style="margin-top:3px;font-size:.7rem;color:var(--text-secondary)">${pedido.parroquia} - ${window.formatBs(pedido.costo_delivery_bs||0)}</div>`}
+return`<div class="detail-item-compact"><div class="detail-header-compact"><span>${hora}</span><span class="detail-metodo-tag">${pedido.tipo}</span></div><div class="detail-items-compact">${itemsHtml}</div>${extraInfo}<div class="detail-total-compact">Total: ${window.formatBs(window.usdToBs(pedido.total||0))}</div></div>`}catch(e){return''}};
+window.crearDetalleVentaCompacto=function(venta,pedido){
+if(!pedido)return'';
+try{
+  const hora=new Date(pedido.fecha).toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
+  const itemsHtml=(pedido.items||[]).map(item=>{
+    const m=window.formatBs(window.usdToBs((item.precioUnitarioUSD||0)*(item.cantidad||1)));
+    return'<div class="detail-item-row-compact"><span>'+(item.cantidad||1)+'x '+item.nombre+'</span><span>'+m+'</span></div>';
+  }).join('');
+  const subtotalBs=window.formatBs(venta.subtotal_platillos||(venta.total*window.tasaEfectiva));
+  let pagosHtml='';
+  if(pedido.metodo_pago==='invitacion'){
+    pagosHtml='<div style="margin-top:6px;padding:4px 8px;background:rgba(245,124,0,.12);border-radius:4px;font-size:.78rem;color:var(--warning)">Pedido por invitacion (sin cobro)</div>';
+  } else if(pedido.pagos_mixtos&&pedido.pagos_mixtos.length){
+    const icons={efectivo_bs:'Efectivo Bs',efectivo_usd:'Efectivo USD',pago_movil:'Pago Móvil',punto_venta:'Punto de Venta',invitacion:'Invitación'};
+    const totalRecibidoBs=pedido.pagos_mixtos.reduce(function(s,p){
+      if(p.metodo==='efectivo_usd')return s+(p.monto||0)*((window.configGlobal&&window.configGlobal.tasa_cambio)||window.tasaEfectiva);
+      return s+(p.montoBs||p.monto||0);
+    },0);
+    const vuelto=pedido.vuelto_entregado||0;
+    const favor=pedido.a_favor_caja||0;
+    const cond=pedido.condonado||0;
+    pagosHtml='<div style="margin-top:6px;border-top:1px dashed var(--border-color);padding-top:6px;font-size:.78rem">';
+    pedido.pagos_mixtos.forEach(function(p){
+      var lbl=icons[p.metodo]||p.metodo;
+      var montoBs=p.metodo==='efectivo_usd'?(p.monto||0)*((window.configGlobal&&window.configGlobal.tasa_cambio)||window.tasaEfectiva):(p.montoBs||p.monto||0);
+      pagosHtml+='<div style="display:flex;justify-content:space-between;padding:2px 0"><span>'+lbl+(p.referencia?' #'+p.referencia:'')+'</span><span style="font-weight:600">'+window.formatBs(montoBs)+'</span></div>';
+    });
+    pagosHtml+='<div style="display:flex;justify-content:space-between;padding:3px 0;border-top:1px solid var(--border-color);margin-top:3px"><span>Recibido</span><span style="font-weight:700;color:var(--success)">'+window.formatBs(totalRecibidoBs)+'</span></div>';
+    if(vuelto>0)pagosHtml+='<div style="display:flex;justify-content:space-between;padding:2px 0"><span>(-) Vuelto entregado</span><span style="color:var(--warning)">- '+window.formatBs(vuelto)+'</span></div>';
+    if(favor>0)pagosHtml+='<div style="display:flex;justify-content:space-between;padding:2px 0"><span>(+) A favor de caja</span><span style="color:var(--favordecaja)">'+window.formatBs(favor)+'</span></div>';
+    if(cond>0)pagosHtml+='<div style="display:flex;justify-content:space-between;padding:2px 0"><span>Condonado</span><span style="color:var(--condonar)">- '+window.formatBs(cond)+'</span></div>';
+    var netoCobrado=totalRecibidoBs-vuelto;
+    pagosHtml+='<div style="display:flex;justify-content:space-between;padding:3px 0;border-top:1px solid var(--border-color);margin-top:3px;font-weight:700"><span>Neto cobrado</span><span style="color:var(--accent)">'+window.formatBs(netoCobrado)+'</span></div>';
+    pagosHtml+='</div>';
+  }
+  const deliveryNombre=pedido.delivery_nombre||(window.deliverys&&window.deliverys.find(function(d){return d.id==pedido.delivery_id;})&&window.deliverys.find(function(d){return d.id==pedido.delivery_id;}).nombre)||'';
+  const cajeroTag=pedido.cajero?'<span style="font-size:.7rem;color:var(--text-secondary)"> — '+pedido.cajero+'</span>':'';
+  return'<div class="detail-item-compact">'+
+    '<div class="detail-header-compact"><span>'+hora+'</span><div style="display:flex;gap:4px;align-items:center"><span class="detail-metodo-tag">'+pedido.tipo+'</span>'+cajeroTag+'</div></div>'+
+    '<div class="detail-items-compact">'+itemsHtml+'</div>'+
+    (pedido.tipo==='delivery'&&deliveryNombre?'<div style="display:flex;justify-content:space-between;margin-top:3px;font-size:.75rem"><span class="delivery-tag"><i class="fas fa-motorcycle"></i> '+deliveryNombre+'</span><span style="font-weight:600">'+window.formatBs(pedido.costo_delivery_bs||0)+'</span></div>':'')+
+    (function(){
+      var costoD=pedido.costo_delivery_bs||0;
+      var tieneDelivery=pedido.tipo==='delivery'&&deliveryNombre&&costoD>0;
+      var subtotalLabel=tieneDelivery?'Subtotal platillos + Delivery':'Subtotal platillos';
+      var subtotalVal=tieneDelivery?window.formatBs((venta.subtotal_platillos||(venta.total*window.tasaEfectiva))+costoD):subtotalBs;
+      return '<div class="detail-total-compact">'+subtotalLabel+': '+subtotalVal+'</div>';
+    })()+
+    pagosHtml+
+    '</div>';
+}catch(e){console.error(e);return''}};
+// ============================================ VERIFICACIÓN ============================================
+window.verificarCambiosPedidos=async function(){if(window.reconectando)return;try{const hoy=new Date();hoy.setHours(0,0,0,0);const manana=new Date(hoy);manana.setDate(manana.getDate()+2);const{data,error}=await window.supabaseClient.from('pedidos').select('id, estado, fecha').gte('fecha',hoy.toISOString()).lt('fecha',manana.toISOString());if(error)throw error;if(data){let cambios=false;if(data.length!==(window.pedidos||[]).length){cambios=true}else{const estadoMap=new Map((window.pedidos||[]).map(p=>[p.id,p.estado]));for(const p of data){if(estadoMap.get(p.id)!==p.estado){cambios=true;break}}}
+if(cambios){console.log('🔄 Cambios detectados en pedidos, recargando...');await window.recargarPedidosCompletos();window.ultimaActualizacion=Date.now()}}}catch(e){console.error('Error verificando cambios:',e)}};
+window.recargarPedidosCompletos=async function(){try{await window.cargarPedidos();await window.cargarVentasHoy();window.actualizarEstadisticas();window.renderizarPedidos();window.verificarYControlarAlarma();window.refrescarAcumuladoDeliverys()}catch(e){console.error('Error recargando pedidos:',e)}};
+window.iniciarVerificacionPeriodica=function(){if(window.intervaloVerificacion)clearInterval(window.intervaloVerificacion);window.intervaloVerificacion=setInterval(async()=>{if(window.paginaVisible&&!window.enProcesoDeCobro){await window.verificarCambiosPedidos()}},3e3)};
+// ============================================ REALTIME ============================================
+window.setupRealtimeSubscriptions=function(){try{if(window.suscripciones){window.suscripciones.forEach(s=>{try{s.unsubscribe()}catch(e){}})}
+window.suscripciones=[];const crearSuscripcion=(nombre,tabla,callback)=>{try{const sub=window.supabaseClient.channel(nombre+'-'+Date.now()).on('postgres_changes',{event:'*',schema:'public',table:tabla},callback).subscribe();window.suscripciones.push(sub)}catch(e){console.error('Error suscribiendo a '+tabla,e)}};crearSuscripcion('cajero-pedidos','pedidos',async()=>{await window.verificarCambiosPedidos()});crearSuscripcion('cajero-ventas','ventas',async()=>{await window.cargarVentasHoy();window.actualizarEstadisticas()});crearSuscripcion('cajero-propinas','propinas',async()=>{await window.cargarPropinas();window.actualizarEstadisticas();window.renderizarPropinas()});crearSuscripcion('cajero-mesoneros','mesoneros',async()=>{await window.cargarMesoneros()});crearSuscripcion('cajero-deliverys','deliverys',async()=>{await window.cargarDeliverys()});crearSuscripcion('cajero-entregas','entregas_delivery',async()=>{await window.refrescarAcumuladoDeliverys();window.renderizarDeliverysStats()});crearSuscripcion('cajero-menu','menu',async()=>{await window.cargarMenu()});crearSuscripcion('cajero-inventario','inventario',async()=>{window.stockCache.invalidate();await window.cargarInventario()});crearSuscripcion('cajero-config','config',(payload)=>{window.configGlobal={...window.configGlobal,...payload.new};window.tasaEfectiva=window.configGlobal.tasa_efectiva||400;window.renderizarPedidos();window.renderizarMenu();window.actualizarEstadisticas()})}catch(e){console.error('Error configurando suscripciones:',e)}};
+// ============================================ EVENTOS ============================================
+window.setupEventListeners=function(){
+document.addEventListener('keydown',function(e){
+  if(e.key==='Escape'){
+    ['cobroModal','propinaModal','confirmModal','rechazoModal','detalleModal','mesaModal','comprobanteModal','deliveryModal','confirmLogoutModal'].forEach(function(id){
+      var modal=document.getElementById(id);
+      if(modal&&modal.classList.contains('active')){
+        if(id==='cobroModal')window.cerrarCobroModal();
+        else if(id==='propinaModal')window.cerrarModal(id);
+        else window.cerrarModal(id);
+      }
+    });
+  }
+  if(e.key==='Enter'){
+    if(document.getElementById('confirmModal')&&document.getElementById('confirmModal').classList.contains('active')){
+      var btn=document.getElementById('confirmActionBtn');
+      if(btn&&!btn.disabled){e.preventDefault();window.ejecutarConfirmacion();}
+    }
+  }
+});
+var categoriasWrapper=document.getElementById('categoriasWrapper');
+if(categoriasWrapper){
+  var touchStartX=0;
+  categoriasWrapper.addEventListener('touchstart',function(e){touchStartX=e.touches[0].clientX});
+  categoriasWrapper.addEventListener('touchmove',function(e){if(!touchStartX)return;var touchEndX=e.touches[0].clientX,diff=touchStartX-touchEndX;if(Math.abs(diff)>20)e.preventDefault()});
+  categoriasWrapper.addEventListener('touchend',function(e){if(!touchStartX)return;var touchEndX=e.changedTouches[0].clientX,diff=touchStartX-touchEndX;if(Math.abs(diff)>50){if(diff>0){categoriasWrapper.scrollLeft+=150}else{categoriasWrapper.scrollLeft-=150}}touchStartX=0});
+}
+};
+// ============================================ INICIALIZACIÓN ============================================
+document.addEventListener('DOMContentLoaded',async()=>{console.log('DOM cargado, verificando sesión...');window.alarmaAudio=document.getElementById('alarmaSonido');cargarTemaGuardado();const sesionRestaurada=await window.restaurarSesion();if(!sesionRestaurada){window.mostrarLogin()}
+document.addEventListener('visibilitychange',function(){if(document.hidden){window.paginaVisible=false}else{window.paginaVisible=true;window.verificarCambiosPedidos()}})});
+</script></body></html
+       var onclickAttr=hayE?' onclick="var el=document.getElementById(this.getAttribute(\"data-did\"));if(el)el.style.display=el.style.display==\"none\"?\"block\":\"none\""':'';
+       var didAttr=hayE?' data-did="'+dId+'"':'';
+       html+='<div class="motorizado-item" style="opacity:'+(hayE?'1':'0.5')+';cursor:'+(hayE?'pointer':'default')+'"'+didAttr+onclickAttr+'>'
            +'<span class="motorizado-nombre"><i class="fas fa-motorcycle" style="color:var(--delivery);margin-right:6px"></i>'+d.nombre+'</span>'
            +'<span class="motorizado-monto" style="color:'+(hayE?'var(--accent)':'var(--text-secondary)')+'">'+window.formatBs(monto)
            +(hayE?' <i class="fas fa-chevron-down" style="font-size:.7rem;margin-left:4px"></i>':'')
