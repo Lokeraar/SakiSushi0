@@ -16,7 +16,8 @@
 <div class="section" id="section-menu"><h2 class="section-title"><i class="fas fa-utensils"></i> Menú Actual</h2><div class="categorias-wrapper" id="categoriasWrapper"><ul class="category-list" id="categoryList"></ul></div><div class="swipe-hint"><i class="fas fa-chevron-left"></i> Desliza para ver más categorías <i class="fas fa-chevron-right"></i></div><div class="menu-grid" id="menuGrid"><div class="loading-container"><div class="loading-spinner"></div><p>Cargando menú...</p></div></div></div>
 <div class="section" id="section-propinas"><h2 class="section-title"><i class="fas fa-hand-holding-heart"></i> Propinas del Día</h2><div class="stats-grid-modern" style="margin-bottom:30px"><button class="stat-button cuatro" onclick="window.abrirModalDetalle('propinasDetalle')" data-tooltip="Total de propinas"><span class="stat-icon propinas"><i class="fas fa-hand-holding-heart"></i></span><span class="stat-value" id="propinasTotal">Bs 0</span><span class="stat-label">Total Propinas</span></button><button class="stat-button cuatro" onclick="window.abrirModalDetalle('propinasCantidad')" data-tooltip="Cantidad de propinas"><span class="stat-icon propinas"><i class="fas fa-hashtag"></i></span><span class="stat-value" id="propinasCantidad">0</span><span class="stat-label">Cantidad</span></button><button class="stat-button cuatro" onclick="window.abrirModalDetalle('propinasPromedio')" data-tooltip="Promedio de propinas"><span class="stat-icon propinas"><i class="fas fa-chart-line"></i></span><span class="stat-value" id="propinasPromedio">Bs 0</span><span class="stat-label">Promedio</span></button></div><div id="propinasContainer" class="pedidos-columns" style="grid-template-columns:1fr"><div class="pedidos-column" style="max-height:500px"><div class="column-header propina"><span><i class="fas fa-clock"></i> últimas Propinas</span><span class="count-badge" id="propinasListCount">0</span></div><div class="column-content" id="propinasListContainer"></div></div></div></div>
 <div class="section" id="section-deliverys"><h2 class="section-title"><i class="fas fa-motorcycle" style="color:var(--delivery)"></i> Estadísticas de Deliverys</h2><div class="stats-grid-modern" style="margin-bottom:30px"><button class="stat-button cuatro" onclick="window.abrirModalDetalle('deliverysTotal')" data-tooltip="Total deliverys"><span class="stat-icon delivery-total"><i class="fas fa-motorcycle"></i></span><span class="stat-value" id="deliverysTotalStats">Bs 0</span><span class="stat-label">Total Deliverys</span></button><button class="stat-button cuatro" onclick="window.abrirModalDetalle('deliverysCantidad')" data-tooltip="Cantidad de entregas"><span class="stat-icon delivery-total"><i class="fas fa-hashtag"></i></span><span class="stat-value" id="deliverysCantidadStats">0</span><span class="stat-label">Entregas Hoy</span></button><button class="stat-button cuatro" onclick="window.abrirModalDetalle('deliverysPromedio')" data-tooltip="Promedio por entrega"><span class="stat-icon delivery-total"><i class="fas fa-chart-line"></i></span><span class="stat-value" id="deliverysPromedioStats">Bs 0</span><span class="stat-label">Promedio por entrega</span></button></div><div id="deliverysContainer" class="pedidos-columns" style="grid-template-columns:1fr"><div class="pedidos-column" style="max-height:500px"><div class="column-header delivery-stats"><span><i class="fas fa-clock"></i> últimas Entregas</span><span class="count-badge" id="deliverysListCount">0</span></div><div class="column-content" id="deliverysListContainer"></div></div></div></div></div></div>
-<div class="modal-overlay" id="cobroModal"><div class="modal-content"><div class="modal-header"><h2><i class="fas fa-cash-register"></i> Procesar Cobro</h2><button class="modal-close" onclick="window.cerrarCobroModal()" data-tooltip="Cerrar (ESC)"><i class="fas fa-times"></i></button></div><div class="modal-body" id="cobroModalBody"></div><div class="modal-footer"><button class="btn btn-secondary" onclick="window.cerrarCobroModal()">Cancelar (ESC)</button><button class="btn btn-primary" id="confirmCobroBtn" onclick="window.confirmarCobro()" disabled>Confirmar Cobro (ENTER doble)</button></div></div></div>
+
+<div class="modal-overlay" id="cobroModal"><div class="modal-content" style="max-width:680px"><div class="modal-header" style="background:linear-gradient(135deg,#1b5e20,#2e7d32)"><h2><i class="fas fa-cash-register"></i> Procesar Cobro</h2><button class="modal-close" onclick="window.cerrarCobroModal()" data-tooltip="Cerrar (ESC)"><i class="fas fa-times"></i></button></div><div class="modal-body" id="cobroModalBody"></div><div class="modal-footer" style="justify-content:flex-end;gap:12px"><button class="btn btn-secondary" onclick="window.cerrarCobroModal()">Cancelar</button><button class="btn btn-primary" id="confirmCobroBtn" onclick="window.confirmarCobro()" disabled style="background:linear-gradient(135deg,#1b5e20,#2e7d32);min-width:180px"><i class="fas fa-check"></i> Confirmar Cobro</button></div></div></div>
 <div class="modal-overlay" id="propinaModal"><div class="modal-content" style="max-width:550px"><div class="modal-header propina"><h2><i class="fas fa-hand-holding-heart"></i> Registrar Propina</h2><button class="modal-close" onclick="window.cerrarModal('propinaModal')" data-tooltip="Cerrar (ESC)"><i class="fas fa-times"></i></button></div><div class="modal-body" id="propinaModalBody"></div></div></div>
 <div class="modal-overlay" id="confirmLogoutModal"><div class="modal-content" style="max-width:400px"><div class="modal-header" style="background:linear-gradient(135deg,var(--warning),#F57C00)"><h2><i class="fas fa-exclamation-triangle"></i> Sesión Duplicada</h2><button class="modal-close" onclick="window.cerrarModal('confirmLogoutModal')" data-tooltip="Cerrar"><i class="fas fa-times"></i></button></div><div class="modal-body"><p style="margin-bottom:20px">Ya hay una sesión activa para este usuario. ¿Deseas cerrar la sesión anterior y continuar con esta?</p></div><div class="modal-footer"><button class="btn btn-secondary" onclick="window.cerrarModal('confirmLogoutModal')">Cancelar</button><button class="btn btn-primary" id="confirmForceLogoutBtn" onclick="window.forzarCierreSesionAnterior()">Sí, cerrar anterior</button></div></div></div>
 <div class="modal-overlay" id="confirmModal"><div class="modal-content"><div class="modal-header" id="confirmModalHeader"><h2 id="confirmModalTitle"><i class="fas fa-check-circle"></i> Confirmar Acción</h2><button class="modal-close" onclick="window.cerrarModal('confirmModal')" data-tooltip="Cerrar (ESC)"><i class="fas fa-times"></i></button></div><div class="modal-body" id="confirmModalBody"></div><div class="modal-footer"><button class="btn btn-secondary" onclick="window.cerrarModal('confirmModal')">Cancelar (ESC)</button><button class="btn btn-primary" id="confirmActionBtn" onclick="window.ejecutarConfirmacion()">Confirmar (ENTER)</button></div></div></div>
@@ -29,7 +30,7 @@
 <script src="../supabase-config.js"></script>
 <script>
 // ============================================ VARIABLES GLOBALES ============================================
-window.currentUser=null;window.jwtToken=null;window.pedidos=[];window.ventasHoy=[];window.propinas=[];window.menuItems=[];window.inventario=[];window.mesas=[];window.currentPedido=null;window.pedidoParaAccion=null;window.accionPendiente=null;window.pagosMixtos=[];window.tasaEfectiva=400;window.currentPropinaPedido=null;window.mesoneros=[];window.deliverys=[];window.alarmaAudio=document.getElementById('alarmaSonido');window.alarmaActiva=false;window.enProcesoDeCobro=false;window.suscripciones=[];window.paginaVisible=true;window.reconectando=false;window.intervaloVerificacion=null;window.ultimaActualizacion=Date.now();window.propinaSeleccionada={mesonero:null,metodo:'efectivo_bs',monto:0,referencia:''};window.referenciaPropina=['','','','','',''];window.cobroEnterCount=0;window.cobroEnterTimeout=null;window.pendingLoginUser=null;window.stockCache={data:{},lastUpdate:0,duration:5e3,get:function(id){const ahora=Date.now();if(ahora-this.lastUpdate>this.duration)this.clear();return this.data[id]},set:function(id,v){this.data[id]=v;this.lastUpdate=Date.now()},clear:function(){this.data={};this.lastUpdate=0},invalidate:function(){this.data={};this.lastUpdate=0}};
+window.currentUser=null;window.jwtToken=null;window.pedidos=[];window.ventasHoy=[];window.propinas=[];window.menuItems=[];window.inventario=[];window.mesas=[];window.currentPedido=null;window.enProcesoDeCobro=false;window.pedidoParaAccion=null;window.accionPendiente=null;window.tasaEfectiva=400;window.currentPropinaPedido=null;window.mesoneros=[];window.deliverys=[];window.alarmaAudio=document.getElementById('alarmaSonido');window.alarmaActiva=false;window.suscripciones=[];window.paginaVisible=true;window.reconectando=false;window.intervaloVerificacion=null;window.ultimaActualizacion=Date.now();window.propinaSeleccionada={mesonero:null,metodo:'efectivo_bs',monto:0,referencia:''};window.referenciaPropina=['','','','','',''];window.pendingLoginUser=null;window.stockCache={data:{},lastUpdate:0,duration:5e3,get:function(id){const ahora=Date.now();if(ahora-this.lastUpdate>this.duration)this.clear();return this.data[id]},set:function(id,v){this.data[id]=v;this.lastUpdate=Date.now()},clear:function(){this.data={};this.lastUpdate=0},invalidate:function(){this.data={};this.lastUpdate=0}};
 // ============================================ TEMA ============================================
 window.toggleTema=function(){document.body.classList.toggle('tema-claro');const icono=document.querySelector('#themeToggle i');if(document.body.classList.contains('tema-claro')){icono.className='fas fa-sun';localStorage.setItem('saki_tema_cajero','claro')}else{icono.className='fas fa-moon';localStorage.setItem('saki_tema_cajero','oscuro')}actualizarTooltips()};
 function cargarTemaGuardado(){const tema=localStorage.getItem('saki_tema_cajero');if(tema==='claro'){document.body.classList.add('tema-claro');document.querySelector('#themeToggle i').className='fas fa-sun'}}
@@ -39,7 +40,7 @@ window.mostrarToast=function(mensaje,tipo='success'){try{const toast=document.ge
 window.formatBs=function(monto){try{return new Intl.NumberFormat('es-VE',{style:'currency',currency:'VES',minimumFractionDigits:2}).format(monto).replace('VES','Bs')}catch(e){return 'Bs '+(monto||0).toFixed(2)}};
 window.formatUSD=function(monto){try{return new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',minimumFractionDigits:2}).format(monto)}catch(e){return '$ '+(monto||0).toFixed(2)}};
 window.usdToBs=function(usd){return usd*(window.tasaEfectiva||400)};
-window.cerrarModal=function(modalId){const modal=document.getElementById(modalId);if(modal)modal.classList.remove('active');if(modalId==='confirmModal'){window.pedidoParaAccion=null;window.accionPendiente=null}if(modalId==='propinaModal'){window.propinaSeleccionada={mesonero:null,metodo:'efectivo_bs',monto:0,referencia:''};window.referenciaPropina=['','','','','','']}if(modalId==='cobroModal'){window.cobroEnterCount=0;if(window.cobroEnterTimeout){clearTimeout(window.cobroEnterTimeout);window.cobroEnterTimeout=null}}};
+window.cerrarModal=function(modalId){const modal=document.getElementById(modalId);if(modal)modal.classList.remove('active');if(modalId==='confirmModal'){window.pedidoParaAccion=null;window.accionPendiente=null}if(modalId==='propinaModal'){window.propinaSeleccionada={mesonero:null,metodo:'efectivo_bs',monto:0,referencia:''};window.referenciaPropina=['','','','','','']}};
 window.mostrarLogin=function(){document.getElementById('username').value='';document.getElementById('password').value='';const e=document.getElementById('loginError');if(e)e.style.display='none';document.getElementById('loginContainer').classList.remove('hidden');document.getElementById('panelContainer').classList.add('hidden');window.detenerAlarma()};
 window.detenerAlarma=function(){if(window.alarmaAudio&&window.alarmaActiva){try{window.alarmaAudio.pause();window.alarmaAudio.currentTime=0}catch(e){}window.alarmaActiva=false}};
 window.verificarYControlarAlarma=function(){if(!window.alarmaAudio)window.alarmaAudio=document.getElementById('alarmaSonido');if(!window.alarmaAudio)return;const pendientes=(window.pedidos||[]).filter(p=>p.estado==='pendiente').length;if(pendientes>0&&!window.enProcesoDeCobro){if(!window.alarmaActiva){window.alarmaAudio.play().then(()=>{window.alarmaActiva=true}).catch(()=>{})}}else if(window.alarmaActiva&&(pendientes===0||window.enProcesoDeCobro)){window.alarmaAudio.pause();window.alarmaAudio.currentTime=0;window.alarmaActiva=false}};
@@ -203,67 +204,257 @@ window.crearTarjetaPedidoCompacta=function(pedido,tipo){try{const hora12=window.
 const itemsHTML=(pedido.items||[]).slice(0,2).map(item=>`<div class="order-item-row-compact"><span class="item-name-compact">${item.cantidad||1}x ${item.nombre}</span><span class="item-price-compact">${window.formatBs(window.usdToBs((item.precioUnitarioUSD||0)*(item.cantidad||1)))}</span></div>`).join('');const totalItems=(pedido.items||[]).length;const masItemsHTML=totalItems>2?`<div class="order-item-row-compact" style="justify-content:center;color:var(--text-secondary)">+${totalItems-2} más</div>`:'';const totalBs=window.formatBs(window.usdToBs(pedido.total||0));const comprobanteHTML=pedido.comprobante_url&&(pedido.tipo==='delivery'||pedido.tipo==='reserva')?`<div class="comprobante-thumbnail" onclick="window.verComprobante('${pedido.id}')"><img src="${pedido.comprobante_url}" style="max-width:100%;cursor:pointer"></div>`:'';let accionesHTML='';if(tipo==='pendiente'){accionesHTML=`<button class="btn-compact btn-cobrar-compact" onclick="window.mostrarCobro('${pedido.id}')" data-tooltip="Cobrar pedido">Cobrar</button><button class="btn-compact btn-rechazar-compact" onclick="window.mostrarRechazo('${pedido.id}')" data-tooltip="Rechazar pedido">Rechazar</button>`}else if(pedido.tipo==='mesa'&&pedido.estado==='en_cocina'){accionesHTML=`<button class="btn-compact btn-entregar-compact" onclick="window.mostrarConfirmacion('${pedido.id}','entregado')" data-tooltip="Marcar como entregado"><i class="fas fa-check"></i> Entregado</button>`}else if(pedido.tipo==='delivery'&&pedido.estado==='en_camino'){accionesHTML=`<button class="btn-compact btn-enviar-compact" onclick="window.mostrarConfirmacionDelivery('${pedido.id}')" data-tooltip="Confirmar envío"><i class="fas fa-motorcycle"></i> Enviar</button>`}else if(pedido.tipo==='reserva'&&pedido.estado==='reserva_pendiente'){accionesHTML=`<button class="btn-compact btn-confirmar-compact" onclick="window.mostrarConfirmacion('${pedido.id}','reserva_atendida')" data-tooltip="Confirmar llegada del cliente"><i class="fas fa-user-check"></i> Confirmar</button>`}else if(pedido.tipo==='reserva'&&pedido.estado==='reserva_atendida'){accionesHTML=`<button class="btn-compact btn-entregar-compact" onclick="window.mostrarConfirmacion('${pedido.id}','reserva_completada')" data-tooltip="Marcar como entregado"><i class="fas fa-check"></i> Entregado</button>`}
 return`<div class="order-card-compact ${pedido.estado}"><div class="order-header-compact"><span class="order-time-compact"><i class="far fa-clock"></i> ${hora12}</span><span style="font-weight:600;color:var(--${pedido.tipo==='mesa'?'info':(pedido.tipo==='delivery'?'success':'accent')});font-size:.7rem;text-transform:uppercase">${pedido.tipo}</span></div>${infoAdicional}<div class="order-items-compact">${itemsHTML}${masItemsHTML}</div><div class="order-total-compact">${totalBs}</div>${comprobanteHTML}<div class="order-actions-compact">${accionesHTML}</div></div>`}catch(e){console.error('Error creando tarjeta:',e);return''}};
 // ============================================ COBRO ============================================
-window.mostrarCobro=function(pedidoId){window.currentPedido=(window.pedidos||[]).find(p=>p.id===pedidoId);if(!window.currentPedido)return;window.enProcesoDeCobro=true;if(window.alarmaActiva){window.alarmaAudio.pause();window.alarmaAudio.currentTime=0;window.alarmaActiva=false}
-window.pagosMixtos=[];let metodoInicial='efectivo_bs';if(window.currentPedido.tipo==='delivery'||window.currentPedido.tipo==='reserva'){metodoInicial='pago_movil'}
-const totalAPagarBs=window.usdToBs(window.currentPedido.total||0),modalBody=document.getElementById('cobroModalBody');let resumenHTML='<div style="background:rgba(0,0,0,.3);padding:15px;border-radius:8px;margin-bottom:20px"><h4>Resumen del Pedido</h4>';if(window.currentPedido.referencia){resumenHTML+=`<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border-color)"><span><i class="fas fa-hashtag"></i> Referencia</span><span style="font-weight:600;font-family:monospace">${window.currentPedido.referencia}</span></div>`}
-;(window.currentPedido.items||[]).forEach(item=>{resumenHTML+=`<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border-color)"><span>${item.cantidad||1}x ${item.nombre}</span><span style="font-weight:600">${window.formatBs(window.usdToBs((item.precioUnitarioUSD||0)*(item.cantidad||1)))}</span></div>`})
-const costoDelivery=window.currentPedido.costo_delivery_bs||window.currentPedido.costoDelivery||0;if(costoDelivery>0){const parroquia=window.currentPedido.parroquia?` (${window.currentPedido.parroquia})`:'';resumenHTML+=`<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border-color)"><span><i class="fas fa-motorcycle"></i> Delivery${parroquia}</span><span style="font-weight:600">${window.formatBs(costoDelivery)}</span></div>`}
-resumenHTML+=`<div style="display:flex;justify-content:space-between;margin-top:15px;padding-top:15px;border-top:2px solid var(--primary);font-weight:700"><span>Total a pagar:</span><span id="totalPagarDisplay" style="color:var(--accent)">${window.formatBs(totalAPagarBs)}</span></div></div>`
-modalBody.innerHTML=resumenHTML+`<div style="margin-bottom:20px;padding:12px;background:rgba(245,124,0,.1);border-left:4px solid var(--warning)"><label style="display:flex;align-items:center;gap:10px;color:var(--text-primary)"><input type="checkbox" id="invitacionCheck" style="width:18px;height:18px"><strong>Por parte de la casa (invitación)</strong></label></div><div id="pagosSection"><h4>Pagos Mixtos</h4><div id="pagosContainer" class="payment-mix-container"></div><button class="btn btn-secondary" onclick="window.agregarMetodoPago()" style="width:100%;margin-bottom:20px"><i class="fas fa-plus"></i> Agregar Método de Pago</button><div id="extrasSection"><div class="pagos-resumen-row" id="vueltoRow"><div class="input-group"><label>Vuelto a entregar (Bs)</label><input type="text" id="vueltoInput" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,'');window.calcularConVuelto()"></div><div class="input-group"><label>Vuelto restante</label><span id="vueltoRestante">Bs 0.00</span></div></div><div class="pagos-checkbox" id="condonarCheckbox"><input type="checkbox" id="condonarCheck"><label><strong>Condonar monto restante</strong> <span class="badge" id="condonarMonto">Bs 0.00</span></label></div><div class="pagos-checkbox" id="favorCheckbox"><input type="checkbox" id="favorCheck"><label><strong>A favor de caja</strong> <span class="badge favor" id="favorMonto">Bs 0.00</span></label></div></div><div class="pagos-total"><div class="pagos-resumen"><span>Total recibido:</span><span id="totalRecibido">Bs 0.00</span></div><div class="pagos-resumen"><span>Pendiente:</span><span id="pendiente" style="color:var(--danger)">Bs 0.00</span></div><div class="pagos-resumen"><span>Sobrante:</span><span id="sobrante" style="color:var(--success)">Bs 0.00</span></div><div class="pagos-resumen" id="condonadoDisplay"><span>Condonado:</span><span id="condonadoValue" style="color:var(--condonar)">Bs 0.00</span></div><div class="pagos-resumen" id="favorDisplay"><span>A favor caja:</span><span id="favorValue" style="color:var(--favordecaja)">Bs 0.00</span></div></div></div><div class="keyboard-hint"><span><kbd>ENTER</kbd> (1er vez) preparar</span><span><kbd>ENTER</kbd> (2da vez) confirmar</span><span><kbd>ESC</kbd> cancelar</span></div>`
-const invitacionCheck=document.getElementById('invitacionCheck'),condonarCheck=document.getElementById('condonarCheck'),favorCheck=document.getElementById('favorCheck');if(invitacionCheck){invitacionCheck.removeEventListener('change',window.recalcularTotales);invitacionCheck.addEventListener('change',function(){const pagosSection=document.getElementById('pagosSection');if(pagosSection){const desactivar=invitacionCheck.checked;pagosSection.style.opacity=desactivar?'0.4':'1';pagosSection.style.pointerEvents=desactivar?'none':'auto'}window.recalcularTotales()})}if(condonarCheck){condonarCheck.removeEventListener('change',window.recalcularTotales);condonarCheck.addEventListener('change',window.recalcularTotales)}if(favorCheck){favorCheck.removeEventListener('change',window.recalcularTotales);favorCheck.addEventListener('change',window.recalcularTotales)}
-const vueltoInput=document.getElementById('vueltoInput');if(vueltoInput){vueltoInput.removeEventListener('input',window.calcularConVuelto);vueltoInput.addEventListener('input',window.calcularConVuelto)}
-window.agregarMetodoPago(metodoInicial);document.getElementById('cobroModal').classList.add('active');window.recalcularTotales()};
-window.agregarMetodoPago=function(metodoInicial='pago_movil'){window.pagosMixtos.push({id:'pago_'+Date.now()+'_'+Math.random().toString(36).substring(2,9),metodo:metodoInicial,monto:0,referencia:''});window.renderizarPagosMixtos();window.recalcularTotales()};
-window.eliminarMetodoPago=function(id){window.pagosMixtos=window.pagosMixtos.filter(p=>p.id!=id);window.renderizarPagosMixtos();window.recalcularTotales()};
-window.renderizarPagosMixtos=function(){const container=document.getElementById('pagosContainer');if(!container)return;container.innerHTML=window.pagosMixtos.map((pago)=>{const placeholder=pago.metodo==='efectivo_usd'?'Monto en USD':'Monto en Bs';const valorMostrar=(pago.monto!==undefined&&pago.monto!==null&&pago.monto!==0)?pago.monto:'';return`<div class="pago-item" data-id="${pago.id}" data-pago-id="${pago.id}">${window.pagosMixtos.length>1?`<button class="remove-pago" onclick="window.eliminarMetodoPago('${pago.id}')" data-tooltip="Eliminar"><i class="fas fa-times"></i></button>`:''}<select class="pago-metodo" data-pago-id="${pago.id}"><option value="efectivo_bs" ${pago.metodo==='efectivo_bs'?'selected':''}>Efectivo Bs</option><option value="efectivo_usd" ${pago.metodo==='efectivo_usd'?'selected':''}>Efectivo Dólar</option><option value="pago_movil" ${pago.metodo==='pago_movil'?'selected':''}>Pago Móvil</option><option value="punto_venta" ${pago.metodo==='punto_venta'?'selected':''}>Punto de Venta</option></select><input type="text" class="pago-monto" inputmode="decimal" placeholder="${placeholder}" value="${valorMostrar}" data-pago-id="${pago.id}"><div class="pago-referencia-container" data-pago-id="${pago.id}" style="${pago.metodo==='pago_movil'?'display:block;':'display:none;'}"><div class="referencia-input">${Array(6).fill(0).map((_,i)=>`<input type="text" class="ref-digit pago-ref-${pago.id}" data-pago-id="${pago.id}" data-index="${i}" maxlength="1" inputmode="numeric" pattern="[0-9]*" value="${pago.referencia?.[i]||''}" style="width:45px;height:45px;text-align:center;font-size:1.3rem;">`).join('')}</div></div></div>`}).join('');
-document.querySelectorAll('.pago-monto').forEach(input=>{input.removeEventListener('input',window.handleMontoInput);window.handleMontoInput=function(e){const pagoId=e.target.dataset.pagoId;let valor=e.target.value;valor=valor.replace(/[^0-9.]/g,'');const partes=valor.split('.');if(partes.length>2)valor=partes[0]+'.'+partes.slice(1).join('');if(partes[0]&&partes[0].length>10)partes[0]=partes[0].slice(0,10);if(partes[1]&&partes[1].length>2)partes[1]=partes[1].slice(0,2);valor=partes.join('.');if(e.target.value!==valor)e.target.value=valor;const pago=window.pagosMixtos.find(p=>p.id==pagoId);if(pago){pago.monto=valor===''?0:parseFloat(valor)||0;if(pago.monto>9999999999.99)pago.monto=9999999999.99}window.recalcularTotales()};input.addEventListener('input',window.handleMontoInput)});
-document.querySelectorAll('.pago-metodo').forEach(select=>{select.removeEventListener('change',window.handleMetodoChange);window.handleMetodoChange=function(e){const pagoId=e.target.dataset.pagoId,nuevoMetodo=e.target.value,pago=window.pagosMixtos.find(p=>p.id==pagoId);if(pago){pago.metodo=nuevoMetodo;if(nuevoMetodo!=='pago_movil')pago.referencia=''}
-const refContainer=document.querySelector(`.pago-referencia-container[data-pago-id="${pagoId}"]`);if(refContainer)refContainer.style.display=nuevoMetodo==='pago_movil'?'block':'none';const montoInput=document.querySelector(`.pago-monto[data-pago-id="${pagoId}"]`);if(montoInput)montoInput.placeholder=nuevoMetodo==='efectivo_usd'?'Monto en USD':'Monto en Bs';window.recalcularTotales()};select.addEventListener('change',window.handleMetodoChange)});
-document.querySelectorAll('.ref-digit').forEach(input=>{input.removeEventListener('input',window.handleRefInput);input.removeEventListener('keydown',window.handleRefKeydown);window.handleRefInput=function(e){const pagoId=e.target.dataset.pagoId,index=parseInt(e.target.dataset.index);e.target.value=e.target.value.replace(/[^0-9]/g,'');if(e.target.value.length===1&&index<5){const nextInput=document.querySelector(`.ref-digit[data-pago-id="${pagoId}"][data-index="${index+1}"]`);if(nextInput)nextInput.focus()}
-const pago=window.pagosMixtos.find(p=>p.id==pagoId);if(pago){const digitos=[];for(let i=0;i<6;i++){const input=document.querySelector(`.ref-digit[data-pago-id="${pagoId}"][data-index="${i}"]`);digitos.push(input?input.value:'')}pago.referencia=digitos.join('')}window.recalcularTotales()};window.handleRefKeydown=function(e){const pagoId=e.target.dataset.pagoId,index=parseInt(e.target.dataset.index);if(e.key==='Backspace'&&e.target.value.length===0&&index>0){const prevInput=document.querySelector(`.ref-digit[data-pago-id="${pagoId}"][data-index="${index-1}"]`);if(prevInput){prevInput.focus();prevInput.value='';const pago=window.pagosMixtos.find(p=>p.id==pagoId);if(pago){const digitos=[];for(let i=0;i<6;i++){const input=document.querySelector(`.ref-digit[data-pago-id="${pagoId}"][data-index="${i}"]`);digitos.push(input?input.value:'')}pago.referencia=digitos.join('')}window.recalcularTotales()}}};input.addEventListener('input',window.handleRefInput);input.addEventListener('keydown',window.handleRefKeydown)})};
-window.recalcularTotales=function(){const totalAPagarUSD=window.currentPedido?.total||0,totalAPagarBs=window.usdToBs(totalAPagarUSD);let totalRecibidoBs=window.pagosMixtos.reduce((sum,pago)=>{return sum+(pago.metodo==='efectivo_usd'?window.usdToBs(pago.monto||0):(pago.monto||0))},0);const invitacionCheck=document.getElementById('invitacionCheck'),condonarCheck=document.getElementById('condonarCheck'),favorCheck=document.getElementById('favorCheck'),vueltoInput=document.getElementById('vueltoInput'),vueltoRow=document.getElementById('vueltoRow'),condonarCheckbox=document.getElementById('condonarCheckbox'),favorCheckbox=document.getElementById('favorCheckbox'),vueltoRestanteSpan=document.getElementById('vueltoRestante'),condonarMontoSpan=document.getElementById('condonarMonto'),favorMontoSpan=document.getElementById('favorMonto'),condonadoValueSpan=document.getElementById('condonadoValue'),favorValueSpan=document.getElementById('favorValue'),condonadoDisplay=document.getElementById('condonadoDisplay'),favorDisplay=document.getElementById('favorDisplay'),totalRecibidoSpan=document.getElementById('totalRecibido'),pendienteSpan=document.getElementById('pendiente'),sobranteSpan=document.getElementById('sobrante');let diferencia=totalAPagarBs-totalRecibidoBs;const vueltoValue=parseFloat(vueltoInput?.value)||0;let montoPendiente=0,montoSobrante=0,montoVueltoReal=0;if(diferencia<0){const sobraTotal=Math.abs(diferencia);if(vueltoValue>0){if(vueltoValue<=sobraTotal){montoVueltoReal=vueltoValue;montoSobrante=sobraTotal-vueltoValue;montoPendiente=0}else{montoVueltoReal=sobraTotal;montoSobrante=0;montoPendiente=vueltoValue-sobraTotal}}else{montoVueltoReal=0;montoSobrante=sobraTotal;montoPendiente=0}vueltoRow.style.display='grid'}else if(diferencia>0){montoPendiente=diferencia;montoSobrante=0;montoVueltoReal=0;vueltoRow.style.display='none'}else{montoPendiente=0;montoSobrante=0;montoVueltoReal=0;vueltoRow.style.display='none'}
-const condonarActivo=condonarCheck?.checked||false,favorActivo=favorCheck?.checked||false;let montoCondonar=montoPendiente,montoFavor=montoSobrante;if(favorActivo&&montoSobrante>0){montoFavor=montoSobrante;montoSobrante=0}if(condonarActivo&&montoPendiente>0){montoCondonar=montoPendiente;montoPendiente=0}
-let mostrarCondonar=diferencia>0||(diferencia<0&&montoPendiente>0),mostrarFavor=diferencia<0;if(diferencia===0){mostrarCondonar=false;mostrarFavor=false}
-condonarCheckbox.style.display=mostrarCondonar?'flex':'none';favorCheckbox.style.display=mostrarFavor?'flex':'none';condonarMontoSpan.textContent=window.formatBs(montoCondonar);favorMontoSpan.textContent=window.formatBs(montoFavor);pendienteSpan.textContent=window.formatBs(montoPendiente);sobranteSpan.textContent=window.formatBs(montoSobrante);vueltoRestanteSpan.textContent=window.formatBs(montoSobrante);condonadoValueSpan.textContent=window.formatBs(montoCondonar);favorValueSpan.textContent=window.formatBs(montoFavor);condonadoDisplay.style.display=montoCondonar>0?'flex':'none';favorDisplay.style.display=montoFavor>0?'flex':'none';totalRecibidoSpan.textContent=window.formatBs(totalRecibidoBs);const esInvitacion=invitacionCheck?.checked||false;let confirmarActivo=false;
-// Validar que todos los pagos móviles tienen referencia de 6 dígitos completa
-// Referencia del pedido (solo los 6 dígitos numéricos)
-const refPedido=(window.currentPedido?.referencia||'').toString().replace(/\D/g,'');
-const todosRefOk=window.pagosMixtos.every(p=>{
-    if(p.metodo!=='pago_movil')return true;
-    const ref=(p.referencia||'').toString().replace(/\D/g,'');
-    if(ref.length!==6||!/^[0-9]{6}$/.test(ref))return false;
-    // Debe coincidir con la referencia del pedido si existe
-    if(refPedido&&refPedido.length===6)return ref===refPedido;
-    return true;
-});
-if(esInvitacion){confirmarActivo=true}
-else if(!todosRefOk){confirmarActivo=false}
-else if(diferencia===0){confirmarActivo=true}
-else if(diferencia>0&&condonarActivo){confirmarActivo=true}
-else if(diferencia<0){confirmarActivo=true}
-else{confirmarActivo=false}
-document.getElementById('confirmCobroBtn').disabled=!confirmarActivo};
-window.calcularConVuelto=function(){window.recalcularTotales()};
-window.handleCobroEnter=function(){if(document.getElementById('confirmCobroBtn').disabled)return;window.cobroEnterCount++;if(window.cobroEnterCount===1){const btn=document.getElementById('confirmCobroBtn');btn.style.background='linear-gradient(135deg, var(--warning), #F57C00)';btn.textContent='Presiona ENTER nuevamente para confirmar';window.cobroEnterTimeout=setTimeout(()=>{window.cobroEnterCount=0;btn.style.background='linear-gradient(135deg, var(--primary), #b71c1c)';btn.textContent='Confirmar Cobro (ENTER doble)'},3e3)}else if(window.cobroEnterCount===2){clearTimeout(window.cobroEnterTimeout);window.cobroEnterCount=0;window.confirmarCobro()}};
-window.confirmarCobro=async function(){if(!window.currentPedido)return;console.log('💰 COBRANDO PEDIDO:',window.currentPedido.id);console.log('   Session ID:',window.currentPedido.session_id);const invitacionCheck=document.getElementById('invitacionCheck'),condonarCheck=document.getElementById('condonarCheck'),favorCheck=document.getElementById('favorCheck'),vueltoInput=document.getElementById('vueltoInput'),esInvitacion=invitacionCheck?.checked||false,condonarActivo=condonarCheck?.checked||false,favorActivo=favorCheck?.checked||false;let nuevoEstado,metodoPago,pagosData,montoCondonado=0,montoFavor=0,vueltoEntregado=0,montoRecibido=0,totalFinalUSD=window.currentPedido.total;const totalRecibidoBs=window.pagosMixtos.reduce((sum,pago)=>{return sum+(pago.metodo==='efectivo_usd'?window.usdToBs(pago.monto||0):(pago.monto||0))},0);const totalAPagarOriginalBs=window.usdToBs(window.currentPedido.total),costoDelivery=window.currentPedido.costo_delivery_bs||window.currentPedido.costoDelivery||0,subtotalPlatillosBs=totalAPagarOriginalBs-costoDelivery,vueltoValue=parseFloat(vueltoInput?.value)||0;if(esInvitacion){nuevoEstado=window.currentPedido.tipo==='delivery'?'en_camino':(window.currentPedido.tipo==='reserva'?'reserva_pendiente':'en_cocina');metodoPago='invitacion';pagosData=[{metodo:'invitacion',monto:0,montoBs:0}];montoRecibido=0;totalFinalUSD=0}else if(condonarActivo&&totalRecibidoBs<totalAPagarOriginalBs){const diferencia=totalAPagarOriginalBs-totalRecibidoBs;montoCondonado=diferencia;const ventasTotalesBs=subtotalPlatillosBs-montoCondonado;totalFinalUSD=ventasTotalesBs/window.tasaEfectiva;montoRecibido=totalRecibidoBs;nuevoEstado=window.currentPedido.tipo==='delivery'?'en_camino':(window.currentPedido.tipo==='reserva'?'reserva_pendiente':'en_cocina');pagosData=window.pagosMixtos.map(p=>({metodo:p.metodo,monto:p.monto,montoBs:p.metodo==='efectivo_usd'?window.usdToBs(p.monto):p.monto,referencia:p.referencia||null}));metodoPago=window.pagosMixtos.length===1?window.pagosMixtos[0].metodo:'mixto'}else if(favorActivo&&totalRecibidoBs>totalAPagarOriginalBs){const sobra=totalRecibidoBs-totalAPagarOriginalBs;if(vueltoValue>0){if(vueltoValue<=sobra){vueltoEntregado=vueltoValue;montoFavor=sobra-vueltoValue}else{vueltoEntregado=sobra}}else{montoFavor=sobra}
-const ventasTotalesBs=subtotalPlatillosBs+montoFavor;totalFinalUSD=ventasTotalesBs/window.tasaEfectiva;montoRecibido=totalRecibidoBs;nuevoEstado=window.currentPedido.tipo==='delivery'?'en_camino':(window.currentPedido.tipo==='reserva'?'reserva_pendiente':'en_cocina');pagosData=window.pagosMixtos.map(p=>({metodo:p.metodo,monto:p.monto,montoBs:p.metodo==='efectivo_usd'?window.usdToBs(p.monto):p.monto,referencia:p.referencia||null}));metodoPago=window.pagosMixtos.length===1?window.pagosMixtos[0].metodo:'mixto'}else{totalFinalUSD=window.currentPedido.total;montoRecibido=totalRecibidoBs;nuevoEstado=window.currentPedido.tipo==='delivery'?'en_camino':(window.currentPedido.tipo==='reserva'?'reserva_pendiente':'en_cocina');pagosData=window.pagosMixtos.map(p=>({metodo:p.metodo,monto:p.monto,montoBs:p.metodo==='efectivo_usd'?window.usdToBs(p.monto):p.monto,referencia:p.referencia||null}));metodoPago=window.pagosMixtos.length===1?window.pagosMixtos[0].metodo:'mixto'}
-try{
-const {error:errPedido}=await window.supabaseClient.from('pedidos').update({estado:nuevoEstado,metodo_pago:metodoPago,pagos_mixtos:pagosData,cajero:window.currentUser?.nombre||'Cajero',fecha_cobro:new Date().toISOString(),condonado:montoCondonado||0,a_favor_caja:montoFavor||0,vuelto_entregado:vueltoEntregado||0,monto_recibido:montoRecibido,total:totalFinalUSD}).eq('id',window.currentPedido.id);
-if(errPedido)throw errPedido;
-const totalItems=window.currentPedido.items?.reduce((sum,item)=>sum+(item.cantidad||1),0)||0;
-const subtotalUSD=(window.currentPedido.items||[]).reduce((sum,item)=>sum+(item.precioUnitarioUSD||0)*(item.cantidad||1),0);
-const subtotalBs=window.usdToBs(subtotalUSD);
-const ventaNueva={pedido_id:window.currentPedido.id,total:totalFinalUSD,subtotal_platillos:subtotalBs,items:totalItems,metodo_pago:metodoPago,tipo:window.currentPedido.tipo,fecha:new Date().toISOString()};
-const {error:errVenta}=await window.supabaseClient.from('ventas').insert([ventaNueva]);
-if(errVenta)throw errVenta;
-// Actualizar en memoria de inmediato para reflejar en tarjetas sin esperar recarga BD
-window.ventasHoy=[ventaNueva,...(window.ventasHoy||[])];
-window.actualizarEstadisticas();
-let tituloNotif,mensajeNotif;if(esInvitacion){tituloNotif='🎁 Pedido por invitación';mensajeNotif='Tu pedido ha sido procesado. ¡Disfruta!'}else if(window.currentPedido.tipo==='delivery'){tituloNotif='✅ Pago confirmado';mensajeNotif='Tu pedido está en preparación'}else if(window.currentPedido.tipo==='reserva'){tituloNotif='📅 Reserva confirmada';mensajeNotif='Tu reserva ha sido confirmada'}else{tituloNotif='✅ Pago confirmado';mensajeNotif='Tu pedido está en preparación'}
-console.log('📢 Insertando notificación en cobro:');console.log('   Session ID:',window.currentPedido.session_id);console.log('   Pedido ID:',window.currentPedido.id);console.log('   Título:',tituloNotif);const{error}=await window.supabaseClient.from('notificaciones').insert([{pedido_id:window.currentPedido.id,tipo:'approved',titulo:tituloNotif,mensaje:mensajeNotif,session_id:window.currentPedido.session_id,leida:false}]);if(error)console.error('❌ Error insertando notificación:',error);else console.log('✅ Notificación insertada correctamente')
-document.getElementById('cobroModal').classList.remove('active');window.mostrarToast('💰 Cobro procesado');window.enProcesoDeCobro=false;window.currentPedido=null;window.pagosMixtos=[];window.cobroEnterCount=0;if(window.cobroEnterTimeout){clearTimeout(window.cobroEnterTimeout);window.cobroEnterTimeout=null}
-await window.recargarPedidosCompletos();await window.cargarMenu();window.renderizarPropinas()}catch(e){console.error('Error en cobro:',e);window.mostrarToast('❌ Error al procesar el cobro','error')}};
-window.cerrarCobroModal=function(){document.getElementById('cobroModal').classList.remove('active');window.enProcesoDeCobro=false;window.currentPedido=null;window.pagosMixtos=[];window.cobroEnterCount=0;if(window.cobroEnterTimeout){clearTimeout(window.cobroEnterTimeout);window.cobroEnterTimeout=null}setTimeout(()=>window.verificarYControlarAlarma(),100)};
+window._cobro = { pagos: [], pedido: null, enterCount: 0, enterTimeout: null };
+
+window.fmtBs  = v => 'Bs ' + (parseFloat(v)||0).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',');
+window.fmtUsd = v => 'USD ' + (parseFloat(v)||0).toFixed(2);
+window.usdToBsTasaBase = v => (parseFloat(v)||0) * (window.configGlobal?.tasa_cambio || window.tasaEfectiva || 400);
+
+window.verificarYControlarAlarma = function() {
+    if (!window.alarmaAudio) window.alarmaAudio = document.getElementById('alarmaSonido');
+    if (!window.alarmaAudio) return;
+    const pendientes = (window.pedidos || []).filter(p => p.estado === 'pendiente').length;
+    if (pendientes > 0 && !window.enProcesoDeCobro) {
+        if (!window.alarmaActiva) {
+            window.alarmaAudio.loop = false;
+            window.alarmaAudio.play().then(() => { window.alarmaActiva = true; }).catch(() => {});
+        }
+    } else if (window.alarmaActiva) {
+        window.alarmaAudio.pause();
+        window.alarmaAudio.currentTime = 0;
+        window.alarmaActiva = false;
+    }
+};
+
+window.mostrarCobro = function(pedidoId) {
+    const pedido = (window.pedidos || []).find(p => p.id === pedidoId);
+    if (!pedido) return;
+    window._cobro.pedido = pedido;
+    window._cobro.pagos = [];
+    window._cobro.enterCount = 0;
+    clearTimeout(window._cobro.enterTimeout);
+    window.enProcesoDeCobro = true;
+    if (window.alarmaActiva) { window.alarmaAudio.pause(); window.alarmaAudio.currentTime = 0; window.alarmaActiva = false; }
+    const p = pedido;
+    const totalBs = window.usdToBs(p.total || 0);
+    const costoDeliveryBs = p.costo_delivery_bs || p.costoDelivery || 0;
+    const subtotalPlatillosBs = totalBs - costoDeliveryBs;
+    let resumen = '<div style="background:rgba(0,0,0,.25);border-radius:10px;padding:14px;margin-bottom:16px"><div style="font-weight:700;font-size:.95rem;margin-bottom:10px;color:var(--accent);display:flex;align-items:center;gap:8px"><i class="fas fa-receipt"></i> Resumen del Pedido</div>';
+    if (p.referencia) resumen += '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border-color);font-size:.85rem"><span><i class="fas fa-hashtag" style="color:var(--accent);width:14px"></i> Referencia</span><span style="font-family:monospace;font-weight:700;letter-spacing:2px">' + p.referencia + '</span></div>';
+    if (p.tipo === 'delivery' && p.parroquia) resumen += '<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border-color);font-size:.85rem"><span><i class="fas fa-motorcycle" style="color:var(--delivery);width:14px"></i> Delivery — ' + p.parroquia + '</span><span style="font-weight:600;color:var(--delivery)">' + window.fmtBs(costoDeliveryBs) + '</span></div>';
+    (p.items || []).forEach(function(item) { const monto = window.usdToBs((item.precioUnitarioUSD || 0) * (item.cantidad || 1)); resumen += '<div style="display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:.83rem"><span>' + (item.cantidad||1) + '\xd7 ' + item.nombre + '</span><span style="font-weight:600">' + window.fmtBs(monto) + '</span></div>'; });
+    resumen += '<div style="display:flex;justify-content:space-between;margin-top:10px;padding-top:10px;border-top:2px solid var(--accent);font-weight:800;font-size:1rem"><span>Total a pagar</span><span style="color:var(--accent)" id="cobro-total-display">' + window.fmtBs(totalBs) + '</span></div></div>';
+    const checkCasa = '<div style="padding:10px 14px;background:rgba(245,124,0,.1);border-left:3px solid var(--warning);border-radius:6px;margin-bottom:16px"><label style="display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none"><input type="checkbox" id="cobroInvitacionCheck" style="width:18px;height:18px;cursor:pointer" onchange="window._cobroOnInvitacion()"><div><div style="font-weight:700;font-size:.9rem">\uD83C\uDF81 Por parte de la casa (invitaci\xf3n)</div><div style="font-size:.75rem;color:var(--text-secondary);margin-top:2px">El cliente no paga \u2014 el restaurante asume el costo</div></div></label></div>';
+    const metodoPorDefecto = (p.tipo === 'delivery' || p.tipo === 'reserva') ? 'pago_movil' : 'punto_venta';
+    const seccionPagos = '<div id="cobro-pagos-section"><div style="font-weight:700;font-size:.88rem;color:var(--text-secondary);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px"><i class="fas fa-coins"></i> M\xe9todos de Pago</div><div id="cobro-pagos-lista"></div><button onclick="window._cobroAgregarPago()" id="cobro-btn-agregar" style="width:100%;padding:8px;background:rgba(255,255,255,.07);border:1px dashed var(--border-color);border-radius:6px;color:var(--text-secondary);cursor:pointer;font-size:.85rem;margin-top:8px;transition:all .2s" onmouseover="this.style.background=\'rgba(255,255,255,.12)\'" onmouseout="this.style.background=\'rgba(255,255,255,.07)\'"><i class="fas fa-plus"></i> Agregar m\xe9todo de pago</button><div id="cobro-vuelto-row" style="display:none;margin-top:14px;padding:10px 14px;background:rgba(0,172,193,.08);border-left:3px solid var(--delivery);border-radius:6px"><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><label style="font-size:.85rem;font-weight:600;white-space:nowrap"><i class="fas fa-exchange-alt"></i> Vuelto a entregar (Bs)</label><input type="text" id="cobro-vuelto-input" inputmode="numeric" placeholder="0" style="flex:1;min-width:100px;padding:7px 10px;border:1px solid var(--border-color);border-radius:5px;background:rgba(0,0,0,.4);color:var(--text-primary);font-size:.9rem" oninput="this.value=this.value.replace(/[^0-9.]/g,\'\');window._cobroRecalcular()"><span style="font-size:.8rem;color:var(--text-secondary)">Sobrante: <strong id="cobro-sobrante-label" style="color:var(--delivery)">Bs 0.00</strong></span></div></div><div id="cobro-favor-row" style="display:none;margin-top:8px;padding:8px 14px;background:rgba(78,205,196,.08);border-left:3px solid var(--favordecaja);border-radius:6px"><label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:.85rem;user-select:none"><input type="checkbox" id="cobro-favor-check" style="width:16px;height:16px" onchange="window._cobroRecalcular()"><span>A favor de caja \u2014 <strong id="cobro-favor-monto" style="color:var(--favordecaja)">Bs 0.00</strong></span></label></div><div id="cobro-pendiente-row" style="display:none;margin-top:8px;padding:8px 14px;background:rgba(239,68,68,.08);border-left:3px solid var(--danger);border-radius:6px"><div style="font-size:.85rem;display:flex;justify-content:space-between"><span style="color:var(--danger)"><i class="fas fa-exclamation-circle"></i> Pendiente por cubrir</span><strong id="cobro-pendiente-monto" style="color:var(--danger)">Bs 0.00</strong></div></div><div id="cobro-condonar-row" style="display:none;margin-top:8px;padding:8px 14px;background:rgba(255,107,107,.08);border-left:3px solid var(--condonar);border-radius:6px"><label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:.85rem;user-select:none"><input type="checkbox" id="cobro-condonar-check" style="width:16px;height:16px" onchange="window._cobroRecalcular()"><span>Condonar pendiente — <strong id="cobro-condonar-monto" style="color:var(--condonar)">Bs 0.00</strong></span></label></div><div style="margin-top:12px;padding:10px 14px;background:rgba(0,0,0,.2);border-radius:6px;font-size:.85rem;display:flex;justify-content:space-between"><span>Total recibido</span><strong id="cobro-recibido-display" style="color:var(--success)">Bs 0.00</strong></div></div>';
+    document.getElementById('cobroModalBody').innerHTML = resumen + checkCasa + seccionPagos;
+    document.getElementById('cobroModal').classList.add('active');
+    window._cobro.totalBs = totalBs;
+    window._cobro.subtotalPlatillosBs = subtotalPlatillosBs;
+    window._cobro.costoDeliveryBs = costoDeliveryBs;
+    window._cobro.metodoPorDefecto = metodoPorDefecto;
+    window._cobroAgregarPago(metodoPorDefecto);
+};
+
+window._cobroAgregarPago = function(metodoInicial) {
+    const id = 'p_' + Date.now() + '_' + Math.random().toString(36).slice(2,7);
+    window._cobro.pagos.push({ id: id, metodo: metodoInicial || 'pago_movil', monto: '', ref: ['','','','','',''] });
+    window._cobroRenderizarPagos();
+};
+
+window._cobroEliminarPago = function(id) {
+    window._cobro.pagos = window._cobro.pagos.filter(function(p) { return p.id !== id; });
+    window._cobroRenderizarPagos();
+};
+
+window._cobroRenderizarPagos = function() {
+    const lista = document.getElementById('cobro-pagos-lista');
+    if (!lista) return;
+    const refPedido = (window._cobro.pedido && window._cobro.pedido.referencia ? window._cobro.pedido.referencia : '').replace(/\D/g,'');
+    lista.innerHTML = window._cobro.pagos.map(function(pago) {
+        const canDelete = window._cobro.pagos.length > 1;
+        const placeholder = pago.metodo === 'efectivo_usd' ? 'Monto en USD' : 'Monto en Bs';
+        const showRef = pago.metodo === 'pago_movil';
+        const refDigits = [0,1,2,3,4,5].map(function(i) {
+            return '<input type="text" maxlength="1" inputmode="numeric" pattern="[0-9]*" data-pago-id="' + pago.id + '" data-idx="' + i + '" value="' + (pago.ref[i]||'') + '" class="cobro-ref-digit" style="width:38px;height:38px;text-align:center;font-size:1.2rem;font-family:monospace;border:2px solid ' + (pago.ref[i] ? 'var(--accent)' : 'var(--border-color)') + ';border-radius:6px;background:rgba(0,0,0,.4);color:var(--text-primary)">';
+        }).join('');
+        return '<div class="cobro-pago-item" data-pago-id="' + pago.id + '" style="background:rgba(0,0,0,.2);border-radius:8px;padding:12px;margin-bottom:10px;border:1px solid var(--border-color);position:relative">' +
+            (canDelete ? '<button onclick="window._cobroEliminarPago(\'' + pago.id + '\')" style="position:absolute;top:8px;right:8px;background:var(--danger);color:#fff;border:none;width:22px;height:22px;border-radius:50%;cursor:pointer;font-size:.75rem;display:flex;align-items:center;justify-content:center"><i class="fas fa-times"></i></button>' : '') +
+            '<div style="display:flex;gap:8px;margin-bottom:8px"><select data-pago-id="' + pago.id + '" class="cobro-metodo-select" style="flex:1;padding:8px;border:1px solid var(--border-color);border-radius:5px;background:rgba(0,0,0,.5);color:var(--text-primary);font-size:.85rem"><option value="pago_movil"' + (pago.metodo==='pago_movil'?' selected':'') + '>\uD83D\uDCF1 Pago M\xf3vil</option><option value="punto_venta"' + (pago.metodo==='punto_venta'?' selected':'') + '>\uD83D\uDCB3 Punto de Venta</option><option value="efectivo_bs"' + (pago.metodo==='efectivo_bs'?' selected':'') + '>\uD83D\uDCB5 Efectivo Bs</option><option value="efectivo_usd"' + (pago.metodo==='efectivo_usd'?' selected':'') + '>\uD83D\uDCB5 Efectivo USD</option></select>' +
+            '<input type="text" inputmode="decimal" placeholder="' + placeholder + '" value="' + (pago.monto !== '' ? pago.monto : '') + '" data-pago-id="' + pago.id + '" class="cobro-monto-input" style="width:130px;padding:8px;border:1px solid var(--border-color);border-radius:5px;background:rgba(0,0,0,.5);color:var(--text-primary);font-size:.9rem;text-align:right"></div>' +
+            '<div class="cobro-ref-section" data-pago-id="' + pago.id + '" style="display:' + (showRef?'block':'none') + '">' +
+            '<div style="font-size:.75rem;color:var(--text-secondary);margin-bottom:6px"><i class="fas fa-hashtag"></i> Referencia (6 d\xedgitos)' + (refPedido ? ' <span style="color:var(--accent);margin-left:6px">\u2014 debe coincidir con: <strong>' + refPedido + '</strong></span>' : '') + '</div>' +
+            '<div style="display:flex;gap:6px">' + refDigits + '</div></div></div>';
+    }).join('');
+    lista.querySelectorAll('.cobro-metodo-select').forEach(function(sel) {
+        sel.addEventListener('change', function(e) {
+            const id = e.target.dataset.pagoId;
+            const pago = window._cobro.pagos.find(function(p){return p.id===id;});
+            if (!pago) return;
+            pago.metodo = e.target.value;
+            if (pago.metodo !== 'pago_movil') pago.ref = ['','','','','',''];
+            pago.monto = '';
+            window._cobroRenderizarPagos();
+        });
+    });
+    lista.querySelectorAll('.cobro-monto-input').forEach(function(inp) {
+        inp.addEventListener('input', function(e) {
+            const id = e.target.dataset.pagoId;
+            const pago = window._cobro.pagos.find(function(p){return p.id===id;});
+            if (!pago) return;
+            let v = e.target.value.replace(/[^0-9.]/g,'');
+            const pts = v.split('.');
+            if (pts.length > 2) v = pts[0]+'.'+pts.slice(1).join('');
+            if (pts[1] && pts[1].length > 2) v = pts[0]+'.'+pts[1].slice(0,2);
+            e.target.value = v;
+            pago.monto = v;
+            window._cobroRecalcular();
+        });
+    });
+    lista.querySelectorAll('.cobro-ref-digit').forEach(function(inp) {
+        inp.addEventListener('input', function(e) {
+            e.target.value = e.target.value.replace(/[^0-9]/g,'');
+            const id = e.target.dataset.pagoId;
+            const idx = parseInt(e.target.dataset.idx);
+            const pago = window._cobro.pagos.find(function(p){return p.id===id;});
+            if (!pago) return;
+            pago.ref[idx] = e.target.value;
+            e.target.style.borderColor = e.target.value ? 'var(--accent)' : 'var(--border-color)';
+            if (e.target.value && idx < 5) { const next = lista.querySelector('.cobro-ref-digit[data-pago-id="'+id+'"][data-idx="'+(idx+1)+'"]'); if (next) next.focus(); }
+            window._cobroRecalcular();
+        });
+        inp.addEventListener('keydown', function(e) {
+            if (e.key === 'Backspace' && !e.target.value) {
+                const id = e.target.dataset.pagoId; const idx = parseInt(e.target.dataset.idx);
+                if (idx > 0) { const prev = lista.querySelector('.cobro-ref-digit[data-pago-id="'+id+'"][data-idx="'+(idx-1)+'"]'); if (prev) { prev.value=''; prev.focus(); const pago=window._cobro.pagos.find(function(p){return p.id===id;}); if(pago)pago.ref[idx-1]=''; window._cobroRecalcular(); } }
+            }
+        });
+    });
+    window._cobroRecalcular();
+};
+
+window._cobroOnInvitacion = function() {
+    const esInv = document.getElementById('cobroInvitacionCheck') && document.getElementById('cobroInvitacionCheck').checked;
+    const sec = document.getElementById('cobro-pagos-section');
+    if (sec) { sec.style.opacity = esInv ? '0.4' : '1'; sec.style.pointerEvents = esInv ? 'none' : 'auto'; }
+    window._cobroRecalcular();
+};
+
+window._cobroRecalcular = function() {
+    const cobro = window._cobro;
+    if (!cobro.pedido) return;
+    const esInvitacion = document.getElementById('cobroInvitacionCheck') && document.getElementById('cobroInvitacionCheck').checked;
+    const btn = document.getElementById('confirmCobroBtn');
+    if (esInvitacion) {
+        if (btn) btn.disabled = false;
+        ['cobro-vuelto-row','cobro-favor-row','cobro-pendiente-row','cobro-condonar-row'].forEach(function(id){const el=document.getElementById(id);if(el)el.style.display='none';});
+        const rec=document.getElementById('cobro-recibido-display'); if(rec)rec.textContent=window.fmtBs(0);
+        return;
+    }
+    const totalBs = cobro.totalBs;
+    const refPedido = ((cobro.pedido && cobro.pedido.referencia)||'').replace(/\D/g,'');
+    let totalRecibidoBs = 0, refOk = true;
+    cobro.pagos.forEach(function(pago) {
+        const monto = parseFloat(pago.monto)||0;
+        if (pago.metodo === 'efectivo_usd') { totalRecibidoBs += monto * (window.configGlobal && window.configGlobal.tasa_cambio ? window.configGlobal.tasa_cambio : window.tasaEfectiva); }
+        else { totalRecibidoBs += monto; }
+        if (pago.metodo === 'pago_movil') {
+            const refIng = pago.ref.join('');
+            if (refIng.length < 6) { refOk = false; }
+            else if (refPedido && refIng !== refPedido) { refOk = false; }
+        }
+    });
+    const diferencia = Math.round((totalBs - totalRecibidoBs)*100)/100;
+    const sobrante = diferencia < 0 ? Math.abs(diferencia) : 0;
+    const pendiente = diferencia > 0 ? diferencia : 0;
+    const vueltoVal = parseFloat((document.getElementById('cobro-vuelto-input')||{}).value)||0;
+    const sobrRestante = Math.max(0, sobrante - vueltoVal);
+    const vueltoRow=document.getElementById('cobro-vuelto-row'); if(vueltoRow)vueltoRow.style.display=sobrante>0?'flex':'none';
+    const sobranteLabel=document.getElementById('cobro-sobrante-label'); if(sobranteLabel)sobranteLabel.textContent=window.fmtBs(sobrante);
+    const favorRow=document.getElementById('cobro-favor-row'); if(favorRow)favorRow.style.display=sobrRestante>0?'flex':'none';
+    const favorMonto=document.getElementById('cobro-favor-monto'); if(favorMonto)favorMonto.textContent=window.fmtBs(sobrRestante);
+    const pendienteRow=document.getElementById('cobro-pendiente-row'); if(pendienteRow)pendienteRow.style.display=pendiente>0?'flex':'none';
+    const pendienteMonto=document.getElementById('cobro-pendiente-monto'); if(pendienteMonto)pendienteMonto.textContent=window.fmtBs(pendiente);
+    const condonarRow=document.getElementById('cobro-condonar-row'); if(condonarRow)condonarRow.style.display=pendiente>0?'flex':'none';
+    const condonarMonto=document.getElementById('cobro-condonar-monto'); if(condonarMonto)condonarMonto.textContent=window.fmtBs(pendiente);
+    const condonarCheck=document.getElementById('cobro-condonar-check');
+    const condonarActivo=condonarCheck&&condonarCheck.checked;
+    const recEl=document.getElementById('cobro-recibido-display'); if(recEl)recEl.textContent=window.fmtBs(totalRecibidoBs);
+    const cubiertoExacto = (diferencia <= 0.01 && refOk) || (condonarActivo && pendiente > 0 && refOk);
+    if (btn) btn.disabled = !cubiertoExacto;
+};
+
+window.confirmarCobro = async function() {
+    const cobro = window._cobro;
+    if (!cobro.pedido) return;
+    const esInvitacion = document.getElementById('cobroInvitacionCheck') && document.getElementById('cobroInvitacionCheck').checked;
+    const favorCheck = document.getElementById('cobro-favor-check');
+    const favorActivo = favorCheck && favorCheck.checked;
+    const vueltoVal = parseFloat((document.getElementById('cobro-vuelto-input')||{}).value)||0;
+    const p = cobro.pedido;
+    const totalBs = cobro.totalBs;
+    let nuevoEstado, metodoPago, pagosData, montoFavor=0, vueltoEntregado=0, totalFinalUSD=p.total;
+    if (esInvitacion) {
+        nuevoEstado = p.tipo==='delivery'?'en_camino':(p.tipo==='reserva'?'reserva_pendiente':'en_cocina');
+        metodoPago='invitacion'; pagosData=[{metodo:'invitacion',monto:0,montoBs:0}]; totalFinalUSD=0;
+    } else {
+        let totalRecibidoBs=0;
+        pagosData = cobro.pagos.map(function(pago) {
+            const monto=parseFloat(pago.monto)||0;
+            const montoBs=pago.metodo==='efectivo_usd'?monto*(window.configGlobal&&window.configGlobal.tasa_cambio?window.configGlobal.tasa_cambio:window.tasaEfectiva):monto;
+            totalRecibidoBs+=montoBs;
+            return {metodo:pago.metodo,monto:monto,montoBs:montoBs,referencia:pago.ref.join('')||null};
+        });
+        const sobrante=Math.max(0,totalRecibidoBs-totalBs);
+        let montoCondonado=0;
+        const condonarChk=document.getElementById('cobro-condonar-check');
+        const condonarActivo2=condonarChk&&condonarChk.checked;
+        if(sobrante>0){ vueltoEntregado=Math.min(vueltoVal,sobrante); const sobrRest=sobrante-vueltoEntregado; if(favorActivo&&sobrRest>0)montoFavor=sobrRest; }
+        const pendienteFinal=Math.max(0,totalBs-totalRecibidoBs);
+        if(condonarActivo2&&pendienteFinal>0)montoCondonado=pendienteFinal;
+        nuevoEstado=p.tipo==='delivery'?'en_camino':(p.tipo==='reserva'?'reserva_pendiente':'en_cocina');
+        metodoPago=pagosData.length===1?pagosData[0].metodo:'mixto';
+        const subtotalConFavor=cobro.subtotalPlatillosBs+montoFavor;
+        const subtotalCondonado=cobro.subtotalPlatillosBs-montoCondonado;
+        if(montoFavor>0) totalFinalUSD=subtotalConFavor/window.tasaEfectiva;
+        else if(montoCondonado>0) totalFinalUSD=Math.max(0,subtotalCondonado)/window.tasaEfectiva;
+        else totalFinalUSD=p.total;
+    }
+    try {
+        const {error:errP}=await window.supabaseClient.from('pedidos').update({estado:nuevoEstado,metodo_pago:metodoPago,pagos_mixtos:pagosData,cajero:window.currentUser&&window.currentUser.nombre?window.currentUser.nombre:'Cajero',fecha_cobro:new Date().toISOString(),a_favor_caja:montoFavor||0,condonado:montoCondonado||0,vuelto_entregado:vueltoEntregado||0,total:totalFinalUSD}).eq('id',p.id);
+        if(errP)throw errP;
+        const totalItems=(p.items||[]).reduce(function(s,i){return s+(i.cantidad||1);},0);
+        const subtotalUSD=(p.items||[]).reduce(function(s,i){return s+(i.precioUnitarioUSD||0)*(i.cantidad||1);},0);
+        const subtotalBs=window.usdToBs(subtotalUSD);
+        const {error:errV}=await window.supabaseClient.from('ventas').insert([{pedido_id:p.id,total:totalFinalUSD,subtotal_platillos:subtotalBs,items:totalItems,metodo_pago:metodoPago,tipo:p.tipo,fecha:new Date().toISOString()}]);
+        if(errV)throw errV;
+        let tituloN,mensajeN;
+        if(esInvitacion){tituloN='\uD83C\uDF81 Pedido por invitaci\xf3n';mensajeN='Tu pedido ha sido procesado. \xa1Disfruta!';}
+        else if(p.tipo==='delivery'){tituloN='\u2705 Pago confirmado';mensajeN='Tu pedido est\xe1 en preparaci\xf3n';}
+        else if(p.tipo==='reserva'){tituloN='\uD83D\uDCC5 Reserva confirmada';mensajeN='Tu reserva ha sido confirmada';}
+        else{tituloN='\u2705 Pago confirmado';mensajeN='Tu pedido est\xe1 en preparaci\xf3n';}
+        await window.supabaseClient.from('notificaciones').insert([{pedido_id:p.id,tipo:'approved',titulo:tituloN,mensaje:mensajeN,session_id:p.session_id,leida:false}]);
+        const ventaNueva={pedido_id:p.id,total:totalFinalUSD,subtotal_platillos:subtotalBs,items:totalItems,metodo_pago:metodoPago,tipo:p.tipo,fecha:new Date().toISOString()};
+        window.ventasHoy=[ventaNueva,...(window.ventasHoy||[])];
+        window.actualizarEstadisticas();
+        window.cerrarCobroModal();
+        window.mostrarToast('\uD83D\uDCB0 Cobro registrado correctamente','success');
+        await window.recargarPedidosCompletos();
+        await window.cargarMenu();
+        window.renderizarPropinas();
+    } catch(e) {
+        console.error('Error en cobro:',e);
+        window.mostrarToast('\u274c Error al registrar el cobro: '+(e.message||e),'error');
+    }
+};
+
+window.cerrarCobroModal = function() {
+    const modal=document.getElementById('cobroModal'); if(modal)modal.classList.remove('active');
+    window._cobro={pagos:[],pedido:null,enterCount:0,enterTimeout:null};
+    window.enProcesoDeCobro=false;
+    setTimeout(function(){window.verificarYControlarAlarma();},200);
+};
+
 // ============================================ PROPINAS ============================================
 window.abrirPropinaModal=async function(){const modalBody=document.getElementById('propinaModalBody');const acumuladoPorMesonero={};window.propinas.forEach(p=>{const mesoneroId=p.mesonero_id;if(mesoneroId){acumuladoPorMesonero[mesoneroId]=(acumuladoPorMesonero[mesoneroId]||0)+(p.monto_bs||0)}});const mesonerosList=window.mesoneros.map(m=>{const acumulado=acumuladoPorMesonero[m.id]||0;return`<div class="mesonero-item" onclick="window.seleccionarMesoneroPropina('${m.id}','${m.nombre}')"><i class="fas fa-user-tie"></i><span class="nombre">${m.nombre}</span><span class="acumulado">Hoy: ${window.formatBs(acumulado)}</span></div>`}).join('');modalBody.innerHTML=`<div style="margin-bottom:20px"><h4 style="color:var(--propina); margin-bottom:15px">1. Selecciona el mesonero</h4><div class="mesoneros-list">${mesonerosList||'<p class="text-center">No hay mesoneros activos</p>'}</div></div><div id="propinaFormSection" style="display:none;"></div>`;document.getElementById('propinaModal').classList.add('active')};
 window.seleccionarMesoneroPropina=function(id,nombre){window.propinaSeleccionada.mesonero={id,nombre};const formSection=document.getElementById('propinaFormSection');formSection.style.display='block';formSection.innerHTML=`<div class="propina-form-container"><h4><i class="fas fa-hand-holding-heart"></i> Registrar propina para ${nombre}</h4><div class="form-group"><label>Monto *</label><input type="number" id="propinaMonto" step="0.01" min="0.01" placeholder="0.00" oninput="window.actualizarPropinaUI()"></div><div class="form-group"><label>Método de pago *</label><div class="metodo-pago-group"><div class="metodo-pago-btn ${window.propinaSeleccionada.metodo==='efectivo_bs'?'active':''}" onclick="window.seleccionarMetodoPropina('efectivo_bs')"><i class="fas fa-money-bill-wave"></i><span>Efectivo Bs</span></div><div class="metodo-pago-btn ${window.propinaSeleccionada.metodo==='efectivo_usd'?'active':''}" onclick="window.seleccionarMetodoPropina('efectivo_usd')"><i class="fas fa-dollar-sign"></i><span>Efectivo USD</span></div><div class="metodo-pago-btn ${window.propinaSeleccionada.metodo==='pago_movil'?'active':''}" onclick="window.seleccionarMetodoPropina('pago_movil')"><i class="fas fa-mobile-alt"></i><span>Pago Móvil</span></div><div class="metodo-pago-btn ${window.propinaSeleccionada.metodo==='punto_venta'?'active':''}" onclick="window.seleccionarMetodoPropina('punto_venta')"><i class="fas fa-credit-card"></i><span>Punto Venta</span></div></div></div><div id="propinaReferenciaGroup" style="display:${window.propinaSeleccionada.metodo==='pago_movil'?'block':'none'}; margin-bottom:15px;"><label>Referencia (6 dígitos) *</label><div class="referencia-inputs">${Array(6).fill(0).map((_,i)=>`<input type="text" class="ref-digit-propina" data-index="${i}" maxlength="1" inputmode="numeric" pattern="[0-9]*" value="${window.referenciaPropina[i]||''}" oninput="window.moverRefPropina(this,${i})">`).join('')}</div></div><div class="propina-total-display"><span class="label">Total a registrar (Bs):</span><span class="valor" id="propinaTotalBs">Bs 0.00</span><span class="small" id="propinaDetalleConversion"></span></div><button class="btn-primary" style="width:100%; background:linear-gradient(135deg,var(--propina),#7B1FA2)" id="guardarPropinaBtn" onclick="window.guardarPropina()" disabled>Guardar Propina</button></div>`
@@ -399,7 +590,7 @@ return`<div class="detail-item-compact"><div class="detail-header-compact"><span
 window.crearDetalleVentaCompacto=function(venta,pedido){if(!pedido)return'';try{const hora=new Date(pedido.fecha).toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'}),itemsHtml=(pedido.items||[]).map(item=>`<div class="detail-item-row-compact"><span>${item.cantidad||1}x ${item.nombre}</span><span>${window.formatBs(window.usdToBs((item.precioUnitarioUSD||0)*(item.cantidad||1)))}</span></div>`).join('');let pagosHtml='';if(pedido.pagos_mixtos?.length){pagosHtml='<div style="margin-top:3px">'+pedido.pagos_mixtos.map(p=>{const icon=p.metodo==='efectivo_bs'?'Bs':(p.metodo==='efectivo_usd'?'$':(p.metodo==='pago_movil'?'📱':'💳'));return`<span class="detail-metodo-tag">${icon} ${window.formatBs(p.monto)}</span>`}).join('')+'</div>'}
 let extrasHtml='';if(pedido.condonado>0)extrasHtml+=`<span class="condonar-tag"><i class="fas fa-gift"></i> Condonado: ${window.formatBs(pedido.condonado)}</span>`;if(pedido.a_favor_caja>0)extrasHtml+=`<span class="favor-tag"><i class="fas fa-piggy-bank"></i> A favor: ${window.formatBs(pedido.a_favor_caja)}</span>`;const deliveryNombre=pedido.delivery_nombre||(window.deliverys?.find(d=>d.id==pedido.delivery_id)?.nombre)||'No asignado';return`<div class="detail-item-compact"><div class="detail-header-compact"><span>${hora}</span><span class="detail-metodo-tag">${venta.tipo}</span></div><div class="detail-items-compact">${itemsHtml}</div>${pedido.tipo==='delivery'?`<div style="margin-top:3px;font-size:.75rem"><span class="delivery-tag"><i class="fas fa-motorcycle"></i> ${deliveryNombre}</span> - ${window.formatBs(pedido.costo_delivery_bs||0)}</div>`:''}<div class="detail-total-compact">Total: ${window.formatBs(venta.subtotal_platillos||(venta.total*window.tasaEfectiva))}</div>${pagosHtml}${extrasHtml?`<div style="margin-top:5px">${extrasHtml}</div>`:''}</div>`}catch(e){return''}};
 // ============================================ VERIFICACIÓN ============================================
-window.verificarCambiosPedidos=async function(){if(window.reconectando||window.enProcesoDeCobro)return;try{const hoy=new Date();hoy.setHours(0,0,0,0);const manana=new Date(hoy);manana.setDate(manana.getDate()+2);const{data,error}=await window.supabaseClient.from('pedidos').select('id, estado, fecha').gte('fecha',hoy.toISOString()).lt('fecha',manana.toISOString());if(error)throw error;if(data){let cambios=false;if(data.length!==(window.pedidos||[]).length){cambios=true}else{const estadoMap=new Map((window.pedidos||[]).map(p=>[p.id,p.estado]));for(const p of data){if(estadoMap.get(p.id)!==p.estado){cambios=true;break}}}
+window.verificarCambiosPedidos=async function(){if(window.reconectando)return;try{const hoy=new Date();hoy.setHours(0,0,0,0);const manana=new Date(hoy);manana.setDate(manana.getDate()+2);const{data,error}=await window.supabaseClient.from('pedidos').select('id, estado, fecha').gte('fecha',hoy.toISOString()).lt('fecha',manana.toISOString());if(error)throw error;if(data){let cambios=false;if(data.length!==(window.pedidos||[]).length){cambios=true}else{const estadoMap=new Map((window.pedidos||[]).map(p=>[p.id,p.estado]));for(const p of data){if(estadoMap.get(p.id)!==p.estado){cambios=true;break}}}
 if(cambios){console.log('🔄 Cambios detectados en pedidos, recargando...');await window.recargarPedidosCompletos();window.ultimaActualizacion=Date.now()}}}catch(e){console.error('Error verificando cambios:',e)}};
 window.recargarPedidosCompletos=async function(){try{await window.cargarPedidos();await window.cargarVentasHoy();window.actualizarEstadisticas();window.renderizarPedidos();window.verificarYControlarAlarma();window.refrescarAcumuladoDeliverys()}catch(e){console.error('Error recargando pedidos:',e)}};
 window.iniciarVerificacionPeriodica=function(){if(window.intervaloVerificacion)clearInterval(window.intervaloVerificacion);window.intervaloVerificacion=setInterval(async()=>{if(window.paginaVisible&&!window.enProcesoDeCobro){await window.verificarCambiosPedidos()}},3e3)};
@@ -407,10 +598,33 @@ window.iniciarVerificacionPeriodica=function(){if(window.intervaloVerificacion)c
 window.setupRealtimeSubscriptions=function(){try{if(window.suscripciones){window.suscripciones.forEach(s=>{try{s.unsubscribe()}catch(e){}})}
 window.suscripciones=[];const crearSuscripcion=(nombre,tabla,callback)=>{try{const sub=window.supabaseClient.channel(nombre+'-'+Date.now()).on('postgres_changes',{event:'*',schema:'public',table:tabla},callback).subscribe();window.suscripciones.push(sub)}catch(e){console.error('Error suscribiendo a '+tabla,e)}};crearSuscripcion('cajero-pedidos','pedidos',async()=>{await window.verificarCambiosPedidos()});crearSuscripcion('cajero-ventas','ventas',async()=>{await window.cargarVentasHoy();window.actualizarEstadisticas()});crearSuscripcion('cajero-propinas','propinas',async()=>{await window.cargarPropinas();window.actualizarEstadisticas();window.renderizarPropinas()});crearSuscripcion('cajero-mesoneros','mesoneros',async()=>{await window.cargarMesoneros()});crearSuscripcion('cajero-deliverys','deliverys',async()=>{await window.cargarDeliverys()});crearSuscripcion('cajero-entregas','entregas_delivery',async()=>{await window.refrescarAcumuladoDeliverys();window.renderizarDeliverysStats()});crearSuscripcion('cajero-menu','menu',async()=>{await window.cargarMenu()});crearSuscripcion('cajero-inventario','inventario',async()=>{window.stockCache.invalidate();await window.cargarInventario()});crearSuscripcion('cajero-config','config',(payload)=>{window.configGlobal={...window.configGlobal,...payload.new};window.tasaEfectiva=window.configGlobal.tasa_efectiva||400;window.renderizarPedidos();window.renderizarMenu();window.actualizarEstadisticas()})}catch(e){console.error('Error configurando suscripciones:',e)}};
 // ============================================ EVENTOS ============================================
-window.setupEventListeners=function(){document.addEventListener('keydown',(e)=>{if(e.key==='Escape'){['cobroModal','propinaModal','confirmModal','rechazoModal','detalleModal','mesaModal','comprobanteModal','deliveryModal','confirmLogoutModal'].forEach(id=>{const modal=document.getElementById(id);if(modal&&modal.classList.contains('active')){if(id==='cobroModal')window.cerrarCobroModal();else if(id==='propinaModal')window.cerrarModal(id);else window.cerrarModal(id)}})}
-if(e.key==='Enter'){if(document.getElementById('confirmModal')?.classList.contains('active')){const btn=document.getElementById('confirmActionBtn');if(btn&&!btn.disabled){e.preventDefault();window.ejecutarConfirmacion()}}
-if(document.getElementById('cobroModal')?.classList.contains('active')&&!document.getElementById('confirmCobroBtn').disabled){e.preventDefault();window.handleCobroEnter()}}})
-const categoriasWrapper=document.getElementById('categoriasWrapper');if(categoriasWrapper){let touchStartX=0;categoriasWrapper.addEventListener('touchstart',e=>{touchStartX=e.touches[0].clientX});categoriasWrapper.addEventListener('touchmove',e=>{if(!touchStartX)return;const touchEndX=e.touches[0].clientX,diff=touchStartX-touchEndX;if(Math.abs(diff)>20)e.preventDefault()});categoriasWrapper.addEventListener('touchend',e=>{if(!touchStartX)return;const touchEndX=e.changedTouches[0].clientX,diff=touchStartX-touchEndX;if(Math.abs(diff)>50){if(diff>0){categoriasWrapper.scrollLeft+=150}else{categoriasWrapper.scrollLeft-=150}}touchStartX=0})}};
+window.setupEventListeners=function(){
+document.addEventListener('keydown',function(e){
+  if(e.key==='Escape'){
+    ['cobroModal','propinaModal','confirmModal','rechazoModal','detalleModal','mesaModal','comprobanteModal','deliveryModal','confirmLogoutModal'].forEach(function(id){
+      var modal=document.getElementById(id);
+      if(modal&&modal.classList.contains('active')){
+        if(id==='cobroModal')window.cerrarCobroModal();
+        else if(id==='propinaModal')window.cerrarModal(id);
+        else window.cerrarModal(id);
+      }
+    });
+  }
+  if(e.key==='Enter'){
+    if(document.getElementById('confirmModal')&&document.getElementById('confirmModal').classList.contains('active')){
+      var btn=document.getElementById('confirmActionBtn');
+      if(btn&&!btn.disabled){e.preventDefault();window.ejecutarConfirmacion();}
+    }
+  }
+});
+var categoriasWrapper=document.getElementById('categoriasWrapper');
+if(categoriasWrapper){
+  var touchStartX=0;
+  categoriasWrapper.addEventListener('touchstart',function(e){touchStartX=e.touches[0].clientX});
+  categoriasWrapper.addEventListener('touchmove',function(e){if(!touchStartX)return;var touchEndX=e.touches[0].clientX,diff=touchStartX-touchEndX;if(Math.abs(diff)>20)e.preventDefault()});
+  categoriasWrapper.addEventListener('touchend',function(e){if(!touchStartX)return;var touchEndX=e.changedTouches[0].clientX,diff=touchStartX-touchEndX;if(Math.abs(diff)>50){if(diff>0){categoriasWrapper.scrollLeft+=150}else{categoriasWrapper.scrollLeft-=150}}touchStartX=0});
+}
+};
 // ============================================ INICIALIZACIÓN ============================================
 document.addEventListener('DOMContentLoaded',async()=>{console.log('DOM cargado, verificando sesión...');window.alarmaAudio=document.getElementById('alarmaSonido');cargarTemaGuardado();const sesionRestaurada=await window.restaurarSesion();if(!sesionRestaurada){window.mostrarLogin()}
 document.addEventListener('visibilitychange',function(){if(document.hidden){window.paginaVisible=false}else{window.paginaVisible=true;window.verificarCambiosPedidos()}})});
