@@ -189,13 +189,41 @@ window.abrirModalDeliverys=async function(){try{
   } else {
     // Incluir todos, aunque no tengan entregas hoy (mostrar Bs 0)
     html+='<div class="motorizados-list">';
-    window.deliverys.forEach(d=>{
+    window.deliverys.forEach(function(d){
       const monto=acumulado[d.id]||0;
       const hayEntregas=monto>0;
-      html+=`<div class="motorizado-item" style="opacity:${hayEntregas?1:0.5}">
-        <span class="motorizado-nombre"><i class="fas fa-motorcycle" style="color:var(--delivery);margin-right:8px"></i>${d.nombre}</span>
-        <span class="motorizado-monto" style="color:${hayEntregas?'var(--accent)':'var(--text-secondary)'}">${window.formatBs(monto)}</span>
-      </div>`;
+      // Pedidos asignados a este motorizado hoy
+      const pedidosD=(window.pedidos||[]).filter(function(p){return p.delivery_id==d.id&&(p.estado==='enviado'||p.estado==='en_camino')&&p.fecha_cobro;});
+      const detalleId='det-'+d.id.replace(/[^a-z0-9]/gi,'_');
+      html+='<div style="margin-bottom:8px">'
+        +'<div class="motorizado-item" style="opacity:'+(hayEntregas?1:0.5)+';cursor:'+(hayEntregas?'pointer':'default')+'" onclick="'+(hayEntregas?'var el=document.getElementById(''+detalleId+'');el.style.display=el.style.display==='none'?'block':'none'':'')+'">'
+        +'<span class="motorizado-nombre"><i class="fas fa-motorcycle" style="color:var(--delivery);margin-right:8px"></i>'+d.nombre+'</span>'
+        +'<span class="motorizado-monto" style="color:'+(hayEntregas?'var(--accent)':'var(--text-secondary)')+'">'+window.formatBs(monto)+(hayEntregas?' <i class="fas fa-chevron-down" style="font-size:.7rem;margin-left:4px"></i>':'')+'</span>'
+        +'</div>';
+      if(hayEntregas){
+        html+='<div id="'+detalleId+'" style="display:none;padding:8px 12px;background:rgba(0,0,0,.25);border-radius:0 0 6px 6px;border:1px solid var(--border-color);border-top:none">';
+        if(pedidosD.length===0){
+          html+='<p style="font-size:.78rem;color:var(--text-secondary);margin:0">Sin detalle de pedidos disponible</p>';
+        } else {
+          pedidosD.forEach(function(p){
+            // Hora GMT-4 formato 12h
+            var fechaAsign=p.fecha_cobro||p.fecha;
+            var hora12='';
+            try{
+              var ts=fechaAsign;
+              if(typeof ts==='string'&&!ts.endsWith('Z')&&!/[+\-]\d{2}(:\d{2})?$/.test(ts))ts+='Z';
+              hora12=new Date(ts).toLocaleString('en-US',{timeZone:'America/Caracas',hour:'numeric',minute:'2-digit',hour12:true}).toLowerCase();
+            }catch(e){hora12=fechaAsign||'';}
+            html+='<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:.78rem">'
+              +'<span><i class="fas fa-map-marker-alt" style="color:var(--delivery);width:12px;margin-right:4px"></i>'+(p.parroquia||'Sin parroquia')+'</span>'
+              +'<span style="color:var(--text-secondary)">'+hora12+'</span>'
+              +'</div>';
+          });
+          html+='<div style="display:flex;justify-content:space-between;padding:5px 0;margin-top:4px;font-size:.78rem;font-weight:700"><span>'+pedidosD.length+' entrega'+( pedidosD.length>1?'s':'')+'</span><span style="color:var(--accent)">'+window.formatBs(monto)+'</span></div>';
+        }
+        html+='</div>';
+      }
+      html+='</div>';
     });
     html+='</div>';
   }
@@ -650,7 +678,7 @@ try{
   if(pedido.metodo_pago==='invitacion'){
     pagosHtml='<div style="margin-top:6px;padding:4px 8px;background:rgba(245,124,0,.12);border-radius:4px;font-size:.78rem;color:var(--warning)">Pedido por invitacion (sin cobro)</div>';
   } else if(pedido.pagos_mixtos&&pedido.pagos_mixtos.length){
-    const icons={efectivo_bs:'Bs',efectivo_usd:'USD',pago_movil:'Movil',punto_venta:'PdV'};
+    const icons={efectivo_bs:'Efectivo Bs',efectivo_usd:'Efectivo USD',pago_movil:'Pago Móvil',punto_venta:'Punto de Venta',invitacion:'Invitación'};
     const totalRecibidoBs=pedido.pagos_mixtos.reduce(function(s,p){
       if(p.metodo==='efectivo_usd')return s+(p.monto||0)*((window.configGlobal&&window.configGlobal.tasa_cambio)||window.tasaEfectiva);
       return s+(p.montoBs||p.monto||0);
@@ -678,7 +706,13 @@ try{
     '<div class="detail-header-compact"><span>'+hora+'</span><div style="display:flex;gap:4px;align-items:center"><span class="detail-metodo-tag">'+pedido.tipo+'</span>'+cajeroTag+'</div></div>'+
     '<div class="detail-items-compact">'+itemsHtml+'</div>'+
     (pedido.tipo==='delivery'&&deliveryNombre?'<div style="display:flex;justify-content:space-between;margin-top:3px;font-size:.75rem"><span class="delivery-tag"><i class="fas fa-motorcycle"></i> '+deliveryNombre+'</span><span style="font-weight:600">'+window.formatBs(pedido.costo_delivery_bs||0)+'</span></div>':'')+
-    '<div class="detail-total-compact">Subtotal platillos: '+subtotalBs+'</div>'+
+    (function(){
+      var costoD=pedido.costo_delivery_bs||0;
+      var tieneDelivery=pedido.tipo==='delivery'&&deliveryNombre&&costoD>0;
+      var subtotalLabel=tieneDelivery?'Subtotal platillos + Delivery':'Subtotal platillos';
+      var subtotalVal=tieneDelivery?window.formatBs((venta.subtotal_platillos||(venta.total*window.tasaEfectiva))+costoD):subtotalBs;
+      return '<div class="detail-total-compact">'+subtotalLabel+': '+subtotalVal+'</div>';
+    })()+
     pagosHtml+
     '</div>';
 }catch(e){console.error(e);return''}};
