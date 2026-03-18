@@ -200,10 +200,15 @@ const condonarActivo=condonarCheck?.checked||false,favorActivo=favorCheck?.check
 let mostrarCondonar=diferencia>0||(diferencia<0&&montoPendiente>0),mostrarFavor=diferencia<0;if(diferencia===0){mostrarCondonar=false;mostrarFavor=false}
 condonarCheckbox.style.display=mostrarCondonar?'flex':'none';favorCheckbox.style.display=mostrarFavor?'flex':'none';condonarMontoSpan.textContent=window.formatBs(montoCondonar);favorMontoSpan.textContent=window.formatBs(montoFavor);pendienteSpan.textContent=window.formatBs(montoPendiente);sobranteSpan.textContent=window.formatBs(montoSobrante);vueltoRestanteSpan.textContent=window.formatBs(montoSobrante);condonadoValueSpan.textContent=window.formatBs(montoCondonar);favorValueSpan.textContent=window.formatBs(montoFavor);condonadoDisplay.style.display=montoCondonar>0?'flex':'none';favorDisplay.style.display=montoFavor>0?'flex':'none';totalRecibidoSpan.textContent=window.formatBs(totalRecibidoBs);const esInvitacion=invitacionCheck?.checked||false;let confirmarActivo=false;
 // Validar que todos los pagos móviles tienen referencia de 6 dígitos completa
+// Referencia del pedido (solo los 6 dígitos numéricos)
+const refPedido=(window.currentPedido?.referencia||'').toString().replace(/\D/g,'');
 const todosRefOk=window.pagosMixtos.every(p=>{
     if(p.metodo!=='pago_movil')return true;
-    const ref=p.referencia||'';
-    return ref.length===6&&/^[0-9]{6}$/.test(ref);
+    const ref=(p.referencia||'').toString().replace(/\D/g,'');
+    if(ref.length!==6||!/^[0-9]{6}$/.test(ref))return false;
+    // Debe coincidir con la referencia del pedido si existe
+    if(refPedido&&refPedido.length===6)return ref===refPedido;
+    return true;
 });
 if(esInvitacion){confirmarActivo=true}
 else if(!todosRefOk){confirmarActivo=false}
