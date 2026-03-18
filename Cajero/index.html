@@ -55,7 +55,6 @@ window.hacerLogin = async function() {
         if (errorDiv && errorMsg) {
             errorMsg.textContent = msg;
             errorDiv.style.display = 'flex';
-            // Shake para llamar la atención
             errorDiv.style.animation = 'none';
             errorDiv.offsetHeight;
             errorDiv.style.animation = 'loginShake .4s ease';
@@ -98,7 +97,6 @@ window.hacerLogin = async function() {
             return;
         }
 
-        // Login exitoso
         if (errorDiv) errorDiv.style.display = 'none';
         window.jwtToken = data.token;
         window.currentUser = data.user;
@@ -147,9 +145,9 @@ window.cargarPedidos = async function() {
         const { data, error } = await window.supabaseClient
             .from('pedidos')
             .select('*')
-            .gte('fecha', hoy.toISOString())  
-            .lt('fecha', manana.toISOString()) 
-            .order('fecha', { ascending: false }); 
+            .gte('fecha', hoy.toISOString())
+            .lt('fecha', manana.toISOString())
+            .order('fecha', { ascending: false });
         if (error) throw error;
         window.pedidos = data || [];
     } catch (e) { 
@@ -187,12 +185,10 @@ window.abrirModalDeliverys=async function(){try{
   if(!window.deliverys||window.deliverys.length===0){
     html+='<div class="empty-state"><i class="fas fa-motorcycle"></i><p>No hay motorizados registrados</p></div>';
   } else {
-    // Incluir todos, aunque no tengan entregas hoy (mostrar Bs 0)
     html+='<div class="motorizados-list">';
     window.deliverys.forEach(function(d){
       const monto=acumulado[d.id]||0;
       const hayEntregas=monto>0;
-      // Pedidos asignados a este motorizado hoy
       const pedidosD=(window.pedidos||[]).filter(function(p){return p.delivery_id==d.id&&(p.estado==='enviado'||p.estado==='en_camino')&&p.fecha_cobro;});
       const detalleId='det-'+d.id.replace(/[^a-z0-9]/gi,'_');
       html+='<div style="margin-bottom:8px">'
@@ -206,7 +202,6 @@ window.abrirModalDeliverys=async function(){try{
           html+='<p style="font-size:.78rem;color:var(--text-secondary);margin:0">Sin detalle de pedidos disponible</p>';
         } else {
           pedidosD.forEach(function(p){
-            // Hora GMT-4 formato 12h
             var fechaAsign=p.fecha_cobro||p.fecha;
             var hora12='';
             try{
@@ -410,10 +405,8 @@ window._cobroRecalcular = function() {
     const condonarCheck=document.getElementById('cobro-condonar-check');
     const condonarActivo=condonarCheck&&condonarCheck.checked;
     const recEl=document.getElementById('cobro-recibido-display'); if(recEl)recEl.textContent=window.formatBs(totalRecibidoBs);
-    // Sobrante resuelto = vuelto + a favor de caja cubren todo el sobrante
     const favorActivoRec = document.getElementById('cobro-favor-check') && document.getElementById('cobro-favor-check').checked;
     const sobranteResuelto = sobrante <= 0 || (vueltoVal + (favorActivoRec ? sobrRestante : 0) >= sobrante - 0.01);
-    // Pendiente resuelto = exacto, o condonar activo
     const pendienteResuelto = pendiente <= 0.01 || condonarActivo;
     const cubiertoExacto = refOk && sobranteResuelto && pendienteResuelto;
     if (btn) btn.disabled = !cubiertoExacto;
@@ -528,7 +521,6 @@ const mesoneroGuardado=window.propinaSeleccionada.mesonero;
 const propinaData={mesonero_id:mesoneroGuardado.id,mesa:window.propinaSeleccionada.mesa||'General',metodo:window.propinaSeleccionada.metodo,monto_original:montoOriginal,moneda_original:monedaOriginal,tasa_aplicada:tasaAplicada,monto_bs:montoBs,referencia:window.propinaSeleccionada.referencia||null,cajero:window.currentUser.nombre,fecha:new Date().toISOString(),entregado:true};
 const{error:errProp}=await window.supabaseClient.from('propinas').insert([propinaData]);
 if(errProp)throw errProp;
-// Actualizar en memoria inmediatamente con datos del mesonero incluidos
 propinaData.mesoneros={nombre:mesoneroGuardado.nombre};
 window.propinas=[propinaData,...(window.propinas||[])];
 window.cerrarModal('propinaModal');
@@ -537,7 +529,6 @@ window.propinaSeleccionada={mesonero:null,metodo:'efectivo_bs',monto:0,referenci
 window.referenciaPropina=['','','','','',''];
 window.actualizarEstadisticas();
 window.renderizarPropinas();
-// Recargar desde BD en background para tener datos exactos
 window.cargarPropinas().then(function(){window.actualizarEstadisticas();window.renderizarPropinas();});
 }catch(e){console.error('Error guardando propina:',e);window.mostrarToast('❌ Error al registrar propina: '+(e.message||e),'error')}};
 window.renderizarPropinas=function(){const total=window.propinas.reduce((sum,p)=>sum+(p.monto_bs||p.monto||0),0),cantidad=window.propinas.length,promedio=cantidad>0?total/cantidad:0;document.getElementById('propinasTotal').textContent=window.formatBs(total);document.getElementById('propinasCantidad').textContent=cantidad;document.getElementById('propinasPromedio').textContent=window.formatBs(promedio);document.getElementById('propinasListCount').textContent=cantidad;document.getElementById('propinasListContainer').innerHTML=cantidad?window.propinas.map(p=>window.crearTarjetaPropina(p)).join(''):'<div class="empty-state"><i class="fas fa-hand-holding-heart"></i><p>No hay propinas hoy</p></div>'};
@@ -551,10 +542,8 @@ window.crearDetallePedidoResumido=function(pedido){try{let html=`<div><strong>Ti
 html+='<div><strong>Items:</strong></div>';(pedido.items||[]).forEach(item=>{html+=`<div style="margin-left:10px">${item.cantidad||1}x ${item.nombre} - ${window.formatBs(window.usdToBs((item.precioUnitarioUSD||0)*(item.cantidad||1)))}</div>`});html+=`<div style="margin-top:10px"><strong>TOTAL:</strong> ${window.formatBs(window.usdToBs(pedido.total||0))}</div>`;return html}catch(e){return''}};
 window.ejecutarConfirmacion=async function(){if(!window.pedidoParaAccion)return;console.log('✅ CONFIRMANDO ACCIÓN:',window.accionPendiente);console.log('   Pedido ID:',window.pedidoParaAccion.id);console.log('   Session ID:',window.pedidoParaAccion.session_id);try{let tituloNotif,mensajeNotif;if(window.accionPendiente==='entregado'){tituloNotif='✅ ¡Pedido entregado!';mensajeNotif='¡Buen Provecho! Gracias por elegir Saki Sushi';await window.supabaseClient.from('pedidos').update({estado:'entregado'}).eq('id',window.pedidoParaAccion.id)}else if(window.accionPendiente==='enviado'){const deliveryId=document.getElementById('deliverySelector')?.value;if(!deliveryId){window.mostrarToast('Selecciona un motorizado','error');return}
 const delivery=window.deliverys.find(d=>d.id==deliveryId),costoDelivery=window.pedidoParaAccion.costo_delivery_bs||window.pedidoParaAccion.costoDelivery||0;await window.supabaseClient.from('entregas_delivery').insert([{pedido_id:window.pedidoParaAccion.id,delivery_id:deliveryId,monto_bs:costoDelivery,fecha_entrega:new Date().toISOString()}]);await window.supabaseClient.from('pedidos').update({estado:'enviado',delivery_nombre:delivery?.nombre,delivery_id:deliveryId}).eq('id',window.pedidoParaAccion.id);tituloNotif='🛵 Delivery en camino';mensajeNotif='Prepárate para disfrutar';
-// Actualizar acumulado en memoria de inmediato
 window._acumuladoDeliverysCache=(window._acumuladoDeliverysCache||0)+costoDelivery;
 document.getElementById('statDeliverysTotal').textContent=window.formatBs(window._acumuladoDeliverysCache);
-// Actualizar pedido en memoria para que renderizarDeliverysStats lo vea inmediatamente
 var pIdx=window.pedidos.findIndex(function(p){return p.id===window.pedidoParaAccion.id;});
 if(pIdx>-1){window.pedidos[pIdx].estado='enviado';window.pedidos[pIdx].delivery_nombre=delivery&&delivery.nombre?delivery.nombre:'';window.pedidos[pIdx].delivery_id=deliveryId;}
 window.renderizarDeliverysStats();
@@ -640,7 +629,6 @@ await window.cargarVentasHoy();await window.cargarPropinas();const modal=documen
   ${window.ventasHoy.map(v=>{const p=window.pedidos.find(p=>p.id===v.pedido_id);return window.crearDetalleVentaCompacto(v,p)}).join('')}`;
   break;}case'platillos':{
   title.innerHTML='<i class="fas fa-utensils"></i> Platillos Vendidos Hoy';
-  // Usar ventasHoy para obtener solo los cobros confirmados del día
   const conteo={};let totalUnidades=0;
   window.ventasHoy.forEach(v=>{
     const pedido=window.pedidos.find(p=>p.id===v.pedido_id);
