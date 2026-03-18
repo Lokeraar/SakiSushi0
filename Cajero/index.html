@@ -380,7 +380,12 @@ window._cobroRecalcular = function() {
     const condonarCheck=document.getElementById('cobro-condonar-check');
     const condonarActivo=condonarCheck&&condonarCheck.checked;
     const recEl=document.getElementById('cobro-recibido-display'); if(recEl)recEl.textContent=window.fmtBs(totalRecibidoBs);
-    const cubiertoExacto = (diferencia <= 0.01 && refOk) || (condonarActivo && pendiente > 0 && refOk);
+    // Sobrante resuelto = vuelto + a favor de caja cubren todo el sobrante
+    const favorActivoRec = document.getElementById('cobro-favor-check') && document.getElementById('cobro-favor-check').checked;
+    const sobranteResuelto = sobrante <= 0 || (vueltoVal + (favorActivoRec ? sobrRestante : 0) >= sobrante - 0.01);
+    // Pendiente resuelto = exacto, o condonar activo
+    const pendienteResuelto = pendiente <= 0.01 || condonarActivo;
+    const cubiertoExacto = refOk && sobranteResuelto && pendienteResuelto;
     if (btn) btn.disabled = !cubiertoExacto;
 };
 
@@ -393,7 +398,7 @@ window.confirmarCobro = async function() {
     const vueltoVal = parseFloat((document.getElementById('cobro-vuelto-input')||{}).value)||0;
     const p = cobro.pedido;
     const totalBs = cobro.totalBs;
-    let nuevoEstado, metodoPago, pagosData, montoFavor=0, vueltoEntregado=0, totalFinalUSD=p.total;
+    let nuevoEstado, metodoPago, pagosData, montoFavor=0, montoCondonado=0, vueltoEntregado=0, totalFinalUSD=p.total;
     if (esInvitacion) {
         nuevoEstado = p.tipo==='delivery'?'en_camino':(p.tipo==='reserva'?'reserva_pendiente':'en_cocina');
         metodoPago='invitacion'; pagosData=[{metodo:'invitacion',monto:0,montoBs:0}]; totalFinalUSD=0;
@@ -406,7 +411,6 @@ window.confirmarCobro = async function() {
             return {metodo:pago.metodo,monto:monto,montoBs:montoBs,referencia:pago.ref.join('')||null};
         });
         const sobrante=Math.max(0,totalRecibidoBs-totalBs);
-        let montoCondonado=0;
         const condonarChk=document.getElementById('cobro-condonar-check');
         const condonarActivo2=condonarChk&&condonarChk.checked;
         if(sobrante>0){ vueltoEntregado=Math.min(vueltoVal,sobrante); const sobrRest=sobrante-vueltoEntregado; if(favorActivo&&sobrRest>0)montoFavor=sobrRest; }
