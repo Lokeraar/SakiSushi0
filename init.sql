@@ -6,7 +6,6 @@
 -- HABILITAR EXTENSIONES NECESARIAS
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
-CREATE EXTENSION IF NOT EXISTS "pg_net";
 
 -- ============================================
 -- ELIMINAR TODO LO EXISTENTE (ORDEN CORRECTO)
@@ -133,17 +132,20 @@ RETURNS TABLE (
     user_username TEXT,
     user_rol TEXT
 ) AS $$
+DECLARE
+    v_username TEXT := LOWER(TRIM(p_username));
+    v_password TEXT := TRIM(p_password);
 BEGIN
     RETURN QUERY
     SELECT 
         CASE 
-            WHEN u.id IS NOT NULL AND u.password_hash = crypt(p_password, u.password_hash) 
+            WHEN u.id IS NOT NULL AND u.password_hash = crypt(v_password, u.password_hash) 
             THEN true 
             ELSE false 
         END AS success,
         CASE 
             WHEN u.id IS NULL THEN 'Usuario no encontrado'::TEXT
-            WHEN u.password_hash != crypt(p_password, u.password_hash) THEN 'Contraseña incorrecta'::TEXT
+            WHEN u.password_hash != crypt(v_password, u.password_hash) THEN 'Contraseña incorrecta'::TEXT
             ELSE NULL::TEXT
         END AS error,
         u.id AS user_id,
@@ -151,10 +153,10 @@ BEGIN
         u.username AS user_username,
         u.rol AS user_rol
     FROM usuarios u
-    WHERE u.username = p_username AND u.activo = true
+    WHERE LOWER(TRIM(u.username)) = v_username AND u.activo = true
     UNION ALL
     SELECT false, 'Usuario no encontrado'::TEXT, NULL::TEXT, NULL::TEXT, NULL::TEXT, NULL::TEXT
-    WHERE NOT EXISTS (SELECT 1 FROM usuarios WHERE username = p_username AND activo = true)
+    WHERE NOT EXISTS (SELECT 1 FROM usuarios WHERE LOWER(TRIM(username)) = v_username AND activo = true)
     LIMIT 1;
 END;
 $$ LANGUAGE plpgsql STABLE;
@@ -997,58 +999,19 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 -- ============================================
 -- TRIGGER PARA ENVIAR PUSH AL INSERTAR NOTIFICACIÓN
 -- ============================================
--- ⚠️ PASO PREVIO (ejecutar una sola vez en SQL Editor):
--- Guardar la service_role_key en vault para que el trigger pueda usarla:
---
---   SELECT vault.create_secret('tu_service_role_key_aqui', 'service_role_key');
---
--- La service_role_key la encuentras en: Supabase → Settings → API → service_role (secret)
--- ============================================
 CREATE OR REPLACE FUNCTION trigger_enviar_push()
 RETURNS TRIGGER AS $$
-DECLARE
-    v_service_key TEXT;
 BEGIN
-    -- Obtener service key desde vault (si está configurado)
-    -- Para configurar: INSERT INTO vault.secrets (name, secret) VALUES ('service_role_key', 'tu_key');
-    BEGIN
-        SELECT decrypted_secret INTO v_service_key
-        FROM vault.decrypted_secrets
-        WHERE name = 'service_role_key'
-        LIMIT 1;
-    EXCEPTION WHEN OTHERS THEN
-        v_service_key := NULL;
-    END;
-
-    -- Si no hay vault, usar la anon key (la Edge Function valida Bearer)
-    IF v_service_key IS NULL OR v_service_key = '' THEN
-        v_service_key := current_setting('request.jwt.claim.role', true);
-    END IF;
-
-    -- Llamar a la Edge Function via pg_net
-    PERFORM net.http_post(
-        url     := 'https://iqwwoihiiyrtypyqzhgy.supabase.co/functions/v1/send-push',
-        headers := jsonb_build_object(
-            'Content-Type',  'application/json',
-            'Authorization', 'Bearer ' || COALESCE(v_service_key, '')
-        ),
-        body    := json_build_object(
-            'record', json_build_object(
-                'session_id', NEW.session_id,
-                'titulo',     NEW.titulo,
-                'mensaje',    NEW.mensaje,
-                'pedido_id',  NEW.pedido_id,
-                'tipo',       NEW.tipo
-            )
-        )::text
-    );
-
-    RETURN NEW;
-EXCEPTION WHEN OTHERS THEN
-    RAISE WARNING 'trigger_enviar_push error: %', SQLERRM;
+    PERFORM pg_notify('enviar_push', json_build_object(
+        'session_id', NEW.session_id,
+        'titulo', NEW.titulo,
+        'mensaje', NEW.mensaje,
+        'pedido_id', NEW.pedido_id
+    )::text);
+    
     RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql;
 
 DROP TRIGGER IF EXISTS notificaciones_push_trigger ON notificaciones;
 CREATE TRIGGER notificaciones_push_trigger
