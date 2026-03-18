@@ -484,6 +484,10 @@ const delivery=window.deliverys.find(d=>d.id==deliveryId),costoDelivery=window.p
 // Actualizar acumulado en memoria de inmediato
 window._acumuladoDeliverysCache=(window._acumuladoDeliverysCache||0)+costoDelivery;
 document.getElementById('statDeliverysTotal').textContent=window.formatBs(window._acumuladoDeliverysCache);
+// Actualizar pedido en memoria para que renderizarDeliverysStats lo vea inmediatamente
+var pIdx=window.pedidos.findIndex(function(p){return p.id===window.pedidoParaAccion.id;});
+if(pIdx>-1){window.pedidos[pIdx].estado='enviado';window.pedidos[pIdx].delivery_nombre=delivery&&delivery.nombre?delivery.nombre:'';window.pedidos[pIdx].delivery_id=deliveryId;}
+window.renderizarDeliverysStats();
 await window.cargarDeliverys();window.renderizarDeliverysStats();await window.refrescarAcumuladoDeliverys()}else if(window.accionPendiente==='reserva_atendida'){tituloNotif='📅 Reserva Confirmada';mensajeNotif='En breve tu pedido te será entregado, ¡Gracias por preferirnos!';await window.supabaseClient.from('pedidos').update({estado:'reserva_atendida'}).eq('id',window.pedidoParaAccion.id)}else if(window.accionPendiente==='reserva_completada'){tituloNotif='✅ ¡Pedido entregado!';mensajeNotif='¡Buen Provecho! Gracias por elegir Saki Sushi';await window.supabaseClient.from('pedidos').update({estado:'reserva_completada'}).eq('id',window.pedidoParaAccion.id)}else{tituloNotif='🔄 Estado actualizado';mensajeNotif='Tu pedido ha sido actualizado';await window.supabaseClient.from('pedidos').update({estado:window.accionPendiente}).eq('id',window.pedidoParaAccion.id)}
 console.log('📢 Insertando notificación en confirmación:');console.log('   Session ID:',window.pedidoParaAccion.session_id);console.log('   Pedido ID:',window.pedidoParaAccion.id);console.log('   Título:',tituloNotif);const{error}=await window.supabaseClient.from('notificaciones').insert([{pedido_id:window.pedidoParaAccion.id,tipo:'approved',titulo:tituloNotif,mensaje:mensajeNotif,session_id:window.pedidoParaAccion.session_id,leida:false}]);if(error)console.error('❌ Error insertando notificación:',error);else console.log('✅ Notificación insertada correctamente')
 window.cerrarModal('confirmModal');window.mostrarToast('✅ Estado actualizado');await window.recargarPedidosCompletos();window.verificarYControlarAlarma()}catch(e){console.error('Error:',e);window.mostrarToast('❌ Error','error')}};
@@ -591,8 +595,51 @@ await window.cargarVentasHoy();await window.cargarPropinas();const modal=documen
 body.innerHTML=contenido;modal.classList.add('active')}catch(e){console.error('Error en abrirModalDetalle:',e);body.innerHTML='<p>Error al cargar los datos</p>';modal.classList.add('active')}};
 window.crearDetallePedidoCompacto=function(pedido){try{const hora=new Date(pedido.fecha).toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'}),itemsHtml=(pedido.items||[]).map(item=>`<div class="detail-item-row-compact"><span>${item.cantidad||1}x ${item.nombre}</span><span>${window.formatBs(window.usdToBs((item.precioUnitarioUSD||0)*(item.cantidad||1)))}</span></div>`).join('');let extraInfo='';if(pedido.tipo==='delivery'&&pedido.parroquia){extraInfo=`<div style="margin-top:3px;font-size:.7rem;color:var(--text-secondary)">${pedido.parroquia} - ${window.formatBs(pedido.costo_delivery_bs||0)}</div>`}
 return`<div class="detail-item-compact"><div class="detail-header-compact"><span>${hora}</span><span class="detail-metodo-tag">${pedido.tipo}</span></div><div class="detail-items-compact">${itemsHtml}</div>${extraInfo}<div class="detail-total-compact">Total: ${window.formatBs(window.usdToBs(pedido.total||0))}</div></div>`}catch(e){return''}};
-window.crearDetalleVentaCompacto=function(venta,pedido){if(!pedido)return'';try{const hora=new Date(pedido.fecha).toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'}),itemsHtml=(pedido.items||[]).map(item=>`<div class="detail-item-row-compact"><span>${item.cantidad||1}x ${item.nombre}</span><span>${window.formatBs(window.usdToBs((item.precioUnitarioUSD||0)*(item.cantidad||1)))}</span></div>`).join('');let pagosHtml='';if(pedido.pagos_mixtos?.length){pagosHtml='<div style="margin-top:3px">'+pedido.pagos_mixtos.map(p=>{const icon=p.metodo==='efectivo_bs'?'Bs':(p.metodo==='efectivo_usd'?'$':(p.metodo==='pago_movil'?'📱':'💳'));return`<span class="detail-metodo-tag">${icon} ${window.formatBs(p.monto)}</span>`}).join('')+'</div>'}
-let extrasHtml='';if(pedido.condonado>0)extrasHtml+=`<span class="condonar-tag"><i class="fas fa-gift"></i> Condonado: ${window.formatBs(pedido.condonado)}</span>`;if(pedido.a_favor_caja>0)extrasHtml+=`<span class="favor-tag"><i class="fas fa-piggy-bank"></i> A favor: ${window.formatBs(pedido.a_favor_caja)}</span>`;const deliveryNombre=pedido.delivery_nombre||(window.deliverys?.find(d=>d.id==pedido.delivery_id)?.nombre)||'No asignado';return`<div class="detail-item-compact"><div class="detail-header-compact"><span>${hora}</span><span class="detail-metodo-tag">${venta.tipo}</span></div><div class="detail-items-compact">${itemsHtml}</div>${pedido.tipo==='delivery'?`<div style="margin-top:3px;font-size:.75rem"><span class="delivery-tag"><i class="fas fa-motorcycle"></i> ${deliveryNombre}</span> - ${window.formatBs(pedido.costo_delivery_bs||0)}</div>`:''}<div class="detail-total-compact">Total: ${window.formatBs(venta.subtotal_platillos||(venta.total*window.tasaEfectiva))}</div>${pagosHtml}${extrasHtml?`<div style="margin-top:5px">${extrasHtml}</div>`:''}</div>`}catch(e){return''}};
+window.crearDetalleVentaCompacto=function(venta,pedido){
+if(!pedido)return'';
+try{
+  const hora=new Date(pedido.fecha).toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'});
+  const itemsHtml=(pedido.items||[]).map(item=>{
+    const m=window.fmtBs(window.usdToBs((item.precioUnitarioUSD||0)*(item.cantidad||1)));
+    return'<div class="detail-item-row-compact"><span>'+(item.cantidad||1)+'x '+item.nombre+'</span><span>'+m+'</span></div>';
+  }).join('');
+  const subtotalBs=window.fmtBs(venta.subtotal_platillos||(venta.total*window.tasaEfectiva));
+  let pagosHtml='';
+  if(pedido.metodo_pago==='invitacion'){
+    pagosHtml='<div style="margin-top:6px;padding:4px 8px;background:rgba(245,124,0,.12);border-radius:4px;font-size:.78rem;color:var(--warning)">Pedido por invitacion (sin cobro)</div>';
+  } else if(pedido.pagos_mixtos&&pedido.pagos_mixtos.length){
+    const icons={efectivo_bs:'Bs',efectivo_usd:'USD',pago_movil:'Movil',punto_venta:'PdV'};
+    const totalRecibidoBs=pedido.pagos_mixtos.reduce(function(s,p){
+      if(p.metodo==='efectivo_usd')return s+(p.monto||0)*((window.configGlobal&&window.configGlobal.tasa_cambio)||window.tasaEfectiva);
+      return s+(p.montoBs||p.monto||0);
+    },0);
+    const vuelto=pedido.vuelto_entregado||0;
+    const favor=pedido.a_favor_caja||0;
+    const cond=pedido.condonado||0;
+    pagosHtml='<div style="margin-top:6px;border-top:1px dashed var(--border-color);padding-top:6px;font-size:.78rem">';
+    pedido.pagos_mixtos.forEach(function(p){
+      var lbl=icons[p.metodo]||p.metodo;
+      var montoBs=p.metodo==='efectivo_usd'?(p.monto||0)*((window.configGlobal&&window.configGlobal.tasa_cambio)||window.tasaEfectiva):(p.montoBs||p.monto||0);
+      pagosHtml+='<div style="display:flex;justify-content:space-between;padding:2px 0"><span>'+lbl+(p.referencia?' #'+p.referencia:'')+'</span><span style="font-weight:600">'+window.fmtBs(montoBs)+'</span></div>';
+    });
+    pagosHtml+='<div style="display:flex;justify-content:space-between;padding:3px 0;border-top:1px solid var(--border-color);margin-top:3px"><span>Recibido</span><span style="font-weight:700;color:var(--success)">'+window.fmtBs(totalRecibidoBs)+'</span></div>';
+    if(vuelto>0)pagosHtml+='<div style="display:flex;justify-content:space-between;padding:2px 0"><span>(-) Vuelto entregado</span><span style="color:var(--warning)">- '+window.fmtBs(vuelto)+'</span></div>';
+    if(favor>0)pagosHtml+='<div style="display:flex;justify-content:space-between;padding:2px 0"><span>(+) A favor de caja</span><span style="color:var(--favordecaja)">'+window.fmtBs(favor)+'</span></div>';
+    if(cond>0)pagosHtml+='<div style="display:flex;justify-content:space-between;padding:2px 0"><span>Condonado</span><span style="color:var(--condonar)">- '+window.fmtBs(cond)+'</span></div>';
+    var netoCobrado=totalRecibidoBs-vuelto;
+    pagosHtml+='<div style="display:flex;justify-content:space-between;padding:3px 0;border-top:1px solid var(--border-color);margin-top:3px;font-weight:700"><span>Neto cobrado</span><span style="color:var(--accent)">'+window.fmtBs(netoCobrado)+'</span></div>';
+    pagosHtml+='</div>';
+  }
+  const deliveryNombre=pedido.delivery_nombre||(window.deliverys&&window.deliverys.find(function(d){return d.id==pedido.delivery_id;})&&window.deliverys.find(function(d){return d.id==pedido.delivery_id;}).nombre)||'';
+  const cajeroTag=pedido.cajero?'<span style="font-size:.7rem;color:var(--text-secondary)"> — '+pedido.cajero+'</span>':'';
+  return'<div class="detail-item-compact">'+
+    '<div class="detail-header-compact"><span>'+hora+'</span><div style="display:flex;gap:4px;align-items:center"><span class="detail-metodo-tag">'+pedido.tipo+'</span>'+cajeroTag+'</div></div>'+
+    '<div class="detail-items-compact">'+itemsHtml+'</div>'+
+    (pedido.tipo==='delivery'&&deliveryNombre?'<div style="margin-top:3px;font-size:.75rem"><span class="delivery-tag"><i class="fas fa-motorcycle"></i> '+deliveryNombre+'</span> -- '+window.fmtBs(pedido.costo_delivery_bs||0)+'</div>':'')+
+    '<div class="detail-total-compact">Subtotal platillos: '+subtotalBs+'</div>'+
+    pagosHtml+
+    '</div>';
+}catch(e){console.error(e);return''}};
 // ============================================ VERIFICACIÓN ============================================
 window.verificarCambiosPedidos=async function(){if(window.reconectando)return;try{const hoy=new Date();hoy.setHours(0,0,0,0);const manana=new Date(hoy);manana.setDate(manana.getDate()+2);const{data,error}=await window.supabaseClient.from('pedidos').select('id, estado, fecha').gte('fecha',hoy.toISOString()).lt('fecha',manana.toISOString());if(error)throw error;if(data){let cambios=false;if(data.length!==(window.pedidos||[]).length){cambios=true}else{const estadoMap=new Map((window.pedidos||[]).map(p=>[p.id,p.estado]));for(const p of data){if(estadoMap.get(p.id)!==p.estado){cambios=true;break}}}
 if(cambios){console.log('🔄 Cambios detectados en pedidos, recargando...');await window.recargarPedidosCompletos();window.ultimaActualizacion=Date.now()}}}catch(e){console.error('Error verificando cambios:',e)}};
