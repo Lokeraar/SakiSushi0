@@ -2136,13 +2136,15 @@
             }
             if (!sessionId) return;
             _realtimeChannel = window.supabaseClient
-                .channel('notif-' + sessionId)
+                .channel('notif-' + sessionId + '-' + Date.now())
                 .on('postgres_changes', {
                     event: 'INSERT',
                     schema: 'public',
-                    table: 'notificaciones',
-                    filter: `session_id=eq.${sessionId}`
+                    table: 'notificaciones'
+                    // Sin filtro de servidor — filtramos en cliente para cubrir
+                    // todos los pedidos de la sesión sin importar cuántos sean
                 }, async (payload) => {
+                    if (!payload.new || payload.new.session_id !== sessionId) return;
                     await recargarNotificacionesCompletas();
                     if (payload.new.leida) return;
                     if (paginaVisible) {
