@@ -9,11 +9,14 @@
     var avisando = false;
     var timer = null;
 
-    // Reemplazar el estado actual Y empujar uno encima,
-    // para que el primer atrás siempre sea interceptado por nosotros.
+    // Reemplazar el estado actual Y empujar DOS estados encima.
+    // Motivo: algunos navegadores móviles consumen silenciosamente el primer
+    // pushState al cargar (especialmente en GitHub Pages / PWA).
+    // Con dos estados garantizamos que al menos uno dispare popstate.
     history.replaceState({saki:true,depth:0},'');
     history.pushState({saki:true,depth:1},'');
-    depth = 1;
+    history.pushState({saki:true,depth:2},'');
+    depth = 2;
 
     function push(){
         depth++;
@@ -113,6 +116,19 @@
         }
         cerrarCapa();
     });
+
+    // ── beforeunload: red de seguridad para cuando popstate no llega ──────────
+    var _beforeunloadActivo = true;
+    window.addEventListener('beforeunload', function(e){
+        // Solo activo mientras la app no haya registrado su propio handler
+        // y solo si no estamos nosotros ya gestionando la salida
+        if(_beforeunloadActivo && !avisando){
+            e.preventDefault();
+            e.returnValue = '';
+        }
+    });
+    // La app lo desactiva una vez que el popstate ya cubre todo
+    window._sakiDesactivarBeforeunload = function(){ _beforeunloadActivo = false; };
 
     // ── API pública para que la app se conecte ────────────────────────────────
     window._sakiBack = {
@@ -3452,6 +3468,11 @@
 					sk.setDepth(0);
 					sk.mostrarAviso();
 				};
+
+				// La app está lista — el popstate ya cubre todo, beforeunload ya no hace falta
+				if(typeof window._sakiDesactivarBeforeunload === 'function'){
+					window._sakiDesactivarBeforeunload();
+				}
 
 				// Procesar back que llegó antes de que la app estuviera lista
 				if(window._sakiPendingBack){
