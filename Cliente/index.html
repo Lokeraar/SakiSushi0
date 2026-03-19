@@ -2,105 +2,20 @@
 <html lang="es">
 <head>
 <script>
-// ── Interceptor de botón atrás — carga INMEDIATA antes del DOM ──────────────
-// Se ejecuta en el <head> para que el historial quede configurado
-// desde el primer milisegundo, antes de cualquier petición de red.
-(function() {
-    var _stackDepth = 0;
-    var _avisandoSalida = false;
-    var _pendingBack = false; // back llegó antes del DOM → procesarlo al montar
-
-    // Registrar el estado base inmediatamente
-    history.replaceState({ saki: true, depth: 0 }, '');
-
-    function _push() {
-        _stackDepth++;
-        history.pushState({ saki: true, depth: _stackDepth }, '');
-    }
-
-    function _mostrarAvisoSalida() {
-        if (_avisandoSalida) {
-            _avisandoSalida = false;
-            var salida = document.referrer || 'about:blank';
-            window.location.replace(salida);
-            return;
-        }
-        _avisandoSalida = true;
-        _push(); // para interceptar el siguiente atrás
-
-        var aviso = document.getElementById('_salidaAviso');
-        if (!aviso) {
-            // DOM puede no estar listo aún — diferir
-            document.addEventListener('DOMContentLoaded', function() {
-                _mostrarAvisoSalida_dom();
-            }, { once: true });
-            return;
-        }
-        _mostrarAvisoSalida_dom();
-    }
-
-    function _mostrarAvisoSalida_dom() {
-        var aviso = document.getElementById('_salidaAviso');
-        if (!aviso) {
-            aviso = document.createElement('div');
-            aviso.id = '_salidaAviso';
-            aviso.style.cssText = 'position:fixed;inset:0;z-index:9999;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.55);padding:1rem';
-            aviso.innerHTML = '<div style="background:linear-gradient(135deg,#1a1a2e,#16213e);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:1.4rem 1.2rem;width:100%;max-width:400px;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,.5)"><p style="color:#fff;font-size:1rem;font-weight:600;margin-bottom:1.2rem">¿Seguro que deseas salir?</p><div style="display:flex;gap:.8rem"><button id="_salidaNo" style="flex:1;padding:.75rem;border-radius:10px;border:2px solid rgba(255,255,255,.2);background:transparent;color:#fff;font-weight:600;cursor:pointer;font-size:.95rem">Cancelar</button><button id="_salidaSi" style="flex:1;padding:.75rem;border-radius:10px;border:none;background:linear-gradient(135deg,#D32F2F,#b71c1c);color:#fff;font-weight:600;cursor:pointer;font-size:.95rem">Salir</button></div></div>';
-            document.body.appendChild(aviso);
-            document.getElementById('_salidaSi').addEventListener('click', function() {
-                _avisandoSalida = false;
-                aviso.style.display = 'none';
-                var salida = document.referrer || 'about:blank';
-                window.location.replace(salida);
-            });
-            document.getElementById('_salidaNo').addEventListener('click', function() {
-                _avisandoSalida = false;
-                aviso.style.display = 'none';
-                _push();
-                clearTimeout(aviso._timer);
-            });
-        }
-        aviso.style.display = 'flex';
-        clearTimeout(aviso._timer);
-        aviso._timer = setTimeout(function() {
-            aviso.style.display = 'none';
-            _avisandoSalida = false;
-            _push();
-        }, 5000);
-    }
-
-    function _ocultarAvisoSalida() {
-        var aviso = document.getElementById('_salidaAviso');
-        if (aviso) aviso.style.display = 'none';
-        _avisandoSalida = false;
-    }
-
-    // popstate: interceptar DESDE el primer momento
-    window.addEventListener('popstate', function(e) {
-        if (e.state && e.state.saki) {
-            _stackDepth = e.state.depth || 0;
+// Interceptor mínimo — solo registra estado y escucha popstate.
+// No toca el DOM en absoluto.
+(function(){
+    history.replaceState({saki:true,depth:0},'');
+    var _pendingPop = null;
+    window.addEventListener('popstate', function(e){
+        if(typeof window._onSakiPopstate === 'function'){
+            window._onSakiPopstate(e);
         } else {
-            // Estado ajeno o null → el usuario intenta salir
-            _push();
-        }
-        if (typeof window._cerrarCapaBack === 'function') {
-            window._cerrarCapaBack();
-        } else {
-            // DOM y app aún no están listos → guardar que hubo un back
-            _pendingBack = true;
+            _pendingPop = e; // guardar para cuando la app esté lista
         }
     });
-
-    // Exponer para que el script principal los use
-    window._backStack = {
-        push: _push,
-        mostrarAviso: _mostrarAvisoSalida,
-        ocultarAviso: _ocultarAvisoSalida,
-        getDepth: function() { return _stackDepth; },
-        setDepth: function(d) { _stackDepth = d; },
-        isPending: function() { return _pendingBack; },
-        clearPending: function() { _pendingBack = false; }
-    };
+    window._getSakiPendingPop = function(){ return _pendingPop; };
+    window._clearSakiPendingPop = function(){ _pendingPop = null; };
 })();
 </script>
     <meta charset="UTF-8">
@@ -3268,192 +3183,6 @@
 		// ============================================
 
 
-        // ── PUENTE: conecta window._backStack con el DOM y los toggles ──────
-        // Se ejecuta en el mismo script donde están toggleNivel1, toggleCarrito, etc.
-        (function() {
-            var bs = window._backStack;
-            if (!bs) return; // salvaguarda por si el head script no cargó
-
-            function _abrirCarrito() {
-                var cart    = document.getElementById('cartSidebar');
-                var menu    = document.getElementById('categorySidebar');
-                var overlay = document.getElementById('overlay');
-                if (!cart) return;
-                cart.classList.add('open');
-                if (overlay && window.innerWidth <= 992) overlay.classList.add('active');
-                if (menu) menu.classList.remove('open');
-                var notifPanel = document.getElementById('notificationsPanel');
-                if (notifPanel) notifPanel.classList.remove('active');
-            }
-
-            function _cerrarCarrito() {
-                var cart    = document.getElementById('cartSidebar');
-                var overlay = document.getElementById('overlay');
-                if (!cart) return;
-                cart.classList.remove('open');
-                var menuOpen  = document.getElementById('categorySidebar')?.classList.contains('open');
-                var notifOpen = document.getElementById('notificationsPanel')?.classList.contains('active');
-                if (overlay && !menuOpen && !notifOpen) overlay.classList.remove('active');
-                detenerSeguimientoScroll();
-            }
-
-            function _carritoEstaAbierto() {
-                return document.getElementById('cartSidebar')?.classList.contains('open');
-            }
-
-            var _modalesConCarrito = new Set(['confirmMesaModal', 'deliveryModal', 'reservaModal']);
-
-            function _contarCapas() {
-                var n = 0;
-                n += document.querySelectorAll('.modal-overlay.active').length;
-                if (document.getElementById('notificationsPanel')?.classList.contains('active')) n++;
-                if (document.querySelector('[id^="nivel2-"].expanded')) n++;
-                if (document.querySelector('[id^="nivel1-"].expanded')) n++;
-                if (_carritoEstaAbierto()) n++;
-                if (document.querySelector('.subcategory-list.expanded')) n++;
-                if (document.getElementById('categorySidebar')?.classList.contains('open')) n++;
-                return n;
-            }
-
-            function _sincronizarStack() {
-                var capasDOM = _contarCapas();
-                var depth    = bs.getDepth();
-                if (capasDOM > depth) {
-                    var faltantes = capasDOM - depth;
-                    for (var i = 0; i < faltantes; i++) bs.push();
-                } else if (capasDOM < depth) {
-                    bs.setDepth(capasDOM);
-                }
-                if (capasDOM === 0) bs.ocultarAviso();
-            }
-
-            function cerrarCapaMasReciente() {
-                // 1. Modal activo
-                var modalesActivos = Array.from(document.querySelectorAll('.modal-overlay.active'));
-                if (modalesActivos.length > 0) {
-                    bs.ocultarAviso();
-                    var modal = modalesActivos[modalesActivos.length - 1];
-                    if (modal.id === 'deliveryModal') detenerTimer('delivery');
-                    if (modal.id === 'reservaModal')  detenerTimer('reserva');
-                    modal.classList.remove('active');
-                    if (_modalesConCarrito.has(modal.id)) _abrirCarrito();
-                    _sincronizarStack();
-                    return;
-                }
-                // 2. Notificaciones
-                var notifPanel = document.getElementById('notificationsPanel');
-                if (notifPanel?.classList.contains('active')) {
-                    bs.ocultarAviso();
-                    notifPanel.classList.remove('active');
-                    var overlay = document.getElementById('overlay');
-                    if (overlay && !document.getElementById('categorySidebar')?.classList.contains('open') && !_carritoEstaAbierto()) overlay.classList.remove('active');
-                    _sincronizarStack();
-                    return;
-                }
-                // 3. Nivel2 carrito
-                var n2el = document.querySelector('[id^="nivel2-"].expanded');
-                if (n2el) {
-                    bs.ocultarAviso();
-                    var id2 = n2el.id.replace('nivel2-', '');
-                    var ic2 = document.getElementById('icon2-' + id2);
-                    n2el.classList.remove('expanded');
-                    if (ic2) ic2.classList.remove('rotated');
-                    nivel2Activo = null;
-                    _sincronizarStack();
-                    return;
-                }
-                // 4. Nivel1 carrito
-                var n1el = document.querySelector('[id^="nivel1-"].expanded');
-                if (n1el) {
-                    bs.ocultarAviso();
-                    var id1 = n1el.id.replace('nivel1-', '');
-                    var ic1 = document.getElementById('icon1-' + id1);
-                    n1el.classList.remove('expanded');
-                    if (ic1) ic1.classList.remove('rotated');
-                    n1el.querySelectorAll('[id^="nivel2-"].expanded').forEach(function(el) {
-                        el.classList.remove('expanded');
-                        var ic = document.getElementById('icon2-' + el.id.replace('nivel2-',''));
-                        if (ic) ic.classList.remove('rotated');
-                    });
-                    nivel1Activo = null; nivel2Activo = null;
-                    _sincronizarStack();
-                    return;
-                }
-                // 5. Carrito
-                if (_carritoEstaAbierto()) {
-                    bs.ocultarAviso();
-                    _cerrarCarrito();
-                    _sincronizarStack();
-                    return;
-                }
-                // 6. Subcategoría hamburguesa
-                var subExpanded = document.querySelector('.subcategory-list.expanded');
-                if (subExpanded) {
-                    bs.ocultarAviso();
-                    subExpanded.classList.remove('expanded');
-                    _sincronizarStack();
-                    return;
-                }
-                // 7. Menú hamburguesa
-                var categorySidebar = document.getElementById('categorySidebar');
-                if (categorySidebar?.classList.contains('open')) {
-                    bs.ocultarAviso();
-                    categorySidebar.classList.remove('open');
-                    var ov = document.getElementById('overlay');
-                    if (ov && !_carritoEstaAbierto() && !document.getElementById('notificationsPanel')?.classList.contains('active')) ov.classList.remove('active');
-                    _sincronizarStack();
-                    return;
-                }
-                // 8. Nada → aviso de salida
-                bs.setDepth(0);
-                bs.mostrarAviso();
-            }
-
-            // Registrar la función global para que el popstate del head script la llame
-            window._cerrarCapaBack = cerrarCapaMasReciente;
-
-            // Si hubo un back antes de que el DOM estuviera listo, procesarlo ahora
-            if (bs.isPending()) {
-                bs.clearPending();
-                cerrarCapaMasReciente();
-            }
-
-            // MutationObserver
-            var observer = new MutationObserver(function(mutations) {
-                mutations.forEach(function(m) {
-                    if (m.attributeName === 'class') _sincronizarStack();
-                });
-            });
-            document.querySelectorAll('.modal-overlay, #notificationsPanel').forEach(function(el) {
-                observer.observe(el, { attributes: true, attributeFilter: ['class'] });
-            });
-            var catSidebarEl  = document.getElementById('categorySidebar');
-            var cartSidebarEl = document.getElementById('cartSidebar');
-            if (catSidebarEl) {
-                observer.observe(catSidebarEl, { attributes: true, attributeFilter: ['class'] });
-                var subObs = new MutationObserver(function() { _sincronizarStack(); });
-                subObs.observe(catSidebarEl, { subtree: true, attributes: true, attributeFilter: ['class'] });
-            }
-            if (cartSidebarEl) {
-                observer.observe(cartSidebarEl, { attributes: true, attributeFilter: ['class'] });
-                var cartSubObs = new MutationObserver(function() { _sincronizarStack(); });
-                cartSubObs.observe(cartSidebarEl, { subtree: true, attributes: true, attributeFilter: ['class'] });
-            }
-
-            // Parches de toggles
-            var _ot = window.toggleCarrito;
-            window.toggleCarrito = function() { _ot?.apply(this, arguments); _sincronizarStack(); };
-            var _om = window.toggleMenuCategorias;
-            window.toggleMenuCategorias = function() { _om?.apply(this, arguments); _sincronizarStack(); };
-            var _on = window.toggleNotifications;
-            window.toggleNotifications = function() { _on?.apply(this, arguments); _sincronizarStack(); };
-            var _o1 = window.toggleNivel1;
-            window.toggleNivel1 = function(g) { _o1?.(g); _sincronizarStack(); };
-            var _o2 = window.toggleNivel2;
-            window.toggleNivel2 = function(s, p) { _o2?.(s, p); _sincronizarStack(); };
-
-            window._sincronizarBackStack = _sincronizarStack;
-        })();
 
 		document.addEventListener('DOMContentLoaded', async () => {
 			
@@ -3517,6 +3246,192 @@
 				headerIcons.classList.add('left-aligned');
 			}
 			
+
+			// ── Sistema de navegación con botón atrás ─────────────────────────
+			(function(){
+				var bs_depth = 0;
+				var bs_avisando = false;
+
+				function bs_push(){
+					bs_depth++;
+					history.pushState({saki:true,depth:bs_depth},'');
+				}
+
+				function bs_contarCapas(){
+					var n = document.querySelectorAll('.modal-overlay.active').length;
+					if(document.getElementById('notificationsPanel')?.classList.contains('active')) n++;
+					if(document.querySelector('[id^="nivel2-"].expanded')) n++;
+					if(document.querySelector('[id^="nivel1-"].expanded')) n++;
+					if(document.getElementById('cartSidebar')?.classList.contains('open')) n++;
+					if(document.querySelector('.subcategory-list.expanded')) n++;
+					if(document.getElementById('categorySidebar')?.classList.contains('open')) n++;
+					return n;
+				}
+
+				function bs_sincronizar(){
+					var capas = bs_contarCapas();
+					if(capas > bs_depth){ var f=capas-bs_depth; for(var i=0;i<f;i++) bs_push(); }
+					else if(capas < bs_depth){ bs_depth = capas; }
+					if(capas === 0) bs_ocultarAviso();
+				}
+
+				function bs_abrirCarrito(){
+					var cart=document.getElementById('cartSidebar');
+					var ov=document.getElementById('overlay');
+					if(!cart) return;
+					cart.classList.add('open');
+					if(ov && window.innerWidth<=992) ov.classList.add('active');
+					var menu=document.getElementById('categorySidebar');
+					if(menu) menu.classList.remove('open');
+					var notif=document.getElementById('notificationsPanel');
+					if(notif) notif.classList.remove('active');
+				}
+
+				function bs_cerrarCarrito(){
+					var cart=document.getElementById('cartSidebar');
+					var ov=document.getElementById('overlay');
+					if(!cart) return;
+					cart.classList.remove('open');
+					var mOpen=document.getElementById('categorySidebar')?.classList.contains('open');
+					var nOpen=document.getElementById('notificationsPanel')?.classList.contains('active');
+					if(ov && !mOpen && !nOpen) ov.classList.remove('active');
+					detenerSeguimientoScroll();
+				}
+
+				function bs_mostrarAviso(){
+					if(bs_avisando){
+						bs_avisando = false;
+						window.location.replace(document.referrer||'about:blank');
+						return;
+					}
+					bs_avisando = true;
+					bs_push();
+					var aviso=document.getElementById('_salidaAviso');
+					if(!aviso){
+						aviso=document.createElement('div');
+						aviso.id='_salidaAviso';
+						aviso.style.cssText='position:fixed;inset:0;z-index:9999;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.55);padding:1rem';
+						aviso.innerHTML='<div style="background:linear-gradient(135deg,#1a1a2e,#16213e);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:1.4rem 1.2rem;width:100%;max-width:400px;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,.5)"><p style="color:#fff;font-size:1rem;font-weight:600;margin-bottom:1.2rem">¿Seguro que deseas salir?</p><div style="display:flex;gap:.8rem"><button id="_salidaNo" style="flex:1;padding:.75rem;border-radius:10px;border:2px solid rgba(255,255,255,.2);background:transparent;color:#fff;font-weight:600;cursor:pointer;font-size:.95rem">Cancelar</button><button id="_salidaSi" style="flex:1;padding:.75rem;border-radius:10px;border:none;background:linear-gradient(135deg,#D32F2F,#b71c1c);color:#fff;font-weight:600;cursor:pointer;font-size:.95rem">Salir</button></div></div>';
+						document.body.appendChild(aviso);
+						document.getElementById('_salidaSi').addEventListener('click',function(){
+							bs_avisando=false; aviso.style.display='none';
+							window.location.replace(document.referrer||'about:blank');
+						});
+						document.getElementById('_salidaNo').addEventListener('click',function(){
+							bs_avisando=false; aviso.style.display='none';
+							bs_push(); clearTimeout(aviso._t);
+						});
+					}
+					aviso.style.display='flex';
+					clearTimeout(aviso._t);
+					aviso._t=setTimeout(function(){ aviso.style.display='none'; bs_avisando=false; bs_push(); },5000);
+				}
+
+				function bs_ocultarAviso(){
+					var aviso=document.getElementById('_salidaAviso');
+					if(aviso) aviso.style.display='none';
+					bs_avisando=false;
+				}
+
+				var _modConCarrito=new Set(['confirmMesaModal','deliveryModal','reservaModal']);
+
+				function bs_cerrarCapa(){
+					// 1. Modal
+					var mods=Array.from(document.querySelectorAll('.modal-overlay.active'));
+					if(mods.length>0){
+						bs_ocultarAviso();
+						var m=mods[mods.length-1];
+						if(m.id==='deliveryModal') detenerTimer('delivery');
+						if(m.id==='reservaModal') detenerTimer('reserva');
+						m.classList.remove('active');
+						if(_modConCarrito.has(m.id)) bs_abrirCarrito();
+						bs_sincronizar(); return;
+					}
+					// 2. Notificaciones
+					var np=document.getElementById('notificationsPanel');
+					if(np?.classList.contains('active')){
+						bs_ocultarAviso(); np.classList.remove('active');
+						var ov=document.getElementById('overlay');
+						var mop=document.getElementById('categorySidebar')?.classList.contains('open');
+						var cop=document.getElementById('cartSidebar')?.classList.contains('open');
+						if(ov&&!mop&&!cop) ov.classList.remove('active');
+						bs_sincronizar(); return;
+					}
+					// 3. Nivel2 carrito
+					var n2=document.querySelector('[id^="nivel2-"].expanded');
+					if(n2){ bs_ocultarAviso();
+						var i2=document.getElementById('icon2-'+n2.id.replace('nivel2-',''));
+						n2.classList.remove('expanded'); if(i2) i2.classList.remove('rotated');
+						nivel2Activo=null; bs_sincronizar(); return;
+					}
+					// 4. Nivel1 carrito
+					var n1=document.querySelector('[id^="nivel1-"].expanded');
+					if(n1){ bs_ocultarAviso();
+						var i1=document.getElementById('icon1-'+n1.id.replace('nivel1-',''));
+						n1.classList.remove('expanded'); if(i1) i1.classList.remove('rotated');
+						n1.querySelectorAll('[id^="nivel2-"].expanded').forEach(function(el){
+							el.classList.remove('expanded');
+							var ic=document.getElementById('icon2-'+el.id.replace('nivel2-',''));
+							if(ic) ic.classList.remove('rotated');
+						});
+						nivel1Activo=null; nivel2Activo=null; bs_sincronizar(); return;
+					}
+					// 5. Carrito
+					if(document.getElementById('cartSidebar')?.classList.contains('open')){
+						bs_ocultarAviso(); bs_cerrarCarrito(); bs_sincronizar(); return;
+					}
+					// 6. Subcategoría
+					var sub=document.querySelector('.subcategory-list.expanded');
+					if(sub){ bs_ocultarAviso(); sub.classList.remove('expanded'); bs_sincronizar(); return; }
+					// 7. Menú hamburguesa
+					var cs=document.getElementById('categorySidebar');
+					if(cs?.classList.contains('open')){
+						bs_ocultarAviso(); cs.classList.remove('open');
+						var ov2=document.getElementById('overlay');
+						var cop2=document.getElementById('cartSidebar')?.classList.contains('open');
+						var nop2=document.getElementById('notificationsPanel')?.classList.contains('active');
+						if(ov2&&!cop2&&!nop2) ov2.classList.remove('active');
+						bs_sincronizar(); return;
+					}
+					// 8. Nada → aviso salida
+					bs_depth=0; bs_mostrarAviso();
+				}
+
+				// Registrar el handler en el popstate del head script
+				window._onSakiPopstate = function(e){
+					if(e.state && e.state.saki){
+						bs_depth = e.state.depth || 0;
+					} else {
+						bs_push();
+					}
+					bs_cerrarCapa();
+				};
+
+				// Procesar popstate que llegó antes del DOM
+				var pending = window._getSakiPendingPop && window._getSakiPendingPop();
+				if(pending){
+					window._clearSakiPendingPop();
+					window._onSakiPopstate(pending);
+				}
+
+				// MutationObserver
+				var obs=new MutationObserver(function(ms){ ms.forEach(function(m){ if(m.attributeName==='class') bs_sincronizar(); }); });
+				document.querySelectorAll('.modal-overlay,#notificationsPanel').forEach(function(el){ obs.observe(el,{attributes:true,attributeFilter:['class']}); });
+				var catEl=document.getElementById('categorySidebar');
+				var cartEl=document.getElementById('cartSidebar');
+				if(catEl){ obs.observe(catEl,{attributes:true,attributeFilter:['class']}); new MutationObserver(function(){ bs_sincronizar(); }).observe(catEl,{subtree:true,attributes:true,attributeFilter:['class']}); }
+				if(cartEl){ obs.observe(cartEl,{attributes:true,attributeFilter:['class']}); new MutationObserver(function(){ bs_sincronizar(); }).observe(cartEl,{subtree:true,attributes:true,attributeFilter:['class']}); }
+
+				// Parches de toggles
+				var _ot=window.toggleCarrito; window.toggleCarrito=function(){ _ot?.apply(this,arguments); bs_sincronizar(); };
+				var _om=window.toggleMenuCategorias; window.toggleMenuCategorias=function(){ _om?.apply(this,arguments); bs_sincronizar(); };
+				var _on=window.toggleNotifications; window.toggleNotifications=function(){ _on?.apply(this,arguments); bs_sincronizar(); };
+				var _o1=window.toggleNivel1; window.toggleNivel1=function(g){ _o1?.(g); bs_sincronizar(); };
+				var _o2=window.toggleNivel2; window.toggleNivel2=function(s,p){ _o2?.(s,p); bs_sincronizar(); };
+				window._sincronizarBackStack=bs_sincronizar;
+			})();
+			// ── fin sistema botón atrás ───────────────────────────────────────────
+
 			resetToAllCategories(false);
 		});
 
