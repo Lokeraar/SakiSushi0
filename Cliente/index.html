@@ -802,7 +802,7 @@ window.addEventListener('beforeunload',function(e){if(!window._sakiReady){e.prev
                             <p><i class="fas fa-university"></i><strong>Banco:</strong><span class="valor">Banesco</span></p>
                             <p><i class="fas fa-phone-alt"></i><strong>Teléfono:</strong><span class="valor" id="telefonoPago">0424-1525233</span><button class="btn-copy" onclick="copiarAlPortapapeles('0424-1525233', this)" title="Copiar teléfono"><i class="fas fa-copy"></i></button></p>
                             <p><i class="fas fa-id-card"></i><strong>RIF:</strong><span class="valor" id="rifPago">J-501519838</span><button class="btn-copy" onclick="copiarAlPortapapeles('J-501519838', this)" title="Copiar RIF"><i class="fas fa-copy"></i></button></p>
-                            <p><i class="fas fa-dollar-sign"></i><strong>Monto:</strong><span class="valor-placeholder" id="montoPago">Primero seleccione Parroquia a enviar</span></p>
+                            <p><i class="fas fa-dollar-sign"></i><strong>Monto:</strong><span class="valor-placeholder" id="montoPago">Primero seleccione Parroquia a enviar</span><button class="btn-copy" id="btnCopyMontoPago" onclick="copiarAlPortapapeles(document.getElementById('montoPago').textContent, this)" title="Copiar monto" style="display:none"><i class="fas fa-copy"></i></button></p>
                         </div>
                         <div class="payment-note">
                             <i class="fas fa-info-circle"></i><strong>Sólo se aceptan pagos por Pago Móvil</strong>
@@ -2685,11 +2685,15 @@ window.addEventListener('beforeunload',function(e){if(!window._sakiReady){e.prev
                 document.getElementById('deliveryPriceDisplay').textContent = `Costo de envío: ${formatBs(usdToBs(precioUSD))}`;
                 const montoPago = document.getElementById('montoPago');
                 if (montoPago) { montoPago.className = 'valor'; montoPago.textContent = formatBs(totalBs); }
+                const btnCopy = document.getElementById('btnCopyMontoPago');
+                if (btnCopy) btnCopy.style.display = 'inline-flex';
             } else {
                 document.getElementById('deliveryTotal').textContent = 'Primero seleccione Parroquia a enviar';
                 document.getElementById('deliveryPriceDisplay').textContent = 'Primero seleccione Parroquia a enviar';
                 const montoPago = document.getElementById('montoPago');
                 if (montoPago) { montoPago.className = 'valor-placeholder'; montoPago.textContent = 'Primero seleccione Parroquia a enviar'; }
+                const btnCopy = document.getElementById('btnCopyMontoPago');
+                if (btnCopy) btnCopy.style.display = 'none';
             }
             validarFormularioDelivery();
         }
