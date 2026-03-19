@@ -1072,12 +1072,12 @@
         }
 
         let menuItems = [], inventario = [], carrito = [], notificaciones = [], notificacionesCache = [], notificacionesNoLeidas = 0;
-        let notificacionesCompletas = [], ultimaActualizacion = Date.now(), paginaVisible = true, intervaloNotificaciones = null;
-        let currentCustomizeItem = null, mesaId = null, nivel1Activo = null, nivel2Activo = null;
-        let timersActivos = {}, intervalosTimer = {};
-        let scrollTimeout = null;
-        let filteredMenuItems = [];
-        let _stockPrecalculado = {};
+		let notificacionesCompletas = [], ultimaActualizacion = Date.now(), paginaVisible = true;
+		let currentCustomizeItem = null, mesaId = null, nivel1Activo = null, nivel2Activo = null;
+		let timersActivos = {}, intervalosTimer = {};
+		let scrollTimeout = null;
+		let filteredMenuItems = [];
+		let _stockPrecalculado = {};
         let favoritos = JSON.parse(localStorage.getItem('saki_favoritos') || '[]');
         let historialPedidos = JSON.parse(localStorage.getItem('saki_historial') || '[]');
         let reconocimientoVoz = null;
@@ -2216,12 +2216,6 @@
 		}
 
 
-        // verificarNotificaciones se mantiene solo para la carga inicial y
-        // cuando la página vuelve a ser visible (por si se perdió conexión)
-        async function verificarNotificaciones() {
-            await recargarNotificacionesCompletas();
-        }
-
         async function marcarTodasComoLeidas() {
             const idsNoLeidas = notificaciones.filter(n => !n.leida).map(n => n.id);
             if (idsNoLeidas.length === 0) return;
@@ -3113,7 +3107,6 @@
 
         window.addEventListener('beforeunload', () => {
             if (_realtimeChannel) window.supabaseClient.removeChannel(_realtimeChannel);
-            if (intervaloNotificaciones) clearInterval(intervaloNotificaciones);
             Object.values(intervalosTimer).forEach(clearInterval);
             detenerSeguimientoScroll();
             if (scrollTimeout) clearTimeout(scrollTimeout);
