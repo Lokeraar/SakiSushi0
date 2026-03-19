@@ -9,7 +9,11 @@
     var avisando = false;
     var timer = null;
 
+    // Reemplazar el estado actual Y empujar uno encima,
+    // para que el primer atrás siempre sea interceptado por nosotros.
     history.replaceState({saki:true,depth:0},'');
+    history.pushState({saki:true,depth:1},'');
+    depth = 1;
 
     function push(){
         depth++;
