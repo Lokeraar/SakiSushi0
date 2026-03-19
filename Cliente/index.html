@@ -399,13 +399,13 @@ window.addEventListener('beforeunload',function(e){if(!window._sakiReady){e.prev
         body.tema-claro .notifications-panel{background:linear-gradient(135deg,#f0f0f5 0%,#e0e0e8 100%);color:#1a1a2e;border:1px solid rgba(0,0,0,.1)}
         body.tema-claro .notifications-header{background:rgba(0,0,0,.06);border-bottom:1px solid rgba(0,0,0,.1)}
         body.tema-claro .notifications-header h4{color:#1a1a2e}
-        body.tema-claro .notification-item{color:#1a1a2e;border-bottom:1px solid rgba(0,0,0,.08)}
+        body.tema-claro .notification-item{color:var(--text-primary);border-bottom:1px solid rgba(128,128,128,.15)}
         body.tema-claro .notification-item:hover{background:rgba(0,0,0,.05)}
         body.tema-claro .notification-item.unread{background:rgba(211,47,47,.1);border-left:3px solid var(--primary)}
         body.tema-claro .notification-item.approved{background:rgba(56,142,60,.08);border-left:4px solid var(--success)}
         body.tema-claro .notification-item.rejected{background:rgba(239,68,68,.08);border-left:4px solid var(--danger)}
         body.tema-claro .notification-item.pending{background:rgba(245,124,0,.08);border-left:4px solid var(--warning)}
-        body.tema-claro .notification-title{color:#1a1a2e}
+        body.tema-claro .notification-title{color:var(--text-primary)}
         body.tema-claro .notification-message{color:#3a3a4e}
         body.tema-claro .notification-time{color:#6c757d}
         body.tema-claro .notification-item{color:#1a1a2e !important}
@@ -437,7 +437,7 @@ window.addEventListener('beforeunload',function(e){if(!window._sakiReady){e.prev
         body.tema-claro .modal-header h3{color:#1a1a2e}
         body.tema-claro .modal-body{color:var(--text-primary);font-family:'Roboto',sans-serif}
         body.tema-claro .modal-body label{color:#1a1a2e}
-        body.tema-claro .modal-body span{color:#2d2d44}
+        body.tema-claro .modal-body span{color:var(--text-primary)}
         body.tema-claro .modal-footer{border-top:1px solid rgba(0,0,0,.1)}
         /* ── Clases de formulario para modales delivery/reserva ── */
         .modal-form-label{display:block;margin-bottom:.5rem;font-weight:600;color:var(--text-primary);font-family:inherit}
@@ -451,12 +451,12 @@ window.addEventListener('beforeunload',function(e){if(!window._sakiReady){e.prev
         body.tema-claro .modal-form-ref-digit{background:rgba(255,255,255,.8);color:#1a1a2e;border-color:rgba(0,0,0,.25)}
         body.tema-claro .parroquia-trigger{background:rgba(255,255,255,.7) !important;color:#1a1a2e !important;border-color:rgba(0,0,0,.2) !important}
         body.tema-claro .payment-info{background:rgba(0,0,0,.05);border-color:var(--primary)}
-        body.tema-claro .payment-info h4{color:#1a1a2e;border-bottom-color:rgba(0,0,0,.1)}
+        body.tema-claro .payment-info h4{color:var(--text-primary);border-bottom-color:rgba(0,0,0,.1)}
         body.tema-claro .payment-details{background:rgba(0,0,0,.04)}
-        body.tema-claro .payment-details p{color:#1a1a2e;border-bottom-color:rgba(0,0,0,.08)}
-        body.tema-claro .payment-details strong{color:#1a1a2e}
-        body.tema-claro .payment-note{color:#4a4a5e}
-        body.tema-claro .payment-note p{color:#5a5a6e}
+        body.tema-claro .payment-details p{color:var(--text-primary);border-bottom-color:rgba(0,0,0,.08)}
+        body.tema-claro .payment-details strong{color:var(--text-primary);font-family:inherit}
+        body.tema-claro .payment-note{color:var(--text-secondary)}
+        body.tema-claro .payment-note p{color:var(--text-secondary)}
         body.tema-claro .file-input-label{background:rgba(0,0,0,.05);color:#1a1a2e}
         body.tema-claro .file-input-label span{color:#4a4a5e}
         body.tema-claro .file-input-label i{color:var(--primary)}
@@ -512,7 +512,7 @@ window.addEventListener('beforeunload',function(e){if(!window._sakiReady){e.prev
         .footer-copyright{color:var(--gray-500);font-size:.85rem}
         .loading-spinner{display:inline-block;width:30px;height:30px;border:3px solid rgba(211,47,47,.2);border-radius:50%;border-top-color:var(--primary);animation:spin 1s linear infinite}
         @keyframes spin{to{transform:rotate(360deg)}}
-        .loading-container{text-align:center;padding:2rem;color:#fff}
+        .loading-container{text-align:center;padding:2rem;color:var(--text-primary)}
         .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);color:white;padding:.8rem 1.5rem;border-radius:50px;box-shadow:var(--shadow-lg);z-index:3000;display:none;animation:slideUp .3s ease;font-family:'Montserrat',sans-serif;align-items:center;gap:.8rem;font-size:.9rem;max-width:90%;text-align:center}
         .toast.show{display:flex}
         .toast.success{background:var(--success)}
@@ -544,8 +544,8 @@ window.addEventListener('beforeunload',function(e){if(!window._sakiReady){e.prev
         .selected-parroquia i.fa-chevron-up{transform:rotate(180deg)}
         .parroquia-search{width:100%;padding:.8rem 1rem;border:2px solid var(--accent);border-radius:var(--radius-md) var(--radius-md) 0 0;font-size:1rem;outline:none;border-bottom:none;background:rgba(0,0,0,.5);color:#fff}
         .parroquia-search:focus{box-shadow:0 0 0 3px rgba(255,152,0,.1)}
-        .parroquia-select{width:100%;padding:.5rem;border:2px solid var(--accent);border-radius:0 0 var(--radius-md) var(--radius-md);font-size:1rem;background:rgba(0,0,0,.5);color:#fff;max-height:200px;overflow-y:auto}
-        .parroquia-select option{padding:.8rem 1rem;border-bottom:1px solid rgba(255,255,255,.1);cursor:pointer;transition:background .2s;background:rgba(0,0,0,.5);color:#fff}
+        .parroquia-select{width:100%;padding:.5rem;border:2px solid var(--accent);border-radius:0 0 var(--radius-md) var(--radius-md);font-size:1rem;background:rgba(0,0,0,.5);color:var(--text-primary);max-height:200px;overflow-y:auto}
+        .parroquia-select option{padding:.8rem 1rem;border-bottom:1px solid rgba(128,128,128,.2);cursor:pointer;transition:background .2s;background:rgba(0,0,0,.5);color:var(--text-primary)}
         .parroquia-select option:hover,.parroquia-select option:checked{background:linear-gradient(135deg,var(--primary),#b71c1c);color:white}
         .payment-info{background:rgba(0,0,0,.3);padding:1.5rem;border-radius:var(--radius-md);margin-bottom:1.5rem;border:2px dashed var(--primary);box-shadow:var(--shadow-sm)}
         .payment-info h4{color:#fff;margin-bottom:1.2rem;font-size:1.2rem;display:flex;align-items:center;gap:.5rem;border-bottom:1px solid rgba(255,255,255,.1);padding-bottom:.8rem}
@@ -1412,11 +1412,11 @@ window.addEventListener('beforeunload',function(e){if(!window._sakiReady){e.prev
                     <div style="display:flex; align-items:center; gap:.6rem">
                         <button id="previewMinus" style="width:36px;height:36px;border-radius:50%;border:2px solid var(--accent);background:transparent;color:var(--accent);font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s" ${agotado ? 'disabled' : ''}><i class="fas fa-minus"></i></button>
                         <input id="previewCantidad" type="number" min="1" max="${Math.min(stockDisponible, 99)}" value="1" inputmode="numeric"
-                            style="width:52px;height:36px;text-align:center;font-size:1.1rem;font-weight:700;border:2px solid var(--accent);border-radius:8px;background:rgba(0,0,0,.3);color:#fff;-moz-appearance:textfield"
+                            style="width:52px;height:36px;text-align:center;font-size:1.1rem;font-weight:700;border:2px solid var(--accent);border-radius:8px;background:rgba(0,0,0,.3);color:var(--text-primary);-moz-appearance:textfield"
                             ${agotado ? 'disabled' : ''}>
                         <button id="previewPlus" style="width:36px;height:36px;border-radius:50%;border:2px solid var(--accent);background:transparent;color:var(--accent);font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s" ${agotado ? 'disabled' : ''}><i class="fas fa-plus"></i></button>
                     </div>
-                    <button id="previewPersonalizar" style="flex:1;padding:.55rem .8rem;border-radius:8px;border:2px solid rgba(255,255,255,.25);background:transparent;color:#fff;font-size:.88rem;font-weight:600;cursor:pointer;transition:all .2s;white-space:nowrap" ${agotado ? 'disabled' : ''}>
+                    <button id="previewPersonalizar" style="flex:1;padding:.55rem .8rem;border-radius:8px;border:2px solid rgba(128,128,128,.4);background:transparent;color:var(--text-primary);font-size:.88rem;font-weight:600;cursor:pointer;transition:all .2s;white-space:nowrap" ${agotado ? 'disabled' : ''}>
                         <i class="fas fa-star" style="color:var(--accent)"></i> Personalizar
                     </button>
                 </div>
@@ -2162,24 +2162,19 @@ window.addEventListener('beforeunload',function(e){if(!window._sakiReady){e.prev
         // FUNCIONES DE SCROLL
         // ============================================
         function iniciarSeguimientoScroll() {
-            const cartItems  = document.getElementById('cartItems');
-            const cartFooter = document.getElementById('cartFooter');
-            const overlay    = document.getElementById('flechasOverlay');
-            if (!cartItems || !cartFooter || !overlay) return;
+            const cartItems = document.getElementById('cartItems');
+            const overlay   = document.getElementById('flechasOverlay');
+            if (!cartItems || !overlay) return;
             if (cartItems._scrollListener) return; // ya activo
 
             function onScroll() {
-                // cartFooter visible = su borde superior está dentro del área visible de cartItems
-                const footerRect  = cartFooter.getBoundingClientRect();
-                const itemsRect   = cartItems.getBoundingClientRect();
-                const footerVisible = footerRect.top < itemsRect.bottom - 4;
-                if (footerVisible) {
-                    // Botones visibles: ocultar overlay
-                    overlay.style.display = 'none';
-                } else {
-                    // Botones fuera de vista: mostrar overlay con las flechas
+                // Las flechas en-flujo están al fondo del contenido scrollable de cartItems.
+                // Si el usuario scrolleó hacia arriba y no puede verlas → mostrar overlay.
+                // Detección: si scrollTop + clientHeight < scrollHeight - 8 → hay contenido
+                // debajo no visible → las flechas están ocultas.
+                const flechasOcultas = cartItems.scrollTop + cartItems.clientHeight < cartItems.scrollHeight - 8;
+                if (flechasOcultas) {
                     if (!overlay.hasChildNodes()) {
-                        // Clonar las flechas del cartItems al overlay
                         const src = cartItems.querySelector('.scroll-indicator-cascade');
                         if (src) {
                             const clone = src.cloneNode(true);
@@ -2188,20 +2183,31 @@ window.addEventListener('beforeunload',function(e){if(!window._sakiReady){e.prev
                         }
                     }
                     overlay.style.display = 'block';
+                } else {
+                    overlay.style.display = 'none';
                 }
             }
 
             cartItems._scrollListener = onScroll;
             cartItems.addEventListener('scroll', onScroll, { passive: true });
+            // También disparar en resize por si cambia el tamaño del sidebar
+            cartItems._resizeObs = new ResizeObserver(onScroll);
+            cartItems._resizeObs.observe(cartItems);
             onScroll(); // estado inicial
         }
 
         function detenerSeguimientoScroll() {
             const cartItems = document.getElementById('cartItems');
             const overlay   = document.getElementById('flechasOverlay');
-            if (cartItems && cartItems._scrollListener) {
-                cartItems.removeEventListener('scroll', cartItems._scrollListener);
-                cartItems._scrollListener = null;
+            if (cartItems) {
+                if (cartItems._scrollListener) {
+                    cartItems.removeEventListener('scroll', cartItems._scrollListener);
+                    cartItems._scrollListener = null;
+                }
+                if (cartItems._resizeObs) {
+                    cartItems._resizeObs.disconnect();
+                    cartItems._resizeObs = null;
+                }
             }
             if (overlay) { overlay.style.display = 'none'; overlay.innerHTML = ''; }
         }
