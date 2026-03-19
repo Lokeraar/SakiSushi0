@@ -3,9 +3,9 @@
 <head>
 <script>
 // Garantiza que el primer "atrás" siempre sea interceptado por popstate.
-history.replaceState({saki:true},'');
-history.pushState({saki:true},'');
-history.pushState({saki:true},'');
+history.replaceState({saki:true,depth:0},'');
+history.pushState({saki:true,depth:1},'');
+history.pushState({saki:true,depth:2},'');
 // Red de seguridad para navegadores que no disparan popstate.
 var _buActive = true;
 window.addEventListener('beforeunload', function(e){ if(_buActive){ e.preventDefault(); e.returnValue=''; } });
@@ -3257,7 +3257,7 @@ window.addEventListener('beforeunload', function(e){ if(_buActive){ e.preventDef
 				var av = document.getElementById('_salidaAviso');
 				var modConCarrito = new Set(['confirmMesaModal','deliveryModal','reservaModal']);
 
-				function push(){ depth++; history.pushState({saki:true},''); }
+				function push(){ depth++; history.pushState({saki:true,depth:depth},''); }
 
 				function mostrar(){
 					if(avisando){ avisando=false; window.location.replace(document.referrer||'about:blank'); return; }
@@ -3352,7 +3352,7 @@ window.addEventListener('beforeunload', function(e){ if(_buActive){ e.preventDef
 				}
 
 				window.addEventListener('popstate', function(e){
-					if(e.state&&e.state.saki) depth=0; else push();
+					if(e.state&&e.state.saki) depth=e.state.depth||0; else push();
 					cerrarCapa();
 				});
 
