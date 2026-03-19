@@ -2450,10 +2450,13 @@ window.addEventListener('beforeunload',function(e){if(!window._sakiReady){e.prev
                         const ingredientesNombres = subgrupo.personalizacion.map(p => inventario.find(i => i.id === p)?.nombre || p).join(', ');
                         personalizacionTexto = `<small style="display:block; color:var(--gray-400)">Sin: ${ingredientesNombres}</small>`;
                     }
-                    html += `<div style="display:flex; justify-content:space-between; margin-bottom:.5rem"><div><span>${grupo.nombre} x${subgrupo.cantidad}</span>${personalizacionTexto}</div><span style="color:var(--accent)">${formatBs(subgrupo.subtotal)}</span></div>`;
+                    const imgMesa = grupo.imagen
+                        ? `<img src="${grupo.imagen}" style="width:40px;height:40px;object-fit:cover;border-radius:6px;flex-shrink:0;margin-right:.6rem">`
+                        : `<div style="width:40px;height:40px;border-radius:6px;background:rgba(255,255,255,.08);flex-shrink:0;margin-right:.6rem;display:flex;align-items:center;justify-content:center"><i class="fas fa-utensils" style="font-size:.8rem;opacity:.4"></i></div>`;
+                    html += `<div style="display:flex;align-items:center;margin-bottom:.5rem;font-size:.88rem">${imgMesa}<div style="flex:1;min-width:0"><div style="display:flex;justify-content:space-between;align-items:flex-start"><span style="flex:1;margin-right:.4rem">${grupo.nombre} x${subgrupo.cantidad}</span><span style="color:var(--accent);font-weight:600;white-space:nowrap">${formatBs(subgrupo.subtotal)}</span></div>${personalizacionTexto}</div></div>`;
                 });
             });
-            summary.innerHTML = html + `<div style="display:flex; justify-content:space-between; margin-top:1rem; padding-top:.5rem; border-top:2px solid rgba(255,255,255,.1); font-weight:700"><span>Total:</span><span>${formatBs(total)}</span></div>`;
+            summary.innerHTML = html + `<div style="display:flex; justify-content:space-between; margin-top:.6rem; padding-top:.5rem; border-top:1px solid rgba(255,255,255,.12); font-weight:700;font-size:.9rem"><span>Total platillos</span><span style="color:var(--accent)">${formatBs(total)}</span></div>`;
             document.getElementById('confirmMesaModal').classList.add('active');
         }
 
@@ -2572,36 +2575,65 @@ window.addEventListener('beforeunload',function(e){if(!window._sakiReady){e.prev
             }
         }
 
-        // Genera el HTML del resumen del carrito (sin delivery)
-        function generarResumenCarrito() {
+        // Genera el HTML del resumen del carrito
+        // modo: 'mesa'|'reserva' → "Total platillos"  /  'delivery' → líneas de delivery
+        function generarResumenCarrito(modo) {
             const grupos = agruparItemsJerarquicamente();
             let html = '';
             let total = 0;
             grupos.forEach(grupo => {
                 total += grupo.subtotal;
+                const img = grupo.imagen
+                    ? `<img src="${grupo.imagen}" style="width:40px;height:40px;object-fit:cover;border-radius:6px;flex-shrink:0;margin-right:.6rem">`
+                    : `<div style="width:40px;height:40px;border-radius:6px;background:rgba(255,255,255,.08);flex-shrink:0;margin-right:.6rem;display:flex;align-items:center;justify-content:center"><i class="fas fa-utensils" style="font-size:.8rem;opacity:.4"></i></div>`;
                 grupo.subgrupos.forEach(subgrupo => {
                     let persTexto = '';
                     if (subgrupo.personalizacion.length > 0) {
                         const nombres = subgrupo.personalizacion.map(p => inventario.find(i => i.id === p)?.nombre || p).join(', ');
-                        persTexto = `<small style="display:block;color:var(--gray-400);font-size:.75rem">Sin: ${nombres}</small>`;
+                        persTexto = `<small style="display:block;color:var(--gray-400);font-size:.72rem">Sin: ${nombres}</small>`;
                     }
-                    html += `<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.4rem;font-size:.88rem">
-                        <div><span>${grupo.nombre} x${subgrupo.cantidad}</span>${persTexto}</div>
-                        <span style="color:var(--accent);font-weight:600;white-space:nowrap;margin-left:.5rem">${formatBs(subgrupo.subtotal)}</span>
+                    html += `<div style="display:flex;align-items:center;margin-bottom:.5rem;font-size:.88rem">
+                        ${img}
+                        <div style="flex:1;min-width:0">
+                            <div style="display:flex;justify-content:space-between;align-items:flex-start">
+                                <span style="flex:1;margin-right:.4rem">${grupo.nombre} x${subgrupo.cantidad}</span>
+                                <span style="color:var(--accent);font-weight:600;white-space:nowrap">${formatBs(subgrupo.subtotal)}</span>
+                            </div>
+                            ${persTexto}
+                        </div>
                     </div>`;
                 });
             });
-            html += `<div style="display:flex;justify-content:space-between;margin-top:.6rem;padding-top:.5rem;border-top:1px solid rgba(255,255,255,.12);font-weight:700;font-size:.9rem">
-                <span>Subtotal platillos</span>
-                <span style="color:var(--accent)">${formatBs(total)}</span>
-            </div>`;
+            const sep = `border-top:1px solid rgba(255,255,255,.12);margin-top:.6rem;padding-top:.5rem;`;
+            if (modo === 'delivery') {
+                // Subtotal platillos
+                html += `<div style="display:flex;justify-content:space-between;${sep}font-size:.88rem" id="resumenSubtotalPlatillos">
+                    <span>Subtotal platillos</span>
+                    <span style="color:var(--accent);font-weight:600">${formatBs(total)}</span>
+                </div>`;
+                // Delivery — se actualiza en actualizarTotalDelivery
+                html += `<div style="display:flex;justify-content:space-between;margin-top:.3rem;font-size:.88rem" id="resumenDeliveryLinea">
+                    <span style="color:var(--text-secondary)">Delivery</span>
+                    <span style="color:var(--text-secondary);font-style:italic" id="resumenDeliveryMonto">Primero seleccione Parroquia a enviar</span>
+                </div>`;
+                // Total
+                html += `<div style="display:flex;justify-content:space-between;margin-top:.3rem;padding-top:.4rem;border-top:1px solid rgba(255,255,255,.08);font-weight:700;font-size:.9rem" id="resumenTotalDelivery">
+                    <span>Total Platillos + Delivery</span>
+                    <span style="color:var(--accent)" id="resumenTotalDeliveryMonto">—</span>
+                </div>`;
+            } else {
+                html += `<div style="display:flex;justify-content:space-between;${sep}font-weight:700;font-size:.9rem">
+                    <span>Total platillos</span>
+                    <span style="color:var(--accent)">${formatBs(total)}</span>
+                </div>`;
+            }
             return html;
         }
 
         function iniciarProcesoDelivery() {
             iniciarTimerFrontend('delivery', 20);
             const resumenDelivery = document.getElementById('resumenPedidoDelivery');
-            if (resumenDelivery) resumenDelivery.innerHTML = generarResumenCarrito();
+            if (resumenDelivery) resumenDelivery.innerHTML = generarResumenCarrito('delivery');
             document.getElementById('selectedParroquiaText').textContent = deliveryFormData.parroquia || 'Seleccionar parroquia';
             document.getElementById('parroquiaSelect').value = deliveryFormData.parroquia || '';
             document.getElementById('direccion').value = deliveryFormData.direccion || '';
@@ -2619,7 +2651,7 @@ window.addEventListener('beforeunload',function(e){if(!window._sakiReady){e.prev
         function iniciarProcesoReserva() {
             iniciarTimerFrontend('reserva', 20);
             const resumenReserva = document.getElementById('resumenPedidoReserva');
-            if (resumenReserva) resumenReserva.innerHTML = generarResumenCarrito();
+            if (resumenReserva) resumenReserva.innerHTML = generarResumenCarrito('reserva');
             const subtotalUSD = carrito.reduce((sum, item) => sum + item.precioUnitarioUSD, 0);
             document.getElementById('reservaTotal').textContent = formatBs(usdToBs(subtotalUSD));
             document.getElementById('montoReserva').textContent = formatBs(usdToBs(subtotalUSD));
@@ -2713,12 +2745,19 @@ window.addEventListener('beforeunload',function(e){if(!window._sakiReady){e.prev
                 const precioUSD = preciosPorParroquia[select.value] || 2;
                 const totalUSD = subtotalUSD + precioUSD;
                 const totalBs = usdToBs(totalUSD);
+                const deliveryBs = usdToBs(precioUSD);
+                const subtotalBs = usdToBs(subtotalUSD);
                 document.getElementById('deliveryTotal').textContent = formatBs(totalBs);
-                document.getElementById('deliveryPriceDisplay').textContent = `Costo de envío: ${formatBs(usdToBs(precioUSD))}`;
+                document.getElementById('deliveryPriceDisplay').textContent = `Costo de envío: ${formatBs(deliveryBs)}`;
                 const montoPago = document.getElementById('montoPago');
                 if (montoPago) { montoPago.className = 'valor'; montoPago.textContent = formatBs(totalBs); }
                 const btnCopy = document.getElementById('btnCopyMontoPago');
                 if (btnCopy) btnCopy.style.display = 'inline-flex';
+                // Actualizar líneas del resumen
+                const rDel = document.getElementById('resumenDeliveryMonto');
+                if (rDel) { rDel.style.fontStyle='normal'; rDel.style.color='var(--accent)'; rDel.textContent = formatBs(deliveryBs); }
+                const rTot = document.getElementById('resumenTotalDeliveryMonto');
+                if (rTot) rTot.textContent = formatBs(totalBs);
             } else {
                 document.getElementById('deliveryTotal').textContent = 'Primero seleccione Parroquia a enviar';
                 document.getElementById('deliveryPriceDisplay').textContent = 'Primero seleccione Parroquia a enviar';
@@ -2726,6 +2765,11 @@ window.addEventListener('beforeunload',function(e){if(!window._sakiReady){e.prev
                 if (montoPago) { montoPago.className = 'valor-placeholder'; montoPago.textContent = 'Primero seleccione Parroquia a enviar'; }
                 const btnCopy = document.getElementById('btnCopyMontoPago');
                 if (btnCopy) btnCopy.style.display = 'none';
+                // Restablecer líneas del resumen
+                const rDel = document.getElementById('resumenDeliveryMonto');
+                if (rDel) { rDel.style.fontStyle='italic'; rDel.style.color='var(--text-secondary)'; rDel.textContent = 'Primero seleccione Parroquia a enviar'; }
+                const rTot = document.getElementById('resumenTotalDeliveryMonto');
+                if (rTot) rTot.textContent = '—';
             }
             validarFormularioDelivery();
         }
