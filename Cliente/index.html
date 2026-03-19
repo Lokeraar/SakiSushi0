@@ -2067,6 +2067,7 @@
         }
 
         function mostrarToastNotificacion(titulo, mensaje) {
+			mostrarToast(`${titulo}: ${mensaje}`, 'info');
             // Toast enriquecido con logo para notificaciones en primer plano
             let toastNotif = document.getElementById('toastNotificacion');
             if (!toastNotif) {
@@ -2124,44 +2125,96 @@
             } catch (error) { console.error('Error recargando notificaciones:', error); }
         }
 
+		// ============================================
+		// REPRODUCIR SONIDO DE NOTIFICACIÓN
+		// ============================================
+		function reproducirSonidoNotificacion() {
+			const audio = document.getElementById('notificationSound');
+			if (audio) {
+				audio.pause();
+				audio.currentTime = 0;
+				audio.play().catch(e => console.log('Error reproduciendo sonido:', e));
+			}
+			if (navigator.vibrate) {
+				navigator.vibrate([200, 100, 200]);
+			}
+		}
+
         // ============================================
         // NOTIFICACIONES — Realtime WebSocket (sin polling)
         // ============================================
         let _realtimeChannel = null;
 
-        function iniciarVerificacionPeriodica() {
-            if (_realtimeChannel) {
-                window.supabaseClient.removeChannel(_realtimeChannel);
-                _realtimeChannel = null;
-            }
-            if (!sessionId) return;
-            _realtimeChannel = window.supabaseClient
-                .channel('notif-' + sessionId + '-' + Date.now())
-                .on('postgres_changes', {
-                    event: 'INSERT',
-                    schema: 'public',
-                    table: 'notificaciones'
-                    // Sin filtro de servidor — filtramos en cliente para cubrir
-                    // todos los pedidos de la sesión sin importar cuántos sean
-                }, async (payload) => {
-                    if (!payload.new || payload.new.session_id !== sessionId) return;
-                    await recargarNotificacionesCompletas();
-                    if (payload.new.leida) return;
-                    if (paginaVisible) {
-                        reproducirAlertaNotificacion();
-                        mostrarToastNotificacion(payload.new.titulo, payload.new.mensaje);
-                    } else if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
-                        navigator.serviceWorker.controller.postMessage({
-                            type: 'SHOW_LOCAL_NOTIFICATION',
-                            titulo: payload.new.titulo || '🍣 Saki Sushi',
-                            mensaje: payload.new.mensaje || 'Tienes una nueva notificación',
-                            url: window.location.href,
-                            tipo: payload.new.tipo
-                        });
-                    }
-                })
-                .subscribe();
-        }
+        // ============================================
+		// INICIAR VERIFICACIÓN PERIÓDICA - VERSIÓN OPTIMIZADA (SIN setInterval)
+		// ============================================
+		function iniciarVerificacionPeriodica() {
+			// Si ya existía un canal de realtime, lo eliminamos para crear uno nuevo
+			if (_realtimeChannel) {
+				window.supabaseClient.removeChannel(_realtimeChannel);
+				_realtimeChannel = null;
+			}
+			if (!sessionId) return;
+			
+			// Usar Realtime en lugar de polling
+			_realtimeChannel = window.supabaseClient
+				.channel('db-changes-' + sessionId)
+				.on('postgres_changes', {
+					event: 'INSERT',
+					schema: 'public',
+					table: 'notificaciones',
+					filter: `session_id=eq.${sessionId}`
+				}, async (payload) => {
+					// Notificaciones nuevas
+					if (payload.new && payload.new.session_id === sessionId) {
+						await recargarNotificacionesCompletas();
+						if (!payload.new.leida) {
+							if (paginaVisible) {
+								reproducirSonidoNotificacion();
+								mostrarToastNotificacion(payload.new.titulo, payload.new.mensaje);
+							} else {
+								// Notificación local en segundo plano
+								if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+									navigator.serviceWorker.controller.postMessage({
+										type: 'SHOW_LOCAL_NOTIFICATION',
+										titulo: payload.new.titulo || '🍣 Saki Sushi',
+										mensaje: payload.new.mensaje || 'Tienes una nueva notificación',
+										url: window.location.href,
+										tipo: payload.new.tipo
+									});
+								}
+							}
+						}
+					}
+				})
+				.on('postgres_changes', {
+					event: 'INSERT',
+					schema: 'public',
+					table: 'pedidos',
+					filter: `session_id=eq.${sessionId}`
+				}, async (payload) => {
+					// Nuevo pedido creado - actualizar historial
+					if (payload.new) {
+						agregarPedidoAHistorial(payload.new);
+					}
+				})
+				.on('postgres_changes', {
+					event: 'UPDATE',
+					schema: 'public',
+					table: 'pedidos',
+					filter: `session_id=eq.${sessionId}`
+				}, async (payload) => {
+					// Pedido actualizado (ej. cambio de estado)
+					console.log('Pedido actualizado:', payload.new);
+					// Aquí podrías actualizar alguna UI si es necesario
+				})
+				.subscribe((status) => {
+					if (status === 'SUBSCRIBED') {
+						console.log('✅ Suscrito a cambios en tiempo real');
+					}
+				});
+		}
+
 
         // verificarNotificaciones se mantiene solo para la carga inicial y
         // cuando la página vuelve a ser visible (por si se perdió conexión)
@@ -2234,17 +2287,54 @@
             document.getElementById('confirmMesaModal').classList.add('active');
         }
 
-        async function confirmarPedidoMesa() {
-            const pedido = crearPedidoBase('mesa');
-            pedido.cliente_nombre = document.getElementById('clienteNombre').value.trim() || 'Cliente';
-            const resultado = await crearPedidoTransaccional(pedido);
-            if (resultado.success) {
-                carrito = []; guardarCarrito(); actualizarCarritoUI(); actualizarCarritoBadge();
-                document.getElementById('confirmMesaModal').classList.remove('active');
-                window.stockCache.invalidate();
-                limpiarDatosFormulario();
-            } else mostrarToast('❌ Error: ' + resultado.error, 'error');
-        }
+        // ============================================
+		// CONFIRMAR PEDIDO MESA - CON PREVENCIÓN DE DUPLICADOS
+		// ============================================
+		async function confirmarPedidoMesa() {
+			// Prevenir múltiples envíos
+			const btn = document.getElementById('confirmMesaOrder');
+			if (btn.disabled) return;
+			btn.disabled = true;
+			const btnOriginalHTML = btn.innerHTML;
+			btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
+
+			const pedido = crearPedidoBase('mesa');
+			
+			// Añadir identificador único de transacción
+			pedido.transaction_nonce = generarId('nonce_');
+			
+			// Datos específicos de mesa
+			pedido.cliente_nombre = document.getElementById('clienteNombre').value.trim() || 'Cliente';
+			
+			try {
+				const resultado = await crearPedidoTransaccional(pedido);
+				
+				if (resultado.success) {
+					carrito = [];
+					guardarCarrito();
+					actualizarCarritoUI();
+					actualizarCarritoBadge();
+					document.getElementById('confirmMesaModal').classList.remove('active');
+					window.stockCache.invalidate();
+					limpiarDatosFormulario();
+					mostrarToast('✅ Pedido realizado con éxito', 'success');
+				} else {
+					// Si es duplicado, mostrar mensaje específico
+					if (resultado.duplicate) {
+						mostrarToast('⏳ Tu pedido ya está siendo procesado', 'warning');
+					} else {
+						mostrarToast('❌ Error: ' + (resultado.error || 'Error al procesar el pedido'), 'error');
+					}
+				}
+			} catch (error) {
+				console.error('Error en confirmarPedidoMesa:', error);
+				mostrarToast('❌ Error inesperado al procesar el pedido', 'error');
+			} finally {
+				// Restaurar botón
+				btn.disabled = false;
+				btn.innerHTML = btnOriginalHTML;
+			}
+		}
 
         function crearPedidoBase(tipo) {
             const tasaActual = configGlobal.tasa_efectiva;
@@ -2466,39 +2556,119 @@
             document.getElementById('confirmReserva').disabled = !(fecha && nombre && referenciaValida && comprobanteOk && !isUploading);
         }
 
-        async function confirmarPedidoDelivery() {
-            detenerTimer('delivery');
-            const pedido = crearPedidoBase('delivery');
-            pedido.parroquia = document.getElementById('parroquiaSelect').value;
-            pedido.direccion = document.getElementById('direccion').value;
-            pedido.telefono = document.getElementById('telefono').value;
-            pedido.referencia = getReferencia('delivery');
-            pedido.costo_delivery_usd = preciosPorParroquia[pedido.parroquia] || 2;
-            pedido.costo_delivery_bs = usdToBs(pedido.costo_delivery_usd);
-            pedido.total += pedido.costo_delivery_usd;
-            pedido.comprobante_url = deliveryFormData.comprobante;
-            const resultado = await crearPedidoTransaccional(pedido);
-            if (resultado.success) {
-                carrito = []; guardarCarrito(); actualizarCarritoUI(); actualizarCarritoBadge();
-                document.getElementById('deliveryModal').classList.remove('active');
-                window.stockCache.invalidate(); limpiarDatosFormulario();
-            } else { mostrarToast('❌ Error: ' + resultado.error, 'error'); iniciarTimerFrontend('delivery', 20); }
-        }
+		// ============================================
+		// CONFIRMAR PEDIDO DELIVERY - CON PREVENCIÓN DE DUPLICADOS
+		// ============================================
+		async function confirmarPedidoDelivery() {
+			// Prevenir múltiples envíos
+			const btn = document.getElementById('confirmDelivery');
+			if (btn.disabled) return;
+			btn.disabled = true;
+			const btnOriginalHTML = btn.innerHTML;
+			btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
 
-        async function confirmarPedidoReserva() {
-            detenerTimer('reserva');
-            const pedido = crearPedidoBase('reserva');
-            pedido.fecha_reserva = document.getElementById('fechaReserva').value;
-            pedido.cliente_nombre = document.getElementById('nombreReserva').value;
-            pedido.referencia = getReferencia('reserva');
-            pedido.comprobante_url = reservaFormData.comprobante;
-            const resultado = await crearPedidoTransaccional(pedido);
-            if (resultado.success) {
-                carrito = []; guardarCarrito(); actualizarCarritoUI(); actualizarCarritoBadge();
-                document.getElementById('reservaModal').classList.remove('active');
-                window.stockCache.invalidate(); limpiarDatosFormulario();
-            } else { mostrarToast('❌ Error: ' + resultado.error, 'error'); iniciarTimerFrontend('reserva', 20); }
-        }
+			detenerTimer('delivery');
+			const pedido = crearPedidoBase('delivery');
+			
+			// Añadir identificador único de transacción
+			pedido.transaction_nonce = generarId('nonce_');
+			
+			// Datos específicos de delivery
+			pedido.parroquia = document.getElementById('parroquiaSelect').value;
+			pedido.direccion = document.getElementById('direccion').value;
+			pedido.telefono = document.getElementById('telefono').value;
+			pedido.referencia = getReferencia('delivery');
+			pedido.costo_delivery_usd = preciosPorParroquia[pedido.parroquia] || 2;
+			pedido.costo_delivery_bs = usdToBs(pedido.costo_delivery_usd);
+			pedido.total += pedido.costo_delivery_usd;
+			pedido.comprobante_url = deliveryFormData.comprobante;
+			
+			try {
+				const resultado = await crearPedidoTransaccional(pedido);
+				
+				if (resultado.success) {
+					carrito = [];
+					guardarCarrito();
+					actualizarCarritoUI();
+					actualizarCarritoBadge();
+					document.getElementById('deliveryModal').classList.remove('active');
+					window.stockCache.invalidate();
+					limpiarDatosFormulario();
+					mostrarToast('✅ Pedido realizado con éxito', 'success');
+				} else {
+					// Si es duplicado, mostrar mensaje específico
+					if (resultado.duplicate) {
+						mostrarToast('⏳ Tu pedido ya está siendo procesado', 'warning');
+					} else {
+						mostrarToast('❌ Error: ' + (resultado.error || 'Error al procesar el pedido'), 'error');
+					}
+					iniciarTimerFrontend('delivery', 20);
+				}
+			} catch (error) {
+				console.error('Error en confirmarPedidoDelivery:', error);
+				mostrarToast('❌ Error inesperado al procesar el pedido', 'error');
+				iniciarTimerFrontend('delivery', 20);
+			} finally {
+				// Restaurar botón
+				btn.disabled = false;
+				btn.innerHTML = btnOriginalHTML;
+			}
+		}
+
+		// ============================================
+		// CONFIRMAR PEDIDO RESERVA - CON PREVENCIÓN DE DUPLICADOS
+		// ============================================
+		async function confirmarPedidoReserva() {
+			// Prevenir múltiples envíos
+			const btn = document.getElementById('confirmReserva');
+			if (btn.disabled) return;
+			btn.disabled = true;
+			const btnOriginalHTML = btn.innerHTML;
+			btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
+
+			detenerTimer('reserva');
+			const pedido = crearPedidoBase('reserva');
+			
+			// Añadir identificador único de transacción
+			pedido.transaction_nonce = generarId('nonce_');
+			
+			// Datos específicos de reserva
+			pedido.fecha_reserva = document.getElementById('fechaReserva').value;
+			pedido.cliente_nombre = document.getElementById('nombreReserva').value;
+			pedido.referencia = getReferencia('reserva');
+			pedido.comprobante_url = reservaFormData.comprobante;
+			
+			try {
+				const resultado = await crearPedidoTransaccional(pedido);
+				
+				if (resultado.success) {
+					carrito = [];
+					guardarCarrito();
+					actualizarCarritoUI();
+					actualizarCarritoBadge();
+					document.getElementById('reservaModal').classList.remove('active');
+					window.stockCache.invalidate();
+					limpiarDatosFormulario();
+					mostrarToast('✅ Reserva realizada con éxito', 'success');
+				} else {
+					// Si es duplicado, mostrar mensaje específico
+					if (resultado.duplicate) {
+						mostrarToast('⏳ Tu reserva ya está siendo procesada', 'warning');
+					} else {
+						mostrarToast('❌ Error: ' + (resultado.error || 'Error al procesar la reserva'), 'error');
+					}
+					iniciarTimerFrontend('reserva', 20);
+				}
+			} catch (error) {
+				console.error('Error en confirmarPedidoReserva:', error);
+				mostrarToast('❌ Error inesperado al procesar la reserva', 'error');
+				iniciarTimerFrontend('reserva', 20);
+			} finally {
+				// Restaurar botón
+				btn.disabled = false;
+				btn.innerHTML = btnOriginalHTML;
+			}
+		}
 
         function guardarDatosDelivery() {
             deliveryFormData.parroquia = document.getElementById('parroquiaSelect').value;
@@ -2879,65 +3049,67 @@
             return usd * (configGlobal?.tasa_efectiva || 400);
         }
 
-        // ============================================
-        // INICIALIZACIÓN
-        // ============================================
-        document.addEventListener('DOMContentLoaded', async () => {
-            
-            cargarTemaGuardado();
-            
-            await cargarConfiguracion();
-            
-            await cargarMenu();
-            
-            await cargarInventario();
-            
-            cargarCategorias();
-            
-            restaurarDatosFormulario();
-            
-            await recargarNotificacionesCompletas();
-            
-            solicitarPermisoPushAuto();
-            
-            iniciarVerificacionPeriodica();
-            
-            setupEventListeners();
-            
-            restaurarCarrito();
-            
-            actualizarCarritoUI();
-            actualizarCarritoBadge();
-            verificarPermisosAudio();
-            actualizarBotonHistorial();
-            // Comprimir el botón de historial 3 segundos después de cargar la página
-            setTimeout(() => {
-                const btn = document.getElementById('historialPedidosBtn');
-                if (btn && btn.style.display !== 'none') btn.classList.add('comprimido');
-            }, 3000);
-            
-            const hoy = new Date().toISOString().split('T')[0];
-            document.getElementById('fechaReserva').min = hoy;
-            
-            if (mesaId) {
-                document.getElementById('tableNumber').textContent = mesaId;
-                document.getElementById('tableBadge').style.display = 'inline-block';
-                document.getElementById('confirmTableNumber').textContent = mesaId;
-                
-                const headerIcons = document.getElementById('headerIcons'),
-                      bellWrapper = headerIcons.children[0],
-                      cartWrapper = headerIcons.children[1],
-                      badge = headerIcons.children[2];
-                
-                headerIcons.innerHTML = '';
-                headerIcons.appendChild(bellWrapper);
-                headerIcons.appendChild(cartWrapper);
-                headerIcons.appendChild(badge);
-                headerIcons.classList.add('left-aligned');
-            }
-            
-            resetToAllCategories(false);
-        });
+		// ============================================
+		// INICIALIZACIÓN - VERSIÓN OPTIMIZADA (SIN setInterval)
+		// ============================================
+		document.addEventListener('DOMContentLoaded', async () => {
+			
+			cargarTemaGuardado();
+			
+			await cargarConfiguracion();
+			
+			await cargarMenu();
+			
+			await cargarInventario();
+			
+			cargarCategorias();
+			
+			restaurarDatosFormulario();
+			
+			await recargarNotificacionesCompletas();
+			
+			solicitarPermisoPushAuto();
+			
+			// --- CAMBIO IMPORTANTE: Solo usar Realtime, NO setInterval ---
+			iniciarVerificacionPeriodica(); // Esta es la VERSIÓN NUEVA (sin setInterval)
+			
+			setupEventListeners();
+			
+			restaurarCarrito();
+			
+			actualizarCarritoUI();
+			actualizarCarritoBadge();
+			verificarPermisosAudio();
+			actualizarBotonHistorial();
+			
+			// Comprimir el botón de historial 3 segundos después de cargar la página
+			setTimeout(() => {
+				const btn = document.getElementById('historialPedidosBtn');
+				if (btn && btn.style.display !== 'none') btn.classList.add('comprimido');
+			}, 3000);
+			
+			const hoy = new Date().toISOString().split('T')[0];
+			document.getElementById('fechaReserva').min = hoy;
+			
+			if (mesaId) {
+				document.getElementById('tableNumber').textContent = mesaId;
+				document.getElementById('tableBadge').style.display = 'inline-block';
+				document.getElementById('confirmTableNumber').textContent = mesaId;
+				
+				const headerIcons = document.getElementById('headerIcons'),
+					  bellWrapper = headerIcons.children[0],
+					  cartWrapper = headerIcons.children[1],
+					  badge = headerIcons.children[2];
+				
+				headerIcons.innerHTML = '';
+				headerIcons.appendChild(bellWrapper);
+				headerIcons.appendChild(cartWrapper);
+				headerIcons.appendChild(badge);
+				headerIcons.classList.add('left-aligned');
+			}
+			
+			resetToAllCategories(false);
+		});
 
         window.addEventListener('beforeunload', () => {
             if (_realtimeChannel) window.supabaseClient.removeChannel(_realtimeChannel);
