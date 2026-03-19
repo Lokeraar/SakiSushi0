@@ -610,16 +610,33 @@ await window.cargarVentasHoy();await window.cargarPropinas();const modal=documen
   break;}case'ventas':{
   title.innerHTML='<i class="fas fa-dollar-sign"></i> Ventas Totales';
   const totalVentas=window.ventasHoy.reduce((sum,v)=>sum+(v.subtotal_platillos||0),0);
-  let vt_ebs=0,vt_eusd=0,vt_pm=0,vt_pv=0,vt_cond=0,vt_favor=0;
+  let vt_ebs=0,vt_eusd=0,vt_pm=0,vt_pv=0,vt_cond=0,vt_favor=0,vt_inv=0;
+  const tasa=(window.configGlobal&&window.configGlobal.tasa_cambio)||window.tasaEfectiva||400;
   window.ventasHoy.forEach(v=>{
-    const p=window.pedidos.find(p=>p.id===v.pedido_id);
+    const p=window.pedidos.find(pd=>pd.id===v.pedido_id);
     if(p?.condonado>0)vt_cond+=p.condonado;
     if(p?.a_favor_caja>0)vt_favor+=p.a_favor_caja;
-    const bs=v.subtotal_platillos||0;
-    if(v.metodo_pago==='efectivo_bs')vt_ebs+=bs;
-    else if(v.metodo_pago==='efectivo_usd')vt_eusd+=bs;
-    else if(v.metodo_pago==='pago_movil')vt_pm+=bs;
-    else if(v.metodo_pago==='punto_venta')vt_pv+=bs;
+    const pagos=p?.pagos_mixtos;
+    if(pagos&&pagos.length){
+      // Usar pagos_mixtos — fuente más precisa con montoBs real por método
+      pagos.forEach(pg=>{
+        const mbs=pg.metodo==='efectivo_usd'?(pg.monto||0)*tasa:(pg.montoBs||pg.monto||0);
+        if(pg.metodo==='efectivo_bs')vt_ebs+=mbs;
+        else if(pg.metodo==='efectivo_usd')vt_eusd+=mbs;
+        else if(pg.metodo==='pago_movil')vt_pm+=mbs;
+        else if(pg.metodo==='punto_venta')vt_pv+=mbs;
+        else if(pg.metodo==='invitacion')vt_inv+=mbs;
+      });
+    } else {
+      // Fallback: usar metodo_pago del pedido o de ventas
+      const metodo=(p?.metodo_pago||v.metodo_pago||'');
+      const bs=v.subtotal_platillos||0;
+      if(metodo==='efectivo_bs')vt_ebs+=bs;
+      else if(metodo==='efectivo_usd')vt_eusd+=bs;
+      else if(metodo==='pago_movil')vt_pm+=bs;
+      else if(metodo==='punto_venta')vt_pv+=bs;
+      else if(metodo==='invitacion')vt_inv+=bs;
+    }
   });
   const vcol=(ico,label,val,color)=>`<div style="display:flex;align-items:center;gap:6px;padding:8px;background:rgba(0,0,0,.25);border-radius:8px;border-left:3px solid ${color}"><i class="${ico}" style="color:${color};width:14px;text-align:center"></i><div style="flex:1"><div style="font-size:.72rem;color:var(--text-secondary)">${label}</div><div style="font-weight:700;color:${color};font-size:.9rem">${window.formatBs(val)}</div></div></div>`;
   contenido=`<div style="margin-bottom:16px;padding:12px;background:rgba(0,0,0,.3);border-radius:8px">
@@ -631,6 +648,7 @@ await window.cargarVentasHoy();await window.cargarPropinas();const modal=documen
       ${vt_eusd>0?vcol('fas fa-dollar-sign','Efectivo USD',vt_eusd,'#4CAF50'):''}
       ${vt_pm>0?vcol('fas fa-mobile-alt','Pago Móvil',vt_pm,'var(--info)'):''}
       ${vt_pv>0?vcol('fas fa-credit-card','Punto de Venta',vt_pv,'var(--warning)'):''}
+      ${vt_inv>0?vcol('fas fa-gift','Invitación',vt_inv,'var(--propina)'):''}
     </div>
     ${vt_cond>0?`<div style="display:flex;justify-content:space-between;padding:4px 8px;font-size:.82rem"><span style="color:var(--condonar)"><i class="fas fa-hand-holding-heart"></i> Condonado</span><span style="color:var(--condonar);font-weight:700">${window.formatBs(vt_cond)}</span></div>`:''}
     ${vt_favor>0?`<div style="display:flex;justify-content:space-between;padding:4px 8px;font-size:.82rem"><span style="color:var(--favordecaja)"><i class="fas fa-piggy-bank"></i> A favor de caja</span><span style="color:var(--favordecaja);font-weight:700">${window.formatBs(vt_favor)}</span></div>`:''}
