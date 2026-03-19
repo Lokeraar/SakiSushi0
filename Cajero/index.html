@@ -198,7 +198,7 @@ window.abrirModalDeliverys=async function(){try{
       var dId='det_'+String(d.id).replace(/[^a-z0-9]/gi,'_');
       html+='<div style="margin-bottom:8px">';
       html+='<div class="motorizado-item" style="opacity:'+(hayE?'1':'0.5')+';cursor:'+(hayE?'pointer':'default')+'"'
-           +(hayE?' data-detalle-id="'+dId+'" onclick="var el=document.getElementById(this.dataset.detalleId);if(el)el.style.display=el.style.display===\'none\'?\'block\':\'none\'"':'')+'>'
+           +(hayE?' data-detalle-id="'+dId+'" onclick="var el=document.getElementById(this.dataset.detalleId);if(el)el.style.display=el.style.display===\'none\'?\'block\':\'none\'\"':'')+'>'
            +'<span class="motorizado-nombre"><i class="fas fa-motorcycle" style="color:var(--delivery);margin-right:6px"></i>'+d.nombre+'</span>'
            +'<span class="motorizado-monto" style="color:'+(hayE?'var(--accent)':'var(--text-secondary)')+'">'+window.formatBs(monto)
            +(hayE?' <i class="fas fa-chevron-down" style="font-size:.7rem;margin-left:4px"></i>':'')
@@ -213,15 +213,13 @@ window.abrirModalDeliverys=async function(){try{
             var h12='';
             try{
               if(ts&&typeof ts==='string'&&ts.indexOf('Z')===-1&&ts.indexOf('+')===-1)ts+='Z';
-              h12=new Date(ts).toLocaleString('en-US',{timeZone:'America/Caracas',hour:'numeric',minute:'2-digit',hour12:true}).toLowerCase();
-            }catch(ex){h12=ts;}
-            html+='<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:.78rem">'
-                 +'<span><i class="fas fa-map-marker-alt" style="color:var(--delivery);margin-right:4px"></i>'+(p.parroquia||'Sin parroquia')+'</span>'
-                 +'<span style="color:var(--text-secondary)">'+h12+'</span></div>';
+              var d=new Date(ts);
+              if(!isNaN(d.getTime()))h12=d.toLocaleString('en-US',{timeZone:'America/Caracas',hour:'numeric',minute:'2-digit',hour12:true}).toLowerCase();
+            }catch(ex){}
+            var precioE=p.costo_delivery_bs||0;
+            html+='<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:.78rem">'                 +'<span><i class="fas fa-map-marker-alt" style="color:var(--delivery);margin-right:4px"></i>'+(p.parroquia||'Sin parroquia')+(h12?'&nbsp;&nbsp;<span style="color:var(--text-secondary)">'+h12+'</span>':'')+'</span>'                 +'<span style="color:var(--accent);font-weight:700">'+window.formatBs(precioE)+'</span></div>';
           });
-          html+='<div style="display:flex;justify-content:space-between;padding:5px 0;margin-top:4px;font-size:.78rem;font-weight:700">'
-               +'<span>'+peds.length+' entrega'+(peds.length>1?'s':'')+'</span>'
-               +'<span style="color:var(--accent)">'+window.formatBs(monto)+'</span></div>';
+          html+='<div style="padding:5px 0;margin-top:4px;font-size:.78rem;font-weight:700">'               +'<span>'+peds.length+' entrega'+(peds.length>1?'s':'')+'</span></div>';
         }
         html+='</div>';
       }
