@@ -425,7 +425,7 @@
         .notification-time{font-size:.7rem;color:var(--gray-500);display:flex;align-items:center;gap:.3rem}
         .modal-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.8);z-index:2000;align-items:center;justify-content:center;backdrop-filter:blur(5px)}
         .modal-overlay.active{display:flex}
-        .modal-container{background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%);border-radius:var(--radius-lg);max-width:500px;width:95%;max-height:90vh;display:flex;flex-direction:column;position:relative;animation:modalSlideIn .3s ease;box-shadow:var(--shadow-lg);border:1px solid rgba(255,255,255,.1);will-change:transform,opacity}
+        .modal-container{background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%);border-radius:var(--radius-lg);max-width:500px;width:95%;max-height:90vh;overflow-y:auto;position:relative;animation:modalSlideIn .3s ease;box-shadow:var(--shadow-lg);border:1px solid rgba(255,255,255,.1);will-change:transform,opacity}
         body.tema-claro .modal-container{background:linear-gradient(135deg,#f0f0f5 0%,#e0e0e8 100%);color:#1a1a2e}
         body.tema-claro .modal-header{background:rgba(0,0,0,.08);border-bottom:1px solid rgba(0,0,0,.1)}
         body.tema-claro .modal-header h3{color:#1a1a2e}
@@ -478,12 +478,12 @@
         body.tema-claro .cart-empty i{color:#6c757d;opacity:.7}
         @media (max-width:480px){.modal-container{width:100%;max-height:100vh;border-radius:0}}
         @keyframes modalSlideIn{from{opacity:0;transform:translateY(-30px)}to{opacity:1;transform:translateY(0)}}
-        .modal-header{padding:1.2rem;border-bottom:1px solid rgba(255,255,255,.1);display:flex;align-items:center;justify-content:space-between;background:rgba(0,0,0,.2);z-index:10;border-radius:var(--radius-lg) var(--radius-lg) 0 0;flex-shrink:0}
+        .modal-header{padding:1.2rem;border-bottom:1px solid rgba(255,255,255,.1);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:rgba(0,0,0,.2);z-index:10;border-radius:var(--radius-lg) var(--radius-lg) 0 0}
         .modal-header h3{font-size:1.3rem;color:#fff}
         .modal-close{background:none;border:none;font-size:1.5rem;cursor:pointer;color:var(--gray-400);width:35px;height:35px;display:flex;align-items:center;justify-content:center;border-radius:50%;transition:all .2s}
         .modal-close:hover{background:rgba(255,255,255,.05);color:var(--danger)}
-        .modal-body{padding:1.2rem;color:#fff;overflow-y:auto;flex:1}
-        .modal-footer{flex-shrink:0;padding:1.2rem;border-top:1px solid rgba(255,255,255,.1);background:rgba(0,0,0,.2);display:flex;justify-content:flex-end;gap:1rem;border-radius:0 0 var(--radius-lg) var(--radius-lg)}
+        .modal-body{padding:1.2rem;color:#fff}
+        .modal-footer{padding:1.2rem;border-top:1px solid rgba(255,255,255,.1);background:rgba(0,0,0,.2);display:flex;justify-content:flex-end;gap:1rem;border-radius:0 0 var(--radius-lg) var(--radius-lg)}
         .footer{background:var(--secondary);color:white;padding:2rem 1.5rem 1rem;width:100%;margin-top:auto;position:relative;z-index:100;flex-shrink:0}
         .footer::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:100px;height:4px;background:linear-gradient(90deg,var(--primary),var(--accent));border-radius:2px}
         .footer-content{max-width:1400px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);gap:2rem;margin-bottom:2rem;width:100%}
@@ -851,8 +851,7 @@
                         
                         <div style="margin-bottom:1.5rem">
                             <label for="telefono" class="modal-form-label">Teléfono (máx 14 dígitos) <span class="asterisk">*</span></label>
-                            <input type="tel" id="telefono" required pattern="\+[0-9]{11,14}" maxlength="15" placeholder="Ej: +5804121234567 o 04121234567" inputmode="numeric" class="modal-form-input" oninput="this.value=this.value.replace(/[^0-9+]/g,''); if(this.value.indexOf('+')!==0&&this.value.length>0){this.value='+'+this.value.replace(/\+/g,'')} validarFormularioDelivery()" onblur="var d=document.getElementById('errorTelefono');var v=this.value.replace(/[^0-9]/g,'');if(this.value.length>0&&v.length<11){d.style.display='block'}else{d.style.display='none'}">
-                        <span id="errorTelefono" style="display:none;color:#ff4d4d;font-size:.78rem;margin-top:4px">Número incompleto</span>
+                            <input type="tel" id="telefono" required pattern="\+[0-9]{11,14}" maxlength="15" placeholder="Ej: +5804121234567 o 04121234567" inputmode="numeric" class="modal-form-input" oninput="this.value=this.value.replace(/[^0-9+]/g,''); if(this.value.indexOf('+')!==0&&this.value.length>0){this.value='+'+this.value.replace(/\+/g,'')} validarFormularioDelivery()">
                         </div>
                         
                         <div style="margin-bottom:1.5rem">
@@ -865,7 +864,6 @@
                                 <input type="text" maxlength="1" class="ref-digit modal-form-ref-digit" data-type="delivery" data-index="4" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this,'delivery',4); validarFormularioDelivery()">
                                 <input type="text" maxlength="1" class="ref-digit modal-form-ref-digit" data-type="delivery" data-index="5" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this,'delivery',5); validarFormularioDelivery()">
                             </div>
-                            <span id="errorRefDelivery" style="display:none;color:#ff4d4d;font-size:.78rem;margin-top:6px;text-align:center">Número de referencia incompleta</span>
                         </div>
                         
                         <div style="margin-bottom:1.5rem">
@@ -944,7 +942,6 @@
                                 <input type="text" maxlength="1" class="ref-digit modal-form-ref-digit" data-type="reserva" data-index="4" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this,'reserva',4); validarFormularioReserva()">
                                 <input type="text" maxlength="1" class="ref-digit modal-form-ref-digit" data-type="reserva" data-index="5" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this,'reserva',5); validarFormularioReserva()">
                             </div>
-                            <span id="errorRefReserva" style="display:none;color:#ff4d4d;font-size:.78rem;margin-top:6px;text-align:center">Número de referencia incompleta</span>
                         </div>
                         
                         <div style="margin-bottom:1.5rem">
@@ -1312,27 +1309,37 @@
         function abrirPreview(platilloId) {
             const platillo = menuItems.find(p => p.id === platilloId);
             if (!platillo) return;
-            
+
             const modal = document.getElementById('previewModal');
             const body = document.getElementById('previewModalBody');
-            
-            let stockDisponible = Infinity, ingredientesFaltantes = [];
+
+            // Calcular stock disponible
+            let stockDisponible = Infinity;
             if (platillo.ingredientes && Object.keys(platillo.ingredientes).length > 0) {
                 for (const [ingId, ingInfo] of Object.entries(platillo.ingredientes)) {
                     const ingrediente = inventario.find(i => i.id === ingId);
                     const stockDisp = (ingrediente?.stock || 0) - (ingrediente?.reservado || 0);
-                    const cantidadNecesaria = ingInfo.cantidad || 1;
-                    const posible = Math.floor(stockDisp / cantidadNecesaria);
+                    const posible = Math.floor(stockDisp / (ingInfo.cantidad || 1));
                     stockDisponible = Math.min(stockDisponible, posible);
-                    if (posible <= 0) ingredientesFaltantes.push(ingInfo.nombre || ingrediente?.nombre || ingId);
                 }
             } else stockDisponible = platillo.stock_maximo || 999;
-            
-            const ingredientesHtml = platillo.ingredientes ? Object.entries(platillo.ingredientes).map(([ingId, ingInfo]) => {
-                const ingrediente = inventario.find(i => i.id === ingId);
-                return `<li>${ingInfo.nombre || ingrediente?.nombre || ingId}</li>`;
-            }).join('') : '<li>Sin ingredientes específicos</li>';
-            
+            if (stockDisponible === Infinity) stockDisponible = 999;
+
+            const agotado = stockDisponible <= 0;
+
+            const ingredientesHtml = platillo.ingredientes
+                ? Object.entries(platillo.ingredientes).map(([ingId, ingInfo]) => {
+                    const ingrediente = inventario.find(i => i.id === ingId);
+                    return `<li>${ingInfo.nombre || ingrediente?.nombre || ingId}</li>`;
+                  }).join('')
+                : '<li>Sin ingredientes específicos</li>';
+
+            // Estado inicial: cantidad = 1
+            let _previewCantidad = 1;
+
+            const _stockClass = agotado ? 'sold-out' : (stockDisponible < 5 ? 'low' : 'available');
+            const _stockTxt   = agotado ? 'Agotado' : `${stockDisponible} disponibles`;
+
             body.innerHTML = `
                 <div class="preview-image" style="background-image:url('${platillo.imagen || 'https://via.placeholder.com/400x300?text=Sushi'}')"></div>
                 <h3 style="color:var(--accent); margin-bottom:.5rem">${platillo.nombre}</h3>
@@ -1341,17 +1348,57 @@
                     <h4><i class="fas fa-utensils"></i> Ingredientes</h4>
                     <ul>${ingredientesHtml}</ul>
                 </div>
+
+                <div style="display:flex; align-items:center; justify-content:space-between; gap:.8rem; margin:1rem 0">
+                    <div style="display:flex; align-items:center; gap:.6rem">
+                        <button id="previewMinus" style="width:36px;height:36px;border-radius:50%;border:2px solid var(--accent);background:transparent;color:var(--accent);font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s" ${agotado ? 'disabled' : ''}><i class="fas fa-minus"></i></button>
+                        <input id="previewCantidad" type="number" min="1" max="${Math.min(stockDisponible, 99)}" value="1" inputmode="numeric"
+                            style="width:52px;height:36px;text-align:center;font-size:1.1rem;font-weight:700;border:2px solid var(--accent);border-radius:8px;background:rgba(0,0,0,.3);color:#fff;-moz-appearance:textfield"
+                            ${agotado ? 'disabled' : ''}>
+                        <button id="previewPlus" style="width:36px;height:36px;border-radius:50%;border:2px solid var(--accent);background:transparent;color:var(--accent);font-size:1.1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s" ${agotado ? 'disabled' : ''}><i class="fas fa-plus"></i></button>
+                    </div>
+                    <button id="previewPersonalizar" style="flex:1;padding:.55rem .8rem;border-radius:8px;border:2px solid rgba(255,255,255,.25);background:transparent;color:#fff;font-size:.88rem;font-weight:600;cursor:pointer;transition:all .2s;white-space:nowrap" ${agotado ? 'disabled' : ''}>
+                        <i class="fas fa-star" style="color:var(--accent)"></i> Personalizar
+                    </button>
+                </div>
+
                 <div style="display:flex; justify-content:space-between; align-items:center">
-                    <span style="font-size:1.5rem; font-weight:700; color:var(--accent)">${formatBs(usdToBs(platillo.precio))}</span>
-                    <span class="stock-info"><i class="fas fa-box ${stockDisponible <= 0 ? 'sold-out' : (stockDisponible < 5 ? 'low' : 'available')}"></i> ${stockDisponible <= 0 ? 'Agotado' : (stockDisponible + ' disponibles')}</span>
+                    <span id="previewPrecio" style="font-size:1.5rem; font-weight:700; color:var(--accent)">${formatBs(usdToBs(platillo.precio))}</span>
+                    <span id="previewStock" class="stock-info"><i class="fas fa-box ${_stockClass}"></i> ${_stockTxt}</span>
                 </div>
             `;
-            
+
+            // Lógica de cantidad
+            const inputCant = document.getElementById('previewCantidad');
+            const precioEl  = document.getElementById('previewPrecio');
+            const stockEl   = document.getElementById('previewStock');
+
+            function _actualizarPreview() {
+                _previewCantidad = Math.max(1, Math.min(stockDisponible, parseInt(inputCant.value) || 1));
+                inputCant.value = _previewCantidad;
+                precioEl.textContent = formatBs(usdToBs(platillo.precio * _previewCantidad));
+                const restante = stockDisponible - _previewCantidad;
+                const sc = restante <= 0 ? 'sold-out' : (restante < 5 ? 'low' : 'available');
+                stockEl.innerHTML = `<i class="fas fa-box ${sc}"></i> ${restante <= 0 ? 'Agotado' : restante + ' disponibles'}`;
+            }
+
+            document.getElementById('previewMinus').addEventListener('click', () => { inputCant.value = Math.max(1, (_previewCantidad - 1)); _actualizarPreview(); });
+            document.getElementById('previewPlus').addEventListener('click',  () => { inputCant.value = Math.min(stockDisponible, (_previewCantidad + 1)); _actualizarPreview(); });
+            inputCant.addEventListener('input', _actualizarPreview);
+
+            // Botón Personalizar: cierra preview y abre el modal de personalización
+            document.getElementById('previewPersonalizar').addEventListener('click', () => {
+                cerrarPreview();
+                setTimeout(() => abrirPersonalizacion(platilloId), 200);
+            });
+
+            // Botón Agregar: añade la cantidad seleccionada como N instancias individuales
             document.getElementById('previewAddToCart').onclick = () => {
-                agregarAlCarrito(platilloId);
+                if (agotado) return;
+                for (let i = 0; i < _previewCantidad; i++) agregarAlCarrito(platilloId);
                 cerrarPreview();
             };
-            
+
             modal.classList.add('active');
         }
 
@@ -2907,25 +2954,10 @@
                     if (this.value.length === 1 && index < 5) document.querySelector(`.ref-digit[data-type="${type}"][data-index="${index + 1}"]`).focus();
                     if (type === 'delivery') { validarFormularioDelivery(); guardarDatosDelivery(); }
                     else { validarFormularioReserva(); guardarDatosReserva(); }
-                    // Ocultar error mientras el usuario sigue editando
-                    const errId = type === 'delivery' ? 'errorRefDelivery' : 'errorRefReserva';
-                    const errEl = document.getElementById(errId);
-                    if (errEl) errEl.style.display = 'none';
                 });
                 input.addEventListener('keydown', function(e) {
                     const type = this.dataset.type, index = parseInt(this.dataset.index);
                     if (e.key === 'Backspace' && this.value.length === 0 && index > 0) document.querySelector(`.ref-digit[data-type="${type}"][data-index="${index - 1}"]`).focus();
-                });
-                input.addEventListener('blur', function() {
-                    const type = this.dataset.type;
-                    const digits = document.querySelectorAll(`.ref-digit[data-type="${type}"]`);
-                    const llenos = [...digits].filter(d => d.value.length === 1).length;
-                    const errId = type === 'delivery' ? 'errorRefDelivery' : 'errorRefReserva';
-                    const errEl = document.getElementById(errId);
-                    if (!errEl) return;
-                    // Solo mostrar error si el usuario llenó algo pero no completó los 6
-                    const alguno = [...digits].some(d => d.value.length === 1);
-                    errEl.style.display = (alguno && llenos < 6) ? 'block' : 'none';
                 });
             });
         }
