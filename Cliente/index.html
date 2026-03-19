@@ -863,7 +863,7 @@ window.addEventListener('beforeunload',function(e){if(!window._sakiReady){e.prev
                             </div>
                         </div>
                         
-                        <div class="delivery-price-display" id="deliveryPriceDisplay" onclick="irAParroquia()" style="cursor:pointer;text-decoration:underline dotted" title="Ir a selección de parroquia">Primero seleccione Parroquia a enviar</div>
+                        <div class="delivery-price-display placeholder" id="deliveryPriceDisplay" onclick="irAParroquia()" style="cursor:pointer" title="Ir a selección de parroquia">Costo de envío: Primero seleccione parroquia a enviar</div>
                         
                         <div style="margin-bottom:1.5rem">
                             <label for="direccion" class="modal-form-label">Dirección completa <span class="asterisk">*</span></label>
@@ -2619,7 +2619,7 @@ window.addEventListener('beforeunload',function(e){if(!window._sakiReady){e.prev
                 // Delivery — se actualiza en actualizarTotalDelivery
                 html += `<div style="display:flex;justify-content:space-between;margin-top:.3rem;font-size:.88rem" id="resumenDeliveryLinea">
                     <span style="color:var(--text-secondary)">Delivery</span>
-                    <span id="resumenDeliveryMonto" onclick="irAParroquia()" style="color:var(--accent);cursor:pointer;text-decoration:underline dotted;font-size:.85rem">Primero seleccione Parroquia a enviar</span>
+                    <span id="resumenDeliveryMonto" onclick="irAParroquia()" style="color:var(--gray-400);font-style:italic;font-weight:400;cursor:pointer;text-decoration:underline dotted;font-size:.88rem">Primero seleccione Parroquia a enviar</span>
                 </div>`;
                 // Total
                 html += `<div style="display:flex;justify-content:space-between;margin-top:.3rem;padding-top:.4rem;border-top:1px solid rgba(255,255,255,.08);font-weight:700;font-size:.9rem" id="resumenTotalDelivery">
@@ -2763,26 +2763,32 @@ window.addEventListener('beforeunload',function(e){if(!window._sakiReady){e.prev
                 const deliveryBs = usdToBs(precioUSD);
                 const subtotalBs = usdToBs(subtotalUSD);
                 document.getElementById('deliveryTotal').textContent = formatBs(totalBs);
-                document.getElementById('deliveryPriceDisplay').textContent = `Costo de envío: ${formatBs(deliveryBs)}`;
+                const dpd = document.getElementById('deliveryPriceDisplay');
+                dpd.textContent = `Costo de envío: ${formatBs(deliveryBs)}`;
+                dpd.classList.remove('placeholder');
+                dpd.onclick = null; dpd.style.cursor = 'default';
                 const montoPago = document.getElementById('montoPago');
                 if (montoPago) { montoPago.className = 'valor'; montoPago.textContent = formatBs(totalBs); }
                 const btnCopy = document.getElementById('btnCopyMontoPago');
                 if (btnCopy) btnCopy.style.display = 'inline-flex';
                 // Actualizar líneas del resumen
                 const rDel = document.getElementById('resumenDeliveryMonto');
-                if (rDel) { rDel.style.fontStyle='normal'; rDel.style.color='var(--accent)'; rDel.textContent = formatBs(deliveryBs); }
+                if (rDel) { rDel.style.color='var(--accent)'; rDel.style.fontStyle='normal'; rDel.style.fontWeight='700'; rDel.style.fontFamily='monospace'; rDel.style.textDecoration='none'; rDel.onclick=null; rDel.style.cursor='default'; rDel.textContent = formatBs(deliveryBs); }
                 const rTot = document.getElementById('resumenTotalDeliveryMonto');
                 if (rTot) rTot.textContent = formatBs(totalBs);
             } else {
                 document.getElementById('deliveryTotal').textContent = 'Primero seleccione Parroquia a enviar';
-                document.getElementById('deliveryPriceDisplay').textContent = 'Primero seleccione Parroquia a enviar';
+                const dpd2 = document.getElementById('deliveryPriceDisplay');
+                dpd2.textContent = 'Costo de envío: Primero seleccione parroquia a enviar';
+                dpd2.classList.add('placeholder');
+                dpd2.onclick = irAParroquia; dpd2.style.cursor = 'pointer';
                 const montoPago = document.getElementById('montoPago');
                 if (montoPago) { montoPago.className = 'valor-placeholder'; montoPago.textContent = 'Primero seleccione Parroquia a enviar'; }
                 const btnCopy = document.getElementById('btnCopyMontoPago');
                 if (btnCopy) btnCopy.style.display = 'none';
                 // Restablecer líneas del resumen
                 const rDel = document.getElementById('resumenDeliveryMonto');
-                if (rDel) { rDel.style.fontStyle='normal'; rDel.style.color='var(--accent)'; rDel.style.textDecoration='underline dotted'; rDel.textContent = 'Primero seleccione Parroquia a enviar'; }
+                if (rDel) { rDel.style.color='var(--gray-400)'; rDel.style.fontStyle='italic'; rDel.style.fontWeight='400'; rDel.style.fontFamily='inherit'; rDel.style.textDecoration='underline dotted'; rDel.style.cursor='pointer'; rDel.onclick=irAParroquia; rDel.textContent = 'Primero seleccione Parroquia a enviar'; }
                 const rTot = document.getElementById('resumenTotalDeliveryMonto');
                 if (rTot) rTot.textContent = '—';
             }
