@@ -610,12 +610,13 @@ await window.cargarVentasHoy();await window.cargarPropinas();const modal=documen
   break;}case'ventas':{
   title.innerHTML='<i class="fas fa-dollar-sign"></i> Ventas Totales';
   const totalVentas=window.ventasHoy.reduce((sum,v)=>sum+(v.subtotal_platillos||0),0);
-  let vt_ebs=0,vt_eusd=0,vt_pm=0,vt_pv=0,vt_cond=0,vt_favor=0,vt_inv=0;
+  let vt_ebs=0,vt_eusd=0,vt_pm=0,vt_pv=0,vt_cond=0,vt_favor=0,vt_inv=0,vt_delivery=0;
   const tasa=(window.configGlobal&&window.configGlobal.tasa_cambio)||window.tasaEfectiva||400;
   window.ventasHoy.forEach(v=>{
     const p=window.pedidos.find(pd=>pd.id===v.pedido_id);
     if(p?.condonado>0)vt_cond+=p.condonado;
     if(p?.a_favor_caja>0)vt_favor+=p.a_favor_caja;
+    if(p?.tipo==='delivery'&&p?.costo_delivery_bs>0)vt_delivery+=p.costo_delivery_bs;
     const pagos=p?.pagos_mixtos;
     if(pagos&&pagos.length){
       // Usar pagos_mixtos — fuente más precisa con montoBs real por método
@@ -648,10 +649,14 @@ await window.cargarVentasHoy();await window.cargarPropinas();const modal=documen
       ${vt_eusd>0?vcol('fas fa-dollar-sign','Efectivo USD',vt_eusd,'#4CAF50'):''}
       ${vt_pm>0?vcol('fas fa-mobile-alt','Pago Móvil',vt_pm,'var(--info)'):''}
       ${vt_pv>0?vcol('fas fa-credit-card','Punto de Venta',vt_pv,'var(--warning)'):''}
-      ${vt_inv>0?vcol('fas fa-gift','Invitación',vt_inv,'var(--propina)'):''}
     </div>
-    ${vt_cond>0?`<div style="display:flex;justify-content:space-between;padding:4px 8px;font-size:.82rem"><span style="color:var(--condonar)"><i class="fas fa-hand-holding-heart"></i> Condonado</span><span style="color:var(--condonar);font-weight:700">${window.formatBs(vt_cond)}</span></div>`:''}
-    ${vt_favor>0?`<div style="display:flex;justify-content:space-between;padding:4px 8px;font-size:.82rem"><span style="color:var(--favordecaja)"><i class="fas fa-piggy-bank"></i> A favor de caja</span><span style="color:var(--favordecaja);font-weight:700">${window.formatBs(vt_favor)}</span></div>`:''}
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+      ${vt_delivery>0?vcol('fas fa-motorcycle','Deliverys',vt_delivery,'var(--delivery)'):''}
+      ${vt_inv>0?vcol('fas fa-gift','Invitación',vt_inv,'var(--propina)'):''}
+      ${vt_cond>0?vcol('fas fa-hand-holding-heart','Condonado',vt_cond,'var(--condonar)'):''}
+      ${vt_favor>0?vcol('fas fa-piggy-bank','A favor de caja',vt_favor,'var(--favordecaja)'):''}
+    </div>
+      ${vt_inv>0?vcol('fas fa-gift','Invitación',vt_inv,'var(--propina)'):''}
   </div>
   <div style="font-size:.85rem;color:var(--text-secondary);margin-bottom:8px;font-weight:600">Detalle por cobro:</div>
   ${window.ventasHoy.map(v=>{const p=window.pedidos.find(p=>p.id===v.pedido_id);return window.crearDetalleVentaCompacto(v,p)}).join('')}`;
@@ -707,7 +712,10 @@ try{
     pedido.pagos_mixtos.forEach(function(p){
       var lbl=icons[p.metodo]||p.metodo;
       var montoBs=p.metodo==='efectivo_usd'?(p.monto||0)*((window.configGlobal&&window.configGlobal.tasa_cambio)||window.tasaEfectiva):(p.montoBs||p.monto||0);
-      pagosHtml+='<div style="display:flex;justify-content:space-between;padding:2px 0"><span>'+lbl+(p.referencia?' #'+p.referencia:'')+'</span><span style="font-weight:600">'+window.formatBs(montoBs)+'</span></div>';
+      var montoLabel=p.metodo==='efectivo_usd'
+        ?'<span style="font-size:.75rem;color:#4fc3f7">$'+((p.monto||0).toFixed(2))+' = </span>'+window.formatBs(montoBs)
+        :window.formatBs(montoBs);
+      pagosHtml+='<div style="display:flex;justify-content:space-between;padding:2px 0"><span>'+lbl+(p.referencia?' #'+p.referencia:'')+'</span><span style="font-weight:600">'+montoLabel+'</span></div>';
     });
     pagosHtml+='<div style="display:flex;justify-content:space-between;padding:3px 0;border-top:1px solid var(--border-color);margin-top:3px"><span>Recibido</span><span style="font-weight:700;color:var(--success)">'+window.formatBs(totalRecibidoBs)+'</span></div>';
     if(vuelto>0)pagosHtml+='<div style="display:flex;justify-content:space-between;padding:2px 0"><span>(-) Vuelto entregado</span><span style="color:var(--warning)">- '+window.formatBs(vuelto)+'</span></div>';
