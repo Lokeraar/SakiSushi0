@@ -3160,87 +3160,7 @@
 		// ============================================
 		// INICIALIZACIÓN - VERSIÓN OPTIMIZADA (SIN setInterval)
 		// ============================================
-		document.addEventListener('DOMContentLoaded', async () => {
-			
-			cargarTemaGuardado();
-			
-			await cargarConfiguracion();
-			
-			await cargarMenu();
-			
-			await cargarInventario();
-			
-			cargarCategorias();
-			
-			restaurarDatosFormulario();
-			
-			await recargarNotificacionesCompletas();
-			
-			solicitarPermisoPushAuto();
-			
-			// --- CAMBIO IMPORTANTE: Solo usar Realtime, NO setInterval ---
-			iniciarVerificacionPeriodica(); // Esta es la VERSIÓN NUEVA (sin setInterval)
-			
-			setupEventListeners();
-			
-			restaurarCarrito();
-			
-			actualizarCarritoUI();
-			actualizarCarritoBadge();
-			verificarPermisosAudio();
-			actualizarBotonHistorial();
-			
-			// Comprimir el botón de historial 3 segundos después de cargar la página
-			setTimeout(() => {
-				const btn = document.getElementById('historialPedidosBtn');
-				if (btn && btn.style.display !== 'none') btn.classList.add('comprimido');
-			}, 3000);
-			
-			const hoy = new Date().toISOString().split('T')[0];
-			document.getElementById('fechaReserva').min = hoy;
-			
-			if (mesaId) {
-				document.getElementById('tableNumber').textContent = mesaId;
-				document.getElementById('tableBadge').style.display = 'inline-block';
-				document.getElementById('confirmTableNumber').textContent = mesaId;
-				
-				const headerIcons = document.getElementById('headerIcons'),
-					  bellWrapper = headerIcons.children[0],
-					  cartWrapper = headerIcons.children[1],
-					  badge = headerIcons.children[2];
-				
-				headerIcons.innerHTML = '';
-				headerIcons.appendChild(bellWrapper);
-				headerIcons.appendChild(cartWrapper);
-				headerIcons.appendChild(badge);
-				headerIcons.classList.add('left-aligned');
-			}
-			
-			resetToAllCategories(false);
-		});
 
-        window.addEventListener('beforeunload', () => {
-            if (_realtimeChannel) window.supabaseClient.removeChannel(_realtimeChannel);
-            Object.values(intervalosTimer).forEach(clearInterval);
-            detenerSeguimientoScroll();
-            if (scrollTimeout) clearTimeout(scrollTimeout);
-        });
-
-        window.addEventListener('visibilitychange', function() {
-            if (document.hidden) {
-                paginaVisible = false;
-                detenerSeguimientoScroll();
-            } else {
-                paginaVisible = true;
-                // Al volver a visible, recargar una vez por si se perdió algún evento
-                recargarNotificacionesCompletas();
-                if (carrito.length > 0 && document.getElementById('cartSidebar').classList.contains('open')) iniciarSeguimientoScroll();
-            }
-        });
-
-        // ============================================
-// ============================================
-        // ============================================
         // INTERCEPCIÓN DEL BOTÓN ATRÁS (History API)
         // Modelo de capas apiladas: cada capa que se abre empuja un estado.
         // Cada atrás consume un estado y cierra la capa más reciente.
@@ -3336,7 +3256,10 @@
 
             function _mostrarAvisoSalida() {
                 if (_avisandoSalida) {
-                    window.history.go(-1);
+                    // Segundo atrás = confirmar salida directamente
+                    _avisandoSalida = false;
+                    const salida = document.referrer || 'about:blank';
+                    window.location.replace(salida);
                     return;
                 }
                 _avisandoSalida = true;
@@ -3365,8 +3288,10 @@
                     document.body.appendChild(aviso);
 
                     document.getElementById('_salidaSi').addEventListener('click', () => {
-                        _ocultarAvisoSalida();
-                        window.history.go(-1);
+                        // Salir de verdad: ir a la URL de referencia o cerrar pestaña
+                        _avisandoSalida = false;
+                        const salida = document.referrer || 'about:blank';
+                        window.location.replace(salida);
                     });
                     document.getElementById('_salidaNo').addEventListener('click', () => {
                         _ocultarAvisoSalida();
@@ -3561,6 +3486,84 @@
             window._sincronizarBackStack = _sincronizarStack;
 
         })();
+
+		document.addEventListener('DOMContentLoaded', async () => {
+			
+			cargarTemaGuardado();
+			
+			await cargarConfiguracion();
+			
+			await cargarMenu();
+			
+			await cargarInventario();
+			
+			cargarCategorias();
+			
+			restaurarDatosFormulario();
+			
+			await recargarNotificacionesCompletas();
+			
+			solicitarPermisoPushAuto();
+			
+			// --- CAMBIO IMPORTANTE: Solo usar Realtime, NO setInterval ---
+			iniciarVerificacionPeriodica(); // Esta es la VERSIÓN NUEVA (sin setInterval)
+			
+			setupEventListeners();
+			
+			restaurarCarrito();
+			
+			actualizarCarritoUI();
+			actualizarCarritoBadge();
+			verificarPermisosAudio();
+			actualizarBotonHistorial();
+			
+			// Comprimir el botón de historial 3 segundos después de cargar la página
+			setTimeout(() => {
+				const btn = document.getElementById('historialPedidosBtn');
+				if (btn && btn.style.display !== 'none') btn.classList.add('comprimido');
+			}, 3000);
+			
+			const hoy = new Date().toISOString().split('T')[0];
+			document.getElementById('fechaReserva').min = hoy;
+			
+			if (mesaId) {
+				document.getElementById('tableNumber').textContent = mesaId;
+				document.getElementById('tableBadge').style.display = 'inline-block';
+				document.getElementById('confirmTableNumber').textContent = mesaId;
+				
+				const headerIcons = document.getElementById('headerIcons'),
+					  bellWrapper = headerIcons.children[0],
+					  cartWrapper = headerIcons.children[1],
+					  badge = headerIcons.children[2];
+				
+				headerIcons.innerHTML = '';
+				headerIcons.appendChild(bellWrapper);
+				headerIcons.appendChild(cartWrapper);
+				headerIcons.appendChild(badge);
+				headerIcons.classList.add('left-aligned');
+			}
+			
+			resetToAllCategories(false);
+		});
+
+        window.addEventListener('beforeunload', () => {
+            if (_realtimeChannel) window.supabaseClient.removeChannel(_realtimeChannel);
+            Object.values(intervalosTimer).forEach(clearInterval);
+            detenerSeguimientoScroll();
+            if (scrollTimeout) clearTimeout(scrollTimeout);
+        });
+
+        window.addEventListener('visibilitychange', function() {
+            if (document.hidden) {
+                paginaVisible = false;
+                detenerSeguimientoScroll();
+            } else {
+                paginaVisible = true;
+                // Al volver a visible, recargar una vez por si se perdió algún evento
+                recargarNotificacionesCompletas();
+                if (carrito.length > 0 && document.getElementById('cartSidebar').classList.contains('open')) iniciarSeguimientoScroll();
+            }
+        });
         </script>
 </body>
 </html>
