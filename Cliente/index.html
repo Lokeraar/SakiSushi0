@@ -1,6 +1,108 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+<script>
+// ── Interceptor de botón atrás — carga INMEDIATA antes del DOM ──────────────
+// Se ejecuta en el <head> para que el historial quede configurado
+// desde el primer milisegundo, antes de cualquier petición de red.
+(function() {
+    var _stackDepth = 0;
+    var _avisandoSalida = false;
+    var _pendingBack = false; // back llegó antes del DOM → procesarlo al montar
+
+    // Registrar el estado base inmediatamente
+    history.replaceState({ saki: true, depth: 0 }, '');
+
+    function _push() {
+        _stackDepth++;
+        history.pushState({ saki: true, depth: _stackDepth }, '');
+    }
+
+    function _mostrarAvisoSalida() {
+        if (_avisandoSalida) {
+            _avisandoSalida = false;
+            var salida = document.referrer || 'about:blank';
+            window.location.replace(salida);
+            return;
+        }
+        _avisandoSalida = true;
+        _push(); // para interceptar el siguiente atrás
+
+        var aviso = document.getElementById('_salidaAviso');
+        if (!aviso) {
+            // DOM puede no estar listo aún — diferir
+            document.addEventListener('DOMContentLoaded', function() {
+                _mostrarAvisoSalida_dom();
+            }, { once: true });
+            return;
+        }
+        _mostrarAvisoSalida_dom();
+    }
+
+    function _mostrarAvisoSalida_dom() {
+        var aviso = document.getElementById('_salidaAviso');
+        if (!aviso) {
+            aviso = document.createElement('div');
+            aviso.id = '_salidaAviso';
+            aviso.style.cssText = 'position:fixed;inset:0;z-index:9999;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.55);padding:1rem';
+            aviso.innerHTML = '<div style="background:linear-gradient(135deg,#1a1a2e,#16213e);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:1.4rem 1.2rem;width:100%;max-width:400px;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,.5)"><p style="color:#fff;font-size:1rem;font-weight:600;margin-bottom:1.2rem">¿Seguro que deseas salir?</p><div style="display:flex;gap:.8rem"><button id="_salidaNo" style="flex:1;padding:.75rem;border-radius:10px;border:2px solid rgba(255,255,255,.2);background:transparent;color:#fff;font-weight:600;cursor:pointer;font-size:.95rem">Cancelar</button><button id="_salidaSi" style="flex:1;padding:.75rem;border-radius:10px;border:none;background:linear-gradient(135deg,#D32F2F,#b71c1c);color:#fff;font-weight:600;cursor:pointer;font-size:.95rem">Salir</button></div></div>';
+            document.body.appendChild(aviso);
+            document.getElementById('_salidaSi').addEventListener('click', function() {
+                _avisandoSalida = false;
+                aviso.style.display = 'none';
+                var salida = document.referrer || 'about:blank';
+                window.location.replace(salida);
+            });
+            document.getElementById('_salidaNo').addEventListener('click', function() {
+                _avisandoSalida = false;
+                aviso.style.display = 'none';
+                _push();
+                clearTimeout(aviso._timer);
+            });
+        }
+        aviso.style.display = 'flex';
+        clearTimeout(aviso._timer);
+        aviso._timer = setTimeout(function() {
+            aviso.style.display = 'none';
+            _avisandoSalida = false;
+            _push();
+        }, 5000);
+    }
+
+    function _ocultarAvisoSalida() {
+        var aviso = document.getElementById('_salidaAviso');
+        if (aviso) aviso.style.display = 'none';
+        _avisandoSalida = false;
+    }
+
+    // popstate: interceptar DESDE el primer momento
+    window.addEventListener('popstate', function(e) {
+        if (e.state && e.state.saki) {
+            _stackDepth = e.state.depth || 0;
+        } else {
+            // Estado ajeno o null → el usuario intenta salir
+            _push();
+        }
+        if (typeof window._cerrarCapaBack === 'function') {
+            window._cerrarCapaBack();
+        } else {
+            // DOM y app aún no están listos → guardar que hubo un back
+            _pendingBack = true;
+        }
+    });
+
+    // Exponer para que el script principal los use
+    window._backStack = {
+        push: _push,
+        mostrarAviso: _mostrarAvisoSalida,
+        ocultarAviso: _ocultarAvisoSalida,
+        getDepth: function() { return _stackDepth; },
+        setDepth: function(d) { _stackDepth = d; },
+        isPending: function() { return _pendingBack; },
+        clearPending: function() { _pendingBack = false; }
+    };
+})();
+</script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
     <title>🍣 Saki Sushi - Menú Cliente</title>
@@ -3165,43 +3267,32 @@
 		// INICIALIZACIÓN - VERSIÓN OPTIMIZADA (SIN setInterval)
 		// ============================================
 
-        // INTERCEPCIÓN DEL BOTÓN ATRÁS (History API)
-        // Modelo de capas apiladas: cada capa que se abre empuja un estado.
-        // Cada atrás consume un estado y cierra la capa más reciente.
-        // Orden (de más reciente a más antigua):
-        //   modal activo → notificaciones → nivel2Carrito → nivel1Carrito
-        //   → carrito abierto → subcatMenuHamburguesa → menuHamburguesa
-        //   → (todo cerrado) → aviso "¿Seguro que desea salir?"
-        // ============================================
+
+        // ── PUENTE: conecta window._backStack con el DOM y los toggles ──────
+        // Se ejecuta en el mismo script donde están toggleNivel1, toggleCarrito, etc.
         (function() {
-            // Número de estados que hemos empujado al historial
-            let _stackDepth = 0;
-            let _avisandoSalida = false;
-
-            // Estado base: reemplazar la entrada actual
-            history.replaceState({ saki: true, depth: 0 }, '');
-
-            // ── Helpers ──────────────────────────────────────────────────────
+            var bs = window._backStack;
+            if (!bs) return; // salvaguarda por si el head script no cargó
 
             function _abrirCarrito() {
-                const cart    = document.getElementById('cartSidebar');
-                const menu    = document.getElementById('categorySidebar');
-                const overlay = document.getElementById('overlay');
+                var cart    = document.getElementById('cartSidebar');
+                var menu    = document.getElementById('categorySidebar');
+                var overlay = document.getElementById('overlay');
                 if (!cart) return;
                 cart.classList.add('open');
                 if (overlay && window.innerWidth <= 992) overlay.classList.add('active');
                 if (menu) menu.classList.remove('open');
-                const notifPanel = document.getElementById('notificationsPanel');
+                var notifPanel = document.getElementById('notificationsPanel');
                 if (notifPanel) notifPanel.classList.remove('active');
             }
 
             function _cerrarCarrito() {
-                const cart    = document.getElementById('cartSidebar');
-                const overlay = document.getElementById('overlay');
+                var cart    = document.getElementById('cartSidebar');
+                var overlay = document.getElementById('overlay');
                 if (!cart) return;
                 cart.classList.remove('open');
-                const menuOpen  = document.getElementById('categorySidebar')?.classList.contains('open');
-                const notifOpen = document.getElementById('notificationsPanel')?.classList.contains('active');
+                var menuOpen  = document.getElementById('categorySidebar')?.classList.contains('open');
+                var notifOpen = document.getElementById('notificationsPanel')?.classList.contains('active');
                 if (overlay && !menuOpen && !notifOpen) overlay.classList.remove('active');
                 detenerSeguimientoScroll();
             }
@@ -3210,292 +3301,158 @@
                 return document.getElementById('cartSidebar')?.classList.contains('open');
             }
 
-            // Modales que al cerrarse deben abrir el carrito como capa siguiente
-            const _modalesConCarrito = new Set([
-                'confirmMesaModal', 'deliveryModal', 'reservaModal'
-            ]);
+            var _modalesConCarrito = new Set(['confirmMesaModal', 'deliveryModal', 'reservaModal']);
 
-            // Empujar UN estado por cada capa que se abre
-            function _push() {
-                _stackDepth++;
-                history.pushState({ saki: true, depth: _stackDepth }, '');
-            }
-
-            // Calcular cuántas capas hay abiertas en el DOM ahora mismo
             function _contarCapas() {
-                let n = 0;
-                // Cada modal activo = 1 capa
+                var n = 0;
                 n += document.querySelectorAll('.modal-overlay.active').length;
-                // Notificaciones
                 if (document.getElementById('notificationsPanel')?.classList.contains('active')) n++;
-                // Nivel2 carrito
                 if (document.querySelector('[id^="nivel2-"].expanded')) n++;
-                // Nivel1 carrito
                 if (document.querySelector('[id^="nivel1-"].expanded')) n++;
-                // Carrito abierto
                 if (_carritoEstaAbierto()) n++;
-                // Subcategoría hamburguesa
                 if (document.querySelector('.subcategory-list.expanded')) n++;
-                // Menú hamburguesa
                 if (document.getElementById('categorySidebar')?.classList.contains('open')) n++;
                 return n;
             }
 
-            // Sincroniza _stackDepth con la cantidad real de capas en el DOM
             function _sincronizarStack() {
-                const capasDOM = _contarCapas();
-                if (capasDOM > _stackDepth) {
-                    // Se abrieron capas sin que nosotros lo detectáramos — empujar los estados faltantes
-                    const faltantes = capasDOM - _stackDepth;
-                    for (let i = 0; i < faltantes; i++) _push();
-                } else if (capasDOM < _stackDepth) {
-                    // Se cerraron capas sin consumir historial — ajustar contador
-                    _stackDepth = capasDOM;
+                var capasDOM = _contarCapas();
+                var depth    = bs.getDepth();
+                if (capasDOM > depth) {
+                    var faltantes = capasDOM - depth;
+                    for (var i = 0; i < faltantes; i++) bs.push();
+                } else if (capasDOM < depth) {
+                    bs.setDepth(capasDOM);
                 }
-                // Si no hay capas y el aviso está visible, ocultarlo
-                if (capasDOM === 0) _ocultarAvisoSalida();
+                if (capasDOM === 0) bs.ocultarAviso();
             }
-
-            // ── Aviso de salida ───────────────────────────────────────────────
-
-            function _mostrarAvisoSalida() {
-                if (_avisandoSalida) {
-                    // Segundo atrás = confirmar salida directamente
-                    _avisandoSalida = false;
-                    const salida = document.referrer || 'about:blank';
-                    window.location.replace(salida);
-                    return;
-                }
-                _avisandoSalida = true;
-                // Empujar un estado para interceptar el siguiente atrás
-                // (el usuario puede presionar atrás otra vez para confirmar salida)
-                _push();
-
-                let aviso = document.getElementById('_salidaAviso');
-                if (!aviso) {
-                    aviso = document.createElement('div');
-                    aviso.id = '_salidaAviso';
-                    aviso.style.cssText = [
-                        'position:fixed', 'inset:0', 'z-index:9999',
-                        'display:flex', 'align-items:flex-end', 'justify-content:center',
-                        'background:rgba(0,0,0,.55)', 'padding:1rem',
-                        'animation:fadeIn .2s ease'
-                    ].join(';');
-                    aviso.innerHTML = `
-                        <div style="background:linear-gradient(135deg,#1a1a2e,#16213e);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:1.4rem 1.2rem;width:100%;max-width:400px;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,.5)">
-                            <p style="color:#fff;font-size:1rem;font-weight:600;margin-bottom:1.2rem">¿Seguro que deseas salir?</p>
-                            <div style="display:flex;gap:.8rem">
-                                <button id="_salidaNo"  style="flex:1;padding:.75rem;border-radius:10px;border:2px solid rgba(255,255,255,.2);background:transparent;color:#fff;font-weight:600;cursor:pointer;font-size:.95rem">Cancelar</button>
-                                <button id="_salidaSi"  style="flex:1;padding:.75rem;border-radius:10px;border:none;background:linear-gradient(135deg,#D32F2F,#b71c1c);color:#fff;font-weight:600;cursor:pointer;font-size:.95rem">Salir</button>
-                            </div>
-                        </div>`;
-                    document.body.appendChild(aviso);
-
-                    document.getElementById('_salidaSi').addEventListener('click', () => {
-                        // Salir de verdad: ir a la URL de referencia o cerrar pestaña
-                        _avisandoSalida = false;
-                        const salida = document.referrer || 'about:blank';
-                        window.location.replace(salida);
-                    });
-                    document.getElementById('_salidaNo').addEventListener('click', () => {
-                        _ocultarAvisoSalida();
-                        // Volver a empujar estado para que el siguiente back muestre aviso de nuevo
-                        _push();
-                        _avisandoSalida = false;
-                    });
-                }
-                aviso.style.display = 'flex';
-
-                clearTimeout(aviso._timer);
-                aviso._timer = setTimeout(() => {
-                    _ocultarAvisoSalida();
-                    _push();
-                    _avisandoSalida = false;
-                }, 5000);
-            }
-
-            function _ocultarAvisoSalida() {
-                const aviso = document.getElementById('_salidaAviso');
-                if (aviso) aviso.style.display = 'none';
-                _avisandoSalida = false;
-            }
-
-            // ── Lógica principal de cierre por capas ──────────────────────────
 
             function cerrarCapaMasReciente() {
-                // Solo ocultamos el aviso si hay una capa real que cerrar.
-                // Si no hay nada, dejamos que el aviso se muestre.
-
                 // 1. Modal activo
-                const modalesActivos = Array.from(document.querySelectorAll('.modal-overlay.active'));
+                var modalesActivos = Array.from(document.querySelectorAll('.modal-overlay.active'));
                 if (modalesActivos.length > 0) {
-                    _ocultarAvisoSalida();
-                    const modal = modalesActivos[modalesActivos.length - 1];
+                    bs.ocultarAviso();
+                    var modal = modalesActivos[modalesActivos.length - 1];
                     if (modal.id === 'deliveryModal') detenerTimer('delivery');
                     if (modal.id === 'reservaModal')  detenerTimer('reserva');
                     modal.classList.remove('active');
-                    if (_modalesConCarrito.has(modal.id)) {
-                        _abrirCarrito();
-                        // El carrito que acabamos de abrir ya cuenta como 1 capa,
-                        // no empujamos nada extra — el estado lo acabamos de consumir
-                        // y _sincronizarStack lo repondrá si hace falta
-                    }
+                    if (_modalesConCarrito.has(modal.id)) _abrirCarrito();
                     _sincronizarStack();
                     return;
                 }
-
-                // 2. Panel de notificaciones
-                const notifPanel = document.getElementById('notificationsPanel');
+                // 2. Notificaciones
+                var notifPanel = document.getElementById('notificationsPanel');
                 if (notifPanel?.classList.contains('active')) {
+                    bs.ocultarAviso();
                     notifPanel.classList.remove('active');
-                    const overlay  = document.getElementById('overlay');
-                    const menuOpen = document.getElementById('categorySidebar')?.classList.contains('open');
-                    const cartOpen = _carritoEstaAbierto();
-                    if (overlay && !menuOpen && !cartOpen) overlay.classList.remove('active');
+                    var overlay = document.getElementById('overlay');
+                    if (overlay && !document.getElementById('categorySidebar')?.classList.contains('open') && !_carritoEstaAbierto()) overlay.classList.remove('active');
                     _sincronizarStack();
                     return;
                 }
-
-                // 3. Nivel2 del carrito expandido → plegar
-                const n2el = document.querySelector('[id^="nivel2-"].expanded');
+                // 3. Nivel2 carrito
+                var n2el = document.querySelector('[id^="nivel2-"].expanded');
                 if (n2el) {
-                    const id2 = n2el.id.replace('nivel2-', '');
-                    const ic2 = document.getElementById(`icon2-${id2}`);
+                    bs.ocultarAviso();
+                    var id2 = n2el.id.replace('nivel2-', '');
+                    var ic2 = document.getElementById('icon2-' + id2);
                     n2el.classList.remove('expanded');
                     if (ic2) ic2.classList.remove('rotated');
                     nivel2Activo = null;
                     _sincronizarStack();
                     return;
                 }
-
-                // 4. Nivel1 del carrito expandido → plegar
-                const n1el = document.querySelector('[id^="nivel1-"].expanded');
+                // 4. Nivel1 carrito
+                var n1el = document.querySelector('[id^="nivel1-"].expanded');
                 if (n1el) {
-                    const id1 = n1el.id.replace('nivel1-', '');
-                    const ic1 = document.getElementById(`icon1-${id1}`);
+                    bs.ocultarAviso();
+                    var id1 = n1el.id.replace('nivel1-', '');
+                    var ic1 = document.getElementById('icon1-' + id1);
                     n1el.classList.remove('expanded');
                     if (ic1) ic1.classList.remove('rotated');
-                    // Plegar también cualquier nivel2 que haya dentro
-                    n1el.querySelectorAll('[id^="nivel2-"].expanded').forEach(el => {
+                    n1el.querySelectorAll('[id^="nivel2-"].expanded').forEach(function(el) {
                         el.classList.remove('expanded');
-                        const ic = document.getElementById(`icon2-${el.id.replace('nivel2-','')}`);
+                        var ic = document.getElementById('icon2-' + el.id.replace('nivel2-',''));
                         if (ic) ic.classList.remove('rotated');
                     });
-                    nivel1Activo = null;
-                    nivel2Activo = null;
+                    nivel1Activo = null; nivel2Activo = null;
                     _sincronizarStack();
                     return;
                 }
-
-                // 5. Carrito abierto → cerrar
+                // 5. Carrito
                 if (_carritoEstaAbierto()) {
+                    bs.ocultarAviso();
                     _cerrarCarrito();
                     _sincronizarStack();
                     return;
                 }
-
-                // 6. Subcategoría hamburguesa expandida → cerrar
-                const subExpanded = document.querySelector('.subcategory-list.expanded');
+                // 6. Subcategoría hamburguesa
+                var subExpanded = document.querySelector('.subcategory-list.expanded');
                 if (subExpanded) {
+                    bs.ocultarAviso();
                     subExpanded.classList.remove('expanded');
                     _sincronizarStack();
                     return;
                 }
-
-                // 7. Menú hamburguesa abierto → cerrar
-                const categorySidebar = document.getElementById('categorySidebar');
+                // 7. Menú hamburguesa
+                var categorySidebar = document.getElementById('categorySidebar');
                 if (categorySidebar?.classList.contains('open')) {
+                    bs.ocultarAviso();
                     categorySidebar.classList.remove('open');
-                    const overlay  = document.getElementById('overlay');
-                    const cartOpen = _carritoEstaAbierto();
-                    const notifOpen = document.getElementById('notificationsPanel')?.classList.contains('active');
-                    if (overlay && !cartOpen && !notifOpen) overlay.classList.remove('active');
+                    var ov = document.getElementById('overlay');
+                    if (ov && !_carritoEstaAbierto() && !document.getElementById('notificationsPanel')?.classList.contains('active')) ov.classList.remove('active');
                     _sincronizarStack();
                     return;
                 }
-
-                // 8. Nada abierto → aviso de salida
-                _stackDepth = 0;
-                _mostrarAvisoSalida();
+                // 8. Nada → aviso de salida
+                bs.setDepth(0);
+                bs.mostrarAviso();
             }
 
-            // ── popstate ─────────────────────────────────────────────────────
-            window.addEventListener('popstate', function(e) {
-                if (e.state && e.state.saki) {
-                    // Estado nuestro: cerrar capa correspondiente
-                    _stackDepth = e.state.depth || 0;
-                    cerrarCapaMasReciente();
-                } else {
-                    // Estado ajeno (del navegador) o null:
-                    // el usuario está intentando salir de nuestra app.
-                    // Empujar de vuelta y mostrar aviso.
-                    _push();
-                    cerrarCapaMasReciente();
-                }
-            });
+            // Registrar la función global para que el popstate del head script la llame
+            window._cerrarCapaBack = cerrarCapaMasReciente;
 
-            // ── MutationObserver: observa cambios de clase en capas ───────────
-            const observer = new MutationObserver(mutations => {
-                mutations.forEach(m => {
-                    if (m.attributeName !== 'class') return;
-                    _sincronizarStack();
+            // Si hubo un back antes de que el DOM estuviera listo, procesarlo ahora
+            if (bs.isPending()) {
+                bs.clearPending();
+                cerrarCapaMasReciente();
+            }
+
+            // MutationObserver
+            var observer = new MutationObserver(function(mutations) {
+                mutations.forEach(function(m) {
+                    if (m.attributeName === 'class') _sincronizarStack();
                 });
             });
-
-            // Modales y panel de notificaciones
-            document.querySelectorAll('.modal-overlay, #notificationsPanel').forEach(el => {
+            document.querySelectorAll('.modal-overlay, #notificationsPanel').forEach(function(el) {
                 observer.observe(el, { attributes: true, attributeFilter: ['class'] });
             });
-
-            // Carrito y menú hamburguesa (incluye subtree para subcategorías)
-            const catSidebarEl  = document.getElementById('categorySidebar');
-            const cartSidebarEl = document.getElementById('cartSidebar');
+            var catSidebarEl  = document.getElementById('categorySidebar');
+            var cartSidebarEl = document.getElementById('cartSidebar');
             if (catSidebarEl) {
                 observer.observe(catSidebarEl, { attributes: true, attributeFilter: ['class'] });
-                // subtree para captar el expanded de subcategory-list dentro del menú
-                const subObs = new MutationObserver(() => _sincronizarStack());
+                var subObs = new MutationObserver(function() { _sincronizarStack(); });
                 subObs.observe(catSidebarEl, { subtree: true, attributes: true, attributeFilter: ['class'] });
             }
             if (cartSidebarEl) {
                 observer.observe(cartSidebarEl, { attributes: true, attributeFilter: ['class'] });
-                // subtree para captar nivel1/nivel2 dentro del carrito
-                const cartSubObs = new MutationObserver(() => _sincronizarStack());
+                var cartSubObs = new MutationObserver(function() { _sincronizarStack(); });
                 cartSubObs.observe(cartSidebarEl, { subtree: true, attributes: true, attributeFilter: ['class'] });
             }
 
-            // ── Parches de funciones de toggle ───────────────────────────────
-            // Los observers ya sincronizan el stack automáticamente,
-            // pero los parches garantizan que el push ocurra antes de cualquier
-            // animación que pudiera confundir al observer.
-            const _origToggleCarrito = window.toggleCarrito;
-            window.toggleCarrito = function() {
-                _origToggleCarrito?.apply(this, arguments);
-                _sincronizarStack();
-            };
-            const _origToggleMenu = window.toggleMenuCategorias;
-            window.toggleMenuCategorias = function() {
-                _origToggleMenu?.apply(this, arguments);
-                _sincronizarStack();
-            };
-            const _origToggleNotif = window.toggleNotifications;
-            window.toggleNotifications = function() {
-                _origToggleNotif?.apply(this, arguments);
-                _sincronizarStack();
-            };
-            const _origToggleNivel1 = window.toggleNivel1;
-            window.toggleNivel1 = function(grupoId) {
-                _origToggleNivel1?.(grupoId);
-                _sincronizarStack();
-            };
-            const _origToggleNivel2 = window.toggleNivel2;
-            window.toggleNivel2 = function(subgrupoId, grupoPadreId) {
-                _origToggleNivel2?.(subgrupoId, grupoPadreId);
-                _sincronizarStack();
-            };
+            // Parches de toggles
+            var _ot = window.toggleCarrito;
+            window.toggleCarrito = function() { _ot?.apply(this, arguments); _sincronizarStack(); };
+            var _om = window.toggleMenuCategorias;
+            window.toggleMenuCategorias = function() { _om?.apply(this, arguments); _sincronizarStack(); };
+            var _on = window.toggleNotifications;
+            window.toggleNotifications = function() { _on?.apply(this, arguments); _sincronizarStack(); };
+            var _o1 = window.toggleNivel1;
+            window.toggleNivel1 = function(g) { _o1?.(g); _sincronizarStack(); };
+            var _o2 = window.toggleNivel2;
+            window.toggleNivel2 = function(s, p) { _o2?.(s, p); _sincronizarStack(); };
 
-            // Exponer para uso externo (subcategory toggle en cargarCategorias)
             window._sincronizarBackStack = _sincronizarStack;
-
         })();
 
 		document.addEventListener('DOMContentLoaded', async () => {
