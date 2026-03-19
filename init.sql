@@ -430,8 +430,7 @@ ALTER TABLE ventas ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Permitir todo ventas" ON ventas FOR ALL USING (true) WITH CHECK (true);
 GRANT ALL ON ventas TO anon, authenticated;
 GRANT ALL ON ventas TO PUBLIC;
-
-CREATE INDEX idx_ventas_fecha ON ventas(fecha);
+GRANT USAGE, SELECT ON SEQUENCE ventas_id_seq TO anon, authenticated;
 CREATE INDEX idx_ventas_pedido_id ON ventas(pedido_id);
 CREATE INDEX idx_ventas_metodo_pago ON ventas(metodo_pago);
 CREATE INDEX idx_ventas_tipo ON ventas(tipo);
@@ -452,8 +451,7 @@ ALTER TABLE entregas_delivery ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Permitir todo entregas_delivery" ON entregas_delivery FOR ALL USING (true) WITH CHECK (true);
 GRANT ALL ON entregas_delivery TO anon, authenticated;
 GRANT ALL ON entregas_delivery TO PUBLIC;
-
-CREATE INDEX idx_entregas_delivery_id ON entregas_delivery(delivery_id);
+GRANT USAGE, SELECT ON SEQUENCE entregas_delivery_id_seq TO anon, authenticated;
 CREATE INDEX idx_entregas_fecha ON entregas_delivery(fecha_entrega);
 CREATE INDEX idx_entregas_pedido_id ON entregas_delivery(pedido_id);
 
@@ -480,6 +478,7 @@ ALTER TABLE propinas ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Permitir todo propinas" ON propinas FOR ALL USING (true) WITH CHECK (true);
 GRANT ALL ON propinas TO anon, authenticated;
 GRANT ALL ON propinas TO PUBLIC;
+GRANT USAGE, SELECT ON SEQUENCE propinas_id_seq TO anon, authenticated;
 
 CREATE INDEX idx_propinas_fecha ON propinas(fecha);
 CREATE INDEX idx_propinas_mesonero ON propinas(mesonero_id);
