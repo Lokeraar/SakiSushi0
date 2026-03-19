@@ -2,144 +2,10 @@
 <html lang="es">
 <head>
 <script>
-// Sistema completo de botón atrás — carga antes que todo el resto.
-// El div #_salidaAviso ya está en el HTML así que se puede mostrar al instante.
-(function(){
-    var depth = 0;
-    var avisando = false;
-    var timer = null;
-
-    // Reemplazar el estado actual Y empujar DOS estados encima.
-    // Motivo: algunos navegadores móviles consumen silenciosamente el primer
-    // pushState al cargar (especialmente en GitHub Pages / PWA).
-    // Con dos estados garantizamos que al menos uno dispare popstate.
-    history.replaceState({saki:true,depth:0},'');
-    history.pushState({saki:true,depth:1},'');
-    history.pushState({saki:true,depth:2},'');
-    depth = 2;
-
-    function push(){
-        depth++;
-        history.pushState({saki:true,depth:depth},'');
-    }
-
-    // ── Mostrar/ocultar aviso ────────────────────────────────────────────────
-    function mostrarAviso(){
-        if(avisando){
-            avisando = false;
-            window.location.replace(document.referrer||'about:blank');
-            return;
-        }
-        avisando = true;
-        push();
-        var av = document.getElementById('_salidaAviso');
-        if(av){ av.style.display='flex'; }
-        clearTimeout(timer);
-        timer = setTimeout(function(){
-            var av2 = document.getElementById('_salidaAviso');
-            if(av2) av2.style.display='none';
-            avisando = false;
-            push();
-        }, 5000);
-    }
-
-    function ocultarAviso(){
-        var av = document.getElementById('_salidaAviso');
-        if(av) av.style.display='none';
-        avisando = false;
-        clearTimeout(timer);
-    }
-
-    // Conectar botones en cuanto exista el DOM (muy temprano, solo necesita el div)
-    document.addEventListener('DOMContentLoaded', function(){
-        var si = document.getElementById('_salidaSi');
-        var no = document.getElementById('_salidaNo');
-        if(si) si.addEventListener('click', function(){
-            avisando = false;
-            var av = document.getElementById('_salidaAviso');
-            if(av) av.style.display='none';
-            clearTimeout(timer);
-            window.location.replace(document.referrer||'about:blank');
-        });
-        if(no) no.addEventListener('click', function(){
-            avisando = false;
-            var av = document.getElementById('_salidaAviso');
-            if(av) av.style.display='none';
-            clearTimeout(timer);
-            push();
-        });
-    }, {once:true});
-
-    // ── Contar capas abiertas (solo cuando el DOM de la app esté listo) ───────
-    function contarCapas(){
-        var n = document.querySelectorAll('.modal-overlay.active').length;
-        if(document.getElementById('notificationsPanel')?.classList.contains('active')) n++;
-        if(document.querySelector('[id^="nivel2-"].expanded')) n++;
-        if(document.querySelector('[id^="nivel1-"].expanded')) n++;
-        if(document.getElementById('cartSidebar')?.classList.contains('open')) n++;
-        if(document.querySelector('.subcategory-list.expanded')) n++;
-        if(document.getElementById('categorySidebar')?.classList.contains('open')) n++;
-        return n;
-    }
-
-    function sincronizar(){
-        var capas = contarCapas();
-        if(capas > depth){ for(var i=capas-depth;i>0;i--) push(); }
-        else if(capas < depth){ depth = capas; }
-        if(capas===0) ocultarAviso();
-    }
-
-    // ── Cerrar capa más reciente ──────────────────────────────────────────────
-    function cerrarCapa(){
-        // La app puede no estar lista aún — si hay función de la app, usarla
-        if(typeof window._appCerrarCapa==='function'){
-            window._appCerrarCapa();
-            return;
-        }
-        // Fallback mínimo: si no hay capas abiertas → aviso
-        var capas = contarCapas();
-        if(capas === 0){
-            depth = 0;
-            mostrarAviso();
-        } else {
-            // Hay capas pero la app aún no registró su handler — guardar para después
-            window._sakiPendingBack = true;
-        }
-    }
-
-    // ── popstate ─────────────────────────────────────────────────────────────
-    window.addEventListener('popstate', function(e){
-        if(e.state && e.state.saki){
-            depth = e.state.depth||0;
-        } else {
-            push();
-        }
-        cerrarCapa();
-    });
-
-    // ── beforeunload: red de seguridad para cuando popstate no llega ──────────
-    var _beforeunloadActivo = true;
-    window.addEventListener('beforeunload', function(e){
-        // Solo activo mientras la app no haya registrado su propio handler
-        // y solo si no estamos nosotros ya gestionando la salida
-        if(_beforeunloadActivo && !avisando){
-            e.preventDefault();
-            e.returnValue = '';
-        }
-    });
-    // La app lo desactiva una vez que el popstate ya cubre todo
-    window._sakiDesactivarBeforeunload = function(){ _beforeunloadActivo = false; };
-
-    // ── API pública para que la app se conecte ────────────────────────────────
-    window._sakiBack = {
-        push: push,
-        sincronizar: sincronizar,
-        mostrarAviso: mostrarAviso,
-        ocultarAviso: ocultarAviso,
-        getDepth: function(){ return depth; },
-        setDepth: function(d){ depth=d; }
-    };
-})();
+history.replaceState({saki:1,d:0},'');
+history.pushState({saki:1,d:1},'');
+history.pushState({saki:1,d:2},'');
+window.addEventListener('beforeunload',function(e){if(!window._sakiReady){e.preventDefault();e.returnValue='';}});
 </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
@@ -3380,121 +3246,127 @@
 			}
 			
 
-			// ── Conectar sistema de botón atrás con la app ─────────────────────
+			// ── Sistema de navegación con botón atrás ──────────────────────────
 			(function(){
-				var sk = window._sakiBack;
-				if(!sk) return;
+				window._sakiReady = true;
+				var depth = 2;
+				var avisando = false, avisoTimer = null;
+				var av = document.getElementById('_salidaAviso');
+				var modConCarrito = new Set(['confirmMesaModal','deliveryModal','reservaModal']);
+
+				function push(){ depth++; history.pushState({saki:1,d:depth},''); }
+
+				function mostrar(){
+					if(avisando){ avisando=false; window.location.replace(document.referrer||'about:blank'); return; }
+					avisando=true; push(); av.style.display='flex';
+					clearTimeout(avisoTimer);
+					avisoTimer=setTimeout(function(){ av.style.display='none'; avisando=false; push(); },5000);
+				}
+				function ocultar(){ av.style.display='none'; avisando=false; clearTimeout(avisoTimer); }
+
+				document.getElementById('_salidaSi').addEventListener('click',function(){
+					avisando=false; av.style.display='none'; window.location.replace(document.referrer||'about:blank');
+				});
+				document.getElementById('_salidaNo').addEventListener('click',function(){
+					avisando=false; av.style.display='none'; clearTimeout(avisoTimer); push();
+				});
 
 				function abrirCarrito(){
-					var cart=document.getElementById('cartSidebar'),ov=document.getElementById('overlay');
-					if(!cart) return;
-					cart.classList.add('open');
-					if(ov&&window.innerWidth<=992) ov.classList.add('active');
-					var menu=document.getElementById('categorySidebar');
-					if(menu) menu.classList.remove('open');
-					var notif=document.getElementById('notificationsPanel');
-					if(notif) notif.classList.remove('active');
+					var c=document.getElementById('cartSidebar'),o=document.getElementById('overlay');
+					if(!c) return; c.classList.add('open');
+					if(o&&innerWidth<=992) o.classList.add('active');
+					var m=document.getElementById('categorySidebar'); if(m) m.classList.remove('open');
+					var n=document.getElementById('notificationsPanel'); if(n) n.classList.remove('active');
 				}
 				function cerrarCarrito(){
-					var cart=document.getElementById('cartSidebar'),ov=document.getElementById('overlay');
-					if(!cart) return;
-					cart.classList.remove('open');
-					var mO=document.getElementById('categorySidebar')?.classList.contains('open');
-					var nO=document.getElementById('notificationsPanel')?.classList.contains('active');
-					if(ov&&!mO&&!nO) ov.classList.remove('active');
+					var c=document.getElementById('cartSidebar'),o=document.getElementById('overlay');
+					if(!c) return; c.classList.remove('open');
+					if(o&&!document.getElementById('categorySidebar')?.classList.contains('open')&&!document.getElementById('notificationsPanel')?.classList.contains('active')) o.classList.remove('active');
 					detenerSeguimientoScroll();
 				}
 
-				var modConCarrito=new Set(['confirmMesaModal','deliveryModal','reservaModal']);
+				function contarCapas(){
+					var n=document.querySelectorAll('.modal-overlay.active').length;
+					if(document.getElementById('notificationsPanel')?.classList.contains('active')) n++;
+					if(document.querySelector('[id^="nivel2-"].expanded')) n++;
+					if(document.querySelector('[id^="nivel1-"].expanded')) n++;
+					if(document.getElementById('cartSidebar')?.classList.contains('open')) n++;
+					if(document.querySelector('.subcategory-list.expanded')) n++;
+					if(document.getElementById('categorySidebar')?.classList.contains('open')) n++;
+					return n;
+				}
+				function sincronizar(){
+					var c=contarCapas();
+					if(c>depth) for(var i=c-depth;i>0;i--) push();
+					else if(c<depth) depth=c;
+					if(c===0) ocultar();
+				}
 
-				// Registrar la función principal de cierre por capas
-				window._appCerrarCapa = function(){
+				function cerrarCapa(){
 					// 1. Modal
 					var mods=Array.from(document.querySelectorAll('.modal-overlay.active'));
-					if(mods.length>0){
-						sk.ocultarAviso();
+					if(mods.length){ ocultar();
 						var m=mods[mods.length-1];
 						if(m.id==='deliveryModal') detenerTimer('delivery');
 						if(m.id==='reservaModal') detenerTimer('reserva');
 						m.classList.remove('active');
 						if(modConCarrito.has(m.id)) abrirCarrito();
-						sk.sincronizar(); return;
-					}
+						sincronizar(); return; }
 					// 2. Notificaciones
 					var np=document.getElementById('notificationsPanel');
-					if(np?.classList.contains('active')){
-						sk.ocultarAviso(); np.classList.remove('active');
-						var ov=document.getElementById('overlay');
-						if(ov&&!document.getElementById('categorySidebar')?.classList.contains('open')&&!document.getElementById('cartSidebar')?.classList.contains('open')) ov.classList.remove('active');
-						sk.sincronizar(); return;
-					}
-					// 3. Nivel2 carrito
+					if(np?.classList.contains('active')){ ocultar(); np.classList.remove('active');
+						var o=document.getElementById('overlay');
+						if(o&&!document.getElementById('categorySidebar')?.classList.contains('open')&&!document.getElementById('cartSidebar')?.classList.contains('open')) o.classList.remove('active');
+						sincronizar(); return; }
+					// 3. Nivel2
 					var n2=document.querySelector('[id^="nivel2-"].expanded');
-					if(n2){
-						sk.ocultarAviso();
-						var i2=document.getElementById('icon2-'+n2.id.replace('nivel2-',''));
+					if(n2){ ocultar(); var i2=document.getElementById('icon2-'+n2.id.replace('nivel2-',''));
 						n2.classList.remove('expanded'); if(i2) i2.classList.remove('rotated');
-						nivel2Activo=null; sk.sincronizar(); return;
-					}
-					// 4. Nivel1 carrito
+						nivel2Activo=null; sincronizar(); return; }
+					// 4. Nivel1
 					var n1=document.querySelector('[id^="nivel1-"].expanded');
-					if(n1){
-						sk.ocultarAviso();
-						var i1=document.getElementById('icon1-'+n1.id.replace('nivel1-',''));
+					if(n1){ ocultar(); var i1=document.getElementById('icon1-'+n1.id.replace('nivel1-',''));
 						n1.classList.remove('expanded'); if(i1) i1.classList.remove('rotated');
 						n1.querySelectorAll('[id^="nivel2-"].expanded').forEach(function(el){
 							el.classList.remove('expanded');
 							var ic=document.getElementById('icon2-'+el.id.replace('nivel2-',''));
 							if(ic) ic.classList.remove('rotated');
 						});
-						nivel1Activo=null; nivel2Activo=null; sk.sincronizar(); return;
-					}
+						nivel1Activo=null; nivel2Activo=null; sincronizar(); return; }
 					// 5. Carrito
-					if(document.getElementById('cartSidebar')?.classList.contains('open')){
-						sk.ocultarAviso(); cerrarCarrito(); sk.sincronizar(); return;
-					}
+					if(document.getElementById('cartSidebar')?.classList.contains('open')){ ocultar(); cerrarCarrito(); sincronizar(); return; }
 					// 6. Subcategoría
 					var sub=document.querySelector('.subcategory-list.expanded');
-					if(sub){ sk.ocultarAviso(); sub.classList.remove('expanded'); sk.sincronizar(); return; }
+					if(sub){ ocultar(); sub.classList.remove('expanded'); sincronizar(); return; }
 					// 7. Menú hamburguesa
 					var cs=document.getElementById('categorySidebar');
-					if(cs?.classList.contains('open')){
-						sk.ocultarAviso(); cs.classList.remove('open');
-						var ov2=document.getElementById('overlay');
-						if(ov2&&!document.getElementById('cartSidebar')?.classList.contains('open')&&!document.getElementById('notificationsPanel')?.classList.contains('active')) ov2.classList.remove('active');
-						sk.sincronizar(); return;
-					}
-					// 8. Sin capas → aviso de salida
-					sk.setDepth(0);
-					sk.mostrarAviso();
-				};
-
-				// La app está lista — el popstate ya cubre todo, beforeunload ya no hace falta
-				if(typeof window._sakiDesactivarBeforeunload === 'function'){
-					window._sakiDesactivarBeforeunload();
+					if(cs?.classList.contains('open')){ ocultar(); cs.classList.remove('open');
+						var o2=document.getElementById('overlay');
+						if(o2&&!document.getElementById('cartSidebar')?.classList.contains('open')&&!document.getElementById('notificationsPanel')?.classList.contains('active')) o2.classList.remove('active');
+						sincronizar(); return; }
+					// 8. Sin capas → aviso
+					depth=0; mostrar();
 				}
 
-				// Procesar back que llegó antes de que la app estuviera lista
-				if(window._sakiPendingBack){
-					window._sakiPendingBack = false;
-					window._appCerrarCapa();
-				}
+				window.addEventListener('popstate', function(e){
+					if(e.state&&e.state.saki) depth=e.state.d||0; else push();
+					cerrarCapa();
+				});
 
-				// MutationObserver
-				var obs=new MutationObserver(function(ms){ ms.forEach(function(m){ if(m.attributeName==='class') sk.sincronizar(); }); });
+				// MutationObserver para sincronizar el stack automáticamente
+				var obs=new MutationObserver(function(ms){ ms.forEach(function(m){ if(m.attributeName==='class') sincronizar(); }); });
 				document.querySelectorAll('.modal-overlay,#notificationsPanel').forEach(function(el){ obs.observe(el,{attributes:true,attributeFilter:['class']}); });
-				var catEl=document.getElementById('categorySidebar');
-				var cartEl=document.getElementById('cartSidebar');
-				if(catEl){ obs.observe(catEl,{attributes:true,attributeFilter:['class']}); new MutationObserver(function(){ sk.sincronizar(); }).observe(catEl,{subtree:true,attributes:true,attributeFilter:['class']}); }
-				if(cartEl){ obs.observe(cartEl,{attributes:true,attributeFilter:['class']}); new MutationObserver(function(){ sk.sincronizar(); }).observe(cartEl,{subtree:true,attributes:true,attributeFilter:['class']}); }
+				var catEl=document.getElementById('categorySidebar'), cartEl=document.getElementById('cartSidebar');
+				if(catEl){ obs.observe(catEl,{attributes:true,attributeFilter:['class']}); new MutationObserver(function(){ sincronizar(); }).observe(catEl,{subtree:true,attributes:true,attributeFilter:['class']}); }
+				if(cartEl){ obs.observe(cartEl,{attributes:true,attributeFilter:['class']}); new MutationObserver(function(){ sincronizar(); }).observe(cartEl,{subtree:true,attributes:true,attributeFilter:['class']}); }
 
 				// Parches de toggles
-				var _ot=window.toggleCarrito; window.toggleCarrito=function(){ _ot?.apply(this,arguments); sk.sincronizar(); };
-				var _om=window.toggleMenuCategorias; window.toggleMenuCategorias=function(){ _om?.apply(this,arguments); sk.sincronizar(); };
-				var _on=window.toggleNotifications; window.toggleNotifications=function(){ _on?.apply(this,arguments); sk.sincronizar(); };
-				var _o1=window.toggleNivel1; window.toggleNivel1=function(g){ _o1?.(g); sk.sincronizar(); };
-				var _o2=window.toggleNivel2; window.toggleNivel2=function(s,p){ _o2?.(s,p); sk.sincronizar(); };
-				window._sincronizarBackStack=sk.sincronizar;
+				var _ot=window.toggleCarrito; window.toggleCarrito=function(){ _ot?.apply(this,arguments); sincronizar(); };
+				var _om=window.toggleMenuCategorias; window.toggleMenuCategorias=function(){ _om?.apply(this,arguments); sincronizar(); };
+				var _on=window.toggleNotifications; window.toggleNotifications=function(){ _on?.apply(this,arguments); sincronizar(); };
+				var _o1=window.toggleNivel1; window.toggleNivel1=function(g){ _o1?.(g); sincronizar(); };
+				var _o2=window.toggleNivel2; window.toggleNivel2=function(s,p){ _o2?.(s,p); sincronizar(); };
+				window._sincronizarBackStack=sincronizar;
 			})();
 			// ── fin sistema botón atrás ───────────────────────────────────────────
 
