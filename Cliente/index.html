@@ -2058,13 +2058,7 @@
         // ============================================
         // FUNCIONES DE NOTIFICACIONES (POLLING CADA 2 SEGUNDOS) - RESTAURADO
         // ============================================
-        function reproducirAlertaNotificacion() {
-            const audio = document.getElementById('notificationSound');
-            if (audio) { audio.pause(); audio.currentTime = 0; audio.play().catch(() => {}); }
-            if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
-            const bell = document.getElementById('notificationBell');
-            if (bell) { bell.classList.add('fa-shake'); setTimeout(() => bell.classList.remove('fa-shake'), 1000); }
-        }
+
 
         function mostrarToastNotificacion(titulo, mensaje) {
 			mostrarToast(`${titulo}: ${mensaje}`, 'info');
@@ -2133,7 +2127,18 @@
 			if (audio) {
 				audio.pause();
 				audio.currentTime = 0;
-				audio.play().catch(e => console.log('Error reproduciendo sonido:', e));
+				const playPromise = audio.play();
+				if (playPromise !== undefined) {
+					playPromise.catch(() => {
+						// Si el contexto de audio aún está bloqueado, desbloquear y reintentar
+						audio.muted = true;
+						audio.play().then(() => {
+							audio.muted = false;
+							audio.currentTime = 0;
+							audio.play().catch(() => {});
+						}).catch(() => {});
+					});
+				}
 			}
 			if (navigator.vibrate) {
 				navigator.vibrate([200, 100, 200]);
@@ -2253,9 +2258,26 @@
             }
         }
 
+        let _audioDesbloqueado = false;
         function verificarPermisosAudio() {
             const audio = document.getElementById('notificationSound');
-            if (audio) { audio.load(); audio.volume = 1; }
+            if (!audio) return;
+            audio.load();
+            audio.volume = 1;
+            // En la primera interacción del usuario, reproducir silencioso para desbloquear el contexto de audio
+            // Esto es lo que permite que el sonido se ejecute luego aunque la página esté en segundo plano
+            const _desbloquear = () => {
+                if (_audioDesbloqueado) return;
+                audio.muted = true;
+                audio.play().then(() => {
+                    audio.pause();
+                    audio.currentTime = 0;
+                    audio.muted = false;
+                    _audioDesbloqueado = true;
+                }).catch(() => {});
+            };
+            document.addEventListener('click', _desbloquear, { once: true });
+            document.addEventListener('touchstart', _desbloquear, { once: true });
         }
 
         // ============================================
@@ -2375,12 +2397,12 @@
                     costo_delivery: pedido.costo_delivery || 0,
                     costo_delivery_usd: pedido.costo_delivery_usd || 0,
                     costo_delivery_bs: pedido.costo_delivery_bs || 0,
-                    tasa_aplicada: pedido.tasa_aplicada || configGlobal?.tasa_efectiva || 400
+                    tasa_aplicada: pedido.tasa_aplicada || configGlobal?.tasa_efectiva || 400,
+                    transaction_nonce: pedido.transaction_nonce || null
                 };
                 const { data, error } = await window.supabaseClient.rpc('crear_pedido_con_reserva', { p_pedido: pedidoParaRPC, p_items: pedido.items });
                 if (error) throw error;
                 if (data && data.success) {
-                    mostrarToast('✅ Pedido realizado', 'success');
                     agregarPedidoAHistorial(pedido);
                     if (window.innerWidth <= 992) {
                         document.getElementById('cartSidebar').classList.remove('open');
