@@ -1537,27 +1537,31 @@
             }
         }
 
-        async function cargarMenu() {
+        // Carga menú sin renderizar (para uso en carga paralela con inventario)
+        async function cargarMenuSinRenderizar() {
             try {
                 const { data, error } = await window.supabaseClient.from('menu').select('*').eq('disponible', true);
                 if (error) throw error;
                 menuItems = data || [];
                 menuItems.sort((a, b) => a.nombre.localeCompare(b.nombre));
                 filteredMenuItems = [...menuItems];
-                precalcularStockMenu();
-                // Precargar todas las imágenes en background inmediatamente
                 _precargarImagenes(menuItems);
-                const ultimaCategoria = localStorage.getItem('saki_ultima_categoria');
-                if (ultimaCategoria && ultimaCategoria !== 'todos') {
-                    renderizarMenuPaginado(ultimaCategoria);
-                    const categoriaItem = document.querySelector(`.category-item[data-categoria="${ultimaCategoria}"]`);
-                    if (categoriaItem) {
-                        document.querySelectorAll('.category-item').forEach(c => c.classList.remove('active'));
-                        categoriaItem.classList.add('active');
-                        document.getElementById('categoryTitle').textContent = categoriaItem.querySelector('span').textContent.replace(/^[^\s]+\s/, '');
-                    }
-                } else renderizarMenuPaginado();
             } catch (error) { console.error('Error cargando menú:', error); mostrarToast('Error al cargar el menú', 'error'); }
+        }
+
+        async function cargarMenu() {
+            await cargarMenuSinRenderizar();
+            precalcularStockMenu();
+            const ultimaCategoria = localStorage.getItem('saki_ultima_categoria');
+            if (ultimaCategoria && ultimaCategoria !== 'todos') {
+                renderizarMenuPaginado(ultimaCategoria);
+                const categoriaItem = document.querySelector(`.category-item[data-categoria="${ultimaCategoria}"]`);
+                if (categoriaItem) {
+                    document.querySelectorAll('.category-item').forEach(c => c.classList.remove('active'));
+                    categoriaItem.classList.add('active');
+                    document.getElementById('categoryTitle').textContent = categoriaItem.querySelector('span').textContent.replace(/^[^\s]+\s/, '');
+                }
+            } else renderizarMenuPaginado();
         }
 
         async function cargarInventario() {
@@ -3418,7 +3422,14 @@
             // ── popstate ─────────────────────────────────────────────────────
             window.addEventListener('popstate', function(e) {
                 if (e.state && e.state.saki) {
+                    // Estado nuestro: cerrar capa correspondiente
                     _stackDepth = e.state.depth || 0;
+                    cerrarCapaMasReciente();
+                } else {
+                    // Estado ajeno (del navegador) o null:
+                    // el usuario está intentando salir de nuestra app.
+                    // Empujar de vuelta y mostrar aviso.
+                    _push();
                     cerrarCapaMasReciente();
                 }
             });
@@ -3490,12 +3501,21 @@
 		document.addEventListener('DOMContentLoaded', async () => {
 			
 			cargarTemaGuardado();
+			restaurarCarrito();
+			actualizarCarritoBadge();
 			
 			await cargarConfiguracion();
 			
-			await cargarMenu();
-			
-			await cargarInventario();
+			// Cargar menú e inventario en paralelo — renderizar solo cuando ambos estén listos
+			await Promise.all([cargarMenuSinRenderizar(), cargarInventario()]);
+			precalcularStockMenu();
+			// Respetar última categoría visitada
+			const _ultCat = localStorage.getItem('saki_ultima_categoria');
+			if (_ultCat && _ultCat !== 'todos') {
+				renderizarMenuPaginado(_ultCat);
+			} else {
+				renderizarMenuPaginado();
+			}
 			
 			cargarCategorias();
 			
@@ -3510,10 +3530,7 @@
 			
 			setupEventListeners();
 			
-			restaurarCarrito();
-			
 			actualizarCarritoUI();
-			actualizarCarritoBadge();
 			verificarPermisosAudio();
 			actualizarBotonHistorial();
 			
