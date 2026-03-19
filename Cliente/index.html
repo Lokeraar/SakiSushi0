@@ -1343,17 +1343,8 @@ window.addEventListener('beforeunload',function(e){if(!window._sakiReady){e.prev
             const modal = document.getElementById('previewModal');
             const body = document.getElementById('previewModalBody');
 
-            // Calcular stock disponible
-            let stockDisponible = Infinity;
-            if (platillo.ingredientes && Object.keys(platillo.ingredientes).length > 0) {
-                for (const [ingId, ingInfo] of Object.entries(platillo.ingredientes)) {
-                    const ingrediente = inventario.find(i => i.id === ingId);
-                    const stockDisp = (ingrediente?.stock || 0) - (ingrediente?.reservado || 0);
-                    const posible = Math.floor(stockDisp / (ingInfo.cantidad || 1));
-                    stockDisponible = Math.min(stockDisponible, posible);
-                }
-            } else stockDisponible = platillo.stock_maximo || 999;
-            if (stockDisponible === Infinity) stockDisponible = 999;
+            // Usar el stock precalculado que ya descuenta carrito local + reservas de otros
+            let stockDisponible = _stockPrecalculado[platilloId] ?? 999;
 
             const agotado = stockDisponible <= 0;
 
@@ -1520,6 +1511,50 @@ window.addEventListener('beforeunload',function(e){if(!window._sakiReady){e.prev
             const disponible = (ingrediente.stock || 0) - (ingrediente.reservado || 0) - reservadoEnCarrito;
             window.stockCache.set(ingredienteId, disponible);
             return disponible;
+        }
+
+        // Actualiza solo los elementos de stock en las tarjetas ya renderizadas,
+        // sin reconstruir el DOM completo. Llama siempre después de precalcularStockMenu().
+        function actualizarStockTarjetas() {
+            document.querySelectorAll('.menu-card').forEach(card => {
+                const btn = card.querySelector('.btn-add');
+                const platilloId = btn ? btn.getAttribute('onclick')?.match(/agregarAlCarrito\('([^']+)'\)/)?.[1] : null;
+                if (!platilloId) return;
+                const stock = _stockPrecalculado[platilloId] ?? 999;
+                const agotado = stock <= 0;
+                const sc = agotado ? 'sold-out' : (stock < 5 ? 'low' : 'available');
+                // Actualizar stock-info
+                const stockInfo = card.querySelector('.stock-info:not(.menu-card-footer .stock-info)') 
+                               || card.querySelector('div.stock-info');
+                if (stockInfo) {
+                    if (agotado) {
+                        stockInfo.innerHTML = '';
+                    } else {
+                        stockInfo.innerHTML = `<i class="fas fa-box ${sc}"></i><span>${stock} disponibles</span>`;
+                    }
+                }
+                // Actualizar badge agotado
+                const overlay = card.querySelector('.menu-card-sold-overlay');
+                const badge   = card.querySelector('.menu-card-badge');
+                if (agotado && !overlay) {
+                    const imgDiv = card.querySelector('.menu-card-image');
+                    if (imgDiv) imgDiv.insertAdjacentHTML('beforeend', '<div class="menu-card-sold-overlay"><span>🚫 Agotado</span></div>');
+                } else if (!agotado && overlay) {
+                    overlay.remove();
+                }
+                if (!agotado && !badge && stock < 5) {
+                    const imgDiv = card.querySelector('.menu-card-image');
+                    if (imgDiv) imgDiv.insertAdjacentHTML('beforeend', '<div class="menu-card-badge low"><i class="fas fa-exclamation-triangle"></i> Últimas</div>');
+                } else if ((agotado || stock >= 5) && badge) {
+                    badge.remove();
+                }
+                // Deshabilitar/habilitar botones
+                card.querySelectorAll('.btn-add, .btn-customize').forEach(b => {
+                    b.disabled = agotado;
+                    b.style.opacity = agotado ? '0.4' : '';
+                });
+                card.classList.toggle('agotado', agotado);
+            });
         }
 
         function precalcularStockMenu() {
@@ -1795,7 +1830,8 @@ window.addEventListener('beforeunload',function(e){if(!window._sakiReady){e.prev
 
         function guardarCarrito() {
             localStorage.setItem('saki_carrito', JSON.stringify({ items: carrito, timestamp: Date.now() }));
-            precalcularStockMenu(); // Recalcular stock reservado al cambiar carrito
+            precalcularStockMenu();
+            actualizarStockTarjetas();
         }
 
         function restaurarCarrito() {
@@ -2315,6 +2351,21 @@ window.addEventListener('beforeunload',function(e){if(!window._sakiReady){e.prev
 					// Pedido actualizado (ej. cambio de estado)
 					console.log('Pedido actualizado:', payload.new);
 					// Aquí podrías actualizar alguna UI si es necesario
+				})
+				.on('postgres_changes', {
+					event: 'UPDATE',
+					schema: 'public',
+					table: 'inventario'
+				}, async (payload) => {
+					// Stock real cambió (cajero confirmó/rechazó pedido) → actualizar inventario local
+					if (payload.new) {
+						const idx = inventario.findIndex(i => i.id === payload.new.id);
+						if (idx >= 0) inventario[idx] = { ...inventario[idx], ...payload.new };
+						else inventario.push(payload.new);
+						window.stockCache.invalidate();
+						precalcularStockMenu();
+						actualizarStockTarjetas();
+					}
 				})
 				.subscribe((status) => {
 					if (status === 'SUBSCRIBED') {
