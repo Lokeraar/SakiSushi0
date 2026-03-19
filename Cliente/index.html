@@ -792,6 +792,7 @@ window.addEventListener('beforeunload',function(e){if(!window._sakiReady){e.prev
                     <button class="modal-close" id="closeDeliveryModal">&times;</button>
                 </div>
                 <div class="modal-body">
+                    <div id="resumenPedidoDelivery" style="background:rgba(0,0,0,.2);border-radius:var(--radius-sm);padding:.8rem;margin-bottom:1rem;border:1px solid rgba(255,255,255,.07)"></div>
                     <div class="payment-timer" id="deliveryTimer" style="display:block">
                         <i class="fas fa-hourglass-half"></i> 20 min para pagar
                         <div class="timer-display" id="deliveryTimerDisplay">20:00</div>
@@ -921,6 +922,7 @@ window.addEventListener('beforeunload',function(e){if(!window._sakiReady){e.prev
                     <button class="modal-close" id="closeReservaModal">&times;</button>
                 </div>
                 <div class="modal-body">
+                    <div id="resumenPedidoReserva" style="background:rgba(0,0,0,.2);border-radius:var(--radius-sm);padding:.8rem;margin-bottom:1rem;border:1px solid rgba(255,255,255,.07)"></div>
                     <div class="payment-timer" id="reservaTimer" style="display:block">
                         <i class="fas fa-hourglass-half"></i> 20 min para pagar
                         <div class="timer-display" id="reservaTimerDisplay">20:00</div>
@@ -2570,8 +2572,36 @@ window.addEventListener('beforeunload',function(e){if(!window._sakiReady){e.prev
             }
         }
 
+        // Genera el HTML del resumen del carrito (sin delivery)
+        function generarResumenCarrito() {
+            const grupos = agruparItemsJerarquicamente();
+            let html = '';
+            let total = 0;
+            grupos.forEach(grupo => {
+                total += grupo.subtotal;
+                grupo.subgrupos.forEach(subgrupo => {
+                    let persTexto = '';
+                    if (subgrupo.personalizacion.length > 0) {
+                        const nombres = subgrupo.personalizacion.map(p => inventario.find(i => i.id === p)?.nombre || p).join(', ');
+                        persTexto = `<small style="display:block;color:var(--gray-400);font-size:.75rem">Sin: ${nombres}</small>`;
+                    }
+                    html += `<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:.4rem;font-size:.88rem">
+                        <div><span>${grupo.nombre} x${subgrupo.cantidad}</span>${persTexto}</div>
+                        <span style="color:var(--accent);font-weight:600;white-space:nowrap;margin-left:.5rem">${formatBs(subgrupo.subtotal)}</span>
+                    </div>`;
+                });
+            });
+            html += `<div style="display:flex;justify-content:space-between;margin-top:.6rem;padding-top:.5rem;border-top:1px solid rgba(255,255,255,.12);font-weight:700;font-size:.9rem">
+                <span>Subtotal platillos</span>
+                <span style="color:var(--accent)">${formatBs(total)}</span>
+            </div>`;
+            return html;
+        }
+
         function iniciarProcesoDelivery() {
             iniciarTimerFrontend('delivery', 20);
+            const resumenDelivery = document.getElementById('resumenPedidoDelivery');
+            if (resumenDelivery) resumenDelivery.innerHTML = generarResumenCarrito();
             document.getElementById('selectedParroquiaText').textContent = deliveryFormData.parroquia || 'Seleccionar parroquia';
             document.getElementById('parroquiaSelect').value = deliveryFormData.parroquia || '';
             document.getElementById('direccion').value = deliveryFormData.direccion || '';
@@ -2588,6 +2618,8 @@ window.addEventListener('beforeunload',function(e){if(!window._sakiReady){e.prev
 
         function iniciarProcesoReserva() {
             iniciarTimerFrontend('reserva', 20);
+            const resumenReserva = document.getElementById('resumenPedidoReserva');
+            if (resumenReserva) resumenReserva.innerHTML = generarResumenCarrito();
             const subtotalUSD = carrito.reduce((sum, item) => sum + item.precioUnitarioUSD, 0);
             document.getElementById('reservaTotal').textContent = formatBs(usdToBs(subtotalUSD));
             document.getElementById('montoReserva').textContent = formatBs(usdToBs(subtotalUSD));
