@@ -213,15 +213,13 @@ window.abrirModalDeliverys=async function(){try{
             var h12='';
             try{
               if(ts&&typeof ts==='string'&&ts.indexOf('Z')===-1&&ts.indexOf('+')===-1)ts+='Z';
-              h12=new Date(ts).toLocaleString('en-US',{timeZone:'America/Caracas',hour:'numeric',minute:'2-digit',hour12:true}).toLowerCase();
-            }catch(ex){h12=ts;}
-            html+='<div style="display:flex;justify-content:space-between;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:.78rem">'
-                 +'<span><i class="fas fa-map-marker-alt" style="color:var(--delivery);margin-right:4px"></i>'+(p.parroquia||'Sin parroquia')+'</span>'
-                 +'<span style="color:var(--text-secondary)">'+h12+'</span></div>';
+              var d=new Date(ts);
+              if(!isNaN(d.getTime()))h12=d.toLocaleString('en-US',{timeZone:'America/Caracas',hour:'numeric',minute:'2-digit',hour12:true}).toLowerCase();
+            }catch(ex){}
+            var precioE=p.costo_delivery_bs||0;
+            html+='<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:.78rem">'                 +'<span><i class="fas fa-map-marker-alt" style="color:var(--delivery);margin-right:4px"></i>'+(p.parroquia||'Sin parroquia')+(h12?'&nbsp;&nbsp;<span style="color:var(--text-secondary)">'+h12+'</span>':'')+'</span>'                 +'<span style="color:var(--accent);font-weight:700">'+window.formatBs(precioE)+'</span></div>';
           });
-          html+='<div style="display:flex;justify-content:space-between;padding:5px 0;margin-top:4px;font-size:.78rem;font-weight:700">'
-               +'<span>'+peds.length+' entrega'+(peds.length>1?'s':'')+'</span>'
-               +'<span style="color:var(--accent)">'+window.formatBs(monto)+'</span></div>';
+          html+='<div style="padding:5px 0;margin-top:4px;font-size:.78rem;font-weight:700">'               +'<span>'+peds.length+' entrega'+(peds.length>1?'s':'')+'</span></div>';
         }
         html+='</div>';
       }
