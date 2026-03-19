@@ -482,7 +482,7 @@
         .modal-header h3{font-size:1.3rem;color:#fff}
         .modal-close{background:none;border:none;font-size:1.5rem;cursor:pointer;color:var(--gray-400);width:35px;height:35px;display:flex;align-items:center;justify-content:center;border-radius:50%;transition:all .2s}
         .modal-close:hover{background:rgba(255,255,255,.05);color:var(--danger)}
-        .modal-body{padding:1.2rem;color:#fff}
+        .modal-body{padding:1.2rem;color:#fff;overflow-y:auto;flex:1}
         .modal-footer{padding:1.2rem;border-top:1px solid rgba(255,255,255,.1);background:rgba(0,0,0,.2);display:flex;justify-content:flex-end;gap:1rem;border-radius:0 0 var(--radius-lg) var(--radius-lg)}
         .footer{background:var(--secondary);color:white;padding:2rem 1.5rem 1rem;width:100%;margin-top:auto;position:relative;z-index:100;flex-shrink:0}
         .footer::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:100px;height:4px;background:linear-gradient(90deg,var(--primary),var(--accent));border-radius:2px}
@@ -851,7 +851,8 @@
                         
                         <div style="margin-bottom:1.5rem">
                             <label for="telefono" class="modal-form-label">Teléfono (máx 14 dígitos) <span class="asterisk">*</span></label>
-                            <input type="tel" id="telefono" required pattern="\+[0-9]{11,14}" maxlength="15" placeholder="Ej: +5804121234567 o 04121234567" inputmode="numeric" class="modal-form-input" oninput="this.value=this.value.replace(/[^0-9+]/g,''); if(this.value.indexOf('+')!==0&&this.value.length>0){this.value='+'+this.value.replace(/\+/g,'')} validarFormularioDelivery()">
+                            <input type="tel" id="telefono" required pattern="\+[0-9]{11,14}" maxlength="15" placeholder="Ej: +5804121234567 o 04121234567" inputmode="numeric" class="modal-form-input" oninput="this.value=this.value.replace(/[^0-9+]/g,''); if(this.value.indexOf('+')!==0&&this.value.length>0){this.value='+'+this.value.replace(/\+/g,'')} validarFormularioDelivery()" onblur="var d=document.getElementById('errorTelefono');var v=this.value.replace(/[^0-9]/g,'');if(this.value.length>0&&v.length<11){d.style.display='block'}else{d.style.display='none'}">
+                        <span id="errorTelefono" style="display:none;color:#ff4d4d;font-size:.78rem;margin-top:4px">Número incompleto</span>
                         </div>
                         
                         <div style="margin-bottom:1.5rem">
@@ -864,6 +865,7 @@
                                 <input type="text" maxlength="1" class="ref-digit modal-form-ref-digit" data-type="delivery" data-index="4" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this,'delivery',4); validarFormularioDelivery()">
                                 <input type="text" maxlength="1" class="ref-digit modal-form-ref-digit" data-type="delivery" data-index="5" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this,'delivery',5); validarFormularioDelivery()">
                             </div>
+                            <span id="errorRefDelivery" style="display:none;color:#ff4d4d;font-size:.78rem;margin-top:6px;text-align:center">Número de referencia incompleta</span>
                         </div>
                         
                         <div style="margin-bottom:1.5rem">
@@ -942,6 +944,7 @@
                                 <input type="text" maxlength="1" class="ref-digit modal-form-ref-digit" data-type="reserva" data-index="4" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this,'reserva',4); validarFormularioReserva()">
                                 <input type="text" maxlength="1" class="ref-digit modal-form-ref-digit" data-type="reserva" data-index="5" inputmode="numeric" pattern="[0-9]*" oninput="this.value=this.value.replace(/[^0-9]/g,''); moverSiguiente(this,'reserva',5); validarFormularioReserva()">
                             </div>
+                            <span id="errorRefReserva" style="display:none;color:#ff4d4d;font-size:.78rem;margin-top:6px;text-align:center">Número de referencia incompleta</span>
                         </div>
                         
                         <div style="margin-bottom:1.5rem">
@@ -1250,6 +1253,17 @@
                 `).join('');
             }
             modal.classList.add('active');
+
+            // Estrella de favoritos
+            const favBtn = document.getElementById('previewFavBtn');
+            if (favBtn) {
+                favBtn.addEventListener('click', () => {
+                    toggleFavorito(platilloId);
+                    const esFav = esFavorito(platilloId);
+                    favBtn.classList.toggle('active', esFav);
+                    favBtn.dataset.tooltip = esFav ? 'Quitar de favoritos' : 'Agregar a favoritos';
+                });
+            }
         }
 
         function cerrarHistorial() {
@@ -1334,14 +1348,19 @@
                   }).join('')
                 : '<li>Sin ingredientes específicos</li>';
 
-            // Estado inicial: cantidad = 1
             let _previewCantidad = 1;
-
             const _stockClass = agotado ? 'sold-out' : (stockDisponible < 5 ? 'low' : 'available');
             const _stockTxt   = agotado ? 'Agotado' : `${stockDisponible} disponibles`;
 
             body.innerHTML = `
-                <div class="preview-image" style="background-image:url('${platillo.imagen || 'https://via.placeholder.com/400x300?text=Sushi'}')"></div>
+                <div style="position:relative">
+                    <div class="preview-image" style="background-image:url('${platillo.imagen || 'https://via.placeholder.com/400x300?text=Sushi'}')"></div>
+                    <button id="previewFavBtn" class="favorite-btn ${esFavorito(platilloId) ? 'active' : ''}"
+                        style="position:absolute;top:.6rem;left:.6rem;width:36px;height:36px;border-radius:50%;background:rgba(0,0,0,.55);backdrop-filter:blur(4px);display:flex;align-items:center;justify-content:center;font-size:1.1rem;z-index:2"
+                        data-tooltip="${esFavorito(platilloId) ? 'Quitar de favoritos' : 'Agregar a favoritos'}">
+                        <i class="fas fa-star"></i>
+                    </button>
+                </div>
                 <h3 style="color:var(--accent); margin-bottom:.5rem">${platillo.nombre}</h3>
                 <p style="margin-bottom:1rem">${platillo.descripcion || 'Delicioso platillo de nuestra carta'}</p>
                 <div class="preview-ingredientes">
@@ -1368,7 +1387,18 @@
                 </div>
             `;
 
-            // Lógica de cantidad
+            // Favoritos
+            const favBtn = document.getElementById('previewFavBtn');
+            if (favBtn) {
+                favBtn.addEventListener('click', () => {
+                    toggleFavorito(platilloId);
+                    const esFav = esFavorito(platilloId);
+                    favBtn.classList.toggle('active', esFav);
+                    favBtn.dataset.tooltip = esFav ? 'Quitar de favoritos' : 'Agregar a favoritos';
+                });
+            }
+
+            // Cantidad
             const inputCant = document.getElementById('previewCantidad');
             const precioEl  = document.getElementById('previewPrecio');
             const stockEl   = document.getElementById('previewStock');
@@ -1382,17 +1412,17 @@
                 stockEl.innerHTML = `<i class="fas fa-box ${sc}"></i> ${restante <= 0 ? 'Agotado' : restante + ' disponibles'}`;
             }
 
-            document.getElementById('previewMinus').addEventListener('click', () => { inputCant.value = Math.max(1, (_previewCantidad - 1)); _actualizarPreview(); });
-            document.getElementById('previewPlus').addEventListener('click',  () => { inputCant.value = Math.min(stockDisponible, (_previewCantidad + 1)); _actualizarPreview(); });
+            document.getElementById('previewMinus').addEventListener('click', () => { inputCant.value = Math.max(1, _previewCantidad - 1); _actualizarPreview(); });
+            document.getElementById('previewPlus').addEventListener('click',  () => { inputCant.value = Math.min(stockDisponible, _previewCantidad + 1); _actualizarPreview(); });
             inputCant.addEventListener('input', _actualizarPreview);
 
-            // Botón Personalizar: cierra preview y abre el modal de personalización
+            // Personalizar
             document.getElementById('previewPersonalizar').addEventListener('click', () => {
                 cerrarPreview();
                 setTimeout(() => abrirPersonalizacion(platilloId), 200);
             });
 
-            // Botón Agregar: añade la cantidad seleccionada como N instancias individuales
+            // Agregar al carrito
             document.getElementById('previewAddToCart').onclick = () => {
                 if (agotado) return;
                 for (let i = 0; i < _previewCantidad; i++) agregarAlCarrito(platilloId);
@@ -2108,13 +2138,7 @@
         // ============================================
         // FUNCIONES DE NOTIFICACIONES (POLLING CADA 2 SEGUNDOS) - RESTAURADO
         // ============================================
-        function reproducirAlertaNotificacion() {
-            const audio = document.getElementById('notificationSound');
-            if (audio) { audio.pause(); audio.currentTime = 0; audio.play().catch(() => {}); }
-            if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
-            const bell = document.getElementById('notificationBell');
-            if (bell) { bell.classList.add('fa-shake'); setTimeout(() => bell.classList.remove('fa-shake'), 1000); }
-        }
+
 
         function mostrarToastNotificacion(titulo, mensaje) {
 			mostrarToast(`${titulo}: ${mensaje}`, 'info');
@@ -2183,7 +2207,17 @@
 			if (audio) {
 				audio.pause();
 				audio.currentTime = 0;
-				audio.play().catch(e => console.log('Error reproduciendo sonido:', e));
+				const playPromise = audio.play();
+				if (playPromise !== undefined) {
+					playPromise.catch(() => {
+						audio.muted = true;
+						audio.play().then(() => {
+							audio.muted = false;
+							audio.currentTime = 0;
+							audio.play().catch(() => {});
+						}).catch(() => {});
+					});
+				}
 			}
 			if (navigator.vibrate) {
 				navigator.vibrate([200, 100, 200]);
@@ -2303,9 +2337,24 @@
             }
         }
 
+        let _audioDesbloqueado = false;
         function verificarPermisosAudio() {
             const audio = document.getElementById('notificationSound');
-            if (audio) { audio.load(); audio.volume = 1; }
+            if (!audio) return;
+            audio.load();
+            audio.volume = 1;
+            const _desbloquear = () => {
+                if (_audioDesbloqueado) return;
+                audio.muted = true;
+                audio.play().then(() => {
+                    audio.pause();
+                    audio.currentTime = 0;
+                    audio.muted = false;
+                    _audioDesbloqueado = true;
+                }).catch(() => {});
+            };
+            document.addEventListener('click', _desbloquear, { once: true });
+            document.addEventListener('touchstart', _desbloquear, { once: true });
         }
 
         // ============================================
@@ -2425,12 +2474,12 @@
                     costo_delivery: pedido.costo_delivery || 0,
                     costo_delivery_usd: pedido.costo_delivery_usd || 0,
                     costo_delivery_bs: pedido.costo_delivery_bs || 0,
-                    tasa_aplicada: pedido.tasa_aplicada || configGlobal?.tasa_efectiva || 400
+                    tasa_aplicada: pedido.tasa_aplicada || configGlobal?.tasa_efectiva || 400,
+                    transaction_nonce: pedido.transaction_nonce || null
                 };
                 const { data, error } = await window.supabaseClient.rpc('crear_pedido_con_reserva', { p_pedido: pedidoParaRPC, p_items: pedido.items });
                 if (error) throw error;
                 if (data && data.success) {
-                    mostrarToast('✅ Pedido realizado', 'success');
                     agregarPedidoAHistorial(pedido);
                     if (window.innerWidth <= 992) {
                         document.getElementById('cartSidebar').classList.remove('open');
@@ -2954,10 +3003,21 @@
                     if (this.value.length === 1 && index < 5) document.querySelector(`.ref-digit[data-type="${type}"][data-index="${index + 1}"]`).focus();
                     if (type === 'delivery') { validarFormularioDelivery(); guardarDatosDelivery(); }
                     else { validarFormularioReserva(); guardarDatosReserva(); }
+                    const errEl = document.getElementById(type === 'delivery' ? 'errorRefDelivery' : 'errorRefReserva');
+                    if (errEl) errEl.style.display = 'none';
                 });
                 input.addEventListener('keydown', function(e) {
                     const type = this.dataset.type, index = parseInt(this.dataset.index);
                     if (e.key === 'Backspace' && this.value.length === 0 && index > 0) document.querySelector(`.ref-digit[data-type="${type}"][data-index="${index - 1}"]`).focus();
+                });
+                input.addEventListener('blur', function() {
+                    const type = this.dataset.type;
+                    const digits = document.querySelectorAll(`.ref-digit[data-type="${type}"]`);
+                    const llenos = [...digits].filter(d => d.value.length === 1).length;
+                    const errEl = document.getElementById(type === 'delivery' ? 'errorRefDelivery' : 'errorRefReserva');
+                    if (!errEl) return;
+                    const alguno = [...digits].some(d => d.value.length === 1);
+                    errEl.style.display = (alguno && llenos < 6) ? 'block' : 'none';
                 });
             });
         }
