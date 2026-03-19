@@ -3340,6 +3340,9 @@
                     return;
                 }
                 _avisandoSalida = true;
+                // Empujar un estado para interceptar el siguiente atrás
+                // (el usuario puede presionar atrás otra vez para confirmar salida)
+                _push();
 
                 let aviso = document.getElementById('_salidaAviso');
                 if (!aviso) {
@@ -3391,11 +3394,13 @@
             // ── Lógica principal de cierre por capas ──────────────────────────
 
             function cerrarCapaMasReciente() {
-                _ocultarAvisoSalida();
+                // Solo ocultamos el aviso si hay una capa real que cerrar.
+                // Si no hay nada, dejamos que el aviso se muestre.
 
                 // 1. Modal activo
                 const modalesActivos = Array.from(document.querySelectorAll('.modal-overlay.active'));
                 if (modalesActivos.length > 0) {
+                    _ocultarAvisoSalida();
                     const modal = modalesActivos[modalesActivos.length - 1];
                     if (modal.id === 'deliveryModal') detenerTimer('delivery');
                     if (modal.id === 'reservaModal')  detenerTimer('reserva');
