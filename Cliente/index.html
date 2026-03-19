@@ -3240,27 +3240,28 @@
 
         // ============================================
 // ============================================
+        // ============================================
         // INTERCEPCIÓN DEL BOTÓN ATRÁS (History API)
-        // Flujo de capas (de más reciente a más antigua):
+        // Modelo de capas apiladas: cada capa que se abre empuja un estado.
+        // Cada atrás consume un estado y cierra la capa más reciente.
+        // Orden (de más reciente a más antigua):
         //   modal activo → notificaciones → nivel2Carrito → nivel1Carrito
         //   → carrito abierto → subcatMenuHamburguesa → menuHamburguesa
         //   → (todo cerrado) → aviso "¿Seguro que desea salir?"
-        // Regla: al cerrar un modal de pedido/delivery/reserva/confirmación
-        //        se abre el carrito como siguiente capa.
         // ============================================
         (function() {
-            let _capaEnStack  = false;
+            // Número de estados que hemos empujado al historial
+            let _stackDepth = 0;
             let _avisandoSalida = false;
 
-            // Estado inicial: reemplazar la entrada actual para que el primer
-            // popstate sea siempre el nuestro.
-            history.replaceState({ saki: true }, '');
+            // Estado base: reemplazar la entrada actual
+            history.replaceState({ saki: true, depth: 0 }, '');
 
             // ── Helpers ──────────────────────────────────────────────────────
 
             function _abrirCarrito() {
-                const cart = document.getElementById('cartSidebar');
-                const menu = document.getElementById('categorySidebar');
+                const cart    = document.getElementById('cartSidebar');
+                const menu    = document.getElementById('categorySidebar');
                 const overlay = document.getElementById('overlay');
                 if (!cart) return;
                 cart.classList.add('open');
@@ -3271,11 +3272,11 @@
             }
 
             function _cerrarCarrito() {
-                const cart = document.getElementById('cartSidebar');
+                const cart    = document.getElementById('cartSidebar');
                 const overlay = document.getElementById('overlay');
                 if (!cart) return;
                 cart.classList.remove('open');
-                const menuOpen = document.getElementById('categorySidebar')?.classList.contains('open');
+                const menuOpen  = document.getElementById('categorySidebar')?.classList.contains('open');
                 const notifOpen = document.getElementById('notificationsPanel')?.classList.contains('active');
                 if (overlay && !menuOpen && !notifOpen) overlay.classList.remove('active');
                 detenerSeguimientoScroll();
@@ -3290,36 +3291,56 @@
                 'confirmMesaModal', 'deliveryModal', 'reservaModal'
             ]);
 
-            function _asegurarEstadoEnStack() {
-                if (!_capaEnStack) {
-                    history.pushState({ saki: true }, '');
-                    _capaEnStack = true;
-                }
+            // Empujar UN estado por cada capa que se abre
+            function _push() {
+                _stackDepth++;
+                history.pushState({ saki: true, depth: _stackDepth }, '');
             }
 
-            function _hayCapasAbiertas() {
-                return !!(
-                    document.querySelector('.modal-overlay.active') ||
-                    document.getElementById('notificationsPanel')?.classList.contains('active') ||
-                    _carritoEstaAbierto() ||
-                    document.getElementById('categorySidebar')?.classList.contains('open') ||
-                    document.querySelector('.subcategory-list.expanded') ||
-                    nivel1Activo ||
-                    nivel2Activo
-                );
+            // Calcular cuántas capas hay abiertas en el DOM ahora mismo
+            function _contarCapas() {
+                let n = 0;
+                // Cada modal activo = 1 capa
+                n += document.querySelectorAll('.modal-overlay.active').length;
+                // Notificaciones
+                if (document.getElementById('notificationsPanel')?.classList.contains('active')) n++;
+                // Nivel2 carrito
+                if (document.querySelector('[id^="nivel2-"].expanded')) n++;
+                // Nivel1 carrito
+                if (document.querySelector('[id^="nivel1-"].expanded')) n++;
+                // Carrito abierto
+                if (_carritoEstaAbierto()) n++;
+                // Subcategoría hamburguesa
+                if (document.querySelector('.subcategory-list.expanded')) n++;
+                // Menú hamburguesa
+                if (document.getElementById('categorySidebar')?.classList.contains('open')) n++;
+                return n;
+            }
+
+            // Sincroniza _stackDepth con la cantidad real de capas en el DOM
+            function _sincronizarStack() {
+                const capasDOM = _contarCapas();
+                if (capasDOM > _stackDepth) {
+                    // Se abrieron capas sin que nosotros lo detectáramos — empujar los estados faltantes
+                    const faltantes = capasDOM - _stackDepth;
+                    for (let i = 0; i < faltantes; i++) _push();
+                } else if (capasDOM < _stackDepth) {
+                    // Se cerraron capas sin consumir historial — ajustar contador
+                    _stackDepth = capasDOM;
+                }
+                // Si no hay capas y el aviso está visible, ocultarlo
+                if (capasDOM === 0) _ocultarAvisoSalida();
             }
 
             // ── Aviso de salida ───────────────────────────────────────────────
 
             function _mostrarAvisoSalida() {
-                // Si ya mostramos el aviso y el usuario vuelve a presionar atrás, salir
                 if (_avisandoSalida) {
                     window.history.go(-1);
                     return;
                 }
                 _avisandoSalida = true;
 
-                // Crear overlay de aviso
                 let aviso = document.getElementById('_salidaAviso');
                 if (!aviso) {
                     aviso = document.createElement('div');
@@ -3346,20 +3367,17 @@
                     });
                     document.getElementById('_salidaNo').addEventListener('click', () => {
                         _ocultarAvisoSalida();
-                        // Volver a empujar estado para que el siguiente back muestre aviso otra vez
-                        history.pushState({ saki: true }, '');
-                        _capaEnStack = true;
+                        // Volver a empujar estado para que el siguiente back muestre aviso de nuevo
+                        _push();
                         _avisandoSalida = false;
                     });
                 }
                 aviso.style.display = 'flex';
 
-                // Auto-cancelar si pasan 5 segundos sin respuesta
                 clearTimeout(aviso._timer);
                 aviso._timer = setTimeout(() => {
                     _ocultarAvisoSalida();
-                    history.pushState({ saki: true }, '');
-                    _capaEnStack = true;
+                    _push();
                     _avisandoSalida = false;
                 }, 5000);
             }
@@ -3382,9 +3400,11 @@
                     if (modal.id === 'deliveryModal') detenerTimer('delivery');
                     if (modal.id === 'reservaModal')  detenerTimer('reserva');
                     modal.classList.remove('active');
-                    // Si es un modal de pedido, abrir el carrito como siguiente capa
                     if (_modalesConCarrito.has(modal.id)) {
                         _abrirCarrito();
+                        // El carrito que acabamos de abrir ya cuenta como 1 capa,
+                        // no empujamos nada extra — el estado lo acabamos de consumir
+                        // y _sincronizarStack lo repondrá si hace falta
                     }
                     _sincronizarStack();
                     return;
@@ -3394,7 +3414,7 @@
                 const notifPanel = document.getElementById('notificationsPanel');
                 if (notifPanel?.classList.contains('active')) {
                     notifPanel.classList.remove('active');
-                    const overlay = document.getElementById('overlay');
+                    const overlay  = document.getElementById('overlay');
                     const menuOpen = document.getElementById('categorySidebar')?.classList.contains('open');
                     const cartOpen = _carritoEstaAbierto();
                     if (overlay && !menuOpen && !cartOpen) overlay.classList.remove('active');
@@ -3402,51 +3422,57 @@
                     return;
                 }
 
-                // 3. Nivel2 del carrito expandido → plegar a nivel1
-                if (nivel2Activo) {
-                    const n2 = document.getElementById(`nivel2-${nivel2Activo}`);
-                    const i2 = document.getElementById(`icon2-${nivel2Activo}`);
-                    if (n2) n2.classList.remove('expanded');
-                    if (i2) i2.classList.remove('rotated');
+                // 3. Nivel2 del carrito expandido → plegar
+                const n2el = document.querySelector('[id^="nivel2-"].expanded');
+                if (n2el) {
+                    const id2 = n2el.id.replace('nivel2-', '');
+                    const ic2 = document.getElementById(`icon2-${id2}`);
+                    n2el.classList.remove('expanded');
+                    if (ic2) ic2.classList.remove('rotated');
                     nivel2Activo = null;
-                    // El carrito sigue abierto como capa activa
                     _sincronizarStack();
                     return;
                 }
 
-                // 4. Nivel1 del carrito expandido → plegar a nivel base
-                if (nivel1Activo) {
-                    const n1 = document.getElementById(`nivel1-${nivel1Activo}`);
-                    const i1 = document.getElementById(`icon1-${nivel1Activo}`);
-                    if (n1) n1.classList.remove('expanded');
-                    if (i1) i1.classList.remove('rotated');
+                // 4. Nivel1 del carrito expandido → plegar
+                const n1el = document.querySelector('[id^="nivel1-"].expanded');
+                if (n1el) {
+                    const id1 = n1el.id.replace('nivel1-', '');
+                    const ic1 = document.getElementById(`icon1-${id1}`);
+                    n1el.classList.remove('expanded');
+                    if (ic1) ic1.classList.remove('rotated');
+                    // Plegar también cualquier nivel2 que haya dentro
+                    n1el.querySelectorAll('[id^="nivel2-"].expanded').forEach(el => {
+                        el.classList.remove('expanded');
+                        const ic = document.getElementById(`icon2-${el.id.replace('nivel2-','')}`);
+                        if (ic) ic.classList.remove('rotated');
+                    });
                     nivel1Activo = null;
-                    // El carrito sigue abierto como capa activa
+                    nivel2Activo = null;
                     _sincronizarStack();
                     return;
                 }
 
-                // 5. Carrito abierto → cerrar carrito
+                // 5. Carrito abierto → cerrar
                 if (_carritoEstaAbierto()) {
                     _cerrarCarrito();
                     _sincronizarStack();
                     return;
                 }
 
-                // 6. Subcategoría del menú hamburguesa expandida → cerrar subcategoría
+                // 6. Subcategoría hamburguesa expandida → cerrar
                 const subExpanded = document.querySelector('.subcategory-list.expanded');
                 if (subExpanded) {
                     subExpanded.classList.remove('expanded');
-                    // El menú hamburguesa sigue abierto como capa activa
                     _sincronizarStack();
                     return;
                 }
 
-                // 7. Menú hamburguesa abierto → cerrar menú
+                // 7. Menú hamburguesa abierto → cerrar
                 const categorySidebar = document.getElementById('categorySidebar');
                 if (categorySidebar?.classList.contains('open')) {
                     categorySidebar.classList.remove('open');
-                    const overlay = document.getElementById('overlay');
+                    const overlay  = document.getElementById('overlay');
                     const cartOpen = _carritoEstaAbierto();
                     const notifOpen = document.getElementById('notificationsPanel')?.classList.contains('active');
                     if (overlay && !cartOpen && !notifOpen) overlay.classList.remove('active');
@@ -3455,45 +3481,51 @@
                 }
 
                 // 8. Nada abierto → aviso de salida
-                _capaEnStack = false;
+                _stackDepth = 0;
                 _mostrarAvisoSalida();
             }
 
-            // Mantiene el stack sincronizado
-            function _sincronizarStack() {
-                if (_hayCapasAbiertas()) {
-                    if (!_capaEnStack) {
-                        history.pushState({ saki: true }, '');
-                        _capaEnStack = true;
-                    }
-                } else {
-                    _capaEnStack = false;
-                }
-            }
-
-            // ── popstate: el back ya consumió un estado ───────────────────────
+            // ── popstate ─────────────────────────────────────────────────────
             window.addEventListener('popstate', function(e) {
                 if (e.state && e.state.saki) {
-                    _capaEnStack = false;
+                    _stackDepth = e.state.depth || 0;
                     cerrarCapaMasReciente();
                 }
             });
 
-            // ── MutationObserver para modales y paneles ───────────────────────
+            // ── MutationObserver: observa cambios de clase en capas ───────────
             const observer = new MutationObserver(mutations => {
                 mutations.forEach(m => {
                     if (m.attributeName !== 'class') return;
-                    const el = m.target;
-                    const abierto = el.classList.contains('active') || el.classList.contains('open');
-                    if (abierto) _asegurarEstadoEnStack();
-                    else _sincronizarStack();
+                    _sincronizarStack();
                 });
             });
+
+            // Modales y panel de notificaciones
             document.querySelectorAll('.modal-overlay, #notificationsPanel').forEach(el => {
                 observer.observe(el, { attributes: true, attributeFilter: ['class'] });
             });
 
+            // Carrito y menú hamburguesa (incluye subtree para subcategorías)
+            const catSidebarEl  = document.getElementById('categorySidebar');
+            const cartSidebarEl = document.getElementById('cartSidebar');
+            if (catSidebarEl) {
+                observer.observe(catSidebarEl, { attributes: true, attributeFilter: ['class'] });
+                // subtree para captar el expanded de subcategory-list dentro del menú
+                const subObs = new MutationObserver(() => _sincronizarStack());
+                subObs.observe(catSidebarEl, { subtree: true, attributes: true, attributeFilter: ['class'] });
+            }
+            if (cartSidebarEl) {
+                observer.observe(cartSidebarEl, { attributes: true, attributeFilter: ['class'] });
+                // subtree para captar nivel1/nivel2 dentro del carrito
+                const cartSubObs = new MutationObserver(() => _sincronizarStack());
+                cartSubObs.observe(cartSidebarEl, { subtree: true, attributes: true, attributeFilter: ['class'] });
+            }
+
             // ── Parches de funciones de toggle ───────────────────────────────
+            // Los observers ya sincronizan el stack automáticamente,
+            // pero los parches garantizan que el push ocurra antes de cualquier
+            // animación que pudiera confundir al observer.
             const _origToggleCarrito = window.toggleCarrito;
             window.toggleCarrito = function() {
                 _origToggleCarrito?.apply(this, arguments);
@@ -3520,23 +3552,10 @@
                 _sincronizarStack();
             };
 
-            // Observar carrito y menú hamburguesa
-            const catSidebarEl = document.getElementById('categorySidebar');
-            const cartSidebarEl = document.getElementById('cartSidebar');
-            if (catSidebarEl) {
-                observer.observe(catSidebarEl, { attributes: true, attributeFilter: ['class'] });
-                // Observar subcategorías del menú hamburguesa con un subtree observer
-                const subObserver = new MutationObserver(() => _sincronizarStack());
-                subObserver.observe(catSidebarEl, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] });
-            }
-            if (cartSidebarEl) {
-                observer.observe(cartSidebarEl, { attributes: true, attributeFilter: ['class'] });
-            }
-
-            // Exponer _sincronizarStack para que el toggle de subcategorías pueda llamarla
+            // Exponer para uso externo (subcategory toggle en cargarCategorias)
             window._sincronizarBackStack = _sincronizarStack;
 
         })();
-    </script>
+        </script>
 </body>
 </html>
