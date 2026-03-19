@@ -240,7 +240,7 @@ window.addEventListener('beforeunload',function(e){if(!window._sakiReady){e.prev
         .subcategory-item:hover{background-color:rgba(255,255,255,.05);color:var(--accent)}
         .subcategory-item.active{color:var(--accent);font-weight:500}
         .subcategory-item.active::before{content:'•';position:absolute;left:2.5rem;color:var(--accent);font-weight:700}
-        .cart-sidebar{width:320px;background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%);border-left:1px solid rgba(255,255,255,.1);display:flex;flex-direction:column;transition:transform .3s ease;position:absolute;right:0;top:0;bottom:0;box-shadow:-2px 0 8px rgba(0,0,0,.5);backdrop-filter:blur(10px);pointer-events:auto;height:100%}
+        .cart-sidebar{width:320px;background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%);border-left:1px solid rgba(255,255,255,.1);position:relative;display:flex;flex-direction:column;transition:transform .3s ease;position:absolute;right:0;top:0;bottom:0;box-shadow:-2px 0 8px rgba(0,0,0,.5);backdrop-filter:blur(10px);pointer-events:auto;height:100%}
         body.tema-claro .cart-sidebar{background:linear-gradient(135deg,#f0f0f5 0%,#e0e0e8 100%);border-left:1px solid rgba(0,0,0,.1)}
         body.tema-claro .cart-sidebar .cart-header h3{color:#1a1a2e}
         body.tema-claro .cart-sidebar .cart-total span{color:#1a1a2e}
@@ -431,20 +431,20 @@ window.addEventListener('beforeunload',function(e){if(!window._sakiReady){e.prev
         .notification-time{font-size:.7rem;color:var(--gray-500);display:flex;align-items:center;gap:.3rem}
         .modal-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.8);z-index:2000;align-items:center;justify-content:center;backdrop-filter:blur(5px)}
         .modal-overlay.active{display:flex}
-        .modal-container{background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%);border-radius:var(--radius-lg);max-width:500px;width:95%;max-height:90vh;overflow-y:auto;position:relative;animation:modalSlideIn .3s ease;box-shadow:var(--shadow-lg);border:1px solid rgba(255,255,255,.1);will-change:transform,opacity}
+        .modal-container{background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%);color:var(--text-primary);font-family:'Roboto',sans-serif;border-radius:var(--radius-lg);max-width:500px;width:95%;max-height:90vh;overflow-y:auto;position:relative;animation:modalSlideIn .3s ease;box-shadow:var(--shadow-lg);border:1px solid rgba(255,255,255,.1);will-change:transform,opacity}
         body.tema-claro .modal-container{background:linear-gradient(135deg,#f0f0f5 0%,#e0e0e8 100%);color:#1a1a2e}
         body.tema-claro .modal-header{background:rgba(0,0,0,.08);border-bottom:1px solid rgba(0,0,0,.1)}
         body.tema-claro .modal-header h3{color:#1a1a2e}
-        body.tema-claro .modal-body{color:#1a1a2e}
+        body.tema-claro .modal-body{color:var(--text-primary);font-family:'Roboto',sans-serif}
         body.tema-claro .modal-body label{color:#1a1a2e}
         body.tema-claro .modal-body span{color:#2d2d44}
         body.tema-claro .modal-footer{border-top:1px solid rgba(0,0,0,.1)}
         /* ── Clases de formulario para modales delivery/reserva ── */
-        .modal-form-label{display:block;margin-bottom:.5rem;font-weight:600;color:#fff}
-        .modal-form-input:not(.ref-digit){width:100%;padding:.8rem;border:2px solid rgba(255,255,255,.1);border-radius:var(--radius-sm);font-size:1rem;background:rgba(0,0,0,.3);color:#fff;transition:border .2s;font-family:inherit}
+        .modal-form-label{display:block;margin-bottom:.5rem;font-weight:600;color:var(--text-primary);font-family:inherit}
+        .modal-form-input:not(.ref-digit){width:100%;padding:.8rem;border:2px solid rgba(255,255,255,.15);border-radius:var(--radius-sm);font-size:1rem;color:var(--text-primary);font-family:inherit;background:rgba(0,0,0,.3);color:#fff;transition:border .2s;font-family:inherit}
         .modal-form-input:not(.ref-digit):focus{outline:none;border-color:var(--accent)}
         .modal-form-input:not(.ref-digit)::placeholder{color:var(--gray-500)}
-        .modal-form-ref-digit{width:50px !important;height:50px;text-align:center;padding:.5rem;border:2px solid rgba(255,255,255,.1);border-radius:var(--radius-sm);font-size:1.4rem;font-weight:600;background:rgba(0,0,0,.3);color:#fff;font-family:monospace;flex-shrink:0}
+        .modal-form-ref-digit{color:var(--text-primary);font-family:'Roboto',sans-serif;width:50px !important;height:50px;text-align:center;padding:.5rem;border:2px solid rgba(128,128,128,.3);border-radius:var(--radius-sm);font-size:1.4rem;font-weight:600;background:rgba(0,0,0,.3);color:#fff;font-family:monospace;flex-shrink:0}
         body.tema-claro .modal-form-label{color:#1a1a2e}
         body.tema-claro .modal-form-input:not(.ref-digit){background:rgba(255,255,255,.7);color:#1a1a2e;border-color:rgba(0,0,0,.2)}
         body.tema-claro .modal-form-input:not(.ref-digit)::placeholder{color:#8a8a9e}
@@ -485,11 +485,11 @@ window.addEventListener('beforeunload',function(e){if(!window._sakiReady){e.prev
         @media (max-width:480px){.modal-container{width:100%;max-height:100vh;border-radius:0}}
         @keyframes modalSlideIn{from{opacity:0;transform:translateY(-30px)}to{opacity:1;transform:translateY(0)}}
         .modal-header{padding:1.2rem;border-bottom:1px solid rgba(255,255,255,.1);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:rgba(0,0,0,.2);z-index:10;border-radius:var(--radius-lg) var(--radius-lg) 0 0}
-        .modal-header h3{font-size:1.3rem;color:#fff}
+        .modal-header h3{font-size:1.3rem;color:var(--text-primary);font-family:inherit}
         .modal-close{background:none;border:none;font-size:1.5rem;cursor:pointer;color:var(--gray-400);width:35px;height:35px;display:flex;align-items:center;justify-content:center;border-radius:50%;transition:all .2s}
         .modal-close:hover{background:rgba(255,255,255,.05);color:var(--danger)}
-        .modal-body{padding:1.2rem;color:#fff;overflow-y:auto;flex:1}
-        .modal-footer{padding:1.2rem;border-top:1px solid rgba(255,255,255,.1);background:rgba(0,0,0,.2);display:flex;justify-content:flex-end;gap:1rem;border-radius:0 0 var(--radius-lg) var(--radius-lg)}
+        .modal-body{padding:1.2rem;color:var(--text-primary);font-family:'Roboto',sans-serif;overflow-y:auto;flex:1}
+        .modal-footer{padding:1.2rem;border-top:1px solid rgba(128,128,128,.2);background:rgba(0,0,0,.2);display:flex;justify-content:flex-end;gap:1rem;border-radius:0 0 var(--radius-lg) var(--radius-lg)}
         .footer{background:var(--secondary);color:white;padding:2rem 1.5rem 1rem;width:100%;margin-top:auto;position:relative;z-index:100;flex-shrink:0}
         .footer::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:100px;height:4px;background:linear-gradient(90deg,var(--primary),var(--accent));border-radius:2px}
         .footer-content{max-width:1400px;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);gap:2rem;margin-bottom:2rem;width:100%}
@@ -644,16 +644,24 @@ window.addEventListener('beforeunload',function(e){if(!window._sakiReady){e.prev
             padding: .6rem 0 .4rem; cursor: pointer; gap: 2px;
             transition: opacity .2s;
         }
-        .scroll-indicator-cascade.flotante {
-            position: sticky;
-            top: 8px;
-            z-index: 10;
-            background: rgba(15,23,42,.92);
-            backdrop-filter: blur(4px);
-            border-radius: 10px;
-            margin: 4px 8px;
-            box-shadow: 0 4px 16px rgba(0,0,0,.4);
+        /* Overlay de flechas flotantes — posicionado encima del cartItems */
+        #flechasOverlay {
+            display: none;
+            position: absolute;
+            top: 60px; /* justo debajo del cart-header */
+            left: 0; right: 0;
+            z-index: 20;
             pointer-events: auto;
+        }
+        #flechasOverlay .scroll-indicator-cascade {
+            margin: 6px 10px;
+            border-radius: 10px;
+            background: rgba(15,23,42,.93);
+            backdrop-filter: blur(6px);
+            box-shadow: 0 4px 18px rgba(0,0,0,.45);
+        }
+        body.tema-claro #flechasOverlay .scroll-indicator-cascade {
+            background: rgba(240,240,245,.95);
         }
         @keyframes resaltarParroquia {
             0%,100% { box-shadow: none; }
@@ -727,6 +735,7 @@ window.addEventListener('beforeunload',function(e){if(!window._sakiReady){e.prev
                         <h3><i class="fas fa-shopping-cart"></i> Tu Pedido</h3>
                         <button id="closeCart"><i class="fas fa-times"></i></button>
                     </div>
+                    <div id="flechasOverlay"></div>
                     <div class="cart-items" id="cartItems">
                         <div class="cart-empty"><i class="fas fa-shopping-basket"></i><p>Tu carrito está vacío</p><small>¡Agrega algunos platillos!</small></div>
                     </div>
@@ -796,8 +805,8 @@ window.addEventListener('beforeunload',function(e){if(!window._sakiReady){e.prev
                     </div>
                     <div class="info-box mesa" style="margin-top:.5rem"><i class="fas fa-clock"></i> Por favor, pasa a caja a cancelar.</div>
                     <div style="margin:1rem 0">
-                        <label for="clienteNombre" style="display:block; margin-bottom:.3rem; font-weight:600; color:#fff">Tu nombre (opcional):</label>
-                        <input type="text" id="clienteNombre" placeholder="Ej: Juan" style="width:100%; padding:.7rem; border:1px solid rgba(255,255,255,.1); border-radius:var(--radius-sm); background:rgba(0,0,0,.3); color:#fff">
+                        <label for="clienteNombre" style="display:block;margin-bottom:.3rem;font-weight:600;color:var(--text-primary);font-family:'Roboto',sans-serif">Tu nombre (opcional):</label>
+                        <input type="text" id="clienteNombre" placeholder="Ej: Juan" style="width:100%;padding:.7rem;border:1px solid rgba(128,128,128,.3);border-radius:var(--radius-sm); background:rgba(0,0,0,.3); color:#fff">
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -924,7 +933,7 @@ window.addEventListener('beforeunload',function(e){if(!window._sakiReady){e.prev
                         
                         <div style="padding:1rem; background:rgba(0,0,0,.2); border-radius:var(--radius-md); border:2px solid var(--primary)">
                             <div style="display:flex; justify-content:space-between; align-items:center">
-                                <span style="font-weight:600; font-size:1.1rem; color:#fff">Total a pagar:</span>
+                                <span style="font-weight:600;font-size:1.1rem;color:var(--accent)">Total a pagar:</span>
                                 <span style="font-weight:700; color:var(--accent); font-size:1.4rem" id="deliveryTotal" onclick="irAParroquia()" style="cursor:pointer;text-decoration:underline dotted;font-size:1rem!important" title="Ir a selección de parroquia">Primero seleccione parroquia a enviar</span>
                             </div>
                         </div>
@@ -1922,6 +1931,9 @@ window.addEventListener('beforeunload',function(e){if(!window._sakiReady){e.prev
             if (carrito.length > 0) iniciarSeguimientoScroll();
             const indicatorContainer = document.getElementById('cartIndicatorContainer');
             if (indicatorContainer) indicatorContainer.innerHTML = '';
+            // Limpiar clone del overlay para que se reconstruya con el nuevo HTML
+            const fOverlay = document.getElementById('flechasOverlay');
+            if (fOverlay) { fOverlay.innerHTML = ''; fOverlay.style.display = 'none'; }
             cartTotal.textContent = formatBs(totalGeneral);
             cartButtons.innerHTML = '';
             
@@ -2150,22 +2162,32 @@ window.addEventListener('beforeunload',function(e){if(!window._sakiReady){e.prev
         // FUNCIONES DE SCROLL
         // ============================================
         function iniciarSeguimientoScroll() {
-            const cartItems   = document.getElementById('cartItems');
-            const cartFooter  = document.getElementById('cartFooter');
-            if (!cartItems || !cartFooter) return;
+            const cartItems  = document.getElementById('cartItems');
+            const cartFooter = document.getElementById('cartFooter');
+            const overlay    = document.getElementById('flechasOverlay');
+            if (!cartItems || !cartFooter || !overlay) return;
             if (cartItems._scrollListener) return; // ya activo
 
             function onScroll() {
-                const flechas = cartItems.querySelector('.scroll-indicator-cascade');
-                if (!flechas) return;
-                const footerRect = cartFooter.getBoundingClientRect();
-                const sidebarRect = cartItems.getBoundingClientRect();
-                // cartFooter está visible si su top está dentro del viewport del sidebar
-                const footerVisible = footerRect.top < sidebarRect.bottom - 10;
+                // cartFooter visible = su borde superior está dentro del área visible de cartItems
+                const footerRect  = cartFooter.getBoundingClientRect();
+                const itemsRect   = cartItems.getBoundingClientRect();
+                const footerVisible = footerRect.top < itemsRect.bottom - 4;
                 if (footerVisible) {
-                    flechas.classList.remove('flotante');
+                    // Botones visibles: ocultar overlay
+                    overlay.style.display = 'none';
                 } else {
-                    flechas.classList.add('flotante');
+                    // Botones fuera de vista: mostrar overlay con las flechas
+                    if (!overlay.hasChildNodes()) {
+                        // Clonar las flechas del cartItems al overlay
+                        const src = cartItems.querySelector('.scroll-indicator-cascade');
+                        if (src) {
+                            const clone = src.cloneNode(true);
+                            clone.addEventListener('click', irABotonesAccion);
+                            overlay.appendChild(clone);
+                        }
+                    }
+                    overlay.style.display = 'block';
                 }
             }
 
@@ -2176,11 +2198,12 @@ window.addEventListener('beforeunload',function(e){if(!window._sakiReady){e.prev
 
         function detenerSeguimientoScroll() {
             const cartItems = document.getElementById('cartItems');
-            if (!cartItems || !cartItems._scrollListener) return;
-            cartItems.removeEventListener('scroll', cartItems._scrollListener);
-            cartItems._scrollListener = null;
-            const flechas = cartItems.querySelector('.scroll-indicator-cascade');
-            if (flechas) flechas.classList.remove('flotante');
+            const overlay   = document.getElementById('flechasOverlay');
+            if (cartItems && cartItems._scrollListener) {
+                cartItems.removeEventListener('scroll', cartItems._scrollListener);
+                cartItems._scrollListener = null;
+            }
+            if (overlay) { overlay.style.display = 'none'; overlay.innerHTML = ''; }
         }
 
         function irABotonesAccion() {
