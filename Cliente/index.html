@@ -101,7 +101,9 @@ window.addEventListener('beforeunload',function(e){if(!window._sakiReady){e.prev
         body.tema-claro #cartTotal,
         body.tema-claro .item-precio { color: var(--primary); }
         body.tema-claro .cart-header h3 { color: var(--text-primary); }
-        body.tema-claro .header-details { color: var(--text-primary); }
+        /* nivel1: blanco como el nombre; nivel2: mismo naranja del "Completo" */
+        body.tema-claro .nivel2-header .header-details { color: var(--nivel2-text); }
+        body.tema-claro .nivel1-header .header-details { color: rgba(255,255,255,.9); }
         body.tema-claro .menu-card-title {
             color: #1a1a2e;
             font-weight: 700;
@@ -1551,6 +1553,7 @@ window.addEventListener('beforeunload',function(e){if(!window._sakiReady){e.prev
         body.tema-claro .modal-body span{color:var(--text-primary)}
         body.tema-claro #deliveryTotal,
         body.tema-claro #cobro-total-display,
+        body.tema-claro .modal-body .total-pagar-label,
         body.tema-claro .total-pagar-label { color: var(--primary) !important; }
         body.tema-claro .modal-footer{border-top:1px solid rgba(0,0,0,.1)}
         /* ── Clases de formulario para modales delivery/reserva ── */
@@ -4450,7 +4453,7 @@ window.addEventListener('beforeunload',function(e){if(!window._sakiReady){e.prev
                 // Delivery — se actualiza en actualizarTotalDelivery
                 html += `<div style="display:flex;justify-content:space-between;margin-top:.3rem;font-size:.88rem" id="resumenDeliveryLinea">
                     <span style="color:var(--text-secondary);font-size:.88rem">Delivery</span>
-                    <span id="resumenDeliveryMonto" onclick="irAParroquia()" style="color:var(--gray-400);font-style:italic;font-weight:400;cursor:pointer;text-decoration:underline dotted;font-size:.88rem">Primero seleccione Parroquia a enviar</span>
+                    <span id="resumenDeliveryMonto" onclick="irAParroquia()" style="color:var(--text-primary);font-style:italic;font-weight:400;cursor:pointer;text-decoration:underline dotted;font-size:.88rem">Primero seleccione Parroquia a enviar</span>
                 </div>`;
                 // Total
                 html += `<div style="display:flex;justify-content:space-between;margin-top:.3rem;padding-top:.4rem;border-top:1px solid rgba(255,255,255,.08);font-weight:700;font-size:.9rem" id="resumenTotalDelivery">
@@ -4623,7 +4626,7 @@ window.addEventListener('beforeunload',function(e){if(!window._sakiReady){e.prev
                 if (btnCopy) btnCopy.style.display = 'none';
                 // Restablecer líneas del resumen
                 const rDel = document.getElementById('resumenDeliveryMonto');
-                if (rDel) { rDel.style.color='var(--gray-400)'; rDel.style.fontStyle='italic'; rDel.style.fontWeight='400'; rDel.style.fontFamily='inherit'; rDel.style.textDecoration='underline dotted'; rDel.style.cursor='pointer'; rDel.onclick=irAParroquia; rDel.textContent = 'Primero seleccione Parroquia a enviar'; }
+                if (rDel) { rDel.style.color='var(--text-primary)'; rDel.style.fontStyle='italic'; rDel.style.fontWeight='400'; rDel.style.fontFamily='inherit'; rDel.style.textDecoration='underline dotted'; rDel.style.cursor='pointer'; rDel.onclick=irAParroquia; rDel.textContent = 'Primero seleccione Parroquia a enviar'; }
                 const rTot = document.getElementById('resumenTotalDeliveryMonto');
                 if (rTot) rTot.textContent = '—';
             }
