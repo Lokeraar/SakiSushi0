@@ -99,9 +99,9 @@ window.addEventListener('beforeunload',function(e){if(!window._sakiReady){e.prev
         /* Rojo de marca para montos y totales en tema claro */
         body.tema-claro .cart-total span:last-child,
         body.tema-claro #cartTotal,
-        body.tema-claro .item-precio,
-        body.tema-claro .header-details,
-        body.tema-claro .cart-header h3 { color: var(--primary); }
+        body.tema-claro .item-precio { color: var(--primary); }
+        body.tema-claro .cart-header h3 { color: var(--text-primary); }
+        body.tema-claro .header-details { color: var(--text-primary); }
         body.tema-claro .menu-card-title {
             color: #1a1a2e;
             font-weight: 700;
@@ -1549,6 +1549,9 @@ window.addEventListener('beforeunload',function(e){if(!window._sakiReady){e.prev
         body.tema-claro .modal-body{color:var(--text-primary);font-family:'Roboto',sans-serif}
         body.tema-claro .modal-body label{color:#1a1a2e}
         body.tema-claro .modal-body span{color:var(--text-primary)}
+        body.tema-claro #deliveryTotal,
+        body.tema-claro #cobro-total-display,
+        body.tema-claro .total-pagar-label { color: var(--primary) !important; }
         body.tema-claro .modal-footer{border-top:1px solid rgba(0,0,0,.1)}
         /* ── Clases de formulario para modales delivery/reserva ── */
         .modal-form-label {
@@ -4442,7 +4445,7 @@ window.addEventListener('beforeunload',function(e){if(!window._sakiReady){e.prev
                 // Subtotal platillos
                 html += `<div style="display:flex;justify-content:space-between;${sep}font-size:.88rem" id="resumenSubtotalPlatillos">
                     <span>Subtotal platillos</span>
-                    <span style="color:var(--accent-text);font-weight:600">${formatBs(total)}</span>
+                    <span style="color:var(--text-primary);font-weight:600">${formatBs(total)}</span>
                 </div>`;
                 // Delivery — se actualiza en actualizarTotalDelivery
                 html += `<div style="display:flex;justify-content:space-between;margin-top:.3rem;font-size:.88rem" id="resumenDeliveryLinea">
