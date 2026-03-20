@@ -78,18 +78,16 @@ window.addEventListener('beforeunload',function(e){if(!window._sakiReady){e.prev
         }
         /* Textos con acento usan tono más oscuro en tema claro */
         body.tema-claro .menu-card-price,
-        body.tema-claro .menu-card-title,
-        body.tema-claro .cart-total,
-        body.tema-claro #cartTotal,
-        body.tema-claro .item-precio,
-        body.tema-claro .header-details,
-        body.tema-claro .cart-header h3,
-        body.tema-claro .payment-details .valor,
-        body.tema-claro .historial-modal .pedido-total,
         body.tema-claro .cascade-arrow,
         body.tema-claro .footer-section h4,
         body.tema-claro .favorite-btn.active,
         body.tema-claro .pagination-num.active { color: var(--accent-text); }
+        /* Rojo de marca para montos y totales en tema claro */
+        body.tema-claro .cart-total span:last-child,
+        body.tema-claro #cartTotal,
+        body.tema-claro .item-precio,
+        body.tema-claro .header-details,
+        body.tema-claro .cart-header h3 { color: var(--primary); }
         body.tema-claro .menu-card-title {
             color: #1a1a2e;
             font-weight: 700;
@@ -2539,10 +2537,10 @@ window.addEventListener('beforeunload',function(e){if(!window._sakiReady){e.prev
                     const imgMesa = grupo.imagen
                         ? `<img src="${grupo.imagen}" style="width:40px;height:40px;object-fit:cover;border-radius:6px;flex-shrink:0;margin-right:.6rem">`
                         : `<div style="width:40px;height:40px;border-radius:6px;background:rgba(255,255,255,.08);flex-shrink:0;margin-right:.6rem;display:flex;align-items:center;justify-content:center"><i class="fas fa-utensils" style="font-size:.8rem;opacity:.4"></i></div>`;
-                    html += `<div style="display:flex;align-items:center;margin-bottom:.5rem;font-size:.88rem">${imgMesa}<div style="flex:1;min-width:0"><div style="display:flex;justify-content:space-between;align-items:flex-start"><span style="flex:1;margin-right:.4rem">${grupo.nombre} x${subgrupo.cantidad}</span><span style="color:var(--accent-text);font-weight:600;white-space:nowrap">${formatBs(subgrupo.subtotal)}</span></div>${personalizacionTexto}</div></div>`;
+                    html += `<div style="display:flex;align-items:center;margin-bottom:.5rem;font-size:.88rem">${imgMesa}<div style="flex:1;min-width:0"><div style="display:flex;justify-content:space-between;align-items:flex-start"><span style="flex:1;margin-right:.4rem">${grupo.nombre} x${subgrupo.cantidad}</span><span style="color:var(--text-primary);font-weig">${formatBs(subgrupo.subtotal)}</span></div>${personalizacionTexto}</div></div>`;
                 });
             });
-            summary.innerHTML = html + `<div style="display:flex; justify-content:space-between; margin-top:.6rem; padding-top:.5rem; border-top:1px solid rgba(255,255,255,.12); font-weight:700;font-size:.9rem"><span>Total platillos</span><span style="color:var(--accent-text)">${formatBs(total)}</span></div>`;
+            summary.innerHTML = html + `<div style="display:flex; justify-content:space-between; margin-top:.6rem; padding-top:.5rem; border-top:1px solid rgba(255,255,255,.12); font-weight:700;font-size:.9rem"><span>Total platillos</span><span style="color:var(--text-primary)">${formatBs(total)}</span></div>`;
             const mModal = document.getElementById('confirmMesaModal');
             mModal.classList.add('active');
             setTimeout(() => { const mb = mModal.querySelector('.modal-body'); if (mb) mb.scrollTop = 0; }, 50);
@@ -2685,7 +2683,7 @@ window.addEventListener('beforeunload',function(e){if(!window._sakiReady){e.prev
                         <div style="flex:1;min-width:0">
                             <div style="display:flex;justify-content:space-between;align-items:flex-start">
                                 <span style="flex:1;margin-right:.4rem">${grupo.nombre} x${subgrupo.cantidad}</span>
-                                <span style="color:var(--accent);font-weight:600;white-space:nowrap">${formatBs(subgrupo.subtotal)}</span>
+                                <span style="color:var(--text-primary);font-weight:600;white-space:nowrap">${formatBs(subgrupo.subtotal)}</span>
                             </div>
                             ${persTexto}
                         </div>
@@ -2707,12 +2705,12 @@ window.addEventListener('beforeunload',function(e){if(!window._sakiReady){e.prev
                 // Total
                 html += `<div style="display:flex;justify-content:space-between;margin-top:.3rem;padding-top:.4rem;border-top:1px solid rgba(255,255,255,.08);font-weight:700;font-size:.9rem" id="resumenTotalDelivery">
                     <span>Total Platillos + Delivery</span>
-                    <span style="color:var(--accent-text)" id="resumenTotalDeliveryMonto">—</span>
+                    <span style="color:var(--primary)" id="resumenTotalDeliveryMonto">—</span>
                 </div>`;
             } else {
                 html += `<div style="display:flex;justify-content:space-between;${sep}font-weight:700;font-size:.9rem">
                     <span>Total platillos</span>
-                    <span style="color:var(--accent-text)">${formatBs(total)}</span>
+                    <span style="color:var(--text-primary)">${formatBs(total)}</span>
                 </div>`;
             }
             return html;
@@ -2860,7 +2858,7 @@ window.addEventListener('beforeunload',function(e){if(!window._sakiReady){e.prev
                 if (btnCopy) btnCopy.style.display = 'inline-flex';
                 // Actualizar líneas del resumen
                 const rDel = document.getElementById('resumenDeliveryMonto');
-                if (rDel) { rDel.style.color='var(--accent-text)'; rDel.style.fontStyle='normal'; rDel.style.fontWeight='600'; rDel.style.fontFamily='inherit'; rDel.style.fontSize='.88rem'; rDel.style.textDecoration='none'; rDel.onclick=null; rDel.style.cursor='default'; rDel.textContent = formatBs(deliveryBs); }
+                if (rDel) { rDel.style.color='var(--text-primary)'; rDel.style.fontStyle='normal'; rDel.style.fontWeight='600'; rDel.style.fontFamily='inherit'; rDel.style.fontSize='.88rem'; rDel.style.textDecoration='none'; rDel.onclick=null; rDel.style.cursor='default'; rDel.textContent = formatBs(deliveryBs); }
                 const rTot = document.getElementById('resumenTotalDeliveryMonto');
                 if (rTot) rTot.textContent = formatBs(totalBs);
             } else {
@@ -3633,3 +3631,5 @@ window.addEventListener('beforeunload',function(e){if(!window._sakiReady){e.prev
         </script>
 </body>
 </html>
+
+
