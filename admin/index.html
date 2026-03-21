@@ -29,6 +29,16 @@
         window.deliveryParaPago = null;
         window.propinas = [];
         window.pedidos = [];
+        
+        // Variables persistentes para WiFi (guardadas en localStorage)
+        window.wifiSsidPersistente = localStorage.getItem('saki_wifi_ssid') || '';
+        window.wifiPasswordPersistente = localStorage.getItem('saki_wifi_password') || '';
+        
+        // Control de notificaciones de stock reactivado
+        window.platillosNotificados = JSON.parse(localStorage.getItem('saki_platillos_notificados') || '{}');
+        
+        // Control de tiempo real para stock
+        window.stockUpdateChannel = null;
 
         // ==================== FUNCIÓN DE TOAST CON FALLBACK ====================
         window.mostrarToast = function(mensaje, tipo = 'info') {
@@ -80,6 +90,204 @@
         window.mostrarLogin = function() {
             document.getElementById('loginContainer').style.display = 'flex';
             document.getElementById('panelContainer').classList.remove('active');
+        };
+        
+        // ==================== FUNCIÓN PARA ENVIAR NOTIFICACIÓN PUSH ====================
+        window.enviarNotificacionPush = async function(titulo, mensaje, sessionId = null) {
+            try {
+                const response = await fetch('https://iqwwoihiiyrtypyqzhgy.supabase.co/functions/v1/send-push', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${window.jwtToken}`
+                    },
+                    body: JSON.stringify({ titulo, mensaje, session_id: sessionId })
+                });
+                const result = await response.json();
+                console.log('Notificaciones push enviadas:', result);
+            } catch (e) {
+                console.error('Error enviando push:', e);
+            }
+        };
+        
+        // ==================== FUNCIÓN PARA DETECTAR CAMBIOS DE STOCK Y NOTIFICAR ====================
+        window.verificarYNotificarStockReactivado = async function(ingredienteId, ingredienteNombre) {
+            // Buscar platillos que usan este ingrediente y estaban agotados
+            for (const platillo of window.menuItems) {
+                if (!platillo.ingredientes || Object.keys(platillo.ingredientes).length === 0) continue;
+                
+                // Verificar si este platillo usa el ingrediente
+                const usaIngrediente = Object.keys(platillo.ingredientes).some(id => id === ingredienteId);
+                if (!usaIngrediente) continue;
+                
+                // Verificar stock actual del platillo
+                let stockDisponible = Infinity;
+                for (const [ingId, ingInfo] of Object.entries(platillo.ingredientes)) {
+                    const ingrediente = window.inventarioItems.find(i => i.id === ingId);
+                    if (!ingrediente) { stockDisponible = 0; break; }
+                    const stockDisp = (ingrediente.stock || 0) - (ingrediente.reservado || 0);
+                    const cantidadNecesaria = ingInfo.cantidad || 1;
+                    const posible = Math.floor(stockDisp / cantidadNecesaria);
+                    stockDisponible = Math.min(stockDisponible, posible);
+                }
+                
+                const estabaAgotado = window.platillosNotificados[platillo.id] === 'agotado';
+                const ahoraDisponible = stockDisponible > 0;
+                
+                // Si estaba agotado y ahora está disponible, enviar notificación
+                if (estabaAgotado && ahoraDisponible) {
+                    window.platillosNotificados[platillo.id] = 'disponible';
+                    localStorage.setItem('saki_platillos_notificados', JSON.stringify(window.platillosNotificados));
+                    
+                    // Enviar notificación push a todos los dispositivos con historial
+                    const titulo = `🍣 ${platillo.nombre} disponible de nuevo!`;
+                    const mensaje = `Ya tenemos ${platillo.nombre} en stock. ¡Pide ahora!`;
+                    
+                    // Obtener todas las sesiones con historial de compra
+                    try {
+                        const { data: pedidosUnicos } = await window.supabaseClient
+                            .from('pedidos')
+                            .select('session_id')
+                            .not('session_id', 'is', null)
+                            .order('fecha', { ascending: false });
+                        
+                        const sessionIds = [...new Set(pedidosUnicos?.map(p => p.session_id) || [])];
+                        
+                        for (const sessionId of sessionIds) {
+                            await window.enviarNotificacionPush(titulo, mensaje, sessionId);
+                        }
+                        
+                        window.mostrarToast(`📢 Notificación enviada: ${platillo.nombre} disponible`, 'success');
+                    } catch (e) {
+                        console.error('Error enviando notificaciones masivas:', e);
+                    }
+                } else if (!ahoraDisponible && !estabaAgotado) {
+                    // Marcar como agotado para futuras reactivaciones
+                    window.platillosNotificados[platillo.id] = 'agotado';
+                    localStorage.setItem('saki_platillos_notificados', JSON.stringify(window.platillosNotificados));
+                }
+            }
+        };
+        
+        // ==================== FUNCIÓN PARA ACTUALIZAR STOCK EN TIEMPO REAL ====================
+        window.setupStockRealtime = function() {
+            if (window.stockUpdateChannel) {
+                window.supabaseClient.removeChannel(window.stockUpdateChannel);
+            }
+            
+            window.stockUpdateChannel = window.supabaseClient
+                .channel('stock-updates')
+                .on('postgres_changes', {
+                    event: 'UPDATE',
+                    schema: 'public',
+                    table: 'inventario'
+                }, async (payload) => {
+                    console.log('📦 Cambio en inventario detectado:', payload);
+                    
+                    // Actualizar inventario local
+                    const index = window.inventarioItems.findIndex(i => i.id === payload.new.id);
+                    if (index !== -1) {
+                        window.inventarioItems[index] = payload.new;
+                    } else {
+                        window.inventarioItems.push(payload.new);
+                    }
+                    
+                    // Verificar si el cambio reactiva algún platillo
+                    await window.verificarYNotificarStockReactivado(payload.new.id, payload.new.nombre);
+                    
+                    // Recalcular stock de todos los platillos
+                    await window.recalcularStockPlatillos();
+                    
+                    // Notificar a los demás módulos (cliente/cajero) a través de notificaciones
+                    if (payload.new.stock > 0 && payload.old?.stock <= 0) {
+                        await window.enviarNotificacionPush(
+                            '📦 Stock actualizado',
+                            `El ingrediente ${payload.new.nombre} está disponible nuevamente. ¡Revisa el menú!`
+                        );
+                    }
+                })
+                .on('postgres_changes', {
+                    event: '*',
+                    schema: 'public',
+                    table: 'menu'
+                }, async (payload) => {
+                    console.log('📋 Cambio en menú detectado:', payload);
+                    await window.cargarMenu();
+                })
+                .subscribe();
+        };
+        
+        // ==================== FUNCIÓN PARA RECALCULAR STOCK DE PLATILLOS ====================
+        window.recalcularStockPlatillos = async function() {
+            for (const platillo of window.menuItems) {
+                let stockDisponible = Infinity;
+                let todosIngredientes = true;
+                
+                if (platillo.ingredientes && Object.keys(platillo.ingredientes).length > 0) {
+                    for (const [ingId, ingInfo] of Object.entries(platillo.ingredientes)) {
+                        const ingrediente = window.inventarioItems.find(i => i.id === ingId);
+                        if (!ingrediente) {
+                            todosIngredientes = false;
+                            stockDisponible = 0;
+                            break;
+                        }
+                        const stockDisp = (ingrediente.stock || 0) - (ingrediente.reservado || 0);
+                        const cantidadNecesaria = ingInfo.cantidad || 1;
+                        const posible = Math.floor(stockDisp / cantidadNecesaria);
+                        stockDisponible = Math.min(stockDisponible, posible);
+                    }
+                } else {
+                    stockDisponible = platillo.stock_maximo || 999;
+                }
+                
+                const nuevoStock = todosIngredientes ? Math.max(0, stockDisponible) : 0;
+                
+                // Actualizar stock en la base de datos si cambió
+                if (platillo.stock !== nuevoStock) {
+                    await window.supabaseClient
+                        .from('menu')
+                        .update({ stock: nuevoStock })
+                        .eq('id', platillo.id);
+                    platillo.stock = nuevoStock;
+                }
+            }
+            
+            window.renderizarMenu();
+        };
+        
+        // ==================== FUNCIÓN PARA GUARDAR WIFI PERSISTENTE ====================
+        window.guardarWifiPersistente = function() {
+            const ssid = document.getElementById('qrWifiSsid')?.value || '';
+            const password = document.getElementById('qrWifiPassword')?.value || '';
+            
+            if (ssid !== window.wifiSsidPersistente) {
+                window.wifiSsidPersistente = ssid;
+                localStorage.setItem('saki_wifi_ssid', ssid);
+            }
+            if (password !== window.wifiPasswordPersistente) {
+                window.wifiPasswordPersistente = password;
+                localStorage.setItem('saki_wifi_password', password);
+            }
+        };
+        
+        // ==================== FUNCIÓN PARA RESTAURAR WIFI PERSISTENTE ====================
+        window.restaurarWifiPersistente = function() {
+            const ssidInput = document.getElementById('qrWifiSsid');
+            const passwordInput = document.getElementById('qrWifiPassword');
+            
+            if (ssidInput && window.wifiSsidPersistente) {
+                ssidInput.value = window.wifiSsidPersistente;
+            }
+            if (passwordInput && window.wifiPasswordPersistente) {
+                passwordInput.value = window.wifiPasswordPersistente;
+            }
+        };
+        
+        // ==================== FUNCIÓN PARA LIMPIAR CAMPOS TEMPORALES ====================
+        window.limpiarCamposTemporalesQR = function() {
+            document.getElementById('qrNombreMesa').value = '';
+            // NO limpiar wifiSsidPersistente ni wifiPasswordPersistente
+            // Solo limpiar el campo temporal de mesa
         };
     </script>
     
@@ -165,6 +373,8 @@
                         await window.cargarPropinas();
                         window.setupEventListeners();
                         window.setupRealtimeSubscriptions();
+                        window.setupStockRealtime();
+                        window.restaurarWifiPersistente();
                     } catch (e) {
                         console.error('Error cargando datos:', e);
                         window.mostrarToast('Error cargando datos: ' + e.message, 'error');
@@ -184,7 +394,7 @@
     </script>
     
     <style>
-        /* ESTILOS EXISTENTES - SIN CAMBIOS */
+        /* ESTILOS EXISTENTES - SIN CAMBIOS ESTRUCTURALES */
         *{margin:0;padding:0;box-sizing:border-box}
         :root{--primary:#D32F2F;--secondary:#212121;--accent:#FF9800;--light-bg:#F5F5F5;--dark-bg:#121212;--success:#388E3C;--info:#1976D2;--warning:#F57C00;--danger:#ef4444;--delivery:#00ACC1;--propina:#9C27B0;--text-light:#ffffff;--text-dark:#333333;--gray-100:#f8f9fa;--gray-200:#e9ecef;--gray-300:#dee2e6;--gray-400:#ced4da;--gray-500:#adb5bd;--gray-600:#6c757d;--gray-700:#495057;--gray-800:#343a40;--gray-900:#212529}
         body{font-family:'Roboto',sans-serif;background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%);color:#fff;min-height:100vh}
@@ -488,15 +698,18 @@
                 </div>
             </div>
             
-            <!-- QR -->
+            <!-- QR (MODIFICADO) -->
             <div class="tab-pane" id="qrPane">
                 <div style="margin-bottom:2rem">
                     <h3 style="color:#fff;margin-bottom:1rem">Generar Nuevo QR</h3>
                     <div style="display:flex;gap:1rem;align-items:flex-end;flex-wrap:wrap">
                         <div class="form-group" style="flex:1"><label>Nombre de la Mesa</label><input type="text" id="qrNombreMesa" placeholder="Ej: Mesa 1" style="width:100%"></div>
-                        <div class="form-group" style="flex:1"><label>SSID WiFi</label><input type="text" id="qrWifiSsid" placeholder="Ej: SakiSushi_Wifi" style="width:100%"></div>
-                        <div class="form-group" style="flex:1"><label>Contraseña WiFi</label><input type="text" id="qrWifiPassword" placeholder="Contraseña" style="width:100%"></div>
+                        <div class="form-group" style="flex:1"><label>SSID de Router (WiFi)</label><input type="text" id="qrWifiSsid" placeholder="Ej: SakiSushi_Wifi" style="width:100%" oninput="window.guardarWifiPersistente()"></div>
+                        <div class="form-group" style="flex:1"><label>Contraseña WiFi</label><input type="text" id="qrWifiPassword" placeholder="Contraseña" style="width:100%" oninput="window.guardarWifiPersistente()"></div>
                         <button class="btn-primary" onclick="window.generarQR()"><i class="fas fa-qrcode"></i> Generar</button>
+                    </div>
+                    <div class="wifi-fields" style="margin-top:15px;padding:12px;background:rgba(0,0,0,.3);border-radius:8px">
+                        <i class="fas fa-wifi"></i> <small>Los datos de WiFi se guardan automáticamente. El QR generado permitirá conectarse automáticamente a la red si se escanea.</small>
                     </div>
                 </div>
                 <div class="qr-grid" id="qrGrid"></div>
@@ -867,10 +1080,16 @@
             const grid = document.getElementById('qrGrid');
             grid.innerHTML = '';
             window.qrCodes.forEach(qr => {
-                let url = qr.tipo === 'wifi' ? `WIFI:T:WPA;S:${qr.ssid};P:${qr.password};;` : `${window.location.origin}/Cliente/index.html?mesa=${encodeURIComponent(qr.nombre)}`;
+                let url = '';
+                if (qr.tipo === 'wifi') {
+                    // Formato estándar para QR WiFi: WIFI:T:WPA;S:SSID;P:CONTRASEÑA;;
+                    url = `WIFI:T:WPA;S:${qr.ssid};P:${qr.password};;`;
+                } else {
+                    url = `${window.location.origin}/Cliente/index.html?mesa=${encodeURIComponent(qr.nombre)}`;
+                }
                 const card = document.createElement('div');
                 card.className = 'qr-card';
-                card.innerHTML = `<div class="qr-image" id="qr-${qr.id}"></div><div class="qr-nombre">${qr.nombre}</div><div class="qr-url">${url}</div><div class="qr-actions"><button onclick="window.ampliarQR('${qr.id}', '${qr.nombre}', '${url}')" title="Ampliar"><i class="fas fa-expand"></i></button><button onclick="window.eliminarQR('${qr.id}')" title="Eliminar"><i class="fas fa-trash"></i></button></div>`;
+                card.innerHTML = `<div class="qr-image" id="qr-${qr.id}"></div><div class="qr-nombre">${qr.nombre || (qr.tipo === 'wifi' ? 'WiFi' : 'QR')}</div><div class="qr-url">${qr.tipo === 'wifi' ? 'Red WiFi' : url.substring(0, 50)}...</div><div class="qr-actions"><button onclick="window.ampliarQR('${qr.id}', '${qr.nombre || (qr.tipo === 'wifi' ? 'WiFi' : 'QR')}', '${url.replace(/'/g, "\\'")}')" title="Ampliar"><i class="fas fa-expand"></i></button><button onclick="window.eliminarQR('${qr.id}')" title="Eliminar"><i class="fas fa-trash"></i></button></div>`;
                 grid.appendChild(card);
                 new QRCode(document.getElementById(`qr-${qr.id}`), { text: url, width: 150, height: 150 });
             });
@@ -880,19 +1099,40 @@
             const nombre = document.getElementById('qrNombreMesa').value.trim();
             const ssid = document.getElementById('qrWifiSsid').value.trim();
             const password = document.getElementById('qrWifiPassword').value.trim();
-            if (!nombre && !ssid) { window.mostrarToast('Ingresa al menos un nombre o configuración WiFi', 'error'); return; }
-            if (ssid && !password) { window.mostrarToast('Ingresa la contraseña WiFi', 'error'); return; }
-            localStorage.setItem('saki_wifi_ssid', ssid);
-            localStorage.setItem('saki_wifi_password', password);
-            let qrData = { id: window.generarId('QR_'), nombre: nombre || 'WiFi', fecha: new Date().toISOString() };
-            if (ssid && password) { qrData.tipo = 'wifi'; qrData.ssid = ssid; qrData.password = password; }
-            else qrData.tipo = 'mesa';
+            
+            // Guardar WiFi persistentemente
+            window.guardarWifiPersistente();
+            
+            if (!nombre && !ssid) { 
+                window.mostrarToast('Ingresa al menos un nombre de mesa o configuración WiFi', 'error'); 
+                return; 
+            }
+            
+            let qrData = { id: window.generarId('QR_'), fecha: new Date().toISOString() };
+            
+            if (ssid && password) {
+                qrData.tipo = 'wifi';
+                qrData.nombre = `WiFi - ${ssid}`;
+                qrData.ssid = ssid;
+                qrData.password = password;
+            } else if (nombre) {
+                qrData.tipo = 'mesa';
+                qrData.nombre = nombre;
+            } else {
+                window.mostrarToast('Completa los datos para generar el QR', 'error');
+                return;
+            }
+            
             try {
                 await window.supabaseClient.from('codigos_qr').insert([qrData]);
+                // Limpiar SOLO el campo de mesa (temporal), NO los campos WiFi
                 document.getElementById('qrNombreMesa').value = '';
                 await window.cargarQRs();
                 window.mostrarToast('✅ QR generado', 'success');
-            } catch (e) { console.error('Error generando QR:', e); window.mostrarToast('❌ Error al generar QR', 'error'); }
+            } catch (e) { 
+                console.error('Error generando QR:', e); 
+                window.mostrarToast('❌ Error al generar QR', 'error'); 
+            }
         };
 
         window.ampliarQR = function(id, nombre, url) {
@@ -1459,6 +1699,8 @@
                     await window.cargarPropinas();
                     window.setupEventListeners();
                     window.setupRealtimeSubscriptions();
+                    window.setupStockRealtime();
+                    window.restaurarWifiPersistente();
                 }, 100);
             } else {
                 console.log('🔒 No hay sesión de admin');
