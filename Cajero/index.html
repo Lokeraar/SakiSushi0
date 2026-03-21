@@ -795,6 +795,12 @@ try{
   return'<div class="detail-item-compact">'+
     '<div class="detail-header-compact"><span>'+hora+'</span><div style="display:flex;gap:4px;align-items:center"><span class="detail-metodo-tag">'+pedido.tipo+'</span>'+cajeroTag+'</div></div>'+
     '<div class="detail-items-compact">'+itemsHtml+'</div>'+
+    (function(){
+      var subtotalPlatillos=venta.subtotal_platillos||0;
+      if(subtotalPlatillos>0){
+        return '<div class="detail-item-row-compact" style="margin-top:3px;font-weight:600"><span>Subtotal platillos</span><span style="color:var(--accent)">'+window.formatBs(subtotalPlatillos)+'</span></div>';
+      } return '';
+    })()+
     (pedido.tipo==='delivery'?(function(){
       var costoD=pedido.costo_delivery_bs||0;
       if(deliveryNombre){
