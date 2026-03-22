@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Saki Sushi - Panel Administración</title>
+    <title>Saki Sushi - Panel Administraci�n</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
@@ -12,7 +12,7 @@
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
-    <!-- FUNCIONES BÁSICAS Y VARIABLES GLOBALES -->
+    <!-- FUNCIONES B�SICAS Y VARIABLES GLOBALES -->
     <script>
         // ==================== VARIABLES GLOBALES ====================
         window.isAdminAuthenticated = false;
@@ -40,7 +40,7 @@
         // Control de tiempo real para stock
         window.stockUpdateChannel = null;
 
-        // ==================== FUNCIÓN DE TOAST CON FALLBACK ====================
+        // ==================== FUNCI�N DE TOAST CON FALLBACK ====================
         window.mostrarToast = function(mensaje, tipo = 'info') {
             console.log('Toast:', mensaje, tipo);
             try {
@@ -92,7 +92,7 @@
             document.getElementById('panelContainer').classList.remove('active');
         };
         
-        // ==================== FUNCIÓN PARA ENVIAR NOTIFICACIÓN PUSH ====================
+        // ==================== FUNCI�N PARA ENVIAR NOTIFICACI�N PUSH ====================
         window.enviarNotificacionPush = async function(titulo, mensaje, sessionId = null) {
             try {
                 const response = await fetch('https://iqwwoihiiyrtypyqzhgy.supabase.co/functions/v1/send-push', {
@@ -110,7 +110,7 @@
             }
         };
         
-        // ==================== FUNCIÓN PARA DETECTAR CAMBIOS DE STOCK Y NOTIFICAR ====================
+        // ==================== FUNCI�N PARA DETECTAR CAMBIOS DE STOCK Y NOTIFICAR ====================
         window.verificarYNotificarStockReactivado = async function(ingredienteId, ingredienteNombre) {
             for (const platillo of window.menuItems) {
                 if (!platillo.ingredientes || Object.keys(platillo.ingredientes).length === 0) continue;
@@ -134,8 +134,8 @@
                     window.platillosNotificados[platillo.id] = 'disponible';
                     localStorage.setItem('saki_platillos_notificados', JSON.stringify(window.platillosNotificados));
                     
-                    const titulo = `🍣 ${platillo.nombre} disponible de nuevo!`;
-                    const mensaje = `Ya tenemos ${platillo.nombre} en stock. ¡Pide ahora!`;
+                    const titulo = ` ${platillo.nombre} disponible de nuevo!`;
+                    const mensaje = `Ya tenemos ${platillo.nombre} en stock. �Pide ahora!`;
                     
                     try {
                         const { data: pedidosUnicos } = await window.supabaseClient
@@ -148,7 +148,7 @@
                         for (const sessionId of sessionIds) {
                             await window.enviarNotificacionPush(titulo, mensaje, sessionId);
                         }
-                        window.mostrarToast(`📢 Notificación enviada: ${platillo.nombre} disponible`, 'success');
+                        window.mostrarToast(` Notificaci�n enviada: ${platillo.nombre} disponible`, 'success');
                     } catch (e) {
                         console.error('Error enviando notificaciones masivas:', e);
                     }
@@ -159,7 +159,7 @@
             }
         };
         
-        // ==================== FUNCIÓN PARA ACTUALIZAR STOCK EN TIEMPO REAL ====================
+        // ==================== FUNCI�N PARA ACTUALIZAR STOCK EN TIEMPO REAL ====================
         window.setupStockRealtime = function() {
             if (window.stockUpdateChannel) {
                 window.supabaseClient.removeChannel(window.stockUpdateChannel);
@@ -172,7 +172,7 @@
                     schema: 'public',
                     table: 'inventario'
                 }, async (payload) => {
-                    console.log('📦 Cambio en inventario detectado:', payload);
+                    console.log(' Cambio en inventario detectado:', payload);
                     const index = window.inventarioItems.findIndex(i => i.id === payload.new.id);
                     if (index !== -1) {
                         window.inventarioItems[index] = payload.new;
@@ -183,8 +183,8 @@
                     await window.recalcularStockPlatillos();
                     if (payload.new.stock > 0 && payload.old?.stock <= 0) {
                         await window.enviarNotificacionPush(
-                            '📦 Stock actualizado',
-                            `El ingrediente ${payload.new.nombre} está disponible nuevamente. ¡Revisa el menú!`
+                            ' Stock actualizado',
+                            `El ingrediente ${payload.new.nombre} est� disponible nuevamente. �Revisa el men�!`
                         );
                     }
                 })
@@ -193,13 +193,13 @@
                     schema: 'public',
                     table: 'menu'
                 }, async (payload) => {
-                    console.log('📋 Cambio en menú detectado:', payload);
+                    console.log(' Cambio en men� detectado:', payload);
                     await window.cargarMenu();
                 })
                 .subscribe();
         };
         
-        // ==================== FUNCIÓN PARA RECALCULAR STOCK DE PLATILLOS ====================
+        // ==================== FUNCI�N PARA RECALCULAR STOCK DE PLATILLOS ====================
         window.recalcularStockPlatillos = async function() {
             for (const platillo of window.menuItems) {
                 let stockDisponible = Infinity;
@@ -234,7 +234,7 @@
             window.renderizarMenu();
         };
         
-        // ==================== FUNCIÓN PARA GUARDAR WIFI PERSISTENTE ====================
+        // ==================== FUNCI�N PARA GUARDAR WIFI PERSISTENTE ====================
         window.guardarWifiPersistente = function() {
             const ssid = document.getElementById('qrWifiSsid')?.value || '';
             const password = document.getElementById('qrWifiPassword')?.value || '';
@@ -249,7 +249,7 @@
             }
         };
         
-        // ==================== FUNCIÓN PARA RESTAURAR WIFI PERSISTENTE ====================
+        // ==================== FUNCI�N PARA RESTAURAR WIFI PERSISTENTE ====================
         window.restaurarWifiPersistente = function() {
             const ssidInput = document.getElementById('qrWifiSsid');
             const passwordInput = document.getElementById('qrWifiPassword');
@@ -257,18 +257,18 @@
             if (passwordInput && window.wifiPasswordPersistente) passwordInput.value = window.wifiPasswordPersistente;
         };
         
-        // ==================== FUNCIÓN PARA LIMPIAR CAMPOS TEMPORALES ====================
+        // ==================== FUNCI�N PARA LIMPIAR CAMPOS TEMPORALES ====================
         window.limpiarCamposTemporalesQR = function() {
             document.getElementById('qrNombreMesa').value = '';
         };
     </script>
     
-    <!-- FUNCIÓN HACER LOGIN (CORREGIDA - USA EDGE FUNCTION) -->
+    <!-- FUNCI�N HACER LOGIN (CORREGIDA - USA EDGE FUNCTION) -->
     <script>
         window.hacerLogin = async function() {
-            console.log('🔑 Intentando login admin...');
+            console.log(' Intentando login admin...');
             const password = document.getElementById('adminPassword').value;
-            if (!password) { window.mostrarToast('Ingresa la contraseña', 'error'); return; }
+            if (!password) { window.mostrarToast('Ingresa la contrase�a', 'error'); return; }
             
             const loginBtn = document.querySelector('#loginForm button[type="submit"]');
             if (loginBtn) { loginBtn.disabled = true; loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Conectando...'; }
@@ -281,9 +281,9 @@
                 });
                 const data = await response.json();
                 if (!response.ok) throw new Error(data.error || `Error ${response.status}`);
-                if (!data.success) { window.mostrarToast('❌ ' + (data.error || 'Contraseña incorrecta'), 'error'); return; }
+                if (!data.success) { window.mostrarToast(' ' + (data.error || 'Contrase�a incorrecta'), 'error'); return; }
                 if (data.user.rol !== 'admin') { window.mostrarToast('Acceso denegado. Se requiere rol de administrador.', 'error'); return; }
-                if (sessionStorage.getItem('admin_authenticated') === 'true') { window.mostrarToast('⚠️ Ya hay una sesión de administrador activa', 'warning'); return; }
+                if (sessionStorage.getItem('admin_authenticated') === 'true') { window.mostrarToast(' Ya hay una sesi�n de administrador activa', 'warning'); return; }
 
                 window.isAdminAuthenticated = true;
                 window.jwtToken = data.token;
@@ -293,7 +293,7 @@
                 window.supabaseClient = window.inicializarSupabaseCliente(window.jwtToken);
                 document.getElementById('loginContainer').style.display = 'none';
                 document.getElementById('panelContainer').classList.add('active');
-                window.mostrarToast('👑 Bienvenido Administrador', 'success');
+                window.mostrarToast(' Bienvenido Administrador', 'success');
                 
                 setTimeout(async () => {
                     try {
@@ -314,8 +314,8 @@
                     } catch (e) { console.error('Error cargando datos:', e); window.mostrarToast('Error cargando datos: ' + e.message, 'error'); }
                 }, 500);
             } catch (error) {
-                console.error('❌ Error:', error);
-                window.mostrarToast('❌ Error: ' + error.message, 'error');
+                console.error(' Error:', error);
+                window.mostrarToast(' Error: ' + error.message, 'error');
             } finally {
                 if (loginBtn) { loginBtn.disabled = false; loginBtn.innerHTML = 'Ingresar'; }
             }
@@ -323,188 +323,1058 @@
     </script>
     
     <style>
-        *{margin:0;padding:0;box-sizing:border-box}
-        :root{--primary:#D32F2F;--secondary:#212121;--accent:#FF9800;--light-bg:#F5F5F5;--dark-bg:#121212;--success:#388E3C;--info:#1976D2;--warning:#F57C00;--danger:#ef4444;--delivery:#00ACC1;--propina:#9C27B0;--text-light:#ffffff;--text-dark:#333333;--gray-100:#f8f9fa;--gray-200:#e9ecef;--gray-300:#dee2e6;--gray-400:#ced4da;--gray-500:#adb5bd;--gray-600:#6c757d;--gray-700:#495057;--gray-800:#343a40;--gray-900:#212529}
-        body{font-family:'Roboto',sans-serif;background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%);color:#fff;min-height:100vh}
-        h1,h2,h3,h4,h5,h6{font-family:'Montserrat',sans-serif}
-        .login-container{display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,var(--primary),var(--secondary))}
-        .login-box{background:rgba(255,255,255,.95);padding:2rem;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.2);width:100%;max-width:400px}
-        .login-box h2{color:var(--primary);margin-bottom:1.5rem;text-align:center}
-        .login-form input{width:100%;padding:.75rem;margin-bottom:1rem;border:1px solid var(--gray-300);border-radius:8px;font-size:1rem}
-        .login-form input:focus{outline:none;border-color:var(--primary)}
-        .login-form button{width:100%;padding:.75rem;background:var(--primary);color:white;border:none;border-radius:8px;font-size:1rem;font-weight:600;cursor:pointer;transition:background .2s}
-        .login-form button:hover{background:#b71c1c}
-        .recovery-link{text-align:center;margin-top:1rem}
-        .recovery-link a{color:var(--info);text-decoration:none;font-size:.9rem}
-        .panel-container{display:none;min-height:100vh;background:transparent}
-        .panel-container.active{display:block}
-        .header{background:rgba(0,0,0,.3);color:#fff;padding:1rem 2rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:1000;box-shadow:0 2px 10px rgba(0,0,0,.1);backdrop-filter:blur(10px);border-bottom:1px solid rgba(255,255,255,.1)}
-        .header-left{display:flex;align-items:center;gap:1rem}
-        .header-left h2{color:var(--accent)}
-        .save-button{background:var(--success);border:none;color:white;padding:.5rem 1rem;border-radius:4px;cursor:pointer;display:flex;align-items:center;gap:.5rem;font-weight:600;transition:background .2s}
-        .save-button:hover{background:#2e7d32}
-        .header-right{display:flex;align-items:center;gap:1rem}
-        .nav-button{background:none;border:1px solid rgba(255,255,255,.2);color:#fff;padding:.5rem 1rem;border-radius:4px;cursor:pointer;text-decoration:none;font-size:.9rem;transition:all .2s}
-        .nav-button:hover{background:rgba(255,255,255,.1)}
-        .logout-button{background:var(--danger);border:none;color:white;padding:.5rem 1rem;border-radius:4px;cursor:pointer;font-weight:600;transition:background .2s}
-        .logout-button:hover{background:#dc2626}
-        .tasa-bar{background:rgba(0,0,0,.3);padding:1rem 2rem;border-bottom:1px solid rgba(255,255,255,.1);display:flex;align-items:center;gap:2rem;flex-wrap:wrap;backdrop-filter:blur(5px)}
-        .tasa-item{display:flex;align-items:center;gap:.5rem;color:#fff}
-        .tasa-item label{font-weight:600;color:rgba(255,255,255,.8)}
-        .tasa-item input{width:100px;padding:.25rem .5rem;border:1px solid rgba(255,255,255,.2);border-radius:4px;background:rgba(0,0,0,.5);color:#fff}
-        .tasa-value{font-weight:700;color:var(--accent);min-width:80px}
-        .toggle-switch{position:relative;display:inline-block;width:50px;height:24px}
-        .toggle-switch input{opacity:0;width:0;height:0}
-        .toggle-slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background:rgba(255,255,255,.2);transition:.4s;border-radius:24px}
-        .toggle-slider:before{position:absolute;content:"";height:20px;width:20px;left:2px;bottom:2px;background:white;transition:.4s;border-radius:50%}
-        input:checked+.toggle-slider{background:var(--primary)}
-        input:checked+.toggle-slider:before{transform:translateX(26px)}
-        .btn-small{padding:.25rem .75rem;border:none;border-radius:4px;cursor:pointer;font-size:.8rem;font-weight:600;background:rgba(255,255,255,.1);color:#fff}
-        .btn-small.danger{background:var(--danger);color:white}
-        .btn-small.success{background:var(--success);color:white}
-        .tabs{display:flex;background:rgba(0,0,0,.3);border-bottom:1px solid rgba(255,255,255,.1);padding:0 2rem;flex-wrap:wrap;backdrop-filter:blur(5px)}
-        .tab{padding:1rem 2rem;cursor:pointer;font-weight:600;color:rgba(255,255,255,.7);border-bottom:3px solid transparent;transition:all .2s}
-        .tab:hover{color:var(--accent)}
-        .tab.active{color:var(--accent);border-bottom-color:var(--accent)}
-        .content{padding:2rem}
-        .tab-pane{display:none}
-        .tab-pane.active{display:block}
-        .dashboard-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:1.5rem;margin-bottom:2rem}
-        .dashboard-card{background:rgba(255,255,255,.1);padding:1.5rem;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,.1);backdrop-filter:blur(5px);border:1px solid rgba(255,255,255,.1)}
-        .card-title{color:rgba(255,255,255,.7);font-size:.9rem;margin-bottom:.5rem}
-        .card-value{font-size:2rem;font-weight:700;color:#fff}
-        .card-value small{font-size:.9rem;color:rgba(255,255,255,.5)}
-        .alert-list{background:rgba(255,255,255,.1);padding:1.5rem;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,.1);margin-bottom:2rem;backdrop-filter:blur(5px);border:1px solid rgba(255,255,255,.1)}
-        .alert-list h3{color:#fff;margin-bottom:1rem}
-        .alert-item{display:flex;align-items:center;justify-content:space-between;padding:.75rem 0;border-bottom:1px solid rgba(255,255,255,.1);color:#fff}
-        .alert-item:last-child{border-bottom:none}
-        .alert-item.critical{color:var(--danger);font-weight:600}
-        .charts-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:1.5rem;margin-top:2rem}
-        .chart-container{background:rgba(255,255,255,.1);padding:1.5rem;border-radius:8px;box-shadow:0 2px 8px rgba(0,0,0,.1);backdrop-filter:blur(5px);border:1px solid rgba(255,255,255,.1)}
-        .chart-container h3{margin-bottom:1rem;color:#fff}
-        .chart-wrapper{height:300px;position:relative}
-        .table-responsive{overflow-x:auto}
-        .data-table{width:100%;background:rgba(255,255,255,.1);border-collapse:collapse;border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.1);color:#fff}
-        .data-table th{background:rgba(0,0,0,.5);color:var(--accent);padding:1rem;text-align:left}
-        .data-table td{padding:1rem;border-bottom:1px solid rgba(255,255,255,.1)}
-        .data-table tr:last-child td{border-bottom:none}
-        .data-table tr:hover{background:rgba(255,255,255,.05)}
-        .menu-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:1.5rem;margin-top:1rem}
-        .menu-card{background:rgba(255,255,255,.1);border-radius:8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.1);position:relative;backdrop-filter:blur(5px);border:1px solid rgba(255,255,255,.1)}
-        .menu-card-image{height:150px;background-color:rgba(0,0,0,.5);background-size:cover;background-position:center;position:relative}
-        .menu-card-actions{position:absolute;top:.5rem;right:.5rem;display:flex;gap:.5rem}
-        .menu-card-actions button{background:rgba(0,0,0,.5);border:none;width:32px;height:32px;border-radius:50%;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;color:#fff}
-        .menu-card-actions button:hover{background:var(--primary);transform:scale(1.1)}
-        .menu-card-content{padding:1rem}
-        .menu-card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem}
-        .menu-card-title{font-weight:600;font-size:1.1rem;color:#fff}
-        .menu-card-stock{font-size:.8rem;padding:.25rem .5rem;border-radius:4px;background:rgba(0,0,0,.3);color:rgba(255,255,255,.8)}
-        .menu-card-precio{font-weight:700;color:var(--accent);margin-bottom:.5rem}
-        .menu-card-descripcion{font-size:.9rem;color:rgba(255,255,255,.7);margin-bottom:.5rem}
-        .menu-card-ingredientes{font-size:.8rem;color:rgba(255,255,255,.6);max-height:100px;overflow-y:auto}
-        .menu-card-ingredientes span{display:inline-block;background:rgba(255,255,255,.1);padding:.2rem .5rem;border-radius:4px;margin:.2rem}
-        .menu-card-ingredientes .sin-stock{background:rgba(239,68,68,.2);color:var(--danger)}
-        .disponible-badge{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--success)}
-        .no-disponible-badge{background:var(--danger)}
-        .inventario-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1.5rem}
-        .inventario-card{background:rgba(255,255,255,.1);border-radius:8px;padding:1rem;box-shadow:0 2px 8px rgba(0,0,0,.1);backdrop-filter:blur(5px);border:1px solid rgba(255,255,255,.1)}
-        .inventario-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem}
-        .inventario-nombre{font-weight:600;font-size:1.1rem;color:#fff}
-        .inventario-actions button{background:none;border:none;cursor:pointer;color:rgba(255,255,255,.7);margin-left:.5rem}
-        .inventario-stock{margin:.5rem 0;color:#fff}
-        .stock-bar{height:8px;background:rgba(255,255,255,.1);border-radius:4px;overflow:hidden;margin-top:.25rem}
-        .stock-fill{height:100%;background:var(--primary);transition:width .3s}
-        .stock-fill.critical{background:var(--danger)}
-        .inventario-info{display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin:.5rem 0;font-size:.9rem;color:rgba(255,255,255,.8)}
-        .inventario-minimo{color:var(--warning)}
-        .usuarios-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1.5rem}
-        .usuario-card{background:rgba(255,255,255,.1);border-radius:8px;padding:1rem;box-shadow:0 2px 8px rgba(0,0,0,.1);backdrop-filter:blur(5px);border:1px solid rgba(255,255,255,.1)}
-        .usuario-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem}
-        .usuario-nombre{font-weight:600;color:#fff}
-        .usuario-username{color:rgba(255,255,255,.7);font-size:.9rem;margin-bottom:.5rem}
-        .usuario-estado{display:flex;align-items:center;gap:.5rem;margin-bottom:.5rem}
-        .usuario-estado span{padding:.25rem .5rem;border-radius:4px;font-size:.8rem;background:rgba(255,255,255,.1)}
-        .usuario-estado .activo{background:var(--success);color:white}
-        .usuario-estado .inactivo{background:var(--danger);color:white}
-        .usuario-actions{display:flex;gap:.5rem;margin-top:.5rem}
-        .qr-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:1.5rem}
-        .qr-card{background:rgba(255,255,255,.1);border-radius:8px;padding:1rem;box-shadow:0 2px 8px rgba(0,0,0,.1);text-align:center;backdrop-filter:blur(5px);border:1px solid rgba(255,255,255,.1)}
-        .qr-image{width:150px;height:150px;margin:0 auto 1rem}
-        .qr-nombre{font-weight:600;margin-bottom:.5rem;color:#fff}
-        .qr-url{font-size:.7rem;color:rgba(255,255,255,.6);margin-bottom:.5rem;word-break:break-all}
-        .qr-actions{display:flex;gap:.5rem;justify-content:center}
-        .qr-actions button{background:none;border:none;cursor:pointer;color:rgba(255,255,255,.7);font-size:1rem}
-        .modal{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.9);z-index:2000;align-items:center;justify-content:center;backdrop-filter:blur(10px)}
-        .modal.active{display:flex}
-        .modal-content{background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%);border-radius:12px;max-width:600px;width:90%;max-height:90vh;overflow-y:auto;position:relative;border:1px solid rgba(255,255,255,.1)}
-        .modal-header{padding:1.5rem;border-bottom:1px solid rgba(255,255,255,.1);display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:rgba(0,0,0,.3);z-index:10}
-        .modal-header h3{color:#fff}
-        .modal-close{background:none;border:none;font-size:1.5rem;cursor:pointer;color:rgba(255,255,255,.7)}
-        .modal-body{padding:1.5rem;color:#fff}
-        .modal-footer{padding:1.5rem;border-top:1px solid rgba(255,255,255,.1);background:rgba(0,0,0,.3);display:flex;justify-content:flex-end;gap:1rem}
-        .form-group{margin-bottom:1rem}
-        .form-group label{display:block;margin-bottom:.5rem;font-weight:600;color:#fff}
-        .form-group input,.form-group select,.form-group textarea{width:100%;padding:.75rem;border:1px solid rgba(255,255,255,.2);border-radius:4px;font-size:1rem;background:rgba(0,0,0,.5);color:#fff}
-        .form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:none;border-color:var(--accent)}
-        .form-row{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
-        .ingrediente-row{display:flex;gap:.5rem;margin-bottom:.5rem;align-items:center}
-        .ingrediente-row select{flex:2}
-        .ingrediente-row input{flex:1}
-        .ingrediente-row button{background:none;border:none;color:var(--danger);cursor:pointer}
-        .btn-primary{background:linear-gradient(135deg,var(--primary),#b71c1c);color:white;border:none;padding:.75rem 1.5rem;border-radius:8px;font-weight:600;cursor:pointer}
-        .btn-primary:hover{background:#b71c1c}
-        .btn-secondary{background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.2);padding:.75rem 1.5rem;border-radius:8px;font-weight:600;cursor:pointer}
-        .btn-secondary:hover{background:rgba(255,255,255,.2)}
-        .btn-danger{background:var(--danger);color:white;border:none;padding:.75rem 1.5rem;border-radius:8px;font-weight:600;cursor:pointer}
-        .btn-danger:hover{background:#dc2626}
-        .password-overlay{position:relative}
-        .password-protected{filter:blur(4px);pointer-events:none;user-select:none}
-        .password-unlock{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,.8);padding:1rem;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,.2);z-index:10;border:1px solid rgba(255,255,255,.1)}
-        .loading{text-align:center;padding:2rem}
-        .loading-spinner{display:inline-block;width:40px;height:40px;border:4px solid rgba(211,47,47,.3);border-radius:50%;border-top-color:var(--primary);animation:spin 1s ease-in-out infinite}
-        @keyframes spin{to{transform:rotate(360deg)}}
-        .toast{position:fixed;bottom:20px;right:20px;background:linear-gradient(135deg,#1a1a2e,#16213e);color:#fff;padding:1rem 1.5rem;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,.3);z-index:3000;display:none;animation:slideIn .3s ease;max-width:300px;border-left:4px solid var(--success);border:1px solid rgba(255,255,255,.1)}
-        .toast.show{display:block}
-        .toast.success{border-left-color:var(--success)}
-        .toast.error{border-left-color:var(--danger)}
-        .toast.info{border-left-color:var(--info)}
-        @keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
-        .image-preview{margin-top:.5rem;padding:.5rem;border:1px solid rgba(255,255,255,.2);border-radius:4px;display:flex;align-items:center;gap:1rem}
-        .image-preview img{width:60px;height:60px;object-fit:cover;border-radius:4px}
-        .image-preview small{color:rgba(255,255,255,.7)}
-        .wifi-fields{margin-top:20px;padding:20px;background:rgba(0,0,0,.2);border-radius:8px;border:1px solid rgba(255,255,255,.1)}
-        .wifi-fields h4{color:var(--accent);margin-bottom:15px}
-        .deliverys-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1.5rem}
-        .delivery-card{background:rgba(0,172,193,.1);border-radius:8px;padding:1rem;box-shadow:0 2px 8px rgba(0,0,0,.1);backdrop-filter:blur(5px);border:1px solid var(--delivery)}
-        .delivery-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:.5rem}
-        .delivery-nombre{font-weight:600;font-size:1.1rem;color:#fff}
-        .delivery-estado{font-size:.8rem;padding:.25rem .5rem;border-radius:4px;background:rgba(255,255,255,.1)}
-        .delivery-estado.activo{color:var(--success)}
-        .delivery-estado.inactivo{color:var(--danger)}
-        .delivery-acumulado{background:rgba(0,0,0,.3);padding:.75rem;border-radius:6px;margin:.5rem 0;display:flex;justify-content:space-between;align-items:center}
-        .delivery-monto{font-weight:700;color:var(--accent);font-size:1.2rem}
-        .delivery-actions{display:flex;gap:.5rem;margin-top:.5rem}
-        .propinas-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:2rem}
-        .propina-card{background:rgba(156,39,176,.1);border-radius:8px;padding:1.5rem;text-align:center;border:1px solid var(--propina)}
-        .propina-card .stat-value{font-size:2rem;font-weight:700;color:var(--propina)}
-        .propina-card .stat-label{color:rgba(255,255,255,.7);margin-top:.5rem}
-    </style>
+        /* MISMO ESTILO QUE TEN�AS - SIN CAMBIOS */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #D32F2F;
+            --secondary: #212121;
+            --accent: #FF9800;
+            --light-bg: #F5F5F5;
+            --dark-bg: #121212;
+            --success: #388E3C;
+            --info: #1976D2;
+            --warning: #F57C00;
+    --delivery: #00ACC1;
+    --propina: #9C27B0;
+    --favordecaja: #FF9800;
+    --condonar: #E91E63;
+
+            --danger: #ef4444;
+            --text-light: #ffffff;
+            --text-dark: #333333;
+            --gray-100: #f8f9fa;
+            --gray-200: #e9ecef;
+            --gray-300: #dee2e6;
+            --gray-400: #ced4da;
+            --gray-500: #adb5bd;
+            --gray-600: #6c757d;
+            --gray-700: #495057;
+            --gray-800: #343a40;
+            --gray-900: #212529;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--light-bg);
+            color: var(--text-dark);
+            min-height: 100vh;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Montserrat', sans-serif;
+        }
+
+        /* Login */
+        .login-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+        }
+
+        .login-box {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .login-box h2 {
+            color: var(--primary);
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        .login-form input {
+            width: 100%;
+            padding: 0.75rem;
+            margin-bottom: 1rem;
+            border: 1px solid var(--gray-300);
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+
+        .login-form input:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .login-form button {
+            width: 100%;
+            padding: 0.75rem;
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .login-form button:hover {
+            background-color: #b71c1c;
+        }
+
+        .recovery-link {
+            text-align: center;
+            margin-top: 1rem;
+        }
+
+        .recovery-link a {
+            color: var(--info);
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+
+        /* Panel principal */
+        .panel-container {
+            display: none;
+            min-height: 100vh;
+            background-color: var(--light-bg);
+        }
+
+        .panel-container.active {
+            display: block;
+        }
+
+        /* Header */
+        .header {
+            background-color: var(--secondary);
+            color: white;
+            padding: 1rem 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .header-left h2 {
+            color: var(--accent);
+        }
+
+        .save-button {
+            background-color: var(--success);
+            border: none;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 600;
+            transition: background-color 0.2s;
+        }
+
+        .save-button:hover {
+            background-color: #2e7d32;
+        }
+
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .nav-button {
+            background: none;
+            border: 1px solid var(--gray-600);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        .nav-button:hover {
+            background-color: var(--gray-700);
+        }
+
+        .logout-button {
+            background-color: var(--danger);
+            border: none;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background-color 0.2s;
+        }
+
+        .logout-button:hover {
+            background-color: #dc2626;
+        }
+
+        /* Barra de tasa (editable) */
+        .tasa-bar {
+            background-color: white;
+            padding: 1rem 2rem;
+            border-bottom: 1px solid var(--gray-200);
+            display: flex;
+            align-items: center;
+            gap: 2rem;
+            flex-wrap: wrap;
+        }
+
+        .tasa-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .tasa-item label {
+            font-weight: 600;
+            color: var(--gray-700);
+        }
+
+        .tasa-item input {
+            width: 100px;
+            padding: 0.25rem 0.5rem;
+            border: 1px solid var(--gray-300);
+            border-radius: 4px;
+        }
+
+        .tasa-value {
+            font-weight: 700;
+            color: var(--primary);
+            min-width: 80px;
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--gray-400);
+            transition: .4s;
+            border-radius: 24px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 2px;
+            bottom: 2px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .toggle-slider {
+            background-color: var(--primary);
+        }
+
+        input:checked + .toggle-slider:before {
+            transform: translateX(26px);
+        }
+
+        .btn-small {
+            padding: 0.25rem 0.75rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 600;
+            background-color: var(--gray-200);
+            color: var(--gray-700);
+        }
+
+        .btn-small.danger {
+            background-color: var(--danger);
+            color: white;
+        }
+
+        .btn-small.success {
+            background-color: var(--success);
+            color: white;
+        }
+
+        /* Pesta�as */
+        .tabs {
+            display: flex;
+            background-color: white;
+            border-bottom: 1px solid var(--gray-200);
+            padding: 0 2rem;
+            flex-wrap: wrap;
+        }
+
+        .tab {
+            padding: 1rem 2rem;
+            cursor: pointer;
+            font-weight: 600;
+            color: var(--gray-600);
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s;
+        }
+
+        .tab:hover {
+            color: var(--primary);
+        }
+
+        .tab.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        /* Contenido */
+        .content {
+            padding: 2rem;
+        }
+
+        .tab-pane {
+            display: none;
+        }
+
+        .tab-pane.active {
+            display: block;
+        }
+
+        /* Tarjetas de dashboard */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .dashboard-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .card-title {
+            color: var(--gray-600);
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .card-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--secondary);
+        }
+
+        .card-value small {
+            font-size: 0.9rem;
+            color: var(--gray-500);
+        }
+
+        .alert-list {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+        }
+
+        .alert-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .alert-item:last-child {
+            border-bottom: none;
+        }
+
+        .alert-item.critical {
+            color: var(--danger);
+            font-weight: 600;
+        }
+
+        /* Gr�ficos */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .chart-container {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .chart-container h3 {
+            margin-bottom: 1rem;
+            color: var(--secondary);
+        }
+
+        .chart-wrapper {
+            height: 300px;
+            position: relative;
+        }
+
+        /* Tablas */
+        .table-responsive {
+            overflow-x: auto;
+        }
+
+        .data-table {
+            width: 100%;
+            background: white;
+            border-collapse: collapse;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .data-table th {
+            background-color: var(--gray-800);
+            color: white;
+            padding: 1rem;
+            text-align: left;
+        }
+
+        .data-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        .data-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        .data-table tr:hover {
+            background-color: var(--gray-100);
+        }
+
+        /* Tarjetas de men� */
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1rem;
+        }
+
+        .menu-card {
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            position: relative;
+        }
+
+        .menu-card-image {
+            height: 150px;
+            background-color: var(--gray-200);
+            background-size: cover;
+            background-position: center;
+            position: relative;
+        }
+
+        .menu-card-actions {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .menu-card-actions button {
+            background: rgba(255,255,255,0.9);
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .menu-card-actions button:hover {
+            background: white;
+            transform: scale(1.1);
+        }
+
+        .menu-card-content {
+            padding: 1rem;
+        }
+
+        .menu-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+        }
+
+        .menu-card-title {
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .menu-card-stock {
+            font-size: 0.8rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            background-color: var(--gray-200);
+        }
+
+        .menu-card-precio {
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+
+        .menu-card-descripcion {
+            font-size: 0.9rem;
+            color: var(--gray-600);
+            margin-bottom: 0.5rem;
+        }
+
+        .menu-card-ingredientes {
+            font-size: 0.8rem;
+            color: var(--gray-500);
+            max-height: 100px;
+            overflow-y: auto;
+        }
+
+        .menu-card-ingredientes span {
+            display: inline-block;
+            background-color: var(--gray-200);
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            margin: 0.2rem;
+        }
+
+        .menu-card-ingredientes .sin-stock {
+            background-color: #fee2e2;
+            color: var(--danger);
+        }
+
+        .disponible-badge {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: var(--success);
+        }
+
+        .no-disponible-badge {
+            background-color: var(--danger);
+        }
+
+        /* Tarjetas de inventario */
+        .inventario-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .inventario-card {
+            background: white;
+            border-radius: 8px;
+            padding: 1rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .inventario-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+        }
+
+        .inventario-nombre {
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .inventario-actions button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--gray-600);
+            margin-left: 0.5rem;
+        }
+
+        .inventario-stock {
+            margin: 0.5rem 0;
+        }
+
+        .stock-bar {
+            height: 8px;
+            background-color: var(--gray-200);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 0.25rem;
+        }
+
+        .stock-fill {
+            height: 100%;
+            background-color: var(--primary);
+            transition: width 0.3s;
+        }
+
+        .stock-fill.critical {
+            background-color: var(--danger);
+        }
+
+        .inventario-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.5rem;
+            margin: 0.5rem 0;
+            font-size: 0.9rem;
+        }
+
+        .inventario-minimo {
+            color: var(--warning);
+        }
+
+        /* Tarjetas de usuarios */
+        .usuarios-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .usuario-card {
+            background: white;
+            border-radius: 8px;
+            padding: 1rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .usuario-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+        }
+
+        .usuario-nombre {
+            font-weight: 600;
+        }
+
+        .usuario-username {
+            color: var(--gray-600);
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .usuario-estado {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .usuario-estado span {
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            background-color: var(--gray-200);
+        }
+
+        .usuario-estado .activo {
+            background-color: var(--success);
+            color: white;
+        }
+
+        .usuario-estado .inactivo {
+            background-color: var(--danger);
+            color: white;
+        }
+
+        .usuario-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        /* Tarjetas de QR */
+        .qr-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .qr-card {
+            background: white;
+            border-radius: 8px;
+            padding: 1rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .qr-image {
+            width: 150px;
+            height: 150px;
+            margin: 0 auto 1rem;
+        }
+
+        .qr-nombre {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .qr-url {
+            font-size: 0.7rem;
+            color: var(--gray-600);
+            margin-bottom: 0.5rem;
+            word-break: break-all;
+        }
+
+        .qr-actions {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: center;
+        }
+
+        .qr-actions button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--gray-600);
+            font-size: 1rem;
+        }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background-color: white;
+            border-radius: 12px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .modal-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--gray-200);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            background: white;
+            z-index: 10;
+        }
+
+        .modal-header h3 {
+            color: var(--secondary);
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--gray-600);
+        }
+
+        .modal-body {
+            padding: 1.5rem;
+        }
+
+        .modal-footer {
+            padding: 1.5rem;
+            border-top: 1px solid var(--gray-200);
+            background-color: var(--gray-100);
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+        }
+
+        /* Formularios */
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--gray-700);
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--gray-300);
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+        }
+
+        .ingrediente-row {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+            align-items: center;
+        }
+
+        .ingrediente-row select {
+            flex: 2;
+        }
+
+        .ingrediente-row input {
+            flex: 1;
+        }
+
+        .ingrediente-row button {
+            background: none;
+            border: none;
+            color: var(--danger);
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-primary:hover {
+            background-color: #b71c1c;
+        }
+
+        .btn-secondary {
+            background-color: var(--gray-200);
+            color: var(--gray-700);
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-secondary:hover {
+            background-color: var(--gray-300);
+        }
+
+        .btn-danger {
+            background-color: var(--danger);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .btn-danger:hover {
+            background-color: #dc2626;
+        }
+
+        /* Overlay para contrase�a */
+        .password-overlay {
+            position: relative;
+        }
+
+        .password-protected {
+            filter: blur(4px);
+            pointer-events: none;
+            user-select: none;
+        }
+
+        .password-unlock {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 1rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            z-index: 10;
+        }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 2rem;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 4px solid rgba(211, 47, 47, 0.3);
+            border-radius: 50%;
+            border-top-color: var(--primary);
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--secondary);
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+            z-index: 3000;
+            display: none;
+            animation: slideIn 0.3s ease;
+            max-width: 300px;
+        }
+
+        .toast.show {
+            display: block;
+        }
+
+        .toast.success {
+            background: var(--success);
+        }
+
+        .toast.error {
+            background: var(--danger);
+        }
+
+        .toast.info {
+            background: var(--info);
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* Preview de imagen */
+        .image-preview {
+            margin-top: 0.5rem;
+            padding: 0.5rem;
+            border: 1px solid var(--gray-300);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .image-preview img {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 4px;
+        }
+
+        .image-preview small {
+            color: var(--gray-600);
+        }
+        /* Deliverys */
+        .delivery-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1rem}
+        .delivery-card{background:white;border-radius:8px;padding:1rem;box-shadow:0 2px 8px rgba(0,0,0,.1);border-left:4px solid var(--delivery)}
+        .delivery-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem}
+        .delivery-nombre{font-weight:700}
+        .delivery-acumulado{font-weight:700;color:var(--delivery);font-size:1.1rem}
+        .delivery-actions{display:flex;gap:.5rem;margin-top:.5rem;flex-wrap:wrap}
+        .mesoneros-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:1rem}
+        .mesonero-card{background:white;border-radius:8px;padding:1rem;box-shadow:0 2px 8px rgba(0,0,0,.1);border-left:4px solid var(--propina);display:flex;justify-content:space-between;align-items:center}
+        .propinas-stats{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:1rem;margin-bottom:1.5rem}
+        .propina-card{background:white;border-radius:8px;padding:1.2rem;box-shadow:0 2px 8px rgba(0,0,0,.1);border-left:4px solid var(--propina);text-align:center}
+        .wifi-fields{margin-top:12px;padding:10px 12px;background:rgba(0,0,0,.04);border-radius:8px;color:#555;font-size:.85rem}
+        </style>
 </head>
 <body>
     <div class="login-container" id="loginContainer">
         <div class="login-box">
             <h2><i class="fas fa-cog"></i> Admin Saki Sushi</h2>
             <form class="login-form" id="loginForm" onsubmit="event.preventDefault(); window.hacerLogin()">
-                <input type="password" id="adminPassword" placeholder="Contraseña de Administrador" required autocomplete="current-password">
+                <input type="password" id="adminPassword" placeholder="Contrase�a de Administrador" required autocomplete="current-password">
                 <button type="submit">Ingresar</button>
             </form>
-            <div class="recovery-link"><a href="#" id="recoveryLink">¿Olvidaste la contraseña?</a></div>
+            <div class="recovery-link"><a href="#" id="recoveryLink">�Olvidaste la contrase�a?</a></div>
         </div>
     </div>
     
     <div class="panel-container" id="panelContainer">
         <header class="header">
-            <div class="header-left"><h2><i class="fas fa-crown"></i> Administración Saki Sushi</h2><button class="save-button" id="saveAllButton"><i class="fas fa-save"></i> Guardar Todo</button></div>
+            <div class="header-left"><h2><i class="fas fa-crown"></i> Administraci�n Saki Sushi</h2><button class="save-button" id="saveAllButton"><i class="fas fa-save"></i> Guardar Todo</button></div>
             <div class="header-right"><a href="../Cliente/index.html" target="_blank" class="nav-button"><i class="fas fa-utensils"></i> Cliente</a><a href="../Cajero/index.html" target="_blank" class="nav-button"><i class="fas fa-cash-register"></i> Cajero</a><button class="logout-button" id="logoutButton"><i class="fas fa-sign-out-alt"></i> Salir</button></div>
         </header>
         
@@ -519,13 +1389,13 @@
         
         <div class="tabs">
             <div class="tab active" data-tab="dashboard">Dashboard</div>
-            <div class="tab" data-tab="menu">Menú y Precios</div>
+            <div class="tab" data-tab="menu">Men� y Precios</div>
             <div class="tab" data-tab="inventario">Inventario</div>
             <div class="tab" data-tab="usuarios">Usuarios</div>
             <div class="tab" data-tab="deliverys">Deliverys</div>
             <div class="tab" data-tab="propinas">Propinas</div>
-            <div class="tab" data-tab="configuracion">Configuración</div>
-            <div class="tab" data-tab="qr">Códigos QR</div>
+            <div class="tab" data-tab="configuracion">Configuraci�n</div>
+            <div class="tab" data-tab="qr">C�digos QR</div>
             <div class="tab" data-tab="reportes">Reportes</div>
         </div>
         
@@ -542,11 +1412,11 @@
                 </div>
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem">
                     <div class="alert-list"><h3>Pedidos Recientes</h3><div id="pedidosRecientes"></div></div>
-                    <div class="alert-list"><h3>Stock Crítico</h3><div id="stockCritico"></div></div>
+                    <div class="alert-list"><h3>Stock Cr�tico</h3><div id="stockCritico"></div></div>
                 </div>
             </div>
             
-            <!-- MENÚ -->
+            <!-- MEN� -->
             <div class="tab-pane" id="menuPane">
                 <button class="btn-primary" onclick="window.abrirModalNuevoPlatillo()" style="margin-bottom:1rem"><i class="fas fa-plus"></i> Nuevo Platillo</button>
                 <div class="menu-grid" id="menuGrid"></div>
@@ -566,10 +1436,10 @@
             
             <!-- DELIVERYS -->
             <div class="tab-pane" id="deliverysPane">
-                <h2 class="section-title" style="margin-bottom:20px"><i class="fas fa-motorcycle" style="color:var(--delivery)"></i> Gestión de Motorizados</h2>
+                <h2 class="section-title" style="margin-bottom:20px"><i class="fas fa-motorcycle" style="color:var(--delivery)"></i> Gesti�n de Motorizados</h2>
                 <div style="margin-bottom:2rem">
                     <div style="display:flex;gap:10px;max-width:500px">
-                        <input type="text" id="nuevoDelivery" placeholder="Nombre del motorizado" style="flex:1;padding:10px;border:2px solid rgba(255,255,255,.2);border-radius:8px;background:rgba(0,0,0,.5);color:#fff">
+                        <input type="text" id="nuevoDelivery" placeholder="Nombre del motorizado" style="flex:1;padding:10px;border:2px solid var(--gray-300,#ddd);border-radius:8px;background:white;color:var(--text-dark,#1a1a2e)">
                         <button class="btn-primary" onclick="window.agregarDelivery()" style="background:linear-gradient(135deg,var(--delivery),#00838F)"><i class="fas fa-plus"></i> Agregar</button>
                     </div>
                 </div>
@@ -578,7 +1448,7 @@
             
             <!-- PROPINAS -->
             <div class="tab-pane" id="propinasPane">
-                <h2 class="section-title" style="margin-bottom:20px"><i class="fas fa-hand-holding-heart" style="color:var(--propina)"></i> Gestión de Propinas</h2>
+                <h2 class="section-title" style="margin-bottom:20px"><i class="fas fa-hand-holding-heart" style="color:var(--propina)"></i> Gesti�n de Propinas</h2>
                 <div class="propinas-stats">
                     <div class="propina-card"><div class="stat-value" id="propinasTotal">Bs. 0</div><div class="stat-label">Total Propinas</div></div>
                     <div class="propina-card"><div class="stat-value" id="propinasCantidad">0</div><div class="stat-label">Cantidad</div></div>
@@ -587,7 +1457,7 @@
                 <div class="table-responsive">
                     <h3 style="color:#fff;margin-bottom:1rem">Historial de Propinas</h3>
                     <table class="data-table" id="propinasTable">
-                        <thead> on<th>Fecha</th><th>Mesonero</th><th>Mesa</th><th>Método</th><th>Monto</th><th>Cajero</th> </thead>
+                        <thead> on<th>Fecha</th><th>Mesonero</th><th>Mesa</th><th>M�todo</th><th>Monto</th><th>Cajero</th> </thead>
                         <tbody id="propinasTableBody"></tbody>
                     </table>
                 </div>
@@ -597,29 +1467,29 @@
                 </div>
             </div>
             
-            <!-- CONFIGURACIÓN -->
+            <!-- CONFIGURACI�N -->
             <div class="tab-pane" id="configuracionPane">
                 <div class="alert-list" style="max-width:500px">
-                    <h3>Cambiar Contraseña</h3>
-                    <div class="form-group"><label>Contraseña Actual</label><input type="password" id="currentPassword"></div>
-                    <div class="form-group"><label>Nueva Contraseña</label><input type="password" id="newPassword"></div>
-                    <div class="form-group"><label>Confirmar Nueva Contraseña</label><input type="password" id="confirmPassword"></div>
-                    <button class="btn-primary" onclick="window.cambiarPassword()">Cambiar Contraseña</button>
+                    <h3>Cambiar Contrase�a</h3>
+                    <div class="form-group"><label>Contrase�a Actual</label><input type="password" id="currentPassword"></div>
+                    <div class="form-group"><label>Nueva Contrase�a</label><input type="password" id="newPassword"></div>
+                    <div class="form-group"><label>Confirmar Nueva Contrase�a</label><input type="password" id="confirmPassword"></div>
+                    <button class="btn-primary" onclick="window.cambiarPassword()">Cambiar Contrase�a</button>
                 </div>
                 <div class="alert-list" style="max-width:500px;margin-top:2rem">
-                    <h3>Correo de Recuperación</h3>
-                    <div class="form-group"><label>Correo Electrónico</label><input type="email" id="recoveryEmail" value="admin@sakisushi.com"></div>
+                    <h3>Correo de Recuperaci�n</h3>
+                    <div class="form-group"><label>Correo Electr�nico</label><input type="email" id="recoveryEmail" value="admin@sakisushi.com"></div>
                     <button class="btn-primary" onclick="window.guardarRecoveryEmail()">Guardar</button>
                 </div>
                 <div class="alert-list" style="max-width:500px;margin-top:2rem">
-                    <h3>Configuración de Alertas</h3>
-                    <div class="form-group"><label>Umbral de Stock Crítico</label><input type="number" id="alertaStockMinimo" value="5" min="1"></div>
+                    <h3>Configuraci�n de Alertas</h3>
+                    <div class="form-group"><label>Umbral de Stock Cr�tico</label><input type="number" id="alertaStockMinimo" value="5" min="1"></div>
                     <button class="btn-primary" onclick="window.guardarUmbralStock()">Guardar</button>
                 </div>
                 <div class="alert-list" style="max-width:500px;margin-top:2rem">
                     <h3>Mesoneros</h3>
                     <div style="display:flex;gap:10px;margin-bottom:20px">
-                        <input type="text" id="nuevoMesonero" placeholder="Nombre del mesonero" style="flex:1;padding:10px;border:2px solid rgba(255,255,255,.2);border-radius:8px;background:rgba(0,0,0,.5);color:#fff">
+                        <input type="text" id="nuevoMesonero" placeholder="Nombre del mesonero" style="flex:1;padding:10px;border:2px solid var(--gray-300,#ddd);border-radius:8px;background:white;color:var(--text-dark,#1a1a2e)">
                         <button class="btn-primary" onclick="window.agregarMesonero()">Agregar</button>
                     </div>
                     <div id="mesonerosList"></div>
@@ -633,11 +1503,11 @@
                     <div style="display:flex;gap:1rem;align-items:flex-end;flex-wrap:wrap">
                         <div class="form-group" style="flex:1"><label>Nombre de la Mesa</label><input type="text" id="qrNombreMesa" placeholder="Ej: Mesa 1" style="width:100%"></div>
                         <div class="form-group" style="flex:1"><label>SSID de Router (WiFi)</label><input type="text" id="qrWifiSsid" placeholder="Ej: SakiSushi_Wifi" style="width:100%" oninput="window.guardarWifiPersistente()"></div>
-                        <div class="form-group" style="flex:1"><label>Contraseña WiFi</label><input type="text" id="qrWifiPassword" placeholder="Contraseña" style="width:100%" oninput="window.guardarWifiPersistente()"></div>
+                        <div class="form-group" style="flex:1"><label>Contrase�a WiFi</label><input type="text" id="qrWifiPassword" placeholder="Contrase�a" style="width:100%" oninput="window.guardarWifiPersistente()"></div>
                         <button class="btn-primary" onclick="window.generarQR()"><i class="fas fa-qrcode"></i> Generar</button>
                     </div>
                     <div class="wifi-fields" style="margin-top:15px;padding:12px;background:rgba(0,0,0,.3);border-radius:8px">
-                        <i class="fas fa-wifi"></i> <small>Los datos de WiFi se guardan automáticamente. El QR generado permitirá conectarse automáticamente a la red si se escanea.</small>
+                        <i class="fas fa-wifi"></i> <small>Los datos de WiFi se guardan autom�ticamente. El QR generado permitir� conectarse autom�ticamente a la red si se escanea.</small>
                     </div>
                 </div>
                 <div class="qr-grid" id="qrGrid"></div>
@@ -651,43 +1521,43 @@
                     <div class="form-group" style="align-self:flex-end"><button class="btn-primary" onclick="window.cargarReportes()">Filtrar</button></div>
                 </div>
                 <div class="dashboard-grid">
-                    <div class="dashboard-card"><div class="card-title">Ventas Día</div><div class="card-value" id="ventasDia">$0.00</div></div>
+                    <div class="dashboard-card"><div class="card-title">Ventas D�a</div><div class="card-value" id="ventasDia">$0.00</div></div>
                     <div class="dashboard-card"><div class="card-title">Ventas Semana</div><div class="card-value" id="ventasSemana">$0.00</div></div>
                     <div class="dashboard-card"><div class="card-title">Ticket Promedio</div><div class="card-value" id="ticketPromedio">$0.00</div></div>
                     <div class="dashboard-card"><div class="card-title">Platillo Top</div><div class="card-value" id="platilloTop">-</div></div>
                 </div>
                 <div class="charts-grid">
-                    <div class="chart-container"><h3>Ventas Últimos 7 Días</h3><div class="chart-wrapper"><canvas id="ventasChart"></canvas></div></div>
-                    <div class="chart-container"><h3>Ventas por Categoría</h3><div class="chart-wrapper"><canvas id="categoriasChart"></canvas></div></div>
-                    <div class="chart-container"><h3>Métodos de Pago</h3><div class="chart-wrapper"><canvas id="pagosChart"></canvas></div></div>
+                    <div class="chart-container"><h3>Ventas �ltimos 7 D�as</h3><div class="chart-wrapper"><canvas id="ventasChart"></canvas></div></div>
+                    <div class="chart-container"><h3>Ventas por Categor�a</h3><div class="chart-wrapper"><canvas id="categoriasChart"></canvas></div></div>
+                    <div class="chart-container"><h3>M�todos de Pago</h3><div class="chart-wrapper"><canvas id="pagosChart"></canvas></div></div>
                     <div class="chart-container"><h3>Ventas por Hora</h3><div class="chart-wrapper"><canvas id="horaChart"></canvas></div></div>
                 </div>
                 <div class="table-responsive" style="margin-top:2rem">
                     <h3 style="color:#fff;margin-bottom:1rem">Detalle de Ventas</h3>
-                    <table class="data-table" id="ventasTable"><thead> on<th>Fecha</th><th>Pedido</th><th>Total</th><th>Items</th><th>Método</th><th>Tipo</th> </thead><tbody id="ventasTableBody"></tbody></table>
+                    <table class="data-table" id="ventasTable"><thead> on<th>Fecha</th><th>Pedido</th><th>Total</th><th>Items</th><th>M�todo</th><th>Tipo</th> </thead><tbody id="ventasTableBody"></tbody></table>
                 </div>
             </div>
         </div>
     </div>
     
     <!-- MODALES -->
-    <div class="modal" id="platilloModal"><div class="modal-content"><div class="modal-header"><h3 id="platilloModalTitle">Nuevo Platillo</h3><button class="modal-close" id="closePlatilloModal">&times;</button></div><div class="modal-body"><form id="platilloForm"><div class="form-group"><label>Imagen</label><input type="file" id="platilloImagen" accept="image/*"><small>O URL:</small><input type="url" id="platilloImagenUrl"><div id="imagenPreview" class="image-preview" style="display:none"><img id="previewImg"><div><small>Vista previa</small><button type="button" class="btn-small" onclick="window.limpiarImagenPreview()">Eliminar</button></div></div></div><div class="form-row"><div class="form-group"><label>Nombre</label><input type="text" id="platilloNombre" required></div><div class="form-group"><label>Categoría</label><select id="platilloCategoria" required></select></div></div><div class="form-group"><label>Subcategoría</label><select id="platilloSubcategoria"><option value="">Ninguna</option></select></div><div class="form-row"><div class="form-group"><label>Precio (USD)</label><input type="number" step="0.01" id="platilloPrecio" required></div><div class="form-group"><label>Disponible</label><select id="platilloDisponible"><option value="true">Sí</option><option value="false">No</option></select></div></div><div class="form-group"><label>Descripción</label><textarea id="platilloDescripcion" rows="3"></textarea></div><div class="form-group"><label>Ingredientes</label><div id="ingredientesContainer"></div><button type="button" class="btn-secondary" onclick="window.agregarIngredienteRow()"><i class="fas fa-plus"></i> Agregar Ingrediente</button></div></form></div><div class="modal-footer"><button class="btn-secondary" id="cancelPlatillo">Cancelar</button><button class="btn-primary" id="savePlatillo">Guardar</button></div></div></div>
+    <div class="modal" id="platilloModal"><div class="modal-content"><div class="modal-header"><h3 id="platilloModalTitle">Nuevo Platillo</h3><button class="modal-close" id="closePlatilloModal">&times;</button></div><div class="modal-body"><form id="platilloForm"><div class="form-group"><label>Imagen</label><input type="file" id="platilloImagen" accept="image/*"><small>O URL:</small><input type="url" id="platilloImagenUrl"><div id="imagenPreview" class="image-preview" style="display:none"><img id="previewImg"><div><small>Vista previa</small><button type="button" class="btn-small" onclick="window.limpiarImagenPreview()">Eliminar</button></div></div></div><div class="form-row"><div class="form-group"><label>Nombre</label><input type="text" id="platilloNombre" required></div><div class="form-group"><label>Categor�a</label><select id="platilloCategoria" required></select></div></div><div class="form-group"><label>Subcategor�a</label><select id="platilloSubcategoria"><option value="">Ninguna</option></select></div><div class="form-row"><div class="form-group"><label>Precio (USD)</label><input type="number" step="0.01" id="platilloPrecio" required></div><div class="form-group"><label>Disponible</label><select id="platilloDisponible"><option value="true">S�</option><option value="false">No</option></select></div></div><div class="form-group"><label>Descripci�n</label><textarea id="platilloDescripcion" rows="3"></textarea></div><div class="form-group"><label>Ingredientes</label><div id="ingredientesContainer"></div><button type="button" class="btn-secondary" onclick="window.agregarIngredienteRow()"><i class="fas fa-plus"></i> Agregar Ingrediente</button></div></form></div><div class="modal-footer"><button class="btn-secondary" id="cancelPlatillo">Cancelar</button><button class="btn-primary" id="savePlatillo">Guardar</button></div></div></div>
     
-    <div class="modal" id="ingredienteModal"><div class="modal-content"><div class="modal-header"><h3 id="ingredienteModalTitle">Nuevo Ingrediente</h3><button class="modal-close" id="closeIngredienteModal">&times;</button></div><div class="modal-body"><form id="ingredienteForm"><div class="form-group"><label>Nombre</label><input type="text" id="ingredienteNombre" required></div><div class="form-group password-overlay" id="stockOverlay"><label>Stock Actual</label><div id="stockActualField" class="password-protected"><input type="number" step="0.01" id="ingredienteStock" disabled></div><div class="password-unlock" id="stockUnlock"><input type="password" placeholder="Contraseña" id="stockPassword"><button type="button" onclick="window.desbloquearStock()">Desbloquear</button></div></div><div class="form-group"><label>Mercancía a Agregar</label><input type="number" step="0.01" id="ingredienteAgregar"></div><div class="form-group"><label>Unidad</label><select id="ingredienteUnidad"><option value="unidades">Unidades</option><option value="gramos">Gramos</option><option value="mililitros">Mililitros</option><option value="kilogramos">Kilogramos</option><option value="litros">Litros</option></select></div><div class="form-group"><label>Stock Mínimo</label><input type="number" step="0.01" id="ingredienteMinimo"></div><div class="form-row"><div class="form-group"><label>Costo Total Compra (USD)</label><input type="number" step="0.01" id="costoTotal" onchange="window.calcularCostoUnitario()"></div><div class="form-group"><label>Cantidad Comprada</label><input type="number" step="0.01" id="cantidadComprada" onchange="window.calcularCostoUnitario()"></div></div><div class="form-group"><label>Precio de Costo (USD/ud)</label><input type="number" step="0.01" id="ingredienteCosto"></div><div class="form-group"><label>Precio de Venta (USD/ud)</label><input type="number" step="0.01" id="ingredienteVenta"></div></form></div><div class="modal-footer"><button class="btn-secondary" id="cancelIngrediente">Cancelar</button><button class="btn-primary" id="saveIngrediente">Guardar</button></div></div></div>
+    <div class="modal" id="ingredienteModal"><div class="modal-content"><div class="modal-header"><h3 id="ingredienteModalTitle">Nuevo Ingrediente</h3><button class="modal-close" id="closeIngredienteModal">&times;</button></div><div class="modal-body"><form id="ingredienteForm"><div class="form-group"><label>Nombre</label><input type="text" id="ingredienteNombre" required></div><div class="form-group password-overlay" id="stockOverlay"><label>Stock Actual</label><div id="stockActualField" class="password-protected"><input type="number" step="0.01" id="ingredienteStock" disabled></div><div class="password-unlock" id="stockUnlock"><input type="password" placeholder="Contrase�a" id="stockPassword"><button type="button" onclick="window.desbloquearStock()">Desbloquear</button></div></div><div class="form-group"><label>Mercanc�a a Agregar</label><input type="number" step="0.01" id="ingredienteAgregar"></div><div class="form-group"><label>Unidad</label><select id="ingredienteUnidad"><option value="unidades">Unidades</option><option value="gramos">Gramos</option><option value="mililitros">Mililitros</option><option value="kilogramos">Kilogramos</option><option value="litros">Litros</option></select></div><div class="form-group"><label>Stock M�nimo</label><input type="number" step="0.01" id="ingredienteMinimo"></div><div class="form-row"><div class="form-group"><label>Costo Total Compra (USD)</label><input type="number" step="0.01" id="costoTotal" onchange="window.calcularCostoUnitario()"></div><div class="form-group"><label>Cantidad Comprada</label><input type="number" step="0.01" id="cantidadComprada" onchange="window.calcularCostoUnitario()"></div></div><div class="form-group"><label>Precio de Costo (USD/ud)</label><input type="number" step="0.01" id="ingredienteCosto"></div><div class="form-group"><label>Precio de Venta (USD/ud)</label><input type="number" step="0.01" id="ingredienteVenta"></div></form></div><div class="modal-footer"><button class="btn-secondary" id="cancelIngrediente">Cancelar</button><button class="btn-primary" id="saveIngrediente">Guardar</button></div></div></div>
     
-    <div class="modal" id="usuarioModal"><div class="modal-content"><div class="modal-header"><h3>Nuevo Cajero</h3><button class="modal-close" id="closeUsuarioModal">&times;</button></div><div class="modal-body"><form id="usuarioForm"><div class="form-group"><label>Nombre Completo</label><input type="text" id="usuarioNombre" required></div><div class="form-group"><label>Nombre de Usuario</label><input type="text" id="usuarioUsername" required></div><div class="form-group"><label>Contraseña</label><input type="text" id="usuarioPassword" value="123456" required></div></form></div><div class="modal-footer"><button class="btn-secondary" id="cancelUsuario">Cancelar</button><button class="btn-primary" id="saveUsuario">Guardar</button></div></div></div>
+    <div class="modal" id="usuarioModal"><div class="modal-content"><div class="modal-header"><h3>Nuevo Cajero</h3><button class="modal-close" id="closeUsuarioModal">&times;</button></div><div class="modal-body"><form id="usuarioForm"><div class="form-group"><label>Nombre Completo</label><input type="text" id="usuarioNombre" required></div><div class="form-group"><label>Nombre de Usuario</label><input type="text" id="usuarioUsername" required></div><div class="form-group"><label>Contrase�a</label><input type="text" id="usuarioPassword" value="123456" required></div></form></div><div class="modal-footer"><button class="btn-secondary" id="cancelUsuario">Cancelar</button><button class="btn-primary" id="saveUsuario">Guardar</button></div></div></div>
     
     <div class="modal" id="deliveryModal"><div class="modal-content"><div class="modal-header" style="background:linear-gradient(135deg,var(--delivery),#00838F)"><h3><i class="fas fa-motorcycle"></i> Editar Motorizado</h3><button class="modal-close" id="closeDeliveryModal">&times;</button></div><div class="modal-body"><form id="deliveryForm"><div class="form-group"><label>Nombre</label><input type="text" id="deliveryNombre" required></div><div class="form-group"><label>Estado</label><select id="deliveryEstado"><option value="true">Activo</option><option value="false">Inactivo</option></select></div></form></div><div class="modal-footer"><button class="btn-secondary" id="cancelDeliveryEdit">Cancelar</button><button class="btn-primary" id="saveDelivery" style="background:linear-gradient(135deg,var(--delivery),#00838F)">Guardar</button></div></div></div>
     
     <div class="modal" id="confirmPagoDeliveryModal"><div class="modal-content"><div class="modal-header" style="background:linear-gradient(135deg,var(--success),#2E7D32)"><h3><i class="fas fa-hand-holding-usd"></i> Confirmar Pago</h3><button class="modal-close" onclick="window.cerrarModal('confirmPagoDeliveryModal')">&times;</button></div><div class="modal-body" id="confirmPagoDeliveryBody"></div><div class="modal-footer"><button class="btn-secondary" onclick="window.cerrarModal('confirmPagoDeliveryModal')">Cancelar</button><button class="btn-primary" id="confirmPagoDeliveryBtn" onclick="window.confirmarPagoDelivery()">Confirmar</button></div></div></div>
     
-    <div class="modal" id="qrAmpliadoModal"><div class="modal-content" style="max-width:400px"><div class="modal-header"><h3>Código QR</h3><button class="modal-close" id="closeQrAmpliadoModal">&times;</button></div><div class="modal-body" style="text-align:center"><div id="qrAmpliado" style="width:300px;height:300px;margin:0 auto"></div><div id="qrAmpliadoInfo" style="margin-top:1rem"></div></div><div class="modal-footer"><button class="btn-primary" id="closeQrAmpliado">Cerrar</button></div></div></div>
+    <div class="modal" id="qrAmpliadoModal"><div class="modal-content" style="max-width:400px"><div class="modal-header"><h3>C�digo QR</h3><button class="modal-close" id="closeQrAmpliadoModal">&times;</button></div><div class="modal-body" style="text-align:center"><div id="qrAmpliado" style="width:300px;height:300px;margin:0 auto"></div><div id="qrAmpliadoInfo" style="margin-top:1rem"></div></div><div class="modal-footer"><button class="btn-primary" id="closeQrAmpliado">Cerrar</button></div></div></div>
     
     <div class="toast" id="toast"></div>
     
     <script src="../supabase-config.js"></script>
     <script>
-        // ==================== RESTAURAR SESIÓN ADMIN ====================
+        // ==================== RESTAURAR SESI�N ADMIN ====================
         window.restaurarSesionAdmin = function() {
             const token = sessionStorage.getItem('admin_jwt_token');
             const userData = sessionStorage.getItem('admin_user');
@@ -701,7 +1571,7 @@
                         return true;
                     }
                 } catch (e) {
-                    console.error('Error restaurando sesión admin:', e);
+                    console.error('Error restaurando sesi�n admin:', e);
                 }
             }
             return false;
@@ -730,7 +1600,7 @@
                 window.menuItems = data || [];
                 window.renderizarMenu();
                 window.actualizarProductosActivos();
-            } catch (e) { console.error('Error cargando menú:', e); window.mostrarToast('Error cargando menú', 'error'); }
+            } catch (e) { console.error('Error cargando men�:', e); window.mostrarToast('Error cargando men�', 'error'); }
         };
 
         window.cargarInventario = async function() {
@@ -795,7 +1665,7 @@
                 const acumulado = await window.obtenerAcumuladoDelivery(d.id);
                 const card = document.createElement('div');
                 card.className = 'delivery-card';
-                card.innerHTML = `<div class="delivery-header"><span class="delivery-nombre">${d.nombre}</span><span class="delivery-estado ${d.activo ? 'activo' : 'inactivo'}">${d.activo ? 'Activo' : 'Inactivo'}</span></div><div class="delivery-acumulado"><span>💰 Acumulado total:</span><span class="delivery-monto">${window.formatBs(acumulado)}</span></div><div class="delivery-actions"><button class="btn-small" onclick="window.editarDelivery('${d.id}')"><i class="fas fa-edit"></i> Editar</button><button class="btn-small success" onclick="window.mostrarPagoDelivery('${d.id}')"><i class="fas fa-hand-holding-usd"></i> Pagado</button><button class="btn-small ${d.activo ? 'danger' : 'success'}" onclick="window.toggleDeliveryActivo('${d.id}', ${!d.activo})">${d.activo ? 'Desactivar' : 'Activar'}</button></div>`;
+                card.innerHTML = `<div class="delivery-header"><span class="delivery-nombre">${d.nombre}</span><span class="delivery-estado ${d.activo ? 'activo' : 'inactivo'}">${d.activo ? 'Activo' : 'Inactivo'}</span></div><div class="delivery-acumulado"><span> Acumulado total:</span><span class="delivery-monto">${window.formatBs(acumulado)}</span></div><div class="delivery-actions"><button class="btn-small" onclick="window.editarDelivery('${d.id}')"><i class="fas fa-edit"></i> Editar</button><button class="btn-small success" onclick="window.mostrarPagoDelivery('${d.id}')"><i class="fas fa-hand-holding-usd"></i> Pagado</button><button class="btn-small ${d.activo ? 'danger' : 'success'}" onclick="window.toggleDeliveryActivo('${d.id}', ${!d.activo})">${d.activo ? 'Desactivar' : 'Activar'}</button></div>`;
                 grid.appendChild(card);
             });
         };
@@ -841,24 +1711,24 @@
                 if (error) throw error;
                 const stockCriticoDiv = document.getElementById('stockCritico');
                 if (data && data.length > 0) {
-                    stockCriticoDiv.innerHTML = data.map(item => `<div class="alert-item critical"><span><strong>${item.nombre}</strong><br>Stock: ${item.stock_actual} / Mínimo: ${item.stock_minimo} (Faltan ${item.unidades_faltantes})</span><button class="btn-small" onclick="window.agregarStock('${item.ingrediente_id}')"><i class="fas fa-plus"></i> Agregar</button></div>`).join('');
+                    stockCriticoDiv.innerHTML = data.map(item => `<div class="alert-item critical"><span><strong>${item.nombre}</strong><br>Stock: ${item.stock_actual} / M�nimo: ${item.stock_minimo} (Faltan ${item.unidades_faltantes})</span><button class="btn-small" onclick="window.agregarStock('${item.ingrediente_id}')"><i class="fas fa-plus"></i> Agregar</button></div>`).join('');
                     document.getElementById('alertasStock').textContent = data.length;
                 } else {
                     stockCriticoDiv.innerHTML = '<p>No hay alertas de stock</p>';
                     document.getElementById('alertasStock').textContent = '0';
                 }
-            } catch (e) { console.error('Error verificando stock crítico:', e); }
+            } catch (e) { console.error('Error verificando stock cr�tico:', e); }
         };
 
         window.guardarUmbralStock = async function() {
             const umbral = parseInt(document.getElementById('alertaStockMinimo').value);
-            if (isNaN(umbral) || umbral < 1) { window.mostrarToast('Ingresa un valor válido', 'error'); return; }
+            if (isNaN(umbral) || umbral < 1) { window.mostrarToast('Ingresa un valor v�lido', 'error'); return; }
             try {
                 await window.supabaseClient.from('config').update({ alerta_stock_minimo: umbral }).eq('id', 1);
                 window.configGlobal.alerta_stock_minimo = umbral;
-                window.mostrarToast('✅ Umbral de stock actualizado', 'success');
+                window.mostrarToast(' Umbral de stock actualizado', 'success');
                 await window.verificarStockCritico();
-            } catch (e) { console.error('Error guardando umbral:', e); window.mostrarToast('❌ Error al guardar el umbral', 'error'); }
+            } catch (e) { console.error('Error guardando umbral:', e); window.mostrarToast(' Error al guardar el umbral', 'error'); }
         };
 
         window.agregarMesonero = async function() {
@@ -868,8 +1738,8 @@
                 await window.supabaseClient.from('mesoneros').insert([{ nombre, activo: true }]);
                 document.getElementById('nuevoMesonero').value = '';
                 await window.cargarMesoneros();
-                window.mostrarToast('✅ Mesonero agregado', 'success');
-            } catch (e) { console.error('Error:', e); window.mostrarToast('❌ Error al agregar', 'error'); }
+                window.mostrarToast(' Mesonero agregado', 'success');
+            } catch (e) { console.error('Error:', e); window.mostrarToast(' Error al agregar', 'error'); }
         };
 
         window.toggleMesoneroActivo = async function(id, activo) {
@@ -880,11 +1750,11 @@
         };
 
         window.eliminarMesonero = async function(id) {
-            if (!confirm('¿Eliminar mesonero?')) return;
+            if (!confirm('�Eliminar mesonero?')) return;
             try {
                 await window.supabaseClient.from('mesoneros').delete().eq('id', id);
                 await window.cargarMesoneros();
-                window.mostrarToast('🗑️ Eliminado', 'success');
+                window.mostrarToast(' Eliminado', 'success');
             } catch (e) { console.error('Error:', e); }
         };
 
@@ -895,8 +1765,8 @@
                 await window.supabaseClient.from('deliverys').insert([{ nombre, activo: true }]);
                 document.getElementById('nuevoDelivery').value = '';
                 await window.cargarDeliverys();
-                window.mostrarToast('✅ Motorizado agregado', 'success');
-            } catch (e) { console.error('Error:', e); window.mostrarToast('❌ Error al agregar', 'error'); }
+                window.mostrarToast(' Motorizado agregado', 'success');
+            } catch (e) { console.error('Error:', e); window.mostrarToast(' Error al agregar', 'error'); }
         };
 
         window.editarDelivery = function(id) {
@@ -917,8 +1787,8 @@
                 await window.supabaseClient.from('deliverys').update({ nombre, activo }).eq('id', window.deliveryEditandoId);
                 document.getElementById('deliveryModal').classList.remove('active');
                 await window.cargarDeliverys();
-                window.mostrarToast('✅ Motorizado actualizado', 'success');
-            } catch (e) { console.error('Error:', e); window.mostrarToast('❌ Error al actualizar', 'error'); }
+                window.mostrarToast(' Motorizado actualizado', 'success');
+            } catch (e) { console.error('Error:', e); window.mostrarToast(' Error al actualizar', 'error'); }
         });
 
         window.toggleDeliveryActivo = async function(id, activo) {
@@ -932,7 +1802,7 @@
             const delivery = window.deliverys.find(d => d.id === id);
             if (!delivery) return;
             window.deliveryParaPago = id;
-            document.getElementById('confirmPagoDeliveryBody').innerHTML = `<p>¿Confirmas que se ha pagado a <strong>${delivery.nombre}</strong>? Esto reiniciará su acumulado a 0 Bs.</p>`;
+            document.getElementById('confirmPagoDeliveryBody').innerHTML = `<p>�Confirmas que se ha pagado a <strong>${delivery.nombre}</strong>? Esto reiniciar� su acumulado a 0 Bs.</p>`;
             document.getElementById('confirmPagoDeliveryModal').classList.add('active');
         };
 
@@ -942,8 +1812,8 @@
                 await window.supabaseClient.from('entregas_delivery').delete().eq('delivery_id', window.deliveryParaPago);
                 window.cerrarModal('confirmPagoDeliveryModal');
                 await window.cargarDeliverys();
-                window.mostrarToast('💰 Pago registrado. Acumulado reiniciado.', 'success');
-            } catch (e) { console.error('Error registrando pago:', e); window.mostrarToast('❌ Error al registrar pago', 'error'); }
+                window.mostrarToast(' Pago registrado. Acumulado reiniciado.', 'success');
+            } catch (e) { console.error('Error registrando pago:', e); window.mostrarToast(' Error al registrar pago', 'error'); }
         };
 
         window.cargarUsuarios = async function() {
@@ -974,25 +1844,25 @@
                 await window.supabaseClient.from('usuarios').insert([{ id: window.generarId('user_'), nombre, username, password, rol: 'cajero', activo: true }]);
                 document.getElementById('usuarioModal').classList.remove('active');
                 await window.cargarUsuarios();
-                window.mostrarToast('✅ Usuario creado', 'success');
-            } catch (e) { console.error('Error creando usuario:', e); window.mostrarToast('❌ Error al crear usuario', 'error'); }
+                window.mostrarToast(' Usuario creado', 'success');
+            } catch (e) { console.error('Error creando usuario:', e); window.mostrarToast(' Error al crear usuario', 'error'); }
         });
 
         window.toggleUsuarioActivo = async function(userId, activo) {
             try {
                 await window.supabaseClient.from('usuarios').update({ activo }).eq('id', userId);
                 await window.cargarUsuarios();
-                window.mostrarToast(`✅ Usuario ${activo ? 'activado' : 'desactivado'}`, 'success');
-            } catch (e) { console.error('Error actualizando usuario:', e); window.mostrarToast('❌ Error al actualizar usuario', 'error'); }
+                window.mostrarToast(` Usuario ${activo ? 'activado' : 'desactivado'}`, 'success');
+            } catch (e) { console.error('Error actualizando usuario:', e); window.mostrarToast(' Error al actualizar usuario', 'error'); }
         };
 
         window.eliminarUsuario = async function(userId) {
-            if (!confirm('¿Estás seguro de eliminar este usuario?')) return;
+            if (!confirm('�Est�s seguro de eliminar este usuario?')) return;
             try {
                 await window.supabaseClient.from('usuarios').delete().eq('id', userId);
                 await window.cargarUsuarios();
-                window.mostrarToast('🗑️ Usuario eliminado', 'success');
-            } catch (e) { console.error('Error eliminando usuario:', e); window.mostrarToast('❌ Error al eliminar usuario', 'error'); }
+                window.mostrarToast(' Usuario eliminado', 'success');
+            } catch (e) { console.error('Error eliminando usuario:', e); window.mostrarToast(' Error al eliminar usuario', 'error'); }
         };
 
         window.cargarQRs = async function() {
@@ -1005,67 +1875,36 @@
         };
 
         window.renderizarQRs = function() {
-            const grid = document.getElementById('qrGrid');
-            grid.innerHTML = '';
-            window.qrCodes.forEach(qr => {
-                let url = '';
-                if (qr.tipo === 'wifi') {
-                    // Formato estándar para QR WiFi
-                    url = `WIFI:T:WPA;S:${qr.ssid};P:${qr.password};;`;
-                } else {
-                    url = `${window.location.origin}/Cliente/index.html?mesa=${encodeURIComponent(qr.nombre)}`;
-                }
-                const card = document.createElement('div');
-                card.className = 'qr-card';
-                card.innerHTML = `<div class="qr-image" id="qr-${qr.id}"></div><div class="qr-nombre">${qr.nombre || (qr.tipo === 'wifi' ? 'WiFi' : 'QR')}</div><div class="qr-url">${qr.tipo === 'wifi' ? 'Red WiFi' : url.substring(0, 50)}...</div><div class="qr-actions"><button onclick="window.ampliarQR('${qr.id}', '${qr.nombre || (qr.tipo === 'wifi' ? 'WiFi' : 'QR')}', '${url.replace(/'/g, "\\'")}')" title="Ampliar"><i class="fas fa-expand"></i></button><button onclick="window.eliminarQR('${qr.id}')" title="Eliminar"><i class="fas fa-trash"></i></button></div>`;
+            const grid=document.getElementById('qrGrid');grid.innerHTML='';
+            (window.qrCodes||[]).forEach(qr=>{
+                const mesaUrl=qr.url||qr.url_mesa||`${window.location.origin}/SakiSushi0/Cliente/index.html?mesa=${encodeURIComponent(qr.nombre)}`;
+                let qrText=(qr.tipo==='mesa_wifi'||qr.tipo==='wifi')&&qr.ssid&&qr.password?`WIFI:T:WPA;S:${qr.ssid};P:${qr.password};;
+${mesaUrl}`:mesaUrl;
+                const icon=qr.tipo==='mesa_wifi'?'📶 ':'';
+                const card=document.createElement('div');card.className='qr-card';
+                card.innerHTML=`<div class="qr-image" id="qr-${qr.id}"></div><div class="qr-nombre">${icon}${qr.nombre}</div><div class="qr-url" style="font-size:.7rem;word-break:break-all;opacity:.6">${mesaUrl}</div><div class="qr-actions"><button onclick="window.ampliarQR('${qr.id}','${qr.nombre}',this.dataset.qrt)" data-qrt="${qrText.replace(/"/g,'&amp;quot;')}" title="Ampliar"><i class="fas fa-expand"></i></button><button onclick="window.eliminarQR('${qr.id}')" title="Eliminar"><i class="fas fa-trash"></i></button></div>`;
                 grid.appendChild(card);
-                new QRCode(document.getElementById(`qr-${qr.id}`), { text: url, width: 150, height: 150 });
+                new QRCode(document.getElementById(`qr-${qr.id}`),{text:qrText,width:150,height:150});
             });
         };
 
         window.generarQR = async function() {
-            const nombre = document.getElementById('qrNombreMesa').value.trim();
-            const ssid = document.getElementById('qrWifiSsid').value.trim();
-            const password = document.getElementById('qrWifiPassword').value.trim();
-            
+            const nombre=document.getElementById('qrNombreMesa').value.trim();
+            const ssidEl=document.getElementById('qrWifiSsid');
+            const pwdEl=document.getElementById('qrWifiPassword');
+            const ssid=ssidEl?ssidEl.value.trim():'';
+            const password=pwdEl?pwdEl.value.trim():'';
             window.guardarWifiPersistente();
-            
-            if (!nombre && !ssid) { 
-                window.mostrarToast('Ingresa al menos un nombre de mesa o configuración WiFi', 'error'); 
-                return; 
-            }
-            
-            let qrData = { id: window.generarId('QR_'), fecha: new Date().toISOString() };
-            let contenidoQR = '';
-            
-            if (ssid && password) {
-                // QR híbrido: WiFi + URL
-                const urlCliente = `${window.location.origin}/Cliente/index.html${nombre ? `?mesa=${encodeURIComponent(nombre)}` : ''}`;
-                // Formato: primero la configuración WiFi, luego la URL (separadas por espacio)
-                contenidoQR = `WIFI:T:WPA;S:${ssid};P:${password};; ${urlCliente}`;
-                qrData.tipo = 'wifi';
-                qrData.nombre = nombre ? `Mesa ${nombre} + WiFi` : `WiFi - ${ssid}`;
-                qrData.ssid = ssid;
-                qrData.password = password;
-                if (nombre) qrData.url_mesa = urlCliente;
-            } else if (nombre) {
-                contenidoQR = `${window.location.origin}/Cliente/index.html?mesa=${encodeURIComponent(nombre)}`;
-                qrData.tipo = 'mesa';
-                qrData.nombre = nombre;
-            } else {
-                window.mostrarToast('Completa los datos para generar el QR', 'error');
-                return;
-            }
-            
-            try {
+            if(!nombre){window.mostrarToast('Ingresa el nombre de la mesa','error');return;}
+            if(ssid&&!password){window.mostrarToast('Ingresa la contraseña WiFi','error');return;}
+            const mesaUrl=`${window.location.origin}/SakiSushi0/Cliente/index.html?mesa=${encodeURIComponent(nombre)}`;
+            const qrData={id:window.generarId('QR_'),fecha:new Date().toISOString(),nombre,tipo:(ssid&&password)?'mesa_wifi':'mesa',ssid:ssid||null,password:password||null,url:mesaUrl};
+            try{
                 await window.supabaseClient.from('codigos_qr').insert([qrData]);
-                document.getElementById('qrNombreMesa').value = '';
+                document.getElementById('qrNombreMesa').value='';
                 await window.cargarQRs();
-                window.mostrarToast('✅ QR generado', 'success');
-            } catch (e) { 
-                console.error('Error generando QR:', e); 
-                window.mostrarToast('❌ Error al generar QR', 'error'); 
-            }
+                window.mostrarToast('✅ QR generado','success');
+            }catch(e){console.error('Error generando QR:',e);window.mostrarToast('❌ Error al generar QR','error');}
         };
 
         window.ampliarQR = function(id, nombre, url) {
@@ -1077,12 +1916,12 @@
         };
 
         window.eliminarQR = async function(id) {
-            if (!confirm('¿Estás seguro de eliminar este código QR?')) return;
+            if (!confirm('�Est�s seguro de eliminar este c�digo QR?')) return;
             try {
                 await window.supabaseClient.from('codigos_qr').delete().eq('id', id);
                 await window.cargarQRs();
-                window.mostrarToast('🗑️ QR eliminado', 'success');
-            } catch (e) { console.error('Error eliminando QR:', e); window.mostrarToast('❌ Error al eliminar QR', 'error'); }
+                window.mostrarToast(' QR eliminado', 'success');
+            } catch (e) { console.error('Error eliminando QR:', e); window.mostrarToast(' Error al eliminar QR', 'error'); }
         };
 
         window.cargarReportes = async function() {
@@ -1147,7 +1986,7 @@
             if (window.charts.pagos) window.charts.pagos.destroy();
             window.charts.pagos = new Chart(document.getElementById('pagosChart'), {
                 type: 'bar',
-                data: { labels: Object.keys(metodos).map(m => { const n = { efectivo_bs: 'Efectivo Bs', efectivo_usd: 'Efectivo USD', pago_movil: 'Pago Móvil', punto_venta: 'Punto de Venta', mixto: 'Mixto', invitacion: 'Invitación' }; return n[m] || m; }), datasets: [{ label: 'Monto (USD)', data: Object.values(metodos).map(v => v / (window.configGlobal?.tasa_efectiva || 400)), backgroundColor: 'var(--info)' }] }
+                data: { labels: Object.keys(metodos).map(m => { const n = { efectivo_bs: 'Efectivo Bs', efectivo_usd: 'Efectivo USD', pago_movil: 'Pago M�vil', punto_venta: 'Punto de Venta', mixto: 'Mixto', invitacion: 'Invitaci�n' }; return n[m] || m; }), datasets: [{ label: 'Monto (USD)', data: Object.values(metodos).map(v => v / (window.configGlobal?.tasa_efectiva || 400)), backgroundColor: 'var(--info)' }] }
             });
             
             const horas = {}; for (let i = 0; i < 24; i++) horas[i] = 0;
@@ -1185,29 +2024,29 @@
             const current = document.getElementById('currentPassword').value;
             const nueva = document.getElementById('newPassword').value;
             const confirm = document.getElementById('confirmPassword').value;
-            if (current !== window.configGlobal.admin_password) { window.mostrarToast('Contraseña actual incorrecta', 'error'); return; }
-            if (nueva !== confirm) { window.mostrarToast('Las contraseñas no coinciden', 'error'); return; }
-            if (nueva.length < 4) { window.mostrarToast('La contraseña debe tener al menos 4 caracteres', 'error'); return; }
+            if (current !== window.configGlobal.admin_password) { window.mostrarToast('Contrase�a actual incorrecta', 'error'); return; }
+            if (nueva !== confirm) { window.mostrarToast('Las contrase�as no coinciden', 'error'); return; }
+            if (nueva.length < 4) { window.mostrarToast('La contrase�a debe tener al menos 4 caracteres', 'error'); return; }
             try {
                 await window.supabaseClient.from('config').update({ admin_password: nueva }).eq('id', 1);
                 window.configGlobal.admin_password = nueva;
-                window.mostrarToast('✅ Contraseña actualizada', 'success');
+                window.mostrarToast(' Contrase�a actualizada', 'success');
                 document.getElementById('currentPassword').value = '';
                 document.getElementById('newPassword').value = '';
                 document.getElementById('confirmPassword').value = '';
-            } catch (e) { console.error('Error cambiando contraseña:', e); window.mostrarToast('❌ Error al cambiar la contraseña', 'error'); }
+            } catch (e) { console.error('Error cambiando contrase�a:', e); window.mostrarToast(' Error al cambiar la contrase�a', 'error'); }
         };
 
         window.guardarRecoveryEmail = async function() {
             const email = document.getElementById('recoveryEmail').value;
-            if (!email || !email.includes('@')) { window.mostrarToast('Ingresa un correo válido', 'error'); return; }
+            if (!email || !email.includes('@')) { window.mostrarToast('Ingresa un correo v�lido', 'error'); return; }
             try {
                 await window.supabaseClient.from('config').update({ recovery_email: email }).eq('id', 1);
-                window.mostrarToast('✅ Correo de recuperación guardado', 'success');
-            } catch (e) { console.error('Error guardando email:', e); window.mostrarToast('❌ Error al guardar el correo', 'error'); }
+                window.mostrarToast(' Correo de recuperaci�n guardado', 'success');
+            } catch (e) { console.error('Error guardando email:', e); window.mostrarToast(' Error al guardar el correo', 'error'); }
         };
 
-        // ==================== FUNCIONES DE CONFIGURACIÓN ====================
+        // ==================== FUNCIONES DE CONFIGURACI�N ====================
         window.recalcularTasaEfectiva = function() {
             const tasaBase = parseFloat(document.getElementById('tasaBaseInput').value) || 0;
             const aumentoDiario = parseFloat(document.getElementById('aumentoDiarioInput').value) || 0;
@@ -1244,11 +2083,11 @@
                     tasa_efectiva: window.configGlobal.tasa_efectiva,
                     ultima_actualizacion: new Date().toISOString()
                 }).eq('id', 1);
-                window.mostrarToast('✅ Configuración guardada', 'success');
-            } catch (e) { console.error('Error guardando configuración:', e); window.mostrarToast('❌ Error al guardar la configuración', 'error'); }
+                window.mostrarToast(' Configuraci�n guardada', 'success');
+            } catch (e) { console.error('Error guardando configuraci�n:', e); window.mostrarToast(' Error al guardar la configuraci�n', 'error'); }
         };
 
-        // ==================== FUNCIONES DE MENÚ (PLATILLOS) ====================
+        // ==================== FUNCIONES DE MEN� (PLATILLOS) ====================
         window.abrirModalNuevoPlatillo = function() {
             document.getElementById('platilloModalTitle').textContent = 'Nuevo Platillo';
             document.getElementById('platilloForm').reset();
@@ -1369,20 +2208,20 @@
                 window.platilloEditandoId = null;
                 window.limpiarImagenPreview();
                 await window.cargarMenu();
-                window.mostrarToast('✅ Platillo guardado', 'success');
-            } catch (e) { console.error('Error guardando platillo:', e); window.mostrarToast('❌ Error al guardar el platillo: ' + e.message, 'error'); }
+                window.mostrarToast(' Platillo guardado', 'success');
+            } catch (e) { console.error('Error guardando platillo:', e); window.mostrarToast(' Error al guardar el platillo: ' + e.message, 'error'); }
             finally { const saveBtn = document.getElementById('savePlatillo'); saveBtn.innerHTML = 'Guardar'; saveBtn.disabled = false; }
         });
 
         window.eliminarPlatillo = async function(id) {
-            if (!confirm('¿Estás seguro de eliminar este platillo?')) return;
+            if (!confirm('�Est�s seguro de eliminar este platillo?')) return;
             try {
                 const platillo = window.menuItems.find(p => p.id === id);
                 if (platillo && platillo.imagen && platillo.imagen.includes('imagenes-platillos')) await window.eliminarImagenPlatillo(platillo.imagen);
                 await window.supabaseClient.from('menu').delete().eq('id', id);
                 await window.cargarMenu();
-                window.mostrarToast('🗑️ Platillo eliminado', 'success');
-            } catch (e) { console.error('Error eliminando platillo:', e); window.mostrarToast('❌ Error al eliminar el platillo', 'error'); }
+                window.mostrarToast(' Platillo eliminado', 'success');
+            } catch (e) { console.error('Error eliminando platillo:', e); window.mostrarToast(' Error al eliminar el platillo', 'error'); }
         };
 
         window.abrirModalNuevoIngrediente = function() {
@@ -1419,7 +2258,7 @@
                 document.getElementById('ingredienteStock').disabled = false;
                 document.getElementById('stockActualField').classList.remove('password-protected');
                 document.getElementById('stockUnlock').style.display = 'none';
-            } else window.mostrarToast('Contraseña incorrecta', 'error');
+            } else window.mostrarToast('Contrase�a incorrecta', 'error');
         };
 
         window.calcularCostoUnitario = function() {
@@ -1454,17 +2293,17 @@
                 if (error) throw error;
                 document.getElementById('ingredienteModal').classList.remove('active');
                 await window.cargarInventario();
-                window.mostrarToast('✅ Ingrediente guardado', 'success');
-            } catch (e) { console.error('Error guardando ingrediente:', e); window.mostrarToast('❌ Error al guardar ingrediente', 'error'); }
+                window.mostrarToast(' Ingrediente guardado', 'success');
+            } catch (e) { console.error('Error guardando ingrediente:', e); window.mostrarToast(' Error al guardar ingrediente', 'error'); }
         });
 
         window.eliminarIngrediente = async function(id) {
-            if (!confirm('¿Estás seguro de eliminar este ingrediente?')) return;
+            if (!confirm('�Est�s seguro de eliminar este ingrediente?')) return;
             try {
                 await window.supabaseClient.from('inventario').delete().eq('id', id);
                 await window.cargarInventario();
-                window.mostrarToast('🗑️ Ingrediente eliminado', 'success');
-            } catch (e) { console.error('Error eliminando ingrediente:', e); window.mostrarToast('❌ Error al eliminar ingrediente', 'error'); }
+                window.mostrarToast(' Ingrediente eliminado', 'success');
+            } catch (e) { console.error('Error eliminando ingrediente:', e); window.mostrarToast(' Error al eliminar ingrediente', 'error'); }
         };
 
         window.renderizarMenu = function() {
@@ -1497,21 +2336,21 @@
                 const critical = disponible <= item.minimo;
                 const card = document.createElement('div');
                 card.className = 'inventario-card';
-                card.innerHTML = `<div class="inventario-header"><span class="inventario-nombre">${item.nombre}</span><div class="inventario-actions"><button onclick="window.editarIngrediente('${item.id}')"><i class="fas fa-edit"></i></button><button onclick="window.eliminarIngrediente('${item.id}')"><i class="fas fa-trash"></i></button></div></div><div class="inventario-stock"><strong>Stock:</strong> ${item.stock || 0} ${item.unidad_base || 'unidades'}<small>(Reservado: ${item.reservado || 0} | Disponible: ${disponible})</small><div class="stock-bar"><div class="stock-fill ${critical ? 'critical' : ''}" style="width:${Math.min(porcentajeStock, 100)}%"></div></div></div><div class="inventario-info"><div><strong>Mínimo:</strong><br><span class="inventario-minimo">${item.minimo || 0} ${item.unidad_base || 'unidades'}</span></div><div><strong>Costo:</strong><br>${window.formatUSD(item.precio_costo || 0)} / ${window.formatBs(window.usdToBs(item.precio_costo || 0))}</div><div><strong>Venta:</strong><br>${window.formatUSD(item.precio_unitario || 0)} / ${window.formatBs(window.usdToBs(item.precio_unitario || 0))}</div></div>`;
+                card.innerHTML = `<div class="inventario-header"><span class="inventario-nombre">${item.nombre}</span><div class="inventario-actions"><button onclick="window.editarIngrediente('${item.id}')"><i class="fas fa-edit"></i></button><button onclick="window.eliminarIngrediente('${item.id}')"><i class="fas fa-trash"></i></button></div></div><div class="inventario-stock"><strong>Stock:</strong> ${item.stock || 0} ${item.unidad_base || 'unidades'}<small>(Reservado: ${item.reservado || 0} | Disponible: ${disponible})</small><div class="stock-bar"><div class="stock-fill ${critical ? 'critical' : ''}" style="width:${Math.min(porcentajeStock, 100)}%"></div></div></div><div class="inventario-info"><div><strong>M�nimo:</strong><br><span class="inventario-minimo">${item.minimo || 0} ${item.unidad_base || 'unidades'}</span></div><div><strong>Costo:</strong><br>${window.formatUSD(item.precio_costo || 0)} / ${window.formatBs(window.usdToBs(item.precio_costo || 0))}</div><div><strong>Venta:</strong><br>${window.formatUSD(item.precio_unitario || 0)} / ${window.formatBs(window.usdToBs(item.precio_unitario || 0))}</div></div>`;
                 grid.appendChild(card);
             });
         };
 
-        // ==================== FUNCIONES DE RECUPERACIÓN ====================
+        // ==================== FUNCIONES DE RECUPERACI�N ====================
         document.getElementById('recoveryLink').addEventListener('click', async (e) => {
             e.preventDefault();
             const codigo = Math.floor(100000 + Math.random() * 900000);
-            console.log('Código de recuperación (simulado):', codigo);
-            const codigoIngresado = prompt('Ingresa el código de recuperación (revisa la consola):');
+            console.log('C�digo de recuperaci�n (simulado):', codigo);
+            const codigoIngresado = prompt('Ingresa el c�digo de recuperaci�n (revisa la consola):');
             if (codigoIngresado === codigo.toString()) {
                 const { data } = await window.supabaseClient.from('config').select('admin_password, recovery_email').eq('id', 1).single();
-                alert(`Tu contraseña es: ${data.admin_password}\nCorreo de recuperación: ${data.recovery_email}`);
-            } else window.mostrarToast('Código incorrecto', 'error');
+                alert(`Tu contrase�a es: ${data.admin_password}\nCorreo de recuperaci�n: ${data.recovery_email}`);
+            } else window.mostrarToast('C�digo incorrecto', 'error');
         });
 
         document.getElementById('logoutButton').addEventListener('click', () => {
@@ -1521,7 +2360,7 @@
             window.isAdminAuthenticated = false;
             window.jwtToken = null;
             window.mostrarLogin();
-            window.mostrarToast('👋 Sesión cerrada', 'info');
+            window.mostrarToast(' Sesi�n cerrada', 'info');
             window.supabaseClient = window.inicializarSupabaseCliente();
         });
 
@@ -1535,14 +2374,14 @@
             document.getElementById('aumentoActivoToggle').checked = false;
             window.configGlobal.aumento_detenido = true;
             window.recalcularTasaEfectiva();
-            window.mostrarToast('⏸️ Aumento detenido', 'info');
+            window.mostrarToast(' Aumento detenido', 'info');
         });
 
         document.getElementById('activarAumentoBtn').addEventListener('click', () => {
             document.getElementById('aumentoActivoToggle').checked = true;
             window.configGlobal.aumento_detenido = false;
             window.recalcularTasaEfectiva();
-            window.mostrarToast('▶️ Aumento activado', 'info');
+            window.mostrarToast(' Aumento activado', 'info');
         });
 
         document.querySelectorAll('.tab').forEach(tab => {
@@ -1588,7 +2427,7 @@
             try {
                 window.supabaseClient.channel('admin-menu').on('postgres_changes', { event: '*', schema: 'public', table: 'menu' }, () => { window.cargarMenu(); }).subscribe();
                 window.supabaseClient.channel('admin-inventario').on('postgres_changes', { event: '*', schema: 'public', table: 'inventario' }, (p) => {
-                    if (p.eventType === 'UPDATE' && p.new.stock <= p.new.minimo) { window.verificarStockCritico(); window.mostrarToast(`⚠️ Stock crítico: ${p.new.nombre}`, 'warning'); }
+                    if (p.eventType === 'UPDATE' && p.new.stock <= p.new.minimo) { window.verificarStockCritico(); window.mostrarToast(` Stock cr�tico: ${p.new.nombre}`, 'warning'); }
                     window.cargarInventario();
                 }).subscribe();
                 window.supabaseClient.channel('admin-usuarios').on('postgres_changes', { event: '*', schema: 'public', table: 'usuarios' }, () => { window.cargarUsuarios(); }).subscribe();
@@ -1600,22 +2439,34 @@
             } catch (e) { console.error('Error configurando suscripciones:', e); }
         };
 
-        window.setupEventListeners = function() {};
+        window.setupEventListeners = function() {
+            // Limpiar 'Nombre de Mesa' al cambiar tab (SSID/pwd persisten)
+            document.querySelectorAll('.tab').forEach(t => {
+                t.addEventListener('click', () => {
+                    const el = document.getElementById('qrNombreMesa');
+                    if (el) el.value = '';
+                });
+            });
+            // Limpiar 'Nombre de Mesa' al cerrar/recargar
+            window.addEventListener('beforeunload', () => {
+                const el = document.getElementById('qrNombreMesa');
+                if (el) el.value = '';
+            });
+        };
 
-        // ==================== CATEGORÍAS PREDEFINIDAS ====================
+        // ==================== CATEGOR�AS PREDEFINIDAS ====================
         window.categoriasMenu = {
-            "Entradas": [], "Sushi": [], "Rolls": ["Rolls Fríos de 10 piezas", "Rolls Tempura de 12 piezas"],
+            "Entradas": [], "Sushi": [], "Rolls": ["Rolls Fr�os de 10 piezas", "Rolls Tempura de 12 piezas"],
             "Tragos y bebidas": [], "Pokes": [], "Ensaladas": [],
             "Comida China": ["Arroz Chino", "Arroz Cantones", "Chopsuey", "Lomey", "Chow Mein", "Fideos de Arroz", "Tallarines Cantones", "Mariscos", "Foo Yong", "Sopas", "Entremeses"],
             "Comida Japonesa": ["Yakimeshi", "Yakisoba", "Pasta Udon", "Churrasco"],
-            "Ofertas Especiales": [], "Para Niños": [], "Combo Ejecutivo": []
-        };
+            "Ofertas Especiales": [], "Para Ni�os": [], "Combo Ejecutivo": []        };
 
-        // ==================== INICIALIZACIÓN ====================
+        // ==================== INICIALIZACI�N ====================
         document.addEventListener('DOMContentLoaded', async () => {
-            console.log('👑 Verificando sesión de admin...');
+            console.log(' Verificando sesi�n de admin...');
             if (window.restaurarSesionAdmin()) {
-                console.log('✅ Sesión de admin restaurada');
+                console.log(' Sesi�n de admin restaurada');
                 window.mostrarPanel();
                 setTimeout(async () => {
                     await window.cargarConfiguracionInicial();
@@ -1634,15 +2485,16 @@
                     window.restaurarWifiPersistente();
                 }, 100);
             } else {
-                console.log('🔒 No hay sesión de admin');
+                console.log(' No hay sesi�n de admin');
                 window.mostrarLogin();
             }
         });
 
         window.mostrarPanel = function() {
-            document.getElementById('loginContainer').style.display = 'none';
-            document.getElementById('panelContainer').classList.add('active');
+            document.getElementById("loginContainer").style.display="none";
+            document.getElementById("panelContainer").classList.add("active");
         };
+
     </script>
 </body>
 </html>
