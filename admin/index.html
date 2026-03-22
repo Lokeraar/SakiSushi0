@@ -323,10 +323,10 @@
     </script>
     
     <style>
-    /* ════════════════════════════════════════════════════
+    /* 
        SAKI SUSHI ADMIN — Estilo Premium Restaurante
        Paleta: Rojo #D32F2F · Negro #1a1a2e · Dorado #FF9800
-       ════════════════════════════════════════════════════ */
+        */
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap');
 
     :root {
@@ -367,7 +367,7 @@
         width: 100%;
     }
 
-    /* ── Login ── */
+    /*  Login  */
     .login-container {
         display: flex;
         align-items: center;
@@ -427,11 +427,11 @@
     .recovery-link a { color: rgba(255,255,255,.6); font-size: .85rem; text-decoration: none; }
     .recovery-link a:hover { color: var(--accent); }
 
-    /* ── Panel Container ── */
+    /*  Panel Container  */
     .panel-container { display: none; flex-direction: column; min-height: 100vh; width: 100%; overflow-x: hidden; }
     .panel-container.active { display: flex; }
 
-    /* ── Header ── */
+    /*  Header  */
     .header {
         background: linear-gradient(135deg, var(--secondary) 0%, #16213e 100%);
         color: #fff;
@@ -509,7 +509,7 @@
     }
     .logout-button:hover { background: rgba(255,255,255,.1); color: #fff; }
 
-    /* ── Tasa Bar ── */
+    /*  Tasa Bar  */
     .tasa-bar {
         background: #fff;
         border-bottom: 1px solid var(--border);
@@ -588,7 +588,7 @@
     .toggle-switch input:checked + .toggle-slider { background: var(--success); }
     .toggle-switch input:checked + .toggle-slider:before { transform: translateX(18px); }
 
-    /* ── Navigation Tabs ── */
+    /*  Navigation Tabs  */
     .tabs {
         background: var(--secondary);
         display: flex;
@@ -616,7 +616,7 @@
     .tab:hover { color: rgba(255,255,255,.85); background: rgba(255,255,255,.05); }
     .tab.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 700; }
 
-    /* ── Content ── */
+    /*  Content  */
     .content { padding: 2rem; flex: 1; }
     .tab-pane { display: none; }
     .tab-pane.active { display: block; }
@@ -633,7 +633,7 @@
     }
     .section-title i { color: var(--primary); }
 
-    /* ── Dashboard Cards ── */
+    /*  Dashboard Cards  */
     .dashboard-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -653,7 +653,7 @@
     .card-value { font-size: 1.6rem; font-weight: 700; color: var(--text-dark); }
     .card-value.accent { color: var(--primary); }
 
-    /* ── Buttons ── */
+    /*  Buttons  */
     .btn-primary {
         display: inline-flex; align-items: center; gap: .4rem;
         padding: .6rem 1.3rem;
@@ -680,7 +680,7 @@
         cursor: pointer; transition: var(--transition);
     }
 
-    /* ── Forms ── */
+    /*  Forms  */
     .form-group { margin-bottom: 1rem; }
     .form-group label { display: block; font-size: .82rem; font-weight: 600; color: var(--text-muted); margin-bottom: .35rem; }
     .form-group input:not([type=checkbox]):not([type=radio]),
@@ -703,7 +703,7 @@
     }
     .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
 
-    /* ── Cards (inventario, menu, qr) ── */
+    /*  Cards (inventario, menu, qr)  */
     .inventario-grid, .menu-grid, .qr-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
@@ -756,13 +756,13 @@
         border-left: 3px solid var(--accent);
     }
 
-    /* ── Menu card ── */
+    /*  Menu card  */
     .menu-card-img { width: 100%; height: 140px; object-fit: cover; border-radius: 8px; margin-bottom: .75rem; }
     .menu-card-nombre { font-weight: 700; font-size: .95rem; color: var(--text-dark); margin-bottom: .25rem; }
     .menu-card-precio { font-size: 1rem; font-weight: 700; color: var(--primary); margin-bottom: .5rem; }
     .menu-card-actions { display: flex; gap: .5rem; flex-wrap: wrap; }
 
-    /* ── Usuarios grid ── */
+    /*  Usuarios grid  */
     .usuarios-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1rem; }
     .usuario-card {
         background: var(--card-bg); border-radius: var(--radius);
@@ -774,7 +774,7 @@
     .usuario-info { font-size: .8rem; color: var(--text-muted); margin-top: .2rem; }
     .usuario-actions { display: flex; gap: .5rem; align-items: center; }
 
-    /* ── Deliverys, Mesoneros, Propinas ── */
+    /*  Deliverys, Mesoneros, Propinas  */
     .delivery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
     .delivery-card {
         background: var(--card-bg); border-radius: var(--radius);
@@ -809,26 +809,26 @@
     .propinas-tabla td { padding: .75rem 1rem; border-bottom: 1px solid #f0f0f0; font-size: .85rem; }
     .propinas-tabla tr:hover td { background: #f9f9f9; }
 
-    /* ── Charts ── */
+    /*  Charts  */
     .charts-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem; margin-top: 1.5rem; }
     .chart-container { background: var(--card-bg); border-radius: var(--radius); padding: 1.5rem; box-shadow: var(--shadow-sm); }
     .chart-container h3 { font-size: 1rem; color: var(--text-dark); margin-bottom: 1rem; font-weight: 600; }
     .chart-wrapper { position: relative; height: 220px; }
 
-    /* ── Data Table ── */
+    /*  Data Table  */
     .data-table { width: 100%; border-collapse: collapse; background: var(--card-bg); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow-sm); }
     .data-table th { background: var(--secondary); color: #fff; padding: .75rem 1rem; text-align: left; font-size: .82rem; font-weight: 600; }
     .data-table td { padding: .75rem 1rem; border-bottom: 1px solid #f0f0f0; font-size: .85rem; }
     .data-table tr:hover td { background: #f9f9f9; }
     .table-responsive { overflow-x: auto; }
 
-    /* ── Alerts / Stock ── */
+    /*  Alerts / Stock  */
     .alert-list { display: flex; flex-direction: column; gap: .5rem; }
     .alert-item { display: flex; justify-content: space-between; align-items: center; padding: .75rem 1rem; border-radius: 8px; }
     .alert-item.critical { background: #ffebee; border-left: 4px solid var(--danger); }
     .critical { color: var(--danger); font-weight: 600; }
 
-    /* ── Modals ── */
+    /*  Modals  */
     .modal { display: none; position: fixed; top:0; left:0; right:0; bottom:0; background: rgba(0,0,0,.6); z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
     .modal.active { display: flex; }
     .modal-content { background: var(--card-bg); border-radius: 12px; width: 90%; max-width: 580px; max-height: 90vh; overflow-y: auto; box-shadow: var(--shadow-lg); }
@@ -839,22 +839,22 @@
     .modal-body { padding: 1.5rem; }
     .modal-footer { padding: 1rem 1.5rem; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: .75rem; }
 
-    /* ── Image preview ── */
+    /*  Image preview  */
     .image-preview { display: flex; align-items: center; gap: 1rem; margin-top: .5rem; }
     .image-preview img { width: 80px; height: 80px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border); }
 
-    /* ── Password overlay ── */
+    /*  Password overlay  */
     .password-overlay { position: relative; }
     .password-protected input:disabled { background: #f5f5f5; cursor: not-allowed; }
     .password-unlock { display: flex; gap: .5rem; margin-top: .4rem; }
     .password-unlock input { flex: 1; }
     .password-unlock button { white-space: nowrap; }
 
-    /* ── Ingrediente rows ── */
+    /*  Ingrediente rows  */
     .ingrediente-row { display: flex; gap: .5rem; align-items: flex-end; margin-bottom: .5rem; padding: .5rem; background: #f9f9f9; border-radius: 8px; }
     .ingrediente-row .form-group { margin-bottom: 0; flex: 1; }
 
-    /* ── Toast ── */
+    /*  Toast  */
     .toast {
         position: fixed; bottom: 1.5rem; right: 1.5rem;
         padding: .9rem 1.5rem; border-radius: 10px;
@@ -869,18 +869,18 @@
     .toast.error   { background: var(--danger);  }
     .toast.warning { background: var(--warning); }
 
-    /* ── Loading ── */
+    /*  Loading  */
     .loading { display: flex; align-items: center; justify-content: center; padding: 3rem; }
     .loading-spinner { width: 36px; height: 36px; border: 3px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin .8s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* ── Configuración ── */
+    /*  Configuración  */
     .config-section { background: var(--card-bg); border-radius: var(--radius); padding: 1.5rem; box-shadow: var(--shadow-sm); margin-bottom: 1.5rem; border: 1px solid var(--border); }
     .config-section h3 { font-size: 1rem; font-weight: 700; color: var(--text-dark); margin-bottom: 1.2rem; padding-bottom: .6rem; border-bottom: 1px solid var(--border); }
 
-    /* ── Responsive ── */
+    /*  Responsive  */
 
-        /* ── Dashboard lower grid ── */
+        /*  Dashboard lower grid  */
         .dashboard-lower-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -894,7 +894,7 @@
             padding-bottom: .4rem;
             border-bottom: 2px solid var(--border);
         }
-        /* ── Tasa bar fechas ── */
+        /*  Tasa bar fechas  */
         .tasa-fechas {
             flex-wrap: wrap;
             align-items: center;
@@ -912,7 +912,7 @@
             font-size: .82rem;
             font-family: 'Montserrat', sans-serif;
         }
-        /* ── Mobile overrides ── */
+        /*  Mobile overrides  */
         @media (max-width: 768px) {
             .dashboard-grid {
                 grid-template-columns: 1fr 1fr !important;
@@ -921,7 +921,7 @@
                 grid-template-columns: 1fr;
             }
         }
-    /* ── Dashboard lower grid ── */
+    /*  Dashboard lower grid  */
         .dashboard-lower-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -1644,7 +1644,7 @@
 
                 const nombre = document.createElement('div');
                 nombre.className = 'qr-nombre';
-                nombre.textContent = (_ssid ? '📶 ' : '') + qr.nombre;
+                nombre.textContent = (_ssid ? ' ' : '') + qr.nombre;
 
                 const url = document.createElement('div');
                 url.className = 'qr-url';
@@ -1714,10 +1714,10 @@
                 if (error) throw error;
                 document.getElementById('qrNombreMesa').value = '';
                 await window.cargarQRs();
-                window.mostrarToast('✅ QR generado', 'success');
+                window.mostrarToast(' QR generado', 'success');
             } catch(e) {
                 console.error('Error generando QR:', e);
-                window.mostrarToast('❌ Error al generar QR: ' + (e.message || e), 'error');
+                window.mostrarToast(' Error al generar QR: ' + (e.message || e), 'error');
             }
         };
 
@@ -1827,7 +1827,7 @@
                     const fecha = new Date(p.fecha).toLocaleDateString('es-VE', {day:'2-digit',month:'2-digit'});
                     const items = (p.items || []).slice(0,2).map(i => `${i.cantidad||1}x ${i.nombre}`).join(', ');
                     const masItems = (p.items||[]).length > 2 ? ` +${(p.items||[]).length-2} más` : '';
-                    const tipoIcon = p.tipo==='delivery' ? '🛵' : p.tipo==='reserva' ? '📅' : '🍽️';
+                    const tipoIcon = p.tipo==='delivery' ? '' : p.tipo==='reserva' ? '' : '';
                     const totalBs = window.formatBs ? window.formatBs(window.usdToBs(p.total||0)) : window.formatUSD(p.total||0);
                     return `<div class="alert-item" style="flex-direction:column;align-items:flex-start;gap:.2rem">
                         <div style="display:flex;justify-content:space-between;width:100%">
@@ -2220,9 +2220,9 @@
             window.supabaseClient = window.inicializarSupabaseCliente();
         });
 
-        // ══════════════════════════════════════════════
+        // 
         // REALTIME SUBSCRIPTIONS
-        // ══════════════════════════════════════════════
+        // 
         window.setupRealtimeSubscriptions = function() {
             try {
                 window.supabaseClient
@@ -2237,7 +2237,7 @@
                         async (p) => {
                             if (p.eventType === 'UPDATE' && p.new.stock <= p.new.minimo) {
                                 window.verificarStockCritico();
-                                window.mostrarToast(`⚠️ Stock crítico: ${p.new.nombre}`, 'warning');
+                                window.mostrarToast(` Stock crítico: ${p.new.nombre}`, 'warning');
                             }
                             if (p.eventType === 'UPDATE' && (p.old?.stock || 0) <= 0 && p.new.stock > 0) {
                                 await window._notificarPlatillosReactivados(p.new.id, p.new.nombre);
@@ -2289,12 +2289,12 @@
             } catch (e) { console.error('Error configurando suscripciones realtime:', e); }
         };
 
-        // ══════════════════════════════════════════════
+        // 
         // SETUP EVENT LISTENERS
-        // ══════════════════════════════════════════════
+        // 
         window.setupEventListeners = function() {
 
-            // ── Navegación de tabs ──────────────────────────────────────────
+            //  Navegación de tabs 
             document.querySelectorAll('.tab').forEach(tab => {
                 tab.addEventListener('click', () => {
                     const target = tab.dataset.tab;
@@ -2313,12 +2313,12 @@
                 });
             });
 
-            // ── Guardar configuración de tasa ───────────────────────────────
+            //  Guardar configuración de tasa 
             document.getElementById('saveAllButton').addEventListener('click', async () => { await window.guardarConfiguracion(); });
 
         document.getElementById('tasaBaseInput').addEventListener('change', window.recalcularTasaEfectiva);
         document.getElementById('aumentoDiarioInput').addEventListener('change', window.recalcularTasaEfectiva);
-        // ── Toggles de aumento: mutuamente excluyentes ──
+        //  Toggles de aumento: mutuamente excluyentes 
         function _mostrarFechasAumento(visible) {
             document.getElementById('tasaFechasDiv').style.display = visible ? 'flex' : 'none';
         }
@@ -2366,9 +2366,9 @@
 
         }; // fin window.setupEventListeners
 
-        // ══════════════════════════════════════════════
+        // 
         // TASA DE HOY — Primer inicio de sesión del día
-        // ══════════════════════════════════════════════
+        // 
         window._pedirTasaDeHoy = function(onConfirm) {
             // Crear overlay bloqueante
             const overlay = document.createElement('div');
@@ -2381,7 +2381,7 @@
             ].join(';');
             overlay.innerHTML = `
                 <div style="background:#fff;border-radius:16px;padding:2rem 2.5rem;width:90%;max-width:400px;box-shadow:0 8px 32px rgba(0,0,0,.3);text-align:center">
-                    <div style="font-size:2.5rem;margin-bottom:.75rem">💱</div>
+                    <div style="font-size:2.5rem;margin-bottom:.75rem"></div>
                     <h2 style="font-size:1.3rem;color:#1a1a2e;margin-bottom:.4rem">Tasa de cambio de hoy</h2>
                     <p style="font-size:.88rem;color:#666;margin-bottom:1.5rem">
                         Ingresa el valor actual del dólar en bolívares para que el sistema calcule correctamente todos los precios de hoy.
@@ -2453,9 +2453,9 @@
             }
         };
 
-        // ══════════════════════════════════════════════
+        // 
         // AVISO DE LUNES — Cambio porcentaje semanal
-        // ══════════════════════════════════════════════
+        // 
         window._verificarAvisoLunes = function() {
             // Solo si el toggle semanal está activo
             if (!window.configGlobal || !window.configGlobal.aumento_semanal) return;
@@ -2478,7 +2478,7 @@
             ].join(';');
             notif.innerHTML = `
                 <div style="display:flex;align-items:flex-start;gap:.75rem">
-                    <div style="font-size:1.5rem;flex-shrink:0">📅</div>
+                    <div style="font-size:1.5rem;flex-shrink:0"></div>
                     <div style="flex:1">
                         <div style="font-weight:700;margin-bottom:.3rem;font-size:.95rem">Nueva semana — ¿Actualizas el porcentaje?</div>
                         <div style="font-size:.82rem;opacity:.85;margin-bottom:.75rem">
@@ -2522,9 +2522,9 @@
             setTimeout(() => { if (notif.parentNode) notif.remove(); }, 30000);
         };
 
-        // ══════════════════════════════════════════════
+        // 
         // SELECTOR DE MESAS (desde header Admin)
-        // ══════════════════════════════════════════════
+        // 
         window.abrirSelectorMesaAdmin = async function() {
             const list = document.getElementById('adminMesaList');
             list.innerHTML = '<p style="color:var(--text-muted)">Cargando mesas...</p>';
