@@ -1114,6 +1114,7 @@
             <div class="tab" data-tab="usuarios">Usuarios</div>
             <div class="tab" data-tab="deliverys">Deliverys</div>
             <div class="tab" data-tab="propinas">Propinas</div>
+            <div class="tab" data-tab="mesoneros">Mesoneros</div>
             <div class="tab" data-tab="configuracion">Configuración</div>
             <div class="tab" data-tab="qr">Códigos QR</div>
             <div class="tab" data-tab="reportes">Reportes</div>
@@ -1186,6 +1187,18 @@
                 </div>
             </div>
             
+            <!-- MESONEROS -->
+            <div class="tab-pane" id="mesonerosPane">                <h2 class="section-title"><i class="fas fa-user-tie" style="color:var(--propina)"></i> Mesoneros</h2>
+                <div style="display:flex;gap:10px;margin-bottom:1.5rem;max-width:500px">
+                    <input type="text" id="nuevoMesonero" placeholder="Nombre del mesonero"
+                        style="flex:1;padding:10px;border:1px solid var(--border);border-radius:8px;font-family:Montserrat,sans-serif">
+                    <button class="btn-primary" onclick="window.agregarMesonero()">
+                        <i class="fas fa-plus"></i> Agregar
+                    </button>
+                </div>
+                <div id="mesonerosList" class="mesoneros-grid"></div>
+            </div>
+
             <!-- CONFIGURACIÓN -->
             <div class="tab-pane" id="configuracionPane">
                 <div class="alert-list" style="max-width:500px">
@@ -1200,19 +1213,8 @@
                     <div class="form-group"><label>Correo Electrónico</label><input type="email" id="recoveryEmail" value="admin@sakisushi.com"></div>
                     <button class="btn-primary" onclick="window.guardarRecoveryEmail()">Guardar</button>
                 </div>
-                <div class="alert-list" style="max-width:500px;margin-top:2rem">
-                    <h3>Configuración de Alertas</h3>
-                    <div class="form-group"><label>Umbral de Stock Crítico</label><input type="number" id="alertaStockMinimo" value="5" min="1"></div>
-                    <button class="btn-primary" onclick="window.guardarUmbralStock()">Guardar</button>
-                </div>
-                <div class="alert-list" style="max-width:500px;margin-top:2rem">
-                    <h3>Mesoneros</h3>
-                    <div style="display:flex;gap:10px;margin-bottom:20px">
-                        <input type="text" id="nuevoMesonero" placeholder="Nombre del mesonero" style="flex:1;padding:10px;border:2px solid var(--gray-300,#ddd);border-radius:8px;background:white;color:var(--text-dark,#1a1a2e)">
-                        <button class="btn-primary" onclick="window.agregarMesonero()">Agregar</button>
-                    </div>
-                    <div id="mesonerosList"></div>
-                </div>
+
+
             </div>
             
             <!-- QR (MODIFICADO) -->
@@ -1262,7 +1264,20 @@
     <!-- MODALES -->
     <div class="modal" id="platilloModal"><div class="modal-content"><div class="modal-header"><h3 id="platilloModalTitle">Nuevo Platillo</h3><button class="modal-close" id="closePlatilloModal">&times;</button></div><div class="modal-body"><form id="platilloForm"><div class="form-group"><label>Imagen</label><input type="file" id="platilloImagen" accept="image/*"><small>O URL:</small><input type="url" id="platilloImagenUrl"><div id="imagenPreview" class="image-preview" style="display:none"><img id="previewImg"><div><small>Vista previa</small><button type="button" class="btn-small" onclick="window.limpiarImagenPreview()">Eliminar</button></div></div></div><div class="form-row"><div class="form-group"><label>Nombre</label><input type="text" id="platilloNombre" required></div><div class="form-group"><label>Categoría</label><select id="platilloCategoria" required></select></div></div><div class="form-group"><label>Subcategoría</label><select id="platilloSubcategoria"><option value="">Ninguna</option></select></div><div class="form-row"><div class="form-group"><label>Precio (USD)</label><input type="number" step="0.01" id="platilloPrecio" required></div><div class="form-group"><label>Disponible</label><select id="platilloDisponible"><option value="true">Sí</option><option value="false">No</option></select></div></div><div class="form-group"><label>Descripción</label><textarea id="platilloDescripcion" rows="3"></textarea></div><div class="form-group"><label>Ingredientes</label><div id="ingredientesContainer"></div><button type="button" class="btn-secondary" onclick="window.agregarIngredienteRow()"><i class="fas fa-plus"></i> Agregar Ingrediente</button></div></form></div><div class="modal-footer"><button class="btn-secondary" id="cancelPlatillo">Cancelar</button><button class="btn-primary" id="savePlatillo">Guardar</button></div></div></div>
     
-    <div class="modal" id="ingredienteModal"><div class="modal-content"><div class="modal-header"><h3 id="ingredienteModalTitle">Nuevo Ingrediente</h3><button class="modal-close" id="closeIngredienteModal">&times;</button></div><div class="modal-body"><form id="ingredienteForm"><div class="form-group"><label>Nombre</label><input type="text" id="ingredienteNombre" required></div><div class="form-group password-overlay" id="stockOverlay"><label>Stock Actual</label><div id="stockActualField" class="password-protected"><input type="number" step="0.01" id="ingredienteStock" disabled></div><div class="password-unlock" id="stockUnlock"><input type="password" placeholder="Contraseña" id="stockPassword"><button type="button" onclick="window.desbloquearStock()">Desbloquear</button></div></div><div class="form-group"><label>Mercancía a Agregar</label><input type="number" step="0.01" id="ingredienteAgregar"></div><div class="form-group"><label>Unidad</label><select id="ingredienteUnidad"><option value="unidades">Unidades</option><option value="gramos">Gramos</option><option value="mililitros">Mililitros</option><option value="kilogramos">Kilogramos</option><option value="litros">Litros</option></select></div><div class="form-group"><label>Stock Mínimo</label><input type="number" step="0.01" id="ingredienteMinimo"></div><div class="form-row"><div class="form-group"><label>Costo Total Compra (USD)</label><input type="number" step="0.01" id="costoTotal" onchange="window.calcularCostoUnitario()"></div><div class="form-group"><label>Cantidad Comprada</label><input type="number" step="0.01" id="cantidadComprada" onchange="window.calcularCostoUnitario()"></div></div><div class="form-group"><label>Precio de Costo (USD/ud)</label><input type="number" step="0.01" id="ingredienteCosto"></div><div class="form-group"><label>Precio de Venta (USD/ud)</label><input type="number" step="0.01" id="ingredienteVenta"></div></form></div><div class="modal-footer"><button class="btn-secondary" id="cancelIngrediente">Cancelar</button><button class="btn-primary" id="saveIngrediente">Guardar</button></div></div></div>
+    <div class="modal" id="ingredienteModal"><div class="modal-content"><div class="modal-header"><h3 id="ingredienteModalTitle">Nuevo Ingrediente</h3><button class="modal-close" id="closeIngredienteModal">&times;</button></div><div class="modal-body"><form id="ingredienteForm"><div class="form-group"><label>Nombre</label><input type="text" id="ingredienteNombre" required></div><div class="form-group password-overlay" id="stockOverlay"><label>Stock Actual</label><div id="stockActualField" class="password-protected"><input type="number" step="0.01" id="ingredienteStock" disabled></div><div class="password-unlock" id="stockUnlock"><input type="password" placeholder="Contraseña" id="stockPassword"><button type="button" onclick="window.desbloquearStock()">Desbloquear</button></div></div><div class="form-group"><label>Mercancía a Agregar</label><input type="number" step="0.01" id="ingredienteAgregar"></div><div class="form-group"><label>Unidad</label><select id="ingredienteUnidad"><option value="unidades">Unidades</option><option value="gramos">Gramos</option><option value="mililitros">Mililitros</option><option value="kilogramos">Kilogramos</option><option value="litros">Litros</option></select></div><div class="form-group">
+                    <label style="display:flex;align-items:center;gap:.4rem">
+                        Stock Mínimo
+                        <span class="tooltip-wrap" style="position:relative;display:inline-flex;cursor:help">
+                            <span style="display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;background:#aaa;color:#fff;border-radius:50%;font-size:.65rem;font-weight:700">?</span>
+                            <span class="tooltip-text" style="display:none;position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:#1a1a2e;color:#fff;padding:.5rem .75rem;border-radius:8px;font-size:.75rem;white-space:normal;width:230px;text-align:center;box-shadow:0 4px 12px rgba(0,0,0,.3);z-index:100;line-height:1.4">
+                                Cuando el stock disponible baje de este valor, aparecerá una alerta en el Dashboard (Stock Crítico) y se enviará una notificación push a todos los dispositivos que hayan iniciado sesión en el admin.
+                            </span>
+                        </span>
+                    </label>
+                    <input type="number" step="0.01" id="ingredienteMinimo"
+                        placeholder="Ej: 5"
+                        title="Cuando el stock disponible baje de este valor, aparecerá una alerta en el Dashboard y se enviará una notificación push a los dispositivos que hayan iniciado sesión en el admin.">
+                </div><div class="form-row"><div class="form-group"><label>Costo Total Compra (USD)</label><input type="number" step="0.01" id="costoTotal" onchange="window.calcularCostoUnitario()"></div><div class="form-group"><label>Cantidad Comprada</label><input type="number" step="0.01" id="cantidadComprada" onchange="window.calcularCostoUnitario()"></div></div><div class="form-group"><label>Precio de Costo (USD/ud)</label><input type="number" step="0.01" id="ingredienteCosto"></div><div class="form-group"><label>Precio de Venta (USD/ud)</label><input type="number" step="0.01" id="ingredienteVenta"></div></form></div><div class="modal-footer"><button class="btn-secondary" id="cancelIngrediente">Cancelar</button><button class="btn-primary" id="saveIngrediente">Guardar</button></div></div></div>
     
     <div class="modal" id="usuarioModal"><div class="modal-content"><div class="modal-header"><h3>Nuevo Cajero</h3><button class="modal-close" id="closeUsuarioModal">&times;</button></div><div class="modal-body"><form id="usuarioForm"><div class="form-group"><label>Nombre Completo</label><input type="text" id="usuarioNombre" required></div><div class="form-group"><label>Nombre de Usuario</label><input type="text" id="usuarioUsername" required></div><div class="form-group"><label>Contraseña</label><input type="text" id="usuarioPassword" value="123456" required></div></form></div><div class="modal-footer"><button class="btn-secondary" id="cancelUsuario">Cancelar</button><button class="btn-primary" id="saveUsuario">Guardar</button></div></div></div>
     
@@ -2249,6 +2264,7 @@
                             if (p.eventType === 'UPDATE' && p.new.stock <= p.new.minimo) {
                                 window.verificarStockCritico();
                                 window.mostrarToast(`⚠️ Stock crítico: ${p.new.nombre}`, 'warning');
+                                window._notificarAdminStockCritico && window._notificarAdminStockCritico(p.new.nombre);
                             }
                             if (p.eventType === 'UPDATE' && (p.old?.stock || 0) <= 0 && p.new.stock > 0) {
                                 await window._notificarPlatillosReactivados(p.new.id, p.new.nombre);
@@ -2334,6 +2350,27 @@
                         const el = document.getElementById('qrNombreMesa');
                         if (el) el.value = '';
                     }
+                });
+            });
+
+            // ── Cerrar todos los modales (X, Cancelar, fondo) ──────────
+            [
+                ['closePlatilloModal',    'platilloModal'],
+                ['cancelPlatillo',        'platilloModal'],
+                ['closeIngredienteModal', 'ingredienteModal'],
+                ['cancelIngrediente',     'ingredienteModal'],
+                ['closeUsuarioModal',     'usuarioModal'],
+                ['cancelUsuario',         'usuarioModal'],
+                ['closeDeliveryModal',    'deliveryModal'],
+                ['cancelDeliveryEdit',    'deliveryModal'],
+            ].forEach(([btnId, modalId]) => {
+                const btn = document.getElementById(btnId);
+                if (btn) btn.addEventListener('click', () => window.cerrarModal(modalId));
+            });
+            // Cerrar al hacer clic en el fondo oscuro de cualquier modal
+            document.querySelectorAll('.modal').forEach(modal => {
+                modal.addEventListener('click', function(e) {
+                    if (e.target === this) window.cerrarModal(this.id);
                 });
             });
 
@@ -2749,6 +2786,64 @@
 
             window._adminCerrarModal = _cerrarTopModal;
         })();
+
+    </script>
+</body>
+</html        // ── Notificación push a dispositivos admin cuando stock es crítico ──
+        window._notificarAdminStockCritico = async function(ingredienteNombre) {
+            try {
+                const { data: subs } = await window.supabaseClient
+                    .from('push_subscriptions').select('session_id').not('session_id', 'is', null);
+                if (!subs || !subs.length) return;
+                const sessions = [...new Set(subs.map(s => s.session_id).filter(Boolean))];
+                for (const sid of sessions) {
+                    await window.supabaseClient.from('notificaciones').insert([{
+                        pedido_id: null, tipo: 'stock_critico',
+                        titulo: '⚠️ Stock crítico',
+                        mensaje: `El ingrediente "${ingredienteNombre}" está por debajo del mínimo. Revisa el inventario.`,
+                        session_id: sid, leida: false
+                    }]);
+                }
+                window.mostrarToast(`📢 Alerta enviada: stock crítico en ${ingredienteNombre}`, 'warning');
+            } catch (e) { console.error('Error notificando stock crítico:', e); }
+        };
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            if (window.restaurarSesionAdmin()) {
+                window.mostrarPanel();
+                setTimeout(async () => {
+                    try {
+                        await window.cargarConfiguracionInicial();
+                        await window.cargarMenu();
+                        await window.cargarInventario();
+                        await window.cargarUsuarios();
+                        await window.cargarQRs();
+                        await window.cargarReportes();
+                        await window.cargarPedidosRecientes();
+                        await window.cargarMesoneros();
+                        await window.cargarDeliverys();
+                        await window.cargarPropinas();
+                        window.setupEventListeners();
+                        window.setupRealtimeSubscriptions();
+                        window.setupStockRealtime();
+                        window.restaurarWifiPersistente();
+                        window._verificarTasaDeHoy((tasa) => {
+                            document.getElementById('tasaBaseInput').value = tasa;
+                            window.configGlobal.tasa_cambio = tasa;
+                            window.recalcularTasaEfectiva();
+                            window._verificarAvisoLunes();
+                        });
+                    } catch (e) { console.error('Error cargando datos:', e); window.mostrarToast('Error cargando datos: ' + e.message, 'error'); }
+                }, 100);
+            } else {
+                window.mostrarLogin();
+            }
+        });
+
+        window.mostrarPanel = function() {
+            document.getElementById('loginContainer').style.display = 'none';
+            document.getElementById('panelContainer').classList.add('active');
+        };
 
     </script>
 </body>
