@@ -363,6 +363,8 @@
         background: var(--light-bg);
         color: var(--text-dark);
         min-height: 100vh;
+        overflow-x: hidden;
+        width: 100%;
     }
 
     /* ── Login ── */
@@ -426,7 +428,7 @@
     .recovery-link a:hover { color: var(--accent); }
 
     /* ── Panel Container ── */
-    .panel-container { display: none; flex-direction: column; min-height: 100vh; }
+    .panel-container { display: none; flex-direction: column; min-height: 100vh; width: 100%; overflow-x: hidden; }
     .panel-container.active { display: flex; }
 
     /* ── Header ── */
@@ -509,13 +511,16 @@
     .tasa-bar {
         background: #fff;
         border-bottom: 1px solid var(--border);
-        padding: .6rem 2rem;
+        padding: .6rem 1rem;
         display: flex;
         align-items: center;
-        gap: 1.5rem;
+        gap: .75rem;
         flex-wrap: wrap;
         font-size: .82rem;
         box-shadow: var(--shadow-sm);
+        overflow-x: hidden;
+        width: 100%;
+        box-sizing: border-box;
     }
     .tasa-item { display: flex; align-items: center; gap: .5rem; }
     .tasa-item label { color: var(--text-muted); font-weight: 600; white-space: nowrap; }
@@ -837,11 +842,26 @@
 
     /* ── Responsive ── */
     @media (max-width: 768px) {
-        .content { padding: 1rem; }
-        .header { padding: 0 1rem; height: 56px; }
-        .header-left h2 { font-size: 1rem; }
+        .content { padding: .75rem; }
+        .header { padding: 0 .75rem; height: auto; min-height: 56px; flex-wrap: wrap; gap: .5rem; padding-top: .5rem; padding-bottom: .5rem; }
+        .header-left { flex: 1; min-width: 0; }
+        .header-left h2 { font-size: .9rem; }
+        .header-right { flex-wrap: wrap; gap: .4rem; }
+        .nav-button, .save-button, .logout-button { padding: .4rem .7rem; font-size: .75rem; }
         .form-row { grid-template-columns: 1fr; }
-        .tasa-bar { padding: .5rem 1rem; font-size: .78rem; }
+        .tasa-bar { padding: .4rem .75rem; font-size: .75rem; gap: .5rem; }
+        .tasa-item { flex-wrap: wrap; }
+        .tasa-item input[type="number"] { width: 70px; }
+        .dashboard-grid { grid-template-columns: 1fr 1fr; }
+        .inventario-grid, .menu-grid, .qr-grid { grid-template-columns: 1fr; }
+        .tabs { padding: 0 .5rem; }
+        .tab { padding: .7rem .9rem; font-size: .78rem; }
+        .modal-content { width: 96%; }
+        .charts-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 480px) {
+        .dashboard-grid { grid-template-columns: 1fr; }
+        .header-right .nav-button:nth-child(n+3) { display: none; }
     }
         </style>
 </head>
@@ -985,9 +1005,9 @@
             <div class="tab-pane" id="qrPane">
                 <div style="margin-bottom:2rem">
                     <h3 class="section-title"><i class="fas fa-qrcode"></i> Generar Nuevo QR</h3>
-                    <div style="display:flex;gap:1rem;align-items:flex-end;flex-wrap:wrap">
-                        <div class="form-group" style="flex:1"><label>Nombre de la Mesa</label><input type="text" id="qrNombreMesa" placeholder="Ej: Mesa 1" style="width:100%"></div>
-                        <div class="form-group" style="flex:1"><label>SSID de Router (WiFi)</label><input type="text" id="qrWifiSsid" placeholder="Ej: SakiSushi_Wifi" style="width:100%" oninput="window.guardarWifiPersistente()"></div>
+                    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:.75rem;align-items:flex-end">
+                        <div class="form-group"><label>Nombre de la Mesa</label><input type="text" id="qrNombreMesa" placeholder="Ej: Mesa 1" style="width:100%"></div>
+                        <div class="form-group"><label>ID de Router (SSID)</label><input type="text" id="qrWifiSsid" placeholder="Ej: SakiSushi_Wifi" style="width:100%" oninput="window.guardarWifiPersistente()"></div>
                         <div class="form-group" style="flex:1"><label>Contraseñaa WiFi</label><input type="text" id="qrWifiPassword" placeholder="Contraseña" style="width:100%" oninput="window.guardarWifiPersistente()"></div>
                         <button class="btn-primary" onclick="window.generarQR()"><i class="fas fa-qrcode"></i> Generar</button>
                     </div>
@@ -1365,36 +1385,89 @@
         };
 
         window.renderizarQRs = function() {
-            const grid=document.getElementById('qrGrid');grid.innerHTML='';
-            (window.qrCodes||[]).forEach(qr=>{
-                const mesaUrl=qr.url||qr.url_mesa||`${window.location.origin}/SakiSushi0/Cliente/index.html?mesa=${encodeURIComponent(qr.nombre)}`;
-                let qrText=(qr.tipo==='mesa_wifi'||qr.tipo==='wifi')&&qr.ssid&&qr.password?`WIFI:T:WPA;S:${qr.ssid};P:${qr.password};;
-${mesaUrl}`:mesaUrl;
-                const icon=qr.tipo==='mesa_wifi'?'📶 ':'';
-                const card=document.createElement('div');card.className='qr-card';
-                card.innerHTML=`<div class="qr-image" id="qr-${qr.id}"></div><div class="qr-nombre">${icon}${qr.nombre}</div><div class="qr-url" style="font-size:.7rem;word-break:break-all;opacity:.6">${mesaUrl}</div><div class="qr-actions"><button onclick="window.ampliarQR('${qr.id}','${qr.nombre}',this.dataset.qrt)" data-qrt="${qrText.replace(/"/g,'&amp;quot;')}" title="Ampliar"><i class="fas fa-expand"></i></button><button onclick="window.eliminarQR('${qr.id}')" title="Eliminar"><i class="fas fa-trash"></i></button></div>`;
+            const grid = document.getElementById('qrGrid');
+            if (!grid) return;
+            grid.innerHTML = '';
+
+            // Leer SSID/pwd del localStorage para el payload combinado
+            const _ssid = localStorage.getItem('saki_wifi_ssid') || '';
+            const _pwd  = localStorage.getItem('saki_wifi_password') || '';
+
+            (window.qrCodes || []).forEach(qr => {
+                const mesaUrl = `${window.location.origin}/SakiSushi0/Cliente/index.html?mesa=${encodeURIComponent(qr.nombre)}`;
+
+                // QR combinado si hay WiFi guardado
+                let qrText;
+                if (_ssid && _pwd) {
+                    qrText = `WIFI:T:WPA;S:${_ssid};P:${_pwd};;
+${mesaUrl}`;
+                } else {
+                    qrText = mesaUrl;
+                }
+
+                const card = document.createElement('div');
+                card.className = 'qr-card';
+                card.innerHTML = `
+                    <div class="qr-image" id="qr-${qr.id}"></div>
+                    <div class="qr-nombre">${_ssid ? '📶 ' : ''}${qr.nombre}</div>
+                    <div class="qr-url">${mesaUrl}</div>
+                    <div class="qr-actions">
+                        <button onclick="window.ampliarQR('${qr.id}','${qr.nombre}',document.getElementById('qr-${qr.id}').dataset.qrt)" title="Ampliar">
+                            <i class="fas fa-expand"></i>
+                        </button>
+                        <button onclick="window.eliminarQR('${qr.id}')" title="Eliminar">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                `;
                 grid.appendChild(card);
-                new QRCode(document.getElementById(`qr-${qr.id}`),{text:qrText,width:150,height:150});
+
+                // Guardar qrText en el div para ampliar
+                const qrDiv = document.getElementById(`qr-${qr.id}`);
+                qrDiv.dataset.qrt = qrText;
+
+                new QRCode(qrDiv, { text: qrText, width: 150, height: 150 });
             });
         };
 
         window.generarQR = async function() {
-            const nombre=document.getElementById('qrNombreMesa').value.trim();
-            const ssidEl=document.getElementById('qrWifiSsid');
-            const pwdEl=document.getElementById('qrWifiPassword');
-            const ssid=ssidEl?ssidEl.value.trim():'';
-            const password=pwdEl?pwdEl.value.trim():'';
+            const nombre   = document.getElementById('qrNombreMesa').value.trim();
+            const ssidEl   = document.getElementById('qrWifiSsid');
+            const pwdEl    = document.getElementById('qrWifiPassword');
+            const ssid     = ssidEl ? ssidEl.value.trim() : '';
+            const password = pwdEl  ? pwdEl.value.trim()  : '';
+
             window.guardarWifiPersistente();
-            if(!nombre){window.mostrarToast('Ingresa el nombre de la mesa','error');return;}
-            if(ssid&&!password){window.mostrarToast('Ingresa la contraseña WiFi','error');return;}
-            const mesaUrl=`${window.location.origin}/SakiSushi0/Cliente/index.html?mesa=${encodeURIComponent(nombre)}`;
-            const qrData={id:window.generarId('QR_'),fecha:new Date().toISOString(),nombre,tipo:(ssid&&password)?'mesa_wifi':'mesa',ssid:ssid||null,password:password||null,url:mesaUrl};
-            try{
-                await window.supabaseClient.from('codigos_qr').insert([qrData]);
-                document.getElementById('qrNombreMesa').value='';
+
+            if (!nombre) {
+                window.mostrarToast('Ingresa el nombre de la mesa', 'error');
+                return;
+            }
+            if (ssid && !password) {
+                window.mostrarToast('Ingresa la contraseña WiFi', 'error');
+                return;
+            }
+
+            // Solo guardamos los campos que existen en la tabla: id, nombre, fecha
+            // El SSID/pwd quedan en localStorage; la URL se genera al renderizar
+            const qrData = {
+                id:     window.generarId('QR_'),
+                nombre: nombre,
+                fecha:  new Date().toISOString()
+            };
+
+            try {
+                const { error } = await window.supabaseClient
+                    .from('codigos_qr')
+                    .insert([qrData]);
+                if (error) throw error;
+                document.getElementById('qrNombreMesa').value = '';
                 await window.cargarQRs();
-                window.mostrarToast('✅ QR generado','success');
-            }catch(e){console.error('Error generando QR:',e);window.mostrarToast('❌ Error al generar QR','error');}
+                window.mostrarToast('✅ QR generado', 'success');
+            } catch(e) {
+                console.error('Error generando QR:', e);
+                window.mostrarToast('❌ Error al generar QR: ' + (e.message || e), 'error');
+            }
         };
 
         window.ampliarQR = function(id, nombre, url) {
