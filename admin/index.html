@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Saki Sushi - Panel Administraciónn</title>
+    <title>Saki Sushi - Panel Administración</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
@@ -268,7 +268,7 @@
         window.hacerLogin = async function() {
             console.log(' Intentando login admin...');
             const password = document.getElementById('adminPassword').value;
-            if (!password) { window.mostrarToast('Ingresa la contraseñaa', 'error'); return; }
+            if (!password) { window.mostrarToast('Ingresa la contraseña', 'error'); return; }
             
             const loginBtn = document.querySelector('#loginForm button[type="submit"]');
             if (loginBtn) { loginBtn.disabled = true; loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Conectando...'; }
@@ -281,9 +281,9 @@
                 });
                 const data = await response.json();
                 if (!response.ok) throw new Error(data.error || `Error ${response.status}`);
-                if (!data.success) { window.mostrarToast(' ' + (data.error || 'Contraseñaa incorrecta'), 'error'); return; }
+                if (!data.success) { window.mostrarToast(' ' + (data.error || 'Contraseña incorrecta'), 'error'); return; }
                 if (data.user.rol !== 'admin') { window.mostrarToast('Acceso denegado. Se requiere rol de administrador.', 'error'); return; }
-                if (sessionStorage.getItem('admin_authenticated') === 'true') { window.mostrarToast(' Ya hay una sesiónn de administrador activa', 'warning'); return; }
+                if (sessionStorage.getItem('admin_authenticated') === 'true') { window.mostrarToast(' Ya hay una sesión de administrador activa', 'warning'); return; }
 
                 window.isAdminAuthenticated = true;
                 window.jwtToken = data.token;
@@ -435,18 +435,20 @@
     .header {
         background: linear-gradient(135deg, var(--secondary) 0%, #16213e 100%);
         color: #fff;
-        padding: 0 2rem;
+        padding: 0 1.5rem;
         display: flex;
         justify-content: space-between;
         align-items: center;
-        height: 64px;
+        min-height: 56px;
         box-shadow: 0 2px 12px rgba(0,0,0,.3);
         position: sticky;
         top: 0;
         z-index: 100;
         flex-shrink: 0;
+        flex-wrap: wrap;
+        gap: .5rem;
     }
-    .header-left { display: flex; align-items: center; gap: 1.5rem; }
+    .header-left { display: flex; align-items: center; gap: 1rem; min-width: 0; flex: 1; }
     .header-left h2 {
         font-family: 'Playfair Display', serif;
         font-size: 1.3rem;
@@ -456,7 +458,7 @@
         gap: .5rem;
     }
     .header-left h2 i { color: var(--accent); }
-    .header-right { display: flex; align-items: center; gap: .75rem; }
+    .header-right { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
     .nav-button {
         display: inline-flex;
         align-items: center;
@@ -511,17 +513,22 @@
     .tasa-bar {
         background: #fff;
         border-bottom: 1px solid var(--border);
-        padding: .6rem 1rem;
+        padding: .5rem 1.5rem;
+        display: flex;
+        flex-direction: column;
+        gap: .4rem;
+        font-size: .82rem;
+        box-shadow: var(--shadow-sm);
+        width: 100%;
+        box-sizing: border-box;
+    }
+    .tasa-row {
         display: flex;
         align-items: center;
         gap: .75rem;
         flex-wrap: wrap;
-        font-size: .82rem;
-        box-shadow: var(--shadow-sm);
-        overflow-x: hidden;
-        width: 100%;
-        box-sizing: border-box;
     }
+    .tasa-row-valores { border-bottom: 1px solid #f0f0f0; padding-bottom: .4rem; }
     .tasa-item { display: flex; align-items: center; gap: .5rem; }
     .tasa-item label { color: var(--text-muted); font-weight: 600; white-space: nowrap; }
     .tasa-item input[type="number"] {
@@ -841,28 +848,99 @@
     .config-section h3 { font-size: 1rem; font-weight: 700; color: var(--text-dark); margin-bottom: 1.2rem; padding-bottom: .6rem; border-bottom: 1px solid var(--border); }
 
     /* ── Responsive ── */
-    @media (max-width: 768px) {
-        .content { padding: .75rem; }
-        .header { padding: 0 .75rem; height: auto; min-height: 56px; flex-wrap: wrap; gap: .5rem; padding-top: .5rem; padding-bottom: .5rem; }
-        .header-left { flex: 1; min-width: 0; }
-        .header-left h2 { font-size: .9rem; }
-        .header-right { flex-wrap: wrap; gap: .4rem; }
-        .nav-button, .save-button, .logout-button { padding: .4rem .7rem; font-size: .75rem; }
-        .form-row { grid-template-columns: 1fr; }
-        .tasa-bar { padding: .4rem .75rem; font-size: .75rem; gap: .5rem; }
-        .tasa-item { flex-wrap: wrap; }
-        .tasa-item input[type="number"] { width: 70px; }
-        .dashboard-grid { grid-template-columns: 1fr 1fr; }
-        .inventario-grid, .menu-grid, .qr-grid { grid-template-columns: 1fr; }
-        .tabs { padding: 0 .5rem; }
-        .tab { padding: .7rem .9rem; font-size: .78rem; }
-        .modal-content { width: 96%; }
-        .charts-grid { grid-template-columns: 1fr; }
-    }
-    @media (max-width: 480px) {
-        .dashboard-grid { grid-template-columns: 1fr; }
-        .header-right .nav-button:nth-child(n+3) { display: none; }
-    }
+
+        /* ── Dashboard lower grid ── */
+        .dashboard-lower-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+        .alert-list h3 {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: .75rem;
+            padding-bottom: .4rem;
+            border-bottom: 2px solid var(--border);
+        }
+        /* ── Tasa bar fechas ── */
+        .tasa-fechas {
+            flex-wrap: wrap;
+            align-items: center;
+            gap: .5rem;
+            padding: .4rem .75rem;
+            background: #fff8e1;
+            border-radius: 8px;
+            border-left: 3px solid var(--accent);
+            width: 100%;
+        }
+        .tasa-fechas input[type="date"] {
+            padding: .3rem .6rem;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: .82rem;
+            font-family: 'Montserrat', sans-serif;
+        }
+        /* ── Mobile overrides ── */
+        @media (max-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr 1fr !important;
+            }
+            .dashboard-lower-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    /* ── Dashboard lower grid ── */
+        .dashboard-lower-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+        .dashboard-lower-grid .alert-list {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            padding: 1.2rem;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border);
+        }
+        .dashboard-lower-grid h3 {
+            font-size: .95rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 1rem;
+            padding-bottom: .5rem;
+            border-bottom: 2px solid var(--border);
+        }
+
+        @media (max-width: 768px) {
+            .content { padding: .75rem; }
+            .header { padding: 0 .75rem; height: auto; min-height: 56px; flex-wrap: wrap; gap: .5rem; padding-top: .5rem; padding-bottom: .5rem; }
+            .header-left { flex: 1; min-width: 0; }
+            .header-left h2 { font-size: .9rem; }
+            .header-right { flex-wrap: wrap; gap: .4rem; }
+            .nav-button, .save-button, .logout-button { padding: .4rem .7rem; font-size: .75rem; }
+            .form-row { grid-template-columns: 1fr; }
+            .tasa-bar { padding: .4rem .75rem; font-size: .75rem; }
+            .tasa-row { gap: .4rem; }
+            .tasa-item input[type="number"] { width: 65px; }
+            .save-button { font-size: .75rem; padding: .4rem .8rem; }
+            /* Dashboard: 2 columnas en móvil */
+            .dashboard-grid { grid-template-columns: 1fr 1fr; }
+            .inventario-grid, .menu-grid, .qr-grid { grid-template-columns: 1fr; }
+            .tabs { padding: 0 .5rem; }
+            .tab { padding: .7rem .9rem; font-size: .78rem; }
+            .modal-content { width: 96%; }
+            .charts-grid { grid-template-columns: 1fr; }
+            /* Stock crítico y pedidos recientes: columna única en móvil */
+            .dashboard-lower-grid {
+                grid-template-columns: 1fr;
+            }
+            /* Stock crítico primero (ya está primero en HTML), luego pedidos */
+        }
+        @media (max-width: 480px) {
+            .header-right .nav-button:nth-child(n+3) { display: none; }
+        }
         </style>
 </head>
 <body>
@@ -873,23 +951,57 @@
                 <input type="password" id="adminPassword" placeholder="Contraseña de Administrador" required autocomplete="current-password">
                 <button type="submit">Ingresar</button>
             </form>
-            <div class="recovery-link"><a href="#" id="recoveryLink">¿Olvidaste la contraseñaa?</a></div>
+            <div class="recovery-link"><a href="#" id="recoveryLink">¿Olvidaste la contraseña?</a></div>
         </div>
     </div>
     
     <div class="panel-container" id="panelContainer">
         <header class="header">
-            <div class="header-left"><h2><i class="fas fa-crown"></i> Administraciónn Saki Sushi</h2><button class="save-button" id="saveAllButton"><i class="fas fa-save"></i> Guardar Todo</button></div>
+            <div class="header-left"><h2><i class="fas fa-crown"></i> Administración Saki Sushi</h2></div>
             <div class="header-right"><a href="../Cliente/index.html" target="_blank" class="nav-button"><i class="fas fa-utensils"></i> Cliente</a><a href="../Cajero/index.html" target="_blank" class="nav-button"><i class="fas fa-cash-register"></i> Cajero</a><button class="logout-button" id="logoutButton"><i class="fas fa-sign-out-alt"></i> Salir</button></div>
         </header>
         
         <div class="tasa-bar" id="tasaBar">
-            <div class="tasa-item"><label>Tasa Base:</label><input type="number" step="0.01" id="tasaBaseInput" value="400.00"></div>
-            <div class="tasa-item"><label>Aumento Diario %:</label><input type="number" step="0.1" id="aumentoDiarioInput" value="0"></div>
-            <div class="tasa-item"><label>Aumento Activo:</label><label class="toggle-switch"><input type="checkbox" id="aumentoActivoToggle"><span class="toggle-slider"></span></label></div>
-            <div class="tasa-item"><button class="btn-small danger" id="detenerAumentoBtn">Detener</button><button class="btn-small success" id="activarAumentoBtn">Activar</button></div>
-            <div class="tasa-item"><label>Tasa Efectiva:</label><span class="tasa-value" id="tasaEfectivaDisplay">400.00</span></div>
-            <div class="tasa-item"><label>Aumento Acumulado:</label><span class="tasa-value" id="aumentoAcumuladoDisplay">0%</span></div>
+            <!-- Fila 1: valores numéricos -->
+            <div class="tasa-row tasa-row-valores">
+                <div class="tasa-item">
+                    <label>Tasa Base:</label>
+                    <input type="number" step="0.01" id="tasaBaseInput" value="400.00">
+                </div>
+                <div class="tasa-item">
+                    <label id="labelAumentoPct">Aumento Diario %:</label>
+                    <input type="number" step="0.1" id="aumentoDiarioInput" value="0">
+                </div>
+                <div class="tasa-item">
+                    <label>Tasa Efectiva:</label>
+                    <span class="tasa-value" id="tasaEfectivaDisplay">400.00</span>
+                </div>
+                <div class="tasa-item">
+                    <label>Acumulado:</label>
+                    <span class="tasa-value" id="aumentoAcumuladoDisplay">0%</span>
+                </div>
+            </div>
+            <!-- Fila 2: toggles, fechas, guardar -->
+            <div class="tasa-row tasa-row-controles">
+                <div class="tasa-item">
+                    <label>Diario activo:</label>
+                    <label class="toggle-switch"><input type="checkbox" id="aumentoActivoToggle"><span class="toggle-slider"></span></label>
+                </div>
+                <div class="tasa-item">
+                    <label>Semanal activo:</label>
+                    <label class="toggle-switch"><input type="checkbox" id="aumentoSemanalToggle"><span class="toggle-slider"></span></label>
+                </div>
+                <div class="tasa-item tasa-fechas" id="tasaFechasDiv" style="display:none">
+                    <label>Desde:</label><input type="date" id="aumentoDesde">
+                    <label style="margin-left:.4rem">Hasta:</label><input type="date" id="aumentoHasta">
+                    <label style="margin-left:.4rem"><input type="checkbox" id="aumentoIndefinido"> Indefinido</label>
+                </div>
+                <div class="tasa-item" style="margin-left:auto">
+                    <button class="save-button" id="saveAllButton">
+                        <i class="fas fa-save"></i> Guardar cambios en tasa
+                    </button>
+                </div>
+            </div>
         </div>
         
         <div class="tabs">
@@ -899,7 +1011,7 @@
             <div class="tab" data-tab="usuarios">Usuarios</div>
             <div class="tab" data-tab="deliverys">Deliverys</div>
             <div class="tab" data-tab="propinas">Propinas</div>
-            <div class="tab" data-tab="configuracion">Configuraciónn</div>
+            <div class="tab" data-tab="configuracion">Configuración</div>
             <div class="tab" data-tab="qr">Códigos QR</div>
             <div class="tab" data-tab="reportes">Reportes</div>
         </div>
@@ -909,15 +1021,14 @@
             <div class="tab-pane active" id="dashboardPane">
                 <div class="dashboard-grid">
                     <div class="dashboard-card"><div class="card-title">Ventas Hoy</div><div class="card-value" id="ventasHoy">$0.00</div></div>
-                    <div class="dashboard-card"><div class="card-title">Tasa Efectiva</div><div class="card-value" id="tasaEfectivaCard">Bs. 400.00</div></div>
                     <div class="dashboard-card"><div class="card-title">Productos Activos</div><div class="card-value" id="productosActivos">0</div></div>
                     <div class="dashboard-card"><div class="card-title">Alertas Stock</div><div class="card-value" id="alertasStock">0</div></div>
                     <div class="dashboard-card"><div class="card-title">Propinas Hoy</div><div class="card-value" id="propinasHoyDashboard">Bs. 0</div></div>
                     <div class="dashboard-card"><div class="card-title">Deliverys Hoy</div><div class="card-value" id="deliverysHoyDashboard">Bs. 0</div></div>
                 </div>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem">
-                    <div class="alert-list"><h3>Pedidos Recientes</h3><div id="pedidosRecientes"></div></div>
-                    <div class="alert-list"><h3>Stock Crítico</h3><div id="stockCritico"></div></div>
+                <div class="dashboard-lower-grid">
+                    <div class="alert-list lower-stock"><h3>Stock Crítico</h3><div id="stockCritico"></div></div>
+                    <div class="alert-list lower-pedidos"><h3>Pedidos Recientes</h3><div id="pedidosRecientes"></div></div>
                 </div>
             </div>
             
@@ -941,7 +1052,7 @@
             
             <!-- DELIVERYS -->
             <div class="tab-pane" id="deliverysPane">
-                <h2 class="section-title" style="margin-bottom:20px"><i class="fas fa-motorcycle" style="color:var(--delivery)"></i> Gestiónn de Motorizados</h2>
+                <h2 class="section-title" style="margin-bottom:20px"><i class="fas fa-motorcycle" style="color:var(--delivery)"></i> Gestión de Motorizados</h2>
                 <div style="margin-bottom:2rem">
                     <div style="display:flex;gap:10px;max-width:500px">
                         <input type="text" id="nuevoDelivery" placeholder="Nombre del motorizado" style="flex:1;padding:10px;border:2px solid var(--gray-300,#ddd);border-radius:8px;background:white;color:var(--text-dark,#1a1a2e)">
@@ -953,7 +1064,7 @@
             
             <!-- PROPINAS -->
             <div class="tab-pane" id="propinasPane">
-                <h2 class="section-title" style="margin-bottom:20px"><i class="fas fa-hand-holding-heart" style="color:var(--propina)"></i> Gestiónn de Propinas</h2>
+                <h2 class="section-title" style="margin-bottom:20px"><i class="fas fa-hand-holding-heart" style="color:var(--propina)"></i> Gestión de Propinas</h2>
                 <div class="propinas-stats">
                     <div class="propina-card"><div class="stat-value" id="propinasTotal">Bs. 0</div><div class="stat-label">Total Propinas</div></div>
                     <div class="propina-card"><div class="stat-value" id="propinasCantidad">0</div><div class="stat-label">Cantidad</div></div>
@@ -975,19 +1086,19 @@
             <!-- CONFIGURACIÓN -->
             <div class="tab-pane" id="configuracionPane">
                 <div class="alert-list" style="max-width:500px">
-                    <h3>Cambiar Contraseñaa</h3>
-                    <div class="form-group"><label>Contraseñaa Actual</label><input type="password" id="currentPassword"></div>
-                    <div class="form-group"><label>Nueva Contraseñaa</label><input type="password" id="newPassword"></div>
-                    <div class="form-group"><label>Confirmar Nueva Contraseñaa</label><input type="password" id="confirmPassword"></div>
-                    <button class="btn-primary" onclick="window.cambiarPassword()">Cambiar Contraseñaa</button>
+                    <h3>Cambiar Contraseña</h3>
+                    <div class="form-group"><label>Contraseña Actual</label><input type="password" id="currentPassword"></div>
+                    <div class="form-group"><label>Nueva Contraseña</label><input type="password" id="newPassword"></div>
+                    <div class="form-group"><label>Confirmar Nueva Contraseña</label><input type="password" id="confirmPassword"></div>
+                    <button class="btn-primary" onclick="window.cambiarPassword()">Cambiar Contraseña</button>
                 </div>
                 <div class="alert-list" style="max-width:500px;margin-top:2rem">
-                    <h3>Correo de Recuperaciónn</h3>
-                    <div class="form-group"><label>Correo Electrónnico</label><input type="email" id="recoveryEmail" value="admin@sakisushi.com"></div>
+                    <h3>Correo de Recuperación</h3>
+                    <div class="form-group"><label>Correo Electrónico</label><input type="email" id="recoveryEmail" value="admin@sakisushi.com"></div>
                     <button class="btn-primary" onclick="window.guardarRecoveryEmail()">Guardar</button>
                 </div>
                 <div class="alert-list" style="max-width:500px;margin-top:2rem">
-                    <h3>Configuraciónn de Alertas</h3>
+                    <h3>Configuración de Alertas</h3>
                     <div class="form-group"><label>Umbral de Stock Crítico</label><input type="number" id="alertaStockMinimo" value="5" min="1"></div>
                     <button class="btn-primary" onclick="window.guardarUmbralStock()">Guardar</button>
                 </div>
@@ -1008,11 +1119,11 @@
                     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:.75rem;align-items:flex-end">
                         <div class="form-group"><label>Nombre de la Mesa</label><input type="text" id="qrNombreMesa" placeholder="Ej: 1  (sin prefijo Mesa)" style="width:100%"></div>
                         <div class="form-group"><label>ID de Router (SSID)</label><input type="text" id="qrWifiSsid" placeholder="Ej: SakiSushi_Wifi" style="width:100%" oninput="window.guardarWifiPersistente()"></div>
-                        <div class="form-group" style="flex:1"><label>Contraseñaa WiFi</label><input type="text" id="qrWifiPassword" placeholder="Contraseña" style="width:100%" oninput="window.guardarWifiPersistente()"></div>
+                        <div class="form-group" style="flex:1"><label>Contraseña WiFi</label><input type="text" id="qrWifiPassword" placeholder="Contraseña" style="width:100%" oninput="window.guardarWifiPersistente()"></div>
                         <button class="btn-primary" onclick="window.generarQR()"><i class="fas fa-qrcode"></i> Generar</button>
                     </div>
                     <div class="wifi-fields" style="margin-top:15px;padding:12px;background:rgba(0,0,0,.3);border-radius:8px">
-                        <i class="fas fa-wifi"></i> <small>Escribe solo el número o nombre de la mesa (el sistema añade la identificación automáticamente)ticamente. El QR generado permitirá conectarse automáticamenteticamente a la red si se escanea.</small>
+                        <i class="fas fa-wifi"></i> <small>Escribe solo el número o nombre de la mesa (el sistema añade la identificación automá). El QR generado permitirá conectarse automá a la red si se escanea.</small>
                     </div>
                 </div>
                 <div class="qr-grid" id="qrGrid"></div>
@@ -1026,14 +1137,14 @@
                     <div class="form-group" style="align-self:flex-end"><button class="btn-primary" onclick="window.cargarReportes()">Filtrar</button></div>
                 </div>
                 <div class="dashboard-grid">
-                    <div class="dashboard-card"><div class="card-title">Ventas Díaa</div><div class="card-value" id="ventasDia">$0.00</div></div>
+                    <div class="dashboard-card"><div class="card-title">Ventas Día</div><div class="card-value" id="ventasDia">$0.00</div></div>
                     <div class="dashboard-card"><div class="card-title">Ventas Semana</div><div class="card-value" id="ventasSemana">$0.00</div></div>
                     <div class="dashboard-card"><div class="card-title">Ticket Promedio</div><div class="card-value" id="ticketPromedio">$0.00</div></div>
                     <div class="dashboard-card"><div class="card-title">Platillo Top</div><div class="card-value" id="platilloTop">-</div></div>
                 </div>
                 <div class="charts-grid">
                     <div class="chart-container"><h3>Ventas Últimos 7 Días</h3><div class="chart-wrapper"><canvas id="ventasChart"></canvas></div></div>
-                    <div class="chart-container"><h3>Ventas por Categoríaa</h3><div class="chart-wrapper"><canvas id="categoriasChart"></canvas></div></div>
+                    <div class="chart-container"><h3>Ventas por Categoría</h3><div class="chart-wrapper"><canvas id="categoriasChart"></canvas></div></div>
                     <div class="chart-container"><h3>Métodos de Pago</h3><div class="chart-wrapper"><canvas id="pagosChart"></canvas></div></div>
                     <div class="chart-container"><h3>Ventas por Hora</h3><div class="chart-wrapper"><canvas id="horaChart"></canvas></div></div>
                 </div>
@@ -1046,11 +1157,11 @@
     </div>
     
     <!-- MODALES -->
-    <div class="modal" id="platilloModal"><div class="modal-content"><div class="modal-header"><h3 id="platilloModalTitle">Nuevo Platillo</h3><button class="modal-close" id="closePlatilloModal">&times;</button></div><div class="modal-body"><form id="platilloForm"><div class="form-group"><label>Imagen</label><input type="file" id="platilloImagen" accept="image/*"><small>O URL:</small><input type="url" id="platilloImagenUrl"><div id="imagenPreview" class="image-preview" style="display:none"><img id="previewImg"><div><small>Vista previa</small><button type="button" class="btn-small" onclick="window.limpiarImagenPreview()">Eliminar</button></div></div></div><div class="form-row"><div class="form-group"><label>Nombre</label><input type="text" id="platilloNombre" required></div><div class="form-group"><label>Categoríaa</label><select id="platilloCategoria" required></select></div></div><div class="form-group"><label>Subcategoríaa</label><select id="platilloSubcategoria"><option value="">Ninguna</option></select></div><div class="form-row"><div class="form-group"><label>Precio (USD)</label><input type="number" step="0.01" id="platilloPrecio" required></div><div class="form-group"><label>Disponible</label><select id="platilloDisponible"><option value="true">Sí</option><option value="false">No</option></select></div></div><div class="form-group"><label>Descripciónn</label><textarea id="platilloDescripcion" rows="3"></textarea></div><div class="form-group"><label>Ingredientes</label><div id="ingredientesContainer"></div><button type="button" class="btn-secondary" onclick="window.agregarIngredienteRow()"><i class="fas fa-plus"></i> Agregar Ingrediente</button></div></form></div><div class="modal-footer"><button class="btn-secondary" id="cancelPlatillo">Cancelar</button><button class="btn-primary" id="savePlatillo">Guardar</button></div></div></div>
+    <div class="modal" id="platilloModal"><div class="modal-content"><div class="modal-header"><h3 id="platilloModalTitle">Nuevo Platillo</h3><button class="modal-close" id="closePlatilloModal">&times;</button></div><div class="modal-body"><form id="platilloForm"><div class="form-group"><label>Imagen</label><input type="file" id="platilloImagen" accept="image/*"><small>O URL:</small><input type="url" id="platilloImagenUrl"><div id="imagenPreview" class="image-preview" style="display:none"><img id="previewImg"><div><small>Vista previa</small><button type="button" class="btn-small" onclick="window.limpiarImagenPreview()">Eliminar</button></div></div></div><div class="form-row"><div class="form-group"><label>Nombre</label><input type="text" id="platilloNombre" required></div><div class="form-group"><label>Categoría</label><select id="platilloCategoria" required></select></div></div><div class="form-group"><label>Subcategoría</label><select id="platilloSubcategoria"><option value="">Ninguna</option></select></div><div class="form-row"><div class="form-group"><label>Precio (USD)</label><input type="number" step="0.01" id="platilloPrecio" required></div><div class="form-group"><label>Disponible</label><select id="platilloDisponible"><option value="true">Sí</option><option value="false">No</option></select></div></div><div class="form-group"><label>Descripción</label><textarea id="platilloDescripcion" rows="3"></textarea></div><div class="form-group"><label>Ingredientes</label><div id="ingredientesContainer"></div><button type="button" class="btn-secondary" onclick="window.agregarIngredienteRow()"><i class="fas fa-plus"></i> Agregar Ingrediente</button></div></form></div><div class="modal-footer"><button class="btn-secondary" id="cancelPlatillo">Cancelar</button><button class="btn-primary" id="savePlatillo">Guardar</button></div></div></div>
     
-    <div class="modal" id="ingredienteModal"><div class="modal-content"><div class="modal-header"><h3 id="ingredienteModalTitle">Nuevo Ingrediente</h3><button class="modal-close" id="closeIngredienteModal">&times;</button></div><div class="modal-body"><form id="ingredienteForm"><div class="form-group"><label>Nombre</label><input type="text" id="ingredienteNombre" required></div><div class="form-group password-overlay" id="stockOverlay"><label>Stock Actual</label><div id="stockActualField" class="password-protected"><input type="number" step="0.01" id="ingredienteStock" disabled></div><div class="password-unlock" id="stockUnlock"><input type="password" placeholder="Contraseña" id="stockPassword"><button type="button" onclick="window.desbloquearStock()">Desbloquear</button></div></div><div class="form-group"><label>Mercancíaa a Agregar</label><input type="number" step="0.01" id="ingredienteAgregar"></div><div class="form-group"><label>Unidad</label><select id="ingredienteUnidad"><option value="unidades">Unidades</option><option value="gramos">Gramos</option><option value="mililitros">Mililitros</option><option value="kilogramos">Kilogramos</option><option value="litros">Litros</option></select></div><div class="form-group"><label>Stock Mínimo</label><input type="number" step="0.01" id="ingredienteMinimo"></div><div class="form-row"><div class="form-group"><label>Costo Total Compra (USD)</label><input type="number" step="0.01" id="costoTotal" onchange="window.calcularCostoUnitario()"></div><div class="form-group"><label>Cantidad Comprada</label><input type="number" step="0.01" id="cantidadComprada" onchange="window.calcularCostoUnitario()"></div></div><div class="form-group"><label>Precio de Costo (USD/ud)</label><input type="number" step="0.01" id="ingredienteCosto"></div><div class="form-group"><label>Precio de Venta (USD/ud)</label><input type="number" step="0.01" id="ingredienteVenta"></div></form></div><div class="modal-footer"><button class="btn-secondary" id="cancelIngrediente">Cancelar</button><button class="btn-primary" id="saveIngrediente">Guardar</button></div></div></div>
+    <div class="modal" id="ingredienteModal"><div class="modal-content"><div class="modal-header"><h3 id="ingredienteModalTitle">Nuevo Ingrediente</h3><button class="modal-close" id="closeIngredienteModal">&times;</button></div><div class="modal-body"><form id="ingredienteForm"><div class="form-group"><label>Nombre</label><input type="text" id="ingredienteNombre" required></div><div class="form-group password-overlay" id="stockOverlay"><label>Stock Actual</label><div id="stockActualField" class="password-protected"><input type="number" step="0.01" id="ingredienteStock" disabled></div><div class="password-unlock" id="stockUnlock"><input type="password" placeholder="Contraseña" id="stockPassword"><button type="button" onclick="window.desbloquearStock()">Desbloquear</button></div></div><div class="form-group"><label>Mercancía a Agregar</label><input type="number" step="0.01" id="ingredienteAgregar"></div><div class="form-group"><label>Unidad</label><select id="ingredienteUnidad"><option value="unidades">Unidades</option><option value="gramos">Gramos</option><option value="mililitros">Mililitros</option><option value="kilogramos">Kilogramos</option><option value="litros">Litros</option></select></div><div class="form-group"><label>Stock Mínimo</label><input type="number" step="0.01" id="ingredienteMinimo"></div><div class="form-row"><div class="form-group"><label>Costo Total Compra (USD)</label><input type="number" step="0.01" id="costoTotal" onchange="window.calcularCostoUnitario()"></div><div class="form-group"><label>Cantidad Comprada</label><input type="number" step="0.01" id="cantidadComprada" onchange="window.calcularCostoUnitario()"></div></div><div class="form-group"><label>Precio de Costo (USD/ud)</label><input type="number" step="0.01" id="ingredienteCosto"></div><div class="form-group"><label>Precio de Venta (USD/ud)</label><input type="number" step="0.01" id="ingredienteVenta"></div></form></div><div class="modal-footer"><button class="btn-secondary" id="cancelIngrediente">Cancelar</button><button class="btn-primary" id="saveIngrediente">Guardar</button></div></div></div>
     
-    <div class="modal" id="usuarioModal"><div class="modal-content"><div class="modal-header"><h3>Nuevo Cajero</h3><button class="modal-close" id="closeUsuarioModal">&times;</button></div><div class="modal-body"><form id="usuarioForm"><div class="form-group"><label>Nombre Completo</label><input type="text" id="usuarioNombre" required></div><div class="form-group"><label>Nombre de Usuario</label><input type="text" id="usuarioUsername" required></div><div class="form-group"><label>Contraseñaa</label><input type="text" id="usuarioPassword" value="123456" required></div></form></div><div class="modal-footer"><button class="btn-secondary" id="cancelUsuario">Cancelar</button><button class="btn-primary" id="saveUsuario">Guardar</button></div></div></div>
+    <div class="modal" id="usuarioModal"><div class="modal-content"><div class="modal-header"><h3>Nuevo Cajero</h3><button class="modal-close" id="closeUsuarioModal">&times;</button></div><div class="modal-body"><form id="usuarioForm"><div class="form-group"><label>Nombre Completo</label><input type="text" id="usuarioNombre" required></div><div class="form-group"><label>Nombre de Usuario</label><input type="text" id="usuarioUsername" required></div><div class="form-group"><label>Contraseña</label><input type="text" id="usuarioPassword" value="123456" required></div></form></div><div class="modal-footer"><button class="btn-secondary" id="cancelUsuario">Cancelar</button><button class="btn-primary" id="saveUsuario">Guardar</button></div></div></div>
     
     <div class="modal" id="deliveryModal"><div class="modal-content"><div class="modal-header" style="background:linear-gradient(135deg,var(--delivery),#00838F)"><h3><i class="fas fa-motorcycle"></i> Editar Motorizado</h3><button class="modal-close" id="closeDeliveryModal">&times;</button></div><div class="modal-body"><form id="deliveryForm"><div class="form-group"><label>Nombre</label><input type="text" id="deliveryNombre" required></div><div class="form-group"><label>Estado</label><select id="deliveryEstado"><option value="true">Activo</option><option value="false">Inactivo</option></select></div></form></div><div class="modal-footer"><button class="btn-secondary" id="cancelDeliveryEdit">Cancelar</button><button class="btn-primary" id="saveDelivery" style="background:linear-gradient(135deg,var(--delivery),#00838F)">Guardar</button></div></div></div>
     
@@ -1076,7 +1187,7 @@
                         return true;
                     }
                 } catch (e) {
-                    console.error('Error restaurando sesiónn admin:', e);
+                    console.error('Error restaurando sesión admin:', e);
                 }
             }
             return false;
@@ -1090,14 +1201,23 @@
         };
 
         window.actualizarTasaUI = function() {
-            document.getElementById('tasaBaseInput').value = window.configGlobal.tasa_cambio || 400;
+            document.getElementById('tasaBaseInput').value    = window.configGlobal.tasa_cambio || 400;
             document.getElementById('aumentoDiarioInput').value = window.configGlobal.aumento_diario || 0;
-            document.getElementById('aumentoActivoToggle').checked = window.configGlobal.aumento_activo || false;
+            document.getElementById('aumentoActivoToggle').checked  = window.configGlobal.aumento_activo || false;
+            const semEl = document.getElementById('aumentoSemanalToggle');
+            if (semEl) semEl.checked = window.configGlobal.aumento_semanal || false;
             document.getElementById('tasaEfectivaDisplay').textContent = (window.configGlobal.tasa_efectiva || 400).toFixed(2);
             document.getElementById('aumentoAcumuladoDisplay').textContent = (window.configGlobal.aumento_acumulado || 0) + '%';
-            document.getElementById('tasaEfectivaCard').textContent = `Bs. ${(window.configGlobal.tasa_efectiva || 400).toFixed(2)}`;
+            // Restaurar fechas si existen
+            if (window.configGlobal.aumento_desde && document.getElementById('aumentoDesde'))
+                document.getElementById('aumentoDesde').value = window.configGlobal.aumento_desde.split('T')[0];
+            if (window.configGlobal.aumento_hasta && document.getElementById('aumentoHasta'))
+                document.getElementById('aumentoHasta').value = window.configGlobal.aumento_hasta.split('T')[0];
+            if (window.configGlobal.aumento_indefinido && document.getElementById('aumentoIndefinido'))
+                document.getElementById('aumentoIndefinido').checked = true;
+            // Actualizar label y visibilidad de fechas
+            if (typeof _actualizarLabelAumento === 'function') _actualizarLabelAumento();
         };
-
         window.cargarMenu = async function() {
             try {
                 const { data, error } = await window.supabaseClient.from('menu').select('*');
@@ -1567,7 +1687,7 @@
             if (window.charts.pagos) window.charts.pagos.destroy();
             window.charts.pagos = new Chart(document.getElementById('pagosChart'), {
                 type: 'bar',
-                data: { labels: Object.keys(metodos).map(m => { const n = { efectivo_bs: 'Efectivo Bs', efectivo_usd: 'Efectivo USD', pago_movil: 'Pago Móvilvil', punto_venta: 'Punto de Venta', mixto: 'Mixto', invitacion: 'Invitaciónn' }; return n[m] || m; }), datasets: [{ label: 'Monto (USD)', data: Object.values(metodos).map(v => v / (window.configGlobal?.tasa_efectiva || 400)), backgroundColor: 'var(--info)' }] }
+                data: { labels: Object.keys(metodos).map(m => { const n = { efectivo_bs: 'Efectivo Bs', efectivo_usd: 'Efectivo USD', pago_movil: 'Pago Móvilvil', punto_venta: 'Punto de Venta', mixto: 'Mixto', invitacion: 'Invitación' }; return n[m] || m; }), datasets: [{ label: 'Monto (USD)', data: Object.values(metodos).map(v => v / (window.configGlobal?.tasa_efectiva || 400)), backgroundColor: 'var(--info)' }] }
             });
             
             const horas = {}; for (let i = 0; i < 24; i++) horas[i] = 0;
@@ -1589,7 +1709,22 @@
             try {
                 const { data, error } = await window.supabaseClient.from('pedidos').select('*').order('fecha', { ascending: false }).limit(5);
                 if (error) throw error;
-                document.getElementById('pedidosRecientes').innerHTML = (data || []).map(p => `<div class="alert-item"><span><strong>${p.id}</strong> - ${window.formatUSD(p.total || 0)}</span><small>${new Date(p.fecha).toLocaleString()}</small></div>`).join('') || '<p>No hay pedidos recientes</p>';
+                document.getElementById('pedidosRecientes').innerHTML = (data || []).map(p => {
+                    const hora = new Date(p.fecha).toLocaleTimeString('es-VE', {hour:'2-digit',minute:'2-digit'});
+                    const fecha = new Date(p.fecha).toLocaleDateString('es-VE', {day:'2-digit',month:'2-digit'});
+                    const items = (p.items || []).slice(0,2).map(i => `${i.cantidad||1}x ${i.nombre}`).join(', ');
+                    const masItems = (p.items||[]).length > 2 ? ` +${(p.items||[]).length-2} más` : '';
+                    const tipoIcon = p.tipo==='delivery' ? '🛵' : p.tipo==='reserva' ? '📅' : '🍽️';
+                    const totalBs = window.formatBs ? window.formatBs(window.usdToBs(p.total||0)) : window.formatUSD(p.total||0);
+                    return `<div class="alert-item" style="flex-direction:column;align-items:flex-start;gap:.2rem">
+                        <div style="display:flex;justify-content:space-between;width:100%">
+                            <span style="font-weight:700">${tipoIcon} ${p.tipo||'mesa'} — ${totalBs}</span>
+                            <small style="color:var(--text-muted)">${fecha} ${hora}</small>
+                        </div>
+                        ${items ? `<small style="color:var(--text-muted)">${items}${masItems}</small>` : ''}
+                        ${p.estado ? `<span style="font-size:.72rem;background:#f0f0f0;padding:.15rem .5rem;border-radius:10px">${p.estado}</span>` : ''}
+                    </div>`;
+                }).join('') || '<p style="color:var(--text-muted);font-size:.85rem">No hay pedidos recientes</p>';
             } catch (e) { console.error('Error cargando pedidos recientes:', e); }
         };
 
@@ -1605,17 +1740,17 @@
             const current = document.getElementById('currentPassword').value;
             const nueva = document.getElementById('newPassword').value;
             const confirm = document.getElementById('confirmPassword').value;
-            if (current !== window.configGlobal.admin_password) { window.mostrarToast('Contraseñaa actual incorrecta', 'error'); return; }
-            if (nueva !== confirm) { window.mostrarToast('Las contraseñaas no coinciden', 'error'); return; }
-            if (nueva.length < 4) { window.mostrarToast('La contraseñaa debe tener al menos 4 caracteres', 'error'); return; }
+            if (current !== window.configGlobal.admin_password) { window.mostrarToast('Contraseña actual incorrecta', 'error'); return; }
+            if (nueva !== confirm) { window.mostrarToast('Las contraseñas no coinciden', 'error'); return; }
+            if (nueva.length < 4) { window.mostrarToast('La contraseña debe tener al menos 4 caracteres', 'error'); return; }
             try {
                 await window.supabaseClient.from('config').update({ admin_password: nueva }).eq('id', 1);
                 window.configGlobal.admin_password = nueva;
-                window.mostrarToast(' Contraseñaa actualizada', 'success');
+                window.mostrarToast(' Contraseña actualizada', 'success');
                 document.getElementById('currentPassword').value = '';
                 document.getElementById('newPassword').value = '';
                 document.getElementById('confirmPassword').value = '';
-            } catch (e) { console.error('Error cambiando contraseñaa:', e); window.mostrarToast(' Error al cambiar la contraseñaa', 'error'); }
+            } catch (e) { console.error('Error cambiando contraseña:', e); window.mostrarToast(' Error al cambiar la contraseña', 'error'); }
         };
 
         window.guardarRecoveryEmail = async function() {
@@ -1623,49 +1758,74 @@
             if (!email || !email.includes('@')) { window.mostrarToast('Ingresa un correo válido', 'error'); return; }
             try {
                 await window.supabaseClient.from('config').update({ recovery_email: email }).eq('id', 1);
-                window.mostrarToast(' Correo de recuperaciónn guardado', 'success');
+                window.mostrarToast(' Correo de recuperación guardado', 'success');
             } catch (e) { console.error('Error guardando email:', e); window.mostrarToast(' Error al guardar el correo', 'error'); }
         };
 
         // ==================== FUNCIONES DE CONFIGURACIÓN ====================
         window.recalcularTasaEfectiva = function() {
-            const tasaBase = parseFloat(document.getElementById('tasaBaseInput').value) || 0;
-            const aumentoDiario = parseFloat(document.getElementById('aumentoDiarioInput').value) || 0;
-            const aumentoActivo = document.getElementById('aumentoActivoToggle').checked;
+            const tasaBase    = parseFloat(document.getElementById('tasaBaseInput').value) || 0;
+            const aumentoPct  = parseFloat(document.getElementById('aumentoDiarioInput').value) || 0;
+            const activoDiario   = document.getElementById('aumentoActivoToggle').checked;
+            const activoSemanal  = document.getElementById('aumentoSemanalToggle') &&
+                                   document.getElementById('aumentoSemanalToggle').checked;
+            const estaActivo  = activoDiario || activoSemanal;
             let aumentoAcumulado = window.configGlobal.aumento_acumulado || 0;
-            
-            if (aumentoActivo && !window.configGlobal.aumento_detenido) {
+
+            if (estaActivo && !window.configGlobal.aumento_detenido) {
                 const ahora = new Date();
-                if (window.configGlobal.fecha_ultimo_aumento) {
-                    const ultimo = new Date(window.configGlobal.fecha_ultimo_aumento);
-                    const dias = Math.floor((ahora - ultimo) / (1000 * 60 * 60 * 24));
-                    aumentoAcumulado += dias * aumentoDiario;
+                // Respetar fecha inicio si está definida
+                const desdeEl = document.getElementById('aumentoDesde') &&
+                                document.getElementById('aumentoDesde').value;
+                const desdeDate = desdeEl ? new Date(desdeEl) : null;
+                const inicio = (desdeDate && desdeDate <= ahora) ? desdeDate :
+                               (window.configGlobal.fecha_ultimo_aumento ? new Date(window.configGlobal.fecha_ultimo_aumento) : null);
+                if (inicio) {
+                    const msPeriodo = activoSemanal ? 7 * 24 * 60 * 60 * 1000 : 24 * 60 * 60 * 1000;
+                    const periodos  = Math.floor((ahora - inicio) / msPeriodo);
+                    // Respetar fecha hasta si no es indefinido
+                    const indefinido = document.getElementById('aumentoIndefinido') &&
+                                       document.getElementById('aumentoIndefinido').checked;
+                    const hastaEl = !indefinido && document.getElementById('aumentoHasta') &&
+                                    document.getElementById('aumentoHasta').value;
+                    const hastaDate = hastaEl ? new Date(hastaEl) : null;
+                    const periodosFin = hastaDate
+                        ? Math.floor((hastaDate - inicio) / msPeriodo)
+                        : periodos;
+                    aumentoAcumulado += Math.max(0, Math.min(periodos, periodosFin)) * aumentoPct;
                 }
             }
-            
+
             const tasaEfectiva = tasaBase * (1 + aumentoAcumulado / 100);
             document.getElementById('tasaEfectivaDisplay').textContent = tasaEfectiva.toFixed(2);
             document.getElementById('aumentoAcumuladoDisplay').textContent = aumentoAcumulado.toFixed(2) + '%';
-            window.configGlobal.tasa_cambio = tasaBase;
-            window.configGlobal.aumento_diario = aumentoDiario;
-            window.configGlobal.aumento_activo = aumentoActivo;
+            if (document.getElementById('tasaEfectivaCard'))
+                document.getElementById('tasaEfectivaCard').textContent = 'Bs. ' + tasaEfectiva.toFixed(2);
+            window.configGlobal.tasa_cambio      = tasaBase;
+            window.configGlobal.aumento_diario   = aumentoPct;
+            window.configGlobal.aumento_activo   = activoDiario;
+            window.configGlobal.aumento_semanal  = activoSemanal;
             window.configGlobal.aumento_acumulado = aumentoAcumulado;
-            window.configGlobal.tasa_efectiva = tasaEfectiva;
+            window.configGlobal.tasa_efectiva    = tasaEfectiva;
         };
 
         window.guardarConfiguracion = async function() {
             try {
                 await window.supabaseClient.from('config').update({
-                    tasa_cambio: window.configGlobal.tasa_cambio,
-                    aumento_diario: window.configGlobal.aumento_diario,
-                    aumento_activo: window.configGlobal.aumento_activo,
-                    aumento_detenido: window.configGlobal.aumento_detenido,
+                    tasa_cambio:       window.configGlobal.tasa_cambio,
+                    aumento_diario:    window.configGlobal.aumento_diario,
+                    aumento_activo:    window.configGlobal.aumento_activo,
+                    aumento_semanal:   window.configGlobal.aumento_semanal || false,
+                    aumento_detenido:  window.configGlobal.aumento_detenido,
                     aumento_acumulado: window.configGlobal.aumento_acumulado,
-                    tasa_efectiva: window.configGlobal.tasa_efectiva,
+                    tasa_efectiva:     window.configGlobal.tasa_efectiva,
+                    aumento_desde:     (document.getElementById('aumentoDesde') && document.getElementById('aumentoDesde').value) || null,
+                    aumento_hasta:     (!document.getElementById('aumentoIndefinido')?.checked && document.getElementById('aumentoHasta')?.value) || null,
+                    aumento_indefinido: document.getElementById('aumentoIndefinido')?.checked || false,
                     ultima_actualizacion: new Date().toISOString()
                 }).eq('id', 1);
-                window.mostrarToast(' Configuraciónn guardada', 'success');
-            } catch (e) { console.error('Error guardando configuraciónn:', e); window.mostrarToast(' Error al guardar la configuraciónn', 'error'); }
+                window.mostrarToast(' Configuración guardada', 'success');
+            } catch (e) { console.error('Error guardando configuración:', e); window.mostrarToast(' Error al guardar la configuración', 'error'); }
         };
 
         // ==================== FUNCIONES DE MENÚ (PLATILLOS) ====================
@@ -1839,7 +1999,7 @@
                 document.getElementById('ingredienteStock').disabled = false;
                 document.getElementById('stockActualField').classList.remove('password-protected');
                 document.getElementById('stockUnlock').style.display = 'none';
-            } else window.mostrarToast('Contraseñaa incorrecta', 'error');
+            } else window.mostrarToast('Contraseña incorrecta', 'error');
         };
 
         window.calcularCostoUnitario = function() {
@@ -1930,7 +2090,7 @@
             const codigoIngresado = prompt('Ingresa el código de recuperación (revisa la consola):');
             if (codigoIngresado === codigo.toString()) {
                 const { data } = await window.supabaseClient.from('config').select('admin_password, recovery_email').eq('id', 1).single();
-                alert(`Tu contraseñaa es: ${data.admin_password}\nCorreo de recuperaciónn: ${data.recovery_email}`);
+                alert(`Tu contraseña es: ${data.admin_password}\nCorreo de recuperación: ${data.recovery_email}`);
             } else window.mostrarToast('Código incorrecto', 'error');
         });
 
@@ -1941,7 +2101,7 @@
             window.isAdminAuthenticated = false;
             window.jwtToken = null;
             window.mostrarLogin();
-            window.mostrarToast(' Sesiónn cerrada', 'info');
+            window.mostrarToast(' Sesión cerrada', 'info');
             window.supabaseClient = window.inicializarSupabaseCliente();
         });
 
@@ -1949,131 +2109,67 @@
 
         document.getElementById('tasaBaseInput').addEventListener('change', window.recalcularTasaEfectiva);
         document.getElementById('aumentoDiarioInput').addEventListener('change', window.recalcularTasaEfectiva);
-        document.getElementById('aumentoActivoToggle').addEventListener('change', window.recalcularTasaEfectiva);
-
-        document.getElementById('detenerAumentoBtn').addEventListener('click', () => {
-            document.getElementById('aumentoActivoToggle').checked = false;
-            window.configGlobal.aumento_detenido = true;
-            window.recalcularTasaEfectiva();
-            window.mostrarToast(' Aumento detenido', 'info');
-        });
-
-        document.getElementById('activarAumentoBtn').addEventListener('click', () => {
-            document.getElementById('aumentoActivoToggle').checked = true;
-            window.configGlobal.aumento_detenido = false;
-            window.recalcularTasaEfectiva();
-            window.mostrarToast(' Aumento activado', 'info');
-        });
-
-        document.querySelectorAll('.tab').forEach(tab => {
-            tab.addEventListener('click', () => {
-                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-                tab.classList.add('active');
-                const tabId = tab.dataset.tab;
-                document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
-                document.getElementById(tabId + 'Pane').classList.add('active');
-                if (tabId === 'reportes') window.cargarReportes();
-                if (tabId === 'propinas') window.cargarPropinas();
-            });
-        });
-
-        const closeButtons = ['closePlatilloModal', 'cancelPlatillo', 'closeIngredienteModal', 'cancelIngrediente', 'closeUsuarioModal', 'cancelUsuario', 'closeQrAmpliadoModal', 'closeQrAmpliado', 'closeDeliveryModal', 'cancelDeliveryEdit'];
-        closeButtons.forEach(id => { const btn = document.getElementById(id); if (btn) btn.addEventListener('click', () => { const modal = btn.closest('.modal'); if (modal) modal.classList.remove('active'); }); });
-
-        document.querySelectorAll('.modal').forEach(modal => { modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('active'); }); });
-
-        document.getElementById('platilloImagen').addEventListener('change', function(e) {
-            if (this.files && this.files[0]) {
-                const reader = new FileReader();
-                reader.onload = function(e) { document.getElementById('previewImg').src = e.target.result; document.getElementById('imagenPreview').style.display = 'flex'; };
-                reader.readAsDataURL(this.files[0]);
+        // ── Toggles de aumento: mutuamente excluyentes ──
+        function _mostrarFechasAumento(visible) {
+            document.getElementById('tasaFechasDiv').style.display = visible ? 'flex' : 'none';
+        }
+        function _actualizarLabelAumento() {
+            const diario   = document.getElementById('aumentoActivoToggle').checked;
+            const semanal  = document.getElementById('aumentoSemanalToggle').checked;
+            const label    = document.getElementById('labelAumentoPct');
+            if (label) label.textContent = semanal ? 'Aumento Semanal %:' : 'Aumento Diario %:';
+            _mostrarFechasAumento(diario || semanal);
+            // Si se acaba de activar y no hay fecha inicio, poner hoy
+            if ((diario || semanal) && !document.getElementById('aumentoDesde').value) {
+                document.getElementById('aumentoDesde').value = new Date().toISOString().split('T')[0];
             }
+        }
+        document.getElementById('aumentoActivoToggle').addEventListener('change', function() {
+            if (this.checked) document.getElementById('aumentoSemanalToggle').checked = false;
+            window.configGlobal.aumento_detenido = !this.checked;
+            _actualizarLabelAumento();
+            window.recalcularTasaEfectiva();
+        });
+        document.getElementById('aumentoSemanalToggle').addEventListener('change', function() {
+            if (this.checked) document.getElementById('aumentoActivoToggle').checked = false;
+            window.configGlobal.aumento_detenido = !this.checked;
+            _actualizarLabelAumento();
+            window.recalcularTasaEfectiva();
+        });
+        document.getElementById('aumentoIndefinido').addEventListener('change', function() {
+            document.getElementById('aumentoHasta').disabled = this.checked;
+            if (this.checked) document.getElementById('aumentoHasta').value = '';
         });
 
-        document.getElementById('platilloImagenUrl').addEventListener('input', function(e) {
-            if (this.value) { document.getElementById('previewImg').src = this.value; document.getElementById('imagenPreview').style.display = 'flex'; }
-        });
-
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                ['deliveryModal', 'confirmPagoDeliveryModal', 'qrAmpliadoModal', 'platilloModal', 'ingredienteModal', 'usuarioModal'].forEach(id => {
-                    const m = document.getElementById(id);
-                    if (m && m.classList.contains('active')) m.classList.remove('active');
-                });
-            }
-        });
-
-        // ==================== FUNCIONES DE REALTIME ====================
-        window.setupRealtimeSubscriptions = function() {
-            try {
-                window.supabaseClient.channel('admin-menu').on('postgres_changes', { event: '*', schema: 'public', table: 'menu' }, () => { window.cargarMenu(); }).subscribe();
-                window.supabaseClient.channel('admin-inventario').on('postgres_changes', { event: '*', schema: 'public', table: 'inventario' }, (p) => {
-                    if (p.eventType === 'UPDATE' && p.new.stock <= p.new.minimo) { window.verificarStockCritico(); window.mostrarToast(` Stock crítico: ${p.new.nombre}`, 'warning'); }
-                    window.cargarInventario();
-                }).subscribe();
-                window.supabaseClient.channel('admin-usuarios').on('postgres_changes', { event: '*', schema: 'public', table: 'usuarios' }, () => { window.cargarUsuarios(); }).subscribe();
-                window.supabaseClient.channel('admin-qr').on('postgres_changes', { event: '*', schema: 'public', table: 'codigos_qr' }, () => { window.cargarQRs(); }).subscribe();
-                window.supabaseClient.channel('admin-pedidos').on('postgres_changes', { event: '*', schema: 'public', table: 'pedidos' }, () => { window.cargarPedidosRecientes(); if (document.getElementById('reportesPane').classList.contains('active')) window.cargarReportes(); }).subscribe();
-                window.supabaseClient.channel('admin-mesoneros').on('postgres_changes', { event: '*', schema: 'public', table: 'mesoneros' }, () => { window.cargarMesoneros(); }).subscribe();
-                window.supabaseClient.channel('admin-deliverys').on('postgres_changes', { event: '*', schema: 'public', table: 'deliverys' }, () => { window.cargarDeliverys(); }).subscribe();
-                window.supabaseClient.channel('admin-propinas').on('postgres_changes', { event: '*', schema: 'public', table: 'propinas' }, () => { window.cargarPropinas(); }).subscribe();
-            } catch (e) { console.error('Error configurando suscripciones:', e); }
-        };
-
-        window.setupEventListeners = function() {
-            // Limpiar 'Nombre de Mesa' al cambiar tab (SSID/pwd persisten)
-            document.querySelectorAll('.tab').forEach(t => {
-                t.addEventListener('click', () => {
-                    const el = document.getElementById('qrNombreMesa');
-                    if (el) el.value = '';
-                });
-            });
-            // Limpiar 'Nombre de Mesa' al cerrar/recargar
-            window.addEventListener('beforeunload', () => {
-                const el = document.getElementById('qrNombreMesa');
-                if (el) el.value = '';
-            });
-        };
-
-        // ==================== CATEGORÍAS PREDEFINIDAS ====================
-        window.categoriasMenu = {
-            "Entradas": [], "Sushi": [], "Rolls": ["Rolls Fríos de 10 piezas", "Rolls Tempura de 12 piezas"],
-            "Tragos y bebidas": [], "Pokes": [], "Ensaladas": [],
-            "Comida China": ["Arroz Chino", "Arroz Cantones", "Chopsuey", "Lomey", "Chow Mein", "Fideos de Arroz", "Tallarines Cantones", "Mariscos", "Foo Yong", "Sopas", "Entremeses"],
-            "Comida Japonesa": ["Yakimeshi", "Yakisoba", "Pasta Udon", "Churrasco"],
-            "Ofertas Especiales": [], "Para Niños": [], "Combo Ejecutivo": []        };
-
-        // ==================== INICIALIZACIÓN ====================
         document.addEventListener('DOMContentLoaded', async () => {
-            console.log(' Verificando sesiónn de admin...');
             if (window.restaurarSesionAdmin()) {
-                console.log(' Sesiónn de admin restaurada');
                 window.mostrarPanel();
                 setTimeout(async () => {
-                    await window.cargarConfiguracionInicial();
-                    await window.cargarMenu();
-                    await window.cargarInventario();
-                    await window.cargarUsuarios();
-                    await window.cargarQRs();
-                    await window.cargarReportes();
-                    await window.cargarPedidosRecientes();
-                    await window.cargarMesoneros();
-                    await window.cargarDeliverys();
-                    await window.cargarPropinas();
-                    window.setupEventListeners();
-                    window.setupRealtimeSubscriptions();
-                    window.setupStockRealtime();
-                    window.restaurarWifiPersistente();
+                    try {
+                        await window.cargarConfiguracionInicial();
+                        await window.cargarMenu();
+                        await window.cargarInventario();
+                        await window.cargarUsuarios();
+                        await window.cargarQRs();
+                        await window.cargarReportes();
+                        await window.cargarPedidosRecientes();
+                        await window.cargarMesoneros();
+                        await window.cargarDeliverys();
+                        await window.cargarPropinas();
+                        window.setupEventListeners();
+                        window.setupRealtimeSubscriptions();
+                        window.setupStockRealtime();
+                        window.restaurarWifiPersistente();
+                    } catch (e) { console.error('Error cargando datos:', e); window.mostrarToast('Error cargando datos: ' + e.message, 'error'); }
                 }, 100);
             } else {
-                console.log(' No hay sesiónn de admin');
                 window.mostrarLogin();
             }
         });
 
         window.mostrarPanel = function() {
-            document.getElementById("loginContainer").style.display="none";
-            document.getElementById("panelContainer").classList.add("active");
+            document.getElementById('loginContainer').style.display = 'none';
+            document.getElementById('panelContainer').classList.add('active');
         };
 
     </script>
