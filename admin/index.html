@@ -1006,13 +1006,13 @@
                 <div style="margin-bottom:2rem">
                     <h3 class="section-title"><i class="fas fa-qrcode"></i> Generar Nuevo QR</h3>
                     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:.75rem;align-items:flex-end">
-                        <div class="form-group"><label>Nombre de la Mesa</label><input type="text" id="qrNombreMesa" placeholder="Ej: Mesa 1" style="width:100%"></div>
+                        <div class="form-group"><label>Nombre de la Mesa</label><input type="text" id="qrNombreMesa" placeholder="Ej: 1  (sin prefijo Mesa)" style="width:100%"></div>
                         <div class="form-group"><label>ID de Router (SSID)</label><input type="text" id="qrWifiSsid" placeholder="Ej: SakiSushi_Wifi" style="width:100%" oninput="window.guardarWifiPersistente()"></div>
                         <div class="form-group" style="flex:1"><label>Contraseñaa WiFi</label><input type="text" id="qrWifiPassword" placeholder="Contraseña" style="width:100%" oninput="window.guardarWifiPersistente()"></div>
                         <button class="btn-primary" onclick="window.generarQR()"><i class="fas fa-qrcode"></i> Generar</button>
                     </div>
                     <div class="wifi-fields" style="margin-top:15px;padding:12px;background:rgba(0,0,0,.3);border-radius:8px">
-                        <i class="fas fa-wifi"></i> <small>Los datos de WiFi se guardan automáticamenteticamente. El QR generado permitirá conectarse automáticamenteticamente a la red si se escanea.</small>
+                        <i class="fas fa-wifi"></i> <small>Escribe solo el número o nombre de la mesa (el sistema añade la identificación automáticamente)ticamente. El QR generado permitirá conectarse automáticamenteticamente a la red si se escanea.</small>
                     </div>
                 </div>
                 <div class="qr-grid" id="qrGrid"></div>
