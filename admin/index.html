@@ -925,6 +925,19 @@
             .tasa-row { gap: .4rem; }
             .tasa-item input[type="number"] { width: 65px; }
             .save-button { font-size: .75rem; padding: .4rem .8rem; }
+            /* Cada toggle en su propia línea en móvil */
+            .tasa-toggle-item {
+                width: 100%;
+                justify-content: space-between;
+                padding: .25rem 0;
+                border-bottom: 1px solid #f5f5f5;
+            }
+            .tasa-toggle-item label:first-child {
+                font-weight: 600;
+                color: var(--text-dark);
+            }
+            .tasa-row-controles { flex-direction: column; align-items: stretch; }
+            .tasa-row-controles .tasa-item:last-child { align-self: flex-end; margin-left: 0; margin-top: .25rem; }
             /* Dashboard: 2 columnas en móvil */
             .dashboard-grid { grid-template-columns: 1fr 1fr; }
             .inventario-grid, .menu-grid, .qr-grid { grid-template-columns: 1fr; }
@@ -933,10 +946,7 @@
             .modal-content { width: 96%; }
             .charts-grid { grid-template-columns: 1fr; }
             /* Stock crítico y pedidos recientes: columna única en móvil */
-            .dashboard-lower-grid {
-                grid-template-columns: 1fr;
-            }
-            /* Stock crítico primero (ya está primero en HTML), luego pedidos */
+            .dashboard-lower-grid { grid-template-columns: 1fr; }
         }
         @media (max-width: 480px) {
             .header-right .nav-button:nth-child(n+3) { display: none; }
@@ -983,12 +993,12 @@
             </div>
             <!-- Fila 2: toggles, fechas, guardar -->
             <div class="tasa-row tasa-row-controles">
-                <div class="tasa-item">
-                    <label>Diario activo:</label>
+                <div class="tasa-item tasa-toggle-item">
+                    <label>Aumento diario activo:</label>
                     <label class="toggle-switch"><input type="checkbox" id="aumentoActivoToggle"><span class="toggle-slider"></span></label>
                 </div>
-                <div class="tasa-item">
-                    <label>Semanal activo:</label>
+                <div class="tasa-item tasa-toggle-item">
+                    <label>Aumento semanal activo:</label>
                     <label class="toggle-switch"><input type="checkbox" id="aumentoSemanalToggle"><span class="toggle-slider"></span></label>
                 </div>
                 <div class="tasa-item tasa-fechas" id="tasaFechasDiv" style="display:none">
@@ -1201,9 +1211,9 @@
         };
 
         window.actualizarTasaUI = function() {
-            document.getElementById('tasaBaseInput').value    = window.configGlobal.tasa_cambio || 400;
+            document.getElementById('tasaBaseInput').value      = window.configGlobal.tasa_cambio || 400;
             document.getElementById('aumentoDiarioInput').value = window.configGlobal.aumento_diario || 0;
-            document.getElementById('aumentoActivoToggle').checked  = window.configGlobal.aumento_activo || false;
+            document.getElementById('aumentoActivoToggle').checked = window.configGlobal.aumento_activo || false;
             const semEl = document.getElementById('aumentoSemanalToggle');
             if (semEl) semEl.checked = window.configGlobal.aumento_semanal || false;
             document.getElementById('tasaEfectivaDisplay').textContent = (window.configGlobal.tasa_efectiva || 400).toFixed(2);
@@ -1215,7 +1225,7 @@
                 document.getElementById('aumentoHasta').value = window.configGlobal.aumento_hasta.split('T')[0];
             if (window.configGlobal.aumento_indefinido && document.getElementById('aumentoIndefinido'))
                 document.getElementById('aumentoIndefinido').checked = true;
-            // Actualizar label y visibilidad de fechas
+            // Sincronizar estado del input y label según toggles
             if (typeof _actualizarLabelAumento === 'function') _actualizarLabelAumento();
         };
         window.cargarMenu = async function() {
@@ -2116,11 +2126,25 @@
         function _actualizarLabelAumento() {
             const diario   = document.getElementById('aumentoActivoToggle').checked;
             const semanal  = document.getElementById('aumentoSemanalToggle').checked;
-            const label    = document.getElementById('labelAumentoPct');
+            const alguno   = diario || semanal;
+
+            // Actualizar label según toggle activo
+            const label = document.getElementById('labelAumentoPct');
             if (label) label.textContent = semanal ? 'Aumento Semanal %:' : 'Aumento Diario %:';
-            _mostrarFechasAumento(diario || semanal);
+
+            // Habilitar/deshabilitar el input de porcentaje según si hay algún toggle activo
+            const inputPct = document.getElementById('aumentoDiarioInput');
+            if (inputPct) {
+                inputPct.disabled = !alguno;
+                inputPct.style.opacity = alguno ? '1' : '0.4';
+                inputPct.style.cursor  = alguno ? '' : 'not-allowed';
+            }
+
+            // Mostrar u ocultar las fechas de vigencia
+            _mostrarFechasAumento(alguno);
+
             // Si se acaba de activar y no hay fecha inicio, poner hoy
-            if ((diario || semanal) && !document.getElementById('aumentoDesde').value) {
+            if (alguno && !document.getElementById('aumentoDesde').value) {
                 document.getElementById('aumentoDesde').value = new Date().toISOString().split('T')[0];
             }
         }
