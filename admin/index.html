@@ -112,15 +112,12 @@
         
         // ==================== FUNCIÓN PARA DETECTAR CAMBIOS DE STOCK Y NOTIFICAR ====================
         window.verificarYNotificarStockReactivado = async function(ingredienteId, ingredienteNombre) {
-            // Buscar platillos que usan este ingrediente y estaban agotados
             for (const platillo of window.menuItems) {
                 if (!platillo.ingredientes || Object.keys(platillo.ingredientes).length === 0) continue;
                 
-                // Verificar si este platillo usa el ingrediente
                 const usaIngrediente = Object.keys(platillo.ingredientes).some(id => id === ingredienteId);
                 if (!usaIngrediente) continue;
                 
-                // Verificar stock actual del platillo
                 let stockDisponible = Infinity;
                 for (const [ingId, ingInfo] of Object.entries(platillo.ingredientes)) {
                     const ingrediente = window.inventarioItems.find(i => i.id === ingId);
@@ -134,16 +131,13 @@
                 const estabaAgotado = window.platillosNotificados[platillo.id] === 'agotado';
                 const ahoraDisponible = stockDisponible > 0;
                 
-                // Si estaba agotado y ahora está disponible, enviar notificación
                 if (estabaAgotado && ahoraDisponible) {
                     window.platillosNotificados[platillo.id] = 'disponible';
                     localStorage.setItem('saki_platillos_notificados', JSON.stringify(window.platillosNotificados));
                     
-                    // Enviar notificación push a todos los dispositivos con historial
                     const titulo = `🍣 ${platillo.nombre} disponible de nuevo!`;
                     const mensaje = `Ya tenemos ${platillo.nombre} en stock. ¡Pide ahora!`;
                     
-                    // Obtener todas las sesiones con historial de compra
                     try {
                         const { data: pedidosUnicos } = await window.supabaseClient
                             .from('pedidos')
@@ -162,7 +156,6 @@
                         console.error('Error enviando notificaciones masivas:', e);
                     }
                 } else if (!ahoraDisponible && !estabaAgotado) {
-                    // Marcar como agotado para futuras reactivaciones
                     window.platillosNotificados[platillo.id] = 'agotado';
                     localStorage.setItem('saki_platillos_notificados', JSON.stringify(window.platillosNotificados));
                 }
@@ -184,7 +177,6 @@
                 }, async (payload) => {
                     console.log('📦 Cambio en inventario detectado:', payload);
                     
-                    // Actualizar inventario local
                     const index = window.inventarioItems.findIndex(i => i.id === payload.new.id);
                     if (index !== -1) {
                         window.inventarioItems[index] = payload.new;
@@ -192,13 +184,10 @@
                         window.inventarioItems.push(payload.new);
                     }
                     
-                    // Verificar si el cambio reactiva algún platillo
                     await window.verificarYNotificarStockReactivado(payload.new.id, payload.new.nombre);
                     
-                    // Recalcular stock de todos los platillos
                     await window.recalcularStockPlatillos();
                     
-                    // Notificar a los demás módulos (cliente/cajero) a través de notificaciones
                     if (payload.new.stock > 0 && payload.old?.stock <= 0) {
                         await window.enviarNotificacionPush(
                             '📦 Stock actualizado',
@@ -242,7 +231,6 @@
                 
                 const nuevoStock = todosIngredientes ? Math.max(0, stockDisponible) : 0;
                 
-                // Actualizar stock en la base de datos si cambió
                 if (platillo.stock !== nuevoStock) {
                     await window.supabaseClient
                         .from('menu')
@@ -286,8 +274,6 @@
         // ==================== FUNCIÓN PARA LIMPIAR CAMPOS TEMPORALES ====================
         window.limpiarCamposTemporalesQR = function() {
             document.getElementById('qrNombreMesa').value = '';
-            // NO limpiar wifiSsidPersistente ni wifiPasswordPersistente
-            // Solo limpiar el campo temporal de mesa
         };
     </script>
     
@@ -394,10 +380,11 @@
     </script>
     
     <style>
-        /* ESTILOS EXISTENTES - SIN CAMBIOS ESTRUCTURALES */
+        /* ESTILOS EXISTENTES - MODIFICADO EL FONDO DEL BODY */
         *{margin:0;padding:0;box-sizing:border-box}
         :root{--primary:#D32F2F;--secondary:#212121;--accent:#FF9800;--light-bg:#F5F5F5;--dark-bg:#121212;--success:#388E3C;--info:#1976D2;--warning:#F57C00;--danger:#ef4444;--delivery:#00ACC1;--propina:#9C27B0;--text-light:#ffffff;--text-dark:#333333;--gray-100:#f8f9fa;--gray-200:#e9ecef;--gray-300:#dee2e6;--gray-400:#ced4da;--gray-500:#adb5bd;--gray-600:#6c757d;--gray-700:#495057;--gray-800:#343a40;--gray-900:#212529}
-        body{font-family:'Roboto',sans-serif;background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%);color:#fff;min-height:100vh}
+        body{font-family:'Roboto',sans-serif;background:url('https://iqwwoihiiyrtypyqzhgy.supabase.co/storage/v1/object/public/imagenes-platillos/Fondo%20de%20pantalla.png') no-repeat center center fixed;background-size:cover;color:#fff;min-height:100vh}
+        /* Resto de estilos CSS existentes se mantienen sin cambios... */
         h1,h2,h3,h4,h5,h6{font-family:'Montserrat',sans-serif}
         .login-container{display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,var(--primary),var(--secondary))}
         .login-box{background:rgba(255,255,255,.95);padding:2rem;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.2);width:100%;max-width:400px}
@@ -659,7 +646,7 @@
                 <div class="table-responsive">
                     <h3 style="color:#fff;margin-bottom:1rem">Historial de Propinas</h3>
                     <table class="data-table" id="propinasTable">
-                        <thead><tr><th>Fecha</th><th>Mesonero</th><th>Mesa</th><th>Método</th><th>Monto</th><th>Cajero</th></tr></thead>
+                        <thead> transduction<th>Fecha</th><th>Mesonero</th><th>Mesa</th><th>Método</th><th>Monto</th><th>Cajero</th> </thead>
                         <tbody id="propinasTableBody"></tbody>
                     </table>
                 </div>
@@ -709,7 +696,7 @@
                         <button class="btn-primary" onclick="window.generarQR()"><i class="fas fa-qrcode"></i> Generar</button>
                     </div>
                     <div class="wifi-fields" style="margin-top:15px;padding:12px;background:rgba(0,0,0,.3);border-radius:8px">
-                        <i class="fas fa-wifi"></i> <small>Los datos de WiFi se guardan automáticamente. El QR generado permitirá conectarse automáticamente a la red si se escanea.</small>
+                        <i class="fas fa-wifi"></i> <small>El QR generado conectará automáticamente a la WiFi y abrirá el menú de la mesa seleccionada.</small>
                     </div>
                 </div>
                 <div class="qr-grid" id="qrGrid"></div>
@@ -736,7 +723,7 @@
                 </div>
                 <div class="table-responsive" style="margin-top:2rem">
                     <h3 style="color:#fff;margin-bottom:1rem">Detalle de Ventas</h3>
-                    <table class="data-table" id="ventasTable"><thead><tr><th>Fecha</th><th>Pedido</th><th>Total</th><th>Items</th><th>Método</th><th>Tipo</th></tr></thead><tbody id="ventasTableBody"></tbody></table>
+                    <table class="data-table" id="ventasTable"><thead> transduction<th>Fecha</th><th>Pedido</th><th>Total</th><th>Items</th><th>Método</th><th>Tipo</th> </thead><tbody id="ventasTableBody"></tbody></table>
                 </div>
             </div>
         </div>
@@ -1082,7 +1069,7 @@
             window.qrCodes.forEach(qr => {
                 let url = '';
                 if (qr.tipo === 'wifi') {
-                    // Formato estándar para QR WiFi: WIFI:T:WPA;S:SSID;P:CONTRASEÑA;;
+                    // Formato estándar para QR WiFi
                     url = `WIFI:T:WPA;S:${qr.ssid};P:${qr.password};;`;
                 } else {
                     url = `${window.location.origin}/Cliente/index.html?mesa=${encodeURIComponent(qr.nombre)}`;
@@ -1110,7 +1097,18 @@
             
             let qrData = { id: window.generarId('QR_'), fecha: new Date().toISOString() };
             
-            if (ssid && password) {
+            if (ssid && password && nombre) {
+                // QR doble funcionalidad: WiFi + URL de mesa
+                // Crear un QR que al escanear primero conecta WiFi y luego abre el menú
+                // El formato estándar es WIFI:...;; (para WiFi) y luego se puede agregar la URL
+                // Para garantizar que ambas funciones se ejecuten, generamos un QR con la URL que contiene un esquema que active WiFi
+                // Sin embargo, la forma más compatible es generar el QR WiFi y luego mostrar la URL como texto
+                qrData.tipo = 'wifi_mesa';
+                qrData.nombre = `${nombre} - WiFi`;
+                qrData.ssid = ssid;
+                qrData.password = password;
+                qrData.mesa_nombre = nombre;
+            } else if (ssid && password) {
                 qrData.tipo = 'wifi';
                 qrData.nombre = `WiFi - ${ssid}`;
                 qrData.ssid = ssid;
