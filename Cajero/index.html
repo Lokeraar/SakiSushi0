@@ -62,7 +62,18 @@
     .tasa-widget-input { width: 72px; font-size: 1rem; }
 }
 </style></head>
-<body><audio id="alarmaSonido" preload="auto"><source src="https://iqwwoihiiyrtypyqzhgy.supabase.co/storage/v1/object/public/alarma/Alarm%20Clock%20Effect%20Sound%20HD%20-%20Despertador%20Efecto%20D'%20Sonido.mp3"></audio>
+<body>
+<!-- Aviso de salida -->
+<div id="_salidaAviso" style="display:none;position:fixed;inset:0;z-index:9999;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.55);padding:1rem">
+  <div style="background:linear-gradient(135deg,#1a1a2e,#16213e);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:1.4rem 1.2rem;width:100%;max-width:400px;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,.5)">
+    <p style="color:#fff;font-size:1rem;font-weight:600;margin-bottom:1.2rem">¿Seguro que deseas salir?</p>
+    <div style="display:flex;gap:.8rem">
+      <button id="_salidaNo" style="flex:1;padding:.75rem;border-radius:10px;border:2px solid rgba(255,255,255,.2);background:transparent;color:#fff;font-weight:600;cursor:pointer;font-size:.95rem">Cancelar</button>
+      <button id="_salidaSi" style="flex:1;padding:.75rem;border-radius:10px;border:none;background:linear-gradient(135deg,#D32F2F,#b71c1c);color:#fff;font-weight:600;cursor:pointer;font-size:.95rem">Salir</button>
+    </div>
+  </div>
+</div>
+<audio id="alarmaSonido" preload="auto"><source src="https://iqwwoihiiyrtypyqzhgy.supabase.co/storage/v1/object/public/alarma/Alarm%20Clock%20Effect%20Sound%20HD%20-%20Despertador%20Efecto%20D'%20Sonido.mp3"></audio>
 <div class="login-container" id="loginContainer"><div class="login-box"><h2><i class="fas fa-cash-register"></i> Cajero Saki Sushi</h2><form class="login-form" id="loginForm" onsubmit="event.preventDefault(); window.hacerLogin()"><input type="text" id="username" placeholder="Usuario" autocomplete="username"><input type="password" id="password" placeholder="Contraseña" autocomplete="current-password"><div id="loginError" style="display:none;background:rgba(211,47,47,.12);border:1px solid var(--danger);border-radius:8px;padding:.7rem 1rem;margin-bottom:1rem;color:#c62828;font-size:.92rem;display:none;align-items:center;gap:.5rem"><i class="fas fa-exclamation-circle" style="color:var(--danger);flex-shrink:0"></i><span id="loginErrorMsg"></span></div><button type="submit" id="loginBtn">Iniciar Sesión</button></form></div></div>
 <div class="container hidden" id="panelContainer"><div class="header">
     <div class="header-left">
@@ -1012,25 +1023,69 @@ document.addEventListener('DOMContentLoaded',async()=>{console.log('DOM cargado,
 document.addEventListener('visibilitychange',function(){if(document.hidden){window.paginaVisible=false}else{window.paginaVisible=true;window.verificarCambiosPedidos()}})});
 
 
+
 // ══════════════════════════════════════════════════════════
-// BACK-NAV CAJERO — botón atrás Android + deslizamiento táctil
-// Cierra la capa/modal más reciente al navegar atrás,
-// respetando la lógica especial de cobroModal.
+// BACK-NAV + CONFIRMACIÓN DE SALIDA — CAJERO
 // ══════════════════════════════════════════════════════════
 (function() {
-    var _depth = 0;
+    var _depth = 2;   // Empieza en 2 igual que cliente (dos pushState iniciales)
+    var _avisando = false, _avisoTimer = null;
+    var _av = document.getElementById('_salidaAviso');
 
-    // Ids de modales en orden de prioridad al cerrar
+    // Pushear historial
+    function _push() {
+        _depth++;
+        try { history.pushState({ sakiCajero: true, d: _depth }, ''); } catch(e) {}
+    }
+
+    // Dos entradas iniciales para que el primer "atrás" no salga
+    try {
+        history.pushState({ sakiCajero: true, d: 1 }, '');
+        history.pushState({ sakiCajero: true, d: 2 }, '');
+    } catch(e) {}
+
+    // ── Aviso de salida ──
+    function _mostrarAviso() {
+        if (_avisando) {
+            // Segunda vez que pulsa atrás sin cerrar el aviso → salir
+            _avisando = false;
+            window.location.replace(document.referrer || 'about:blank');
+            return;
+        }
+        _avisando = true;
+        _push();
+        if (_av) _av.style.display = 'flex';
+        clearTimeout(_avisoTimer);
+        _avisoTimer = setTimeout(function() {
+            if (_av) _av.style.display = 'none';
+            _avisando = false;
+            _push();
+        }, 5000);
+    }
+    function _ocultarAviso() {
+        if (_av) _av.style.display = 'none';
+        _avisando = false;
+        clearTimeout(_avisoTimer);
+    }
+
+    // Botones del aviso
+    var _btnSi = document.getElementById('_salidaSi');
+    var _btnNo = document.getElementById('_salidaNo');
+    if (_btnSi) _btnSi.addEventListener('click', function() {
+        _avisando = false;
+        if (_av) _av.style.display = 'none';
+        window.location.replace(document.referrer || 'about:blank');
+    });
+    if (_btnNo) _btnNo.addEventListener('click', function() {
+        _ocultarAviso(); _push();
+    });
+
+    // ── Modales del cajero ──
     var _modalIds = [
         'cobroModal', 'propinaModal', 'detalleModal',
         'confirmModal', 'rechazoModal', 'mesaModal',
         'comprobanteModal', 'deliveryModal', 'confirmLogoutModal'
     ];
-
-    function _push() {
-        _depth++;
-        try { history.pushState({ sakiCajero: true, d: _depth }, ''); } catch(e) {}
-    }
 
     function _getActiveModals() {
         return _modalIds
@@ -1041,10 +1096,8 @@ document.addEventListener('visibilitychange',function(){if(document.hidden){wind
     function _cerrarTopModal() {
         var activos = _getActiveModals();
         if (!activos.length) return false;
-        // Cerrar el último que se abrió (el que está encima)
         var top = activos[activos.length - 1];
         if (top.id === 'cobroModal') {
-            // cobroModal tiene lógica especial (limpia estado _cobro)
             if (typeof window.cerrarCobroModal === 'function') window.cerrarCobroModal();
         } else {
             if (typeof window.cerrarModal === 'function') window.cerrarModal(top.id);
@@ -1054,61 +1107,61 @@ document.addEventListener('visibilitychange',function(){if(document.hidden){wind
         return true;
     }
 
-    // MutationObserver — registra un pushState cada vez que abre un modal
+    // MutationObserver — pushState al abrir modal
     var _obs = new MutationObserver(function(mutations) {
         mutations.forEach(function(m) {
             if (m.attributeName !== 'class') return;
             var el = m.target;
-            // Solo modales que acaban de activarse
-            if (el.classList.contains('active') &&
-                _modalIds.indexOf(el.id) !== -1) {
+            if (el.classList.contains('active') && _modalIds.indexOf(el.id) !== -1) {
                 _push();
             }
         });
     });
-
-    // Esperar a que el DOM esté listo para observar
     function _iniciarObservacion() {
         _modalIds.forEach(function(id) {
             var el = document.getElementById(id);
             if (el) _obs.observe(el, { attributes: true, attributeFilter: ['class'] });
         });
     }
-
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', _iniciarObservacion);
     } else {
-        // DOM ya listo (script cargado tarde)
         setTimeout(_iniciarObservacion, 0);
     }
 
-    // Botón atrás del navegador / tecla atrás Android
+    // ── popstate ──
     window.addEventListener('popstate', function(e) {
+        if (e.state && e.state.sakiCajero) _depth = e.state.d || 0;
+
+        // Primero: cerrar aviso si estaba activo
+        if (_avisando) { _ocultarAviso(); return; }
+
+        // Luego: cerrar modal superior si hay
         if (_getActiveModals().length > 0) {
-            // Hay capas abiertas → cerrar la superior en lugar de salir
             _cerrarTopModal();
-            // Volver a empujar para mantener la "barrera" mientras queden capas
-            if (_getActiveModals().length > 0) {
-                _push();
-            }
+            if (_getActiveModals().length > 0) _push(); // mantener barrera
+            return;
         }
-        // Si no hay capas activas, el navegador sale normalmente
+
+        // Sin capas: mostrar aviso de salida
+        _depth = 0;
+        _mostrarAviso();
     });
 
-    // Deslizamiento táctil desde el borde izquierdo → cerrar capa
+    // ── Swipe táctil desde borde izquierdo ──
     var _tx = 0, _ty = 0;
     document.addEventListener('touchstart', function(e) {
         _tx = e.touches[0].clientX;
         _ty = e.touches[0].clientY;
     }, { passive: true });
-
     document.addEventListener('touchend', function(e) {
         var dx = e.changedTouches[0].clientX - _tx;
         var dy = Math.abs(e.changedTouches[0].clientY - _ty);
-        // Swipe desde borde izquierdo (≤35px inicio) con recorrido ≥65px horizontal
         if (_tx <= 35 && dx >= 65 && dy < 80) {
             if (_getActiveModals().length > 0) {
                 _cerrarTopModal();
+            } else {
+                _mostrarAviso();
             }
         }
     }, { passive: true });
