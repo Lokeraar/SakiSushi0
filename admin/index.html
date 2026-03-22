@@ -114,7 +114,6 @@
         window.verificarYNotificarStockReactivado = async function(ingredienteId, ingredienteNombre) {
             for (const platillo of window.menuItems) {
                 if (!platillo.ingredientes || Object.keys(platillo.ingredientes).length === 0) continue;
-                
                 const usaIngrediente = Object.keys(platillo.ingredientes).some(id => id === ingredienteId);
                 if (!usaIngrediente) continue;
                 
@@ -146,11 +145,9 @@
                             .order('fecha', { ascending: false });
                         
                         const sessionIds = [...new Set(pedidosUnicos?.map(p => p.session_id) || [])];
-                        
                         for (const sessionId of sessionIds) {
                             await window.enviarNotificacionPush(titulo, mensaje, sessionId);
                         }
-                        
                         window.mostrarToast(`📢 Notificación enviada: ${platillo.nombre} disponible`, 'success');
                     } catch (e) {
                         console.error('Error enviando notificaciones masivas:', e);
@@ -176,18 +173,14 @@
                     table: 'inventario'
                 }, async (payload) => {
                     console.log('📦 Cambio en inventario detectado:', payload);
-                    
                     const index = window.inventarioItems.findIndex(i => i.id === payload.new.id);
                     if (index !== -1) {
                         window.inventarioItems[index] = payload.new;
                     } else {
                         window.inventarioItems.push(payload.new);
                     }
-                    
                     await window.verificarYNotificarStockReactivado(payload.new.id, payload.new.nombre);
-                    
                     await window.recalcularStockPlatillos();
-                    
                     if (payload.new.stock > 0 && payload.old?.stock <= 0) {
                         await window.enviarNotificacionPush(
                             '📦 Stock actualizado',
@@ -230,7 +223,6 @@
                 }
                 
                 const nuevoStock = todosIngredientes ? Math.max(0, stockDisponible) : 0;
-                
                 if (platillo.stock !== nuevoStock) {
                     await window.supabaseClient
                         .from('menu')
@@ -239,7 +231,6 @@
                     platillo.stock = nuevoStock;
                 }
             }
-            
             window.renderizarMenu();
         };
         
@@ -262,13 +253,8 @@
         window.restaurarWifiPersistente = function() {
             const ssidInput = document.getElementById('qrWifiSsid');
             const passwordInput = document.getElementById('qrWifiPassword');
-            
-            if (ssidInput && window.wifiSsidPersistente) {
-                ssidInput.value = window.wifiSsidPersistente;
-            }
-            if (passwordInput && window.wifiPasswordPersistente) {
-                passwordInput.value = window.wifiPasswordPersistente;
-            }
+            if (ssidInput && window.wifiSsidPersistente) ssidInput.value = window.wifiSsidPersistente;
+            if (passwordInput && window.wifiPasswordPersistente) passwordInput.value = window.wifiPasswordPersistente;
         };
         
         // ==================== FUNCIÓN PARA LIMPIAR CAMPOS TEMPORALES ====================
@@ -281,68 +267,32 @@
     <script>
         window.hacerLogin = async function() {
             console.log('🔑 Intentando login admin...');
-            
             const password = document.getElementById('adminPassword').value;
-            
-            if (!password) {
-                window.mostrarToast('Ingresa la contraseña', 'error');
-                return;
-            }
+            if (!password) { window.mostrarToast('Ingresa la contraseña', 'error'); return; }
             
             const loginBtn = document.querySelector('#loginForm button[type="submit"]');
-            if (loginBtn) {
-                loginBtn.disabled = true;
-                loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Conectando...';
-            }
+            if (loginBtn) { loginBtn.disabled = true; loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Conectando...'; }
             
             try {
                 const response = await fetch('https://iqwwoihiiyrtypyqzhgy.supabase.co/functions/v1/login', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ 
-                        username: 'admin',
-                        password: password 
-                    })
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: 'admin', password: password })
                 });
-
-                console.log('📡 Status:', response.status);
-                
                 const data = await response.json();
-                console.log('📦 Respuesta:', data);
-
-                if (!response.ok) {
-                    throw new Error(data.error || `Error ${response.status}`);
-                }
-
-                if (!data.success) {
-                    window.mostrarToast('❌ ' + (data.error || 'Contraseña incorrecta'), 'error');
-                    return;
-                }
-
-                if (data.user.rol !== 'admin') {
-                    window.mostrarToast('Acceso denegado. Se requiere rol de administrador.', 'error');
-                    return;
-                }
-
-                const adminSession = sessionStorage.getItem('admin_authenticated');
-                if (adminSession === 'true') {
-                    window.mostrarToast('⚠️ Ya hay una sesión de administrador activa', 'warning');
-                    return;
-                }
+                if (!response.ok) throw new Error(data.error || `Error ${response.status}`);
+                if (!data.success) { window.mostrarToast('❌ ' + (data.error || 'Contraseña incorrecta'), 'error'); return; }
+                if (data.user.rol !== 'admin') { window.mostrarToast('Acceso denegado. Se requiere rol de administrador.', 'error'); return; }
+                if (sessionStorage.getItem('admin_authenticated') === 'true') { window.mostrarToast('⚠️ Ya hay una sesión de administrador activa', 'warning'); return; }
 
                 window.isAdminAuthenticated = true;
                 window.jwtToken = data.token;
                 sessionStorage.setItem('admin_authenticated', 'true');
                 sessionStorage.setItem('admin_jwt_token', window.jwtToken);
                 sessionStorage.setItem('admin_user', JSON.stringify(data.user));
-
                 window.supabaseClient = window.inicializarSupabaseCliente(window.jwtToken);
-
                 document.getElementById('loginContainer').style.display = 'none';
                 document.getElementById('panelContainer').classList.add('active');
-                
                 window.mostrarToast('👑 Bienvenido Administrador', 'success');
                 
                 setTimeout(async () => {
@@ -361,30 +311,21 @@
                         window.setupRealtimeSubscriptions();
                         window.setupStockRealtime();
                         window.restaurarWifiPersistente();
-                    } catch (e) {
-                        console.error('Error cargando datos:', e);
-                        window.mostrarToast('Error cargando datos: ' + e.message, 'error');
-                    }
+                    } catch (e) { console.error('Error cargando datos:', e); window.mostrarToast('Error cargando datos: ' + e.message, 'error'); }
                 }, 500);
-                
             } catch (error) {
                 console.error('❌ Error:', error);
                 window.mostrarToast('❌ Error: ' + error.message, 'error');
             } finally {
-                if (loginBtn) {
-                    loginBtn.disabled = false;
-                    loginBtn.innerHTML = 'Ingresar';
-                }
+                if (loginBtn) { loginBtn.disabled = false; loginBtn.innerHTML = 'Ingresar'; }
             }
         };
     </script>
     
     <style>
-        /* ESTILOS EXISTENTES - MODIFICADO EL FONDO DEL BODY */
         *{margin:0;padding:0;box-sizing:border-box}
         :root{--primary:#D32F2F;--secondary:#212121;--accent:#FF9800;--light-bg:#F5F5F5;--dark-bg:#121212;--success:#388E3C;--info:#1976D2;--warning:#F57C00;--danger:#ef4444;--delivery:#00ACC1;--propina:#9C27B0;--text-light:#ffffff;--text-dark:#333333;--gray-100:#f8f9fa;--gray-200:#e9ecef;--gray-300:#dee2e6;--gray-400:#ced4da;--gray-500:#adb5bd;--gray-600:#6c757d;--gray-700:#495057;--gray-800:#343a40;--gray-900:#212529}
-        body{font-family:'Roboto',sans-serif;background:url('https://iqwwoihiiyrtypyqzhgy.supabase.co/storage/v1/object/public/imagenes-platillos/Fondo%20de%20pantalla.png') no-repeat center center fixed;background-size:cover;color:#fff;min-height:100vh}
-        /* Resto de estilos CSS existentes se mantienen sin cambios... */
+        body{font-family:'Roboto',sans-serif;background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%);color:#fff;min-height:100vh}
         h1,h2,h3,h4,h5,h6{font-family:'Montserrat',sans-serif}
         .login-container{display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,var(--primary),var(--secondary))}
         .login-box{background:rgba(255,255,255,.95);padding:2rem;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.2);width:100%;max-width:400px}
@@ -646,7 +587,7 @@
                 <div class="table-responsive">
                     <h3 style="color:#fff;margin-bottom:1rem">Historial de Propinas</h3>
                     <table class="data-table" id="propinasTable">
-                        <thead> transduction<th>Fecha</th><th>Mesonero</th><th>Mesa</th><th>Método</th><th>Monto</th><th>Cajero</th> </thead>
+                        <thead> on<th>Fecha</th><th>Mesonero</th><th>Mesa</th><th>Método</th><th>Monto</th><th>Cajero</th> </thead>
                         <tbody id="propinasTableBody"></tbody>
                     </table>
                 </div>
@@ -696,7 +637,7 @@
                         <button class="btn-primary" onclick="window.generarQR()"><i class="fas fa-qrcode"></i> Generar</button>
                     </div>
                     <div class="wifi-fields" style="margin-top:15px;padding:12px;background:rgba(0,0,0,.3);border-radius:8px">
-                        <i class="fas fa-wifi"></i> <small>El QR generado conectará automáticamente a la WiFi y abrirá el menú de la mesa seleccionada.</small>
+                        <i class="fas fa-wifi"></i> <small>Los datos de WiFi se guardan automáticamente. El QR generado permitirá conectarse automáticamente a la red si se escanea.</small>
                     </div>
                 </div>
                 <div class="qr-grid" id="qrGrid"></div>
@@ -723,7 +664,7 @@
                 </div>
                 <div class="table-responsive" style="margin-top:2rem">
                     <h3 style="color:#fff;margin-bottom:1rem">Detalle de Ventas</h3>
-                    <table class="data-table" id="ventasTable"><thead> transduction<th>Fecha</th><th>Pedido</th><th>Total</th><th>Items</th><th>Método</th><th>Tipo</th> </thead><tbody id="ventasTableBody"></tbody></table>
+                    <table class="data-table" id="ventasTable"><thead> on<th>Fecha</th><th>Pedido</th><th>Total</th><th>Items</th><th>Método</th><th>Tipo</th> </thead><tbody id="ventasTableBody"></tbody></table>
                 </div>
             </div>
         </div>
@@ -1087,7 +1028,6 @@
             const ssid = document.getElementById('qrWifiSsid').value.trim();
             const password = document.getElementById('qrWifiPassword').value.trim();
             
-            // Guardar WiFi persistentemente
             window.guardarWifiPersistente();
             
             if (!nombre && !ssid) { 
@@ -1096,24 +1036,20 @@
             }
             
             let qrData = { id: window.generarId('QR_'), fecha: new Date().toISOString() };
+            let contenidoQR = '';
             
-            if (ssid && password && nombre) {
-                // QR doble funcionalidad: WiFi + URL de mesa
-                // Crear un QR que al escanear primero conecta WiFi y luego abre el menú
-                // El formato estándar es WIFI:...;; (para WiFi) y luego se puede agregar la URL
-                // Para garantizar que ambas funciones se ejecuten, generamos un QR con la URL que contiene un esquema que active WiFi
-                // Sin embargo, la forma más compatible es generar el QR WiFi y luego mostrar la URL como texto
-                qrData.tipo = 'wifi_mesa';
-                qrData.nombre = `${nombre} - WiFi`;
-                qrData.ssid = ssid;
-                qrData.password = password;
-                qrData.mesa_nombre = nombre;
-            } else if (ssid && password) {
+            if (ssid && password) {
+                // QR híbrido: WiFi + URL
+                const urlCliente = `${window.location.origin}/Cliente/index.html${nombre ? `?mesa=${encodeURIComponent(nombre)}` : ''}`;
+                // Formato: primero la configuración WiFi, luego la URL (separadas por espacio)
+                contenidoQR = `WIFI:T:WPA;S:${ssid};P:${password};; ${urlCliente}`;
                 qrData.tipo = 'wifi';
-                qrData.nombre = `WiFi - ${ssid}`;
+                qrData.nombre = nombre ? `Mesa ${nombre} + WiFi` : `WiFi - ${ssid}`;
                 qrData.ssid = ssid;
                 qrData.password = password;
+                if (nombre) qrData.url_mesa = urlCliente;
             } else if (nombre) {
+                contenidoQR = `${window.location.origin}/Cliente/index.html?mesa=${encodeURIComponent(nombre)}`;
                 qrData.tipo = 'mesa';
                 qrData.nombre = nombre;
             } else {
@@ -1123,7 +1059,6 @@
             
             try {
                 await window.supabaseClient.from('codigos_qr').insert([qrData]);
-                // Limpiar SOLO el campo de mesa (temporal), NO los campos WiFi
                 document.getElementById('qrNombreMesa').value = '';
                 await window.cargarQRs();
                 window.mostrarToast('✅ QR generado', 'success');
@@ -1665,9 +1600,7 @@
             } catch (e) { console.error('Error configurando suscripciones:', e); }
         };
 
-        window.setupEventListeners = function() {
-            // Los event listeners ya están definidos arriba
-        };
+        window.setupEventListeners = function() {};
 
         // ==================== CATEGORÍAS PREDEFINIDAS ====================
         window.categoriasMenu = {
