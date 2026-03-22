@@ -983,6 +983,39 @@
         @media (max-width: 480px) {
             .header-right .nav-button:nth-child(n+3) { display: none; }
         }
+        /* Tarjetas de mesa en modal admin */
+        .mesa-admin-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: .4rem;
+            padding: 1rem .5rem;
+            background: #fff;
+            border: 2px solid var(--border);
+            border-radius: var(--radius);
+            cursor: pointer;
+            font-family: 'Montserrat', sans-serif;
+            font-size: .85rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            transition: var(--transition);
+            box-shadow: var(--shadow-sm);
+        }
+        .mesa-admin-btn i {
+            font-size: 1.4rem;
+            color: var(--primary);
+        }
+        .mesa-admin-btn:hover {
+            border-color: var(--primary);
+            background: #fff5f5;
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+        .mesa-admin-btn span {
+            text-align: center;
+            word-break: break-word;
+        }
         </style>
 </head>
 <body>
@@ -1000,7 +1033,7 @@
     <div class="panel-container" id="panelContainer">
         <header class="header">
             <div class="header-left"><h2><i class="fas fa-crown"></i> Administración Saki Sushi</h2></div>
-            <div class="header-right"><a href="../Cliente/index.html" target="_blank" class="nav-button"><i class="fas fa-utensils"></i> Cliente</a><a href="../Cajero/index.html" target="_blank" class="nav-button"><i class="fas fa-cash-register"></i> Cajero</a><button class="logout-button" id="logoutButton"><i class="fas fa-sign-out-alt"></i> Salir</button></div>
+            <div class="header-right"><button class="nav-button" onclick="window.abrirSelectorMesaAdmin()"><i class="fas fa-utensils"></i> Mesas</button><a href="../Cajero/index.html" target="_blank" class="nav-button"><i class="fas fa-cash-register"></i> Cajero</a><button class="logout-button" id="logoutButton"><i class="fas fa-sign-out-alt"></i> Salir</button></div>
         </header>
         
         <div class="tasa-bar" id="tasaBar">
@@ -1217,6 +1250,27 @@
     
     <div class="modal" id="qrAmpliadoModal"><div class="modal-content" style="max-width:400px"><div class="modal-header"><h3>Código QR</h3><button class="modal-close" id="closeQrAmpliadoModal">&times;</button></div><div class="modal-body" style="text-align:center"><div id="qrAmpliado" style="width:300px;height:300px;margin:0 auto"></div><div id="qrAmpliadoInfo" style="margin-top:1rem"></div></div><div class="modal-footer"><button class="btn-primary" id="closeQrAmpliado">Cerrar</button></div></div></div>
     
+    <!-- Modal Selector de Mesas -->
+    <div class="modal" id="adminMesaModal">
+        <div class="modal-content" style="max-width:520px">
+            <div class="modal-header">
+                <h3><i class="fas fa-utensils"></i> Mesas</h3>
+                <button class="modal-close" onclick="window.cerrarModal('adminMesaModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p style="font-size:.85rem;color:var(--text-muted);margin-bottom:1rem">
+                    Selecciona una mesa para abrir el menú del cliente en esa mesa.
+                </p>
+                <div id="adminMesaList" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:.75rem">
+                    <p style="color:var(--text-muted)">Cargando mesas...</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="window.cerrarModal('adminMesaModal')">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
     <div class="toast" id="toast"></div>
     
     <script src="../supabase-config.js"></script>
@@ -2153,7 +2207,12 @@
             window.supabaseClient = window.inicializarSupabaseCliente();
         });
 
-        document.getElementById('saveAllButton').addEventListener('click', async () => { await window.guardarConfiguracion(); });
+        // ══════════════════════════════════════════════
+        // SETUP EVENT LISTENERS
+        // ══════════════════════════════════════════════
+        window.setupEventListeners = function() {
+            // Guardar configuración de tasa
+            document.getElementById('saveAllButton').addEventListener('click', async () => { await window.guardarConfiguracion(); });
 
         document.getElementById('tasaBaseInput').addEventListener('change', window.recalcularTasaEfectiva);
         document.getElementById('aumentoDiarioInput').addEventListener('change', window.recalcularTasaEfectiva);
@@ -2202,6 +2261,41 @@
             document.getElementById('aumentoHasta').disabled = this.checked;
             if (this.checked) document.getElementById('aumentoHasta').value = '';
         });
+
+        }; // fin window.setupEventListeners
+
+        // ══════════════════════════════════════════════
+        // SELECTOR DE MESAS (desde header Admin)
+        // ══════════════════════════════════════════════
+        window.abrirSelectorMesaAdmin = async function() {
+            const list = document.getElementById('adminMesaList');
+            list.innerHTML = '<p style="color:var(--text-muted)">Cargando mesas...</p>';
+            document.getElementById('adminMesaModal').classList.add('active');
+            try {
+                const { data, error } = await window.supabaseClient
+                    .from('codigos_qr').select('*').order('nombre');
+                if (error) throw error;
+                const mesas = data || [];
+                if (!mesas.length) {
+                    list.innerHTML = '<p style="color:var(--text-muted);grid-column:1/-1">No hay mesas creadas. Genera QRs en la pestaña Códigos QR.</p>';
+                    return;
+                }
+                list.innerHTML = '';
+                mesas.forEach(mesa => {
+                    const url = window.location.origin + '/SakiSushi0/Cliente/index.html?mesa=' + encodeURIComponent(mesa.nombre);
+                    const btn = document.createElement('button');
+                    btn.className = 'mesa-admin-btn';
+                    btn.innerHTML = '<i class="fas fa-chair"></i><span>' + mesa.nombre + '</span>';
+                    btn.addEventListener('click', function() {
+                        window.open(url, '_blank');
+                        window.cerrarModal('adminMesaModal');
+                    });
+                    list.appendChild(btn);
+                });
+            } catch(e) {
+                list.innerHTML = '<p style="color:var(--danger)">Error cargando mesas: ' + (e.message || e) + '</p>';
+            }
+        };
 
         document.addEventListener('DOMContentLoaded', async () => {
             if (window.restaurarSesionAdmin()) {
