@@ -983,6 +983,9 @@
         @media (max-width: 480px) {
             .header-right .nav-button:nth-child(n+3) { display: none; }
         }
+        /* Tooltip genérico */
+        .tooltip-wrap:hover .tooltip-text { display:block !important; }
+
         /* Tarjetas de mesa en modal admin */
         .mesa-admin-btn {
             display: flex;
@@ -1074,7 +1077,15 @@
                     <div class="tasa-fecha-item">
                         <label class="tasa-fecha-label">Hasta:</label>
                         <input type="date" id="aumentoHasta" style="margin-right:.5rem">
-                        <label class="tasa-fecha-label"><input type="checkbox" id="aumentoIndefinido"> Indefinido</label>
+                        <label class="tasa-fecha-label" style="display:flex;align-items:center;gap:.35rem">
+                            <input type="checkbox" id="aumentoIndefinido"> Indefinido
+                            <span class="tooltip-wrap" style="position:relative;display:inline-flex;align-items:center;cursor:help">
+                                <span style="display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;background:#aaa;color:#fff;border-radius:50%;font-size:.65rem;font-weight:700;flex-shrink:0">?</span>
+                                <span class="tooltip-text" style="display:none;position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:#1a1a2e;color:#fff;padding:.5rem .75rem;border-radius:8px;font-size:.75rem;white-space:normal;width:220px;text-align:center;box-shadow:0 4px 12px rgba(0,0,0,.3);z-index:100;line-height:1.4">
+                                    Activa esto si quieres que el aumento siga aplicándose cada día o semana sin límite de tiempo. Si lo dejas sin marcar, el aumento se detiene en la fecha "Hasta" que indiques.
+                                </span>
+                            </span>
+                        </label>
                     </div>
                 </div>
                 <div class="tasa-item" style="margin-left:auto">
@@ -1866,49 +1877,51 @@
 
         // ==================== FUNCIONES DE CONFIGURACIÓN ====================
         window.recalcularTasaEfectiva = function() {
-            const tasaBase    = parseFloat(document.getElementById('tasaBaseInput').value) || 0;
-            const aumentoPct  = parseFloat(document.getElementById('aumentoDiarioInput').value) || 0;
-            const activoDiario   = document.getElementById('aumentoActivoToggle').checked;
-            const activoSemanal  = document.getElementById('aumentoSemanalToggle') &&
-                                   document.getElementById('aumentoSemanalToggle').checked;
-            const estaActivo  = activoDiario || activoSemanal;
-            let aumentoAcumulado = window.configGlobal.aumento_acumulado || 0;
+            const tasaBase     = parseFloat(document.getElementById('tasaBaseInput').value) || 0;
+            const aumentoPct   = parseFloat(document.getElementById('aumentoDiarioInput').value) || 0;
+            const activoDiario  = document.getElementById('aumentoActivoToggle').checked;
+            const activoSemanal = document.getElementById('aumentoSemanalToggle') &&
+                                  document.getElementById('aumentoSemanalToggle').checked;
+            const estaActivo   = activoDiario || activoSemanal;
+            const indefinido   = document.getElementById('aumentoIndefinido') &&
+                                 document.getElementById('aumentoIndefinido').checked;
+            const desdeVal     = document.getElementById('aumentoDesde')?.value || '';
+            const hastaVal     = !indefinido ? (document.getElementById('aumentoHasta')?.value || '') : '';
 
-            if (estaActivo && !window.configGlobal.aumento_detenido) {
-                const ahora = new Date();
-                // Respetar fecha inicio si está definida
-                const desdeEl = document.getElementById('aumentoDesde') &&
-                                document.getElementById('aumentoDesde').value;
-                const desdeDate = desdeEl ? new Date(desdeEl) : null;
-                const inicio = (desdeDate && desdeDate <= ahora) ? desdeDate :
-                               (window.configGlobal.fecha_ultimo_aumento ? new Date(window.configGlobal.fecha_ultimo_aumento) : null);
-                if (inicio) {
-                    const msPeriodo = activoSemanal ? 7 * 24 * 60 * 60 * 1000 : 24 * 60 * 60 * 1000;
-                    const periodos  = Math.floor((ahora - inicio) / msPeriodo);
-                    // Respetar fecha hasta si no es indefinido
-                    const indefinido = document.getElementById('aumentoIndefinido') &&
-                                       document.getElementById('aumentoIndefinido').checked;
-                    const hastaEl = !indefinido && document.getElementById('aumentoHasta') &&
-                                    document.getElementById('aumentoHasta').value;
-                    const hastaDate = hastaEl ? new Date(hastaEl) : null;
-                    const periodosFin = hastaDate
-                        ? Math.floor((hastaDate - inicio) / msPeriodo)
-                        : periodos;
-                    aumentoAcumulado += Math.max(0, Math.min(periodos, periodosFin)) * aumentoPct;
+            let periodos = 0;
+
+            if (estaActivo && desdeVal) {
+                // Normalizar fechas a medianoche local para comparar solo días
+                const hoy        = new Date(); hoy.setHours(0,0,0,0);
+                const desdeDate  = new Date(desdeVal + 'T00:00:00');
+                const hastaDate  = hastaVal ? new Date(hastaVal + 'T00:00:00') : null;
+
+                if (desdeDate <= hoy) {
+                    // Fecha efectiva de fin: la menor entre hoy y hastaDate (si existe)
+                    const finEfectivo = hastaDate && hastaDate < hoy ? hastaDate : hoy;
+                    const msDay      = 24 * 60 * 60 * 1000;
+                    const msPeriodo  = activoSemanal ? 7 * msDay : msDay;
+                    // +1 porque el día "desde" cuenta como período 1
+                    const diffMs     = finEfectivo - desdeDate;
+                    periodos = Math.max(0, Math.floor(diffMs / msPeriodo) + 1);
                 }
             }
 
-            const tasaEfectiva = tasaBase * (1 + aumentoAcumulado / 100);
+            // Tasa efectiva = TasaBase × (1 + periodos × porcentaje / 100)
+            const aumentoAcumulado = periodos * aumentoPct;
+            const tasaEfectiva     = tasaBase * (1 + aumentoAcumulado / 100);
+
             document.getElementById('tasaEfectivaDisplay').textContent = tasaEfectiva.toFixed(2);
             document.getElementById('aumentoAcumuladoDisplay').textContent = aumentoAcumulado.toFixed(2) + '%';
             if (document.getElementById('tasaEfectivaCard'))
                 document.getElementById('tasaEfectivaCard').textContent = 'Bs. ' + tasaEfectiva.toFixed(2);
-            window.configGlobal.tasa_cambio      = tasaBase;
-            window.configGlobal.aumento_diario   = aumentoPct;
-            window.configGlobal.aumento_activo   = activoDiario;
-            window.configGlobal.aumento_semanal  = activoSemanal;
+
+            window.configGlobal.tasa_cambio       = tasaBase;
+            window.configGlobal.aumento_diario    = aumentoPct;
+            window.configGlobal.aumento_activo    = activoDiario;
+            window.configGlobal.aumento_semanal   = activoSemanal;
             window.configGlobal.aumento_acumulado = aumentoAcumulado;
-            window.configGlobal.tasa_efectiva    = tasaEfectiva;
+            window.configGlobal.tasa_efectiva     = tasaEfectiva;
         };
 
         window.guardarConfiguracion = async function() {
@@ -2280,7 +2293,27 @@
         // SETUP EVENT LISTENERS
         // ══════════════════════════════════════════════
         window.setupEventListeners = function() {
-            // Guardar configuración de tasa
+
+            // ── Navegación de tabs ──────────────────────────────────────────
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const target = tab.dataset.tab;
+                    // Activar tab
+                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    // Mostrar pane correspondiente
+                    document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
+                    const pane = document.getElementById(target + 'Pane');
+                    if (pane) pane.classList.add('active');
+                    // Limpiar nombre de mesa al ir a QR (SSID/pwd persisten)
+                    if (target !== 'qr') {
+                        const el = document.getElementById('qrNombreMesa');
+                        if (el) el.value = '';
+                    }
+                });
+            });
+
+            // ── Guardar configuración de tasa ───────────────────────────────
             document.getElementById('saveAllButton').addEventListener('click', async () => { await window.guardarConfiguracion(); });
 
         document.getElementById('tasaBaseInput').addEventListener('change', window.recalcularTasaEfectiva);
@@ -2334,6 +2367,162 @@
         }; // fin window.setupEventListeners
 
         // ══════════════════════════════════════════════
+        // TASA DE HOY — Primer inicio de sesión del día
+        // ══════════════════════════════════════════════
+        window._pedirTasaDeHoy = function(onConfirm) {
+            // Crear overlay bloqueante
+            const overlay = document.createElement('div');
+            overlay.id = 'tasaHoyOverlay';
+            overlay.style.cssText = [
+                'position:fixed','top:0','left:0','width:100%','height:100%',
+                'background:rgba(0,0,0,.85)','z-index:9999',
+                'display:flex','align-items:center','justify-content:center',
+                'font-family:Montserrat,sans-serif'
+            ].join(';');
+            overlay.innerHTML = `
+                <div style="background:#fff;border-radius:16px;padding:2rem 2.5rem;width:90%;max-width:400px;box-shadow:0 8px 32px rgba(0,0,0,.3);text-align:center">
+                    <div style="font-size:2.5rem;margin-bottom:.75rem">💱</div>
+                    <h2 style="font-size:1.3rem;color:#1a1a2e;margin-bottom:.4rem">Tasa de cambio de hoy</h2>
+                    <p style="font-size:.88rem;color:#666;margin-bottom:1.5rem">
+                        Ingresa el valor actual del dólar en bolívares para que el sistema calcule correctamente todos los precios de hoy.
+                    </p>
+                    <input type="number" id="tasaHoyInput" placeholder="Ej: 42.50"
+                        step="0.01" min="1"
+                        style="width:100%;padding:.8rem 1rem;font-size:1.1rem;font-weight:700;text-align:center;
+                               border:2px solid #e0e0e0;border-radius:10px;outline:none;
+                               font-family:Montserrat,sans-serif;margin-bottom:1rem;box-sizing:border-box">
+                    <div id="tasaHoyError" style="color:#D32F2F;font-size:.82rem;margin-bottom:.75rem;display:none">
+                        Por favor ingresa un valor válido mayor a 0.
+                    </div>
+                    <button id="tasaHoyBtn"
+                        style="width:100%;padding:.9rem;background:linear-gradient(135deg,#D32F2F,#B71C1C);
+                               color:#fff;border:none;border-radius:10px;font-size:1rem;font-weight:700;
+                               cursor:pointer;font-family:Montserrat,sans-serif;letter-spacing:.5px">
+                        Confirmar tasa de hoy
+                    </button>
+                    <p style="font-size:.75rem;color:#999;margin-top:.75rem">
+                        Podrás ajustarla en cualquier momento desde la barra de tasa.
+                    </p>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+
+            // Focus automático
+            setTimeout(() => {
+                const input = document.getElementById('tasaHoyInput');
+                if (input) input.focus();
+            }, 100);
+
+            // Confirmar con botón o Enter
+            const confirmar = () => {
+                const val = parseFloat(document.getElementById('tasaHoyInput').value);
+                const errEl = document.getElementById('tasaHoyError');
+                if (!val || val <= 0) {
+                    errEl.style.display = 'block';
+                    document.getElementById('tasaHoyInput').focus();
+                    return;
+                }
+                errEl.style.display = 'none';
+                // Guardar: fecha de hoy + valor
+                const hoy = new Date().toISOString().split('T')[0];
+                localStorage.setItem('saki_tasa_fecha', hoy);
+                localStorage.setItem('saki_tasa_valor', val);
+                overlay.remove();
+                onConfirm(val);
+            };
+
+            document.getElementById('tasaHoyBtn').addEventListener('click', confirmar);
+            document.getElementById('tasaHoyInput').addEventListener('keydown', e => {
+                if (e.key === 'Enter') confirmar();
+            });
+        };
+
+        window._verificarTasaDeHoy = function(onReady) {
+            const hoy  = new Date().toISOString().split('T')[0];
+            const fecha = localStorage.getItem('saki_tasa_fecha');
+            const valor = parseFloat(localStorage.getItem('saki_tasa_valor'));
+
+            if (fecha === hoy && valor > 0) {
+                // Ya se ingresó la tasa hoy — aplicar y continuar
+                onReady(valor);
+            } else {
+                // No se ingresó todavía — pedir en bucle hasta que se confirme
+                window._pedirTasaDeHoy((val) => {
+                    onReady(val);
+                });
+            }
+        };
+
+        // ══════════════════════════════════════════════
+        // AVISO DE LUNES — Cambio porcentaje semanal
+        // ══════════════════════════════════════════════
+        window._verificarAvisoLunes = function() {
+            // Solo si el toggle semanal está activo
+            if (!window.configGlobal || !window.configGlobal.aumento_semanal) return;
+
+            const hoy = new Date();
+            if (hoy.getDay() !== 1) return; // 1 = lunes
+
+            const claveAviso = 'saki_aviso_lunes_' + hoy.toISOString().split('T')[0];
+            if (localStorage.getItem(claveAviso)) return; // Ya se mostró hoy
+            localStorage.setItem(claveAviso, '1');
+
+            // Crear notificación
+            const notif = document.createElement('div');
+            notif.style.cssText = [
+                'position:fixed','top:1.5rem','left:50%','transform:translateX(-50%)',
+                'background:#1a1a2e','color:#fff','border-radius:12px',
+                'padding:1.2rem 1.5rem','z-index:8000','box-shadow:0 4px 20px rgba(0,0,0,.4)',
+                'max-width:420px','width:90%','font-family:Montserrat,sans-serif',
+                'border-left:4px solid #FF9800'
+            ].join(';');
+            notif.innerHTML = `
+                <div style="display:flex;align-items:flex-start;gap:.75rem">
+                    <div style="font-size:1.5rem;flex-shrink:0">📅</div>
+                    <div style="flex:1">
+                        <div style="font-weight:700;margin-bottom:.3rem;font-size:.95rem">Nueva semana — ¿Actualizas el porcentaje?</div>
+                        <div style="font-size:.82rem;opacity:.85;margin-bottom:.75rem">
+                            Hoy es lunes y tienes activo el aumento semanal.
+                            ¿Quieres ajustar el porcentaje de aumento para esta semana?
+                        </div>
+                        <div style="display:flex;gap:.5rem;justify-content:flex-end">
+                            <button id="avisoLunesNo"
+                                style="padding:.4rem .9rem;background:rgba(255,255,255,.15);color:#fff;
+                                       border:1px solid rgba(255,255,255,.3);border-radius:6px;
+                                       cursor:pointer;font-family:Montserrat,sans-serif;font-size:.82rem">
+                                No, dejarlo igual
+                            </button>
+                            <button id="avisoLunesSi"
+                                style="padding:.4rem .9rem;background:#FF9800;color:#1a1a2e;border:none;
+                                       border-radius:6px;cursor:pointer;font-family:Montserrat,sans-serif;
+                                       font-weight:700;font-size:.82rem">
+                                Sí, cambiar %
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(notif);
+
+            document.getElementById('avisoLunesNo').addEventListener('click', () => notif.remove());
+            document.getElementById('avisoLunesSi').addEventListener('click', () => {
+                notif.remove();
+                // Ir a la barra de tasa y enfocar el campo
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                const input = document.getElementById('aumentoDiarioInput');
+                if (input) {
+                    input.focus();
+                    input.select();
+                    input.style.outline = '3px solid #FF9800';
+                    setTimeout(() => { input.style.outline = ''; }, 3000);
+                }
+            });
+
+            // Auto-cerrar después de 30 segundos si no hay acción
+            setTimeout(() => { if (notif.parentNode) notif.remove(); }, 30000);
+        };
+
+        // ══════════════════════════════════════════════
         // SELECTOR DE MESAS (desde header Admin)
         // ══════════════════════════════════════════════
         window.abrirSelectorMesaAdmin = async function() {
@@ -2385,6 +2574,14 @@
                         window.setupRealtimeSubscriptions();
                         window.setupStockRealtime();
                         window.restaurarWifiPersistente();
+                        // Pedir tasa de hoy si aún no se ingresó
+                        window._verificarTasaDeHoy((tasa) => {
+                            document.getElementById('tasaBaseInput').value = tasa;
+                            window.configGlobal.tasa_cambio = tasa;
+                            window.recalcularTasaEfectiva();
+                            // Aviso de lunes solo si aumento semanal activo
+                            window._verificarAvisoLunes();
+                        });
                     } catch (e) { console.error('Error cargando datos:', e); window.mostrarToast('Error cargando datos: ' + e.message, 'error'); }
                 }, 100);
             } else {
