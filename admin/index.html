@@ -12,7 +12,9 @@
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
-    <!-- FUNCIONES BÁSICAS Y VARIABLES GLOBALES -->
+    <!-- CARGAR CONFIGURACIÓN DE SUPABASE PRIMERO -->
+    <script src="../supabase-config.js"></script>
+    
     <script>
         // ==================== VARIABLES GLOBALES ====================
         window.isAdminAuthenticated = false;
@@ -114,7 +116,6 @@
         window.verificarYNotificarStockReactivado = async function(ingredienteId, ingredienteNombre) {
             for (const platillo of window.menuItems) {
                 if (!platillo.ingredientes || Object.keys(platillo.ingredientes).length === 0) continue;
-                
                 const usaIngrediente = Object.keys(platillo.ingredientes).some(id => id === ingredienteId);
                 if (!usaIngrediente) continue;
                 
@@ -146,11 +147,9 @@
                             .order('fecha', { ascending: false });
                         
                         const sessionIds = [...new Set(pedidosUnicos?.map(p => p.session_id) || [])];
-                        
                         for (const sessionId of sessionIds) {
                             await window.enviarNotificacionPush(titulo, mensaje, sessionId);
                         }
-                        
                         window.mostrarToast(`📢 Notificación enviada: ${platillo.nombre} disponible`, 'success');
                     } catch (e) {
                         console.error('Error enviando notificaciones masivas:', e);
@@ -176,18 +175,14 @@
                     table: 'inventario'
                 }, async (payload) => {
                     console.log('📦 Cambio en inventario detectado:', payload);
-                    
                     const index = window.inventarioItems.findIndex(i => i.id === payload.new.id);
                     if (index !== -1) {
                         window.inventarioItems[index] = payload.new;
                     } else {
                         window.inventarioItems.push(payload.new);
                     }
-                    
                     await window.verificarYNotificarStockReactivado(payload.new.id, payload.new.nombre);
-                    
                     await window.recalcularStockPlatillos();
-                    
                     if (payload.new.stock > 0 && payload.old?.stock <= 0) {
                         await window.enviarNotificacionPush(
                             '📦 Stock actualizado',
@@ -230,7 +225,6 @@
                 }
                 
                 const nuevoStock = todosIngredientes ? Math.max(0, stockDisponible) : 0;
-                
                 if (platillo.stock !== nuevoStock) {
                     await window.supabaseClient
                         .from('menu')
@@ -239,7 +233,6 @@
                     platillo.stock = nuevoStock;
                 }
             }
-            
             window.renderizarMenu();
         };
         
@@ -262,13 +255,8 @@
         window.restaurarWifiPersistente = function() {
             const ssidInput = document.getElementById('qrWifiSsid');
             const passwordInput = document.getElementById('qrWifiPassword');
-            
-            if (ssidInput && window.wifiSsidPersistente) {
-                ssidInput.value = window.wifiSsidPersistente;
-            }
-            if (passwordInput && window.wifiPasswordPersistente) {
-                passwordInput.value = window.wifiPasswordPersistente;
-            }
+            if (ssidInput && window.wifiSsidPersistente) ssidInput.value = window.wifiSsidPersistente;
+            if (passwordInput && window.wifiPasswordPersistente) passwordInput.value = window.wifiPasswordPersistente;
         };
         
         // ==================== FUNCIÓN PARA LIMPIAR CAMPOS TEMPORALES ====================
@@ -277,7 +265,7 @@
         };
     </script>
     
-    <!-- FUNCIÓN HACER LOGIN (CORREGIDA - USA EDGE FUNCTION) -->
+    <!-- FUNCIÓN HACER LOGIN CORREGIDA -->
     <script>
         window.hacerLogin = async function() {
             console.log('🔑 Intentando login admin...');
@@ -296,10 +284,13 @@
             }
             
             try {
+                console.log('Enviando petición a login...');
                 const response = await fetch('https://iqwwoihiiyrtypyqzhgy.supabase.co/functions/v1/login', {
                     method: 'POST',
+                    mode: 'cors',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
                     },
                     body: JSON.stringify({ 
                         username: 'admin',
@@ -369,7 +360,7 @@
                 
             } catch (error) {
                 console.error('❌ Error:', error);
-                window.mostrarToast('❌ Error: ' + error.message, 'error');
+                window.mostrarToast('❌ Error de conexión: ' + error.message, 'error');
             } finally {
                 if (loginBtn) {
                     loginBtn.disabled = false;
@@ -380,11 +371,9 @@
     </script>
     
     <style>
-        /* ESTILOS EXISTENTES - MODIFICADO EL FONDO DEL BODY */
         *{margin:0;padding:0;box-sizing:border-box}
         :root{--primary:#D32F2F;--secondary:#212121;--accent:#FF9800;--light-bg:#F5F5F5;--dark-bg:#121212;--success:#388E3C;--info:#1976D2;--warning:#F57C00;--danger:#ef4444;--delivery:#00ACC1;--propina:#9C27B0;--text-light:#ffffff;--text-dark:#333333;--gray-100:#f8f9fa;--gray-200:#e9ecef;--gray-300:#dee2e6;--gray-400:#ced4da;--gray-500:#adb5bd;--gray-600:#6c757d;--gray-700:#495057;--gray-800:#343a40;--gray-900:#212529}
-        body{font-family:'Roboto',sans-serif;background:url('https://iqwwoihiiyrtypyqzhgy.supabase.co/storage/v1/object/public/imagenes-platillos/Fondo%20de%20pantalla.png') no-repeat center center fixed;background-size:cover;color:#fff;min-height:100vh}
-        /* Resto de estilos CSS existentes se mantienen sin cambios... */
+        body{font-family:'Roboto',sans-serif;background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%);color:#fff;min-height:100vh}
         h1,h2,h3,h4,h5,h6{font-family:'Montserrat',sans-serif}
         .login-container{display:flex;align-items:center;justify-content:center;min-height:100vh;background:linear-gradient(135deg,var(--primary),var(--secondary))}
         .login-box{background:rgba(255,255,255,.95);padding:2rem;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.2);width:100%;max-width:400px}
@@ -646,9 +635,9 @@
                 <div class="table-responsive">
                     <h3 style="color:#fff;margin-bottom:1rem">Historial de Propinas</h3>
                     <table class="data-table" id="propinasTable">
-                        <thead> transduction<th>Fecha</th><th>Mesonero</th><th>Mesa</th><th>Método</th><th>Monto</th><th>Cajero</th> </thead>
+                        <thead> on<th>Fecha</th><th>Mesonero</th><th>Mesa</th><th>Método</th><th>Monto</th><th>Cajero</th> </thead>
                         <tbody id="propinasTableBody"></tbody>
-                    </table>
+                     </table>
                 </div>
                 <div style="margin-top:2rem">
                     <h3 style="color:#fff;margin-bottom:1rem">Ranking de Mesoneros</h3>
@@ -696,7 +685,7 @@
                         <button class="btn-primary" onclick="window.generarQR()"><i class="fas fa-qrcode"></i> Generar</button>
                     </div>
                     <div class="wifi-fields" style="margin-top:15px;padding:12px;background:rgba(0,0,0,.3);border-radius:8px">
-                        <i class="fas fa-wifi"></i> <small>El QR generado conectará automáticamente a la WiFi y abrirá el menú de la mesa seleccionada.</small>
+                        <i class="fas fa-wifi"></i> <small>Los datos de WiFi se guardan automáticamente. El QR generado permitirá conectarse automáticamente a la red si se escanea.</small>
                     </div>
                 </div>
                 <div class="qr-grid" id="qrGrid"></div>
@@ -723,7 +712,7 @@
                 </div>
                 <div class="table-responsive" style="margin-top:2rem">
                     <h3 style="color:#fff;margin-bottom:1rem">Detalle de Ventas</h3>
-                    <table class="data-table" id="ventasTable"><thead> transduction<th>Fecha</th><th>Pedido</th><th>Total</th><th>Items</th><th>Método</th><th>Tipo</th> </thead><tbody id="ventasTableBody"></tbody></table>
+                    <table class="data-table" id="ventasTable"><thead> on<th>Fecha</th><th>Pedido</th><th>Total</th><th>Items</th><th>Método</th><th>Tipo</th> </thead><tbody id="ventasTableBody"></tbody> </table>
                 </div>
             </div>
         </div>
@@ -744,7 +733,6 @@
     
     <div class="toast" id="toast"></div>
     
-    <script src="../supabase-config.js"></script>
     <script>
         // ==================== RESTAURAR SESIÓN ADMIN ====================
         window.restaurarSesionAdmin = function() {
@@ -877,7 +865,7 @@
             
             const tbody = document.getElementById('propinasTableBody');
             if (tbody) {
-                tbody.innerHTML = window.propinas.map(p => `<tr><td>${new Date(p.fecha).toLocaleString()}</td><td>${p.mesoneros?.nombre || 'N/A'}</td><td>${p.mesa || 'N/A'}</td><td>${p.metodo}</td><td>${window.formatBs(p.monto_bs)}</td><td>${p.cajero || 'N/A'}</td></tr>`).join('');
+                tbody.innerHTML = window.propinas.map(p => ` on<td>${new Date(p.fecha).toLocaleString()} on<td>${p.mesoneros?.nombre || 'N/A'} on<td>${p.mesa || 'N/A'} on<td>${p.metodo} on<td>${window.formatBs(p.monto_bs)} on<td>${p.cajero || 'N/A'} on`).join('');
             }
             
             const ranking = {};
@@ -1069,7 +1057,6 @@
             window.qrCodes.forEach(qr => {
                 let url = '';
                 if (qr.tipo === 'wifi') {
-                    // Formato estándar para QR WiFi
                     url = `WIFI:T:WPA;S:${qr.ssid};P:${qr.password};;`;
                 } else {
                     url = `${window.location.origin}/Cliente/index.html?mesa=${encodeURIComponent(qr.nombre)}`;
@@ -1087,7 +1074,6 @@
             const ssid = document.getElementById('qrWifiSsid').value.trim();
             const password = document.getElementById('qrWifiPassword').value.trim();
             
-            // Guardar WiFi persistentemente
             window.guardarWifiPersistente();
             
             if (!nombre && !ssid) { 
@@ -1096,24 +1082,18 @@
             }
             
             let qrData = { id: window.generarId('QR_'), fecha: new Date().toISOString() };
+            let contenidoQR = '';
             
-            if (ssid && password && nombre) {
-                // QR doble funcionalidad: WiFi + URL de mesa
-                // Crear un QR que al escanear primero conecta WiFi y luego abre el menú
-                // El formato estándar es WIFI:...;; (para WiFi) y luego se puede agregar la URL
-                // Para garantizar que ambas funciones se ejecuten, generamos un QR con la URL que contiene un esquema que active WiFi
-                // Sin embargo, la forma más compatible es generar el QR WiFi y luego mostrar la URL como texto
-                qrData.tipo = 'wifi_mesa';
-                qrData.nombre = `${nombre} - WiFi`;
-                qrData.ssid = ssid;
-                qrData.password = password;
-                qrData.mesa_nombre = nombre;
-            } else if (ssid && password) {
+            if (ssid && password) {
+                const urlCliente = `${window.location.origin}/Cliente/index.html${nombre ? `?mesa=${encodeURIComponent(nombre)}` : ''}`;
+                contenidoQR = `WIFI:T:WPA;S:${ssid};P:${password};; ${urlCliente}`;
                 qrData.tipo = 'wifi';
-                qrData.nombre = `WiFi - ${ssid}`;
+                qrData.nombre = nombre ? `Mesa ${nombre} + WiFi` : `WiFi - ${ssid}`;
                 qrData.ssid = ssid;
                 qrData.password = password;
+                if (nombre) qrData.url_mesa = urlCliente;
             } else if (nombre) {
+                contenidoQR = `${window.location.origin}/Cliente/index.html?mesa=${encodeURIComponent(nombre)}`;
                 qrData.tipo = 'mesa';
                 qrData.nombre = nombre;
             } else {
@@ -1123,7 +1103,6 @@
             
             try {
                 await window.supabaseClient.from('codigos_qr').insert([qrData]);
-                // Limpiar SOLO el campo de mesa (temporal), NO los campos WiFi
                 document.getElementById('qrNombreMesa').value = '';
                 await window.cargarQRs();
                 window.mostrarToast('✅ QR generado', 'success');
@@ -1227,7 +1206,7 @@
 
         window.actualizarTablaVentas = function(pedidos) {
             const tbody = document.getElementById('ventasTableBody');
-            tbody.innerHTML = pedidos.slice(0, 50).map(p => `<tr><td>${new Date(p.fecha).toLocaleDateString()}</td><td>${p.id}</td><td>${window.formatUSD(p.total || 0)}</td><td>${p.items?.reduce((s, i) => s + (i.cantidad || 0), 0) || 0}</td><td>${p.metodo_pago || 'N/A'}</td><td>${p.tipo || 'N/A'}</td></tr>`).join('');
+            tbody.innerHTML = pedidos.slice(0, 50).map(p => ` on<td>${new Date(p.fecha).toLocaleDateString()} on<td>${p.id} on<td>${window.formatUSD(p.total || 0)} on<td>${p.items?.reduce((s, i) => s + (i.cantidad || 0), 0) || 0} on<td>${p.metodo_pago || 'N/A'} on<td>${p.tipo || 'N/A'} on`).join('');
         };
 
         window.cargarPedidosRecientes = async function() {
@@ -1665,9 +1644,7 @@
             } catch (e) { console.error('Error configurando suscripciones:', e); }
         };
 
-        window.setupEventListeners = function() {
-            // Los event listeners ya están definidos arriba
-        };
+        window.setupEventListeners = function() {};
 
         // ==================== CATEGORÍAS PREDEFINIDAS ====================
         window.categoriasMenu = {
