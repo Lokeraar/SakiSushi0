@@ -793,7 +793,7 @@ window.renderizarDeliverysStats=function(){const entregasHoy=window.pedidos.filt
 window.crearTarjetaDelivery=function(pedido){try{const fecha=new Date(pedido.fecha),hora=fecha.toLocaleTimeString('es-ES',{hour:'2-digit',minute:'2-digit'}),deliveryNombre=pedido.delivery_nombre||(window.deliverys.find(d=>d.id==pedido.delivery_id)?.nombre)||'No asignado';return`<div class="order-card-compact" style="border-left-color:var(--delivery)"><div class="order-header-compact"><span class="order-time-compact"><i class="far fa-clock"></i> ${hora}</span><span class="delivery-tag"><i class="fas fa-motorcycle"></i> Delivery</span></div><div class="order-info-compact"><div><i class="fas fa-map-marker-alt"></i> ${(pedido.direccion||'').substring(0,20)}...</div><div><i class="fas fa-phone"></i> ${pedido.telefono||'N/A'}</div><div><i class="fas fa-user"></i> Motorizado: ${deliveryNombre}</div><div><i class="fas fa-tag"></i> Pedido: ${pedido.id.substring(0,8)}</div></div><div class="order-total-compact" style="color:var(--delivery)">${window.formatBs(pedido.costo_delivery_bs||0)}</div></div>`}catch(e){return''}};
 // ============================================ MESA ============================================
 window.abrirSelectorMesa=async function(){await window.cargarMesas();const modal=document.getElementById('mesaModal'),mesaList=document.getElementById('mesaList');mesaList.innerHTML=(window.mesas||[]).length?window.mesas.map(m=>`<button class="mesa-btn" onclick="window.abrirMesa('${m.nombre}')"><i class="fas fa-chair"></i>${m.nombre}</button>`).join(''):'<p class="text-center">No hay mesas</p>';modal.classList.add('active')};
-window.abrirMesa=function(mesa){window.open(`${window.location.origin}/Cliente/index.html?mesa=${encodeURIComponent(mesa)}`,'_blank');window.cerrarModal('mesaModal')};
+window.abrirMesa=function(mesa){window.open(`${window.location.origin}/SakiSushi0/Cliente/index.html?mesa=${encodeURIComponent(mesa)}`,'_blank');window.cerrarModal('mesaModal')};
 // ============================================ COMPROBANTE ============================================
 window.verComprobante=async function(pedidoId){const pedido=window.pedidos.find(p=>p.id===pedidoId);if(!pedido||!pedido.comprobante_url){window.mostrarToast('No hay comprobante','error');return}
 const modal=document.getElementById('comprobanteModal');document.getElementById('comprobanteModalBody').innerHTML=`<div style="text-align:center"><img src="${pedido.comprobante_url}" style="max-width:100%;max-height:400px;border-radius:8px;margin-bottom:15px"><p><strong>Referencia:</strong> ${pedido.referencia||'N/A'}</p><p><strong>Teléfono:</strong> ${pedido.telefono||'N/A'}</p><p><strong>Total:</strong> ${window.formatBs(window.usdToBs(pedido.total||0))}</p></div><div class="keyboard-hint"><span><kbd>ESC</kbd> cerrar</span></div>`;modal.classList.add('active')};
@@ -1010,4 +1010,108 @@ if(categoriasWrapper){
 // ============================================ INICIALIZACIÓN ============================================
 document.addEventListener('DOMContentLoaded',async()=>{console.log('DOM cargado, verificando sesión...');window.alarmaAudio=document.getElementById('alarmaSonido');cargarTemaGuardado();const sesionRestaurada=await window.restaurarSesion();if(!sesionRestaurada){window.mostrarLogin()}
 document.addEventListener('visibilitychange',function(){if(document.hidden){window.paginaVisible=false}else{window.paginaVisible=true;window.verificarCambiosPedidos()}})});
+
+
+// ══════════════════════════════════════════════════════════
+// BACK-NAV CAJERO — botón atrás Android + deslizamiento táctil
+// Cierra la capa/modal más reciente al navegar atrás,
+// respetando la lógica especial de cobroModal.
+// ══════════════════════════════════════════════════════════
+(function() {
+    var _depth = 0;
+
+    // Ids de modales en orden de prioridad al cerrar
+    var _modalIds = [
+        'cobroModal', 'propinaModal', 'detalleModal',
+        'confirmModal', 'rechazoModal', 'mesaModal',
+        'comprobanteModal', 'deliveryModal', 'confirmLogoutModal'
+    ];
+
+    function _push() {
+        _depth++;
+        try { history.pushState({ sakiCajero: true, d: _depth }, ''); } catch(e) {}
+    }
+
+    function _getActiveModals() {
+        return _modalIds
+            .map(function(id) { return document.getElementById(id); })
+            .filter(function(el) { return el && el.classList.contains('active'); });
+    }
+
+    function _cerrarTopModal() {
+        var activos = _getActiveModals();
+        if (!activos.length) return false;
+        // Cerrar el último que se abrió (el que está encima)
+        var top = activos[activos.length - 1];
+        if (top.id === 'cobroModal') {
+            // cobroModal tiene lógica especial (limpia estado _cobro)
+            if (typeof window.cerrarCobroModal === 'function') window.cerrarCobroModal();
+        } else {
+            if (typeof window.cerrarModal === 'function') window.cerrarModal(top.id);
+            else top.classList.remove('active');
+        }
+        _depth = Math.max(0, _depth - 1);
+        return true;
+    }
+
+    // MutationObserver — registra un pushState cada vez que abre un modal
+    var _obs = new MutationObserver(function(mutations) {
+        mutations.forEach(function(m) {
+            if (m.attributeName !== 'class') return;
+            var el = m.target;
+            // Solo modales que acaban de activarse
+            if (el.classList.contains('active') &&
+                _modalIds.indexOf(el.id) !== -1) {
+                _push();
+            }
+        });
+    });
+
+    // Esperar a que el DOM esté listo para observar
+    function _iniciarObservacion() {
+        _modalIds.forEach(function(id) {
+            var el = document.getElementById(id);
+            if (el) _obs.observe(el, { attributes: true, attributeFilter: ['class'] });
+        });
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', _iniciarObservacion);
+    } else {
+        // DOM ya listo (script cargado tarde)
+        setTimeout(_iniciarObservacion, 0);
+    }
+
+    // Botón atrás del navegador / tecla atrás Android
+    window.addEventListener('popstate', function(e) {
+        if (_getActiveModals().length > 0) {
+            // Hay capas abiertas → cerrar la superior en lugar de salir
+            _cerrarTopModal();
+            // Volver a empujar para mantener la "barrera" mientras queden capas
+            if (_getActiveModals().length > 0) {
+                _push();
+            }
+        }
+        // Si no hay capas activas, el navegador sale normalmente
+    });
+
+    // Deslizamiento táctil desde el borde izquierdo → cerrar capa
+    var _tx = 0, _ty = 0;
+    document.addEventListener('touchstart', function(e) {
+        _tx = e.touches[0].clientX;
+        _ty = e.touches[0].clientY;
+    }, { passive: true });
+
+    document.addEventListener('touchend', function(e) {
+        var dx = e.changedTouches[0].clientX - _tx;
+        var dy = Math.abs(e.changedTouches[0].clientY - _ty);
+        // Swipe desde borde izquierdo (≤35px inicio) con recorrido ≥65px horizontal
+        if (_tx <= 35 && dx >= 65 && dy < 80) {
+            if (_getActiveModals().length > 0) {
+                _cerrarTopModal();
+            }
+        }
+    }, { passive: true });
+
+})();
 </script></body></html>
