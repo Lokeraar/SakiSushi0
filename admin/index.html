@@ -1389,48 +1389,66 @@
             if (!grid) return;
             grid.innerHTML = '';
 
-            // Leer SSID/pwd del localStorage para el payload combinado
             const _ssid = localStorage.getItem('saki_wifi_ssid') || '';
             const _pwd  = localStorage.getItem('saki_wifi_password') || '';
 
             (window.qrCodes || []).forEach(qr => {
-                const mesaUrl = `${window.location.origin}/SakiSushi0/Cliente/index.html?mesa=${encodeURIComponent(qr.nombre)}`;
-
-                // QR combinado si hay WiFi guardado
-                let qrText;
-                if (_ssid && _pwd) {
-                    qrText = `WIFI:T:WPA;S:${_ssid};P:${_pwd};;
-${mesaUrl}`;
-                } else {
-                    qrText = mesaUrl;
-                }
+                // URL del menú con parámetros de mesa y WiFi
+                const params = new URLSearchParams({ mesa: qr.nombre });
+                if (_ssid) params.set('wifi_ssid', _ssid);
+                if (_pwd)  params.set('wifi_pwd', _pwd);
+                const qrText = window.location.origin + '/SakiSushi0/Cliente/index.html?' + params.toString();
+                const urlVisible = qrText.replace(/wifi_pwd=[^&]+/, 'wifi_pwd=***');
 
                 const card = document.createElement('div');
                 card.className = 'qr-card';
-                card.innerHTML = `
-                    <div class="qr-image" id="qr-${qr.id}"></div>
-                    <div class="qr-nombre">${_ssid ? '📶 ' : ''}${qr.nombre}</div>
-                    <div class="qr-url">${mesaUrl}</div>
-                    <div class="qr-actions">
-                        <button onclick="window.ampliarQR('${qr.id}','${qr.nombre}',document.getElementById('qr-${qr.id}').dataset.qrt)" title="Ampliar">
-                            <i class="fas fa-expand"></i>
-                        </button>
-                        <button onclick="window.eliminarQR('${qr.id}')" title="Eliminar">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </div>
-                `;
+                const qrId = 'qr-' + qr.id;
+
+                // Usar data-qrt para evitar problemas de comillas en onclick
+                const img  = document.createElement('div');
+                img.className = 'qr-image';
+                img.id = qrId;
+
+                const nombre = document.createElement('div');
+                nombre.className = 'qr-nombre';
+                nombre.textContent = (_ssid ? '📶 ' : '') + qr.nombre;
+
+                const url = document.createElement('div');
+                url.className = 'qr-url';
+                url.textContent = urlVisible;
+
+                const actions = document.createElement('div');
+                actions.className = 'qr-actions';
+
+                const btnAmp = document.createElement('button');
+                btnAmp.title = 'Ampliar';
+                btnAmp.innerHTML = '<i class="fas fa-expand"></i>';
+                btnAmp.dataset.qrt   = qrText;
+                btnAmp.dataset.id    = qr.id;
+                btnAmp.dataset.nom   = qr.nombre;
+                btnAmp.addEventListener('click', function() {
+                    window.ampliarQR(this.dataset.id, this.dataset.nom, this.dataset.qrt);
+                });
+
+                const btnDel = document.createElement('button');
+                btnDel.title = 'Eliminar';
+                btnDel.innerHTML = '<i class="fas fa-trash"></i>';
+                btnDel.dataset.id = qr.id;
+                btnDel.addEventListener('click', function() {
+                    window.eliminarQR(this.dataset.id);
+                });
+
+                actions.appendChild(btnAmp);
+                actions.appendChild(btnDel);
+                card.appendChild(img);
+                card.appendChild(nombre);
+                card.appendChild(url);
+                card.appendChild(actions);
                 grid.appendChild(card);
 
-                // Guardar qrText en el div para ampliar
-                const qrDiv = document.getElementById(`qr-${qr.id}`);
-                qrDiv.dataset.qrt = qrText;
-
-                new QRCode(qrDiv, { text: qrText, width: 150, height: 150 });
+                new QRCode(document.getElementById(qrId), { text: qrText, width: 150, height: 150 });
             });
-        };
-
-        window.generarQR = async function() {
+        };        window.generarQR = async function() {
             const nombre   = document.getElementById('qrNombreMesa').value.trim();
             const ssidEl   = document.getElementById('qrWifiSsid');
             const pwdEl    = document.getElementById('qrWifiPassword');
