@@ -47,14 +47,21 @@ DROP TABLE IF EXISTS config CASCADE;
 -- ============================================
 CREATE TABLE config (
     id INTEGER PRIMARY KEY DEFAULT 1,
-    tasa_cambio NUMERIC(10,2) DEFAULT 400.00,
-    tasa_efectiva NUMERIC(10,2) DEFAULT 400.00,
+    -- Tasa de cambio (NULL = no definida todavia hoy)
+    tasa_cambio NUMERIC(10,2) DEFAULT NULL,
+    tasa_efectiva NUMERIC(10,2) DEFAULT NULL,
+    -- Aumento automatico de tasa
     aumento_diario NUMERIC(5,2) DEFAULT 0,
     aumento_acumulado NUMERIC(5,2) DEFAULT 0,
     aumento_activo BOOLEAN DEFAULT FALSE,
+    aumento_semanal BOOLEAN DEFAULT FALSE,
     aumento_detenido BOOLEAN DEFAULT FALSE,
+    aumento_desde DATE DEFAULT NULL,
+    aumento_hasta DATE DEFAULT NULL,
+    aumento_indefinido BOOLEAN DEFAULT FALSE,
     fecha_ultimo_aumento TIMESTAMP WITH TIME ZONE,
     ultima_actualizacion TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    -- Seguridad y alertas
     admin_password TEXT DEFAULT '654321',
     recovery_email TEXT DEFAULT 'admin@sakisushi.com',
     alerta_stock_minimo INTEGER DEFAULT 5,
@@ -63,14 +70,26 @@ CREATE TABLE config (
     CONSTRAINT config_id_check CHECK (id = 1)
 );
 
-INSERT INTO config (id, tasa_cambio, tasa_efectiva, admin_password, recovery_email, alerta_stock_minimo) 
-VALUES (1, 400.00, 400.00, '654321', 'admin@sakisushi.com', 5)
+INSERT INTO config (
+    id, tasa_cambio, tasa_efectiva,
+    aumento_diario, aumento_acumulado,
+    aumento_activo, aumento_semanal, aumento_detenido,
+    aumento_desde, aumento_hasta, aumento_indefinido,
+    admin_password, recovery_email, alerta_stock_minimo
+) VALUES (
+    1,
+    NULL,   -- Sin tasa definida: el primer usuario en iniciar sesion la ingresara
+    NULL,   -- Se calcula automaticamente tras ingresar la tasa base
+    0, 0,
+    FALSE, FALSE, FALSE,
+    NULL, NULL, FALSE,
+    '654321', 'admin@sakisushi.com', 5
+)
 ON CONFLICT (id) DO UPDATE SET
-    tasa_cambio = EXCLUDED.tasa_cambio,
-    tasa_efectiva = EXCLUDED.tasa_efectiva,
-    admin_password = EXCLUDED.admin_password,
-    recovery_email = EXCLUDED.recovery_email,
-    alerta_stock_minimo = EXCLUDED.alerta_stock_minimo;
+    -- Al re-ejecutar el script, NO se pisa la tasa ni las fechas que ya existan
+    admin_password      = COALESCE(EXCLUDED.admin_password,      config.admin_password),
+    recovery_email      = COALESCE(EXCLUDED.recovery_email,      config.recovery_email),
+    alerta_stock_minimo = COALESCE(EXCLUDED.alerta_stock_minimo, config.alerta_stock_minimo);
 
 ALTER TABLE config ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Lectura config para todos" ON config FOR SELECT USING (true);
@@ -1092,10 +1111,20 @@ ALTER PUBLICATION supabase_realtime ADD TABLE mesoneros;
 ALTER PUBLICATION supabase_realtime ADD TABLE deliverys;
 
 -- ============================================
--- VERIFICACIÓN FINAL
+-- MIGRACION PARA BD YA EXISTENTE EN PRODUCCION
+-- Si ya tienes datos y NO quieres borrar todo,
+-- ejecuta solo este bloque en el SQL Editor de Supabase:
+-- ============================================
+ALTER TABLE config ADD COLUMN IF NOT EXISTS aumento_semanal    BOOLEAN DEFAULT FALSE;
+ALTER TABLE config ADD COLUMN IF NOT EXISTS aumento_desde      DATE    DEFAULT NULL;
+ALTER TABLE config ADD COLUMN IF NOT EXISTS aumento_hasta      DATE    DEFAULT NULL;
+ALTER TABLE config ADD COLUMN IF NOT EXISTS aumento_indefinido BOOLEAN DEFAULT FALSE;
+
+-- ============================================
+-- VERIFICACION FINAL
 -- ============================================
 SELECT '✅ SCRIPT COMPLETADO EXITOSAMENTE' as mensaje;
 SELECT '✅ NOTIFICACIONES AUTOMÁTICAS ACTIVADAS' as notificaciones;
 SELECT '✅ FUNCIÓN verify_user_credentials CREADA' as auth;
 SELECT '✅ Usuario admin: contraseña admin123' as admin_info;
-SELECT '✅ Usuarios cajero: cajero1/123456, cajero2/123456' as cajero_info;
+SELECT '✅ Usuarios cajero: cajero1/123456, cajero2/123456' as cajero_info;p
