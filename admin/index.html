@@ -1022,6 +1022,17 @@
         </style>
 </head>
 <body>
+<!-- Aviso de salida -->
+<div id="_salidaAviso" style="display:none;position:fixed;inset:0;z-index:9999;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.55);padding:1rem">
+  <div style="background:linear-gradient(135deg,#1a1a2e,#16213e);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:1.4rem 1.2rem;width:100%;max-width:400px;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,.5)">
+    <p style="color:#fff;font-size:1rem;font-weight:600;margin-bottom:1.2rem">¿Seguro que deseas salir?</p>
+    <div style="display:flex;gap:.8rem">
+      <button id="_salidaNo" style="flex:1;padding:.75rem;border-radius:10px;border:2px solid rgba(255,255,255,.2);background:transparent;color:#fff;font-weight:600;cursor:pointer;font-size:.95rem">Cancelar</button>
+      <button id="_salidaSi" style="flex:1;padding:.75rem;border-radius:10px;border:none;background:linear-gradient(135deg,#D32F2F,#b71c1c);color:#fff;font-weight:600;cursor:pointer;font-size:.95rem">Salir</button>
+    </div>
+  </div>
+</div>
+
     <div class="login-container" id="loginContainer">
         <div class="login-box">
             <h2><i class="fas fa-cog"></i> Admin Saki Sushi</h2>
@@ -2619,76 +2630,124 @@
         };
 
         // ══════════════════════════════════════════════════════
-        // BACK-NAV ADMIN — botón atrás / deslizamiento táctil
-        // Cierra la capa/modal más reciente al navegar atrás
+        // BACK-NAV + CONFIRMACIÓN DE SALIDA — ADMIN
         // ══════════════════════════════════════════════════════
         (function() {
-            var _depth = 0;
+            var _depth = 2;
+            var _avisando = false, _avisoTimer = null;
+            var _av = document.getElementById('_salidaAviso');
 
             function _push() {
                 _depth++;
-                history.pushState({ sakiAdmin: true, d: _depth }, '');
+                try { history.pushState({ sakiAdmin: true, d: _depth }, ''); } catch(e) {}
             }
 
+            // Dos entradas iniciales — la página ya está "protegida" al cargar
+            try {
+                history.pushState({ sakiAdmin: true, d: 1 }, '');
+                history.pushState({ sakiAdmin: true, d: 2 }, '');
+            } catch(e) {}
+
+            // ── Aviso de salida ──
+            function _mostrarAviso() {
+                if (_avisando) {
+                    _avisando = false;
+                    window.location.replace(document.referrer || 'about:blank');
+                    return;
+                }
+                _avisando = true;
+                _push();
+                if (_av) _av.style.display = 'flex';
+                clearTimeout(_avisoTimer);
+                _avisoTimer = setTimeout(function() {
+                    if (_av) _av.style.display = 'none';
+                    _avisando = false;
+                    _push();
+                }, 5000);
+            }
+            function _ocultarAviso() {
+                if (_av) _av.style.display = 'none';
+                _avisando = false;
+                clearTimeout(_avisoTimer);
+            }
+
+            // Botones del aviso
+            var _btnSi = document.getElementById('_salidaSi');
+            var _btnNo = document.getElementById('_salidaNo');
+            if (_btnSi) _btnSi.addEventListener('click', function() {
+                _avisando = false;
+                if (_av) _av.style.display = 'none';
+                window.location.replace(document.referrer || 'about:blank');
+            });
+            if (_btnNo) _btnNo.addEventListener('click', function() {
+                _ocultarAviso(); _push();
+            });
+
+            // ── Modales del admin ──
             function _getOpenModals() {
                 return Array.from(document.querySelectorAll('.modal.active'));
             }
 
-            function _cerrarTopmostModal() {
+            function _cerrarTopModal() {
                 var mods = _getOpenModals();
-                if (mods.length > 0) {
-                    mods[mods.length - 1].classList.remove('active');
-                    _depth = Math.max(0, _depth - 1);
-                    return true;
-                }
-                return false;
+                if (!mods.length) return false;
+                mods[mods.length - 1].classList.remove('active');
+                _depth = Math.max(0, _depth - 1);
+                return true;
             }
 
-            // Monitorear apertura de modales con MutationObserver
+            // MutationObserver — pushState al abrir modal
             var _obs = new MutationObserver(function(mutations) {
                 mutations.forEach(function(m) {
-                    if (m.attributeName === 'class' && m.target.classList) {
-                        var el = m.target;
-                        // Modal que acaba de abrirse
-                        if (el.classList.contains('modal') && el.classList.contains('active')) {
-                            _push();
-                        }
+                    if (m.attributeName !== 'class') return;
+                    var el = m.target;
+                    if (el.classList.contains('modal') && el.classList.contains('active')) {
+                        _push();
                     }
                 });
             });
-            // Observar todos los modales del admin
             document.querySelectorAll('.modal').forEach(function(modal) {
                 _obs.observe(modal, { attributes: true, attributeFilter: ['class'] });
             });
 
-            // popstate — botón atrás del navegador/Android
+            // ── popstate ──
             window.addEventListener('popstate', function(e) {
-                if (e.state && e.state.sakiAdmin) {
-                    if (!_cerrarTopmostModal()) {
-                        _depth = 0;
-                    }
+                if (e.state && e.state.sakiAdmin) _depth = e.state.d || 0;
+
+                if (_avisando) { _ocultarAviso(); return; }
+
+                if (_getOpenModals().length > 0) {
+                    _cerrarTopModal();
+                    if (_getOpenModals().length > 0) _push();
+                    return;
+                }
+
+                // Sin capas y panel activo: mostrar aviso
+                if (document.getElementById('panelContainer')?.classList.contains('active')) {
+                    _depth = 0;
+                    _mostrarAviso();
                 }
             });
 
-            // Swipe derecho táctil — deslizar desde borde izquierdo
-            var _touchStartX = 0, _touchStartY = 0;
+            // ── Swipe táctil ──
+            var _tx = 0, _ty = 0;
             document.addEventListener('touchstart', function(e) {
-                _touchStartX = e.touches[0].clientX;
-                _touchStartY = e.touches[0].clientY;
+                _tx = e.touches[0].clientX;
+                _ty = e.touches[0].clientY;
             }, { passive: true });
             document.addEventListener('touchend', function(e) {
-                var dx = e.changedTouches[0].clientX - _touchStartX;
-                var dy = Math.abs(e.changedTouches[0].clientY - _touchStartY);
-                // Swipe derecho desde borde izquierdo (≤30px) con recorrido ≥60px horizontal
-                if (_touchStartX <= 30 && dx >= 60 && dy < 80) {
+                var dx = e.changedTouches[0].clientX - _tx;
+                var dy = Math.abs(e.changedTouches[0].clientY - _ty);
+                if (_tx <= 35 && dx >= 65 && dy < 80) {
                     if (_getOpenModals().length > 0) {
-                        _cerrarTopmostModal();
+                        _cerrarTopModal();
+                    } else if (document.getElementById('panelContainer')?.classList.contains('active')) {
+                        _mostrarAviso();
                     }
                 }
             }, { passive: true });
 
-            // Exponer para uso externo si es necesario
-            window._adminCerrarModal = _cerrarTopmostModal;
+            window._adminCerrarModal = _cerrarTopModal;
         })();
 
     </script>
