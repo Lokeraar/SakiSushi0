@@ -529,6 +529,37 @@
         flex-wrap: wrap;
     }
     .tasa-row-valores { border-bottom: 1px solid #f0f0f0; padding-bottom: .4rem; }
+    /* Bloque de fechas de vigencia */
+    .tasa-fechas-wrap {
+        display: flex;
+        flex-direction: column;
+        gap: .3rem;
+        padding: .4rem .6rem;
+        background: #f9f9f9;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        font-size: .82rem;
+    }
+    .tasa-fecha-item {
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+    }
+    .tasa-fecha-label {
+        font-weight: 600;
+        color: var(--text-muted);
+        white-space: nowrap;
+        min-width: 52px;
+    }
+    .tasa-fecha-item input[type="date"] {
+        padding: .3rem .5rem;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        font-size: .82rem;
+        font-family: 'Montserrat', sans-serif;
+        outline: none;
+    }
+    .tasa-fecha-item input[type="date"]:focus { border-color: var(--primary); }
     .tasa-item { display: flex; align-items: center; gap: .5rem; }
     .tasa-item label { color: var(--text-muted); font-weight: 600; white-space: nowrap; }
     .tasa-item input[type="number"] {
@@ -928,8 +959,9 @@
             /* Cada toggle en su propia línea en móvil */
             .tasa-toggle-item {
                 width: 100%;
-                justify-content: space-between;
-                padding: .25rem 0;
+                justify-content: flex-start;
+                gap: .75rem;
+                padding: .3rem 0;
                 border-bottom: 1px solid #f5f5f5;
             }
             .tasa-toggle-item label:first-child {
@@ -937,7 +969,7 @@
                 color: var(--text-dark);
             }
             .tasa-row-controles { flex-direction: column; align-items: stretch; }
-            .tasa-row-controles .tasa-item:last-child { align-self: flex-end; margin-left: 0; margin-top: .25rem; }
+            .tasa-row-controles .tasa-item:last-child { align-self: flex-end; margin-left: 0; margin-top: .4rem; }
             /* Dashboard: 2 columnas en móvil */
             .dashboard-grid { grid-template-columns: 1fr 1fr; }
             .inventario-grid, .menu-grid, .qr-grid { grid-template-columns: 1fr; }
@@ -1001,10 +1033,16 @@
                     <label>Aumento semanal activo:</label>
                     <label class="toggle-switch"><input type="checkbox" id="aumentoSemanalToggle"><span class="toggle-slider"></span></label>
                 </div>
-                <div class="tasa-item tasa-fechas" id="tasaFechasDiv" style="display:none">
-                    <label>Desde:</label><input type="date" id="aumentoDesde">
-                    <label style="margin-left:.4rem">Hasta:</label><input type="date" id="aumentoHasta">
-                    <label style="margin-left:.4rem"><input type="checkbox" id="aumentoIndefinido"> Indefinido</label>
+                <div class="tasa-fechas-wrap" id="tasaFechasDiv" style="display:none">
+                    <div class="tasa-fecha-item">
+                        <label class="tasa-fecha-label">Desde:</label>
+                        <input type="date" id="aumentoDesde">
+                    </div>
+                    <div class="tasa-fecha-item">
+                        <label class="tasa-fecha-label">Hasta:</label>
+                        <input type="date" id="aumentoHasta" style="margin-right:.5rem">
+                        <label class="tasa-fecha-label"><input type="checkbox" id="aumentoIndefinido"> Indefinido</label>
+                    </div>
                 </div>
                 <div class="tasa-item" style="margin-left:auto">
                     <button class="save-button" id="saveAllButton">
