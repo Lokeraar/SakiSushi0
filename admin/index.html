@@ -1336,7 +1336,7 @@
         window.cargarConfiguracionInicial = async function() {
             await window.cargarConfiguracion();
             window.actualizarTasaUI();
-            document.getElementById('alertaStockMinimo').value = window.configGlobal.alerta_stock_minimo || 5;
+            // alertaStockMinimo se gestiona por ingrediente (campo Stock Mínimo en modal de inventario)
         };
 
         window.actualizarTasaUI = function() {
@@ -1484,16 +1484,7 @@
             } catch (e) { console.error('Error verificando stock crítico:', e); }
         };
 
-        window.guardarUmbralStock = async function() {
-            const umbral = parseInt(document.getElementById('alertaStockMinimo').value);
-            if (isNaN(umbral) || umbral < 1) { window.mostrarToast('Ingresa un valor válido', 'error'); return; }
-            try {
-                await window.supabaseClient.from('config').update({ alerta_stock_minimo: umbral }).eq('id', 1);
-                window.configGlobal.alerta_stock_minimo = umbral;
-                window.mostrarToast(' Umbral de stock actualizado', 'success');
-                await window.verificarStockCritico();
-            } catch (e) { console.error('Error guardando umbral:', e); window.mostrarToast(' Error al guardar el umbral', 'error'); }
-        };
+
 
         window.agregarMesonero = async function() {
             const nombre = document.getElementById('nuevoMesonero').value.trim();
