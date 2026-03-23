@@ -134,7 +134,7 @@
                     window.platillosNotificados[platillo.id] = 'disponible';
                     localStorage.setItem('saki_platillos_notificados', JSON.stringify(window.platillosNotificados));
                     
-                    const titulo = ` ${platillo.nombre} disponible de nuevo!`;
+                    const titulo = `✅ ${platillo.nombre} disponible de nuevo!`;
                     const mensaje = `Ya tenemos ${platillo.nombre} en stock. ¡Pide ahora!`;
                     
                     try {
@@ -148,7 +148,7 @@
                         for (const sessionId of sessionIds) {
                             await window.enviarNotificacionPush(titulo, mensaje, sessionId);
                         }
-                        window.mostrarToast(` Notificaciónn enviada: ${platillo.nombre} disponible`, 'success');
+                        window.mostrarToast(`✅ Notificaciónn enviada: ${platillo.nombre} disponible`, 'success');
                     } catch (e) {
                         console.error('Error enviando notificaciones masivas:', e);
                     }
@@ -172,7 +172,7 @@
                     schema: 'public',
                     table: 'inventario'
                 }, async (payload) => {
-                    console.log(' Cambio en inventario detectado:', payload);
+                    console.log('✅ Cambio en inventario detectado:', payload);
                     const index = window.inventarioItems.findIndex(i => i.id === payload.new.id);
                     if (index !== -1) {
                         window.inventarioItems[index] = payload.new;
@@ -183,7 +183,7 @@
                     await window.recalcularStockPlatillos();
                     if (payload.new.stock > 0 && payload.old?.stock <= 0) {
                         await window.enviarNotificacionPush(
-                            ' Stock actualizado',
+                            '✅ Stock actualizado',
                             `El ingrediente ${payload.new.nombre} está disponible nuevamente. ¡Revisa el menú!`
                         );
                     }
@@ -193,7 +193,7 @@
                     schema: 'public',
                     table: 'menu'
                 }, async (payload) => {
-                    console.log(' Cambio en menú detectado:', payload);
+                    console.log('✅ Cambio en menú detectado:', payload);
                     await window.cargarMenu();
                 })
                 .subscribe();
@@ -266,7 +266,7 @@
     <!-- FUNCIÓN HACER LOGIN (CORREGIDA - USA EDGE FUNCTION) -->
     <script>
         window.hacerLogin = async function() {
-            console.log(' Intentando login admin...');
+            console.log('✅ Intentando login admin...');
             const password = document.getElementById('adminPassword').value;
             if (!password) { window.mostrarToast('Ingresa la contraseña', 'error'); return; }
             
@@ -281,9 +281,9 @@
                 });
                 const data = await response.json();
                 if (!response.ok) throw new Error(data.error || `Error ${response.status}`);
-                if (!data.success) { window.mostrarToast(' ' + (data.error || 'Contraseña incorrecta'), 'error'); return; }
+                if (!data.success) { window.mostrarToast('✅ ' + (data.error || 'Contraseña incorrecta'), 'error'); return; }
                 if (data.user.rol !== 'admin') { window.mostrarToast('Acceso denegado. Se requiere rol de administrador.', 'error'); return; }
-                if (sessionStorage.getItem('admin_authenticated') === 'true') { window.mostrarToast(' Ya hay una sesión de administrador activa', 'warning'); return; }
+                if (sessionStorage.getItem('admin_authenticated') === 'true') { window.mostrarToast('✅✅ Ya hay una sesión de administrador activa', 'warning'); return; }
 
                 window.isAdminAuthenticated = true;
                 window.jwtToken = data.token;
@@ -293,7 +293,7 @@
                 window.supabaseClient = window.inicializarSupabaseCliente(window.jwtToken);
                 document.getElementById('loginContainer').style.display = 'none';
                 document.getElementById('panelContainer').classList.add('active');
-                window.mostrarToast(' Bienvenido Administrador', 'success');
+                window.mostrarToast('✅ Bienvenido Administrador', 'success');
                 
                 setTimeout(async () => {
                     try {
@@ -314,8 +314,8 @@
                     } catch (e) { console.error('Error cargando datos:', e); window.mostrarToast('Error cargando datos: ' + e.message, 'error'); }
                 }, 500);
             } catch (error) {
-                console.error(' Error:', error);
-                window.mostrarToast(' Error: ' + error.message, 'error');
+                console.error('✅ Error:', error);
+                window.mostrarToast('✅ Error: ' + error.message, 'error');
             } finally {
                 if (loginBtn) { loginBtn.disabled = false; loginBtn.innerHTML = 'Ingresar'; }
             }
@@ -1480,12 +1480,7 @@ html.dark-theme {
     .delivery-actions { display: flex; gap: .35rem; flex-wrap: wrap; align-items: center; }
 
     /* ── Mesoneros grid ── */
-    .mesoneros-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-        gap: 1rem;
-        max-width: 900px;
-    }
+    .mesoneros-grid-OLD-REMOVED { display: none; }
     .mesonero-card {
         background: var(--card-bg);
         border-radius: 14px;
@@ -2078,6 +2073,17 @@ html.dark-theme {
         .qr-grid           { grid-template-columns: repeat(2, 1fr); }
         .mesonero-card     { width: 100%; max-width: 100%; }
     }
+
+    /* ── Menú: tarjeta desactivada/no disponible ── */
+    .menu-card-v2.no-disponible {
+        opacity: .55;
+        filter: grayscale(.7);
+        border-top-color: var(--text-muted) !important;
+        background: #f5f5f5;
+    }
+    .menu-card-v2.no-disponible .mc2-nombre { color: var(--text-muted); }
+    .menu-card-v2.no-disponible .mc2-precio { color: var(--text-muted) !important; }
+    .menu-card-v2.no-disponible .mc2-precio-bs { color: var(--text-muted) !important; }
 </style>
 </head>
 <body>
@@ -2802,7 +2808,7 @@ html.dark-theme {
                         <span class="delivery-estado ${d.activo ? 'activo' : 'inactivo'}">${d.activo ? 'Activo' : 'Inactivo'}</span>
                     </div>
                     <div class="delivery-acumulado">
-                        <span> Acumulado total:</span>
+                        <span>💰 Acumulado total:</span>
                         <span class="delivery-monto">${window.formatBs(acumulado)}</span>
                     </div>
                     <div class="delivery-actions">
@@ -2931,10 +2937,10 @@ html.dark-theme {
                 if (error) throw error;
                 document.getElementById('nuevoMesonero').value = '';
                 await window.cargarMesoneros();
-                window.mostrarToast(' Mesonero agregado', 'success');
+                window.mostrarToast('✅ Mesonero agregado', 'success');
             } catch (e) {
                 console.error('Error agregando mesonero:', e);
-                window.mostrarToast(' Error: ' + (e.message || e), 'error');
+                window.mostrarToast('✅ Error: ' + (e.message || e), 'error');
             } finally {
                 if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-plus"></i> Agregar'; }
             }
@@ -2972,7 +2978,7 @@ Esto marcará todas sus propinas pendientes como entregadas.`);
             try {
                 await window.supabaseClient.from('mesoneros').delete().eq('id', id);
                 await window.cargarMesoneros();
-                window.mostrarToast(' Eliminado', 'success');
+                window.mostrarToast('✅✅ Eliminado', 'success');
             } catch (e) { console.error('Error:', e); }
         };
 
@@ -2988,10 +2994,10 @@ Esto marcará todas sus propinas pendientes como entregadas.`);
                 if (error) throw error;
                 document.getElementById('nuevoDelivery').value = '';
                 await window.cargarDeliverys();
-                window.mostrarToast(' Motorizado agregado', 'success');
+                window.mostrarToast('✅ Motorizado agregado', 'success');
             } catch (e) {
                 console.error('Error agregando motorizado:', e);
-                window.mostrarToast(' Error: ' + (e.message || e), 'error');
+                window.mostrarToast('✅ Error: ' + (e.message || e), 'error');
             } finally {
                 if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-plus"></i> Agregar'; }
             }
@@ -3014,8 +3020,8 @@ Esto marcará todas sus propinas pendientes como entregadas.`);
                 await window.supabaseClient.from('deliverys').update({ nombre, activo }).eq('id', window.deliveryEditandoId);
                 document.getElementById('deliveryModal').classList.remove('active');
                 await window.cargarDeliverys();
-                window.mostrarToast(' Motorizado actualizado', 'success');
-            } catch (e) { console.error('Error:', e); window.mostrarToast(' Error al actualizar', 'error'); }
+                window.mostrarToast('✅ Motorizado actualizado', 'success');
+            } catch (e) { console.error('Error:', e); window.mostrarToast('✅ Error al actualizar', 'error'); }
         });
 
         window.eliminarDelivery = async function(id) {
@@ -3125,19 +3131,19 @@ Esto marcará todas sus propinas pendientes como entregadas.`);
                         fecha_entrega: new Date().toISOString()
                     }]);
                     if (error) throw error;
-                    window.mostrarToast(' Pago parcial registrado.', 'success');
+                    window.mostrarToast('✅ Pago parcial registrado.', 'success');
                 } else {
                     // Pago total — borrar todo el acumulado
                     const { error } = await window.supabaseClient.from('entregas_delivery')
                         .delete().eq('delivery_id', window.deliveryParaPago);
                     if (error) throw error;
-                    window.mostrarToast(' Pago total registrado. Acumulado reiniciado.', 'success');
+                    window.mostrarToast('✅ Pago total registrado. Acumulado reiniciado.', 'success');
                 }
                 window.cerrarModal('confirmPagoDeliveryModal');
                 await window.cargarDeliverys();
             } catch (e) {
                 console.error('Error registrando pago:', e);
-                window.mostrarToast(' Error al registrar pago: ' + (e.message || e), 'error');
+                window.mostrarToast('✅ Error al registrar pago: ' + (e.message || e), 'error');
             } finally {
                 if (btn) { btn.disabled = false; btn.innerHTML = 'Confirmar'; }
             }
@@ -3225,10 +3231,10 @@ Esto marcará todas sus propinas pendientes como entregadas.`);
                 if (error) throw error;
                 document.getElementById('usuarioModal').classList.remove('active');
                 await window.cargarUsuarios();
-                window.mostrarToast(' Cajero creado exitosamente', 'success');
+                window.mostrarToast('✅ Cajero creado exitosamente', 'success');
             } catch (e) {
                 console.error('Error creando cajero:', e);
-                window.mostrarToast(' Error: ' + (e.message || e), 'error');
+                window.mostrarToast('✅ Error: ' + (e.message || e), 'error');
             } finally {
                 if (btn) { btn.disabled = false; btn.innerHTML = 'Guardar'; }
             }
@@ -3238,8 +3244,8 @@ Esto marcará todas sus propinas pendientes como entregadas.`);
             try {
                 await window.supabaseClient.from('usuarios').update({ activo }).eq('id', userId);
                 await window.cargarUsuarios();
-                window.mostrarToast(` Usuario ${activo ? 'activado' : 'desactivado'}`, 'success');
-            } catch (e) { console.error('Error actualizando usuario:', e); window.mostrarToast(' Error al actualizar usuario', 'error'); }
+                window.mostrarToast(`✅ Usuario ${activo ? 'activado' : 'desactivado'}`, 'success');
+            } catch (e) { console.error('Error actualizando usuario:', e); window.mostrarToast('✅ Error al actualizar usuario', 'error'); }
         };
 
         window.eliminarUsuario = async function(userId) {
@@ -3247,8 +3253,8 @@ Esto marcará todas sus propinas pendientes como entregadas.`);
             try {
                 await window.supabaseClient.from('usuarios').delete().eq('id', userId);
                 await window.cargarUsuarios();
-                window.mostrarToast(' Usuario eliminado', 'success');
-            } catch (e) { console.error('Error eliminando usuario:', e); window.mostrarToast(' Error al eliminar usuario', 'error'); }
+                window.mostrarToast('✅✅ Usuario eliminado', 'success');
+            } catch (e) { console.error('Error eliminando usuario:', e); window.mostrarToast('✅ Error al eliminar usuario', 'error'); }
         };
 
         window.cargarQRs = async function() {
@@ -3377,8 +3383,8 @@ Esto marcará todas sus propinas pendientes como entregadas.`);
             try {
                 await window.supabaseClient.from('codigos_qr').delete().eq('id', id);
                 await window.cargarQRs();
-                window.mostrarToast(' QR eliminado', 'success');
-            } catch (e) { console.error('Error eliminando QR:', e); window.mostrarToast(' Error al eliminar QR', 'error'); }
+                window.mostrarToast('✅✅ QR eliminado', 'success');
+            } catch (e) { console.error('Error eliminando QR:', e); window.mostrarToast('✅ Error al eliminar QR', 'error'); }
         };
 
         window.cargarReportes = async function() {
@@ -3530,11 +3536,11 @@ Esto marcará todas sus propinas pendientes como entregadas.`);
             try {
                 await window.supabaseClient.from('config').update({ admin_password: nueva }).eq('id', 1);
                 window.configGlobal.admin_password = nueva;
-                window.mostrarToast(' Contraseña actualizada', 'success');
+                window.mostrarToast('✅ Contraseña actualizada', 'success');
                 document.getElementById('currentPassword').value = '';
                 document.getElementById('newPassword').value = '';
                 document.getElementById('confirmPassword').value = '';
-            } catch (e) { console.error('Error cambiando contraseña:', e); window.mostrarToast(' Error al cambiar la contraseña', 'error'); }
+            } catch (e) { console.error('Error cambiando contraseña:', e); window.mostrarToast('✅ Error al cambiar la contraseña', 'error'); }
         };
 
         window.guardarRecoveryEmail = async function() {
@@ -3542,8 +3548,8 @@ Esto marcará todas sus propinas pendientes como entregadas.`);
             if (!email || !email.includes('@')) { window.mostrarToast('Ingresa un correo válido', 'error'); return; }
             try {
                 await window.supabaseClient.from('config').update({ recovery_email: email }).eq('id', 1);
-                window.mostrarToast(' Correo de recuperación guardado', 'success');
-            } catch (e) { console.error('Error guardando email:', e); window.mostrarToast(' Error al guardar el correo', 'error'); }
+                window.mostrarToast('✅ Correo de recuperación guardado', 'success');
+            } catch (e) { console.error('Error guardando email:', e); window.mostrarToast('✅ Error al guardar el correo', 'error'); }
         };
 
         // ==================== FUNCIONES DE CONFIGURACIÓN ====================
@@ -3637,8 +3643,8 @@ Esto marcará todas sus propinas pendientes como entregadas.`);
                     aumento_indefinido: document.getElementById('aumentoIndefinido')?.checked || false,
                     ultima_actualizacion: new Date().toISOString()
                 }).eq('id', 1);
-                window.mostrarToast(' Configuración guardada', 'success');
-            } catch (e) { console.error('Error guardando configuración:', e); window.mostrarToast(' Error al guardar la configuración', 'error'); }
+                window.mostrarToast('✅ Configuración guardada', 'success');
+            } catch (e) { console.error('Error guardando configuración:', e); window.mostrarToast('✅ Error al guardar la configuración', 'error'); }
         };
 
         // ==================== FUNCIONES DE MENÚ (PLATILLOS) ====================
@@ -3670,6 +3676,11 @@ Esto marcará todas sus propinas pendientes como entregadas.`);
         window.agregarIngredienteRow = function(ingredienteId, cantidad, unidad) {
             ingredienteId = ingredienteId || '';
             cantidad = cantidad || '';
+            // Si no viene unidad, buscar la del inventario para no asumir 'unidades' incorrectamente
+            if (!unidad && ingredienteId) {
+                const _invItem = (window.inventarioItems || []).find(i => i.id === ingredienteId);
+                unidad = _invItem?.unidad_base || 'unidades';
+            }
             unidad = unidad || 'unidades';
             const container = document.getElementById('ingredientesContainer');
             const row = document.createElement('div');
@@ -3807,16 +3818,26 @@ Esto marcará todas sus propinas pendientes como entregadas.`);
                 });
 
                 // Calcular stock máximo basado en inventario real
-                let maxPlatillos = Infinity;
-                Object.entries(ingredientes).forEach(([ingId, ingData]) => {
-                    const inv = (window.inventarioItems || []).find(i => i.id === ingId);
-                    if (inv) {
-                        const disponibleInv = (inv.stock || 0) - (inv.reservado || 0);
-                        const necesario = window._convertirUnidad(ingData.cantidad, ingData.unidad, inv.unidad_base || 'unidades');
-                        if (necesario > 0) maxPlatillos = Math.min(maxPlatillos, Math.floor(disponibleInv / necesario));
-                    } else { maxPlatillos = 0; }
-                });
-                if (!isFinite(maxPlatillos) || maxPlatillos < 0) maxPlatillos = 0;
+                const _ingEntries = Object.entries(ingredientes);
+                let maxPlatillos;
+                if (!_ingEntries.length) {
+                    // Sin ingredientes → conservar stock existente (no sobreescribir con 0)
+                    const _existing = (window.menuItems || []).find(p => p.id === (window.platilloEditandoId || ''));
+                    maxPlatillos = _existing ? (_existing.stock || 0) : 0;
+                } else {
+                    maxPlatillos = Infinity;
+                    _ingEntries.forEach(([ingId, ingData]) => {
+                        const inv = (window.inventarioItems || []).find(i => i.id === ingId);
+                        if (inv) {
+                            const disponibleInv = (inv.stock || 0) - (inv.reservado || 0);
+                            const unidadRef  = inv.unidad_base || 'unidades';
+                            const unidadDato = ingData.unidad || unidadRef;
+                            const necesario  = window._convertirUnidad(ingData.cantidad, unidadDato, unidadRef);
+                            if (necesario > 0) maxPlatillos = Math.min(maxPlatillos, Math.floor(disponibleInv / necesario));
+                        } else { maxPlatillos = 0; }
+                    });
+                    if (!isFinite(maxPlatillos) || maxPlatillos < 0) maxPlatillos = 0;
+                } // end else (tiene ingredientes)
 
                 // Leer disponible del checkbox visual
                 const chkDisp = document.getElementById('platilloDisponibleCheck');
@@ -3839,8 +3860,8 @@ Esto marcará todas sus propinas pendientes como entregadas.`);
                 window.platilloEditandoId = null;
                 window.limpiarImagenPreview();
                 await window.cargarMenu();
-                window.mostrarToast(' Platillo guardado', 'success');
-            } catch (e) { console.error('Error guardando platillo:', e); window.mostrarToast(' Error al guardar el platillo: ' + e.message, 'error'); }
+                window.mostrarToast('✅ Platillo guardado', 'success');
+            } catch (e) { console.error('Error guardando platillo:', e); window.mostrarToast('✅ Error al guardar el platillo: ' + e.message, 'error'); }
             finally { const saveBtn = document.getElementById('savePlatillo'); saveBtn.innerHTML = 'Guardar'; saveBtn.disabled = false; }
         });
 
@@ -3851,8 +3872,8 @@ Esto marcará todas sus propinas pendientes como entregadas.`);
                 if (platillo && platillo.imagen && platillo.imagen.includes('imagenes-platillos')) await window.eliminarImagenPlatillo(platillo.imagen);
                 await window.supabaseClient.from('menu').delete().eq('id', id);
                 await window.cargarMenu();
-                window.mostrarToast(' Platillo eliminado', 'success');
-            } catch (e) { console.error('Error eliminando platillo:', e); window.mostrarToast(' Error al eliminar el platillo', 'error'); }
+                window.mostrarToast('✅✅ Platillo eliminado', 'success');
+            } catch (e) { console.error('Error eliminando platillo:', e); window.mostrarToast('✅ Error al eliminar el platillo', 'error'); }
         };
 
         window.abrirModalNuevoIngrediente = function() {
@@ -4011,10 +4032,10 @@ Esto marcará todas sus propinas pendientes como entregadas.`);
                 window.ingredienteEditandoId = null;
                 document.getElementById('ingredienteModal').classList.remove('active');
                 await window.cargarInventario();
-                window.mostrarToast(' Ingrediente guardado', 'success');
+                window.mostrarToast('✅ Ingrediente guardado', 'success');
             } catch (e) {
                 console.error('Error guardando ingrediente:', e);
-                window.mostrarToast(' Error: ' + (e.message || e), 'error');
+                window.mostrarToast('✅ Error: ' + (e.message || e), 'error');
             } finally {
                 if (btn) { btn.disabled = false; btn.innerHTML = 'Guardar'; }
             }
@@ -4025,8 +4046,8 @@ Esto marcará todas sus propinas pendientes como entregadas.`);
             try {
                 await window.supabaseClient.from('inventario').delete().eq('id', id);
                 await window.cargarInventario();
-                window.mostrarToast(' Ingrediente eliminado', 'success');
-            } catch (e) { console.error('Error eliminando ingrediente:', e); window.mostrarToast(' Error al eliminar ingrediente', 'error'); }
+                window.mostrarToast('✅✅ Ingrediente eliminado', 'success');
+            } catch (e) { console.error('Error eliminando ingrediente:', e); window.mostrarToast('✅ Error al eliminar ingrediente', 'error'); }
         };
 
         window.renderizarMenu = function(filtro) {
@@ -4063,7 +4084,7 @@ Esto marcará todas sus propinas pendientes como entregadas.`);
                     : '<span class="ing-tag" style="opacity:.5">Sin ingredientes</span>';
 
                 const card = document.createElement('div');
-                card.className = 'menu-card-v2';
+                card.className = 'menu-card-v2' + (item.disponible ? '' : ' no-disponible');
                 card.innerHTML = `
                     <!-- Cabecera: imagen derecha + info izquierda -->
                     <div class="mc2-header">
@@ -4267,7 +4288,7 @@ Esto marcará todas sus propinas pendientes como entregadas.`);
             window.isAdminAuthenticated = false;
             window.jwtToken = null;
             window.mostrarLogin();
-            window.mostrarToast(' Sesión cerrada', 'info');
+            window.mostrarToast('✅ Sesión cerrada', 'info');
             window.supabaseClient = window.inicializarSupabaseCliente();
         });
 
