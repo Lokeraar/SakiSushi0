@@ -885,7 +885,7 @@ html.dark-theme {
     /* ── Cards (inventario, menu, qr) ── */
     .inventario-grid, .menu-grid, .qr-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+        grid-template-columns: repeat(2, 1fr);
         gap: 1rem;
     }
     .inventario-card, .menu-card, .qr-card {
@@ -942,12 +942,24 @@ html.dark-theme {
     .menu-card-actions { display: flex; gap: .5rem; flex-wrap: wrap; }
 
     /* ── Usuarios grid ── */
-    .usuarios-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 1rem; }
+    .usuarios-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
     .usuario-card {
-        background: var(--card-bg); border-radius: var(--radius);
-        padding: 1.2rem; box-shadow: var(--shadow-sm);
+        background: var(--card-bg);
+        border-radius: 14px;
+        padding: 1rem 1.2rem;
+        box-shadow: var(--shadow-sm);
         border: 1px solid var(--border);
-        display: flex; justify-content: space-between; align-items: center;
+        border-left: 4px solid var(--info);
+        display: grid;
+        grid-template-columns: 40px 1fr auto;
+        align-items: center;
+        gap: .85rem;
+        min-width: 0;
+        transition: var(--transition);
     }
     .usuario-header { font-weight: 700; font-size: .95rem; }
     .usuario-info { font-size: .8rem; color: var(--text-muted); margin-top: .2rem; }
@@ -959,7 +971,7 @@ html.dark-theme {
         background: var(--card-bg); border-radius: var(--radius);
         padding: 1.2rem; box-shadow: var(--shadow-sm);
         border-left: 4px solid var(--delivery); border: 1px solid var(--border);
-        border-left: 4px solid var(--delivery);
+        display: flex; flex-direction: column; gap: .5rem;
         transition: var(--transition);
     }
     .delivery-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
@@ -967,13 +979,25 @@ html.dark-theme {
     .delivery-nombre { font-weight: 700; font-size: 1rem; }
     .delivery-acumulado { font-weight: 700; color: var(--delivery); font-size: 1.1rem; }
     .delivery-actions { display: flex; gap: .5rem; margin-top: .75rem; flex-wrap: wrap; }
-    .mesoneros-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem; }
+    .mesoneros-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
     .mesonero-card {
-        background: var(--card-bg); border-radius: var(--radius);
-        padding: 1rem; box-shadow: var(--shadow-sm);
-        border: 1px solid var(--border); border-left: 4px solid var(--propina);
-        display: flex; justify-content: space-between; align-items: center;
+        background: var(--card-bg);
+        border-radius: 14px;
+        padding: 1rem 1.2rem;
+        display: flex;
+        align-items: center;
+        gap: .85rem;
+        box-shadow: var(--shadow-sm);
+        border: 1px solid var(--border);
+        border-left: 4px solid var(--propina);
         transition: var(--transition);
+        min-width: 0;
+        width: 100%;
+        box-sizing: border-box;
     }
     .mesonero-nombre { font-weight: 600; }
     .propinas-stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
@@ -990,7 +1014,12 @@ html.dark-theme {
     .propinas-tabla tr:hover td { background: #f9f9f9; }
 
     /* ── Charts ── */
-    .charts-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem; margin-top: 1.5rem; }
+    .charts-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+        margin-top: 1.5rem;
+    }
     .chart-container { background: var(--card-bg); border-radius: var(--radius); padding: 1.5rem; box-shadow: var(--shadow-sm); }
     .chart-container h3 { font-size: 1rem; color: var(--text-dark); margin-bottom: 1rem; font-weight: 600; }
     .chart-wrapper { position: relative; height: 220px; }
@@ -1378,6 +1407,10 @@ html.dark-theme {
         transition: var(--transition);
     }
     .usuario-card:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
+    .usuario-info { min-width: 0; overflow: hidden; }
+    .usuario-nombre { font-weight: 700; font-size: .9rem; color: var(--text-dark); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; }
+    .usuario-username { font-size: .75rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
+    .usuario-actions { display: flex; gap: .35rem; flex-shrink: 0; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
     .usuario-avatar {
         width: 44px; height: 44px;
         border-radius: 50%;
@@ -1417,10 +1450,9 @@ html.dark-theme {
 
     /* ── Deliverys ── */
     .delivery-list {
-        display: flex;
-        flex-direction: column;
-        gap: .75rem;
-        max-width: 600px;
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: .85rem;
     }
     .delivery-item {
         background: var(--card-bg);
@@ -1445,7 +1477,7 @@ html.dark-theme {
         flex-shrink: 0;
     }
     .delivery-nombre { font-weight: 700; font-size: .9rem; color: var(--text-dark); flex: 1; }
-    .delivery-actions { display: flex; gap: .35rem; }
+    .delivery-actions { display: flex; gap: .35rem; flex-wrap: wrap; align-items: center; }
 
     /* ── Mesoneros grid ── */
     .mesoneros-grid {
@@ -1482,6 +1514,7 @@ html.dark-theme {
         white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
     .mesonero-card .mesonero-actions { display: flex; gap: .35rem; }
+    .mesonero-nombre { font-weight: 700; font-size: .88rem; color: var(--text-dark); flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
 
     /* ── Propinas stats ── */
     .propina-card {
@@ -1773,7 +1806,9 @@ html.dark-theme {
     .mc2-actions { display: flex; gap: .4rem; justify-content: flex-end; padding-top: .4rem; border-top: 1px solid var(--border); }
 
     /* ── Inventario card v2 ── */
-    .inventario-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem; }
+    .inventario-grid {
+        display: block; /* overridden by JS-built panel */
+    }
     .inv-card {
         background: var(--card-bg);
         border-radius: 14px;
@@ -1910,6 +1945,139 @@ html.dark-theme {
     .btn-toggle-on:hover  { background: var(--success); color: #fff; }
     .btn-toggle-off { background: #f5f5f5; color: var(--text-muted); }
     .btn-toggle-off:hover { background: #e0e0e0; color: var(--text-dark); }
+
+    /* ── Config 2-col grid ── */
+    .config-grid {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1.25rem;
+    }
+
+    /* ── Inventario panel ── */
+    .inv-panel { display: flex; gap: 1rem; align-items: flex-start; }
+    .inv-list-col {
+        flex: 0 0 260px;
+        background: var(--card-bg);
+        border-radius: 14px;
+        box-shadow: var(--shadow-sm);
+        border: 1px solid var(--border);
+        overflow: hidden;
+    }
+    .inv-list-search {
+        padding: .6rem .75rem;
+        border-bottom: 1px solid var(--border);
+        background: #fafafa;
+    }
+    .inv-list-search input {
+        width: 100%; padding: .4rem .7rem;
+        border: 1px solid var(--border); border-radius: 8px;
+        font-family: 'Montserrat', sans-serif; font-size: .82rem; outline: none;
+    }
+    .inv-list-items { max-height: calc(100vh - 280px); overflow-y: auto; }
+    .inv-list-item {
+        display: flex; align-items: center; justify-content: space-between;
+        padding: .6rem .9rem; cursor: pointer;
+        font-size: .85rem; font-weight: 600; color: var(--text-dark);
+        border-bottom: 1px solid var(--border);
+        transition: background .15s;
+        gap: .5rem;
+    }
+    .inv-list-item:last-child { border-bottom: none; }
+    .inv-list-item:hover { background: #f5f5f5; }
+    .inv-list-item.active {
+        background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+        color: #fff;
+    }
+    .inv-list-item.active .inv-item-badge { background: rgba(255,255,255,.25); color: #fff; }
+    .inv-item-badge {
+        font-size: .65rem; font-weight: 700;
+        padding: 2px 6px; border-radius: 10px;
+        flex-shrink: 0;
+        background: #f0f0f0; color: var(--text-muted);
+    }
+    .inv-item-badge.ok  { background: #e8f5e9; color: var(--success); }
+    .inv-item-badge.bajo { background: #fff8e1; color: var(--warning); }
+    .inv-item-badge.critico { background: #ffebee; color: var(--danger); }
+    .inv-detail-col {
+        flex: 1;
+        min-width: 0;
+    }
+    .inv-detail-card {
+        background: var(--card-bg);
+        border-radius: 14px;
+        padding: 1.4rem;
+        box-shadow: var(--shadow-sm);
+        border: 1px solid var(--border);
+        border-top: 3px solid var(--info);
+        position: relative;
+        animation: inv-detail-in .18s ease;
+    }
+    @keyframes inv-detail-in {
+        from { opacity: 0; transform: translateY(6px); }
+        to   { opacity: 1; transform: translateY(0); }
+    }
+    .inv-detail-title {
+        font-size: 1.1rem; font-weight: 800;
+        color: var(--text-dark); margin-bottom: 1rem;
+        padding-bottom: .6rem; border-bottom: 1px solid var(--border);
+        display: flex; align-items: center; justify-content: space-between;
+        gap: .5rem;
+    }
+    .inv-detail-empty {
+        padding: 3rem 1rem; text-align: center;
+        color: var(--text-muted); font-size: .88rem;
+    }
+    .inv-detail-close {
+        background: #f5f5f5; border: none; border-radius: 8px;
+        width: 28px; height: 28px; cursor: pointer; display: flex;
+        align-items: center; justify-content: center;
+        font-size: .8rem; color: var(--text-muted);
+        flex-shrink: 0; transition: background .15s;
+    }
+    .inv-detail-close:hover { background: var(--danger); color: #fff; }
+
+    /* Mobile: stack vertically */
+    @media (max-width: 768px) {
+        .inv-panel { flex-direction: column; }
+        .inv-list-col { flex: none; width: 100%; }
+        .inv-list-items { max-height: none; }
+        .inv-list-item.mobile-expanded { background: #f0f4ff; color: var(--primary); }
+    }
+
+    /* ══ RESPONSIVE BREAKPOINTS ══════════════════════════════════════ */
+
+    /* Tablet: 769px – 1200px */
+    @media (min-width: 769px) {
+        .usuarios-grid     { grid-template-columns: repeat(2, 1fr); }
+        .delivery-list     { grid-template-columns: repeat(2, 1fr); }
+        .mesoneros-grid    { grid-template-columns: repeat(2, 1fr); }
+        .config-grid       { grid-template-columns: repeat(2, 1fr); }
+        .qr-grid           { grid-template-columns: repeat(3, 1fr); }
+        .dashboard-grid    { grid-template-columns: repeat(3, 1fr); }
+        .charts-grid       { grid-template-columns: repeat(2, 1fr); }
+        .inv-list-col      { flex: 0 0 280px; }
+    }
+
+    /* Desktop: 1201px+ */
+    @media (min-width: 1201px) {
+        .usuarios-grid     { grid-template-columns: repeat(3, 1fr); }
+        .delivery-list     { grid-template-columns: repeat(3, 1fr); }
+        .mesoneros-grid    { grid-template-columns: repeat(3, 1fr); }
+        .config-grid       { grid-template-columns: repeat(2, 1fr); }
+        .qr-grid           { grid-template-columns: repeat(5, 1fr); }
+        .dashboard-grid    { grid-template-columns: repeat(4, 1fr); }
+        .charts-grid       { grid-template-columns: repeat(2, 1fr); }
+        .inv-list-col      { flex: 0 0 300px; }
+    }
+
+    /* Mobile: up to 768px — ensure mesonero cards are full width */
+    @media (max-width: 768px) {
+        .mesoneros-grid    { grid-template-columns: 1fr; }
+        .usuarios-grid     { grid-template-columns: 1fr; }
+        .delivery-list     { grid-template-columns: 1fr; }
+        .qr-grid           { grid-template-columns: repeat(2, 1fr); }
+        .mesonero-card     { width: 100%; max-width: 100%; }
+    }
 </style>
 </head>
 <body>
@@ -2084,13 +2252,23 @@ html.dark-theme {
                         <button class="btn-primary" onclick="window.abrirModalNuevoIngrediente()"><i class="fas fa-plus"></i> Nuevo Ingrediente</button>
                     </div>
                 </div>
-                <div class="inv-search-wrap">
-                    <i class="fas fa-search inv-search-icon"></i>
-                    <input type="text" id="inventarioBuscador" class="inv-search-input"
-                        placeholder="Buscar ingrediente por nombre..."
-                        oninput="window.renderizarInventario(this.value.trim())">
+                <div class="inv-panel" id="invPanel">
+                    <!-- Columna izquierda: lista -->
+                    <div class="inv-list-col">
+                        <div class="inv-list-search">
+                            <input type="text" id="inventarioBuscador" placeholder="Buscar ingrediente..."
+                                oninput="window.renderizarInventario(this.value.trim())">
+                        </div>
+                        <div class="inv-list-items" id="inventarioGrid"></div>
+                    </div>
+                    <!-- Columna derecha: detalle -->
+                    <div class="inv-detail-col" id="invDetailCol">
+                        <div class="inv-detail-empty" id="invDetailEmpty">
+                            <i class="fas fa-hand-point-left" style="font-size:2rem;margin-bottom:.75rem;display:block;opacity:.3"></i>
+                            Selecciona un ingrediente de la lista para ver su detalle
+                        </div>
+                    </div>
                 </div>
-                <div class="inventario-grid" id="inventarioGrid"></div>
             </div>
             
             <!-- USUARIOS -->
@@ -2115,7 +2293,7 @@ html.dark-theme {
                         </button>
                     </div>
                 </div>
-                <div class="delivery-list" id="deliverysGrid"></div>
+                <div class="delivery-list" id="deliverysGrid" style="display:grid"></div>
             </div>
             
             <!-- MESONEROS -->
@@ -2158,20 +2336,20 @@ html.dark-theme {
                 <div class="pane-header">
                     <h2 class="section-title"><i class="fas fa-cog"></i> Configuración</h2>
                 </div>
-                <div class="config-section">
-                    <h3><i class="fas fa-lock" style="color:var(--primary);margin-right:.4rem"></i>Cambiar Contraseña</h3>
-                    <div class="form-group"><label>Contraseña Actual</label><input type="password" id="currentPassword"></div>
-                    <div class="form-group"><label>Nueva Contraseña</label><input type="password" id="newPassword"></div>
-                    <div class="form-group"><label>Confirmar Nueva Contraseña</label><input type="password" id="confirmPassword"></div>
-                    <button class="btn-primary" onclick="window.cambiarPassword()"><i class="fas fa-save"></i> Guardar contraseña</button>
+                <div class="config-grid">
+                    <div class="config-section">
+                        <h3><i class="fas fa-lock" style="color:var(--primary);margin-right:.4rem"></i>Cambiar Contraseña</h3>
+                        <div class="form-group"><label>Contraseña Actual</label><input type="password" id="currentPassword"></div>
+                        <div class="form-group"><label>Nueva Contraseña</label><input type="password" id="newPassword"></div>
+                        <div class="form-group"><label>Confirmar Nueva Contraseña</label><input type="password" id="confirmPassword"></div>
+                        <button class="btn-primary" onclick="window.cambiarPassword()"><i class="fas fa-save"></i> Guardar contraseña</button>
+                    </div>
+                    <div class="config-section">
+                        <h3><i class="fas fa-envelope" style="color:var(--info);margin-right:.4rem"></i>Correo de Recuperación</h3>
+                        <div class="form-group"><label>Correo Electrónico</label><input type="email" id="recoveryEmail" value="admin@sakisushi.com"></div>
+                        <button class="btn-primary" onclick="window.guardarRecoveryEmail()"><i class="fas fa-save"></i> Guardar correo</button>
+                    </div>
                 </div>
-                <div class="config-section">
-                    <h3><i class="fas fa-envelope" style="color:var(--info);margin-right:.4rem"></i>Correo de Recuperación</h3>
-                    <div class="form-group"><label>Correo Electrónico</label><input type="email" id="recoveryEmail" value="admin@sakisushi.com"></div>
-                    <button class="btn-primary" onclick="window.guardarRecoveryEmail()"><i class="fas fa-save"></i> Guardar correo</button>
-                </div>
-
-
             </div>
             
             <!-- QR (MODIFICADO) -->
@@ -3934,8 +4112,90 @@ Esto marcará todas sus propinas pendientes como entregadas.`);
             });
         };
 
+        window._invActiveId = null;
+
+        window._invMostrarDetalle = function(item) {
+            const isMobile = window.innerWidth <= 768;
+            const estado = (item.stock||0)-(item.reservado||0) <= 0 ? 'critico'
+                : (item.stock||0)-(item.reservado||0) <= (item.minimo||0) ? 'bajo' : 'ok';
+            const disponible = (item.stock||0) - (item.reservado||0);
+            const porcentaje = item.minimo > 0 ? Math.min((disponible/item.minimo)*100, 100) : 100;
+            const colorEstado = estado === 'critico' ? 'var(--danger)' : estado === 'bajo' ? 'var(--warning)' : 'var(--success)';
+
+            const detailHTML = `
+                <div class="inv-detail-card" id="invDetailCard_${item.id}">
+                    <div class="inv-detail-title">
+                        <span>${item.nombre}</span>
+                        <button class="inv-detail-close" onclick="window._invCerrarDetalle('${item.id}')" title="Minimizar">
+                            <i class="fas fa-minus"></i>
+                        </button>
+                    </div>
+                    <div class="inv-stock-row" style="margin-bottom:.5rem">
+                        <span class="inv-stock-num ${estado}" style="font-size:2rem">${disponible}</span>
+                        <span class="inv-stock-unit" style="font-size:.9rem">${item.unidad_base||'u'}</span>
+                        <span style="font-size:.75rem;color:var(--text-muted);margin-left:auto">Reservado: ${item.reservado||0}</span>
+                    </div>
+                    <div class="inv-bar" style="margin-bottom:.85rem"><div class="inv-bar-fill ${estado}" style="width:${porcentaje}%"></div></div>
+                    <div class="inv-meta-grid" style="grid-template-columns:1fr 1fr 1fr;gap:.75rem;margin-bottom:.85rem">
+                        <div class="inv-meta-item">
+                            <span class="inv-meta-label">Mínimo</span>
+                            <span class="inv-meta-val" style="color:${colorEstado}">${item.minimo||0} ${item.unidad_base||'u'}</span>
+                        </div>
+                        <div class="inv-meta-item">
+                            <span class="inv-meta-label">Costo</span>
+                            <span class="inv-meta-val">${window.formatUSD(item.precio_costo||0)}</span>
+                            <span class="inv-meta-bs">${window.formatBs(window.usdToBs(item.precio_costo||0))}</span>
+                        </div>
+                        <div class="inv-meta-item">
+                            <span class="inv-meta-label">Venta</span>
+                            <span class="inv-meta-val">${window.formatUSD(item.precio_unitario||0)}</span>
+                            <span class="inv-meta-bs">${window.formatBs(window.usdToBs(item.precio_unitario||0))}</span>
+                        </div>
+                    </div>
+                    <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+                        <button class="btn-icon edit" onclick="window.editarIngrediente('${item.id}')" title="Editar ingrediente" style="width:auto;padding:.45rem .9rem;border-radius:8px">
+                            <i class="fas fa-pen"></i> Editar
+                        </button>
+                        <button class="btn-icon delete" onclick="window.eliminarIngrediente('${item.id}')" title="Eliminar ingrediente" style="width:auto;padding:.45rem .9rem;border-radius:8px">
+                            <i class="fas fa-trash"></i> Eliminar
+                        </button>
+                    </div>
+                </div>`;
+
+            if (isMobile) {
+                // Insertar debajo del item en la lista
+                const el = document.getElementById('invItem_' + item.id);
+                if (!el) return;
+                // Quitar detalle anterior si existía
+                const prev = el.nextElementSibling;
+                if (prev && prev.classList.contains('inv-mobile-detail')) prev.remove();
+                const wrap = document.createElement('div');
+                wrap.className = 'inv-mobile-detail';
+                wrap.innerHTML = detailHTML;
+                el.insertAdjacentElement('afterend', wrap);
+            } else {
+                // Mostrar en columna derecha
+                const col = document.getElementById('invDetailCol');
+                if (!col) return;
+                col.innerHTML = detailHTML;
+            }
+        };
+
+        window._invCerrarDetalle = function(itemId) {
+            window._invActiveId = null;
+            // Quitar highlight de lista
+            document.querySelectorAll('.inv-list-item').forEach(el => el.classList.remove('active'));
+            // Mobile: quitar detalle inline
+            const mDet = document.querySelector('.inv-mobile-detail');
+            if (mDet) mDet.remove();
+            // Desktop: restaurar empty
+            const col = document.getElementById('invDetailCol');
+            if (col) col.innerHTML = '<div class="inv-detail-empty" id="invDetailEmpty"><i class="fas fa-hand-point-left" style="font-size:2rem;margin-bottom:.75rem;display:block;opacity:.3"></i>Selecciona un ingrediente de la lista para ver su detalle</div>';
+        };
+
         window.renderizarInventario = function(filtro) {
             const grid = document.getElementById('inventarioGrid');
+            if (!grid) return;
             grid.innerHTML = '';
             const _normI = t => (t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
             const _baseI = [...window.inventarioItems].sort((a,b) => a.nombre.localeCompare(b.nombre));
@@ -3943,52 +4203,49 @@ Esto marcará todas sus propinas pendientes como entregadas.`);
                 ? _baseI.filter(i => _normI(i.nombre).includes(_normI(filtro)))
                 : _baseI;
             if (!items.length) {
-                grid.innerHTML = '<p style="color:var(--text-muted);font-size:.88rem;padding:.5rem">' +
+                grid.innerHTML = '<p style="color:var(--text-muted);font-size:.85rem;padding:.75rem">' +
                     (filtro ? 'Sin resultados para "' + filtro + '"' : 'No hay ingredientes registrados.') + '</p>';
                 return;
             }
             items.forEach(item => {
-                const disponible = (item.stock || 0) - (item.reservado || 0);
-                const porcentaje = item.minimo > 0 ? Math.min((disponible / item.minimo) * 100, 100) : 100;
-                const estado = disponible <= 0 ? 'critico' : disponible <= item.minimo ? 'bajo' : 'ok';
-                const card = document.createElement('div');
-                card.className = 'inv-card';
-                card.innerHTML = `
-                    <div class="inv-top">
-                        <div class="inv-nombre">${item.nombre}</div>
-                        <div class="inv-actions">
-                            <button class="btn-icon edit" onclick="window.editarIngrediente('${item.id}')" title="Editar">
-                                <i class="fas fa-pen"></i>
-                            </button>
-                            <button class="btn-icon delete" onclick="window.eliminarIngrediente('${item.id}')" title="Eliminar">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    </div>
-                    <div class="inv-stock-row">
-                        <span class="inv-stock-num ${estado}">${disponible}</span>
-                        <span class="inv-stock-unit">${item.unidad_base || 'u'}</span>
-                        <span class="inv-reservado">Reservado: ${item.reservado || 0}</span>
-                    </div>
-                    <div class="inv-bar"><div class="inv-bar-fill ${estado}" style="width:${porcentaje}%"></div></div>
-                    <div class="inv-meta-grid">
-                        <div class="inv-meta-item">
-                            <span class="inv-meta-label">Mínimo</span>
-                            <span class="inv-meta-val ${estado === 'critico' ? 'color:var(--danger)' : ''}">${item.minimo || 0} ${item.unidad_base || 'u'}</span>
-                        </div>
-                        <div class="inv-meta-item">
-                            <span class="inv-meta-label">Costo</span>
-                            <span class="inv-meta-val">${window.formatUSD(item.precio_costo || 0)}</span>
-                            <span class="inv-meta-bs">${window.formatBs(window.usdToBs(item.precio_costo || 0))}</span>
-                        </div>
-                        <div class="inv-meta-item">
-                            <span class="inv-meta-label">Venta</span>
-                            <span class="inv-meta-val">${window.formatUSD(item.precio_unitario || 0)}</span>
-                            <span class="inv-meta-bs">${window.formatBs(window.usdToBs(item.precio_unitario || 0))}</span>
-                        </div>
-                    </div>`;
-                grid.appendChild(card);
+                const disponible = (item.stock||0) - (item.reservado||0);
+                const estado = disponible <= 0 ? 'critico' : disponible <= (item.minimo||0) ? 'bajo' : 'ok';
+                const el = document.createElement('div');
+                el.className = 'inv-list-item' + (item.id === window._invActiveId ? ' active' : '');
+                el.id = 'invItem_' + item.id;
+                el.innerHTML = `
+                    <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${item.nombre}</span>
+                    <span class="inv-item-badge ${estado}">${disponible} ${item.unidad_base||'u'}</span>`;
+                el.addEventListener('click', function() {
+                    const wasActive = item.id === window._invActiveId;
+                    // Quitar active de todos
+                    document.querySelectorAll('.inv-list-item').forEach(e => e.classList.remove('active'));
+                    // Quitar detalle móvil previo
+                    document.querySelectorAll('.inv-mobile-detail').forEach(e => e.remove());
+                    if (wasActive) {
+                        // Ya estaba abierto → cerrar
+                        window._invActiveId = null;
+                        const col = document.getElementById('invDetailCol');
+                        if (col) col.innerHTML = '<div class="inv-detail-empty"><i class="fas fa-hand-point-left" style="font-size:2rem;margin-bottom:.75rem;display:block;opacity:.3"></i>Selecciona un ingrediente de la lista para ver su detalle</div>';
+                    } else {
+                        window._invActiveId = item.id;
+                        this.classList.add('active');
+                        window._invMostrarDetalle(item);
+                    }
+                });
+                grid.appendChild(el);
             });
+            // Re-abrir detalle si había uno activo
+            if (window._invActiveId) {
+                const activeItem = items.find(i => i.id === window._invActiveId);
+                if (activeItem) {
+                    const el = document.getElementById('invItem_' + window._invActiveId);
+                    if (el) el.classList.add('active');
+                    window._invMostrarDetalle(activeItem);
+                } else {
+                    window._invActiveId = null;
+                }
+            }
         };
 
         // ==================== FUNCIONES DE RECUPERACIÓN ====================
