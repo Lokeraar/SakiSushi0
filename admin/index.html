@@ -1550,6 +1550,129 @@
         .propinas-stats { grid-template-columns: 1fr; }
         .qr-generator-grid { grid-template-columns: 1fr; }
     }
+    /* ── Menu card v2 ── */
+    .menu-card-v2 {
+        background: var(--card-bg);
+        border-radius: 14px;
+        padding: 1.1rem;
+        box-shadow: var(--shadow-sm);
+        border: 1px solid var(--border);
+        border-top: 3px solid var(--primary);
+        transition: var(--transition);
+        display: flex;
+        flex-direction: column;
+        gap: .6rem;
+    }
+    .menu-card-v2:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+    .mc2-header { display: flex; gap: .75rem; align-items: flex-start; }
+    .mc2-info { flex: 1; min-width: 0; }
+    .mc2-nombre { font-weight: 800; font-size: .95rem; color: var(--text-dark); line-height: 1.25; }
+    .mc2-cat { font-size: .68rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: .4px; margin-top: 2px; }
+    .mc2-precio { font-size: 1rem; font-weight: 800; color: var(--primary); margin-top: .3rem; }
+    .mc2-precio-bs { font-size: .75rem; font-weight: 600; color: var(--text-muted); }
+    .mc2-stock-line { font-size: .75rem; color: var(--text-muted); margin-top: .2rem; display: flex; align-items: center; gap: .4rem; flex-wrap: wrap; }
+    .mc2-stock-val { font-weight: 700; color: var(--success); }
+    .mc2-badge { font-size: .6rem; font-weight: 700; padding: 2px 6px; border-radius: 20px; text-transform: uppercase; letter-spacing: .3px; }
+    .mc2-badge-ok { background: #e8f5e9; color: var(--success); }
+    .mc2-badge-off { background: #ffebee; color: var(--danger); }
+    .mc2-img-wrap { width: 68px; height: 68px; border-radius: 10px; overflow: hidden; flex-shrink: 0; border: 1px solid var(--border); }
+    .mc2-img { width: 100%; height: 100%; object-fit: cover; }
+    .mc2-desc { font-size: .75rem; color: var(--text-muted); line-height: 1.4; }
+    .mc2-tags { display: flex; flex-wrap: wrap; gap: .3rem; }
+    .ing-tag {
+        font-size: .65rem; font-weight: 600;
+        padding: 2px 8px; border-radius: 20px;
+        background: #f0f0f0; color: var(--text-dark);
+        border: 1px solid #e0e0e0;
+    }
+    .ing-tag-sin-stock { background: #ffebee; color: var(--danger); border-color: #ffcdd2; }
+    .mc2-actions { display: flex; gap: .4rem; justify-content: flex-end; padding-top: .4rem; border-top: 1px solid var(--border); }
+
+    /* ── Inventario card v2 ── */
+    .inventario-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1rem; }
+    .inv-card {
+        background: var(--card-bg);
+        border-radius: 14px;
+        padding: 1rem;
+        box-shadow: var(--shadow-sm);
+        border: 1px solid var(--border);
+        border-top: 3px solid var(--info);
+        display: flex; flex-direction: column; gap: .5rem;
+        transition: var(--transition);
+    }
+    .inv-card:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
+    .inv-top { display: flex; align-items: center; justify-content: space-between; gap: .5rem; }
+    .inv-nombre { font-weight: 700; font-size: .88rem; color: var(--text-dark); flex: 1; word-break: break-word; }
+    .inv-actions { display: flex; gap: .3rem; flex-shrink: 0; }
+    .inv-stock-row { display: flex; align-items: baseline; gap: .3rem; }
+    .inv-stock-num { font-size: 1.5rem; font-weight: 800; }
+    .inv-stock-num.ok { color: var(--success); }
+    .inv-stock-num.bajo { color: var(--warning); }
+    .inv-stock-num.critico { color: var(--danger); }
+    .inv-stock-unit { font-size: .75rem; color: var(--text-muted); }
+    .inv-reservado { font-size: .7rem; color: var(--text-muted); margin-left: auto; }
+    .inv-bar { height: 5px; background: #f0f0f0; border-radius: 3px; overflow: hidden; }
+    .inv-bar-fill { height: 100%; border-radius: 3px; transition: width .4s; }
+    .inv-bar-fill.ok { background: var(--success); }
+    .inv-bar-fill.bajo { background: var(--warning); }
+    .inv-bar-fill.critico { background: var(--danger); }
+    .inv-meta-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: .3rem; }
+    .inv-meta-item { display: flex; flex-direction: column; }
+    .inv-meta-label { font-size: .62rem; font-weight: 700; text-transform: uppercase; letter-spacing: .3px; color: var(--text-muted); }
+    .inv-meta-val { font-size: .78rem; font-weight: 700; color: var(--text-dark); }
+    .inv-meta-bs { font-size: .65rem; color: var(--text-muted); }
+
+    /* ── Inventario buscador ── */
+    .inv-search-wrap {
+        position: relative;
+        max-width: 380px;
+        margin-bottom: 1rem;
+    }
+    .inv-search-icon {
+        position: absolute; left: .85rem; top: 50%; transform: translateY(-50%);
+        color: var(--text-muted); font-size: .85rem; pointer-events: none;
+    }
+    .inv-search-input {
+        width: 100%;
+        padding: .6rem .9rem .6rem 2.2rem;
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        font-family: 'Montserrat', sans-serif;
+        font-size: .88rem;
+        color: var(--text-dark);
+        outline: none;
+        transition: var(--transition);
+    }
+    .inv-search-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(211,47,47,.1); }
+
+    /* ── QR card v2 ── */
+    .qr-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; }
+    .qr-card-v2 {
+        background: var(--card-bg);
+        border-radius: 14px;
+        padding: 1rem;
+        box-shadow: var(--shadow-sm);
+        border: 1px solid var(--border);
+        text-align: center;
+        display: flex; flex-direction: column; align-items: center; gap: .5rem;
+        transition: var(--transition);
+        position: relative;
+    }
+    .qr-card-v2:hover { box-shadow: var(--shadow-md); border-color: var(--primary); }
+    .qr-img-box { line-height: 0; }
+    .qr-nombre-v2 { font-weight: 700; font-size: .88rem; color: var(--text-dark); }
+    .qr-del-btn {
+        position: absolute; top: .6rem; right: .6rem;
+        width: 28px; height: 28px;
+        border-radius: 8px; border: none; cursor: pointer;
+        background: #ffebee; color: var(--danger);
+        display: flex; align-items: center; justify-content: center;
+        font-size: .75rem; transition: var(--transition);
+    }
+    .qr-del-btn:hover { background: var(--danger); color: #fff; }
+
+    /* ── Reportes tabla resumen ── */
+    #ventasTableBody td { vertical-align: middle; }
 </style>
 </head>
 <body>
@@ -1688,6 +1811,12 @@
                     <div class="pane-actions">
                         <button class="btn-primary" onclick="window.abrirModalNuevoIngrediente()"><i class="fas fa-plus"></i> Nuevo Ingrediente</button>
                     </div>
+                </div>
+                <div class="inv-search-wrap">
+                    <i class="fas fa-search inv-search-icon"></i>
+                    <input type="text" id="inventarioBuscador" class="inv-search-input"
+                        placeholder="Buscar ingrediente por nombre..."
+                        oninput="window.renderizarInventario(this.value.trim())">
                 </div>
                 <div class="inventario-grid" id="inventarioGrid"></div>
             </div>
@@ -1859,7 +1988,33 @@
                         title="Cuando el stock disponible baje de este valor, aparecerá una alerta en el Dashboard y se enviará una notificación push a los dispositivos que hayan iniciado sesión en el admin.">
                 </div><div class="form-row"><div class="form-group"><label>Costo Total Compra (USD)</label><input type="number" step="0.01" id="costoTotal" onchange="window.calcularCostoUnitario()"></div><div class="form-group"><label>Cantidad Comprada</label><input type="number" step="0.01" id="cantidadComprada" onchange="window.calcularCostoUnitario()"></div></div><div class="form-group"><label>Precio de Costo (USD/ud)</label><input type="number" step="0.01" id="ingredienteCosto"></div><div class="form-group"><label>Precio de Venta (USD/ud)</label><input type="number" step="0.01" id="ingredienteVenta"></div></form></div><div class="modal-footer"><button class="btn-secondary" id="cancelIngrediente">Cancelar</button><button class="btn-primary" id="saveIngrediente">Guardar</button></div></div></div>
     
-    <div class="modal" id="usuarioModal"><div class="modal-content"><div class="modal-header"><h3>Nuevo Cajero</h3><button class="modal-close" id="closeUsuarioModal">&times;</button></div><div class="modal-body"><form id="usuarioForm"><div class="form-group"><label>Nombre Completo</label><input type="text" id="usuarioNombre" required></div><div class="form-group"><label>Nombre de Usuario</label><input type="text" id="usuarioUsername" required></div><div class="form-group"><label>Contraseña</label><input type="text" id="usuarioPassword" value="123456" required></div></form></div><div class="modal-footer"><button class="btn-secondary" id="cancelUsuario">Cancelar</button><button class="btn-primary" id="saveUsuario">Guardar</button></div></div></div>
+    <div class="modal" id="usuarioModal"><div class="modal-content"><div class="modal-header"><h3>Nuevo Cajero</h3><button class="modal-close" id="closeUsuarioModal">&times;</button></div><div class="modal-body"><form id="usuarioForm">
+                        <!-- Línea 1: Nombre completo + estado activo -->
+                        <div style="display:flex;gap:.75rem;align-items:flex-end">
+                            <div class="form-group" style="flex:1">
+                                <label>Nombre Completo</label>
+                                <input type="text" id="usuarioNombre" required placeholder="Ej: María González">
+                            </div>
+                            <div class="form-group" style="min-width:110px">
+                                <label>Estado</label>
+                                <select id="usuarioActivo" style="width:100%;padding:.55rem .75rem;border:1px solid var(--border);border-radius:8px;font-family:Montserrat,sans-serif;font-size:.88rem">
+                                    <option value="true">Activo</option>
+                                    <option value="false">Inactivo</option>
+                                </select>
+                            </div>
+                        </div>
+                        <!-- Línea 2: Usuario y contraseña -->
+                        <div style="display:flex;gap:.75rem">
+                            <div class="form-group" style="flex:1">
+                                <label>Nombre de Usuario</label>
+                                <input type="text" id="usuarioUsername" required placeholder="Ej: cajero3">
+                            </div>
+                            <div class="form-group" style="flex:1">
+                                <label>Contraseña</label>
+                                <input type="text" id="usuarioPassword" value="123456" required>
+                            </div>
+                        </div>
+                    </form></div><div class="modal-footer"><button class="btn-secondary" id="cancelUsuario">Cancelar</button><button class="btn-primary" id="saveUsuario">Guardar</button></div></div></div>
     
     <div class="modal" id="deliveryModal"><div class="modal-content"><div class="modal-header" style="background:linear-gradient(135deg,var(--delivery),#00838F)"><h3><i class="fas fa-motorcycle"></i> Editar Motorizado</h3><button class="modal-close" id="closeDeliveryModal">&times;</button></div><div class="modal-body"><form id="deliveryForm"><div class="form-group"><label>Nombre</label><input type="text" id="deliveryNombre" required></div><div class="form-group"><label>Estado</label><select id="deliveryEstado"><option value="true">Activo</option><option value="false">Inactivo</option></select></div></form></div><div class="modal-footer"><button class="btn-secondary" id="cancelDeliveryEdit">Cancelar</button><button class="btn-primary" id="saveDelivery" style="background:linear-gradient(135deg,var(--delivery),#00838F)">Guardar</button></div></div></div>
     
@@ -2001,25 +2156,65 @@
             } catch (e) { console.error('Error obteniendo acumulado:', e); return 0; }
         };
 
-        window.renderizarDeliverys = function() {
+        window.renderizarDeliverys = async function() {
             const grid = document.getElementById('deliverysGrid');
             if (!grid) return;
+            // Limpiar ANTES de cualquier await para evitar duplicados
             grid.innerHTML = '';
-            window.deliverys.forEach(async (d) => {
+            for (const d of (window.deliverys || [])) {
                 const acumulado = await window.obtenerAcumuladoDelivery(d.id);
                 const card = document.createElement('div');
                 card.className = 'delivery-card';
-                card.innerHTML = `<div class="delivery-header"><span class="delivery-nombre">${d.nombre}</span><span class="delivery-estado ${d.activo ? 'activo' : 'inactivo'}">${d.activo ? 'Activo' : 'Inactivo'}</span></div><div class="delivery-acumulado"><span> Acumulado total:</span><span class="delivery-monto">${window.formatBs(acumulado)}</span></div><div class="delivery-actions"><button class="btn-small" onclick="window.editarDelivery('${d.id}')"><i class="fas fa-edit"></i> Editar</button><button class="btn-small success" onclick="window.mostrarPagoDelivery('${d.id}')"><i class="fas fa-hand-holding-usd"></i> Pagado</button><button class="btn-small ${d.activo ? 'danger' : 'success'}" onclick="window.toggleDeliveryActivo('${d.id}', ${!d.activo})">${d.activo ? 'Desactivar' : 'Activar'}</button></div>`;
+                card.innerHTML = `
+                    <div class="delivery-header">
+                        <span class="delivery-nombre">${d.nombre}</span>
+                        <span class="delivery-estado ${d.activo ? 'activo' : 'inactivo'}">${d.activo ? 'Activo' : 'Inactivo'}</span>
+                    </div>
+                    <div class="delivery-acumulado">
+                        <span> Acumulado total:</span>
+                        <span class="delivery-monto">${window.formatBs(acumulado)}</span>
+                    </div>
+                    <div class="delivery-actions">
+                        <button class="btn-icon edit" onclick="window.editarDelivery('${d.id}')" title="Editar"><i class="fas fa-edit"></i></button>
+                        <button class="btn-icon toggle-${d.activo ? 'on' : 'off'}" onclick="window.toggleDeliveryActivo('${d.id}', ${!d.activo})" title="${d.activo ? 'Desactivar' : 'Activar'}">
+                            <i class="fas fa-${d.activo ? 'pause' : 'play'}"></i>
+                        </button>
+                        <button class="btn-sm" style="background:linear-gradient(135deg,var(--success),#2E7D32);color:#fff"
+                            onclick="window.mostrarPagoDelivery('${d.id}')">
+                            <i class="fas fa-hand-holding-usd"></i> Pagado
+                        </button>
+                    </div>`;
                 grid.appendChild(card);
-            });
+            }
         };
-
         window.renderizarMesoneros = function() {
             const container = document.getElementById('mesonerosList');
             if (!container) return;
-            container.innerHTML = window.mesoneros.map(m => `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px;border-bottom:1px solid rgba(255,255,255,.1)"><span>${m.nombre}</span><div><button class="btn-small" onclick="window.toggleMesoneroActivo('${m.id}', ${!m.activo})">${m.activo ? 'Desactivar' : 'Activar'}</button><button class="btn-small danger" onclick="window.eliminarMesonero('${m.id}')"><i class="fas fa-trash"></i></button></div></div>`).join('');
+            if (!window.mesoneros || !window.mesoneros.length) {
+                container.innerHTML = '<p style="color:var(--text-muted);font-size:.88rem">No hay mesoneros registrados.</p>';
+                return;
+            }
+            container.innerHTML = window.mesoneros.map(m => {
+                const inicial = m.nombre.charAt(0).toUpperCase();
+                return `<div class="mesonero-card">
+                    <div class="mesonero-avatar">${inicial}</div>
+                    <span class="mesonero-nombre">${m.nombre}</span>
+                    <span class="usuario-rol ${m.activo ? 'cajero' : ''}" style="${m.activo ? '' : 'background:#fafafa;color:var(--text-muted)'}">
+                        ${m.activo ? 'Activo' : 'Inactivo'}
+                    </span>
+                    <div class="mesonero-actions">
+                        <button class="btn-icon ${m.activo ? 'toggle-on' : 'toggle-off'}"
+                            onclick="window.toggleMesoneroActivo('${m.id}', ${!m.activo})"
+                            title="${m.activo ? 'Desactivar' : 'Activar'}">
+                            <i class="fas fa-${m.activo ? 'pause' : 'play'}"></i>
+                        </button>
+                        <button class="btn-icon delete" onclick="window.eliminarMesonero('${m.id}')" title="Eliminar">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>`;
+            }).join('');
         };
-
         window.renderizarPropinas = function() {
             const total = window.propinas.reduce((s, p) => s + (p.monto_bs || 0), 0);
             const cantidad = window.propinas.length;
@@ -2069,14 +2264,23 @@
         window.agregarMesonero = async function() {
             const nombre = document.getElementById('nuevoMesonero').value.trim();
             if (!nombre) { window.mostrarToast('Ingresa un nombre', 'error'); return; }
+            const btn = document.querySelector('[onclick="window.agregarMesonero()"]');
+            if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>'; }
             try {
-                await window.supabaseClient.from('mesoneros').insert([{ nombre, activo: true }]);
+                const { error } = await window.supabaseClient
+                    .from('mesoneros')
+                    .insert([{ id: window.generarId('mes_'), nombre, activo: true }]);
+                if (error) throw error;
                 document.getElementById('nuevoMesonero').value = '';
                 await window.cargarMesoneros();
                 window.mostrarToast(' Mesonero agregado', 'success');
-            } catch (e) { console.error('Error:', e); window.mostrarToast(' Error al agregar', 'error'); }
+            } catch (e) {
+                console.error('Error agregando mesonero:', e);
+                window.mostrarToast(' Error: ' + (e.message || e), 'error');
+            } finally {
+                if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-plus"></i> Agregar'; }
+            }
         };
-
         window.toggleMesoneroActivo = async function(id, activo) {
             try {
                 await window.supabaseClient.from('mesoneros').update({ activo }).eq('id', id);
@@ -2096,14 +2300,23 @@
         window.agregarDelivery = async function() {
             const nombre = document.getElementById('nuevoDelivery').value.trim();
             if (!nombre) { window.mostrarToast('Ingresa un nombre', 'error'); return; }
+            const btn = document.querySelector('.btn-delivery');
+            if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>'; }
             try {
-                await window.supabaseClient.from('deliverys').insert([{ nombre, activo: true }]);
+                const { error } = await window.supabaseClient
+                    .from('deliverys')
+                    .insert([{ id: window.generarId('del_'), nombre, activo: true }]);
+                if (error) throw error;
                 document.getElementById('nuevoDelivery').value = '';
                 await window.cargarDeliverys();
                 window.mostrarToast(' Motorizado agregado', 'success');
-            } catch (e) { console.error('Error:', e); window.mostrarToast(' Error al agregar', 'error'); }
+            } catch (e) {
+                console.error('Error agregando motorizado:', e);
+                window.mostrarToast(' Error: ' + (e.message || e), 'error');
+            } finally {
+                if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-plus"></i> Agregar'; }
+            }
         };
-
         window.editarDelivery = function(id) {
             const delivery = window.deliverys.find(d => d.id === id);
             if (!delivery) return;
@@ -2133,22 +2346,106 @@
             } catch (e) { console.error('Error:', e); }
         };
 
-        window.mostrarPagoDelivery = function(id) {
+        window.mostrarPagoDelivery = async function(id) {
             const delivery = window.deliverys.find(d => d.id === id);
             if (!delivery) return;
             window.deliveryParaPago = id;
-            document.getElementById('confirmPagoDeliveryBody').innerHTML = `<p>¿Confirmas que se ha pagado a <strong>${delivery.nombre}</strong>? Esto reiniciará su acumulado a 0 Bs.</p>`;
+            window._pagoDeliveryMonto = null;
+            // Obtener acumulado actual
+            const acumulado = await window.obtenerAcumuladoDelivery(id);
+            document.getElementById('confirmPagoDeliveryBody').innerHTML = `
+                <p style="margin-bottom:1rem">
+                    <strong>${delivery.nombre}</strong> tiene acumulado:
+                    <span style="color:var(--accent);font-weight:700;font-size:1.1rem"> ${window.formatBs(acumulado)}</span>
+                </p>
+                <div style="display:flex;flex-direction:column;gap:.75rem">
+                    <!-- Opción 1: Pago total -->
+                    <label class="pago-tipo-option" style="display:flex;align-items:flex-start;gap:.75rem;padding:.85rem 1rem;border:2px solid var(--border);border-radius:10px;cursor:pointer;transition:.2s" id="opcionTotal">
+                        <input type="radio" name="tipoPago" value="total" checked style="margin-top:3px;accent-color:var(--success)">
+                        <div>
+                            <div style="font-weight:700;font-size:.9rem;color:var(--text-dark)">Pago total
+                                <span class="tooltip-wrap" style="position:relative;display:inline-flex;align-items:center;cursor:help;margin-left:.3rem">
+                                    <span style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;background:#aaa;color:#fff;border-radius:50%;font-size:.6rem;font-weight:700">?</span>
+                                    <span class="tooltip-text" style="display:none;position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:#1a1a2e;color:#fff;padding:.5rem .7rem;border-radius:8px;font-size:.72rem;width:210px;text-align:center;z-index:100;line-height:1.4">
+                                        Registra que el motorizado recibió el pago completo de su acumulado y reinicia su saldo a Bs 0.
+                                    </span>
+                                </span>
+                            </div>
+                            <div style="font-size:.78rem;color:var(--text-muted)">Reinicia el acumulado a Bs 0,00</div>
+                        </div>
+                        <span style="margin-left:auto;font-weight:800;color:var(--success)">${window.formatBs(acumulado)}</span>
+                    </label>
+                    <!-- Opción 2: Pago parcial -->
+                    <label class="pago-tipo-option" style="display:flex;align-items:flex-start;gap:.75rem;padding:.85rem 1rem;border:2px solid var(--border);border-radius:10px;cursor:pointer;transition:.2s" id="opcionParcial">
+                        <input type="radio" name="tipoPago" value="parcial" style="margin-top:3px;accent-color:var(--warning)">
+                        <div style="flex:1">
+                            <div style="font-weight:700;font-size:.9rem;color:var(--text-dark)">Pago parcial
+                                <span class="tooltip-wrap" style="position:relative;display:inline-flex;align-items:center;cursor:help;margin-left:.3rem">
+                                    <span style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;background:#aaa;color:#fff;border-radius:50%;font-size:.6rem;font-weight:700">?</span>
+                                    <span class="tooltip-text" style="display:none;position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:#1a1a2e;color:#fff;padding:.5rem .7rem;border-radius:8px;font-size:.72rem;width:210px;text-align:center;z-index:100;line-height:1.4">
+                                        Le pagas al motorizado solo una parte de lo acumulado. El resto quedará pendiente para la próxima liquidación.
+                                    </span>
+                                </span>
+                            </div>
+                            <div style="font-size:.78rem;color:var(--text-muted);margin-bottom:.4rem">Ingresa el monto a pagar</div>
+                            <input type="number" id="montoPagoParcial" placeholder="Monto en Bs" step="0.01" min="0.01"
+                                max="${acumulado}"
+                                style="width:100%;padding:.5rem .75rem;border:1px solid var(--border);border-radius:8px;font-family:Montserrat,sans-serif;font-size:.88rem;outline:none"
+                                onclick="event.stopPropagation()"
+                                oninput="document.querySelector('[name=tipoPago][value=parcial]').checked=true">
+                        </div>
+                    </label>
+                </div>`;
+            // Resaltar opción seleccionada
+            document.getElementById('confirmPagoDeliveryModal').addEventListener('change', function(e) {
+                if (e.target.name !== 'tipoPago') return;
+                document.querySelectorAll('.pago-tipo-option').forEach(el => el.style.borderColor = 'var(--border)');
+                const selected = e.target.closest('.pago-tipo-option');
+                if (selected) selected.style.borderColor = e.target.value === 'total' ? 'var(--success)' : 'var(--warning)';
+            }, { once: true });
+            // Marcar total como activo por defecto
+            document.getElementById('opcionTotal').style.borderColor = 'var(--success)';
             document.getElementById('confirmPagoDeliveryModal').classList.add('active');
         };
 
         window.confirmarPagoDelivery = async function() {
             if (!window.deliveryParaPago) return;
+            const btn = document.getElementById('confirmPagoDeliveryBtn');
+            if (btn && btn.disabled) return;
+            if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...'; }
             try {
-                await window.supabaseClient.from('entregas_delivery').delete().eq('delivery_id', window.deliveryParaPago);
+                const tipoPago = document.querySelector('[name="tipoPago"]:checked')?.value || 'total';
+                if (tipoPago === 'parcial') {
+                    const monto = parseFloat(document.getElementById('montoPagoParcial')?.value);
+                    if (!monto || monto <= 0) {
+                        window.mostrarToast('Ingresa un monto válido para el pago parcial', 'error');
+                        if (btn) { btn.disabled = false; btn.innerHTML = 'Confirmar'; }
+                        return;
+                    }
+                    // Registrar entrega negativa = descuento del acumulado
+                    const { error } = await window.supabaseClient.from('entregas_delivery').insert([{
+                        delivery_id: window.deliveryParaPago,
+                        monto_bs: -monto,
+                        pedido_id: null,
+                        fecha_entrega: new Date().toISOString()
+                    }]);
+                    if (error) throw error;
+                    window.mostrarToast(' Pago parcial registrado.', 'success');
+                } else {
+                    // Pago total — borrar todo el acumulado
+                    const { error } = await window.supabaseClient.from('entregas_delivery')
+                        .delete().eq('delivery_id', window.deliveryParaPago);
+                    if (error) throw error;
+                    window.mostrarToast(' Pago total registrado. Acumulado reiniciado.', 'success');
+                }
                 window.cerrarModal('confirmPagoDeliveryModal');
                 await window.cargarDeliverys();
-                window.mostrarToast(' Pago registrado. Acumulado reiniciado.', 'success');
-            } catch (e) { console.error('Error registrando pago:', e); window.mostrarToast(' Error al registrar pago', 'error'); }
+            } catch (e) {
+                console.error('Error registrando pago:', e);
+                window.mostrarToast(' Error al registrar pago: ' + (e.message || e), 'error');
+            } finally {
+                if (btn) { btn.disabled = false; btn.innerHTML = 'Confirmar'; }
+            }
         };
 
         window.cargarUsuarios = async function() {
@@ -2162,7 +2459,38 @@
 
         window.renderizarUsuarios = function() {
             const grid = document.getElementById('usuariosGrid');
-            grid.innerHTML = window.usuarios.map(user => `<div class="usuario-card"><div class="usuario-header"><span class="usuario-nombre">${user.nombre}</span><span class="${user.activo ? 'activo' : 'inactivo'}">${user.activo ? 'Activo' : 'Inactivo'}</span></div><div class="usuario-username">@${user.username}</div><div class="usuario-estado"><span>Rol: ${user.rol || 'cajero'}</span></div><div class="usuario-actions"><button class="btn-small ${user.activo ? 'danger' : 'success'}" onclick="window.toggleUsuarioActivo('${user.id}', ${!user.activo})">${user.activo ? 'Desactivar' : 'Activar'}</button><button class="btn-small danger" onclick="window.eliminarUsuario('${user.id}')">Eliminar</button></div></div>`).join('');
+            if (!window.usuarios || !window.usuarios.length) {
+                grid.innerHTML = '<p style="color:var(--text-muted);font-size:.88rem">No hay cajeros registrados.</p>';
+                return;
+            }
+            grid.innerHTML = window.usuarios.map(user => {
+                const inicial = (user.nombre || '?').charAt(0).toUpperCase();
+                return `<div class="usuario-card">
+                    <div class="usuario-avatar">${inicial}</div>
+                    <div class="usuario-info">
+                        <!-- Línea 1: nombre + estado -->
+                        <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
+                            <span class="usuario-nombre">${user.nombre}</span>
+                            <span class="usuario-rol ${user.activo ? (user.rol === 'admin' ? 'admin' : 'cajero') : ''}"
+                                style="${user.activo ? '' : 'background:#f5f5f5;color:var(--text-muted)'}">
+                                ${user.activo ? 'Activo' : 'Inactivo'}
+                            </span>
+                        </div>
+                        <!-- Línea 2: username y rol -->
+                        <div class="usuario-username">@${user.username} · ${user.rol || 'cajero'}</div>
+                    </div>
+                    <div class="usuario-actions">
+                        <button class="btn-icon ${user.activo ? 'toggle-on' : 'toggle-off'}"
+                            onclick="window.toggleUsuarioActivo('${user.id}', ${!user.activo})"
+                            title="${user.activo ? 'Desactivar' : 'Activar'}">
+                            <i class="fas fa-${user.activo ? 'pause' : 'play'}"></i>
+                        </button>
+                        <button class="btn-icon delete" onclick="window.eliminarUsuario('${user.id}')" title="Eliminar">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>`;
+            }).join('');
         };
 
         window.abrirModalNuevoUsuario = function() {
@@ -2171,16 +2499,44 @@
         };
 
         document.getElementById('saveUsuario').addEventListener('click', async () => {
-            const nombre = document.getElementById('usuarioNombre').value;
-            const username = document.getElementById('usuarioUsername').value;
-            const password = document.getElementById('usuarioPassword').value;
-            if (!nombre || !username || !password) { window.mostrarToast('Completa todos los campos', 'error'); return; }
+            const btn = document.getElementById('saveUsuario');
+            if (btn && btn.disabled) return;
+            if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...'; }
+            const nombre   = document.getElementById('usuarioNombre').value.trim();
+            const username = document.getElementById('usuarioUsername').value.trim().toLowerCase();
+            const password = document.getElementById('usuarioPassword').value.trim();
+            if (!nombre || !username || !password) {
+                window.mostrarToast('Completa todos los campos', 'error');
+                if (btn) { btn.disabled = false; btn.innerHTML = 'Guardar'; }
+                return;
+            }
             try {
-                await window.supabaseClient.from('usuarios').insert([{ id: window.generarId('user_'), nombre, username, password, rol: 'cajero', activo: true }]);
+                // password_hash se genera en el servidor via hash_password(),
+                // pero como usamos anon key necesitamos guardar el texto plano
+                // y el login lo verifica via verify_user_credentials (usa crypt)
+                // Supabase RPC hash_password está disponible públicamente
+                const { data: hashed, error: hashErr } = await window.supabaseClient
+                    .rpc('hash_password', { plain_password: password });
+                if (hashErr) throw hashErr;
+                const activo = document.getElementById('usuarioActivo')?.value !== 'false';
+                const { error } = await window.supabaseClient.from('usuarios').insert([{
+                    id: window.generarId('user_'),
+                    nombre,
+                    username,
+                    password_hash: hashed,
+                    rol: 'cajero',
+                    activo
+                }]);
+                if (error) throw error;
                 document.getElementById('usuarioModal').classList.remove('active');
                 await window.cargarUsuarios();
-                window.mostrarToast(' Usuario creado', 'success');
-            } catch (e) { console.error('Error creando usuario:', e); window.mostrarToast(' Error al crear usuario', 'error'); }
+                window.mostrarToast(' Cajero creado exitosamente', 'success');
+            } catch (e) {
+                console.error('Error creando cajero:', e);
+                window.mostrarToast(' Error: ' + (e.message || e), 'error');
+            } finally {
+                if (btn) { btn.disabled = false; btn.innerHTML = 'Guardar'; }
+            }
         });
 
         window.toggleUsuarioActivo = async function(userId, activo) {
@@ -2223,60 +2579,45 @@
             const _pwd  = localStorage.getItem('saki_wifi_password') || '';
 
             (window.qrCodes || []).forEach(qr => {
-                // URL del menú con parámetros de mesa y WiFi
                 const params = new URLSearchParams({ mesa: qr.nombre });
                 if (_ssid) params.set('wifi_ssid', _ssid);
                 if (_pwd)  params.set('wifi_pwd', _pwd);
                 const qrText = window.location.origin + '/SakiSushi0/Cliente/index.html?' + params.toString();
-                const urlVisible = qrText.replace(/wifi_pwd=[^&]+/, 'wifi_pwd=***');
+                const qrId   = 'qr-' + qr.id;
 
                 const card = document.createElement('div');
-                card.className = 'qr-card';
-                const qrId = 'qr-' + qr.id;
+                card.className = 'qr-card-v2';
+                card.title = 'Toca para ampliar';
+                card.style.cursor = 'pointer';
 
-                // Usar data-qrt para evitar problemas de comillas en onclick
-                const img  = document.createElement('div');
-                img.className = 'qr-image';
-                img.id = qrId;
+                const qrDiv = document.createElement('div');
+                qrDiv.id = qrId;
+                qrDiv.className = 'qr-img-box';
 
                 const nombre = document.createElement('div');
-                nombre.className = 'qr-nombre';
+                nombre.className = 'qr-nombre-v2';
                 nombre.textContent = (_ssid ? '📶 ' : '') + qr.nombre;
 
-                const url = document.createElement('div');
-                url.className = 'qr-url';
-                url.textContent = urlVisible;
-
-                const actions = document.createElement('div');
-                actions.className = 'qr-actions';
-
-                const btnAmp = document.createElement('button');
-                btnAmp.title = 'Ampliar';
-                btnAmp.innerHTML = '<i class="fas fa-expand"></i>';
-                btnAmp.dataset.qrt   = qrText;
-                btnAmp.dataset.id    = qr.id;
-                btnAmp.dataset.nom   = qr.nombre;
-                btnAmp.addEventListener('click', function() {
-                    window.ampliarQR(this.dataset.id, this.dataset.nom, this.dataset.qrt);
-                });
-
                 const btnDel = document.createElement('button');
-                btnDel.title = 'Eliminar';
+                btnDel.className = 'btn-icon delete qr-del-btn';
+                btnDel.title = 'Eliminar QR';
                 btnDel.innerHTML = '<i class="fas fa-trash"></i>';
-                btnDel.dataset.id = qr.id;
-                btnDel.addEventListener('click', function() {
-                    window.eliminarQR(this.dataset.id);
+                btnDel.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    window.eliminarQR(qr.id);
                 });
 
-                actions.appendChild(btnAmp);
-                actions.appendChild(btnDel);
-                card.appendChild(img);
+                card.appendChild(qrDiv);
                 card.appendChild(nombre);
-                card.appendChild(url);
-                card.appendChild(actions);
-                grid.appendChild(card);
+                card.appendChild(btnDel);
 
-                new QRCode(document.getElementById(qrId), { text: qrText, width: 150, height: 150 });
+                // Clic en la tarjeta (no en basura) → ampliar
+                card.addEventListener('click', function() {
+                    window.ampliarQR(qr.id, qr.nombre, qrText);
+                });
+
+                grid.appendChild(card);
+                new QRCode(document.getElementById(qrId), { text: qrText, width: 140, height: 140 });
             });
         };        window.generarQR = async function() {
             const nombre   = document.getElementById('qrNombreMesa').value.trim();
@@ -2322,7 +2663,17 @@
             const container = document.getElementById('qrAmpliado');
             container.innerHTML = '';
             new QRCode(container, { text: url, width: 300, height: 300 });
-            document.getElementById('qrAmpliadoInfo').innerHTML = `<strong>${nombre}</strong><br><small>${url}</small>`;
+            // Mostrar nombre y URL completa (oculta en la tarjeta, visible aquí)
+            const urlDisplay = url.replace(/wifi_pwd=([^&]+)/, 'wifi_pwd=***');
+            document.getElementById('qrAmpliadoInfo').innerHTML =
+                `<div style="margin-top:.75rem">
+                    <div style="font-weight:800;font-size:1rem;color:var(--text-dark);margin-bottom:.4rem">${nombre}</div>
+                    <div style="font-size:.7rem;color:var(--text-muted);word-break:break-all;
+                                background:#f5f5f5;padding:.5rem .7rem;border-radius:8px;
+                                border:1px solid var(--border);line-height:1.5;text-align:left">
+                        ${urlDisplay}
+                    </div>
+                </div>`;
             document.getElementById('qrAmpliadoModal').classList.add('active');
         };
 
@@ -2412,7 +2763,25 @@
 
         window.actualizarTablaVentas = function(pedidos) {
             const tbody = document.getElementById('ventasTableBody');
-            tbody.innerHTML = pedidos.slice(0, 50).map(p => `<tr><td>${new Date(p.fecha).toLocaleDateString()}</td><td>${p.id}</td><td>${window.formatUSD(p.total || 0)}</td><td>${p.items?.reduce((s, i) => s + (i.cantidad || 0), 0) || 0}</td><td>${p.metodo_pago || 'N/A'}</td><td>${p.tipo || 'N/A'}</td></tr>`).join('');
+            const tasa = (window.configGlobal && window.configGlobal.tasa_efectiva) || window.configGlobal?.tasa_cambio || 400;
+            tbody.innerHTML = pedidos.slice(0, 50).map(p => {
+                const items = p.items || [];
+                const totalItems = items.reduce((s, i) => s + (i.cantidad || 0), 0);
+                const resumen = items.length
+                    ? items.slice(0, 2).map(i => `${i.cantidad || 1}× ${i.nombre}`).join(', ') +
+                      (items.length > 2 ? ` +${items.length - 2} más` : '')
+                    : 'Sin detalle';
+                const totalUSD = p.total || 0;
+                const totalBs  = window.formatBs(totalUSD * tasa);
+                return `<tr>
+                    <td>${new Date(p.fecha).toLocaleDateString()}</td>
+                    <td style="max-width:200px;font-size:.82rem">${resumen}</td>
+                    <td>${window.formatUSD(totalUSD)}<br><span style="font-size:.75rem;color:var(--text-muted)">${totalBs}</span></td>
+                    <td>${totalItems}</td>
+                    <td>${p.metodo_pago || 'N/A'}</td>
+                    <td>${p.tipo || 'N/A'}</td>
+                </tr>`;
+            }).join('');
         };
 
         window.cargarPedidosRecientes = async function() {
@@ -2614,8 +2983,9 @@
         };
 
         document.getElementById('savePlatillo').addEventListener('click', async () => {
+            const saveBtn = document.getElementById('savePlatillo');
+            if (saveBtn && saveBtn.disabled) return;
             try {
-                const saveBtn = document.getElementById('savePlatillo');
                 saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
                 saveBtn.disabled = true;
                 
@@ -2678,6 +3048,7 @@
         };
 
         window.abrirModalNuevoIngrediente = function() {
+            window.ingredienteEditandoId = null;   // Asegurar modo nuevo
             document.getElementById('ingredienteModalTitle').textContent = 'Nuevo Ingrediente';
             document.getElementById('ingredienteForm').reset();
             document.getElementById('ingredienteStock').disabled = true;
@@ -2690,6 +3061,7 @@
         window.editarIngrediente = function(id) {
             const ingrediente = window.inventarioItems.find(i => i.id === id);
             if (!ingrediente) return;
+            window.ingredienteEditandoId = id;   // Guardar para saveIngrediente
             document.getElementById('ingredienteModalTitle').textContent = 'Editar Ingrediente';
             document.getElementById('ingredienteNombre').value = ingrediente.nombre || '';
             document.getElementById('ingredienteStock').value = ingrediente.stock || 0;
@@ -2726,28 +3098,48 @@
         };
 
         document.getElementById('saveIngrediente').addEventListener('click', async () => {
-            const id = document.getElementById('ingredienteModalTitle').textContent === 'Nuevo Ingrediente' ? window.generarId('ing_') : (window.inventarioItems.find(i => i.nombre === document.getElementById('ingredienteNombre').value)?.id || window.generarId('ing_'));
-            const nombre = document.getElementById('ingredienteNombre').value;
+            const btn = document.getElementById('saveIngrediente');
+            if (btn && btn.disabled) return;
+            if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...'; }
+
+            // Determinar si es nuevo o edición usando el ID guardado en window
+            const esNuevo = !window.ingredienteEditandoId;
+            const id = esNuevo ? window.generarId('ing_') : window.ingredienteEditandoId;
+
+            const nombre    = document.getElementById('ingredienteNombre').value.trim();
             const stockActual = parseFloat(document.getElementById('ingredienteStock').value) || 0;
-            const agregar = parseFloat(document.getElementById('ingredienteAgregar').value) || 0;
-            const unidad = document.getElementById('ingredienteUnidad').value;
-            const minimo = parseFloat(document.getElementById('ingredienteMinimo').value) || 0;
-            const costo = parseFloat(document.getElementById('ingredienteCosto').value) || 0;
-            const venta = parseFloat(document.getElementById('ingredienteVenta').value) || 0;
-            
-            if (!nombre) { window.mostrarToast('Ingresa el nombre del ingrediente', 'error'); return; }
-            
+            const agregar   = parseFloat(document.getElementById('ingredienteAgregar').value) || 0;
+            const unidad    = document.getElementById('ingredienteUnidad').value;
+            const minimo    = parseFloat(document.getElementById('ingredienteMinimo').value) || 0;
+            const costo     = parseFloat(document.getElementById('ingredienteCosto').value) || 0;
+            const venta     = parseFloat(document.getElementById('ingredienteVenta').value) || 0;
+
+            if (!nombre) {
+                window.mostrarToast('Ingresa el nombre del ingrediente', 'error');
+                if (btn) { btn.disabled = false; btn.innerHTML = 'Guardar'; }
+                return;
+            }
+
             try {
-                const ingrediente = { id, nombre, stock: stockActual + agregar, reservado: 0, unidad_base: unidad, minimo, precio_costo: costo, precio_unitario: venta };
+                const ingrediente = { id, nombre, stock: stockActual + agregar, reservado: 0,
+                    unidad_base: unidad, minimo, precio_costo: costo, precio_unitario: venta };
                 let error;
-                const existe = window.inventarioItems.some(i => i.id === id);
-                if (existe) ({ error } = await window.supabaseClient.from('inventario').update(ingrediente).eq('id', id));
-                else ({ error } = await window.supabaseClient.from('inventario').insert([ingrediente]));
+                if (esNuevo) {
+                    ({ error } = await window.supabaseClient.from('inventario').insert([ingrediente]));
+                } else {
+                    ({ error } = await window.supabaseClient.from('inventario').update(ingrediente).eq('id', id));
+                }
                 if (error) throw error;
+                window.ingredienteEditandoId = null;
                 document.getElementById('ingredienteModal').classList.remove('active');
                 await window.cargarInventario();
                 window.mostrarToast(' Ingrediente guardado', 'success');
-            } catch (e) { console.error('Error guardando ingrediente:', e); window.mostrarToast(' Error al guardar ingrediente', 'error'); }
+            } catch (e) {
+                console.error('Error guardando ingrediente:', e);
+                window.mostrarToast(' Error: ' + (e.message || e), 'error');
+            } finally {
+                if (btn) { btn.disabled = false; btn.innerHTML = 'Guardar'; }
+            }
         });
 
         window.eliminarIngrediente = async function(id) {
@@ -2773,23 +3165,102 @@
                         ingredientesEstado.push({ nombre: ingInfo.nombre || ingId, disponible });
                     }
                 }
+                const disponibleFinal = item.disponible && todosDisponibles;
+                const imgSrc = item.imagen || '';
+                const tagsHtml = ingredientesEstado.length
+                    ? ingredientesEstado.map(ing =>
+                        `<span class="ing-tag ${ing.disponible ? '' : 'ing-tag-sin-stock'}">${ing.nombre}</span>`
+                      ).join('')
+                    : '<span class="ing-tag" style="opacity:.5">Sin ingredientes</span>';
+
                 const card = document.createElement('div');
-                card.className = 'menu-card';
-                card.innerHTML = `<div class="menu-card-image" style="background-image:url('${item.imagen || 'https://via.placeholder.com/300x150?text=Saki+Sushi'}')"><div class="menu-card-actions"><button onclick="window.editarPlatillo('${item.id}')" title="Editar"><i class="fas fa-edit"></i></button><button onclick="window.eliminarPlatillo('${item.id}')" title="Eliminar"><i class="fas fa-trash"></i></button></div></div><div class="menu-card-content"><div class="menu-card-header"><span class="menu-card-title">${item.nombre}</span><span class="${item.disponible && todosDisponibles ? 'disponible-badge' : 'no-disponible-badge'}" title="${!todosDisponibles ? 'Sin stock de ingredientes' : ''}"></span></div><div class="menu-card-precio">${window.formatUSD(item.precio || 0)} / ${window.formatBs(window.usdToBs(item.precio || 0))}</div><div class="menu-card-stock">Stock: ${item.stock || 0}</div><div class="menu-card-descripcion">${item.descripcion || ''}</div><div class="menu-card-ingredientes">${ingredientesEstado.map(ing => `<span class="${!ing.disponible ? 'sin-stock' : ''}">${ing.nombre}${!ing.disponible ? '(sin stock)' : ''}</span>`).join('')}</div></div>`;
+                card.className = 'menu-card-v2';
+                card.innerHTML = `
+                    <!-- Cabecera: imagen derecha + info izquierda -->
+                    <div class="mc2-header">
+                        <div class="mc2-info">
+                            <div class="mc2-nombre">${item.nombre}</div>
+                            <div class="mc2-cat">${item.categoria || ''}${item.subcategoria ? ' · ' + item.subcategoria : ''}</div>
+                            <div class="mc2-precio">${window.formatUSD(item.precio || 0)}
+                                <span class="mc2-precio-bs">/ ${window.formatBs(window.usdToBs(item.precio || 0))}</span>
+                            </div>
+                            <div class="mc2-stock-line">
+                                Stock: <span class="mc2-stock-val">${item.stock || 0}</span>
+                                <span class="mc2-badge ${disponibleFinal ? 'mc2-badge-ok' : 'mc2-badge-off'}">
+                                    ${disponibleFinal ? 'Disponible' : 'No disponible'}
+                                </span>
+                            </div>
+                        </div>
+                        ${imgSrc ? `<div class="mc2-img-wrap"><img src="${imgSrc}" class="mc2-img" alt="${item.nombre}" onerror="this.parentElement.style.display='none'"></div>` : ''}
+                    </div>
+                    <!-- Descripción -->
+                    ${item.descripcion ? `<div class="mc2-desc">${item.descripcion}</div>` : ''}
+                    <!-- Tags de ingredientes -->
+                    <div class="mc2-tags">${tagsHtml}</div>
+                    <!-- Acciones -->
+                    <div class="mc2-actions">
+                        <button class="btn-icon edit" onclick="window.editarPlatillo('${item.id}')" title="Editar platillo">
+                            <i class="fas fa-pen"></i>
+                        </button>
+                        <button class="btn-icon delete" onclick="window.eliminarPlatillo('${item.id}')" title="Eliminar platillo">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>`;
                 grid.appendChild(card);
             });
         };
 
-        window.renderizarInventario = function() {
+        window.renderizarInventario = function(filtro) {
             const grid = document.getElementById('inventarioGrid');
             grid.innerHTML = '';
-            window.inventarioItems.forEach(item => {
-                const disponible = item.stock - item.reservado;
-                const porcentajeStock = item.minimo > 0 ? (disponible / item.minimo) * 100 : 100;
-                const critical = disponible <= item.minimo;
+            const items = filtro
+                ? window.inventarioItems.filter(i => i.nombre.toLowerCase().includes(filtro.toLowerCase()))
+                : window.inventarioItems;
+            if (!items.length) {
+                grid.innerHTML = '<p style="color:var(--text-muted);font-size:.88rem;padding:.5rem">' +
+                    (filtro ? 'Sin resultados para "' + filtro + '"' : 'No hay ingredientes registrados.') + '</p>';
+                return;
+            }
+            items.forEach(item => {
+                const disponible = (item.stock || 0) - (item.reservado || 0);
+                const porcentaje = item.minimo > 0 ? Math.min((disponible / item.minimo) * 100, 100) : 100;
+                const estado = disponible <= 0 ? 'critico' : disponible <= item.minimo ? 'bajo' : 'ok';
                 const card = document.createElement('div');
-                card.className = 'inventario-card';
-                card.innerHTML = `<div class="inventario-header"><span class="inventario-nombre">${item.nombre}</span><div class="inventario-actions"><button onclick="window.editarIngrediente('${item.id}')"><i class="fas fa-edit"></i></button><button onclick="window.eliminarIngrediente('${item.id}')"><i class="fas fa-trash"></i></button></div></div><div class="inventario-stock"><strong>Stock:</strong> ${item.stock || 0} ${item.unidad_base || 'unidades'}<small>(Reservado: ${item.reservado || 0} | Disponible: ${disponible})</small><div class="stock-bar"><div class="stock-fill ${critical ? 'critical' : ''}" style="width:${Math.min(porcentajeStock, 100)}%"></div></div></div><div class="inventario-info"><div><strong>Mínimo:</strong><br><span class="inventario-minimo">${item.minimo || 0} ${item.unidad_base || 'unidades'}</span></div><div><strong>Costo:</strong><br>${window.formatUSD(item.precio_costo || 0)} / ${window.formatBs(window.usdToBs(item.precio_costo || 0))}</div><div><strong>Venta:</strong><br>${window.formatUSD(item.precio_unitario || 0)} / ${window.formatBs(window.usdToBs(item.precio_unitario || 0))}</div></div>`;
+                card.className = 'inv-card';
+                card.innerHTML = `
+                    <div class="inv-top">
+                        <div class="inv-nombre">${item.nombre}</div>
+                        <div class="inv-actions">
+                            <button class="btn-icon edit" onclick="window.editarIngrediente('${item.id}')" title="Editar">
+                                <i class="fas fa-pen"></i>
+                            </button>
+                            <button class="btn-icon delete" onclick="window.eliminarIngrediente('${item.id}')" title="Eliminar">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="inv-stock-row">
+                        <span class="inv-stock-num ${estado}">${disponible}</span>
+                        <span class="inv-stock-unit">${item.unidad_base || 'u'}</span>
+                        <span class="inv-reservado">Reservado: ${item.reservado || 0}</span>
+                    </div>
+                    <div class="inv-bar"><div class="inv-bar-fill ${estado}" style="width:${porcentaje}%"></div></div>
+                    <div class="inv-meta-grid">
+                        <div class="inv-meta-item">
+                            <span class="inv-meta-label">Mínimo</span>
+                            <span class="inv-meta-val ${estado === 'critico' ? 'color:var(--danger)' : ''}">${item.minimo || 0} ${item.unidad_base || 'u'}</span>
+                        </div>
+                        <div class="inv-meta-item">
+                            <span class="inv-meta-label">Costo</span>
+                            <span class="inv-meta-val">${window.formatUSD(item.precio_costo || 0)}</span>
+                            <span class="inv-meta-bs">${window.formatBs(window.usdToBs(item.precio_costo || 0))}</span>
+                        </div>
+                        <div class="inv-meta-item">
+                            <span class="inv-meta-label">Venta</span>
+                            <span class="inv-meta-val">${window.formatUSD(item.precio_unitario || 0)}</span>
+                            <span class="inv-meta-bs">${window.formatBs(window.usdToBs(item.precio_unitario || 0))}</span>
+                        </div>
+                    </div>`;
                 grid.appendChild(card);
             });
         };
