@@ -1673,6 +1673,55 @@
 
     /* ── Reportes tabla resumen ── */
     #ventasTableBody td { vertical-align: middle; }
+    /* ── Tabs wrapper con chevrons ── */
+    .tabs-wrapper {
+        display: flex;
+        align-items: stretch;
+        background: var(--secondary);
+        border-bottom: 1px solid rgba(255,255,255,.08);
+        position: relative;
+    }
+    .tabs-chevron {
+        flex-shrink: 0;
+        width: 36px;
+        background: rgba(255,255,255,.06);
+        border: none;
+        color: rgba(255,255,255,.7);
+        cursor: pointer;
+        font-size: .6rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: -2px;
+        transition: var(--transition);
+        letter-spacing: -3px;
+        padding: 0 4px;
+    }
+    .tabs-chevron:hover { background: rgba(255,255,255,.12); color: var(--accent); }
+    .tabs-chevron-left { border-right: 1px solid rgba(255,255,255,.08); }
+    .tabs-chevron-right { border-left: 1px solid rgba(255,255,255,.08); }
+    .tabs { flex: 1; overflow-x: auto; }
+
+    /* ── btn-toggle (Activo/Inactivo) ── */
+    .btn-toggle {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: .3rem .8rem;
+        border-radius: 20px;
+        border: none;
+        font-family: 'Montserrat', sans-serif;
+        font-size: .72rem;
+        font-weight: 700;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: var(--transition);
+        min-width: 72px;
+    }
+    .btn-toggle-on  { background: #e8f5e9; color: var(--success); }
+    .btn-toggle-on:hover  { background: var(--success); color: #fff; }
+    .btn-toggle-off { background: #f5f5f5; color: var(--text-muted); }
+    .btn-toggle-off:hover { background: #e0e0e0; color: var(--text-dark); }
 </style>
 </head>
 <body>
@@ -1761,17 +1810,25 @@
             </div>
         </div>
         
-        <div class="tabs">
-            <div class="tab active" data-tab="dashboard">Dashboard</div>
-            <div class="tab" data-tab="menu">Menú y Precios</div>
-            <div class="tab" data-tab="inventario">Inventario</div>
-            <div class="tab" data-tab="usuarios">Usuarios</div>
-            <div class="tab" data-tab="deliverys">Deliverys</div>
-            <div class="tab" data-tab="propinas">Propinas</div>
-            <div class="tab" data-tab="mesoneros">Mesoneros</div>
-            <div class="tab" data-tab="configuracion">Configuración</div>
-            <div class="tab" data-tab="qr">Códigos QR</div>
-            <div class="tab" data-tab="reportes">Reportes</div>
+        <div class="tabs-wrapper">
+            <button class="tabs-chevron tabs-chevron-left" id="tabsChevronLeft" onclick="window._scrollTabs(-1)" title="Categorías anteriores">
+                <i class="fas fa-chevron-left"></i><i class="fas fa-chevron-left"></i>
+            </button>
+            <div class="tabs" id="tabsContainer">
+                <div class="tab active" data-tab="dashboard">Dashboard</div>
+                <div class="tab" data-tab="menu">Menú y Precios</div>
+                <div class="tab" data-tab="inventario">Inventario</div>
+                <div class="tab" data-tab="usuarios">Usuarios</div>
+                <div class="tab" data-tab="deliverys">Deliverys</div>
+                <div class="tab" data-tab="propinas">Propinas</div>
+                <div class="tab" data-tab="mesoneros">Mesoneros</div>
+                <div class="tab" data-tab="configuracion">Configuración</div>
+                <div class="tab" data-tab="qr">Códigos QR</div>
+                <div class="tab" data-tab="reportes">Reportes</div>
+            </div>
+            <button class="tabs-chevron tabs-chevron-right" id="tabsChevronRight" onclick="window._scrollTabs(1)" title="Más categorías">
+                <i class="fas fa-chevron-right"></i><i class="fas fa-chevron-right"></i>
+            </button>
         </div>
         
         <div class="content">
@@ -1800,6 +1857,12 @@
                     <div class="pane-actions">
                         <button class="btn-primary" onclick="window.abrirModalNuevoPlatillo()"><i class="fas fa-plus"></i> Nuevo Platillo</button>
                     </div>
+                </div>
+                <div class="inv-search-wrap">
+                    <i class="fas fa-search inv-search-icon"></i>
+                    <input type="text" id="menuBuscador" class="inv-search-input"
+                        placeholder="Buscar platillo por nombre..."
+                        oninput="window.renderizarMenu(this.value.trim())">
                 </div>
                 <div class="menu-grid" id="menuGrid"></div>
             </div>
@@ -2176,8 +2239,8 @@
                     </div>
                     <div class="delivery-actions">
                         <button class="btn-icon edit" onclick="window.editarDelivery('${d.id}')" title="Editar"><i class="fas fa-edit"></i></button>
-                        <button class="btn-icon toggle-${d.activo ? 'on' : 'off'}" onclick="window.toggleDeliveryActivo('${d.id}', ${!d.activo})" title="${d.activo ? 'Desactivar' : 'Activar'}">
-                            <i class="fas fa-${d.activo ? 'pause' : 'play'}"></i>
+                        <button class="btn-toggle ${d.activo ? 'btn-toggle-on' : 'btn-toggle-off'}" onclick="window.toggleDeliveryActivo('${d.id}', ${!d.activo})">
+                            ${d.activo ? 'Activo' : 'Inactivo'}
                         </button>
                         <button class="btn-sm" style="background:linear-gradient(135deg,var(--success),#2E7D32);color:#fff"
                             onclick="window.mostrarPagoDelivery('${d.id}')">
@@ -2203,10 +2266,9 @@
                         ${m.activo ? 'Activo' : 'Inactivo'}
                     </span>
                     <div class="mesonero-actions">
-                        <button class="btn-icon ${m.activo ? 'toggle-on' : 'toggle-off'}"
-                            onclick="window.toggleMesoneroActivo('${m.id}', ${!m.activo})"
-                            title="${m.activo ? 'Desactivar' : 'Activar'}">
-                            <i class="fas fa-${m.activo ? 'pause' : 'play'}"></i>
+                        <button class="btn-toggle ${m.activo ? 'btn-toggle-on' : 'btn-toggle-off'}"
+                            onclick="window.toggleMesoneroActivo('${m.id}', ${!m.activo})">
+                            ${m.activo ? 'Activo' : 'Inactivo'}
                         </button>
                         <button class="btn-icon delete" onclick="window.eliminarMesonero('${m.id}')" title="Eliminar">
                             <i class="fas fa-trash"></i>
@@ -2227,7 +2289,7 @@
             
             const tbody = document.getElementById('propinasTableBody');
             if (tbody) {
-                tbody.innerHTML = window.propinas.map(p => `<tr><td>${new Date(p.fecha).toLocaleString()}</td><td>${p.mesoneros?.nombre || 'N/A'}</td><td>${p.mesa || 'N/A'}</td><td>${p.metodo}</td><td>${window.formatBs(p.monto_bs)}</td><td>${p.cajero || 'N/A'}</td></tr>`).join('');
+                tbody.innerHTML = window.propinas.map(p => `<tr><td>${new Date(p.fecha).toLocaleString('es-VE', { timeZone: 'America/Caracas' })}</td><td>${p.mesoneros?.nombre || 'N/A'}</td><td>${p.mesa || 'N/A'}</td><td>${p.metodo}</td><td>${window.formatBs(p.monto_bs)}</td><td>${p.cajero || 'N/A'}</td></tr>`).join('');
             }
             
             const ranking = {};
@@ -2480,10 +2542,9 @@
                         <div class="usuario-username">@${user.username} · ${user.rol || 'cajero'}</div>
                     </div>
                     <div class="usuario-actions">
-                        <button class="btn-icon ${user.activo ? 'toggle-on' : 'toggle-off'}"
-                            onclick="window.toggleUsuarioActivo('${user.id}', ${!user.activo})"
-                            title="${user.activo ? 'Desactivar' : 'Activar'}">
-                            <i class="fas fa-${user.activo ? 'pause' : 'play'}"></i>
+                        <button class="btn-toggle ${user.activo ? 'btn-toggle-on' : 'btn-toggle-off'}"
+                            onclick="window.toggleUsuarioActivo('${user.id}', ${!user.activo})">
+                            ${user.activo ? 'Activo' : 'Inactivo'}
                         </button>
                         <button class="btn-icon delete" onclick="window.eliminarUsuario('${user.id}')" title="Eliminar">
                             <i class="fas fa-trash"></i>
@@ -2774,7 +2835,7 @@
                 const totalUSD = p.total || 0;
                 const totalBs  = window.formatBs(totalUSD * tasa);
                 return `<tr>
-                    <td>${new Date(p.fecha).toLocaleDateString()}</td>
+                    <td>${new Date(p.fecha).toLocaleDateString('es-VE', { timeZone: 'America/Caracas' })}</td>
                     <td style="max-width:200px;font-size:.82rem">${resumen}</td>
                     <td>${window.formatUSD(totalUSD)}<br><span style="font-size:.75rem;color:var(--text-muted)">${totalBs}</span></td>
                     <td>${totalItems}</td>
@@ -2876,6 +2937,33 @@
             // Tasa efectiva = TasaBase × (1 + periodos × porcentaje / 100)
             const aumentoAcumulado = periodos * aumentoPct;
             const tasaEfectiva     = tasaBase * (1 + aumentoAcumulado / 100);
+
+            // ── LOG DE DIAGNÓSTICO (visible en F12 → Consola) ──
+            console.group('%c💱 Saki Sushi — Cálculo de Tasa', 'color:#FF9800;font-weight:700');
+            console.log('Modo activo:', estaActivo ? (activoSemanal ? 'SEMANAL' : 'DIARIO') : 'DESACTIVADO');
+            console.log('Fecha inicio (Desde):', desdeVal || '—');
+            console.log('Fecha fin   (Hasta): ', hastaVal || (indefinido ? 'Indefinido' : '—'));
+            if (estaActivo && desdeVal) {
+                const _hoyLog = new Date(); _hoyLog.setHours(0,0,0,0);
+                const _desdeLog = new Date(desdeVal + 'T00:00:00');
+                const _msD = 24*60*60*1000;
+                const _mpLog = activoSemanal ? 7*_msD : _msD;
+                const _diffDias = Math.floor((_hoyLog - _desdeLog) / _msD);
+                console.log('Días transcurridos desde "Desde":', _diffDias);
+                console.log('Períodos ' + (activoSemanal ? 'semanales' : 'diarios') + ' completados:', periodos);
+                if (activoSemanal) {
+                    const _proxLunes = new Date(_desdeLog);
+                    _proxLunes.setDate(_proxLunes.getDate() + periodos * 7);
+                    console.log('Próximo período semanal:', _proxLunes.toLocaleDateString('es-VE'));
+                    console.log('💡 Para simular "ya es lunes": window._simularLunes()');
+                }
+            }
+            console.log('Porcentaje por período:', aumentoPct + '%');
+            console.log('Períodos aplicados:', periodos);
+            console.log('Acumulado total:', aumentoAcumulado.toFixed(2) + '%');
+            console.log('Tasa Base:', tasaBase);
+            console.log('Tasa Efectiva → Bs', tasaEfectiva.toFixed(2));
+            console.groupEnd();
 
             document.getElementById('tasaEfectivaDisplay').textContent = tasaEfectiva.toFixed(2);
             document.getElementById('aumentoAcumuladoDisplay').textContent = aumentoAcumulado.toFixed(2) + '%';
@@ -3151,10 +3239,20 @@
             } catch (e) { console.error('Error eliminando ingrediente:', e); window.mostrarToast(' Error al eliminar ingrediente', 'error'); }
         };
 
-        window.renderizarMenu = function() {
+        window.renderizarMenu = function(filtro) {
             const grid = document.getElementById('menuGrid');
             grid.innerHTML = '';
-            window.menuItems.forEach(item => {
+            // Normalizar texto para búsqueda sin sensibilidad a mayúsculas ni acentos
+            const _norm = t => (t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+            const items = filtro
+                ? window.menuItems.filter(item => _norm(item.nombre).includes(_norm(filtro)))
+                : window.menuItems;
+            if (!items.length) {
+                grid.innerHTML = '<p style="color:var(--text-muted);font-size:.88rem;padding:.5rem">' +
+                    (filtro ? 'Sin resultados para "' + filtro + '"' : 'No hay platillos registrados.') + '</p>';
+                return;
+            }
+            items.forEach(item => {
                 const ingredientesEstado = [];
                 let todosDisponibles = true;
                 if (item.ingredientes) {
@@ -3213,8 +3311,9 @@
         window.renderizarInventario = function(filtro) {
             const grid = document.getElementById('inventarioGrid');
             grid.innerHTML = '';
+            const _normI = t => (t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
             const items = filtro
-                ? window.inventarioItems.filter(i => i.nombre.toLowerCase().includes(filtro.toLowerCase()))
+                ? window.inventarioItems.filter(i => _normI(i.nombre).includes(_normI(filtro)))
                 : window.inventarioItems;
             if (!items.length) {
                 grid.innerHTML = '<p style="color:var(--text-muted);font-size:.88rem;padding:.5rem">' +
@@ -3375,6 +3474,27 @@
         // SETUP EVENT LISTENERS
         // ══════════════════════════════════════════════
         window.setupEventListeners = function() {
+
+            // ── Chevrons de navegación de tabs ─────────────────────────────
+            window._scrollTabs = function(dir) {
+                const c = document.getElementById('tabsContainer');
+                if (!c) return;
+                c.scrollBy({ left: dir * 180, behavior: 'smooth' });
+                setTimeout(window._updateTabChevrons, 200);
+            };
+            window._updateTabChevrons = function() {
+                const c = document.getElementById('tabsContainer');
+                const lBtn = document.getElementById('tabsChevronLeft');
+                const rBtn = document.getElementById('tabsChevronRight');
+                if (!c || !lBtn || !rBtn) return;
+                lBtn.style.opacity = c.scrollLeft > 4 ? '1' : '0.3';
+                lBtn.style.pointerEvents = c.scrollLeft > 4 ? 'auto' : 'none';
+                const atEnd = c.scrollLeft + c.clientWidth >= c.scrollWidth - 4;
+                rBtn.style.opacity = atEnd ? '0.3' : '1';
+                rBtn.style.pointerEvents = atEnd ? 'none' : 'auto';
+            };
+            document.getElementById('tabsContainer')?.addEventListener('scroll', window._updateTabChevrons);
+            window._updateTabChevrons();
 
             // ── Navegación de tabs ──────────────────────────────────────────
             document.querySelectorAll('.tab').forEach(tab => {
@@ -3843,6 +3963,44 @@
                 window.mostrarLogin();
             }
         });
+
+        // ── Simulador de lunes para probar aviso semanal (desde F12) ──
+        window._simularLunes = function() {
+            console.log('%c🧪 Simulando lunes para prueba de aviso semanal...', 'color:#FF9800;font-weight:700');
+            // Borrar la clave de "ya mostrado hoy" para que vuelva a aparecer
+            const hoy = new Date().toISOString().split('T')[0];
+            localStorage.removeItem('saki_aviso_lunes_' + hoy);
+            // Forzar configGlobal.aumento_semanal = true temporalmente para el test
+            const estadoOriginal = window.configGlobal?.aumento_semanal;
+            if (window.configGlobal) window.configGlobal.aumento_semanal = true;
+            // Simular que hoy es lunes usando una versión modificada
+            const _orig = Date.prototype.getDay;
+            Date.prototype.getDay = function() { return 1; }; // 1 = lunes
+            window._verificarAvisoLunes();
+            Date.prototype.getDay = _orig; // restaurar
+            if (window.configGlobal && estadoOriginal !== undefined)
+                window.configGlobal.aumento_semanal = estadoOriginal;
+            console.log('%c✅ Aviso de lunes disparado. Mira la pantalla.', 'color:green;font-weight:700');
+        };
+
+        // ── Simulador de recálculo por período para probar acumulado ──
+        window._simularPeriodoSemanal = function(semanas) {
+            semanas = semanas || 1;
+            const input = document.getElementById('aumentoDiarioInput');
+            const pct = parseFloat(input?.value) || 0;
+            const base = parseFloat(document.getElementById('tasaBaseInput')?.value) || 0;
+            const acum = semanas * pct;
+            const efectiva = base * (1 + acum / 100);
+            console.group('%c🧪 Simulación: ' + semanas + ' semana(s) de aumento semanal', 'color:#FF9800;font-weight:700');
+            console.log('Tasa base:', base);
+            console.log('% por semana:', pct + '%');
+            console.log('Semanas simuladas:', semanas);
+            console.log('Acumulado simulado:', acum.toFixed(2) + '%');
+            console.log('Tasa efectiva simulada: Bs', efectiva.toFixed(2));
+            console.log('Diferencia vs actual: Bs', (efectiva - (window.configGlobal?.tasa_efectiva || base)).toFixed(2));
+            console.groupEnd();
+            console.log('%c💡 Tip: prueba window._simularPeriodoSemanal(3) para 3 semanas', 'color:gray');
+        };
 
         window.mostrarPanel = function() {
             document.getElementById('loginContainer').style.display = 'none';
