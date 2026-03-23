@@ -1019,7 +1019,447 @@
             text-align: center;
             word-break: break-word;
         }
-        </style>
+
+    /* ═══════════════════════════════════════════════════
+       PREMIUM ADMIN DESIGN — Saki Sushi
+       Paleta: Rojo #D32F2F · Negro #1a1a2e · Dorado #FF9800
+       ═══════════════════════════════════════════════════ */
+
+    /* ── Pane header universal ── */
+    .pane-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: .75rem;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 2px solid var(--border);
+    }
+    .pane-header .section-title { margin-bottom: 0; padding-bottom: 0; border: none; }
+    .pane-actions { display: flex; gap: .5rem; flex-wrap: wrap; }
+
+    /* ── Dashboard cards mejoradas ── */
+    .dashboard-card {
+        background: var(--card-bg);
+        border-radius: 14px;
+        padding: 1.4rem 1.5rem;
+        box-shadow: var(--shadow-sm);
+        border: 1px solid var(--border);
+        border-top: 3px solid var(--primary);
+        transition: var(--transition);
+        position: relative;
+        overflow: hidden;
+    }
+    .dashboard-card::after {
+        content: '';
+        position: absolute;
+        top: 0; right: 0;
+        width: 60px; height: 60px;
+        background: linear-gradient(135deg, var(--primary) 0%, transparent 70%);
+        opacity: .05;
+        border-radius: 0 14px 0 60px;
+    }
+    .dashboard-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+    .card-title {
+        font-size: .72rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: var(--text-muted);
+        margin-bottom: .6rem;
+    }
+    .card-value {
+        font-size: 1.75rem;
+        font-weight: 800;
+        color: var(--text-dark);
+        line-height: 1.1;
+    }
+
+    /* ── Dashboard lower grid ── */
+    .lower-stock, .lower-pedidos {
+        background: var(--card-bg);
+        border-radius: 14px;
+        padding: 1.4rem;
+        box-shadow: var(--shadow-sm);
+        border: 1px solid var(--border);
+    }
+    .lower-stock { border-top: 3px solid var(--danger); }
+    .lower-pedidos { border-top: 3px solid var(--info); }
+    .lower-stock h3, .lower-pedidos h3 {
+        font-family: 'Montserrat', sans-serif;
+        font-size: .8rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: var(--text-muted);
+        margin-bottom: 1rem;
+    }
+
+    /* ── Menú & Inventario grid cards ── */
+    .menu-card, .inventario-card {
+        background: var(--card-bg);
+        border-radius: 14px;
+        overflow: hidden;
+        box-shadow: var(--shadow-sm);
+        border: 1px solid var(--border);
+        transition: var(--transition);
+        display: flex;
+        flex-direction: column;
+    }
+    .menu-card:hover, .inventario-card:hover {
+        transform: translateY(-3px);
+        box-shadow: var(--shadow-md);
+        border-color: var(--primary);
+    }
+    .menu-card img {
+        width: 100%; height: 160px;
+        object-fit: cover;
+    }
+    .menu-card-body, .inventario-card-body {
+        padding: 1rem;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: .3rem;
+    }
+    .menu-card-name {
+        font-weight: 700;
+        font-size: .95rem;
+        color: var(--text-dark);
+        line-height: 1.3;
+    }
+    .menu-card-cat {
+        font-size: .72rem;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: .5px;
+    }
+    .menu-card-price {
+        font-size: 1.05rem;
+        font-weight: 800;
+        color: var(--primary);
+        margin-top: auto;
+        padding-top: .4rem;
+    }
+    .menu-card-actions {
+        display: flex;
+        gap: .4rem;
+        padding: .75rem 1rem;
+        background: #fafafa;
+        border-top: 1px solid var(--border);
+    }
+    .inventario-card-name {
+        font-weight: 700;
+        font-size: .9rem;
+        color: var(--text-dark);
+    }
+    .inventario-card-stock {
+        font-size: 1.3rem;
+        font-weight: 800;
+        color: var(--text-dark);
+    }
+    .inventario-card-stock.critico { color: var(--danger); }
+    .inventario-card-stock.bajo { color: var(--warning); }
+    .inventario-card-stock.ok { color: var(--success); }
+    .inventario-card-meta {
+        font-size: .75rem;
+        color: var(--text-muted);
+    }
+    .inventario-card-actions {
+        display: flex;
+        gap: .4rem;
+        padding: .75rem 1rem;
+        background: #fafafa;
+        border-top: 1px solid var(--border);
+        margin-top: auto;
+    }
+
+    /* ── Usuarios grid ── */
+    .usuarios-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+        gap: 1rem;
+    }
+    .usuario-card {
+        background: var(--card-bg);
+        border-radius: 14px;
+        padding: 1.2rem 1.3rem;
+        box-shadow: var(--shadow-sm);
+        border: 1px solid var(--border);
+        border-left: 4px solid var(--info);
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        transition: var(--transition);
+    }
+    .usuario-card:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
+    .usuario-avatar {
+        width: 44px; height: 44px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--secondary), #16213e);
+        color: var(--accent);
+        display: flex; align-items: center; justify-content: center;
+        font-weight: 800; font-size: 1rem;
+        flex-shrink: 0;
+    }
+    .usuario-info { flex: 1; min-width: 0; }
+    .usuario-nombre {
+        font-weight: 700;
+        font-size: .9rem;
+        color: var(--text-dark);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .usuario-username {
+        font-size: .75rem;
+        color: var(--text-muted);
+        margin-top: 2px;
+    }
+    .usuario-rol {
+        display: inline-block;
+        font-size: .65rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .5px;
+        padding: 2px 8px;
+        border-radius: 20px;
+        margin-top: 4px;
+    }
+    .usuario-rol.admin { background: #fff3e0; color: var(--warning); }
+    .usuario-rol.cajero { background: #e3f2fd; color: var(--info); }
+    .usuario-actions { display: flex; gap: .35rem; flex-shrink: 0; }
+
+    /* ── Deliverys ── */
+    .delivery-list {
+        display: flex;
+        flex-direction: column;
+        gap: .75rem;
+        max-width: 600px;
+    }
+    .delivery-item {
+        background: var(--card-bg);
+        border-radius: 14px;
+        padding: 1rem 1.3rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        box-shadow: var(--shadow-sm);
+        border: 1px solid var(--border);
+        border-left: 4px solid var(--delivery);
+        transition: var(--transition);
+    }
+    .delivery-item:hover { box-shadow: var(--shadow-md); }
+    .delivery-icon {
+        width: 40px; height: 40px;
+        border-radius: 10px;
+        background: linear-gradient(135deg, var(--delivery), #00838F);
+        color: #fff;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.1rem;
+        flex-shrink: 0;
+    }
+    .delivery-nombre { font-weight: 700; font-size: .9rem; color: var(--text-dark); flex: 1; }
+    .delivery-actions { display: flex; gap: .35rem; }
+
+    /* ── Mesoneros grid ── */
+    .mesoneros-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+        gap: 1rem;
+        max-width: 900px;
+    }
+    .mesonero-card {
+        background: var(--card-bg);
+        border-radius: 14px;
+        padding: 1rem 1.2rem;
+        display: flex;
+        align-items: center;
+        gap: .85rem;
+        box-shadow: var(--shadow-sm);
+        border: 1px solid var(--border);
+        border-left: 4px solid var(--propina);
+        transition: var(--transition);
+    }
+    .mesonero-card:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
+    .mesonero-avatar {
+        width: 38px; height: 38px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--propina), #7B1FA2);
+        color: #fff;
+        display: flex; align-items: center; justify-content: center;
+        font-weight: 800; font-size: .85rem;
+        flex-shrink: 0;
+    }
+    .mesonero-card .mesonero-nombre {
+        font-weight: 700; font-size: .88rem;
+        color: var(--text-dark); flex: 1;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .mesonero-card .mesonero-actions { display: flex; gap: .35rem; }
+
+    /* ── Propinas stats ── */
+    .propina-card {
+        background: var(--card-bg);
+        border-radius: 14px;
+        padding: 1.2rem 1.4rem;
+        box-shadow: var(--shadow-sm);
+        border: 1px solid var(--border);
+        border-top: 3px solid var(--propina);
+        text-align: center;
+        transition: var(--transition);
+    }
+    .propina-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+    .propina-card .stat-value {
+        font-size: 1.5rem; font-weight: 800;
+        color: var(--propina);
+    }
+    .propina-card .stat-label {
+        font-size: .72rem; font-weight: 700;
+        text-transform: uppercase; letter-spacing: .8px;
+        color: var(--text-muted); margin-top: .3rem;
+    }
+
+    /* ── QR grid ── */
+    .qr-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px,1fr)); gap: 1rem; }
+    .qr-card {
+        background: var(--card-bg);
+        border-radius: 14px;
+        padding: 1.2rem;
+        box-shadow: var(--shadow-sm);
+        border: 1px solid var(--border);
+        text-align: center;
+        transition: var(--transition);
+        display: flex; flex-direction: column; align-items: center; gap: .6rem;
+    }
+    .qr-card:hover { box-shadow: var(--shadow-md); border-color: var(--primary); }
+    .qr-card-name {
+        font-weight: 700; font-size: .88rem;
+        color: var(--text-dark);
+    }
+    .qr-card-url {
+        font-size: .68rem; color: var(--text-muted);
+        word-break: break-all; line-height: 1.4;
+    }
+    .qr-card-actions { display: flex; gap: .4rem; margin-top: .25rem; }
+
+    /* ── Config pane ── */
+    .config-section {
+        background: var(--card-bg);
+        border-radius: 14px;
+        padding: 1.5rem;
+        box-shadow: var(--shadow-sm);
+        border: 1px solid var(--border);
+        border-top: 3px solid var(--secondary);
+        max-width: 480px;
+        margin-bottom: 1.25rem;
+    }
+    .config-section h3 {
+        font-family: 'Montserrat', sans-serif;
+        font-size: .78rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: var(--text-muted);
+        margin-bottom: 1rem;
+        padding-bottom: .6rem;
+        border-bottom: 1px solid var(--border);
+    }
+
+    /* ── Buttons refinement ── */
+    .btn-sm {
+        display: inline-flex; align-items: center; gap: .3rem;
+        padding: .4rem .8rem;
+        border-radius: 8px; border: none; cursor: pointer;
+        font-family: 'Montserrat', sans-serif;
+        font-size: .75rem; font-weight: 700;
+        transition: var(--transition);
+    }
+    .btn-icon {
+        width: 32px; height: 32px;
+        border-radius: 8px; border: none; cursor: pointer;
+        display: inline-flex; align-items: center; justify-content: center;
+        font-size: .8rem;
+        transition: var(--transition);
+    }
+    .btn-icon.edit { background: #e3f2fd; color: var(--info); }
+    .btn-icon.edit:hover { background: var(--info); color: #fff; }
+    .btn-icon.delete { background: #ffebee; color: var(--danger); }
+    .btn-icon.delete:hover { background: var(--danger); color: #fff; }
+    .btn-icon.toggle-on { background: #e8f5e9; color: var(--success); }
+    .btn-icon.toggle-on:hover { background: var(--success); color: #fff; }
+    .btn-icon.toggle-off { background: #fafafa; color: var(--text-muted); }
+    .btn-icon.toggle-off:hover { background: #eee; }
+
+    /* ── Reportes ── */
+    .reportes-filters {
+        display: flex; gap: .75rem; flex-wrap: wrap;
+        align-items: flex-end;
+        background: var(--card-bg);
+        border-radius: 14px;
+        padding: 1.2rem;
+        box-shadow: var(--shadow-sm);
+        border: 1px solid var(--border);
+        margin-bottom: 1.5rem;
+    }
+    .chart-container {
+        background: var(--card-bg);
+        border-radius: 14px;
+        padding: 1.3rem;
+        box-shadow: var(--shadow-sm);
+        border: 1px solid var(--border);
+    }
+    .chart-container h3 {
+        font-family: 'Montserrat', sans-serif;
+        font-size: .78rem; font-weight: 700;
+        text-transform: uppercase; letter-spacing: .8px;
+        color: var(--text-muted); margin-bottom: 1rem;
+    }
+
+    /* ── Stock crítico badges ── */
+    .stock-badge {
+        display: inline-flex; align-items: center; gap: .3rem;
+        padding: .25rem .6rem;
+        border-radius: 20px;
+        font-size: .7rem; font-weight: 700;
+    }
+    .stock-badge.critico { background: #ffebee; color: var(--danger); }
+    .stock-badge.bajo { background: #fff8e1; color: var(--warning); }
+
+    /* ── Pedidos recientes ── */
+    .pedido-reciente {
+        display: flex; align-items: center; gap: .75rem;
+        padding: .6rem .75rem;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        margin-bottom: .5rem;
+        font-size: .82rem;
+        transition: var(--transition);
+    }
+    .pedido-reciente:hover { background: #f9f9f9; }
+    .pedido-reciente-tipo {
+        width: 28px; height: 28px;
+        border-radius: 8px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: .75rem; flex-shrink: 0;
+    }
+
+    /* ── Content padding ── */
+    .content { padding: 1.5rem; }
+    @media (max-width: 768px) {
+        .content { padding: .85rem; }
+        .pane-header { flex-direction: column; align-items: flex-start; }
+        .usuarios-grid { grid-template-columns: 1fr; }
+        .mesoneros-grid { grid-template-columns: 1fr 1fr; }
+        .config-section { max-width: 100%; }
+        .reportes-filters { flex-direction: column; }
+    }
+    @media (max-width: 480px) {
+        .mesoneros-grid { grid-template-columns: 1fr; }
+        .card-value { font-size: 1.4rem; }
+    }
+</style>
 </head>
 <body>
 <!-- Aviso de salida -->
@@ -1123,6 +1563,9 @@
         <div class="content">
             <!-- DASHBOARD -->
             <div class="tab-pane active" id="dashboardPane">
+                <div class="pane-header">
+                    <h2 class="section-title"><i class="fas fa-tachometer-alt"></i> Dashboard</h2>
+                </div>
                 <div class="dashboard-grid">
                     <div class="dashboard-card"><div class="card-title">Ventas Hoy</div><div class="card-value" id="ventasHoy">$0.00</div></div>
                     <div class="dashboard-card"><div class="card-title">Productos Activos</div><div class="card-value" id="productosActivos">0</div></div>
@@ -1138,19 +1581,34 @@
             
             <!-- MENÚ -->
             <div class="tab-pane" id="menuPane">
-                <button class="btn-primary" onclick="window.abrirModalNuevoPlatillo()" style="margin-bottom:1rem"><i class="fas fa-plus"></i> Nuevo Platillo</button>
+                <div class="pane-header">
+                    <h2 class="section-title"><i class="fas fa-utensils"></i> Menú y Precios</h2>
+                    <div class="pane-actions">
+                        <button class="btn-primary" onclick="window.abrirModalNuevoPlatillo()"><i class="fas fa-plus"></i> Nuevo Platillo</button>
+                    </div>
+                </div>
                 <div class="menu-grid" id="menuGrid"></div>
             </div>
             
             <!-- INVENTARIO -->
             <div class="tab-pane" id="inventarioPane">
-                <button class="btn-primary" onclick="window.abrirModalNuevoIngrediente()" style="margin-bottom:1rem"><i class="fas fa-plus"></i> Nuevo Ingrediente</button>
+                <div class="pane-header">
+                    <h2 class="section-title"><i class="fas fa-boxes"></i> Inventario</h2>
+                    <div class="pane-actions">
+                        <button class="btn-primary" onclick="window.abrirModalNuevoIngrediente()"><i class="fas fa-plus"></i> Nuevo Ingrediente</button>
+                    </div>
+                </div>
                 <div class="inventario-grid" id="inventarioGrid"></div>
             </div>
             
             <!-- USUARIOS -->
             <div class="tab-pane" id="usuariosPane">
-                <button class="btn-primary" onclick="window.abrirModalNuevoUsuario()" style="margin-bottom:1rem"><i class="fas fa-plus"></i> Nuevo Cajero</button>
+                <div class="pane-header">
+                    <h2 class="section-title"><i class="fas fa-users-cog"></i> Usuarios del Sistema</h2>
+                    <div class="pane-actions">
+                        <button class="btn-primary" onclick="window.abrirModalNuevoUsuario()"><i class="fas fa-plus"></i> Nuevo Cajero</button>
+                    </div>
+                </div>
                 <div class="usuarios-grid" id="usuariosGrid"></div>
             </div>
             
@@ -1188,30 +1646,36 @@
             </div>
             
             <!-- MESONEROS -->
-            <div class="tab-pane" id="mesonerosPane">                <h2 class="section-title"><i class="fas fa-user-tie" style="color:var(--propina)"></i> Mesoneros</h2>
-                <div style="display:flex;gap:10px;margin-bottom:1.5rem;max-width:500px">
-                    <input type="text" id="nuevoMesonero" placeholder="Nombre del mesonero"
-                        style="flex:1;padding:10px;border:1px solid var(--border);border-radius:8px;font-family:Montserrat,sans-serif">
-                    <button class="btn-primary" onclick="window.agregarMesonero()">
-                        <i class="fas fa-plus"></i> Agregar
-                    </button>
+            <div class="tab-pane" id="mesonerosPane">
+                <div class="pane-header">
+                    <h2 class="section-title"><i class="fas fa-user-tie" style="color:var(--propina)"></i> Mesoneros</h2>
+                    <div class="pane-actions" style="max-width:400px;flex:1">
+                        <input type="text" id="nuevoMesonero" placeholder="Nombre del mesonero"
+                            style="flex:1;min-width:160px;padding:.55rem .9rem;border:1px solid var(--border);border-radius:8px;font-family:Montserrat,sans-serif;font-size:.88rem">
+                        <button class="btn-primary" onclick="window.agregarMesonero()">
+                            <i class="fas fa-plus"></i> Agregar
+                        </button>
+                    </div>
                 </div>
                 <div id="mesonerosList" class="mesoneros-grid"></div>
             </div>
 
             <!-- CONFIGURACIÓN -->
             <div class="tab-pane" id="configuracionPane">
-                <div class="alert-list" style="max-width:500px">
-                    <h3>Cambiar Contraseña</h3>
+                <div class="pane-header">
+                    <h2 class="section-title"><i class="fas fa-cog"></i> Configuración</h2>
+                </div>
+                <div class="config-section">
+                    <h3><i class="fas fa-lock" style="color:var(--primary);margin-right:.4rem"></i>Cambiar Contraseña</h3>
                     <div class="form-group"><label>Contraseña Actual</label><input type="password" id="currentPassword"></div>
                     <div class="form-group"><label>Nueva Contraseña</label><input type="password" id="newPassword"></div>
                     <div class="form-group"><label>Confirmar Nueva Contraseña</label><input type="password" id="confirmPassword"></div>
-                    <button class="btn-primary" onclick="window.cambiarPassword()">Cambiar Contraseña</button>
+                    <button class="btn-primary" onclick="window.cambiarPassword()"><i class="fas fa-save"></i> Guardar contraseña</button>
                 </div>
-                <div class="alert-list" style="max-width:500px;margin-top:2rem">
-                    <h3>Correo de Recuperación</h3>
+                <div class="config-section">
+                    <h3><i class="fas fa-envelope" style="color:var(--info);margin-right:.4rem"></i>Correo de Recuperación</h3>
                     <div class="form-group"><label>Correo Electrónico</label><input type="email" id="recoveryEmail" value="admin@sakisushi.com"></div>
-                    <button class="btn-primary" onclick="window.guardarRecoveryEmail()">Guardar</button>
+                    <button class="btn-primary" onclick="window.guardarRecoveryEmail()"><i class="fas fa-save"></i> Guardar correo</button>
                 </div>
 
 
@@ -1219,8 +1683,11 @@
             
             <!-- QR (MODIFICADO) -->
             <div class="tab-pane" id="qrPane">
-                <div style="margin-bottom:2rem">
-                    <h3 class="section-title"><i class="fas fa-qrcode"></i> Generar Nuevo QR</h3>
+                <div class="pane-header">
+                    <h2 class="section-title"><i class="fas fa-qrcode"></i> Códigos QR</h2>
+                </div>
+                <div style="margin-bottom:1.5rem">
+                    <h3 style="font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:1rem">Generar Nuevo QR</h3>
                     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:.75rem;align-items:flex-end">
                         <div class="form-group"><label>Nombre de la Mesa</label><input type="text" id="qrNombreMesa" placeholder="Ej: 1  (sin prefijo Mesa)" style="width:100%"></div>
                         <div class="form-group"><label>ID de Router (SSID)</label><input type="text" id="qrWifiSsid" placeholder="Ej: SakiSushi_Wifi" style="width:100%" oninput="window.guardarWifiPersistente()"></div>
@@ -1236,10 +1703,13 @@
             
             <!-- REPORTES -->
             <div class="tab-pane" id="reportesPane">
-                <div style="display:flex;gap:1rem;margin-bottom:2rem;flex-wrap:wrap">
-                    <div class="form-group"><label>Desde</label><input type="date" id="reporteDesde"></div>
-                    <div class="form-group"><label>Hasta</label><input type="date" id="reporteHasta"></div>
-                    <div class="form-group" style="align-self:flex-end"><button class="btn-primary" onclick="window.cargarReportes()">Filtrar</button></div>
+                <div class="pane-header">
+                    <h2 class="section-title"><i class="fas fa-chart-bar"></i> Reportes</h2>
+                </div>
+                <div class="reportes-filters">
+                    <div class="form-group" style="margin:0"><label>Desde</label><input type="date" id="reporteDesde"></div>
+                    <div class="form-group" style="margin:0"><label>Hasta</label><input type="date" id="reporteHasta"></div>
+                    <button class="btn-primary" onclick="window.cargarReportes()"><i class="fas fa-filter"></i> Filtrar</button>
                 </div>
                 <div class="dashboard-grid">
                     <div class="dashboard-card"><div class="card-title">Ventas Día</div><div class="card-value" id="ventasDia">$0.00</div></div>
