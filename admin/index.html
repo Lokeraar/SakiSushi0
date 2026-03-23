@@ -32,7 +32,7 @@
         
         // Variables persistentes para WiFi (guardadas en localStorage)
         window.wifiSsidPersistente = localStorage.getItem('saki_wifi_ssid') || '';
-        window.wifiPasswordPersistente = localStorage.getItem('saki_wifi_password') || '';
+        window.wifiPasswordPersistente = localStorage.getItem('saki_wifi_pwd') || '';
         
         // Control de notificaciones de stock reactivado
         window.platillosNotificados = JSON.parse(localStorage.getItem('saki_platillos_notificados') || '{}');
@@ -245,7 +245,7 @@
             }
             if (password !== window.wifiPasswordPersistente) {
                 window.wifiPasswordPersistente = password;
-                localStorage.setItem('saki_wifi_password', password);
+                localStorage.setItem('saki_wifi_pwd', password);
             }
         };
         
@@ -323,6 +323,7 @@
     </script>
     
     <style>
+    /* ══
     /* ════════════════════════════════════════════════════
        SAKI SUSHI ADMIN — Estilo Premium Restaurante
        Paleta: Rojo #D32F2F · Negro #1a1a2e · Dorado #FF9800
@@ -1306,7 +1307,7 @@ html.dark-theme {
     }
     .dashboard-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
     .card-title {
-        font-size: .72rem;
+        font-size: .8rem;
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 1px;
@@ -1700,7 +1701,7 @@ html.dark-theme {
     }
     @media (max-width: 480px) {
         .mesoneros-grid { grid-template-columns: 1fr; }
-        .card-value { font-size: 1.4rem; }
+        .card-value { font-size: 1.6rem; font-weight: 800; color: var(--card-value-color, var(--text-dark)); }
     }
     /* ── pane-input (inline text input in pane-header) ── */
     .pane-input {
@@ -1967,10 +1968,16 @@ html.dark-theme {
         transition: var(--transition);
         min-width: 72px;
     }
-    .btn-toggle-on  { background: #e8f5e9; color: var(--success); }
-    .btn-toggle-on:hover  { background: var(--success); color: #fff; }
-    .btn-toggle-off { background: #f5f5f5; color: var(--text-muted); }
-    .btn-toggle-off:hover { background: #e0e0e0; color: var(--text-dark); }
+    /* btn-toggle-on: el elemento ESTÁ activo → el botón dice Inhabilitar → color rojo (advertencia) */
+    .btn-toggle-on  { background: #ffebee; color: var(--danger); border: 1px solid #ffcdd2; }
+    .btn-toggle-on:hover  { background: var(--danger); color: #fff; }
+    /* btn-toggle-off: el elemento ESTÁ inactivo → el botón dice Activar → color verde (positivo) */
+    .btn-toggle-off { background: #e8f5e9; color: var(--success); border: 1px solid #c8e6c9; }
+    .btn-toggle-off:hover { background: var(--success); color: #fff; }
+    .dark-theme .btn-toggle-on  { background: rgba(239,68,68,.18); color: #ff6b6b; border-color: rgba(239,68,68,.3); }
+    .dark-theme .btn-toggle-on:hover  { background: var(--danger); color: #fff; }
+    .dark-theme .btn-toggle-off { background: rgba(56,142,60,.2); color: #69f0ae; border-color: rgba(56,142,60,.3); }
+    .dark-theme .btn-toggle-off:hover { background: var(--success); color: #fff; }
 
     /* ── Config 2-col grid ── */
     .config-grid {
@@ -2168,8 +2175,34 @@ html.dark-theme {
     /* ── tcb cards text adapt ── */
     .tcb-label { color: rgba(255,255,255,.65) !important; }
     .tcb-sublabel { color: rgba(255,255,255,.45) !important; }
-</style>
-</head>
+
+    /* ── QR generator inputs legibles en ambos temas ── */
+    .qr-generator-card .form-group label { color: var(--text-dark); font-weight: 600; }
+    .qr-generator-card input[type="text"] {
+        background: var(--input-bg);
+        color: var(--text-dark);
+        border: 1px solid var(--input-border);
+    }
+    .qr-generator-card input[type="text"]::placeholder { color: var(--text-muted); opacity: .7; }
+
+    /* ── Mesonero/Usuario badge adapta al tema ── */
+    .usuario-rol.inactivo-badge { background: var(--table-header); color: var(--text-muted); }
+    .usuario-rol.cajero { background: #e3f2fd; color: #1565c0; }
+    .dark-theme .usuario-rol.cajero { background: rgba(21,101,192,.25); color: #64b5f6; }
+
+    /* ── Reportes date inputs ── */
+    #reporteDesde, #reporteHasta {
+        background: var(--input-bg);
+        color: var(--text-dark);
+        border: 1px solid var(--input-border);
+        padding: .5rem .75rem;
+        border-radius: 8px;
+        font-family: 'Montserrat', sans-serif;
+        font-size: .88rem;
+    }
+    .dark-theme #reporteDesde::-webkit-calendar-picker-indicator,
+    .dark-theme #reporteHasta::-webkit-calendar-picker-indicator { filter: invert(1); }
+/head>
 <body>
 <!-- Aviso de salida -->
 <div id="_salidaAviso" style="display:none;position:fixed;inset:0;z-index:9999;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.55);padding:1rem">
@@ -2304,7 +2337,11 @@ html.dark-theme {
                 </div>
                 
                 <div class="dashboard-grid">
-                    <div class="dashboard-card"><div class="card-title">Ventas Hoy</div><div class="card-value" id="ventasHoy">$0.00</div></div>
+                    <div class="dashboard-card" id="ventasHoyCard" style="cursor:pointer" onclick="window._abrirDetalleVentasAdmin()" title="Ver detalle de ventas de hoy">
+                        <div class="card-title">Ventas Hoy (Neto Cobrado) <i class="fas fa-external-link-alt" style="font-size:.6rem;opacity:.5;margin-left:.3rem"></i></div>
+                        <div class="card-value" id="ventasHoy">$0.00</div>
+                        <div style="font-size:.72rem;color:var(--text-muted);margin-top:.25rem">Toca para ver desglose</div>
+                    </div>
                     <div class="dashboard-card"><div class="card-title">Productos Activos</div><div class="card-value" id="productosActivos">0</div></div>
                     <div class="dashboard-card"><div class="card-title">Alertas Stock</div><div class="card-value" id="alertasStock">0</div></div>
                     <div class="dashboard-card"><div class="card-title">Propinas Hoy</div><div class="card-value" id="propinasHoyDashboard">Bs. 0</div></div>
@@ -2483,7 +2520,7 @@ html.dark-theme {
                 <div class="reportes-filters">
                     <div class="form-group" style="margin:0"><label>Desde</label><input type="date" id="reporteDesde"></div>
                     <div class="form-group" style="margin:0"><label>Hasta</label><input type="date" id="reporteHasta"></div>
-                    <button class="btn-primary" onclick="window.cargarReportes()"><i class="fas fa-filter"></i> Filtrar</button>
+                    <button class="btn-primary" onclick="window.cargarReportes()"><i class="fas fa-search"></i> Buscar</button>
                 </div>
                 <div class="dashboard-grid">
                     <div class="dashboard-card"><div class="card-title">Ventas Día</div><div class="card-value" id="ventasDia">$0.00</div></div>
@@ -2944,7 +2981,7 @@ html.dark-theme {
                             Propinas pendientes: ${window.formatBs(acum)}
                         </div>
                     </div>
-                    <span class="usuario-rol ${m.activo ? 'cajero' : ''}" style="${m.activo ? '' : 'background:#fafafa;color:var(--text-muted)'}">
+                    <span class="usuario-rol ${m.activo ? 'cajero' : 'inactivo-badge'}" style="${m.activo ? '' : ''}">
                         ${m.activo ? 'Activo' : 'Inactivo'}
                     </span>
                     <div class="mesonero-actions">
@@ -3349,7 +3386,7 @@ Esto marcará todas sus propinas pendientes como entregadas.`);
                 window.renderizarQRs();
                 // Restaurar SSID y contraseña (persisten, nunca se borran)
                 const _ssid = localStorage.getItem('saki_wifi_ssid');
-                const _pwd  = localStorage.getItem('saki_wifi_password');
+                const _pwd  = localStorage.getItem('saki_wifi_pwd');
                 if (_ssid) { const el = document.getElementById('qrWifiSsid'); if (el) el.value = _ssid; }
                 if (_pwd)  { const el = document.getElementById('qrWifiPassword'); if (el) el.value = _pwd; }
             } catch (e) { console.error('Error cargando QRs:', e); window.mostrarToast('Error cargando QRs', 'error'); }
@@ -3361,7 +3398,7 @@ Esto marcará todas sus propinas pendientes como entregadas.`);
             grid.innerHTML = '';
 
             const _ssid = localStorage.getItem('saki_wifi_ssid') || '';
-            const _pwd  = localStorage.getItem('saki_wifi_password') || '';
+            const _pwd  = localStorage.getItem('saki_wifi_pwd') || '';
 
             (window.qrCodes || []).forEach(qr => {
                 const params = new URLSearchParams({ mesa: qr.nombre });
@@ -3596,7 +3633,7 @@ Esto marcará todas sus propinas pendientes como entregadas.`);
                             <small style="color:var(--text-muted)">${fecha} ${hora}</small>
                         </div>
                         ${items ? `<small style="color:var(--text-muted)">${items}${masItems}</small>` : ''}
-                        ${p.estado ? `<span style="font-size:.72rem;background:#f0f0f0;padding:.15rem .5rem;border-radius:10px">${p.estado}</span>` : ''}
+                        ${p.estado ? `<span style="font-size:.72rem;background:var(--table-header);color:var(--text-dark);padding:.15rem .5rem;border-radius:10px;font-weight:600">${p.estado.replace(/_/g,' ')}</span>` : ''}
                     </div>`;
                 }).join('') || '<p style="color:var(--text-muted);font-size:.85rem">No hay pedidos recientes</p>';
             } catch (e) { console.error('Error cargando pedidos recientes:', e); }
@@ -5217,6 +5254,80 @@ Esto marcará todas sus propinas pendientes como entregadas.`);
         };
 
 
+
+        // ── Detalle de ventas del día (desde el dashboard) ──
+        window._abrirDetalleVentasAdmin = async function() {
+            try {
+                const hoy = new Date(); hoy.setHours(0,0,0,0);
+                const man  = new Date(hoy); man.setDate(man.getDate()+1);
+                const { data: ventas, error } = await window.supabaseClient
+                    .from('ventas')
+                    .select('*, pedidos(*)')
+                    .gte('fecha', hoy.toISOString())
+                    .lt('fecha', man.toISOString())
+                    .order('fecha', { ascending: false });
+                if (error) throw error;
+
+                const tasa = window.configGlobal?.tasa_efectiva || window.configGlobal?.tasa_cambio || 400;
+                const labels = { efectivo_bs:'Ef. Bs', efectivo_usd:'Ef. USD', pago_movil:'Pago Móvil', punto_venta:'Punto Venta', invitacion:'Invitación', mixto:'Mixto' };
+
+                // Calcular neto por método
+                let totalNeto = 0, byMetodo = {};
+                (ventas || []).forEach(v => {
+                    const pedido = v.pedidos || {};
+                    let neto = 0;
+                    if (pedido.pagos_mixtos && pedido.pagos_mixtos.length) {
+                        const vuelto = pedido.vuelto_entregado || 0;
+                        let vueltoRest = vuelto;
+                        pedido.pagos_mixtos.forEach(pg => {
+                            const mbs = pg.metodo === 'efectivo_usd' ? (pg.monto||0)*tasa : (pg.montoBs||pg.monto||0);
+                            if (pg.metodo === 'invitacion') return;
+                            if (pg.metodo === 'efectivo_bs' || pg.metodo === 'efectivo_usd') {
+                                const n = Math.max(0, mbs - vueltoRest); vueltoRest = Math.max(0, vueltoRest-mbs); neto += n;
+                            } else { neto += mbs; }
+                            const lab = labels[pg.metodo] || pg.metodo;
+                            byMetodo[lab] = (byMetodo[lab]||0) + (pg.metodo==='efectivo_bs'||pg.metodo==='efectivo_usd' ? Math.max(0,mbs-(pg.metodo==='efectivo_bs'?vuelto:0)) : mbs);
+                        });
+                    } else {
+                        neto = v.subtotal_platillos || (v.total || 0) * tasa;
+                        const lab = labels[v.metodo_pago || pedido.metodo_pago] || (v.metodo_pago || 'N/A');
+                        byMetodo[lab] = (byMetodo[lab]||0) + neto;
+                    }
+                    if (pedido.metodo_pago !== 'invitacion') totalNeto += neto;
+                });
+
+                const metodosHtml = Object.entries(byMetodo).map(([m,bs]) =>
+                    `<div style="display:flex;justify-content:space-between;padding:.4rem 0;border-bottom:1px solid var(--border)">
+                        <span style="font-size:.85rem;color:var(--text-muted)">${m}</span>
+                        <span style="font-weight:700;color:var(--text-dark)">${window.formatBs(bs)}</span>
+                     </div>`).join('') || '<p style="color:var(--text-muted);font-size:.85rem">Sin ventas hoy</p>';
+
+                // Mostrar en un modal genérico
+                const modal = document.createElement('div');
+                modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:1rem';
+                modal.innerHTML = `
+                    <div style="background:var(--card-bg);border-radius:16px;padding:1.5rem;width:100%;max-width:440px;box-shadow:0 8px 32px rgba(0,0,0,.3)">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;padding-bottom:.75rem;border-bottom:2px solid var(--border)">
+                            <h3 style="font-size:1rem;font-weight:700;color:var(--text-dark)">💰 Ventas de Hoy — Neto Cobrado</h3>
+                            <button onclick="this.closest('[style*=fixed]').remove()" style="background:#f5f5f5;border:none;border-radius:8px;width:28px;height:28px;cursor:pointer;font-size:.85rem">✕</button>
+                        </div>
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;padding:.75rem;background:var(--table-header);border-radius:10px">
+                            <span style="font-weight:700;color:var(--text-dark)">Total neto</span>
+                            <span style="font-size:1.3rem;font-weight:800;color:var(--success)">${window.formatBs(totalNeto)}</span>
+                        </div>
+                        <div style="font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);margin-bottom:.5rem">Desglose por método</div>
+                        ${metodosHtml}
+                        <div style="margin-top:1rem;font-size:.75rem;color:var(--text-muted);text-align:center">
+                            ${(ventas||[]).length} cobro${(ventas||[]).length !== 1 ? 's' : ''} registrados hoy
+                        </div>
+                    </div>`;
+                modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+                document.body.appendChild(modal);
+            } catch(e) {
+                console.error('Error abriendo detalle ventas:', e);
+                window.mostrarToast('❌ Error al cargar ventas: ' + (e.message||e), 'error');
+            }
+        };
 
         window.mostrarPanel = function() {
             document.getElementById('loginContainer').style.display = 'none';
