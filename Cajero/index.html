@@ -258,6 +258,41 @@ window.cargarDatosIniciales=async function(){try{await window.cargarConfiguracio
                     } catch(e) { console.error('Error guardando tasa:', e); }
                 };
                 window.iniciarVerificacionPeriodica();
+                    // ── Registrar push para cajero ──
+                    (async function _registrarPushCajero() {
+                        if (!('Notification' in window) || !('serviceWorker' in navigator)) return;
+                        if (location.protocol !== 'https:' && location.hostname !== 'localhost') return;
+                        if (Notification.permission === 'denied') return;
+                        let sid = localStorage.getItem('saki_cajero_session_id');
+                        if (!sid) {
+                            sid = 'cajero_' + Date.now() + '_' + Math.random().toString(36).slice(2, 9);
+                            localStorage.setItem('saki_cajero_session_id', sid);
+                        }
+                        const _reg = async () => {
+                            try {
+                                const reg = await navigator.serviceWorker.register('/SakiSushi0/sw.js', { scope: '/SakiSushi0/' });
+                                await navigator.serviceWorker.ready;
+                                let sub = await reg.pushManager.getSubscription();
+                                if (!sub) {
+                                    const vapid = 'BC6oJ4E+5pGIn4icpzCBLMi6/nk+1JJenrUA41uJrAs1ELraSw5ctvRAlh8sHVldqzBXUtEwEeFKBm0/hmuM9EY=';
+                                    const pad = '='.repeat((4 - vapid.length % 4) % 4);
+                                    const raw = atob((vapid + pad).replace(/-/g, '+').replace(/_/g, '/'));
+                                    const key = new Uint8Array(raw.length);
+                                    for (let i = 0; i < raw.length; i++) key[i] = raw.charCodeAt(i);
+                                    sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: key });
+                                }
+                                const p256dh = btoa(String.fromCharCode.apply(null, new Uint8Array(sub.getKey('p256dh'))));
+                                const auth   = btoa(String.fromCharCode.apply(null, new Uint8Array(sub.getKey('auth'))));
+                                await window.supabaseClient.from('push_subscriptions').upsert([{
+                                    session_id: sid, endpoint: sub.endpoint, p256dh, auth,
+                                    rol: 'cajero', user_agent: navigator.userAgent
+                                }], { onConflict: 'endpoint' });
+                                console.log('✅ Push cajero registrado:', sid);
+                            } catch (e) { console.warn('⚠️ Push cajero no disponible:', e.message); }
+                        };
+                        if (Notification.permission === 'granted') { await _reg(); }
+                        else { setTimeout(async () => { if ((await Notification.requestPermission()) === 'granted') await _reg(); }, 3000); }
+                    })();
                     // Tasa de hoy — bloqueante hasta que se ingrese
                     (function _pedirTasaCajero() {
                         const hoy   = new Date().toISOString().split('T')[0];
