@@ -335,27 +335,38 @@
   --accent:       #FF9800;
   --accent-dark:  #E65100;
   --gold:         #FFB300;
-  
+
   /* Tema Claro (por defecto) */
   --secondary:    #f8f9fa;
-  --header-bg:    linear-gradient(135deg, #ffffff 0%, #f1f3f4 100%);
-  --header-text:  #1a1a2e;
-  --body-bg:      #ffffff;
+  --header-bg:    linear-gradient(135deg, #1a1a2e 0%, #2d2d4e 100%);
+  --header-text:  #ffffff;
+  --body-bg:      #f4f4f8;
   --card-bg:      #ffffff;
   --text-dark:    #1a1a2e;
   --text-muted:   #5f6368;
   --border:       #e0e0e0;
-  --tabs-bg:      #f1f3f4;
-  --tab-text:     #5f6368;
+  --tabs-bg:      #ffffff;
+  --tab-text:     #1a1a2e;
   --tab-active:   #D32F2F;
+  --tab-active-bg: #1a1a2e;
   --table-header: #f1f3f4;
   --table-header-text: #1a1a2e;
   --input-bg:     #ffffff;
   --input-border: #dadce0;
-  --modal-header-bg: linear-gradient(135deg, #f8f9fa, #e8eaed);
-  --modal-header-text: #1a1a2e;
+  --modal-header-bg: linear-gradient(135deg, #1a1a2e, #2d2d4e);
+  --modal-header-text: #ffffff;
   --toast-bg:     #1a1a2e;
   --toast-text:   #ffffff;
+  --card-title-color: #5f6368;
+  --card-value-color: #1a1a2e;
+  --section-title-color: #1a1a2e;
+  --tag-bg: #f0f0f0;
+  --tag-text: #1a1a2e;
+  --tag-border: #d0d0d0;
+  --list-item-hover: #f0f0f8;
+  --badge-ok-bg: #e8f5e9; --badge-ok-text: #2e7d32;
+  --badge-bajo-bg: #fff8e1; --badge-bajo-text: #f57f17;
+  --badge-critico-bg: #ffebee; --badge-critico-text: #c62828;
 }
 
 /* Tema Oscuro */
@@ -365,20 +376,31 @@ html.dark-theme {
   --header-text:  #ffffff;
   --body-bg:      #0f0f1a;
   --card-bg:      #1e1e32;
-  --text-dark:    #ffffff;
-  --text-muted:   #a0a0b0;
-  --border:       rgba(255,255,255,.1);
+  --text-dark:    #f0f0f8;
+  --text-muted:   #a0a0c0;
+  --border:       rgba(255,255,255,.12);
   --tabs-bg:      #1a1a2e;
-  --tab-text:     rgba(255,255,255,.7);
+  --tab-text:     rgba(255,255,255,.75);
   --tab-active:   #FF9800;
+  --tab-active-bg:#1a1a2e;
   --table-header: #1a1a2e;
-  --table-header-text: #ffffff;
-  --input-bg:     #252540;
-  --input-border: rgba(255,255,255,.15);
+  --table-header-text: #f0f0f8;
+  --input-bg:     #252545;
+  --input-border: rgba(255,255,255,.18);
   --modal-header-bg: linear-gradient(135deg, #1a1a2e, #16213e);
   --modal-header-text: #ffffff;
-  --toast-bg:     #252540;
+  --toast-bg:     #252545;
   --toast-text:   #ffffff;
+  --card-title-color: #a0a0c0;
+  --card-value-color: #f0f0f8;
+  --section-title-color: #f0f0f8;
+  --tag-bg: rgba(255,255,255,.08);
+  --tag-text: #e0e0f0;
+  --tag-border: rgba(255,255,255,.15);
+  --list-item-hover: rgba(255,255,255,.07);
+  --badge-ok-bg: rgba(46,125,50,.35); --badge-ok-text: #69f0ae;
+  --badge-bajo-bg: rgba(245,127,23,.25); --badge-bajo-text: #ffcc02;
+  --badge-critico-bg: rgba(198,40,40,.3); --badge-critico-text: #ff6b6b;
 }
 
 :root {
@@ -416,8 +438,17 @@ html.dark-theme {
         align-items: center;
         justify-content: center;
         min-height: 100vh;
-        background: linear-gradient(135deg, var(--secondary) 0%, #16213e 50%, #0f3460 100%);
+        background: url('https://iqwwoihiiyrtypyqzhgy.supabase.co/storage/v1/object/public/imagenes-platillos/Fondo%20de%20pantalla.png') center/cover no-repeat fixed;
+        position: relative;
     }
+    .login-container::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: rgba(10, 10, 20, .55);
+        backdrop-filter: blur(2px);
+    }
+    .login-box { position: relative; z-index: 1; }
     .login-box {
         background: rgba(255,255,255,.05);
         border: 1px solid rgba(255,255,255,.1);
@@ -976,7 +1007,7 @@ html.dark-theme {
     }
     .delivery-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
     .delivery-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: .75rem; }
-    .delivery-nombre { font-weight: 700; font-size: 1rem; }
+    .delivery-nombre { font-weight: 700; font-size: 1rem; color: var(--text-dark); }
     .delivery-acumulado { font-weight: 700; color: var(--delivery); font-size: 1.1rem; }
     .delivery-actions { display: flex; gap: .5rem; margin-top: .75rem; flex-wrap: wrap; }
     .mesoneros-grid {
@@ -1279,7 +1310,7 @@ html.dark-theme {
         font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 1px;
-        color: var(--text-muted);
+        color: var(--card-title-color, var(--text-muted));
         margin-bottom: .6rem;
     }
     .card-value {
@@ -1794,8 +1825,8 @@ html.dark-theme {
     .ing-tag {
         font-size: .65rem; font-weight: 600;
         padding: 2px 8px; border-radius: 20px;
-        background: #f0f0f0; color: var(--text-dark);
-        border: 1px solid #e0e0e0;
+        background: var(--tag-bg); color: var(--tag-text);
+        border: 1px solid var(--tag-border);
     }
     .ing-tag-sin-stock { background: #ffebee; color: var(--danger); border-color: #ffcdd2; }
     .mc2-actions { display: flex; gap: .4rem; justify-content: flex-end; padding-top: .4rem; border-top: 1px solid var(--border); }
@@ -1978,7 +2009,7 @@ html.dark-theme {
         gap: .5rem;
     }
     .inv-list-item:last-child { border-bottom: none; }
-    .inv-list-item:hover { background: #f5f5f5; }
+    .inv-list-item:hover { background: var(--list-item-hover); }
     .inv-list-item.active {
         background: linear-gradient(135deg, var(--primary), var(--primary-dark));
         color: #fff;
@@ -1990,9 +2021,9 @@ html.dark-theme {
         flex-shrink: 0;
         background: #f0f0f0; color: var(--text-muted);
     }
-    .inv-item-badge.ok  { background: #e8f5e9; color: var(--success); }
-    .inv-item-badge.bajo { background: #fff8e1; color: var(--warning); }
-    .inv-item-badge.critico { background: #ffebee; color: var(--danger); }
+    .inv-item-badge.ok  { background: var(--badge-ok-bg); color: var(--badge-ok-text); }
+    .inv-item-badge.bajo { background: var(--badge-bajo-bg); color: var(--badge-bajo-text); }
+    .inv-item-badge.critico { background: var(--badge-critico-bg); color: var(--badge-critico-text); }
     .inv-detail-col {
         flex: 1;
         min-width: 0;
@@ -2084,6 +2115,59 @@ html.dark-theme {
     .menu-card-v2.no-disponible .mc2-nombre { color: var(--text-muted); }
     .menu-card-v2.no-disponible .mc2-precio { color: var(--text-muted) !important; }
     .menu-card-v2.no-disponible .mc2-precio-bs { color: var(--text-muted) !important; }
+
+    /* ── Chart.js dark mode text ── */
+    .dark-theme canvas { filter: brightness(.95); }
+
+    /* ── form inputs always use theme vars ── */
+    input, select, textarea {
+        background: var(--input-bg);
+        color: var(--text-dark);
+        border-color: var(--input-border);
+    }
+    input::placeholder { color: var(--text-muted); opacity: .7; }
+
+    /* ── Links adapt to theme ── */
+    a { color: var(--primary); }
+    .dark-theme a { color: var(--accent); }
+
+    /* ── Mesoneros text in light theme ── */
+    .mesonero-nombre { color: var(--text-dark) !important; }
+    .mesonero-card .usuario-rol { color: var(--text-dark); }
+
+    /* ── delivery-estado badges adapt ── */
+    .delivery-estado.activo   { color: #2e7d32; background: #e8f5e9; padding: 2px 8px; border-radius: 20px; font-size: .72rem; font-weight: 700; }
+    .delivery-estado.inactivo { color: #757575; background: #f5f5f5; padding: 2px 8px; border-radius: 20px; font-size: .72rem; font-weight: 700; }
+    .dark-theme .delivery-estado.activo   { color: #69f0ae; background: rgba(46,125,50,.3); }
+    .dark-theme .delivery-estado.inactivo { color: #a0a0b0; background: rgba(255,255,255,.08); }
+
+    /* ── qr-wifi-hint adapts ── */
+    .qr-wifi-hint { background: var(--table-header); border-color: var(--border); color: var(--text-muted); }
+
+    /* ── table adapt ── */
+    .data-table th { background: var(--table-header); color: var(--table-header-text); }
+    .data-table td { color: var(--text-dark); border-bottom: 1px solid var(--border); }
+    .dark-theme .data-table tr:hover { background: rgba(255,255,255,.04); }
+
+    /* ── pane section background ── */
+    .tab-pane { background: var(--body-bg); }
+
+    /* ── config-section adapt ── */
+    .config-section { border-top-color: var(--primary); background: var(--card-bg); }
+    .config-section h3 { color: var(--text-muted); border-bottom-color: var(--border); }
+
+    /* ── inventory detail adapt ── */
+    .inv-list-col { background: var(--card-bg); border-color: var(--border); }
+    .inv-list-search { background: var(--table-header); border-color: var(--border); }
+    .inv-list-search input { background: var(--input-bg); color: var(--text-dark); border-color: var(--input-border); }
+    .inv-detail-card { background: var(--card-bg); border-color: var(--border); }
+    .inv-detail-title { color: var(--text-dark); border-color: var(--border); }
+    .inv-detail-close { background: var(--table-header); color: var(--text-muted); }
+    .inv-detail-close:hover { background: var(--danger); color: #fff; }
+
+    /* ── tcb cards text adapt ── */
+    .tcb-label { color: rgba(255,255,255,.65) !important; }
+    .tcb-sublabel { color: rgba(255,255,255,.45) !important; }
 </style>
 </head>
 <body>
@@ -2306,7 +2390,7 @@ html.dark-theme {
             <div class="tab-pane" id="mesonerosPane">
                 <div class="pane-header">
                     <h2 class="section-title"><i class="fas fa-user-tie" style="color:var(--propina)"></i> Mesoneros y Propinas</h2>
-                    <div class="pane-actions" style="flex:1">
+                    <div class="pane-actions" style="margin-left:auto">
                         <input type="text" id="nuevoMesonero" placeholder="Nombre del mesonero"
                             class="pane-input">
                         <button class="btn-primary" onclick="window.agregarMesonero()">
