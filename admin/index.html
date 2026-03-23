@@ -2028,9 +2028,38 @@
     </div>
     
     <!-- MODALES -->
-    <div class="modal" id="platilloModal"><div class="modal-content"><div class="modal-header"><h3 id="platilloModalTitle">Nuevo Platillo</h3><button class="modal-close" id="closePlatilloModal">&times;</button></div><div class="modal-body"><form id="platilloForm"><div class="form-group"><label>Imagen</label><input type="file" id="platilloImagen" accept="image/*"><small>O URL:</small><input type="url" id="platilloImagenUrl"><div id="imagenPreview" class="image-preview" style="display:none"><img id="previewImg"><div><small>Vista previa</small><button type="button" class="btn-small" onclick="window.limpiarImagenPreview()">Eliminar</button></div></div></div><div class="form-row"><div class="form-group"><label>Nombre</label><input type="text" id="platilloNombre" required></div><div class="form-group"><label>Categoría</label><select id="platilloCategoria" required></select></div></div><div class="form-group"><label>Subcategoría</label><select id="platilloSubcategoria"><option value="">Ninguna</option></select></div><div class="form-row"><div class="form-group"><label>Precio (USD)</label><input type="number" step="0.01" id="platilloPrecio" required></div><div class="form-group"><label>Disponible</label><select id="platilloDisponible"><option value="true">Sí</option><option value="false">No</option></select></div></div><div class="form-group"><label>Descripción</label><textarea id="platilloDescripcion" rows="3"></textarea></div><div class="form-group"><label>Ingredientes</label><div id="ingredientesContainer"></div><button type="button" class="btn-secondary" onclick="window.agregarIngredienteRow()"><i class="fas fa-plus"></i> Agregar Ingrediente</button></div></form></div><div class="modal-footer"><button class="btn-secondary" id="cancelPlatillo">Cancelar</button><button class="btn-primary" id="savePlatillo">Guardar</button></div></div></div>
+    <div class="modal" id="platilloModal"><div class="modal-content"><div class="modal-header"><h3 id="platilloModalTitle">Nuevo Platillo</h3><button class="modal-close" id="closePlatilloModal">&times;</button></div><div class="modal-body"><form id="platilloForm"><div class="form-group"><label>Imagen</label><input type="file" id="platilloImagen" accept="image/*"><small>O URL:</small><input type="url" id="platilloImagenUrl"><div id="imagenPreview" class="image-preview" style="display:none"><img id="previewImg"><div><small>Vista previa</small><button type="button" class="btn-small" onclick="window.limpiarImagenPreview()">Eliminar</button></div></div></div><div class="form-row"><div class="form-group"><label>Nombre</label><input type="text" id="platilloNombre" required></div><div class="form-group"><label>Categoría</label><select id="platilloCategoria" required></select></div></div><div class="form-group"><label>Subcategoría</label><select id="platilloSubcategoria"><option value="">Ninguna</option></select></div><div class="form-row"><div class="form-group"><label>Precio (USD)</label><input type="number" step="0.01" id="platilloPrecio" required></div><div class="form-group"><label>Disponible</label><select id="platilloDisponible"><option value="true">Sí</option><option value="false">No</option></select></div></div><div class="form-group"><label>Descripción</label><textarea id="platilloDescripcion" rows="3"></textarea></div><div class="form-group"><label>Ingredientes</label><div id="ingredientesContainer"></div><button type="button" class="btn-secondary" onclick="window.agregarIngredienteRow()"><i class="fas fa-plus"></i> Agregar Ingrediente</button></div></form></div><div class="modal-footer"><button class="btn-secondary" id="cancelPlatillo" type="button">Cancelar</button><button class="btn-primary" id="savePlatillo" type="button">Guardar</button></div></div></div>
     
-    <div class="modal" id="ingredienteModal"><div class="modal-content"><div class="modal-header"><h3 id="ingredienteModalTitle">Nuevo Ingrediente</h3><button class="modal-close" id="closeIngredienteModal">&times;</button></div><div class="modal-body"><form id="ingredienteForm"><div class="form-group"><label>Nombre</label><input type="text" id="ingredienteNombre" required></div><div class="form-group password-overlay" id="stockOverlay"><label>Stock Actual</label><div id="stockActualField" class="password-protected"><input type="number" step="0.01" id="ingredienteStock" disabled></div><div class="password-unlock" id="stockUnlock"><input type="password" placeholder="Contraseña" id="stockPassword"><button type="button" onclick="window.desbloquearStock()">Desbloquear</button></div></div><div class="form-group"><label>Mercancía a Agregar</label><input type="number" step="0.01" id="ingredienteAgregar"></div><div class="form-group"><label>Unidad</label><select id="ingredienteUnidad"><option value="unidades">Unidades</option><option value="gramos">Gramos</option><option value="mililitros">Mililitros</option><option value="kilogramos">Kilogramos</option><option value="litros">Litros</option></select></div><div class="form-group">
+    <div class="modal" id="ingredienteModal"><div class="modal-content"><div class="modal-header"><h3 id="ingredienteModalTitle">Nuevo Ingrediente</h3><button class="modal-close" id="closeIngredienteModal">&times;</button></div><div class="modal-body"><form id="ingredienteForm"><div class="form-group"><label>Nombre</label><input type="text" id="ingredienteNombre" required></div><div class="form-group" id="stockOverlay">
+                    <label>Stock Actual</label>
+                    <div style="position:relative">
+                        <input type="number" step="0.01" id="ingredienteStock" disabled
+                            style="width:100%;cursor:pointer;background:#f9f9f9"
+                            title="Haz clic para editar (requiere contraseña)"
+                            onclick="window.desbloquearStockClick(this)">
+                        <span id="stockLockIcon" style="position:absolute;right:.75rem;top:50%;transform:translateY(-50%);color:var(--text-muted);pointer-events:none">
+                            <i class="fas fa-lock" style="font-size:.8rem"></i>
+                        </span>
+                    </div>
+                    <div id="stockUnlockInline" style="display:none;margin-top:.4rem">
+                        <div style="display:flex;gap:.4rem;align-items:center">
+                            <input type="password" id="stockPasswordInline" placeholder="Contraseña de admin"
+                                style="flex:1;padding:.45rem .7rem;border:1px solid var(--border);border-radius:8px;font-family:Montserrat,sans-serif;font-size:.85rem"
+                                onkeydown="if(event.key==='Enter') window.desbloquearStockInline()">
+                            <button type="button" onclick="window.desbloquearStockInline()"
+                                style="padding:.45rem .9rem;background:var(--primary);color:#fff;border:none;border-radius:8px;font-family:Montserrat,sans-serif;font-size:.82rem;cursor:pointer;font-weight:600">
+                                <i class="fas fa-unlock"></i>
+                            </button>
+                            <button type="button" onclick="window._cerrarStockUnlock()"
+                                style="padding:.45rem .7rem;background:#f5f5f5;border:1px solid var(--border);border-radius:8px;cursor:pointer;font-size:.8rem">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <div id="stockUnlockError" style="color:var(--danger);font-size:.75rem;margin-top:.25rem;display:none">
+                            Contraseña incorrecta
+                        </div>
+                    </div>
+                </div><div class="form-group"><label>Mercancía a Agregar</label><input type="number" step="0.01" id="ingredienteAgregar"></div><div class="form-group"><label>Unidad</label><select id="ingredienteUnidad"><option value="unidades">Unidades</option><option value="gramos">Gramos</option><option value="mililitros">Mililitros</option><option value="kilogramos">Kilogramos</option><option value="litros">Litros</option></select></div><div class="form-group">
                     <label style="display:flex;align-items:center;gap:.4rem">
                         Stock Mínimo
                         <span class="tooltip-wrap" style="position:relative;display:inline-flex;cursor:help">
@@ -2043,7 +2072,7 @@
                     <input type="number" step="0.01" id="ingredienteMinimo"
                         placeholder="Ej: 5"
                         title="Cuando el stock disponible baje de este valor, aparecerá una alerta en el Dashboard y se enviará una notificación push a los dispositivos que hayan iniciado sesión en el admin.">
-                </div><div class="form-row"><div class="form-group"><label>Costo Total Compra (USD)</label><input type="number" step="0.01" id="costoTotal" onchange="window.calcularCostoUnitario()"></div><div class="form-group"><label>Cantidad Comprada</label><input type="number" step="0.01" id="cantidadComprada" onchange="window.calcularCostoUnitario()"></div></div><div class="form-group"><label>Precio de Costo (USD/ud)</label><input type="number" step="0.01" id="ingredienteCosto"></div><div class="form-group"><label>Precio de Venta (USD/ud)</label><input type="number" step="0.01" id="ingredienteVenta"></div></form></div><div class="modal-footer"><button class="btn-secondary" id="cancelIngrediente">Cancelar</button><button class="btn-primary" id="saveIngrediente">Guardar</button></div></div></div>
+                </div><div class="form-row"><div class="form-group"><label>Costo Total Compra (USD)</label><input type="number" step="0.01" id="costoTotal" onchange="window.calcularCostoUnitario()"></div><div class="form-group"><label>Cantidad Comprada</label><input type="number" step="0.01" id="cantidadComprada" onchange="window.calcularCostoUnitario()"></div></div><div class="form-group"><label>Precio de Costo (USD/ud)</label><input type="number" step="0.01" id="ingredienteCosto"></div><div class="form-group"><label>Precio de Venta (USD/ud)</label><input type="number" step="0.01" id="ingredienteVenta"></div></form></div><div class="modal-footer"><button class="btn-secondary" id="cancelIngrediente" type="button">Cancelar</button><button class="btn-primary" id="saveIngrediente" type="button">Guardar</button></div></div></div>
     
     <div class="modal" id="usuarioModal"><div class="modal-content"><div class="modal-header"><h3>Nuevo Cajero</h3><button class="modal-close" id="closeUsuarioModal">&times;</button></div><div class="modal-body"><form id="usuarioForm">
                         <!-- Línea 1: Nombre completo + estado activo -->
@@ -2071,9 +2100,9 @@
                                 <input type="text" id="usuarioPassword" value="123456" required>
                             </div>
                         </div>
-                    </form></div><div class="modal-footer"><button class="btn-secondary" id="cancelUsuario">Cancelar</button><button class="btn-primary" id="saveUsuario">Guardar</button></div></div></div>
+                    </form></div><div class="modal-footer"><button class="btn-secondary" id="cancelUsuario" type="button">Cancelar</button><button class="btn-primary" id="saveUsuario" type="button">Guardar</button></div></div></div>
     
-    <div class="modal" id="deliveryModal"><div class="modal-content"><div class="modal-header" style="background:linear-gradient(135deg,var(--delivery),#00838F)"><h3><i class="fas fa-motorcycle"></i> Editar Motorizado</h3><button class="modal-close" id="closeDeliveryModal">&times;</button></div><div class="modal-body"><form id="deliveryForm"><div class="form-group"><label>Nombre</label><input type="text" id="deliveryNombre" required></div><div class="form-group"><label>Estado</label><select id="deliveryEstado"><option value="true">Activo</option><option value="false">Inactivo</option></select></div></form></div><div class="modal-footer"><button class="btn-secondary" id="cancelDeliveryEdit">Cancelar</button><button class="btn-primary" id="saveDelivery" style="background:linear-gradient(135deg,var(--delivery),#00838F)">Guardar</button></div></div></div>
+    <div class="modal" id="deliveryModal"><div class="modal-content"><div class="modal-header" style="background:linear-gradient(135deg,var(--delivery),#00838F)"><h3><i class="fas fa-motorcycle"></i> Editar Motorizado</h3><button class="modal-close" id="closeDeliveryModal">&times;</button></div><div class="modal-body"><form id="deliveryForm"><div class="form-group"><label>Nombre</label><input type="text" id="deliveryNombre" required></div><div class="form-group"><label>Estado</label><select id="deliveryEstado"><option value="true">Activo</option><option value="false">Inactivo</option></select></div></form></div><div class="modal-footer"><button class="btn-secondary" id="cancelDeliveryEdit" type="button">Cancelar</button><button class="btn-primary" id="saveDelivery" type="button" style="background:linear-gradient(135deg,var(--delivery),#00838F)">Guardar</button></div></div></div>
     
     <div class="modal" id="confirmPagoDeliveryModal"><div class="modal-content"><div class="modal-header" style="background:linear-gradient(135deg,var(--success),#2E7D32)"><h3><i class="fas fa-hand-holding-usd"></i> Confirmar Pago</h3><button class="modal-close" onclick="window.cerrarModal('confirmPagoDeliveryModal')">&times;</button></div><div class="modal-body" id="confirmPagoDeliveryBody"></div><div class="modal-footer"><button class="btn-secondary" onclick="window.cerrarModal('confirmPagoDeliveryModal')">Cancelar</button><button class="btn-primary" id="confirmPagoDeliveryBtn" onclick="window.confirmarPagoDelivery()">Confirmar</button></div></div></div>
     
@@ -2238,7 +2267,7 @@
                     <div class="delivery-actions">
                         <button class="btn-icon edit" onclick="window.editarDelivery('${d.id}')" title="Editar"><i class="fas fa-edit"></i></button>
                         <button class="btn-toggle ${d.activo ? 'btn-toggle-on' : 'btn-toggle-off'}" onclick="window.toggleDeliveryActivo('${d.id}', ${!d.activo})">
-                            ${d.activo ? 'Desactivar' : 'Activar'}
+                            ${d.activo ? 'Inhabilitar' : 'Activar'}
                         </button>
                         <button class="btn-sm" style="background:linear-gradient(135deg,var(--success),#2E7D32);color:#fff"
                             onclick="window.mostrarPagoDelivery('${d.id}')">
@@ -2294,7 +2323,7 @@
                         </button>` : ''}
                         <button class="btn-toggle ${m.activo ? 'btn-toggle-on' : 'btn-toggle-off'}"
                             onclick="window.toggleMesoneroActivo('${m.id}', ${!m.activo})">
-                            ${m.activo ? 'Desactivar' : 'Activar'}
+                            ${m.activo ? 'Inhabilitar' : 'Activar'}
                         </button>
                         <button class="btn-icon delete" onclick="window.eliminarMesonero('${m.id}')" title="Eliminar">
                             <i class="fas fa-trash"></i>
@@ -2603,21 +2632,12 @@ Esto marcará todas sus propinas pendientes como entregadas.`);
                         </div>
                         <!-- Línea 2: username y rol -->
                         <div class="usuario-username">@${user.username} · ${user.rol || 'cajero'}</div>
-                        <!-- Línea 3: contraseña -->
-                        <div style="display:flex;align-items:center;gap:.4rem;margin-top:2px">
-                            <span style="font-size:.72rem;color:var(--text-muted)">Contraseña:</span>
-                            <span class="usr-pwd-display" id="pwd-${user.id}" style="font-size:.72rem;font-family:monospace;color:var(--text-dark);letter-spacing:.5px">••••••</span>
-                            <button onclick="window._togglePwd('${user.id}', '${(user.password_hash||'').replace(/'/g,'')}')"
-                                style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:.7rem;padding:0 2px"
-                                title="Mostrar/ocultar contraseña">
-                                <i class="fas fa-eye"></i>
-                            </button>
-                        </div>
+
                     </div>
                     <div class="usuario-actions">
                         <button class="btn-toggle ${user.activo ? 'btn-toggle-on' : 'btn-toggle-off'}"
                             onclick="window.toggleUsuarioActivo('${user.id}', ${!user.activo})">
-                            ${user.activo ? 'Desactivar' : 'Activar'}
+                            ${user.activo ? 'Inhabilitar' : 'Activar'}
                         </button>
                         <button class="btn-icon delete" onclick="window.eliminarUsuario('${user.id}')" title="Eliminar">
                             <i class="fas fa-trash"></i>
@@ -2847,9 +2867,12 @@ Esto marcará todas sus propinas pendientes como entregadas.`);
             let platilloTop = '-', maxCount = 0;
             for (const [n, c] of Object.entries(platillosCount)) { if (c > maxCount) { maxCount = c; platilloTop = n; } }
             
-            document.getElementById('ventasDia').textContent = window.formatUSD(ventasHoy);
-            document.getElementById('ventasSemana').textContent = window.formatUSD(ventasSemana);
-            document.getElementById('ticketPromedio').textContent = window.formatUSD(ticketPromedio);
+            const _vdBs = window.formatBs((ventasHoy||0) * ((window.configGlobal?.tasa_efectiva)||400));
+                document.getElementById('ventasDia').textContent = window.formatUSD(ventasHoy) + ' / ' + _vdBs;
+            const _vsBs = window.formatBs((ventasSemana||0) * ((window.configGlobal?.tasa_efectiva)||400));
+                document.getElementById('ventasSemana').textContent = window.formatUSD(ventasSemana) + ' / ' + _vsBs;
+            const _tpBs = window.formatBs((ticketPromedio||0) * ((window.configGlobal?.tasa_efectiva)||400));
+                document.getElementById('ticketPromedio').textContent = window.formatUSD(ticketPromedio) + ' / ' + _tpBs;
             document.getElementById('platilloTop').textContent = platilloTop;
         };
 
@@ -2912,7 +2935,14 @@ Esto marcará todas sus propinas pendientes como entregadas.`);
                     <td style="max-width:200px;font-size:.82rem">${resumen}</td>
                     <td>${window.formatUSD(totalUSD)}<br><span style="font-size:.75rem;color:var(--text-muted)">${totalBs}</span></td>
                     <td>${totalItems}</td>
-                    <td>${p.metodo_pago || 'N/A'}</td>
+                    <td style="font-size:.78rem">${(function(){
+                        if (p.pagos_mixtos && p.pagos_mixtos.length > 1) {
+                            const labels = { efectivo_bs:'Ef.Bs', efectivo_usd:'Ef.USD', pago_movil:'P.Móvil', punto_venta:'Pto.Venta', invitacion:'Invitación' };
+                            return p.pagos_mixtos.map(pg => labels[pg.metodo] || pg.metodo).join(' + ');
+                        }
+                        const labels2 = { efectivo_bs:'Ef. Bs', efectivo_usd:'Ef. USD', pago_movil:'Pago Móvil', punto_venta:'Punto Venta', invitacion:'Invitación' };
+                        return labels2[p.metodo_pago] || p.metodo_pago || 'N/A';
+                    })()}</td>
                     <td>${p.tipo || 'N/A'}</td>
                 </tr>`;
             }).join('');
@@ -2928,7 +2958,7 @@ Esto marcará todas sus propinas pendientes como entregadas.`);
                     const items = (p.items || []).slice(0,2).map(i => `${i.cantidad||1}x ${i.nombre}`).join(', ');
                     const masItems = (p.items||[]).length > 2 ? ` +${(p.items||[]).length-2} más` : '';
                     const tipoIcon = p.tipo==='delivery' ? '🛵' : p.tipo==='reserva' ? '📅' : '🍽️';
-                    const totalBs = window.formatBs ? window.formatBs(window.usdToBs(p.total||0)) : window.formatUSD(p.total||0);
+                    const totalBs = window.formatBs ? window.formatBs(window.usdToBs(p.total||0)) : (window.formatUSD(p.total||0) + ' / ' + window.formatBs(window.usdToBs(p.total||0)));
                     return `<div class="alert-item" style="flex-direction:column;align-items:flex-start;gap:.2rem">
                         <div style="display:flex;justify-content:space-between;width:100%">
                             <span style="font-weight:700">${tipoIcon} ${p.tipo||'mesa'} — ${totalBs}</span>
@@ -3210,6 +3240,13 @@ Esto marcará todas sus propinas pendientes como entregadas.`);
 
         window.abrirModalNuevoIngrediente = function() {
             window.ingredienteEditandoId = null;   // Asegurar modo nuevo
+            // En modo nuevo, stock visible y editable directamente
+            const _si = document.getElementById('ingredienteStock');
+            const _li = document.getElementById('stockLockIcon');
+            const _ud = document.getElementById('stockUnlockInline');
+            if (_si)  { _si.disabled = false; _si.value = '0'; _si.style.background = ''; _si.style.cursor = ''; }
+            if (_li)  { _li.innerHTML = ''; }
+            if (_ud)  { _ud.style.display = 'none'; }
             document.getElementById('ingredienteModalTitle').textContent = 'Nuevo Ingrediente';
             document.getElementById('ingredienteForm').reset();
             document.getElementById('ingredienteStock').disabled = true;
@@ -3231,22 +3268,47 @@ Esto marcará todas sus propinas pendientes como entregadas.`);
             document.getElementById('ingredienteCosto').value = ingrediente.precio_costo || 0;
             document.getElementById('ingredienteVenta').value = ingrediente.precio_unitario || 0;
             document.getElementById('ingredienteAgregar').value = '';
-            document.getElementById('ingredienteStock').disabled = true;
-            document.getElementById('stockActualField').classList.add('password-protected');
-            document.getElementById('stockUnlock').style.display = 'block';
-            document.getElementById('stockPassword').value = '';
+            // Resetear campo de stock: mostrar valor pero bloqueado
+            const _stockInp  = document.getElementById('ingredienteStock');
+            const _lockIcon  = document.getElementById('stockLockIcon');
+            const _unlockDiv = document.getElementById('stockUnlockInline');
+            if (_stockInp)  { _stockInp.disabled = true; _stockInp.style.background = '#f9f9f9'; _stockInp.style.cursor = 'pointer'; }
+            if (_lockIcon)  { _lockIcon.innerHTML = '<i class="fas fa-lock" style="font-size:.8rem"></i>'; }
+            if (_unlockDiv) { _unlockDiv.style.display = 'none'; }
             document.getElementById('ingredienteModal').classList.add('active');
         };
 
-        window.desbloquearStock = function() {
-            const password = document.getElementById('stockPassword').value;
-            if (password === window.configGlobal.admin_password) {
-                document.getElementById('ingredienteStock').disabled = false;
-                document.getElementById('stockActualField').classList.remove('password-protected');
-                document.getElementById('stockUnlock').style.display = 'none';
-            } else window.mostrarToast('Contraseña incorrecta', 'error');
+        window.desbloquearStockClick = function(inputEl) {
+            if (!inputEl.disabled) return; // ya desbloqueado
+            const unlock = document.getElementById('stockUnlockInline');
+            const pwdField = document.getElementById('stockPasswordInline');
+            if (unlock) { unlock.style.display = 'block'; }
+            if (pwdField) { pwdField.value = ''; pwdField.focus(); }
         };
 
+        window.desbloquearStockInline = function() {
+            const pwd = document.getElementById('stockPasswordInline')?.value;
+            const errEl = document.getElementById('stockUnlockError');
+            if (pwd === window.configGlobal.admin_password) {
+                const inp = document.getElementById('ingredienteStock');
+                const lock = document.getElementById('stockLockIcon');
+                const unlock = document.getElementById('stockUnlockInline');
+                if (inp)  { inp.disabled = false; inp.style.background = ''; inp.style.cursor = ''; inp.focus(); }
+                if (lock) lock.innerHTML = '<i class="fas fa-lock-open" style="font-size:.8rem;color:var(--success)"></i>';
+                if (unlock) unlock.style.display = 'none';
+                if (errEl) errEl.style.display = 'none';
+            } else {
+                if (errEl) { errEl.style.display = 'block'; }
+                document.getElementById('stockPasswordInline')?.focus();
+            }
+        };
+
+        window._cerrarStockUnlock = function() {
+            const unlock = document.getElementById('stockUnlockInline');
+            if (unlock) unlock.style.display = 'none';
+        };
+
+        window.desbloquearStock = function() { window.desbloquearStockInline(); };
         window.calcularCostoUnitario = function() {
             const costoTotal = parseFloat(document.getElementById('costoTotal').value) || 0;
             const cantidad = parseFloat(document.getElementById('cantidadComprada').value) || 1;
