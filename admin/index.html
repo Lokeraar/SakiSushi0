@@ -1820,7 +1820,6 @@
                 <div class="tab" data-tab="inventario">Inventario</div>
                 <div class="tab" data-tab="usuarios">Usuarios</div>
                 <div class="tab" data-tab="deliverys">Deliverys</div>
-                <div class="tab" data-tab="propinas">Propinas</div>
                 <div class="tab" data-tab="mesoneros">Mesoneros</div>
                 <div class="tab" data-tab="configuracion">Configuración</div>
                 <div class="tab" data-tab="qr">Códigos QR</div>
@@ -1909,44 +1908,39 @@
                 <div class="delivery-list" id="deliverysGrid"></div>
             </div>
             
-            <!-- PROPINAS -->
-            <div class="tab-pane" id="propinasPane">
-                <div class="pane-header">
-                    <h2 class="section-title"><i class="fas fa-hand-holding-heart" style="color:var(--propina)"></i> Propinas</h2>
-                </div>
-                <div class="propinas-stats">
-                    <div class="propina-card"><div class="stat-value" id="propinasTotal">Bs. 0</div><div class="stat-label">Total del Día</div></div>
-                    <div class="propina-card"><div class="stat-value" id="propinasCantidad">0</div><div class="stat-label">Cantidad</div></div>
-                    <div class="propina-card"><div class="stat-value" id="propinasPromedio">Bs. 0</div><div class="stat-label">Promedio</div></div>
-                </div>
-                <div class="table-section">
-                    <h3 class="table-section-title">Historial de Propinas</h3>
-                    <div class="table-responsive">
-                        <table class="data-table" id="propinasTable">
-                            <thead><tr><th>Fecha</th><th>Mesonero</th><th>Mesa</th><th>Método</th><th>Monto</th><th>Cajero</th></tr></thead>
-                            <tbody id="propinasTableBody"></tbody>
-                        </table>
-                    </div>
-                </div>
-                <div class="table-section" style="margin-top:1.5rem">
-                    <h3 class="table-section-title">Ranking de Mesoneros</h3>
-                    <div id="mesonerosRanking"></div>
-                </div>
-            </div>
-            
             <!-- MESONEROS -->
             <div class="tab-pane" id="mesonerosPane">
                 <div class="pane-header">
-                    <h2 class="section-title"><i class="fas fa-user-tie" style="color:var(--propina)"></i> Mesoneros</h2>
-                    <div class="pane-actions" style="max-width:400px;flex:1">
+                    <h2 class="section-title"><i class="fas fa-user-tie" style="color:var(--propina)"></i> Mesoneros y Propinas</h2>
+                    <div class="pane-actions" style="flex:1">
                         <input type="text" id="nuevoMesonero" placeholder="Nombre del mesonero"
-                            style="flex:1;min-width:160px;padding:.55rem .9rem;border:1px solid var(--border);border-radius:8px;font-family:Montserrat,sans-serif;font-size:.88rem">
+                            class="pane-input">
                         <button class="btn-primary" onclick="window.agregarMesonero()">
                             <i class="fas fa-plus"></i> Agregar
                         </button>
                     </div>
                 </div>
+
+                <!-- Stats de propinas -->
+                <div class="propinas-stats" style="margin-bottom:1.5rem">
+                    <div class="propina-card"><div class="stat-value" id="propinasTotal">Bs. 0</div><div class="stat-label">Total del Día</div></div>
+                    <div class="propina-card"><div class="stat-value" id="propinasCantidad">0</div><div class="stat-label">Propinas Hoy</div></div>
+                    <div class="propina-card"><div class="stat-value" id="propinasPromedio">Bs. 0</div><div class="stat-label">Promedio</div></div>
+                </div>
+
+                <!-- Tarjetas de mesoneros con acumulado -->
                 <div id="mesonerosList" class="mesoneros-grid"></div>
+
+                <!-- Historial de propinas del día -->
+                <div class="table-section" style="margin-top:1.5rem">
+                    <h3 class="table-section-title">Historial de Propinas de Hoy</h3>
+                    <div class="table-responsive">
+                        <table class="data-table" id="propinasTable">
+                            <thead><tr><th>Hora</th><th>Mesonero</th><th>Mesa</th><th>Método</th><th>Monto</th><th>Cajero</th></tr></thead>
+                            <tbody id="propinasTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
 
             <!-- CONFIGURACIÓN -->
@@ -2182,16 +2176,18 @@
                 const { data, error } = await window.supabaseClient.from('mesoneros').select('*').order('nombre');
                 if (error) throw error;
                 window.mesoneros = data || [];
-                window.renderizarMesoneros();
+                await window.renderizarMesoneros();
+                window.renderizarPropinas(); // sync propinas stats
             } catch (e) { console.error('Error cargando mesoneros:', e); }
         };
 
+        window._renderizandoDeliverys = false;
         window.cargarDeliverys = async function() {
             try {
                 const { data, error } = await window.supabaseClient.from('deliverys').select('*').order('nombre');
                 if (error) throw error;
                 window.deliverys = data || [];
-                window.renderizarDeliverys();
+                await window.renderizarDeliverys();
             } catch (e) { console.error('Error cargando deliverys:', e); }
         };
 
@@ -2220,10 +2216,12 @@
         };
 
         window.renderizarDeliverys = async function() {
+            if (window._renderizandoDeliverys) return;
+            window._renderizandoDeliverys = true;
             const grid = document.getElementById('deliverysGrid');
-            if (!grid) return;
-            // Limpiar ANTES de cualquier await para evitar duplicados
+            if (!grid) { window._renderizandoDeliverys = false; return; }
             grid.innerHTML = '';
+            try {
             for (const d of (window.deliverys || [])) {
                 const acumulado = await window.obtenerAcumuladoDelivery(d.id);
                 const card = document.createElement('div');
@@ -2240,35 +2238,63 @@
                     <div class="delivery-actions">
                         <button class="btn-icon edit" onclick="window.editarDelivery('${d.id}')" title="Editar"><i class="fas fa-edit"></i></button>
                         <button class="btn-toggle ${d.activo ? 'btn-toggle-on' : 'btn-toggle-off'}" onclick="window.toggleDeliveryActivo('${d.id}', ${!d.activo})">
-                            ${d.activo ? 'Activo' : 'Inactivo'}
+                            ${d.activo ? 'Desactivar' : 'Activar'}
                         </button>
                         <button class="btn-sm" style="background:linear-gradient(135deg,var(--success),#2E7D32);color:#fff"
                             onclick="window.mostrarPagoDelivery('${d.id}')">
                             <i class="fas fa-hand-holding-usd"></i> Pagado
                         </button>
+                        <button class="btn-icon delete" onclick="window.eliminarDelivery('${d.id}')" title="Eliminar motorizado">
+                            <i class="fas fa-trash"></i>
+                        </button>
                     </div>`;
                 grid.appendChild(card);
             }
+            } finally { window._renderizandoDeliverys = false; }
         };
-        window.renderizarMesoneros = function() {
+        window.renderizarMesoneros = async function() {
             const container = document.getElementById('mesonerosList');
             if (!container) return;
             if (!window.mesoneros || !window.mesoneros.length) {
                 container.innerHTML = '<p style="color:var(--text-muted);font-size:.88rem">No hay mesoneros registrados.</p>';
                 return;
             }
-            container.innerHTML = window.mesoneros.map(m => {
-                const inicial = m.nombre.charAt(0).toUpperCase();
+            // Construir acumulado de propinas por mesonero (todas, sin filtro de fecha)
+            let acumulados = {};
+            try {
+                const { data: allProp } = await window.supabaseClient
+                    .from('propinas')
+                    .select('mesonero_id, monto_bs, entregado')
+                    .eq('entregado', false);
+                (allProp || []).forEach(p => {
+                    acumulados[p.mesonero_id] = (acumulados[p.mesonero_id] || 0) + (p.monto_bs || 0);
+                });
+            } catch(e) { console.error('Error obteniendo acumulado propinas:', e); }
+
+            const sorted = [...window.mesoneros].sort((a, b) => a.nombre.localeCompare(b.nombre));
+            container.innerHTML = sorted.map(m => {
+                const inicial  = m.nombre.charAt(0).toUpperCase();
+                const acum     = acumulados[m.id] || 0;
+                const hayAcum  = acum > 0;
                 return `<div class="mesonero-card">
                     <div class="mesonero-avatar">${inicial}</div>
-                    <span class="mesonero-nombre">${m.nombre}</span>
+                    <div style="flex:1;min-width:0">
+                        <span class="mesonero-nombre">${m.nombre}</span>
+                        <div style="font-size:.72rem;color:${hayAcum ? 'var(--propina)' : 'var(--text-muted)'};font-weight:${hayAcum ? '700' : '400'};margin-top:2px">
+                            Propinas pendientes: ${window.formatBs(acum)}
+                        </div>
+                    </div>
                     <span class="usuario-rol ${m.activo ? 'cajero' : ''}" style="${m.activo ? '' : 'background:#fafafa;color:var(--text-muted)'}">
                         ${m.activo ? 'Activo' : 'Inactivo'}
                     </span>
                     <div class="mesonero-actions">
+                        ${hayAcum ? `<button class="btn-sm" style="background:linear-gradient(135deg,var(--propina),#7B1FA2);color:#fff;white-space:nowrap"
+                            onclick="window.pagarPropinaMesonero('${m.id}', '${m.nombre}', ${acum})">
+                            <i class="fas fa-hand-holding-heart"></i> Pagar
+                        </button>` : ''}
                         <button class="btn-toggle ${m.activo ? 'btn-toggle-on' : 'btn-toggle-off'}"
                             onclick="window.toggleMesoneroActivo('${m.id}', ${!m.activo})">
-                            ${m.activo ? 'Activo' : 'Inactivo'}
+                            ${m.activo ? 'Desactivar' : 'Activar'}
                         </button>
                         <button class="btn-icon delete" onclick="window.eliminarMesonero('${m.id}')" title="Eliminar">
                             <i class="fas fa-trash"></i>
@@ -2350,6 +2376,27 @@
             } catch (e) { console.error('Error:', e); }
         };
 
+        window.pagarPropinaMesonero = async function(mesoneroId, nombre, acum) {
+            const confirmado = confirm(`¿Registrar pago de propinas a ${nombre}?
+Monto pendiente: ${window.formatBs(acum)}
+
+Esto marcará todas sus propinas pendientes como entregadas.`);
+            if (!confirmado) return;
+            try {
+                const { error } = await window.supabaseClient
+                    .from('propinas')
+                    .update({ entregado: true })
+                    .eq('mesonero_id', mesoneroId)
+                    .eq('entregado', false);
+                if (error) throw error;
+                await window.renderizarMesoneros();
+                window.mostrarToast(`✅ Propinas pagadas a ${nombre}`, 'success');
+            } catch(e) {
+                console.error('Error pagando propinas:', e);
+                window.mostrarToast('❌ Error: ' + (e.message || e), 'error');
+            }
+        };
+
         window.eliminarMesonero = async function(id) {
             if (!confirm('¿Eliminar mesonero?')) return;
             try {
@@ -2400,6 +2447,22 @@
                 window.mostrarToast(' Motorizado actualizado', 'success');
             } catch (e) { console.error('Error:', e); window.mostrarToast(' Error al actualizar', 'error'); }
         });
+
+        window.eliminarDelivery = async function(id) {
+            const delivery = window.deliverys.find(d => d.id === id);
+            if (!delivery) return;
+            if (!confirm(`¿Eliminar al motorizado "${delivery.nombre}"? También se borrarán sus registros de entrega.`)) return;
+            try {
+                // Borrar entregas asociadas primero
+                await window.supabaseClient.from('entregas_delivery').delete().eq('delivery_id', id);
+                await window.supabaseClient.from('deliverys').delete().eq('id', id);
+                await window.cargarDeliverys();
+                window.mostrarToast('✅ Motorizado eliminado', 'success');
+            } catch (e) {
+                console.error('Error eliminando motorizado:', e);
+                window.mostrarToast('❌ Error al eliminar: ' + (e.message || e), 'error');
+            }
+        };
 
         window.toggleDeliveryActivo = async function(id, activo) {
             try {
@@ -2512,7 +2575,7 @@
 
         window.cargarUsuarios = async function() {
             try {
-                const { data, error } = await window.supabaseClient.from('usuarios').select('*').order('created_at', { ascending: false });
+                const { data, error } = await window.supabaseClient.from('usuarios').select('*').order('nombre');
                 if (error) throw error;
                 window.usuarios = data || [];
                 window.renderizarUsuarios();
@@ -2540,11 +2603,21 @@
                         </div>
                         <!-- Línea 2: username y rol -->
                         <div class="usuario-username">@${user.username} · ${user.rol || 'cajero'}</div>
+                        <!-- Línea 3: contraseña -->
+                        <div style="display:flex;align-items:center;gap:.4rem;margin-top:2px">
+                            <span style="font-size:.72rem;color:var(--text-muted)">Contraseña:</span>
+                            <span class="usr-pwd-display" id="pwd-${user.id}" style="font-size:.72rem;font-family:monospace;color:var(--text-dark);letter-spacing:.5px">••••••</span>
+                            <button onclick="window._togglePwd('${user.id}', '${(user.password_hash||'').replace(/'/g,'')}')"
+                                style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:.7rem;padding:0 2px"
+                                title="Mostrar/ocultar contraseña">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
                     </div>
                     <div class="usuario-actions">
                         <button class="btn-toggle ${user.activo ? 'btn-toggle-on' : 'btn-toggle-off'}"
                             onclick="window.toggleUsuarioActivo('${user.id}', ${!user.activo})">
-                            ${user.activo ? 'Activo' : 'Inactivo'}
+                            ${user.activo ? 'Desactivar' : 'Activar'}
                         </button>
                         <button class="btn-icon delete" onclick="window.eliminarUsuario('${user.id}')" title="Eliminar">
                             <i class="fas fa-trash"></i>
@@ -3244,9 +3317,10 @@
             grid.innerHTML = '';
             // Normalizar texto para búsqueda sin sensibilidad a mayúsculas ni acentos
             const _norm = t => (t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+            const _base = [...window.menuItems].sort((a,b) => a.nombre.localeCompare(b.nombre));
             const items = filtro
-                ? window.menuItems.filter(item => _norm(item.nombre).includes(_norm(filtro)))
-                : window.menuItems;
+                ? _base.filter(item => _norm(item.nombre).includes(_norm(filtro)))
+                : _base;
             if (!items.length) {
                 grid.innerHTML = '<p style="color:var(--text-muted);font-size:.88rem;padding:.5rem">' +
                     (filtro ? 'Sin resultados para "' + filtro + '"' : 'No hay platillos registrados.') + '</p>';
@@ -3312,9 +3386,10 @@
             const grid = document.getElementById('inventarioGrid');
             grid.innerHTML = '';
             const _normI = t => (t || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+            const _baseI = [...window.inventarioItems].sort((a,b) => a.nombre.localeCompare(b.nombre));
             const items = filtro
-                ? window.inventarioItems.filter(i => _normI(i.nombre).includes(_normI(filtro)))
-                : window.inventarioItems;
+                ? _baseI.filter(i => _normI(i.nombre).includes(_normI(filtro)))
+                : _baseI;
             if (!items.length) {
                 grid.innerHTML = '<p style="color:var(--text-muted);font-size:.88rem;padding:.5rem">' +
                     (filtro ? 'Sin resultados para "' + filtro + '"' : 'No hay ingredientes registrados.') + '</p>';
