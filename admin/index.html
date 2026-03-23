@@ -1459,6 +1459,97 @@
         .mesoneros-grid { grid-template-columns: 1fr; }
         .card-value { font-size: 1.4rem; }
     }
+    /* ── pane-input (inline text input in pane-header) ── */
+    .pane-input {
+        flex: 1;
+        min-width: 160px;
+        max-width: 280px;
+        padding: .55rem .9rem;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        font-family: 'Montserrat', sans-serif;
+        font-size: .88rem;
+        color: var(--text-dark);
+        background: #fff;
+        outline: none;
+        transition: var(--transition);
+    }
+    .pane-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(211,47,47,.1); }
+
+    /* ── btn-delivery ── */
+    .btn-delivery {
+        display: inline-flex; align-items: center; gap: .4rem;
+        padding: .6rem 1.3rem;
+        background: linear-gradient(135deg, var(--delivery), #00838F);
+        color: #fff; border: none; border-radius: 10px;
+        font-family: 'Montserrat', sans-serif;
+        font-size: .85rem; font-weight: 700; cursor: pointer;
+        transition: var(--transition); white-space: nowrap;
+    }
+    .btn-delivery:hover { opacity: .88; transform: translateY(-1px); }
+
+    /* ── table-section ── */
+    .table-section {
+        background: var(--card-bg);
+        border-radius: 14px;
+        padding: 1.25rem;
+        box-shadow: var(--shadow-sm);
+        border: 1px solid var(--border);
+        overflow: hidden;
+    }
+    .table-section-title {
+        font-family: 'Montserrat', sans-serif;
+        font-size: .75rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        color: var(--text-muted);
+        margin-bottom: 1rem;
+        padding-bottom: .6rem;
+        border-bottom: 1px solid var(--border);
+    }
+
+    /* ── QR generator card ── */
+    .qr-generator-card {
+        background: var(--card-bg);
+        border-radius: 14px;
+        padding: 1.4rem;
+        box-shadow: var(--shadow-sm);
+        border: 1px solid var(--border);
+        border-top: 3px solid var(--accent);
+        margin-bottom: 1.5rem;
+    }
+    .qr-generator-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+        gap: .85rem;
+        align-items: flex-end;
+        margin-bottom: 1rem;
+    }
+    .qr-wifi-hint {
+        display: flex;
+        align-items: flex-start;
+        gap: .5rem;
+        font-size: .78rem;
+        color: var(--text-muted);
+        padding: .6rem .8rem;
+        background: #fffde7;
+        border-radius: 8px;
+        border: 1px solid #fff9c4;
+        line-height: 1.45;
+    }
+
+    /* ── propinas-stats responsive ── */
+    .propinas-stats {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    @media (max-width: 480px) {
+        .propinas-stats { grid-template-columns: 1fr; }
+        .qr-generator-grid { grid-template-columns: 1fr; }
+    }
 </style>
 </head>
 <body>
@@ -1614,33 +1705,39 @@
             
             <!-- DELIVERYS -->
             <div class="tab-pane" id="deliverysPane">
-                <h2 class="section-title" style="margin-bottom:20px"><i class="fas fa-motorcycle" style="color:var(--delivery)"></i> Gestión de Motorizados</h2>
-                <div style="margin-bottom:2rem">
-                    <div style="display:flex;gap:10px;max-width:500px">
-                        <input type="text" id="nuevoDelivery" placeholder="Nombre del motorizado" style="flex:1;padding:10px;border:2px solid var(--gray-300,#ddd);border-radius:8px;background:white;color:var(--text-dark,#1a1a2e)">
-                        <button class="btn-primary" onclick="window.agregarDelivery()" style="background:linear-gradient(135deg,var(--delivery),#00838F)"><i class="fas fa-plus"></i> Agregar</button>
+                <div class="pane-header">
+                    <h2 class="section-title"><i class="fas fa-motorcycle" style="color:var(--delivery)"></i> Motorizados</h2>
+                    <div class="pane-actions">
+                        <input type="text" id="nuevoDelivery" placeholder="Nombre del motorizado" class="pane-input">
+                        <button class="btn-delivery" onclick="window.agregarDelivery()">
+                            <i class="fas fa-plus"></i> Agregar
+                        </button>
                     </div>
                 </div>
-                <div class="deliverys-grid" id="deliverysGrid"></div>
+                <div class="delivery-list" id="deliverysGrid"></div>
             </div>
             
             <!-- PROPINAS -->
             <div class="tab-pane" id="propinasPane">
-                <h2 class="section-title" style="margin-bottom:20px"><i class="fas fa-hand-holding-heart" style="color:var(--propina)"></i> Gestión de Propinas</h2>
+                <div class="pane-header">
+                    <h2 class="section-title"><i class="fas fa-hand-holding-heart" style="color:var(--propina)"></i> Propinas</h2>
+                </div>
                 <div class="propinas-stats">
-                    <div class="propina-card"><div class="stat-value" id="propinasTotal">Bs. 0</div><div class="stat-label">Total Propinas</div></div>
+                    <div class="propina-card"><div class="stat-value" id="propinasTotal">Bs. 0</div><div class="stat-label">Total del Día</div></div>
                     <div class="propina-card"><div class="stat-value" id="propinasCantidad">0</div><div class="stat-label">Cantidad</div></div>
                     <div class="propina-card"><div class="stat-value" id="propinasPromedio">Bs. 0</div><div class="stat-label">Promedio</div></div>
                 </div>
-                <div class="table-responsive">
-                    <h3 style="color:#fff;margin-bottom:1rem">Historial de Propinas</h3>
-                    <table class="data-table" id="propinasTable">
-                        <thead> on<th>Fecha</th><th>Mesonero</th><th>Mesa</th><th>Método</th><th>Monto</th><th>Cajero</th> </thead>
-                        <tbody id="propinasTableBody"></tbody>
-                    </table>
+                <div class="table-section">
+                    <h3 class="table-section-title">Historial de Propinas</h3>
+                    <div class="table-responsive">
+                        <table class="data-table" id="propinasTable">
+                            <thead><tr><th>Fecha</th><th>Mesonero</th><th>Mesa</th><th>Método</th><th>Monto</th><th>Cajero</th></tr></thead>
+                            <tbody id="propinasTableBody"></tbody>
+                        </table>
+                    </div>
                 </div>
-                <div style="margin-top:2rem">
-                    <h3 style="color:#fff;margin-bottom:1rem">Ranking de Mesoneros</h3>
+                <div class="table-section" style="margin-top:1.5rem">
+                    <h3 class="table-section-title">Ranking de Mesoneros</h3>
                     <div id="mesonerosRanking"></div>
                 </div>
             </div>
@@ -1686,16 +1783,29 @@
                 <div class="pane-header">
                     <h2 class="section-title"><i class="fas fa-qrcode"></i> Códigos QR</h2>
                 </div>
-                <div style="margin-bottom:1.5rem">
-                    <h3 style="font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:1rem">Generar Nuevo QR</h3>
-                    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:.75rem;align-items:flex-end">
-                        <div class="form-group"><label>Nombre de la Mesa</label><input type="text" id="qrNombreMesa" placeholder="Ej: 1  (sin prefijo Mesa)" style="width:100%"></div>
-                        <div class="form-group"><label>ID de Router (SSID)</label><input type="text" id="qrWifiSsid" placeholder="Ej: SakiSushi_Wifi" style="width:100%" oninput="window.guardarWifiPersistente()"></div>
-                        <div class="form-group" style="flex:1"><label>Contraseña WiFi</label><input type="text" id="qrWifiPassword" placeholder="Contraseña" style="width:100%" oninput="window.guardarWifiPersistente()"></div>
-                        <button class="btn-primary" onclick="window.generarQR()"><i class="fas fa-qrcode"></i> Generar</button>
+                <div class="qr-generator-card">
+                    <div class="qr-generator-grid">
+                        <div class="form-group">
+                            <label>Nombre de la Mesa</label>
+                            <input type="text" id="qrNombreMesa" placeholder="Ej: Mesa 1" style="width:100%">
+                        </div>
+                        <div class="form-group">
+                            <label>Red WiFi (SSID)</label>
+                            <input type="text" id="qrWifiSsid" placeholder="Ej: SakiSushi_WiFi" style="width:100%" oninput="window.guardarWifiPersistente()">
+                        </div>
+                        <div class="form-group">
+                            <label>Contraseña WiFi</label>
+                            <input type="text" id="qrWifiPassword" placeholder="Contraseña del WiFi" style="width:100%" oninput="window.guardarWifiPersistente()">
+                        </div>
+                        <div class="form-group" style="align-self:flex-end">
+                            <button class="btn-primary" onclick="window.generarQR()" style="width:100%">
+                                <i class="fas fa-qrcode"></i> Generar QR
+                            </button>
+                        </div>
                     </div>
-                    <div class="wifi-fields" style="margin-top:15px;padding:12px;background:rgba(0,0,0,.3);border-radius:8px">
-                        <i class="fas fa-wifi"></i> <small>Escribe solo el número o nombre de la mesa (el sistema añade la identificación automá). El QR generado permitirá conectarse automá a la red si se escanea.</small>
+                    <div class="qr-wifi-hint">
+                        <i class="fas fa-info-circle" style="color:var(--accent)"></i>
+                        <span>El QR lleva al cliente directo al menú de esa mesa. Si agregas los datos de WiFi, el QR también conecta automáticamente al escanear.</span>
                     </div>
                 </div>
                 <div class="qr-grid" id="qrGrid"></div>
