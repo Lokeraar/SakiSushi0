@@ -509,84 +509,136 @@
     }
     .logout-button:hover { background: rgba(255,255,255,.1); color: #fff; }
 
-    /* ── Tasa Bar ── */
-    .tasa-bar {
-        background: #fff;
-        border-bottom: 1px solid var(--border);
-        padding: .5rem 1.5rem;
-        display: flex;
-        flex-direction: column;
-        gap: .4rem;
-        font-size: .82rem;
-        box-shadow: var(--shadow-sm);
-        width: 100%;
-        box-sizing: border-box;
+    /* ── Tasa Cards Bar ── */
+    .tasa-cards-bar {
+        background: var(--secondary);
+        padding: .75rem 1.25rem;
+        border-bottom: 2px solid rgba(255,255,255,.07);
+        position: sticky;
+        top: 0;
+        z-index: 200;
     }
-    .tasa-row {
+    .tcb-cards {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: .6rem;
+        margin-bottom: .6rem;
+    }
+    .tcb-card {
+        background: rgba(255,255,255,.06);
+        border-radius: 12px;
+        padding: .6rem .85rem;
+        border: 1px solid rgba(255,255,255,.1);
+        border-top: 3px solid rgba(255,255,255,.2);
+        transition: background .2s;
+    }
+    .tcb-card:hover { background: rgba(255,255,255,.1); }
+    .tcb-card-base     { border-top-color: rgba(255,255,255,.4); }
+    .tcb-card-pct      { border-top-color: var(--accent); }
+    .tcb-card-efectiva { border-top-color: #4ade80; }
+    .tcb-card-acum     { border-top-color: var(--warning); }
+    .tcb-label {
+        font-size: .65rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: .6px;
+        color: rgba(255,255,255,.55);
+        margin-bottom: .3rem;
+    }
+    .tcb-input {
+        width: 100%;
+        background: rgba(0,0,0,.25);
+        border: 1px solid rgba(255,255,255,.15);
+        border-radius: 7px;
+        color: #fff;
+        font-family: 'Montserrat', sans-serif;
+        font-size: .95rem;
+        font-weight: 700;
+        padding: .3rem .55rem;
+        outline: none;
+        transition: border-color .2s;
+    }
+    .tcb-input:focus { border-color: var(--accent); }
+    .tcb-value-big {
+        font-size: 1.1rem;
+        font-weight: 800;
+        color: #fff;
+        line-height: 1.2;
+    }
+    .tcb-card-efectiva .tcb-value-big { color: #4ade80; }
+    .tcb-acum-val { color: var(--accent) !important; }
+    .tcb-sublabel {
+        font-size: .6rem;
+        color: rgba(255,255,255,.4);
+        margin-top: .2rem;
+    }
+    .tcb-controls {
         display: flex;
+        gap: .6rem;
         align-items: center;
-        gap: .75rem;
         flex-wrap: wrap;
     }
-    .tasa-row-valores { border-bottom: 1px solid #f0f0f0; padding-bottom: .4rem; }
-    /* Bloque de fechas de vigencia */
-    .tasa-fechas-wrap {
+    .tcb-toggle-card {
+        background: rgba(255,255,255,.06);
+        border-radius: 10px;
+        padding: .45rem .85rem;
+        border: 1px solid rgba(255,255,255,.1);
+        flex-shrink: 0;
+    }
+    .tcb-toggle-top {
+        display: flex;
+        align-items: center;
+        gap: .6rem;
+    }
+    .tcb-toggle-label {
+        font-size: .72rem;
+        color: rgba(255,255,255,.75);
+        font-weight: 600;
+        white-space: nowrap;
+    }
+    .tcb-fechas-card {
+        background: rgba(255,255,255,.06);
+        border-radius: 10px;
+        padding: .45rem .85rem;
+        border: 1px solid rgba(255,255,255,.1);
         display: flex;
         flex-direction: column;
         gap: .3rem;
-        padding: .4rem .6rem;
-        background: #f9f9f9;
-        border-radius: 8px;
-        border: 1px solid var(--border);
-        font-size: .82rem;
     }
-    .tasa-fecha-item {
+    .tcb-fecha-row {
         display: flex;
         align-items: center;
-        gap: .5rem;
+        gap: .4rem;
+        font-size: .72rem;
+        color: rgba(255,255,255,.7);
     }
-    .tasa-fecha-label {
-        font-weight: 600;
-        color: var(--text-muted);
+    .tcb-fecha-label { font-size: .7rem; color: rgba(255,255,255,.55); white-space: nowrap; }
+    .tcb-fecha-input {
+        padding: .2rem .4rem;
+        border-radius: 6px;
+        border: 1px solid rgba(255,255,255,.2);
+        background: rgba(0,0,0,.25);
+        color: #fff;
+        font-size: .72rem;
+        font-family: 'Montserrat', sans-serif;
+    }
+    .tcb-save-wrap { margin-left: auto; flex-shrink: 0; }
+    .tcb-save-btn {
+        font-size: .82rem;
+        padding: .55rem 1.1rem;
         white-space: nowrap;
-        min-width: 52px;
     }
-    .tasa-fecha-item input[type="date"] {
-        padding: .3rem .5rem;
-        border: 1px solid var(--border);
-        border-radius: 6px;
-        font-size: .82rem;
-        font-family: 'Montserrat', sans-serif;
-        outline: none;
+    @media (max-width: 768px) {
+        .tcb-cards { grid-template-columns: repeat(2, 1fr); }
+        .tcb-controls { flex-direction: column; align-items: stretch; }
+        .tcb-save-wrap { margin-left: 0; }
+        .tcb-save-btn { width: 100%; }
     }
-    .tasa-fecha-item input[type="date"]:focus { border-color: var(--primary); }
-    .tasa-item { display: flex; align-items: center; gap: .5rem; }
-    .tasa-item label { color: var(--text-muted); font-weight: 600; white-space: nowrap; }
-    .tasa-item input[type="number"] {
-        width: 90px;
-        padding: .3rem .6rem;
-        border: 1px solid var(--border);
-        border-radius: 6px;
-        font-size: .82rem;
-        font-family: 'Montserrat', sans-serif;
-        outline: none;
+    @media (max-width: 480px) {
+        .tcb-cards { grid-template-columns: repeat(2, 1fr); gap: .4rem; }
+        .tcb-card { padding: .5rem .65rem; }
+        .tcb-value-big { font-size: .95rem; }
     }
-    .tasa-item input[type="number"]:focus { border-color: var(--primary); }
-    .tasa-value { font-weight: 700; color: var(--primary); }
-    .tasa-btn { padding: .35rem .9rem; border: none; border-radius: 6px; font-size: .8rem; font-weight: 600; cursor: pointer; font-family: 'Montserrat', sans-serif; }
-    .tasa-btn.success { background: var(--success); color: #fff; }
-    .tasa-btn.danger  { background: var(--danger);  color: #fff; }
-    .btn-small { padding: .3rem .75rem; border: none; border-radius: 6px; font-size: .78rem; font-weight: 600; cursor: pointer; font-family: 'Montserrat', sans-serif; }
-    .btn-small.success { background: var(--success); color: #fff; }
-    .btn-small.danger  { background: var(--danger);  color: #fff; }
-
-    /* Toggle switch */
-    .toggle-switch { position: relative; display: inline-block; width: 40px; height: 22px; }
-    .toggle-switch input { opacity: 0; width: 0; height: 0; }
-    .toggle-slider { position: absolute; cursor: pointer; top:0; left:0; right:0; bottom:0; background:#ccc; border-radius:22px; transition:.3s; }
-    .toggle-slider:before { position:absolute; content:""; width:16px; height:16px; left:3px; bottom:3px; background:#fff; border-radius:50%; transition:.3s; }
-    .toggle-switch input:checked + .toggle-slider { background: var(--success); }
-    .toggle-switch input:checked + .toggle-slider:before { transform: translateX(18px); }
 
     /* ── Navigation Tabs ── */
     .tabs {
@@ -1753,60 +1805,90 @@
             <div class="header-right"><button class="nav-button" onclick="window.abrirSelectorMesaAdmin()"><i class="fas fa-utensils"></i> Mesas</button><a href="../Cajero/index.html" target="_blank" class="nav-button"><i class="fas fa-cash-register"></i> Cajero</a><button class="logout-button" id="logoutButton"><i class="fas fa-sign-out-alt"></i> Salir</button></div>
         </header>
         
-        <div class="tasa-bar" id="tasaBar">
-            <!-- Fila 1: valores numéricos -->
-            <div class="tasa-row tasa-row-valores">
-                <div class="tasa-item">
-                    <label>Tasa Base:</label>
-                    <input type="number" step="0.01" id="tasaBaseInput" value="400.00">
+        <div class="tasa-cards-bar" id="tasaBar">
+
+            <!-- ── Fila 1: 4 tarjetas de valores ── -->
+            <div class="tcb-cards">
+
+                <!-- Tasa Base -->
+                <div class="tcb-card tcb-card-base">
+                    <div class="tcb-label">Tasa Base:</div>
+                    <input type="number" step="0.01" id="tasaBaseInput" class="tcb-input"
+                        oninput="window.recalcularTasaEfectiva && window.recalcularTasaEfectiva()">
+                    <div class="tcb-sublabel">Bs. por $1</div>
                 </div>
-                <div class="tasa-item">
-                    <label id="labelAumentoPct">Aumento Diario %:</label>
-                    <input type="number" step="0.1" id="aumentoDiarioInput" value="0">
+
+                <!-- Aumento % -->
+                <div class="tcb-card tcb-card-pct">
+                    <div class="tcb-label" id="labelAumentoPct">Aumento Diario %:</div>
+                    <input type="number" step="0.1" id="aumentoDiarioInput" class="tcb-input"
+                        oninput="window.recalcularTasaEfectiva && window.recalcularTasaEfectiva()">
+                    <div class="tcb-sublabel">por período</div>
                 </div>
-                <div class="tasa-item">
-                    <label>Tasa Efectiva:</label>
-                    <span class="tasa-value" id="tasaEfectivaDisplay">400.00</span>
+
+                <!-- Tasa Efectiva -->
+                <div class="tcb-card tcb-card-efectiva">
+                    <div class="tcb-label">Tasa Efectiva:</div>
+                    <div class="tcb-value-big" id="tasaEfectivaDisplay">400.00</div>
+                    <div class="tcb-sublabel">Bs. por $1 hoy</div>
                 </div>
-                <div class="tasa-item">
-                    <label>Acumulado:</label>
-                    <span class="tasa-value" id="aumentoAcumuladoDisplay">0%</span>
+
+                <!-- Acumulado -->
+                <div class="tcb-card tcb-card-acum">
+                    <div class="tcb-label">Acumulado:</div>
+                    <div class="tcb-value-big tcb-acum-val" id="aumentoAcumuladoDisplay">0%</div>
+                    <div class="tcb-sublabel">aumento total</div>
                 </div>
+
             </div>
-            <!-- Fila 2: toggles, fechas, guardar -->
-            <div class="tasa-row tasa-row-controles">
-                <div class="tasa-item tasa-toggle-item">
-                    <label>Aumento diario activo:</label>
-                    <label class="toggle-switch"><input type="checkbox" id="aumentoActivoToggle"><span class="toggle-slider"></span></label>
-                </div>
-                <div class="tasa-item tasa-toggle-item">
-                    <label>Aumento semanal activo:</label>
-                    <label class="toggle-switch"><input type="checkbox" id="aumentoSemanalToggle"><span class="toggle-slider"></span></label>
-                </div>
-                <div class="tasa-fechas-wrap" id="tasaFechasDiv" style="display:none">
-                    <div class="tasa-fecha-item">
-                        <label class="tasa-fecha-label">Desde:</label>
-                        <input type="date" id="aumentoDesde">
+
+            <!-- ── Fila 2: toggles + fechas + guardar ── -->
+            <div class="tcb-controls">
+
+                <!-- Toggle diario -->
+                <div class="tcb-toggle-card">
+                    <div class="tcb-toggle-top">
+                        <span class="tcb-toggle-label">Aumento diario activo</span>
+                        <label class="toggle-switch"><input type="checkbox" id="aumentoActivoToggle"><span class="toggle-slider"></span></label>
                     </div>
-                    <div class="tasa-fecha-item">
-                        <label class="tasa-fecha-label">Hasta:</label>
-                        <input type="date" id="aumentoHasta" style="margin-right:.5rem">
-                        <label class="tasa-fecha-label" style="display:flex;align-items:center;gap:.35rem">
-                            <input type="checkbox" id="aumentoIndefinido"> Indefinido
+                </div>
+
+                <!-- Toggle semanal -->
+                <div class="tcb-toggle-card">
+                    <div class="tcb-toggle-top">
+                        <span class="tcb-toggle-label">Aumento semanal activo</span>
+                        <label class="toggle-switch"><input type="checkbox" id="aumentoSemanalToggle"><span class="toggle-slider"></span></label>
+                    </div>
+                </div>
+
+                <!-- Fechas (visibles solo cuando hay toggle activo) -->
+                <div class="tcb-fechas-card" id="tasaFechasDiv" style="display:none">
+                    <div class="tcb-fecha-row">
+                        <span class="tcb-fecha-label">Desde:</span>
+                        <input type="date" id="aumentoDesde" class="tcb-fecha-input">
+                    </div>
+                    <div class="tcb-fecha-row">
+                        <span class="tcb-fecha-label">Hasta:</span>
+                        <input type="date" id="aumentoHasta" class="tcb-fecha-input">
+                        <label class="tcb-fecha-row" style="gap:.3rem;margin-left:.5rem;cursor:pointer">
+                            <input type="checkbox" id="aumentoIndefinido" style="accent-color:var(--accent)"> Indefinido
                             <span class="tooltip-wrap" style="position:relative;display:inline-flex;align-items:center;cursor:help">
-                                <span style="display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;background:#aaa;color:#fff;border-radius:50%;font-size:.65rem;font-weight:700;flex-shrink:0">?</span>
-                                <span class="tooltip-text" style="display:none;position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:#1a1a2e;color:#fff;padding:.5rem .75rem;border-radius:8px;font-size:.75rem;white-space:normal;width:220px;text-align:center;box-shadow:0 4px 12px rgba(0,0,0,.3);z-index:100;line-height:1.4">
-                                    Activa esto si quieres que el aumento siga aplicándose cada día o semana sin límite de tiempo. Si lo dejas sin marcar, el aumento se detiene en la fecha "Hasta" que indiques.
+                                <span style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;background:#aaa;color:#fff;border-radius:50%;font-size:.6rem;font-weight:700">?</span>
+                                <span class="tooltip-text" style="display:none;position:absolute;bottom:calc(100%+6px);left:50%;transform:translateX(-50%);background:#1a1a2e;color:#fff;padding:.5rem .75rem;border-radius:8px;font-size:.72rem;width:210px;text-align:center;box-shadow:0 4px 12px rgba(0,0,0,.35);z-index:100;line-height:1.4">
+                                    Activa esto si quieres que el aumento siga sin límite de tiempo. Si lo dejas sin marcar, el aumento se detiene en la fecha "Hasta".
                                 </span>
                             </span>
                         </label>
                     </div>
                 </div>
-                <div class="tasa-item" style="margin-left:auto">
-                    <button class="save-button" id="saveAllButton">
+
+                <!-- Guardar -->
+                <div class="tcb-save-wrap">
+                    <button class="btn-primary tcb-save-btn" id="saveAllButton">
                         <i class="fas fa-save"></i> Guardar cambios en tasa
                     </button>
                 </div>
+
             </div>
         </div>
         
@@ -1855,30 +1937,6 @@
                     <h2 class="section-title"><i class="fas fa-utensils"></i> Menú y Precios</h2>
                     <div class="pane-actions">
                         <button class="btn-primary" onclick="window.abrirModalNuevoPlatillo()"><i class="fas fa-plus"></i> Nuevo Platillo</button>
-                    </div>
-                </div>
-
-                <!-- Banner de tasa actual -->
-                <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:.75rem;margin-bottom:1.25rem">
-                    <div class="dashboard-card" style="border-top-color:var(--secondary)">
-                        <div class="card-title">Tasa Base del Día</div>
-                        <div class="card-value" id="menuTasaBase" style="font-size:1.3rem">—</div>
-                        <div style="font-size:.7rem;color:var(--text-muted)">Bs. por $1</div>
-                    </div>
-                    <div class="dashboard-card" style="border-top-color:var(--warning)">
-                        <div class="card-title">Aumento Acumulado</div>
-                        <div class="card-value" id="menuAumentoAcum" style="font-size:1.3rem;color:var(--warning)">0.00%</div>
-                        <div style="font-size:.7rem;color:var(--text-muted)">sobre tasa base</div>
-                    </div>
-                    <div class="dashboard-card" style="border-top-color:var(--success)">
-                        <div class="card-title">Tasa Efectiva</div>
-                        <div class="card-value" id="menuTasaEfectiva" style="font-size:1.3rem;color:var(--success)">—</div>
-                        <div style="font-size:.7rem;color:var(--text-muted)">precio real actual</div>
-                    </div>
-                    <div class="dashboard-card" style="border-top-color:var(--accent);cursor:pointer" onclick="window.recalcularCostos()" title="Recalcula el costo en Bs de todos los ingredientes con la tasa efectiva actual">
-                        <div class="card-title">Recalcular Costos</div>
-                        <div style="font-size:1.5rem;text-align:center;margin:.2rem 0"><i class="fas fa-calculator" style="color:var(--accent)"></i></div>
-                        <div style="font-size:.7rem;color:var(--text-muted);text-align:center">toca para actualizar</div>
                     </div>
                 </div>
 
@@ -2343,7 +2401,7 @@
             const semEl = document.getElementById('aumentoSemanalToggle');
             if (semEl) semEl.checked = window.configGlobal.aumento_semanal || false;
             document.getElementById('tasaEfectivaDisplay').textContent = (window.configGlobal.tasa_efectiva || 400).toFixed(2);
-            document.getElementById('aumentoAcumuladoDisplay').textContent = (window.configGlobal.aumento_acumulado || 0) + '%';
+            document.getElementById('aumentoAcumuladoDisplay').textContent = (window.configGlobal.aumento_acumulado || 0).toFixed(2) + '%';
             // Restaurar fechas si existen
             if (window.configGlobal.aumento_desde && document.getElementById('aumentoDesde'))
                 document.getElementById('aumentoDesde').value = window.configGlobal.aumento_desde.split('T')[0];
@@ -2354,6 +2412,8 @@
             // Sincronizar estado del input y label según toggles
             if (typeof _actualizarLabelAumento === 'function') _actualizarLabelAumento();
         };
+        // Alias — ahora actualizarTasaUI ya actualiza la barra de tarjetas
+        window.actualizarMenuTasaBanner = window.actualizarTasaUI;
         window.cargarMenu = async function() {
             try {
                 const { data, error } = await window.supabaseClient.from('menu').select('*');
@@ -4635,19 +4695,7 @@ Esto marcará todas sus propinas pendientes como entregadas.`);
             window.mostrarToast(`✅ ${actualizados} ingrediente${actualizados !== 1 ? 's' : ''} actualizados en Bs`, 'success');
         };
 
-        // ── actualizarMenuTasaBanner — sync del banner de tasa en tab Menú ──
-        window.actualizarMenuTasaBanner = function() {
-            const cfg = window.configGlobal || {};
-            const base    = cfg.tasa_cambio    || 0;
-            const efectiva = cfg.tasa_efectiva || base;
-            const acum    = cfg.aumento_acumulado || 0;
-            const elBase  = document.getElementById('menuTasaBase');
-            const elEfect = document.getElementById('menuTasaEfectiva');
-            const elAcum  = document.getElementById('menuAumentoAcum');
-            if (elBase)  elBase.textContent  = base > 0  ? 'Bs ' + base.toFixed(2) : '—';
-            if (elEfect) elEfect.textContent = efectiva > 0 ? 'Bs ' + efectiva.toFixed(2) : '—';
-            if (elAcum)  elAcum.textContent  = acum.toFixed(2) + '%';
-        };
+
 
         window.mostrarPanel = function() {
             document.getElementById('loginContainer').style.display = 'none';
