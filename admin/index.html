@@ -509,14 +509,13 @@
     }
     .logout-button:hover { background: rgba(255,255,255,.1); color: #fff; }
 
-    /* ── Tasa Cards Bar ── */
+    /* ── Tasa Cards Bar (dentro del Dashboard) ── */
     .tasa-cards-bar {
         background: var(--secondary);
-        padding: .75rem 1.25rem;
-        border-bottom: 2px solid rgba(255,255,255,.07);
-        position: sticky;
-        top: 0;
-        z-index: 200;
+        padding: 1rem 1.25rem;
+        border-radius: 14px;
+        margin-bottom: 1.25rem;
+        box-shadow: var(--shadow-md);
     }
     .tcb-cards {
         display: grid;
@@ -1805,93 +1804,6 @@
             <div class="header-right"><button class="nav-button" onclick="window.abrirSelectorMesaAdmin()"><i class="fas fa-utensils"></i> Mesas</button><a href="../Cajero/index.html" target="_blank" class="nav-button"><i class="fas fa-cash-register"></i> Cajero</a><button class="logout-button" id="logoutButton"><i class="fas fa-sign-out-alt"></i> Salir</button></div>
         </header>
         
-        <div class="tasa-cards-bar" id="tasaBar">
-
-            <!-- ── Fila 1: 4 tarjetas de valores ── -->
-            <div class="tcb-cards">
-
-                <!-- Tasa Base -->
-                <div class="tcb-card tcb-card-base">
-                    <div class="tcb-label">Tasa Base:</div>
-                    <input type="number" step="0.01" id="tasaBaseInput" class="tcb-input"
-                        oninput="window.recalcularTasaEfectiva && window.recalcularTasaEfectiva()">
-                    <div class="tcb-sublabel">Bs. por $1</div>
-                </div>
-
-                <!-- Aumento % -->
-                <div class="tcb-card tcb-card-pct">
-                    <div class="tcb-label" id="labelAumentoPct">Aumento Diario %:</div>
-                    <input type="number" step="0.1" id="aumentoDiarioInput" class="tcb-input"
-                        oninput="window.recalcularTasaEfectiva && window.recalcularTasaEfectiva()">
-                    <div class="tcb-sublabel">por período</div>
-                </div>
-
-                <!-- Tasa Efectiva -->
-                <div class="tcb-card tcb-card-efectiva">
-                    <div class="tcb-label">Tasa Efectiva:</div>
-                    <div class="tcb-value-big" id="tasaEfectivaDisplay">400.00</div>
-                    <div class="tcb-sublabel">Bs. por $1 hoy</div>
-                </div>
-
-                <!-- Acumulado -->
-                <div class="tcb-card tcb-card-acum">
-                    <div class="tcb-label">Acumulado:</div>
-                    <div class="tcb-value-big tcb-acum-val" id="aumentoAcumuladoDisplay">0%</div>
-                    <div class="tcb-sublabel">aumento total</div>
-                </div>
-
-            </div>
-
-            <!-- ── Fila 2: toggles + fechas + guardar ── -->
-            <div class="tcb-controls">
-
-                <!-- Toggle diario -->
-                <div class="tcb-toggle-card">
-                    <div class="tcb-toggle-top">
-                        <span class="tcb-toggle-label">Aumento diario activo</span>
-                        <label class="toggle-switch"><input type="checkbox" id="aumentoActivoToggle"><span class="toggle-slider"></span></label>
-                    </div>
-                </div>
-
-                <!-- Toggle semanal -->
-                <div class="tcb-toggle-card">
-                    <div class="tcb-toggle-top">
-                        <span class="tcb-toggle-label">Aumento semanal activo</span>
-                        <label class="toggle-switch"><input type="checkbox" id="aumentoSemanalToggle"><span class="toggle-slider"></span></label>
-                    </div>
-                </div>
-
-                <!-- Fechas (visibles solo cuando hay toggle activo) -->
-                <div class="tcb-fechas-card" id="tasaFechasDiv" style="display:none">
-                    <div class="tcb-fecha-row">
-                        <span class="tcb-fecha-label">Desde:</span>
-                        <input type="date" id="aumentoDesde" class="tcb-fecha-input">
-                    </div>
-                    <div class="tcb-fecha-row">
-                        <span class="tcb-fecha-label">Hasta:</span>
-                        <input type="date" id="aumentoHasta" class="tcb-fecha-input">
-                        <label class="tcb-fecha-row" style="gap:.3rem;margin-left:.5rem;cursor:pointer">
-                            <input type="checkbox" id="aumentoIndefinido" style="accent-color:var(--accent)"> Indefinido
-                            <span class="tooltip-wrap" style="position:relative;display:inline-flex;align-items:center;cursor:help">
-                                <span style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;background:#aaa;color:#fff;border-radius:50%;font-size:.6rem;font-weight:700">?</span>
-                                <span class="tooltip-text" style="display:none;position:absolute;bottom:calc(100%+6px);left:50%;transform:translateX(-50%);background:#1a1a2e;color:#fff;padding:.5rem .75rem;border-radius:8px;font-size:.72rem;width:210px;text-align:center;box-shadow:0 4px 12px rgba(0,0,0,.35);z-index:100;line-height:1.4">
-                                    Activa esto si quieres que el aumento siga sin límite de tiempo. Si lo dejas sin marcar, el aumento se detiene en la fecha "Hasta".
-                                </span>
-                            </span>
-                        </label>
-                    </div>
-                </div>
-
-                <!-- Guardar -->
-                <div class="tcb-save-wrap">
-                    <button class="btn-primary tcb-save-btn" id="saveAllButton">
-                        <i class="fas fa-save"></i> Guardar cambios en tasa
-                    </button>
-                </div>
-
-            </div>
-        </div>
-        
         <div class="tabs-wrapper">
             <button class="tabs-chevron tabs-chevron-left" id="tabsChevronLeft" onclick="window._scrollTabs(-1)" title="Categorías anteriores">
                 <i class="fas fa-chevron-left"></i><i class="fas fa-chevron-left"></i>
@@ -1918,6 +1830,83 @@
                 <div class="pane-header">
                     <h2 class="section-title"><i class="fas fa-tachometer-alt"></i> Dashboard</h2>
                 </div>
+                
+                <!-- Configuración de Tasa de Cambio -->
+                <div class="tasa-cards-bar" id="tasaBar">
+                    <!-- Fila 1: 4 tarjetas de valores -->
+                    <div class="tcb-cards">
+                        <!-- Tasa Base -->
+                        <div class="tcb-card tcb-card-base">
+                            <div class="tcb-label">Tasa Base:</div>
+                            <input type="number" step="0.01" id="tasaBaseInput" class="tcb-input"
+                                oninput="window.recalcularTasaEfectiva && window.recalcularTasaEfectiva()">
+                            <div class="tcb-sublabel">Bs. por $1</div>
+                        </div>
+                        <!-- Aumento % -->
+                        <div class="tcb-card tcb-card-pct">
+                            <div class="tcb-label" id="labelAumentoPct">Aumento Diario %:</div>
+                            <input type="number" step="0.1" id="aumentoDiarioInput" class="tcb-input"
+                                oninput="window.recalcularTasaEfectiva && window.recalcularTasaEfectiva()">
+                            <div class="tcb-sublabel">por periodo</div>
+                        </div>
+                        <!-- Tasa Efectiva -->
+                        <div class="tcb-card tcb-card-efectiva">
+                            <div class="tcb-label">Tasa Efectiva:</div>
+                            <div class="tcb-value-big" id="tasaEfectivaDisplay">400.00</div>
+                            <div class="tcb-sublabel">Bs. por $1 hoy</div>
+                        </div>
+                        <!-- Acumulado -->
+                        <div class="tcb-card tcb-card-acum">
+                            <div class="tcb-label">Acumulado:</div>
+                            <div class="tcb-value-big tcb-acum-val" id="aumentoAcumuladoDisplay">0%</div>
+                            <div class="tcb-sublabel">aumento total</div>
+                        </div>
+                    </div>
+                    <!-- Fila 2: toggles + fechas + guardar -->
+                    <div class="tcb-controls">
+                        <!-- Toggle diario -->
+                        <div class="tcb-toggle-card">
+                            <div class="tcb-toggle-top">
+                                <span class="tcb-toggle-label">Aumento diario activo</span>
+                                <label class="toggle-switch"><input type="checkbox" id="aumentoActivoToggle"><span class="toggle-slider"></span></label>
+                            </div>
+                        </div>
+                        <!-- Toggle semanal -->
+                        <div class="tcb-toggle-card">
+                            <div class="tcb-toggle-top">
+                                <span class="tcb-toggle-label">Aumento semanal activo</span>
+                                <label class="toggle-switch"><input type="checkbox" id="aumentoSemanalToggle"><span class="toggle-slider"></span></label>
+                            </div>
+                        </div>
+                        <!-- Fechas (visibles solo cuando hay toggle activo) -->
+                        <div class="tcb-fechas-card" id="tasaFechasDiv" style="display:none">
+                            <div class="tcb-fecha-row">
+                                <span class="tcb-fecha-label">Desde:</span>
+                                <input type="date" id="aumentoDesde" class="tcb-fecha-input">
+                            </div>
+                            <div class="tcb-fecha-row">
+                                <span class="tcb-fecha-label">Hasta:</span>
+                                <input type="date" id="aumentoHasta" class="tcb-fecha-input">
+                                <label class="tcb-fecha-row" style="gap:.3rem;margin-left:.5rem;cursor:pointer">
+                                    <input type="checkbox" id="aumentoIndefinido" style="accent-color:var(--accent)"> Indefinido
+                                    <span class="tooltip-wrap" style="position:relative;display:inline-flex;align-items:center;cursor:help">
+                                        <span style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;background:#aaa;color:#fff;border-radius:50%;font-size:.6rem;font-weight:700">?</span>
+                                        <span class="tooltip-text" style="display:none;position:absolute;bottom:calc(100%+6px);left:50%;transform:translateX(-50%);background:#1a1a2e;color:#fff;padding:.5rem .75rem;border-radius:8px;font-size:.72rem;width:210px;text-align:center;box-shadow:0 4px 12px rgba(0,0,0,.35);z-index:100;line-height:1.4">
+                                            Activa esto si quieres que el aumento siga sin limite de tiempo. Si lo dejas sin marcar, el aumento se detiene en la fecha "Hasta".
+                                        </span>
+                                    </span>
+                                </label>
+                            </div>
+                        </div>
+                        <!-- Guardar -->
+                        <div class="tcb-save-wrap">
+                            <button class="btn-primary tcb-save-btn" id="saveAllButton">
+                                <i class="fas fa-save"></i> Guardar cambios en tasa
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
                 <div class="dashboard-grid">
                     <div class="dashboard-card"><div class="card-title">Ventas Hoy</div><div class="card-value" id="ventasHoy">$0.00</div></div>
                     <div class="dashboard-card"><div class="card-title">Productos Activos</div><div class="card-value" id="productosActivos">0</div></div>
