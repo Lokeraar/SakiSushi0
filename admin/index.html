@@ -2878,16 +2878,34 @@ window.cargarConfiguracionInicial = async function() {
         };
 
         window.cargarInventario = async function() {
-            try {
-                const { data, error } = await window.supabaseClient.from('inventario').select('*');
-                if (error) throw error;
-                window.inventarioItems = data || [];
-                window.renderizarInventario();
-                window.actualizarAlertasStock();
-                await window.cargarMenu();
-                await window.verificarStockCritico();
-            } catch (e) { console.error('Error cargando inventario:', e); window.mostrarToast('Error cargando inventario', 'error'); }
-        };
+    try {
+        const { data, error } = await window.supabaseClient.from('inventario').select('*');
+        if (error) throw error;
+        window.inventarioItems = data || [];
+        
+        // Verificar si el elemento existe antes de renderizar
+        const inventarioGrid = document.getElementById('inventarioGrid');
+        if (inventarioGrid) {
+            window.renderizarInventario();
+        } else {
+            console.log('InventarioGrid no encontrado, esperando...');
+        }
+        
+        window.actualizarAlertasStock();
+        await window.cargarMenu();
+        
+        // Verificar que verificarStockCritico existe antes de llamarla
+        if (typeof window.verificarStockCritico === 'function') {
+            await window.verificarStockCritico();
+        }
+    } catch (e) { 
+        console.error('Error cargando inventario:', e); 
+        // No mostrar toast si es un error menor de renderizado
+        if (e.message && !e.message.includes('inventarioGrid')) {
+            window.mostrarToast('Error cargando inventario', 'error');
+        }
+    }
+};
 
         window.cargarMesoneros = async function() {
             try {
@@ -3668,6 +3686,53 @@ Esto marcará todas sus propinas pendientes como entregadas.`);
         window.actualizarAlertasStock = function() {
             document.getElementById('alertasStock').textContent = window.inventarioItems.filter(i => i.stock <= i.minimo).length;
         };
+        
+        // ==================== VERIFICAR STOCK CRÍTICO ====================
+window.verificarStockCritico = async function() {
+    try {
+        const stockCriticoDiv = document.getElementById('stockCritico');
+        if (!stockCriticoDiv) return;
+        
+        // Calcular ingredientes con stock por debajo del mínimo
+        const criticos = (window.inventarioItems || []).filter(item => {
+            const stockActual = item.stock || 0;
+            const reservado = item.reservado || 0;
+            const disponible = stockActual - reservado;
+            const minimo = item.minimo || 0;
+            return disponible <= minimo && minimo > 0;
+        });
+        
+        if (criticos.length > 0) {
+            stockCriticoDiv.innerHTML = criticos.map(item => {
+                const disponible = (item.stock || 0) - (item.reservado || 0);
+                const faltantes = (item.minimo || 0) - disponible;
+                return `
+                    <div class="alert-item critical">
+                        <span>
+                            <strong>${item.nombre}</strong><br>
+                            Stock: ${disponible} / Mínimo: ${item.minimo || 0}
+                            ${faltantes > 0 ? `(Faltan ${faltantes})` : ''}
+                        </span>
+                        <button class="btn-small" onclick="window.agregarStock('${item.id}')" style="background:var(--primary);color:#fff;border:none;padding:.3rem .7rem;border-radius:4px;cursor:pointer">
+                            <i class="fas fa-plus"></i> Agregar
+                        </button>
+                    </div>
+                `;
+            }).join('');
+            document.getElementById('alertasStock').textContent = criticos.length;
+        } else {
+            stockCriticoDiv.innerHTML = '<p style="color:var(--text-muted);font-size:.85rem">No hay alertas de stock</p>';
+            document.getElementById('alertasStock').textContent = '0';
+        }
+    } catch (e) { 
+        console.error('Error verificando stock crítico:', e);
+        const stockCriticoDiv = document.getElementById('stockCritico');
+        if (stockCriticoDiv) {
+            stockCriticoDiv.innerHTML = '<p style="color:var(--text-muted);font-size:.85rem">No hay alertas de stock</p>';
+        }
+        document.getElementById('alertasStock').textContent = '0';
+    }
+};
 
         window.cambiarPassword = async function() {
             const current = document.getElementById('currentPassword').value;
@@ -4135,9 +4200,15 @@ Esto marcará todas sus propinas pendientes como entregadas.`);
         };
 
         window.agregarStock = function(ingredienteId) {
-            const ingrediente = window.inventarioItems.find(i => i.id === ingredienteId);
-            if (ingrediente) { window.editarIngrediente(ingredienteId); setTimeout(() => { document.getElementById('ingredienteAgregar').focus(); }, 500); }
-        };
+    const ingrediente = window.inventarioItems.find(i => i.id === ingredienteId);
+    if (ingrediente) { 
+        window.editarIngrediente(ingredienteId); 
+        setTimeout(() => { 
+            const agregarInput = document.getElementById('ingredienteAgregar');
+            if (agregarInput) agregarInput.focus();
+        }, 500); 
+    }
+};
 
         document.getElementById('saveIngrediente').addEventListener('click', async () => {
             const btn = document.getElementById('saveIngrediente');
@@ -4991,56 +5062,58 @@ window._abrirDetalleDeliverysAdmin = async function() {
         
         const totalAcumulado = Object.values(acumulado).reduce((s, v) => s + v, 0);
         
-        // Generar HTML del modal
+        // Generar HTML del modal con IDs únicos y evento onclick correcto
         let motorizadosHtml = '';
         if (!motorizados || motorizados.length === 0) {
             motorizadosHtml = '<div class="empty-state"><i class="fas fa-motorcycle"></i><p>No hay motorizados registrados</p></div>';
         } else {
-            motorizadosHtml = '<div class="motorizados-list">';
+            motorizadosHtml = '<div class="motorizados-list" style="display:flex;flex-direction:column;gap:8px">';
             motorizados.forEach(m => {
                 const monto = acumulado[m.id] || 0;
                 const hayE = monto > 0;
-                const pedidosDelDia = (window.pedidos || []).filter(p => 
-                    p.delivery_id === m.id && 
-                    p.estado === 'enviado' &&
-                    new Date(p.fecha).toDateString() === hoy.toDateString()
-                );
                 const detalleId = 'det_del_' + String(m.id).replace(/[^a-z0-9]/gi, '_');
                 
                 motorizadosHtml += `
                     <div style="margin-bottom:8px">
-                        <div class="motorizado-item" style="opacity:${hayE ? '1' : '0.5'}; cursor:${hayE ? 'pointer' : 'default'}" 
-                            ${hayE ? `data-detalle-id="${detalleId}" onclick="var el=document.getElementById(this.dataset.detalleId); if(el) el.style.display=el.style.display==='none'?'block':'none'"` : ''}>
+                        <div class="motorizado-item" style="background:rgba(0,0,0,.25);border-radius:8px;padding:12px;display:flex;justify-content:space-between;align-items:center;border-left:4px solid var(--delivery);cursor:${hayE ? 'pointer' : 'default'};opacity:${hayE ? '1' : '0.6'}" 
+                            onclick="${hayE ? `window._toggleDeliveryDetalle('${detalleId}')` : ''}">
                             <span class="motorizado-nombre">
-                                <i class="fas fa-motorcycle" style="color:var(--delivery);margin-right:6px"></i>
+                                <i class="fas fa-motorcycle" style="color:var(--delivery);margin-right:8px"></i>
                                 ${m.nombre}
                             </span>
-                            <span class="motorizado-monto" style="color:${hayE ? 'var(--accent)' : 'var(--text-secondary)'}">
+                            <span class="motorizado-monto" style="color:${hayE ? 'var(--accent)' : 'var(--text-secondary)'};font-weight:700;display:flex;align-items:center;gap:6px">
                                 ${window.formatBs(monto)}
-                                ${hayE ? '<i class="fas fa-chevron-down" style="font-size:.7rem;margin-left:4px"></i>' : ''}
+                                ${hayE ? '<i class="fas fa-chevron-down" style="font-size:.7rem;transition:transform .2s" id="icon_' + detalleId + '"></i>' : ''}
                             </span>
                         </div>`;
                 
-                if (hayE && pedidosDelDia.length > 0) {
+                if (hayE) {
+                    // Obtener pedidos de este motorizado
+                    const pedidosDelDia = (window.pedidos || []).filter(p => 
+                        p.delivery_id === m.id && 
+                        p.estado === 'enviado' &&
+                        new Date(p.fecha).toDateString() === hoy.toDateString()
+                    );
+                    
                     motorizadosHtml += `
-                        <div id="${detalleId}" style="display:none;padding:8px 12px;background:rgba(0,0,0,.25);border-radius:0 0 6px 6px;border:1px solid var(--border-color);border-top:none">
-                            ${pedidosDelDia.map(p => {
+                        <div id="${detalleId}" style="display:none;padding:8px 12px;background:rgba(0,0,0,.2);border-radius:0 0 8px 8px;margin-top:-4px;border:1px solid var(--border-color);border-top:none">
+                            ${pedidosDelDia.length > 0 ? pedidosDelDia.map(p => {
                                 const hora = new Date(p.fecha).toLocaleTimeString('es-VE', {
                                     hour: 'numeric', minute: '2-digit', hour12: true
                                 }).toLowerCase();
                                 return `
-                                    <div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:.78rem">
+                                    <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.08);font-size:.78rem">
                                         <span>
-                                            <i class="fas fa-map-marker-alt" style="color:var(--delivery);margin-right:4px"></i>
+                                            <i class="fas fa-map-marker-alt" style="color:var(--delivery);margin-right:6px"></i>
                                             ${p.parroquia || 'Sin parroquia'}
-                                            &nbsp;&nbsp;<span style="color:var(--text-secondary)">${hora}</span>
+                                            <span style="color:var(--text-secondary);margin-left:8px">${hora}</span>
                                         </span>
                                         <span style="color:var(--accent);font-weight:700">${window.formatBs(p.costo_delivery_bs || 0)}</span>
                                     </div>
                                 `;
-                            }).join('')}
-                            <div style="padding:5px 0;margin-top:4px;font-size:.78rem;font-weight:700">
-                                <span>${pedidosDelDia.length} entrega${pedidosDelDia.length > 1 ? 's' : ''}</span>
+                            }).join('') : '<div style="padding:6px 0;color:var(--text-secondary);font-size:.78rem">No hay entregas registradas</div>'}
+                            <div style="padding:6px 0;margin-top:4px;font-size:.75rem;font-weight:600;border-top:1px solid rgba(255,255,255,.1);color:var(--text-secondary)">
+                                Total: ${pedidosDelDia.length} entrega${pedidosDelDia.length !== 1 ? 's' : ''}
                             </div>
                         </div>`;
                 }
@@ -5051,27 +5124,27 @@ window._abrirDetalleDeliverysAdmin = async function() {
         
         // Crear modal
         const modal = document.createElement('div');
-        modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:1rem';
+        modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:10000;display:flex;align-items:center;justify-content:center;padding:1rem';
         modal.innerHTML = `
-            <div style="background:var(--card-bg);border-radius:16px;width:100%;max-width:500px;max-height:90vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.35)">
-                <div class="modal-header" style="background:linear-gradient(135deg, var(--delivery), #00838F);color:#fff;padding:1rem 1.2rem;display:flex;justify-content:space-between;align-items:center;border-radius:16px 16px 0 0">
+            <div style="background:var(--card-bg);border-radius:16px;width:100%;max-width:500px;max-height:90vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.4)">
+                <div style="background:linear-gradient(135deg, var(--delivery), #00838F);color:#fff;padding:1rem 1.2rem;display:flex;justify-content:space-between;align-items:center;border-radius:16px 16px 0 0">
                     <h3 style="font-size:1rem;font-weight:700;display:flex;align-items:center;gap:.5rem">
                         <i class="fas fa-motorcycle"></i> Acumulado Deliverys (Hoy)
                     </h3>
                     <button onclick="this.closest('[style*=fixed]').remove()" 
-                        style="background:rgba(255,255,255,.2);border:none;border-radius:50%;width:30px;height:30px;cursor:pointer;color:#fff;font-size:1rem">
+                        style="background:rgba(255,255,255,.2);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;color:#fff;font-size:1rem;display:flex;align-items:center;justify-content:center">
                         ✕
                     </button>
                 </div>
                 <div style="padding:1.25rem">
                     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;padding-bottom:12px;border-bottom:2px solid var(--border-color)">
-                        <span style="font-weight:700;font-size:1.05rem">Total acumulado hoy</span>
-                        <span style="font-weight:800;color:var(--delivery);font-size:1.15rem">${window.formatBs(totalAcumulado)}</span>
+                        <span style="font-weight:700;font-size:1rem">Total acumulado hoy</span>
+                        <span style="font-weight:800;color:var(--delivery);font-size:1.2rem">${window.formatBs(totalAcumulado)}</span>
                     </div>
-                    <h4 style="margin-bottom:12px;color:var(--text-secondary);font-size:.9rem">Desglose por motorizado:</h4>
+                    <h4 style="margin-bottom:12px;color:var(--text-secondary);font-size:.85rem;font-weight:600">Desglose por motorizado:</h4>
                     ${motorizadosHtml}
                 </div>
-                <div class="modal-footer" style="padding:1rem 1.5rem;border-top:1px solid var(--border);display:flex;justify-content:flex-end">
+                <div style="padding:1rem 1.2rem;border-top:1px solid var(--border);display:flex;justify-content:flex-end">
                     <button onclick="this.closest('[style*=fixed]').remove()" 
                         class="btn-primary" style="padding:.5rem 1.2rem;font-size:.85rem;background:linear-gradient(135deg, var(--delivery), #00838F)">
                         Cerrar
@@ -5087,6 +5160,21 @@ window._abrirDetalleDeliverysAdmin = async function() {
     } catch (e) {
         console.error('Error abriendo detalle deliverys admin:', e);
         window.mostrarToast('❌ Error al cargar datos de deliverys', 'error');
+    }
+};
+
+// Función para toggle del detalle de motorizado
+window._toggleDeliveryDetalle = function(detalleId) {
+    const detalleEl = document.getElementById(detalleId);
+    const iconEl = document.getElementById('icon_' + detalleId);
+    if (detalleEl) {
+        if (detalleEl.style.display === 'none' || detalleEl.style.display === '') {
+            detalleEl.style.display = 'block';
+            if (iconEl) iconEl.style.transform = 'rotate(180deg)';
+        } else {
+            detalleEl.style.display = 'none';
+            if (iconEl) iconEl.style.transform = 'rotate(0deg)';
+        }
     }
 };
 
@@ -5852,3 +5940,4 @@ window._abrirDetalleVentasAdmin = async function() {
     </script>
 </body>
 </html>
+    
