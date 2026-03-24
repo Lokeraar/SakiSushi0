@@ -3005,6 +3005,40 @@ window._irAMesoneros = function() {
         };
 
         // ==================== FUNCIONES DE CARGA DE DATOS ====================
+window.cargarConfiguracion = async function() {
+    try {
+        const { data, error } = await window.supabaseClient
+            .from('config')
+            .select('*')
+            .eq('id', 1)
+            .single();
+        if (error) throw error;
+        window.configGlobal = data || {};
+        
+        // Asegurar valores por defecto
+        window.configGlobal.tasa_cambio = window.configGlobal.tasa_cambio || 400;
+        window.configGlobal.tasa_efectiva = window.configGlobal.tasa_efectiva || 400;
+        window.configGlobal.aumento_diario = window.configGlobal.aumento_diario || 0;
+        window.configGlobal.aumento_activo = window.configGlobal.aumento_activo || false;
+        window.configGlobal.aumento_semanal = window.configGlobal.aumento_semanal || false;
+        window.configGlobal.admin_password = window.configGlobal.admin_password || 'admin123';
+        window.configGlobal.recovery_email = window.configGlobal.recovery_email || 'admin@sakisushi.com';
+        
+    } catch (e) {
+        console.error('Error cargando configuración:', e);
+        // Configuración por defecto
+        window.configGlobal = {
+            tasa_cambio: 400,
+            tasa_efectiva: 400,
+            aumento_diario: 0,
+            aumento_activo: false,
+            aumento_semanal: false,
+            admin_password: 'admin123',
+            recovery_email: 'admin@sakisushi.com'
+        };
+    }
+};
+
 window.cargarConfiguracionInicial = async function() {
     await window.cargarConfiguracion();
     window.actualizarTasaUI();
@@ -3012,37 +3046,38 @@ window.cargarConfiguracionInicial = async function() {
     // alertaStockMinimo se gestiona por ingrediente (campo Stock Mínimo en modal de inventario)
 };
 
-        window.actualizarTasaUI = function() {
-            document.getElementById('tasaBaseInput').value      = window.configGlobal.tasa_cambio || 400;
-            document.getElementById('aumentoDiarioInput').value = window.configGlobal.aumento_diario || 0;
-            document.getElementById('aumentoActivoToggle').checked = window.configGlobal.aumento_activo || false;
-            const semEl = document.getElementById('aumentoSemanalToggle');
-            if (semEl) semEl.checked = window.configGlobal.aumento_semanal || false;
-            document.getElementById('tasaEfectivaDisplay').textContent = (window.configGlobal.tasa_efectiva || 400).toFixed(2);
-            document.getElementById('aumentoAcumuladoDisplay').textContent = (window.configGlobal.aumento_acumulado || 0).toFixed(2) + '%';
-            // Restaurar fechas si existen
-            if (window.configGlobal.aumento_desde && document.getElementById('aumentoDesde'))
-                document.getElementById('aumentoDesde').value = window.configGlobal.aumento_desde.split('T')[0];
-            if (window.configGlobal.aumento_hasta && document.getElementById('aumentoHasta'))
-                document.getElementById('aumentoHasta').value = window.configGlobal.aumento_hasta.split('T')[0];
-            if (window.configGlobal.aumento_indefinido && document.getElementById('aumentoIndefinido'))
-                document.getElementById('aumentoIndefinido').checked = true;
-            // Sincronizar estado del input y label según toggles
-            if (typeof _actualizarLabelAumento === 'function') _actualizarLabelAumento();
-        };
-        // Alias — ahora actualizarTasaUI ya actualiza la barra de tarjetas
-        window.actualizarMenuTasaBanner = window.actualizarTasaUI;
-        window.cargarMenu = async function() {
-            try {
-                const { data, error } = await window.supabaseClient.from('menu').select('*');
-                if (error) throw error;
-                window.menuItems = data || [];
-                window.renderizarMenu();
-                window.actualizarProductosActivos();
-            } catch (e) { console.error('Error cargando menú:', e); window.mostrarToast('Error cargando menú', 'error'); }
-        };
+window.actualizarTasaUI = function() {
+    document.getElementById('tasaBaseInput').value      = window.configGlobal.tasa_cambio || 400;
+    document.getElementById('aumentoDiarioInput').value = window.configGlobal.aumento_diario || 0;
+    document.getElementById('aumentoActivoToggle').checked = window.configGlobal.aumento_activo || false;
+    const semEl = document.getElementById('aumentoSemanalToggle');
+    if (semEl) semEl.checked = window.configGlobal.aumento_semanal || false;
+    document.getElementById('tasaEfectivaDisplay').textContent = (window.configGlobal.tasa_efectiva || 400).toFixed(2);
+    document.getElementById('aumentoAcumuladoDisplay').textContent = (window.configGlobal.aumento_acumulado || 0).toFixed(2) + '%';
+    // Restaurar fechas si existen
+    if (window.configGlobal.aumento_desde && document.getElementById('aumentoDesde'))
+        document.getElementById('aumentoDesde').value = window.configGlobal.aumento_desde.split('T')[0];
+    if (window.configGlobal.aumento_hasta && document.getElementById('aumentoHasta'))
+        document.getElementById('aumentoHasta').value = window.configGlobal.aumento_hasta.split('T')[0];
+    if (window.configGlobal.aumento_indefinido && document.getElementById('aumentoIndefinido'))
+        document.getElementById('aumentoIndefinido').checked = true;
+    // Sincronizar estado del input y label según toggles
+    if (typeof _actualizarLabelAumento === 'function') _actualizarLabelAumento();
+};
+// Alias — ahora actualizarTasaUI ya actualiza la barra de tarjetas
+window.actualizarMenuTasaBanner = window.actualizarTasaUI;
 
-        window.cargarInventario = async function() {
+window.cargarMenu = async function() {
+    try {
+        const { data, error } = await window.supabaseClient.from('menu').select('*');
+        if (error) throw error;
+        window.menuItems = data || [];
+        window.renderizarMenu();
+        window.actualizarProductosActivos();
+    } catch (e) { console.error('Error cargando menú:', e); window.mostrarToast('Error cargando menú', 'error'); }
+};
+
+window.cargarInventario = async function() {
     try {
         const { data, error } = await window.supabaseClient.from('inventario').select('*');
         if (error) throw error;
@@ -5792,7 +5827,8 @@ window._toggleDeliveryDetalle = function(detalleId) {
             }
         };
 
-        document.addEventListener('DOMContentLoaded', async () => {
+        // ==================== DOMContentLoaded - INICIALIZACIÓN CORREGIDA ====================
+document.addEventListener('DOMContentLoaded', async () => {
     // Inicializar tema
     window.initTheme();
     
@@ -5800,7 +5836,10 @@ window._toggleDeliveryDetalle = function(detalleId) {
         window.mostrarPanel();
         setTimeout(async () => {
             try {
+                // 🔧 PRIMERO: Cargar configuración inicial
                 await window.cargarConfiguracionInicial();
+                
+                // Luego cargar el resto de datos
                 await window.cargarMenu();
                 await window.cargarInventario();
                 await window.cargarUsuarios();
@@ -5810,24 +5849,31 @@ window._toggleDeliveryDetalle = function(detalleId) {
                 await window.cargarMesoneros();
                 await window.cargarDeliverys();
                 await window.cargarPropinas();
+                
                 window.setupEventListeners();
                 window.setupRealtimeSubscriptions();
                 window.setupStockRealtime();
                 window.restaurarWifiPersistente();
                 window._registrarPushAdmin();
+                
+                // Verificar tasa del día
                 window._verificarTasaDeHoy((tasa) => {
-                    document.getElementById('tasaBaseInput').value = tasa;
+                    const tasaInput = document.getElementById('tasaBaseInput');
+                    if (tasaInput) tasaInput.value = tasa;
                     window.configGlobal.tasa_cambio = tasa;
                     window.recalcularTasaEfectiva();
                     window._verificarAvisoLunes();
                 });
+                
                 // Actualizar ventas y deliverys hoy
                 await window._actualizarVentasHoyNeto();
                 await window._actualizarDeliverysHoy();
+                
                 setInterval(async () => { 
                     await window._actualizarVentasHoyNeto();
                     await window._actualizarDeliverysHoy();
                 }, 60000);
+                
             } catch (e) { 
                 console.error('Error cargando datos:', e); 
                 window.mostrarToast('Error cargando datos: ' + e.message, 'error'); 
