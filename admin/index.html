@@ -4564,15 +4564,35 @@ async function _desbloquearStock() {
     // Mostrar mensaje de éxito
     window.mostrarToast('🔓 Stock desbloqueado. Puedes editar la cantidad.', 'success');
 }
-       
-        // Contraseña incorrecta
-        if (errorEl) {
-            errorEl.textContent = 'Contraseña incorrecta. Intenta de nuevo.';
-            errorEl.style.display = 'block';
-        }
-        document.getElementById('stockPasswordModalInput')?.focus();
-        document.getElementById('stockPasswordModalInput')?.select();
+
+// Sobrescribir la función desbloquearStockClick para que use el modal en lugar del inline
+window.desbloquearStockClick = function(inputEl) {
+    if (!inputEl.disabled) return; // ya desbloqueado
+    window.mostrarModalContraseñaStock();
+};
+
+// Función para resetear el estado de bloqueo del stock (se llama al cerrar el modal de ingrediente)
+window.resetearBloqueoStock = function() {
+    const stockInput = document.getElementById('ingredienteStock');
+    const lockIcon = document.getElementById('stockLockIcon');
+    const unlockInline = document.getElementById('stockUnlockInline');
+    const unlockDiv = document.getElementById('stockUnlock');
+    
+    // Solo si es modo edición y el campo estaba bloqueado, restaurar a bloqueado
+    if (stockInput && stockInput.disabled === false && window.ingredienteEditandoId) {
+        stockInput.disabled = true;
+        stockInput.style.background = 'var(--input-bg)';
+        stockInput.style.cursor = 'pointer';
+        stockInput.onclick = function() { window.mostrarModalContraseñaStock(); };
     }
+    
+    if (lockIcon && window.ingredienteEditandoId) {
+        lockIcon.innerHTML = '<i class="fas fa-lock" style="font-size:.8rem"></i>';
+        lockIcon.style.cursor = 'default';
+    }
+    
+    if (unlockInline) unlockInline.style.display = 'none';
+    if (unlockDiv) unlockDiv.style.display = 'none';
 };
 
 // Sobrescribir la función desbloquearStockClick para que use el modal en lugar del inline
@@ -5836,7 +5856,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         window.mostrarPanel();
         setTimeout(async () => {
             try {
-                // 🔧 PRIMERO: Cargar configuración inicial
+                //  PRIMERO: Cargar configuración inicial
                 await window.cargarConfiguracionInicial();
                 
                 // Luego cargar el resto de datos
