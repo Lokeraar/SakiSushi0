@@ -2248,10 +2248,67 @@ html.dark-theme {
         margin-right: auto;
     }
 }
+
+/* Mejoras de contraste para tema oscuro en modal de ingredientes */
+.dark-theme .modal-footer .btn-secondary {
+    background: rgba(255,255,255,.1);
+    color: #fff;
+    border: 1px solid rgba(255,255,255,.2);
+}
+
+.dark-theme .modal-footer .btn-secondary:hover {
+    background: rgba(255,255,255,.2);
+}
+
+.dark-theme #ingredienteStock:disabled,
+.dark-theme #ingredienteStock {
+    background: #2a2a3a !important;
+    color: #e0e0f0 !important;
+    border-color: rgba(255,255,255,.15) !important;
+}
+
+.dark-theme #ingredienteStock:focus {
+    background: #35354a !important;
+}
+
+.dark-theme .modal-body input,
+.dark-theme .modal-body select {
+    background: #2a2a3a !important;
+    color: #e0e0f0 !important;
+    border-color: rgba(255,255,255,.15) !important;
+}
+
+.dark-theme .modal-body input:focus,
+.dark-theme .modal-body select:focus {
+    border-color: var(--accent) !important;
+    outline: none;
+}
+
+.dark-theme .modal-body label {
+    color: #c0c0e0 !important;
+}
+
+.dark-theme #stockLockIcon i {
+    color: #a0a0c0;
+}
+
+.dark-theme .btn-icon.delete {
+    background: rgba(239,68,68,.2);
+    color: #ff6b6b;
+}
+
+.dark-theme .btn-icon.delete:hover {
+    background: var(--danger);
+    color: #fff;
+}
+
     </style>
 </head>
+
+
 <body>
 <!-- Aviso de salida -->
+
 <div id="_salidaAviso" style="display:none;position:fixed;inset:0;z-index:9999;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.55);padding:1rem">
   <div style="background:linear-gradient(135deg,#1a1a2e,#16213e);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:1.4rem 1.2rem;width:100%;max-width:400px;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,.5)">
     <p style="color:#fff;font-size:1rem;font-weight:600;margin-bottom:1.2rem">¿Seguro que deseas salir?</p>
@@ -2701,45 +2758,38 @@ html.dark-theme {
                 <button class="btn-primary" id="savePlatillo" type="button">Guardar</button>
             </div>
         </div></div>
-    
-    <div class="modal" id="ingredienteModal"><div class="modal-content"><div class="modal-header"><h3 id="ingredienteModalTitle">Nuevo Ingrediente</h3><button class="modal-close" id="closeIngredienteModal">&times;</button></div><div class="modal-body"><form id="ingredienteForm">
+        
+<div class="modal" id="ingredienteModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3 id="ingredienteModalTitle">Nuevo Ingrediente</h3>
+            <button class="modal-close" id="closeIngredienteModal">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form id="ingredienteForm">
+                <div class="form-group">
+                    <label>Nombre del Ingrediente</label>
+                    <input type="text" id="ingredienteNombre" required placeholder="Ej: Salmón fresco">
+                </div>
 
-                <div class="form-group"><label>Nombre del Ingrediente</label>
-                    <input type="text" id="ingredienteNombre" required placeholder="Ej: Salmón fresco"></div>
-
-                <!-- Stock Actual (protegido con contraseña en edición) -->
+                <!-- Stock Actual con overlay de contraseña -->
                 <div class="form-group" id="stockOverlay">
-                    <label style="display:flex;align-items:center;gap:.5rem">
+                    <label style="display:flex; align-items:center; gap:.5rem">
                         Stock Actual
-                        <span id="stockLockIcon" style="color:var(--text-muted)"><i class="fas fa-lock" style="font-size:.8rem"></i></span>
+                        <span id="stockLockIcon" style="color:var(--text-muted); cursor:pointer" onclick="window.mostrarModalContraseñaStock()">
+                            <i class="fas fa-lock" style="font-size:.8rem"></i>
+                        </span>
                     </label>
                     <div style="position:relative">
                         <input type="number" step="0.001" id="ingredienteStock" disabled
-                            style="width:100%;cursor:pointer;background:#f9f9f9"
-                            title="Haz clic para editar (requiere contraseña)"
-                            onclick="window.desbloquearStockClick(this)">
-                    </div>
-                    <div id="stockUnlockInline" style="display:none;margin-top:.4rem">
-                        <div style="display:flex;gap:.4rem;align-items:center">
-                            <input type="password" id="stockPasswordInline" placeholder="Contraseña de admin"
-                                style="flex:1;padding:.45rem .7rem;border:1px solid var(--border);border-radius:8px;font-family:Montserrat,sans-serif;font-size:.85rem"
-                                onkeydown="if(event.key==='Enter') window.desbloquearStockInline()">
-                            <button type="button" onclick="window.desbloquearStockInline()"
-                                style="padding:.45rem .9rem;background:var(--primary);color:#fff;border:none;border-radius:8px;font-family:Montserrat,sans-serif;font-size:.82rem;cursor:pointer;font-weight:600">
-                                <i class="fas fa-unlock"></i>
-                            </button>
-                            <button type="button" onclick="window._cerrarStockUnlock()"
-                                style="padding:.45rem .7rem;background:#f5f5f5;border:1px solid var(--border);border-radius:8px;cursor:pointer;font-size:.8rem">
-                                <i class="fas fa-times"></i>
-                            </button>
-                        </div>
-                        <div id="stockUnlockError" style="color:var(--danger);font-size:.75rem;margin-top:.25rem;display:none">Contraseña incorrecta</div>
+                            style="width:100%; cursor:pointer; background:var(--input-bg); color:var(--text-dark); border:1px solid var(--border); border-radius:8px; padding:.65rem .9rem"
+                            title="Haz clic en el candado para desbloquear">
                     </div>
                 </div>
 
-                <!-- Mercancía a agregar + Unidad (en la misma fila) + preview stock total -->
+                <!-- Mercancía a agregar + Unidad -->
                 <div class="form-group">
-                    <div style="display:flex;gap:.75rem;align-items:flex-end">
+                    <div style="display:flex; gap:.75rem; align-items:flex-end">
                         <div style="flex:1">
                             <label>Mercancía Nueva a Agregar</label>
                             <input type="number" step="0.001" id="ingredienteAgregar" placeholder="0"
@@ -2756,19 +2806,18 @@ html.dark-theme {
                             </select>
                         </div>
                     </div>
-                    <!-- Preview en tiempo real -->
-                    <div id="stockTotalPreview" style="margin-top:.4rem;font-size:.82rem;color:var(--text-muted)"></div>
-                    <div id="stockConversionPreview" style="margin-top:.2rem;font-size:.75rem;color:var(--text-muted)"></div>
+                    <div id="stockTotalPreview" style="margin-top:.4rem; font-size:.82rem; color:var(--text-muted)"></div>
+                    <div id="stockConversionPreview" style="margin-top:.2rem; font-size:.75rem; color:var(--text-muted)"></div>
                 </div>
 
                 <!-- Stock Mínimo -->
                 <div class="form-group">
-                    <label style="display:flex;align-items:center;gap:.4rem">
+                    <label style="display:flex; align-items:center; gap:.4rem">
                         Stock Mínimo
-                        <span class="tooltip-wrap" style="position:relative;display:inline-flex;cursor:help">
-                            <span style="display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;background:#aaa;color:#fff;border-radius:50%;font-size:.65rem;font-weight:700">?</span>
-                            <span class="tooltip-text" style="display:none;position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);background:#1a1a2e;color:#fff;padding:.5rem .75rem;border-radius:8px;font-size:.75rem;white-space:normal;width:230px;text-align:center;box-shadow:0 4px 12px rgba(0,0,0,.3);z-index:100;line-height:1.4">
-                                Cuando el stock disponible baje de este valor, aparecerá una alerta en el Dashboard (Stock Crítico) y se enviará una notificación push a todos los dispositivos que hayan iniciado sesión en el admin.
+                        <span class="tooltip-wrap" style="position:relative; display:inline-flex; cursor:help">
+                            <span style="display:inline-flex; align-items:center; justify-content:center; width:15px; height:15px; background:#aaa; color:#fff; border-radius:50%; font-size:.65rem; font-weight:700">?</span>
+                            <span class="tooltip-text" style="display:none; position:absolute; bottom:calc(100% + 6px); left:50%; transform:translateX(-50%); background:var(--toast-bg); color:var(--toast-text); padding:.5rem .75rem; border-radius:8px; font-size:.75rem; white-space:normal; width:230px; text-align:center; box-shadow:0 4px 12px rgba(0,0,0,.3); z-index:100; line-height:1.4">
+                                Cuando el stock disponible baje de este valor, aparecerá una alerta en el Dashboard (Stock Crítico) y se enviará una notificación push.
                             </span>
                         </span>
                     </label>
@@ -2776,47 +2825,52 @@ html.dark-theme {
                 </div>
 
                 <!-- Calculadora de costo unitario -->
-                <div class="form-group" style="background:#f9f9f9;border-radius:10px;padding:.85rem;border:1px solid var(--border)">
-                    <label style="font-weight:700;font-size:.8rem;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);margin-bottom:.5rem;display:block">
-                        <i class="fas fa-calculator" style="margin-right:.3rem;color:var(--accent)"></i>Calculadora de Costo Unitario
+                <div class="form-group" style="background:var(--card-bg); border-radius:10px; padding:.85rem; border:1px solid var(--border)">
+                    <label style="font-weight:700; font-size:.8rem; text-transform:uppercase; letter-spacing:.5px; color:var(--text-muted); margin-bottom:.5rem; display:block">
+                        <i class="fas fa-calculator" style="margin-right:.3rem; color:var(--accent)"></i>Calculadora de Costo Unitario
                     </label>
-                    <div style="display:flex;gap:.75rem;align-items:flex-end">
+                    <div style="display:flex; gap:.75rem; align-items:flex-end">
                         <div style="flex:1">
                             <label style="font-size:.78rem">Costo Total Compra (USD)</label>
-                            <input type="number" step="0.01" id="costoTotal" placeholder="0.00"
-                                oninput="window.calcularCostoUnitario()">
+                            <input type="number" step="0.01" id="costoTotal" placeholder="0.00" oninput="window.calcularCostoUnitario()">
                         </div>
                         <div style="flex:1">
                             <label style="font-size:.78rem">Cantidad Comprada</label>
-                            <input type="number" step="0.001" id="cantidadComprada" placeholder="0"
-                                oninput="window.calcularCostoUnitario()">
+                            <input type="number" step="0.001" id="cantidadComprada" placeholder="0" oninput="window.calcularCostoUnitario()">
                         </div>
                     </div>
-                    <div id="calcResultado" style="display:none;margin-top:.5rem;padding:.4rem .6rem;background:var(--card-bg);border-radius:6px;border:1px solid var(--border);font-size:.82rem">
+                    <div id="calcResultado" style="display:none; margin-top:.5rem; padding:.4rem .6rem; background:rgba(0,0,0,.2); border-radius:6px; border:1px solid var(--border); font-size:.82rem">
                         Costo unitario: <strong id="calcPrecioUnitario">0.00</strong> USD
                         <span id="calcUnidadResult" style="color:var(--text-muted)"></span>
                     </div>
                 </div>
 
                 <div class="form-row">
-                    <div class="form-group"><label>Precio de Costo (USD/ud)</label>
-                        <input type="number" step="0.01" id="ingredienteCosto" placeholder="0.00"></div>
-                    <div class="form-group"><label>Precio de Venta (USD/ud)</label>
-                        <input type="number" step="0.01" id="ingredienteVenta" placeholder="0.00"></div>
+                    <div class="form-group">
+                        <label>Precio de Costo (USD/ud)</label>
+                        <input type="number" step="0.01" id="ingredienteCosto" placeholder="0.00">
+                    </div>
+                    <div class="form-group">
+                        <label>Precio de Venta (USD/ud)</label>
+                        <input type="number" step="0.01" id="ingredienteVenta" placeholder="0.00">
+                    </div>
                 </div>
-
-            </form></div>
-            <div class="modal-footer">
+            </form>
+        </div>
+        <div class="modal-footer" style="display:flex; justify-content:space-between; align-items:center">
+            <button class="btn-icon delete" id="deleteIngredienteBtn" type="button"
+                style="display:none; padding:.5rem 1rem; border-radius:8px; background:var(--danger); color:#fff; border:none; cursor:pointer"
+                onclick="window._eliminarIngredienteDesdeModal()"
+                title="Eliminar este ingrediente">
+                <i class="fas fa-trash"></i> Eliminar
+            </button>
+            <div style="display:flex; gap:.75rem">
                 <button class="btn-secondary" id="cancelIngrediente" type="button">Cancelar</button>
-                <button class="btn-icon delete" id="deleteIngredienteBtn" type="button"
-                    style="display:none;padding:.5rem 1rem;width:auto;border-radius:8px"
-                    onclick="window._eliminarIngredienteDesdeModal()"
-                    title="Eliminar este ingrediente">
-                    <i class="fas fa-trash"></i> Eliminar
-                </button>
                 <button class="btn-primary" id="saveIngrediente" type="button">Guardar</button>
             </div>
-        </div></div>
+        </div>
+    </div>
+</div>
     
     <div class="modal" id="usuarioModal"><div class="modal-content"><div class="modal-header"><h3>Nuevo Cajero</h3><button class="modal-close" id="closeUsuarioModal">&times;</button></div><div class="modal-body"><form id="usuarioForm">
                         <!-- Línea 1: Nombre completo + estado activo -->
@@ -4190,70 +4244,109 @@ window.verificarStockCritico = async function() {
         };
 
         window.abrirModalNuevoIngrediente = function() {
-            window.ingredienteEditandoId = null;
-            document.getElementById('ingredienteModalTitle').textContent = 'Nuevo Ingrediente';
-            document.getElementById('ingredienteNombre').value = '';
-            document.getElementById('ingredienteMinimo').value = '';
-            document.getElementById('ingredienteCosto').value = '';
-            document.getElementById('ingredienteVenta').value = '';
-            document.getElementById('ingredienteAgregar').value = '';
-            // Resetear calculadora
-            const _ct = document.getElementById('costoTotal'); if (_ct) _ct.value = '';
-            const _cc = document.getElementById('cantidadComprada'); if (_cc) _cc.value = '';
-            const _cr = document.getElementById('calcResultado'); if (_cr) _cr.style.display = 'none';
-            // Resetear preview
-            const _sp = document.getElementById('stockTotalPreview'); if (_sp) _sp.textContent = '';
-            const _sc = document.getElementById('stockConversionPreview'); if (_sc) _sc.textContent = '';
-            // Stock editable directamente en modo nuevo
-            const _si = document.getElementById('ingredienteStock');
-            const _li = document.getElementById('stockLockIcon');
-            const _ud = document.getElementById('stockUnlockInline');
-            if (_si)  { _si.disabled = false; _si.value = '0'; _si.style.background = ''; _si.style.cursor = ''; }
-            if (_li)  { _li.innerHTML = ''; }
-            if (_ud)  { _ud.style.display = 'none'; }
-            // Ocultar botón Eliminar (solo aparece en edición)
-            const _delBtn = document.getElementById('deleteIngredienteBtn');
-            if (_delBtn) _delBtn.style.display = 'none';
-            document.getElementById('ingredienteModalTitle').textContent = 'Nuevo Ingrediente';
-            document.getElementById('ingredienteForm').reset();
-            document.getElementById('ingredienteStock').disabled = true;
-            document.getElementById('ingredienteStock').value = 0;
-            document.getElementById('stockActualField').classList.add('password-protected');
-            document.getElementById('stockUnlock').style.display = 'block';
-            document.getElementById('ingredienteModal').classList.add('active');
-        };
+    window.ingredienteEditandoId = null;
+    document.getElementById('ingredienteModalTitle').textContent = 'Nuevo Ingrediente';
+    document.getElementById('ingredienteNombre').value = '';
+    document.getElementById('ingredienteMinimo').value = '';
+    document.getElementById('ingredienteCosto').value = '';
+    document.getElementById('ingredienteVenta').value = '';
+    document.getElementById('ingredienteAgregar').value = '';
+    
+    // Resetear calculadora
+    const _ct = document.getElementById('costoTotal'); if (_ct) _ct.value = '';
+    const _cc = document.getElementById('cantidadComprada'); if (_cc) _cc.value = '';
+    const _cr = document.getElementById('calcResultado'); if (_cr) _cr.style.display = 'none';
+    
+    // Resetear preview
+    const _sp = document.getElementById('stockTotalPreview'); if (_sp) _sp.textContent = '';
+    const _sc = document.getElementById('stockConversionPreview'); if (_sc) _sc.textContent = '';
+    
+    // En modo NUEVO, el stock es editable directamente (sin bloqueo)
+    const _si = document.getElementById('ingredienteStock');
+    const _li = document.getElementById('stockLockIcon');
+    const _ud = document.getElementById('stockUnlockInline');
+    const _unlockDiv = document.getElementById('stockUnlock');
+    
+    if (_si) { 
+        _si.disabled = false; 
+        _si.value = '0'; 
+        _si.style.background = ''; 
+        _si.style.cursor = 'text';
+    }
+    if (_li) { 
+        _li.innerHTML = '<i class="fas fa-lock-open" style="font-size:.8rem; color:var(--success)"></i>';
+        _li.style.cursor = 'default';
+        _li.onclick = null;  // En modo nuevo no necesita abrir modal de contraseña
+    }
+    if (_ud) { _ud.style.display = 'none'; }
+    if (_unlockDiv) { _unlockDiv.style.display = 'none'; }
+    
+    // Ocultar botón Eliminar (solo aparece en edición)
+    const _delBtn = document.getElementById('deleteIngredienteBtn');
+    if (_delBtn) _delBtn.style.display = 'none';
+    
+    // Resetear formulario
+    document.getElementById('ingredienteForm').reset();
+    
+    // Asegurar que el campo stock tenga el valor correcto después del reset
+    if (_si) _si.value = 0;
+    
+    // Remover clase password-protected si existe
+    const stockField = document.getElementById('stockActualField');
+    if (stockField) stockField.classList.remove('password-protected');
+    
+    // Mostrar modal
+    document.getElementById('ingredienteModal').classList.add('active');
+};
 
         window.editarIngrediente = function(id) {
-            const ingrediente = window.inventarioItems.find(i => i.id === id);
-            if (!ingrediente) return;
-            window.ingredienteEditandoId = id;
-            document.getElementById('ingredienteModalTitle').textContent = 'Editar Ingrediente';
-            document.getElementById('ingredienteNombre').value = ingrediente.nombre || '';
-            document.getElementById('ingredienteStock').value = ingrediente.stock || 0;
-            document.getElementById('ingredienteUnidad').value = ingrediente.unidad_base || 'unidades';
-            document.getElementById('ingredienteMinimo').value = ingrediente.minimo || 0;
-            document.getElementById('ingredienteCosto').value = ingrediente.precio_costo || 0;
-            document.getElementById('ingredienteVenta').value = ingrediente.precio_unitario || 0;
-            document.getElementById('ingredienteAgregar').value = '';
-            // Resetear calculadora
-            const _ct = document.getElementById('costoTotal'); if (_ct) _ct.value = '';
-            const _cc = document.getElementById('cantidadComprada'); if (_cc) _cc.value = '';
-            const _cr = document.getElementById('calcResultado'); if (_cr) _cr.style.display = 'none';
-            // Resetear preview stock
-            const _sp = document.getElementById('stockTotalPreview'); if (_sp) _sp.textContent = '';
-            const _sc = document.getElementById('stockConversionPreview'); if (_sc) _sc.textContent = '';
-            // Stock bloqueado
-            const _si = document.getElementById('ingredienteStock');
-            const _li = document.getElementById('stockLockIcon');
-            const _ud = document.getElementById('stockUnlockInline');
-            if (_si)  { _si.disabled = true; _si.style.background = '#f9f9f9'; _si.style.cursor = 'pointer'; }
-            if (_li)  { _li.innerHTML = '<i class="fas fa-lock" style="font-size:.8rem"></i>'; }
-            if (_ud)  { _ud.style.display = 'none'; }
-            // Mostrar botón Eliminar (solo en edición)
-            const _delBtn = document.getElementById('deleteIngredienteBtn');
-            if (_delBtn) _delBtn.style.display = 'inline-flex';
-            document.getElementById('ingredienteModal').classList.add('active');
-        };
+    const ingrediente = window.inventarioItems.find(i => i.id === id);
+    if (!ingrediente) return;
+    
+    window.ingredienteEditandoId = id;
+    document.getElementById('ingredienteModalTitle').textContent = 'Editar Ingrediente';
+    document.getElementById('ingredienteNombre').value = ingrediente.nombre || '';
+    document.getElementById('ingredienteStock').value = ingrediente.stock || 0;
+    document.getElementById('ingredienteUnidad').value = ingrediente.unidad_base || 'unidades';
+    document.getElementById('ingredienteMinimo').value = ingrediente.minimo || 0;
+    document.getElementById('ingredienteCosto').value = ingrediente.precio_costo || 0;
+    document.getElementById('ingredienteVenta').value = ingrediente.precio_unitario || 0;
+    document.getElementById('ingredienteAgregar').value = '';
+    
+    // Resetear calculadora
+    const _ct = document.getElementById('costoTotal'); if (_ct) _ct.value = '';
+    const _cc = document.getElementById('cantidadComprada'); if (_cc) _cc.value = '';
+    const _cr = document.getElementById('calcResultado'); if (_cr) _cr.style.display = 'none';
+    
+    // Resetear preview stock
+    const _sp = document.getElementById('stockTotalPreview'); if (_sp) _sp.textContent = '';
+    const _sc = document.getElementById('stockConversionPreview'); if (_sc) _sc.textContent = '';
+    
+    // Stock bloqueado al abrir (usar modal de contraseña)
+    const _si = document.getElementById('ingredienteStock');
+    const _li = document.getElementById('stockLockIcon');
+    const _ud = document.getElementById('stockUnlockInline');
+    const _unlockDiv = document.getElementById('stockUnlock');
+    
+    if (_si) {
+        _si.disabled = true;
+        _si.style.background = 'var(--input-bg)';
+        _si.style.cursor = 'pointer';
+    }
+    if (_li) {
+        _li.innerHTML = '<i class="fas fa-lock" style="font-size:.8rem"></i>';
+        _li.style.cursor = 'pointer';
+        _li.onclick = function() { window.mostrarModalContraseñaStock(); };
+    }
+    if (_ud) { _ud.style.display = 'none'; }  // Ocultar el inline unlock
+    if (_unlockDiv) { _unlockDiv.style.display = 'none'; }  // Ocultar el div de desbloqueo
+    
+    // Mostrar botón Eliminar (solo en edición)
+    const _delBtn = document.getElementById('deleteIngredienteBtn');
+    if (_delBtn) _delBtn.style.display = 'inline-flex';
+    
+    document.getElementById('ingredienteModal').classList.add('active');
+};
 
         window.desbloquearStockClick = function(inputEl) {
             if (!inputEl.disabled) return; // ya desbloqueado
@@ -4262,6 +4355,108 @@ window.verificarStockCritico = async function() {
             if (unlock) { unlock.style.display = 'block'; }
             if (pwdField) { pwdField.value = ''; pwdField.focus(); }
         };
+        
+        // ==================== FUNCIONES PARA MODAL DE CONTRASEÑA DE STOCK ====================
+window.mostrarModalContraseñaStock = function() {
+    // Limpiar campos previos
+    const input = document.getElementById('stockPasswordModalInput');
+    const error = document.getElementById('passwordStockError');
+    if (input) input.value = '';
+    if (error) error.style.display = 'none';
+    
+    // Mostrar modal
+    document.getElementById('passwordStockModal').classList.add('active');
+    
+    // Focus en el input
+    setTimeout(() => {
+        const inp = document.getElementById('stockPasswordModalInput');
+        if (inp) inp.focus();
+    }, 100);
+};
+
+window.verificarContraseñaStock = function() {
+    const pwd = document.getElementById('stockPasswordModalInput')?.value;
+    const errorEl = document.getElementById('passwordStockError');
+    
+    if (!pwd) {
+        if (errorEl) {
+            errorEl.textContent = 'Ingresa la contraseña';
+            errorEl.style.display = 'block';
+        }
+        return;
+    }
+    
+    // Verificar con la contraseña de admin
+    const adminPassword = window.configGlobal?.admin_password;
+    
+    if (pwd === adminPassword) {
+        // Contraseña correcta - desbloquear campo
+        const stockInput = document.getElementById('ingredienteStock');
+        const lockIcon = document.getElementById('stockLockIcon');
+        
+        if (stockInput) {
+            stockInput.disabled = false;
+            stockInput.style.background = '';
+            stockInput.style.cursor = 'text';
+            stockInput.focus();
+        }
+        
+        if (lockIcon) {
+            lockIcon.innerHTML = '<i class="fas fa-lock-open" style="font-size:.8rem; color:var(--success)"></i>';
+            lockIcon.style.cursor = 'default';
+            lockIcon.onclick = null;
+        }
+        
+        // Ocultar inline unlock si existe
+        const unlockInline = document.getElementById('stockUnlockInline');
+        if (unlockInline) unlockInline.style.display = 'none';
+        
+        // Cerrar modal
+        window.cerrarModal('passwordStockModal');
+        
+        // Mostrar mensaje de éxito
+        window.mostrarToast('🔓 Stock desbloqueado. Puedes editar la cantidad.', 'success');
+        
+    } else {
+        // Contraseña incorrecta
+        if (errorEl) {
+            errorEl.textContent = 'Contraseña incorrecta. Intenta de nuevo.';
+            errorEl.style.display = 'block';
+        }
+        document.getElementById('stockPasswordModalInput')?.focus();
+        document.getElementById('stockPasswordModalInput')?.select();
+    }
+};
+
+// Sobrescribir la función desbloquearStockClick para que use el modal en lugar del inline
+window.desbloquearStockClick = function(inputEl) {
+    if (!inputEl.disabled) return; // ya desbloqueado
+    window.mostrarModalContraseñaStock();
+};
+
+// Función para resetear el estado de bloqueo del stock (se llama al cerrar el modal de ingrediente)
+window.resetearBloqueoStock = function() {
+    const stockInput = document.getElementById('ingredienteStock');
+    const lockIcon = document.getElementById('stockLockIcon');
+    const unlockInline = document.getElementById('stockUnlockInline');
+    const unlockDiv = document.getElementById('stockUnlock');
+    
+    // Solo si es modo edición (el campo estaba bloqueado)
+    if (stockInput && stockInput.disabled === true) {
+        stockInput.disabled = false;
+        stockInput.style.background = '';
+        stockInput.style.cursor = 'text';
+    }
+    
+    if (lockIcon) {
+        lockIcon.innerHTML = '<i class="fas fa-lock-open" style="font-size:.8rem; color:var(--success)"></i>';
+        lockIcon.style.cursor = 'default';
+        lockIcon.onclick = null;
+    }
+    
+    if (unlockInline) unlockInline.style.display = 'none';
+    if (unlockDiv) unlockDiv.style.display = 'none';
+};
 
         window.desbloquearStockInline = function() {
             const pwd = document.getElementById('stockPasswordInline')?.value;
@@ -4751,19 +4946,26 @@ window.verificarStockCritico = async function() {
             });
 
             // ❌ Cerrar todos los modales (X, Cancelar, fondo) ❌❌❌❌❌❌❌❌❌❌
-            [
-                ['closePlatilloModal',    'platilloModal'],
-                ['cancelPlatillo',        'platilloModal'],
-                ['closeIngredienteModal', 'ingredienteModal'],
-                ['cancelIngrediente',     'ingredienteModal'],
-                ['closeUsuarioModal',     'usuarioModal'],
-                ['cancelUsuario',         'usuarioModal'],
-                ['closeDeliveryModal',    'deliveryModal'],
-                ['cancelDeliveryEdit',    'deliveryModal'],
-            ].forEach(([btnId, modalId]) => {
-                const btn = document.getElementById(btnId);
-                if (btn) btn.addEventListener('click', () => window.cerrarModal(modalId));
-            });
+[
+    ['closePlatilloModal',    'platilloModal', null],
+    ['cancelPlatillo',        'platilloModal', null],
+    ['closeIngredienteModal', 'ingredienteModal', 'resetearBloqueoStock'],
+    ['cancelIngrediente',     'ingredienteModal', 'resetearBloqueoStock'],
+    ['closeUsuarioModal',     'usuarioModal', null],
+    ['cancelUsuario',         'usuarioModal', null],
+    ['closeDeliveryModal',    'deliveryModal', null],
+    ['cancelDeliveryEdit',    'deliveryModal', null],
+].forEach(([btnId, modalId, callback]) => {
+    const btn = document.getElementById(btnId);
+    if (btn) {
+        btn.addEventListener('click', () => {
+            window.cerrarModal(modalId);
+            if (callback && typeof window[callback] === 'function') {
+                window[callback]();
+            }
+        });
+    }
+});
             // Cerrar al hacer clic en el fondo oscuro de cualquier modal
             document.querySelectorAll('.modal').forEach(modal => {
                 modal.addEventListener('click', function(e) {
@@ -6120,6 +6322,32 @@ window._irAIngrediente = function(ingredienteId) {
         }
     }, 200);
 };
+
     </script>
+    <!-- Modal para contraseña de stock -->
+<div class="modal" id="passwordStockModal">
+    <div class="modal-content" style="max-width: 400px">
+        <div class="modal-header" style="background:linear-gradient(135deg, var(--info), #1565C0)">
+            <h3><i class="fas fa-lock"></i> Desbloquear Stock</h3>
+            <button class="modal-close" onclick="window.cerrarModal('passwordStockModal')">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p style="margin-bottom: 1rem; color: var(--text-muted)">Ingresa la contraseña de administrador para poder editar el stock actual:</p>
+            <div class="form-group">
+                <label>Contraseña de Administrador</label>
+                <input type="password" id="stockPasswordModalInput" placeholder="Contraseña" 
+                    style="width:100%; padding:.8rem; border:1px solid var(--border); border-radius:8px; background:var(--input-bg); color:var(--text-dark); font-size:.95rem"
+                    onkeydown="if(event.key === 'Enter') window.verificarContraseñaStock()">
+            </div>
+            <div id="passwordStockError" style="display:none; color:var(--danger); font-size:.8rem; margin-top:.5rem; text-align:center">
+                <i class="fas fa-exclamation-circle"></i> Contraseña incorrecta
+            </div>
+        </div>
+        <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:.75rem">
+            <button class="btn-secondary" onclick="window.cerrarModal('passwordStockModal')">Cancelar</button>
+            <button class="btn-primary" id="confirmPasswordStockBtn" onclick="window.verificarContraseñaStock()">Confirmar</button>
+        </div>
+    </div>
+</div>
 </body>
 </html>
