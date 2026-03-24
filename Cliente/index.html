@@ -3480,15 +3480,16 @@ window.addEventListener('beforeunload',function(e){if(!window._sakiReady){e.prev
 
         // Carga menú sin renderizar (para uso en carga paralela con inventario)
         async function cargarMenuSinRenderizar() {
-            try {
-                const { data, error } = await window.supabaseClient.from('menu').select('*').eq('disponible', true);
-                if (error) throw error;
-                menuItems = data || [];
-                menuItems.sort((a, b) => a.nombre.localeCompare(b.nombre));
-                filteredMenuItems = [...menuItems];
-                _precargarImagenes(menuItems);
-            } catch (error) { console.error('Error cargando menú:', error); mostrarToast('Error al cargar el menú', 'error'); }
-        }
+    try {
+        // CORREGIDO: Ya NO filtramos por disponible === true
+        const { data, error } = await window.supabaseClient.from('menu').select('*');
+        if (error) throw error;
+        menuItems = data || [];
+        menuItems.sort((a, b) => a.nombre.localeCompare(b.nombre));
+        filteredMenuItems = [...menuItems];
+        _precargarImagenes(menuItems);
+    } catch (error) { console.error('Error cargando menú:', error); mostrarToast('Error al cargar el menú', 'error'); }
+}
 
         async function cargarMenu() {
             await cargarMenuSinRenderizar();
@@ -3537,20 +3538,20 @@ window.addEventListener('beforeunload',function(e){if(!window._sakiReady){e.prev
         }
 
         function _htmlTarjeta(item) {
-            const stock = _stockPrecalculado[item.id] ?? 999;
-            const agotado = stock <= 0;
-            const sc = agotado ? 'sold-out' : (stock < 5 ? 'low' : 'available');
-            const fav = esFavorito(item.id) ? 'active' : '';
-            const img = item.imagen || 'https://via.placeholder.com/400x300?text=Sushi';
-            const badge = agotado
-                ? '<div class="menu-card-sold-overlay"><span>🚫 Agotado</span></div>'
-                : (sc === 'low' ? '<div class="menu-card-badge low"><i class="fas fa-exclamation-triangle"></i> Últimas</div>' : '');
-            const footer = agotado
-                ? '<span class="stock-info"><i class="fas fa-info-circle"></i> Sin stock</span>'
-                : `<button class="btn-add" onclick="agregarAlCarrito('${item.id}')" data-tooltip="Agregar al carrito"><i class="fas fa-plus"></i></button><button class="btn-customize" onclick="abrirPersonalizacion('${item.id}')" data-tooltip="Personalizar platillo y cantidades"><i class="fas fa-star"></i> Personalizar</button>`;
-            const stockInfo = agotado ? '' : `<div class="stock-info"><i class="fas fa-box ${sc}"></i><span>${stock} disponibles</span></div>`;
-            return `<div class="menu-card${agotado?' agotado':''}"><div class="menu-card-image" style="background-image:url('${img}')"${agotado?'':` onclick="abrirPreview('${item.id}')"`}>${badge}</div><div class="menu-card-content"><div class="menu-card-header"><div style="display:flex;align-items:center"><button class="favorite-btn ${fav}" onclick="event.stopPropagation();toggleFavorito('${item.id}')" data-tooltip="${fav?'Quitar de favoritos':'Agregar a favoritos'}"><i class="fas fa-star"></i></button><h3 class="menu-card-title">${item.nombre}</h3></div><span class="menu-card-price">${formatBs(usdToBs(item.precio))}</span></div><p class="menu-card-description">${item.descripcion||''}</p><div class="menu-card-footer">${footer}</div>${stockInfo}</div></div>`;
-        }
+    const stock = _stockPrecalculado[item.id] ?? 999;
+    const agotado = stock <= 0 || item.disponible === false;  // <-- MODIFICADO: incluye disponible === false
+    const sc = agotado ? 'sold-out' : (stock < 5 ? 'low' : 'available');
+    const fav = esFavorito(item.id) ? 'active' : '';
+    const img = item.imagen || 'https://via.placeholder.com/400x300?text=Sushi';
+    const badge = agotado
+        ? '<div class="menu-card-sold-overlay"><span>🚫 Agotado</span></div>'
+        : (sc === 'low' ? '<div class="menu-card-badge low"><i class="fas fa-exclamation-triangle"></i> Últimas</div>' : '');
+    const footer = agotado
+        ? '<span class="stock-info"><i class="fas fa-info-circle"></i> No disponible</span>'
+        : `<button class="btn-add" onclick="agregarAlCarrito('${item.id}')" data-tooltip="Agregar al carrito"><i class="fas fa-plus"></i></button><button class="btn-customize" onclick="abrirPersonalizacion('${item.id}')" data-tooltip="Personalizar platillo y cantidades"><i class="fas fa-star"></i> Personalizar</button>`;
+    const stockInfo = agotado ? '' : `<div class="stock-info"><i class="fas fa-box ${sc}"></i><span>${stock} disponibles</span></div>`;
+    return `<div class="menu-card${agotado?' agotado':''}"><div class="menu-card-image" style="background-image:url('${img}')"${agotado?'':` onclick="abrirPreview('${item.id}')"`}>${badge}</div><div class="menu-card-content"><div class="menu-card-header"><div style="display:flex;align-items:center"><button class="favorite-btn ${fav}" onclick="event.stopPropagation();toggleFavorito('${item.id}')" data-tooltip="${fav?'Quitar de favoritos':'Agregar a favoritos'}"><i class="fas fa-star"></i></button><h3 class="menu-card-title">${item.nombre}</h3></div><span class="menu-card-price">${formatBs(usdToBs(item.precio))}</span></div><p class="menu-card-description">${item.descripcion||''}</p><div class="menu-card-footer">${footer}</div>${stockInfo}</div></div>`;
+}
 
         function _htmlPaginacion(paginaActual, totalPaginas) {
             if (totalPaginas <= 1) return '';
@@ -3565,35 +3566,36 @@ window.addEventListener('beforeunload',function(e){if(!window._sakiReady){e.prev
         }
 
         function renderizarMenuPaginado(filtroCategoria = null, filtroSubcategoria = null, busqueda = '') {
-            let items = [...menuItems];
-            if (filtroCategoria === 'favoritos')       items = items.filter(i => favoritos.includes(i.id));
-            else if (filtroCategoria === 'ofertas')    items = items.filter(i => i.categoria === 'Ofertas Especiales' || i.precio < 10);
-            else if (filtroCategoria && filtroCategoria !== 'todos') items = items.filter(i => i.categoria === filtroCategoria);
-            if (filtroSubcategoria) items = items.filter(i => i.subcategoria === filtroSubcategoria);
-            if (busqueda) {
-                const t = busqueda.toLowerCase().split(/\s+/).filter(x => x.length > 0);
-                items = items.filter(i => t.every(x => i.nombre.toLowerCase().includes(x)));
-            }
-            filteredMenuItems = items;
-            _paginaActual = 1;
-            if (filtroCategoria) localStorage.setItem('saki_ultima_categoria', filtroCategoria);
-            else if (filtroCategoria === null) localStorage.setItem('saki_ultima_categoria', 'todos');
-            renderizarPaginaActual();
-        }
+    let items = [...menuItems];
+    // CORREGIDO: NO filtrar por disponible === false, solo filtros normales
+    if (filtroCategoria === 'favoritos')       items = items.filter(i => favoritos.includes(i.id));
+    else if (filtroCategoria === 'ofertas')    items = items.filter(i => i.categoria === 'Ofertas Especiales' || i.precio < 10);
+    else if (filtroCategoria && filtroCategoria !== 'todos') items = items.filter(i => i.categoria === filtroCategoria);
+    if (filtroSubcategoria) items = items.filter(i => i.subcategoria === filtroSubcategoria);
+    if (busqueda) {
+        const t = busqueda.toLowerCase().split(/\s+/).filter(x => x.length > 0);
+        items = items.filter(i => t.every(x => i.nombre.toLowerCase().includes(x)));
+    }
+    filteredMenuItems = items;
+    _paginaActual = 1;
+    if (filtroCategoria) localStorage.setItem('saki_ultima_categoria', filtroCategoria);
+    else if (filtroCategoria === null) localStorage.setItem('saki_ultima_categoria', 'todos');
+    renderizarPaginaActual();
+}
 
         function renderizarPaginaActual() {
-            const grid = document.getElementById('menuGrid');
-            if (!grid) return;
-            if (filteredMenuItems.length === 0) {
-                grid.innerHTML = '<div class="loading-container"><p>No hay platillos</p></div>';
-                return;
-            }
-            const totalPaginas = Math.ceil(filteredMenuItems.length / ITEMS_POR_PAGINA);
-            _paginaActual = Math.max(1, Math.min(_paginaActual, totalPaginas));
-            const pagItems = filteredMenuItems.slice((_paginaActual - 1) * ITEMS_POR_PAGINA, _paginaActual * ITEMS_POR_PAGINA);
-            // Render directo, síncrono, sin observer ni RAF — tarjetas siempre visibles
-            grid.innerHTML = pagItems.map(_htmlTarjeta).join('') + _htmlPaginacion(_paginaActual, totalPaginas);
-        }
+    const grid = document.getElementById('menuGrid');
+    if (!grid) return;
+    if (filteredMenuItems.length === 0) {
+        grid.innerHTML = '<div class="loading-container"><p>No hay platillos</p></div>';
+        return;
+    }
+    const totalPaginas = Math.ceil(filteredMenuItems.length / ITEMS_POR_PAGINA);
+    _paginaActual = Math.max(1, Math.min(_paginaActual, totalPaginas));
+    const pagItems = filteredMenuItems.slice((_paginaActual - 1) * ITEMS_POR_PAGINA, _paginaActual * ITEMS_POR_PAGINA);
+    // Render directo, síncrono, sin observer ni RAF — tarjetas siempre visibles
+    grid.innerHTML = pagItems.map(_htmlTarjeta).join('') + _htmlPaginacion(_paginaActual, totalPaginas);
+}
 
         window.irAPagina = function(pagina) {
             const totalPaginas = Math.ceil(filteredMenuItems.length / ITEMS_POR_PAGINA);
