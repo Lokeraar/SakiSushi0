@@ -4815,43 +4815,78 @@ Esto marcará todas sus propinas pendientes como entregadas.`);
             }
         };
 
-        // ==================== ACTUALIZAR VENTAS HOY NETO (CORREGIDO) ====================
-        window._actualizarVentasHoyNeto = async function() {
-            try {
-                const hoy = new Date(); hoy.setHours(0,0,0,0);
-                const man = new Date(hoy); man.setDate(man.getDate()+1);
-                const { data: vs } = await window.supabaseClient
-                    .from('ventas').select('pedido_id, subtotal_platillos, metodo_pago')
-                    .gte('fecha', hoy.toISOString()).lt('fecha', man.toISOString());
-                const { data: ps } = await window.supabaseClient
-                    .from('pedidos').select('id, pagos_mixtos, vuelto_entregado, metodo_pago, subtotal_bs, total')
-                    .in('id', (vs||[]).map(v=>v.pedido_id));
-                const tasa = window.configGlobal?.tasa_efectiva || window.configGlobal?.tasa_cambio || 400;
-                let neto = 0;
-                (vs||[]).forEach(v => {
-                    const p = (ps||[]).find(p=>p.id===v.pedido_id);
-                    if (!p || p.metodo_pago==='invitacion') return;
-                    if (p.pagos_mixtos && p.pagos_mixtos.length) {
-                        let vueltoR = p.vuelto_entregado||0;
-                        p.pagos_mixtos.forEach(pg => {
-                            if (pg.metodo==='invitacion') return;
-                            const mbs = pg.metodo==='efectivo_usd'?(pg.monto||0)*tasa:(pg.montoBs||pg.monto||0);
-                            if (pg.metodo==='efectivo_bs'||pg.metodo==='efectivo_usd') {
-                                neto += Math.max(0,mbs-vueltoR); vueltoR = Math.max(0,vueltoR-mbs);
-                            } else { neto += mbs; }
-                        });
-                    } else {
-                        neto += p.subtotal_bs || 0;
-                    }
+        // ==================== ACTUALIZAR VENTAS HOY NETO (CORREGIDO - MISMA LÓGICA QUE CAJERO) ====================
+window._actualizarVentasHoyNeto = async function() {
+    try {
+        const hoy = new Date(); 
+        hoy.setHours(0, 0, 0, 0);
+        const manana = new Date(hoy); 
+        manana.setDate(manana.getDate() + 1);
+        
+        // Obtener ventas del día
+        const { data: ventasHoy } = await window.supabaseClient
+            .from('ventas')
+            .select('pedido_id')
+            .gte('fecha', hoy.toISOString())
+            .lt('fecha', manana.toISOString());
+        
+        if (!ventasHoy || ventasHoy.length === 0) {
+            document.getElementById('ventasHoy').textContent = '$0.00 / Bs 0.00';
+            return;
+        }
+        
+        // Obtener los pedidos correspondientes
+        const pedidoIds = ventasHoy.map(v => v.pedido_id);
+        const { data: pedidosData } = await window.supabaseClient
+            .from('pedidos')
+            .select('*')
+            .in('id', pedidoIds);
+        
+        // Función que calcula el neto cobrado (misma lógica que en Cajero)
+        const _netoCobradoPedido = (pedido) => {
+            if (!pedido) return 0;
+            if (pedido.metodo_pago === 'invitacion') return 0;
+            const tasa = window.configGlobal?.tasa_cambio || window.configGlobal?.tasa_efectiva || 400;
+            let recibido = 0;
+            if (pedido.pagos_mixtos && pedido.pagos_mixtos.length) {
+                pedido.pagos_mixtos.forEach(pg => {
+                    if (pg.metodo === 'invitacion') return;
+                    recibido += pg.metodo === 'efectivo_usd'
+                        ? (pg.monto || 0) * tasa
+                        : (pg.montoBs || pg.monto || 0);
                 });
-                const tasa2 = window.configGlobal?.tasa_efectiva || window.configGlobal?.tasa_cambio || 400;
-                const el = document.getElementById('ventasHoy');
-                if (el) {
-                    const netoUSD = neto / tasa2;
-                    el.textContent = `${window.formatUSD(netoUSD)} / Bs ${neto.toFixed(2)}`;
-                }
-            } catch(e) { console.error('Error neto cobrado:', e); }
+            } else {
+                recibido = pedido.subtotal_bs || 0;
+            }
+            return Math.max(0, recibido - (pedido.vuelto_entregado || 0));
         };
+        
+        // Sumar neto cobrado de todos los pedidos
+        let netoBs = 0;
+        pedidosData.forEach(pedido => {
+            netoBs += _netoCobradoPedido(pedido);
+        });
+        
+        // Calcular equivalente en USD
+        const tasa = window.configGlobal?.tasa_efectiva || window.configGlobal?.tasa_cambio || 400;
+        const netoUSD = netoBs / tasa;
+        
+        // Mostrar en formato: USD / Bs (igual que en Cajero)
+        const el = document.getElementById('ventasHoy');
+        if (el) {
+            // Formato: $XX.XX / Bs XXX.XXX,XX
+            el.textContent = `${window.formatUSD(netoUSD)} / Bs ${netoBs.toFixed(2)}`;
+        }
+        
+        // Guardar en variable global para el modal de detalle
+        window._ventasHoyNeto = { netoBs, netoUSD, ventasHoy, pedidosData };
+        
+    } catch (e) { 
+        console.error('Error calculando neto cobrado:', e); 
+        const el = document.getElementById('ventasHoy');
+        if (el) el.textContent = '$0.00 / Bs 0.00';
+    }
+};
 
         // ==================== TOGGLE DISPONIBLE PLATILLO (CORREGIDO) ====================
         window.toggleDisponiblePlatillo = async function(id, disponible) {
@@ -5291,133 +5326,242 @@ Esto marcará todas sus propinas pendientes como entregadas.`);
             window.mostrarToast(`💰 ${actualizados} ingrediente${actualizados !== 1 ? 's' : ''} actualizados en Bs`, 'success');
         };
 
-        // 🟢 Detalle de ventas del día (desde el dashboard) 🟢
-        window._abrirDetalleVentasAdmin = async function() {
-            try {
-                const hoy = new Date(); hoy.setHours(0,0,0,0);
-                const man = new Date(hoy); man.setDate(man.getDate()+1);
+        // ==================== MODAL DE DETALLE DE VENTAS (IDÉNTICO AL CAJERO) ====================
+window._abrirDetalleVentasAdmin = async function() {
+    try {
+        const hoy = new Date(); 
+        hoy.setHours(0, 0, 0, 0);
+        const manana = new Date(hoy); 
+        manana.setDate(manana.getDate() + 1);
 
-                // Cargar ventas y pedidos del día
-                const { data: ventasHoy } = await window.supabaseClient
-                    .from('ventas').select('*')
-                    .gte('fecha', hoy.toISOString()).lt('fecha', man.toISOString());
-                const { data: pedidosHoy } = await window.supabaseClient
-                    .from('pedidos').select('*')
-                    .in('id', (ventasHoy||[]).map(v=>v.pedido_id));
+        // Cargar ventas y pedidos del día
+        const { data: ventasHoy } = await window.supabaseClient
+            .from('ventas')
+            .select('*')
+            .gte('fecha', hoy.toISOString())
+            .lt('fecha', manana.toISOString());
+        
+        if (!ventasHoy || ventasHoy.length === 0) {
+            window.mostrarToast('No hay ventas registradas hoy', 'info');
+            return;
+        }
+        
+        const pedidoIds = ventasHoy.map(v => v.pedido_id);
+        const { data: pedidosHoy } = await window.supabaseClient
+            .from('pedidos')
+            .select('*')
+            .in('id', pedidoIds);
 
-                const tasa = window.configGlobal?.tasa_cambio || window.configGlobal?.tasa_efectiva || 400;
-                const fmtBs = window.formatBs;
-                const usdToBs = (u) => u * (window.configGlobal?.tasa_efectiva || tasa);
-
-                // Calcular totales idéntico al cajero
-                let totalNeto=0, vt_ebs=0, vt_eusd=0, vt_pm=0, vt_pv=0;
-                let vt_cond=0, vt_favor=0, vt_delivery=0, vt_inv_count=0, vt_inv_acum=0;
-
-                (ventasHoy||[]).forEach(v => {
-                    const p = (pedidosHoy||[]).find(pd=>pd.id===v.pedido_id);
-                    if (!p) return;
-                    totalNeto += window._netoCobradoPedidoAdmin(p, tasa);
-                    if(p.condonado>0) vt_cond += p.condonado;
-                    if(p.a_favor_caja>0) vt_favor += p.a_favor_caja;
-                    if(p.tipo==='delivery'&&p.costo_delivery_bs>0) vt_delivery += p.costo_delivery_bs;
-                    const pagos = p.pagos_mixtos;
-                    if(pagos&&pagos.length) {
-                        let vueltoR = p.vuelto_entregado||0;
-                        pagos.forEach(pg => {
-                            const mbs = pg.metodo==='efectivo_usd'?(pg.monto||0)*tasa:(pg.montoBs||pg.monto||0);
-                            if(pg.metodo==='efectivo_bs')       { const n=Math.max(0,mbs-vueltoR); vueltoR=Math.max(0,vueltoR-mbs); vt_ebs+=n; }
-                            else if(pg.metodo==='efectivo_usd') { const n=Math.max(0,mbs-vueltoR); vueltoR=Math.max(0,vueltoR-mbs); vt_eusd+=n; }
-                            else if(pg.metodo==='pago_movil')   vt_pm  += mbs;
-                            else if(pg.metodo==='punto_venta')  vt_pv  += mbs;
-                            else if(pg.metodo==='invitacion')   { vt_inv_count++; vt_inv_acum += (p.items||[]).reduce((s,i)=>s+usdToBs((i.precioUnitarioUSD||0)*(i.cantidad||1)),0)+(p.costo_delivery_bs||0); }
-                        });
-                    } else {
-                        const metodo = p.metodo_pago||v.metodo_pago||'';
-                        const bs = window._netoCobradoPedidoAdmin(p, tasa);
-                        if(metodo==='efectivo_bs')      vt_ebs  += bs;
-                        else if(metodo==='efectivo_usd') vt_eusd += bs;
-                        else if(metodo==='pago_movil')   vt_pm   += bs;
-                        else if(metodo==='punto_venta')  vt_pv   += bs;
-                        else if(metodo==='invitacion')   { vt_inv_count++; vt_inv_acum += (p.items||[]).reduce((s,i)=>s+usdToBs((i.precioUnitarioUSD||0)*(i.cantidad||1)),0)+(p.costo_delivery_bs||0); }
+        const tasa = window.configGlobal?.tasa_cambio || window.configGlobal?.tasa_efectiva || 400;
+        const fmtBs = window.formatBs;
+        
+        // Función neto cobrado (misma que usa el cajero)
+        const _netoCobradoPedido = (pedido) => {
+            if (!pedido) return 0;
+            if (pedido.metodo_pago === 'invitacion') return 0;
+            let recibido = 0;
+            if (pedido.pagos_mixtos && pedido.pagos_mixtos.length) {
+                pedido.pagos_mixtos.forEach(pg => {
+                    if (pg.metodo === 'invitacion') return;
+                    recibido += pg.metodo === 'efectivo_usd'
+                        ? (pg.monto || 0) * tasa
+                        : (pg.montoBs || pg.monto || 0);
+                });
+            } else {
+                recibido = pedido.subtotal_bs || 0;
+            }
+            return Math.max(0, recibido - (pedido.vuelto_entregado || 0));
+        };
+        
+        // Calcular totales por método de pago
+        let totalNeto = 0;
+        let vt_ebs = 0, vt_eusd = 0, vt_pm = 0, vt_pv = 0;
+        let vt_cond = 0, vt_favor = 0, vt_delivery = 0;
+        let vt_inv_count = 0, vt_inv_acum = 0;
+        
+        ventasHoy.forEach(v => {
+            const p = pedidosHoy.find(pd => pd.id === v.pedido_id);
+            if (!p) return;
+            
+            const neto = _netoCobradoPedido(p);
+            totalNeto += neto;
+            
+            if (p.condonado > 0) vt_cond += p.condonado;
+            if (p.a_favor_caja > 0) vt_favor += p.a_favor_caja;
+            if (p.tipo === 'delivery' && (p.costo_delivery_bs || 0) > 0) vt_delivery += p.costo_delivery_bs;
+            
+            const pagos = p.pagos_mixtos;
+            if (pagos && pagos.length) {
+                let vueltoR = p.vuelto_entregado || 0;
+                pagos.forEach(pg => {
+                    const mbs = pg.metodo === 'efectivo_usd' 
+                        ? (pg.monto || 0) * tasa 
+                        : (pg.montoBs || pg.monto || 0);
+                    
+                    if (pg.metodo === 'efectivo_bs') {
+                        const n = Math.max(0, mbs - vueltoR);
+                        vueltoR = Math.max(0, vueltoR - mbs);
+                        vt_ebs += n;
+                    } 
+                    else if (pg.metodo === 'efectivo_usd') {
+                        const n = Math.max(0, mbs - vueltoR);
+                        vueltoR = Math.max(0, vueltoR - mbs);
+                        vt_eusd += n;
+                    } 
+                    else if (pg.metodo === 'pago_movil') {
+                        vt_pm += mbs;
+                    } 
+                    else if (pg.metodo === 'punto_venta') {
+                        vt_pv += mbs;
+                    } 
+                    else if (pg.metodo === 'invitacion') {
+                        vt_inv_count++;
+                        const subtotalInv = (p.items || []).reduce((s, i) => 
+                            s + window.usdToBs((i.precioUnitarioUSD || 0) * (i.cantidad || 1)), 0);
+                        vt_inv_acum += subtotalInv + (p.costo_delivery_bs || 0);
                     }
                 });
-
-                const vcol = (ico,label,val,color) =>
-                    `<div style="display:flex;align-items:center;gap:6px;padding:8px;background:rgba(0,0,0,.08);border-radius:8px;border-left:3px solid ${color}">
+            } else {
+                const metodo = p.metodo_pago || v.metodo_pago || '';
+                const bs = neto;
+                if (metodo === 'efectivo_bs') vt_ebs += bs;
+                else if (metodo === 'efectivo_usd') vt_eusd += bs;
+                else if (metodo === 'pago_movil') vt_pm += bs;
+                else if (metodo === 'punto_venta') vt_pv += bs;
+                else if (metodo === 'invitacion') {
+                    vt_inv_count++;
+                    const subtotalInv = (p.items || []).reduce((s, i) => 
+                        s + window.usdToBs((i.precioUnitarioUSD || 0) * (i.cantidad || 1)), 0);
+                    vt_inv_acum += subtotalInv + (p.costo_delivery_bs || 0);
+                }
+            }
+        });
+        
+        // Helper para mostrar fila de método de pago
+        const vcol = (ico, label, val, color) => {
+            if (val <= 0) return '';
+            return `<div style="display:flex;align-items:center;gap:6px;padding:8px;background:rgba(0,0,0,.08);border-radius:8px;border-left:3px solid ${color}">
                         <i class="${ico}" style="color:${color};width:14px;text-align:center"></i>
                         <div style="flex:1">
                             <div style="font-size:.72rem;color:var(--text-muted)">${label}</div>
                             <div style="font-weight:700;color:${color};font-size:.9rem">${fmtBs(val)}</div>
                         </div>
                     </div>`;
-
-                // Detalle por cobro (igual al cajero)
-                const detallesCobros = (ventasHoy||[]).map(v => {
-                    const p = (pedidosHoy||[]).find(pd=>pd.id===v.pedido_id);
-                    if (!p) return '';
-                    const hora = new Date(p.fecha).toLocaleTimeString('es-VE',{hour:'2-digit',minute:'2-digit',timeZone:'America/Caracas'});
-                    const items = (p.items||[]).slice(0,2).map(i=>`${i.cantidad||1}× ${i.nombre}`).join(', ') + ((p.items||[]).length>2?` +${(p.items||[]).length-2} más`:'');
-                    const neto = window._netoCobradoPedidoAdmin(p, tasa);
-                    const metodoLabel = { efectivo_bs:'Ef.Bs', efectivo_usd:'Ef.USD', pago_movil:'P.Móvil', punto_venta:'Pto.Venta', invitacion:'Invitación' };
-                    let metodoStr = p.metodo_pago || 'N/A';
-                    if (p.pagos_mixtos && p.pagos_mixtos.length > 1) {
-                        metodoStr = p.pagos_mixtos.map(pg=>metodoLabel[pg.metodo]||pg.metodo).join(' + ');
-                    } else { metodoStr = metodoLabel[p.metodo_pago]||p.metodo_pago||'N/A'; }
-                    return `<div style="padding:.6rem .75rem;border-radius:8px;background:var(--table-header);margin-bottom:.4rem;font-size:.82rem">
+        };
+        
+        // Detalle por cobro (lista de cada venta)
+        const detallesCobros = ventasHoy.map(v => {
+            const p = pedidosHoy.find(pd => pd.id === v.pedido_id);
+            if (!p) return '';
+            
+            const hora = new Date(p.fecha).toLocaleTimeString('es-VE', {
+                hour: '2-digit', minute: '2-digit', timeZone: 'America/Caracas'
+            });
+            
+            const items = (p.items || []).slice(0, 2).map(i => 
+                `${i.cantidad || 1}× ${i.nombre}`
+            ).join(', ');
+            const masItems = (p.items || []).length > 2 ? ` +${(p.items || []).length - 2} más` : '';
+            
+            const neto = _netoCobradoPedido(p);
+            
+            const metodoLabel = {
+                efectivo_bs: 'Ef.Bs', efectivo_usd: 'Ef.USD',
+                pago_movil: 'P.Móvil', punto_venta: 'Pto.Venta',
+                invitacion: 'Invitación'
+            };
+            
+            let metodoStr = p.metodo_pago || 'N/A';
+            if (p.pagos_mixtos && p.pagos_mixtos.length > 1) {
+                metodoStr = p.pagos_mixtos.map(pg => metodoLabel[pg.metodo] || pg.metodo).join(' + ');
+            } else {
+                metodoStr = metodoLabel[p.metodo_pago] || p.metodo_pago || 'N/A';
+            }
+            
+            return `<div style="padding:.6rem .75rem;border-radius:8px;background:var(--table-header);margin-bottom:.4rem;font-size:.82rem">
                         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.2rem">
-                            <span style="font-weight:700;color:var(--text-dark)">${hora} · ${p.tipo||'mesa'}</span>
+                            <span style="font-weight:700;color:var(--text-dark)">${hora} · ${p.tipo || 'mesa'}</span>
                             <span style="font-weight:800;color:var(--success)">${fmtBs(neto)}</span>
                         </div>
-                        <div style="color:var(--text-muted);font-size:.75rem">${items}</div>
+                        <div style="color:var(--text-muted);font-size:.75rem">${items}${masItems}</div>
                         <div style="font-size:.72rem;color:var(--text-muted);margin-top:.15rem">${metodoStr}</div>
                     </div>`;
-                }).join('');
-
-                const contenido = `
-                    <div style="margin-bottom:1rem;padding:.85rem;background:var(--table-header);border-radius:10px">
-                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.4rem">
-                            <span style="font-weight:700;color:var(--text-dark)">Neto cobrado hoy</span>
-                            <span style="font-weight:800;color:var(--success);font-size:1.15rem">${fmtBs(totalNeto)}</span>
-                        </div>
-                        <div style="display:flex;justify-content:space-between;color:var(--text-muted);font-size:.82rem">
-                            <span>Pedidos cobrados</span><span style="font-weight:600">${(ventasHoy||[]).length}</span>
-                        </div>
+        }).join('');
+        
+        // Construir contenido del modal (igual al del cajero)
+        const contenido = `
+            <div style="margin-bottom:1rem;padding:.85rem;background:var(--table-header);border-radius:10px">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.4rem">
+                    <span style="font-weight:700;color:var(--text-dark)">Neto cobrado hoy</span>
+                    <span style="font-weight:800;color:var(--success);font-size:1.15rem">${fmtBs(totalNeto)}</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;color:var(--text-muted);font-size:.82rem">
+                    <span>Pedidos cobrados</span><span style="font-weight:600">${ventasHoy.length}</span>
+                </div>
+            </div>
+            
+            <div style="font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);margin-bottom:.6rem">
+                Desglose por método de pago
+            </div>
+            
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:1rem">
+                ${vt_ebs > 0 ? vcol('fas fa-money-bill-wave', 'Efectivo Bs', vt_ebs, 'var(--success)') : ''}
+                ${vt_eusd > 0 ? vcol('fas fa-dollar-sign', 'Efectivo USD', vt_eusd, '#4CAF50') : ''}
+                ${vt_pm > 0 ? vcol('fas fa-mobile-alt', 'Pago Móvil', vt_pm, 'var(--info)') : ''}
+                ${vt_pv > 0 ? vcol('fas fa-credit-card', 'Punto de Venta', vt_pv, 'var(--warning)') : ''}
+                ${vt_delivery > 0 ? vcol('fas fa-motorcycle', 'Deliverys', vt_delivery, 'var(--delivery)') : ''}
+                ${vt_inv_count > 0 ? `
+                    <div style="grid-column:1/-1;padding:8px;background:rgba(0,0,0,.06);border-radius:8px;border-left:3px solid var(--propina);font-size:.82rem">
+                        <span style="color:var(--propina);font-weight:700">🎁 Invitaciones: ${vt_inv_count}</span>
+                        <span style="color:var(--text-muted);font-size:.75rem;margin-left:.5rem">Valor real: ${fmtBs(vt_inv_acum)}</span>
                     </div>
-                    <div style="font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);margin-bottom:.6rem">Desglose por método de pago</div>
-                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:1rem">
-                        ${vt_ebs>0  ? vcol('fas fa-money-bill-wave','Efectivo Bs',  vt_ebs,  'var(--success)') : ''}
-                        ${vt_eusd>0 ? vcol('fas fa-dollar-sign',    'Efectivo USD', vt_eusd, '#4CAF50')         : ''}
-                        ${vt_pm>0   ? vcol('fas fa-mobile-alt',     'Pago Móvil',   vt_pm,   'var(--info)')     : ''}
-                        ${vt_pv>0   ? vcol('fas fa-credit-card',    'Punto de Venta',vt_pv,  'var(--warning)')  : ''}
-                        ${vt_delivery>0 ? vcol('fas fa-motorcycle', 'Deliverys',   vt_delivery,'var(--delivery)') : ''}
-                        ${vt_inv_count>0 ? `<div style="grid-column:1/-1;padding:8px;background:rgba(0,0,0,.06);border-radius:8px;border-left:3px solid var(--propina);font-size:.82rem">
-                            <span style="color:var(--propina);font-weight:700">🎁 Invitaciones: ${vt_inv_count}</span>
-                            <span style="color:var(--text-muted);font-size:.75rem;margin-left:.5rem">Valor real: ${fmtBs(vt_inv_acum)}</span>
-                        </div>` : ''}
-                        ${vt_cond>0  ? vcol('fas fa-hand-holding-heart','Condonado', vt_cond, '#E91E63')  : ''}
-                        ${vt_favor>0 ? vcol('fas fa-piggy-bank','A favor de caja', vt_favor, 'var(--accent)') : ''}
-                    </div>
-                    ${detallesCobros ? `<div style="font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);margin-bottom:.6rem">Detalle por cobro</div>${detallesCobros}` : ''}
-                `;
-
-                // Mostrar modal
-                const modal = document.createElement('div');
-                modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:1rem';
-                modal.innerHTML = `
-                    <div style="background:var(--card-bg);border-radius:16px;width:100%;max-width:500px;max-height:90vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.35)">
-                        <div style="display:flex;justify-content:space-between;align-items:center;padding:1.2rem 1.5rem;border-bottom:2px solid var(--border);position:sticky;top:0;background:var(--card-bg);z-index:1">
-                            <h3 style="font-size:1rem;font-weight:700;color:var(--text-dark)">💰 Ventas Hoy — Neto Cobrado</h3>
-                            <button onclick="this.closest('[style*=fixed]').remove()" style="background:var(--table-header);border:none;border-radius:8px;width:30px;height:30px;cursor:pointer;font-size:.9rem;color:var(--text-muted)">✕</button>
-                        </div>
-                        <div style="padding:1.25rem">${contenido}</div>
-                    </div>`;
-                modal.addEventListener('click', e => { if(e.target===modal) modal.remove(); });
-                document.body.appendChild(modal);
-            } catch(e) {
-                console.error('Error abriendo detalle ventas admin:', e);
-                window.mostrarToast('❌ Error: ' + (e.message||e), 'error');
-            }
-        };
+                ` : ''}
+                ${vt_cond > 0 ? vcol('fas fa-hand-holding-heart', 'Condonado', vt_cond, '#E91E63') : ''}
+                ${vt_favor > 0 ? vcol('fas fa-piggy-bank', 'A favor de caja', vt_favor, 'var(--accent)') : ''}
+            </div>
+            
+            ${detallesCobros ? `
+                <div style="font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);margin-bottom:.6rem">
+                    Detalle por cobro
+                </div>
+                ${detallesCobros}
+            ` : ''}
+        `;
+        
+        // Crear y mostrar modal
+        const modal = document.createElement('div');
+        modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:1rem';
+        modal.innerHTML = `
+            <div style="background:var(--card-bg);border-radius:16px;width:100%;max-width:500px;max-height:90vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.35)">
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:1.2rem 1.5rem;border-bottom:2px solid var(--border);position:sticky;top:0;background:var(--card-bg);z-index:1">
+                    <h3 style="font-size:1rem;font-weight:700;color:var(--text-dark)">
+                        <i class="fas fa-chart-line" style="color:var(--accent);margin-right:.5rem"></i>
+                        Ventas Hoy — Neto Cobrado
+                    </h3>
+                    <button onclick="this.closest('[style*=fixed]').remove()" 
+                        style="background:var(--table-header);border:none;border-radius:8px;width:30px;height:30px;cursor:pointer;font-size:.9rem;color:var(--text-muted)">
+                        ✕
+                    </button>
+                </div>
+                <div style="padding:1.25rem">${contenido}</div>
+                <div class="modal-footer" style="padding:1rem 1.5rem;border-top:1px solid var(--border);display:flex;justify-content:flex-end">
+                    <button onclick="this.closest('[style*=fixed]').remove()" 
+                        class="btn-primary" style="padding:.5rem 1.2rem;font-size:.85rem">
+                        Cerrar
+                    </button>
+                </div>
+            </div>`;
+        
+        modal.addEventListener('click', e => { 
+            if (e.target === modal) modal.remove(); 
+        });
+        document.body.appendChild(modal);
+        
+    } catch (e) {
+        console.error('Error abriendo detalle ventas admin:', e);
+        window.mostrarToast('❌ Error al cargar el detalle de ventas', 'error');
+    }
+};
 
         // 🟢 Helper: neto cobrado de un pedido (igual que cajero) 🟢
         window._netoCobradoPedidoAdmin = function(pedido, tasa) {
