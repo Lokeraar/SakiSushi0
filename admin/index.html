@@ -2193,6 +2193,61 @@ html.dark-theme {
     }
     .dark-theme #reporteDesde::-webkit-calendar-picker-indicator,
     .dark-theme #reporteHasta::-webkit-calendar-picker-indicator { filter: invert(1); }
+   
+ /* Texto "Activo" en color verde */
+.activo-text {
+    color: #4CAF50 !important;
+    font-weight: 600;
+}
+
+/* Para los badges de estado en mesoneros, deliverys, etc */
+.status-activo {
+    background: rgba(76, 175, 80, 0.15);
+    color: #4CAF50;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: .7rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.status-inactivo {
+    background: rgba(158, 158, 158, 0.15);
+    color: #9e9e9e;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: .7rem;
+    font-weight: 600;
+}
+
+/* Animación palpitante para tags de stock crítico */
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+    }
+    50% {
+        opacity: 0.85;
+        transform: scale(1.02);
+        box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
+    }
+}
+
+.stock-critico-tag {
+    animation: pulse 1.5s infinite;
+}
+
+/* Para escritorio, limitar el ancho del header */
+@media (min-width: 1200px) {
+    #stockCriticoHeader {
+        max-width: 80%;
+        margin-left: auto;
+        margin-right: auto;
+    }
+}
     </style>
 </head>
 <body>
@@ -2221,7 +2276,17 @@ html.dark-theme {
     <div class="panel-container" id="panelContainer">
         <header class="header">
             <div class="header-left"><h2><i class="fas fa-crown"></i> Administración Saki Sushi</h2></div>
-            <div class="header-right"><button class="nav-button" onclick="window.abrirSelectorMesaAdmin()"><i class="fas fa-utensils"></i> Mesas</button><a href="../Cajero/index.html" target="_blank" class="nav-button"><i class="fas fa-cash-register"></i> Cajero</a><button class="theme-toggle" id="themeToggle" onclick="window.toggleTheme()" title="Cambiar tema"><i class="fas fa-sun" id="themeIcon"></i></button><button class="logout-button" id="logoutButton"><i class="fas fa-sign-out-alt"></i> Salir</button></div>
+            <div class="header-right">
+    <button class="nav-button" onclick="window.abrirSelectorMesaAdmin()"><i class="fas fa-utensils"></i> Mesas</button>
+    <a href="../Cajero/index.html" target="_blank" class="nav-button"><i class="fas fa-cash-register"></i> Cajero</a>
+    <button class="theme-toggle" id="themeToggle" onclick="window.toggleTheme()" title="Cambiar tema"><i class="fas fa-sun" id="themeIcon"></i></button>
+    <button class="logout-button" id="logoutButton"><i class="fas fa-sign-out-alt"></i> Salir</button>
+</div>
+<!-- NUEVA LÍNEA: Stock crítico -->
+<div id="stockCriticoHeader" style="width:100%; margin-top:.5rem; padding:.4rem .8rem; background:rgba(0,0,0,.2); border-radius:8px; display:flex; align-items:center; gap:.8rem; flex-wrap:wrap; font-size:.75rem">
+    <span style="font-weight:700; color:var(--danger); white-space:nowrap"><i class="fas fa-exclamation-triangle"></i> Stock crítico:</span>
+    <div id="stockCriticoTags" style="display:flex; flex-wrap:wrap; gap:.4rem; flex:1; min-width:0"></div>
+</div>
         </header>
         
         <div class="tabs-wrapper">
@@ -2349,7 +2414,13 @@ html.dark-theme {
                 </div>
                 <div class="dashboard-lower-grid">
                     <div class="alert-list lower-stock"><h3>Stock Crítico</h3><div id="stockCritico"></div></div>
-                    <div class="alert-list lower-pedidos"><h3>Pedidos Recientes</h3><div id="pedidosRecientes"></div></div>
+                    <div class="alert-list lower-pedidos">
+    <h3 style="display:flex; align-items:center; gap:.5rem; margin-bottom:1rem; padding-bottom:.5rem; border-bottom:2px solid var(--border)">
+        <i class="fas fa-clock" style="color:var(--accent)"></i> Pedidos Recientes
+        <span id="pedidosCountBadge" style="background:var(--primary); color:#fff; padding:.15rem .6rem; border-radius:20px; font-size:.7rem; margin-left:auto">0</span>
+    </h3>
+    <div id="pedidosRecientes" style="display:flex; flex-direction:column; gap:.6rem"></div>
+</div>
                 </div>
             </div>
             
@@ -2517,11 +2588,19 @@ html.dark-theme {
                 <div class="pane-header">
                     <h2 class="section-title"><i class="fas fa-chart-bar"></i> Reportes</h2>
                 </div>
-                <div class="reportes-filters">
-                    <div class="form-group" style="margin:0"><label>Desde</label><input type="date" id="reporteDesde"></div>
-                    <div class="form-group" style="margin:0"><label>Hasta</label><input type="date" id="reporteHasta"></div>
-                    <button class="btn-primary" onclick="window.cargarReportes()"><i class="fas fa-search"></i> Buscar</button>
-                </div>
+                <div class="reportes-filters" style="display:flex; gap:1rem; flex-wrap:wrap; align-items:flex-end; background:var(--card-bg); border-radius:14px; padding:1.2rem; box-shadow:var(--shadow-sm); border:1px solid var(--border); margin-bottom:1.5rem">
+    <div class="form-group" style="margin:0; flex:1; min-width:180px">
+        <label style="display:block; margin-bottom:.3rem; font-weight:600; font-size:.75rem; color:var(--text-muted)">Desde</label>
+        <input type="date" id="reporteDesde" style="width:100%; padding:.7rem; border:1px solid var(--border); border-radius:8px; background:var(--input-bg); color:var(--text-dark); font-size:.9rem">
+    </div>
+    <div class="form-group" style="margin:0; flex:1; min-width:180px">
+        <label style="display:block; margin-bottom:.3rem; font-weight:600; font-size:.75rem; color:var(--text-muted)">Hasta</label>
+        <input type="date" id="reporteHasta" style="width:100%; padding:.7rem; border:1px solid var(--border); border-radius:8px; background:var(--input-bg); color:var(--text-dark); font-size:.9rem">
+    </div>
+    <button class="btn-primary" onclick="window.cargarReportes()" style="padding:.7rem 1.5rem; white-space:nowrap">
+        <i class="fas fa-search"></i> Buscar
+    </button>
+</div>
                 <div class="dashboard-grid">
                     <div class="dashboard-card"><div class="card-title">Ventas Día</div><div class="card-value" id="ventasDia">$0.00</div></div>
                     <div class="dashboard-card"><div class="card-title">Ventas Semana</div><div class="card-value" id="ventasSemana">$0.00</div></div>
@@ -2890,9 +2969,10 @@ window.cargarConfiguracionInicial = async function() {
         } else {
             console.log('InventarioGrid no encontrado, esperando...');
         }
-        
+       
         window.actualizarAlertasStock();
         await window.cargarMenu();
+        window.actualizarStockCriticoHeader();
         
         // Verificar que verificarStockCritico existe antes de llamarla
         if (typeof window.verificarStockCritico === 'function') {
@@ -3657,27 +3737,52 @@ Esto marcará todas sus propinas pendientes como entregadas.`);
         };
 
         window.cargarPedidosRecientes = async function() {
-            try {
-                const { data, error } = await window.supabaseClient.from('pedidos').select('*').order('fecha', { ascending: false }).limit(5);
-                if (error) throw error;
-                document.getElementById('pedidosRecientes').innerHTML = (data || []).map(p => {
-                    const hora = new Date(p.fecha).toLocaleTimeString('es-VE', {hour:'2-digit',minute:'2-digit'});
-                    const fecha = new Date(p.fecha).toLocaleDateString('es-VE', {day:'2-digit',month:'2-digit'});
-                    const items = (p.items || []).slice(0,2).map(i => `${i.cantidad||1}x ${i.nombre}`).join(', ');
-                    const masItems = (p.items||[]).length > 2 ? ` +${(p.items||[]).length-2} más` : '';
-                    const tipoIcon = p.tipo==='delivery' ? '🛵' : p.tipo==='reserva' ? '📅' : '🍽️';
-                    const totalBs = window.formatBs ? window.formatBs(window.usdToBs(p.total||0)) : (window.formatUSD(p.total||0) + ' / ' + window.formatBs(window.usdToBs(p.total||0)));
-                    return `<div class="alert-item" style="flex-direction:column;align-items:flex-start;gap:.2rem">
-                        <div style="display:flex;justify-content:space-between;width:100%">
-                            <span style="font-weight:700">${tipoIcon} ${p.tipo||'mesa'} — ${totalBs}</span>
-                            <small style="color:var(--text-muted)">${fecha} ${hora}</small>
+    try {
+        const { data, error } = await window.supabaseClient.from('pedidos').select('*').order('fecha', { ascending: false }).limit(5);
+        if (error) throw error;
+        
+        const pedidosCount = document.getElementById('pedidosCountBadge');
+        if (pedidosCount) pedidosCount.textContent = (data || []).length;
+        
+        document.getElementById('pedidosRecientes').innerHTML = (data || []).map(p => {
+            const hora = new Date(p.fecha).toLocaleTimeString('es-VE', {hour:'2-digit',minute:'2-digit'});
+            const fecha = new Date(p.fecha).toLocaleDateString('es-VE', {day:'2-digit',month:'2-digit'});
+            const items = (p.items || []).slice(0,2).map(i => `${i.cantidad||1}x ${i.nombre}`).join(', ');
+            const masItems = (p.items||[]).length > 2 ? ` +${(p.items||[]).length-2} más` : '';
+            const tipoIcon = p.tipo==='delivery' ? '🛵' : p.tipo==='reserva' ? '📅' : '🍽️';
+            const tipoColor = p.tipo==='delivery' ? 'var(--delivery)' : p.tipo==='reserva' ? 'var(--propina)' : 'var(--info)';
+            const totalBs = window.formatBs(window.usdToBs(p.total||0));
+            const estadoText = p.estado ? p.estado.replace(/_/g,' ') : '';
+            const estadoColor = p.estado === 'entregado' ? 'var(--success)' : p.estado === 'en_camino' ? 'var(--delivery)' : p.estado === 'en_cocina' ? 'var(--warning)' : 'var(--text-muted)';
+            
+            return `
+                <div class="pedido-item-modern" style="background:var(--card-bg); border-radius:12px; padding:.8rem 1rem; border:1px solid var(--border); transition:all .2s; cursor:pointer" onclick="window._abrirDetallePedidoAdmin('${p.id}')">
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:.5rem; margin-bottom:.5rem">
+                        <div style="display:flex; align-items:center; gap:.6rem; flex-wrap:wrap">
+                            <span style="font-size:1.1rem">${tipoIcon}</span>
+                            <span style="font-weight:700; color:${tipoColor}">${p.tipo || 'mesa'} ${p.mesa ? `· Mesa ${p.mesa}` : ''}</span>
+                            <span style="font-size:.7rem; background:${estadoColor}20; color:${estadoColor}; padding:.2rem .6rem; border-radius:20px; font-weight:600">${estadoText || 'pendiente'}</span>
                         </div>
-                        ${items ? `<small style="color:var(--text-muted)">${items}${masItems}</small>` : ''}
-                        ${p.estado ? `<span style="font-size:.72rem;background:var(--table-header);color:var(--text-dark);padding:.15rem .5rem;border-radius:10px;font-weight:600">${p.estado.replace(/_/g,' ')}</span>` : ''}
-                    </div>`;
-                }).join('') || '<p style="color:var(--text-muted);font-size:.85rem">No hay pedidos recientes</p>';
-            } catch (e) { console.error('Error cargando pedidos recientes:', e); }
-        };
+                        <div style="display:flex; align-items:center; gap:.5rem">
+                            <span style="font-size:.7rem; color:var(--text-muted)">${fecha} ${hora}</span>
+                            <span style="font-weight:800; color:var(--accent); font-size:.9rem">${totalBs}</span>
+                        </div>
+                    </div>
+                    <div style="font-size:.75rem; color:var(--text-muted); display:flex; flex-wrap:wrap; gap:.3rem">
+                        <span><i class="fas fa-receipt" style="width:14px; margin-right:.3rem"></i> ${items || 'Sin items'}</span>
+                        ${masItems ? `<span style="color:var(--accent)">${masItems}</span>` : ''}
+                    </div>
+                </div>
+            `;
+        }).join('') || '<div style="text-align:center; padding:1rem; color:var(--text-muted)"><i class="fas fa-inbox"></i><p style="margin-top:.5rem">No hay pedidos recientes</p></div>';
+    } catch (e) { console.error('Error cargando pedidos recientes:', e); }
+};
+
+// Función para abrir detalle de pedido (opcional)
+window._abrirDetallePedidoAdmin = function(pedidoId) {
+    // Puedes implementar un modal con el detalle del pedido
+    window.mostrarToast(`Pedido: ${pedidoId}`, 'info');
+};
 
         window.actualizarProductosActivos = function() {
             document.getElementById('productosActivos').textContent = window.menuItems.filter(m => m.disponible).length;
@@ -4440,6 +4545,7 @@ window.verificarStockCritico = async function() {
             if (!items.length) {
                 grid.innerHTML = '<p style="color:var(--text-muted);font-size:.85rem;padding:.75rem">' +
                     (filtro ? 'Sin resultados para "' + filtro + '"' : 'No hay ingredientes registrados.') + '</p>';
+                    window.actualizarStockCriticoHeader();
                 return;
             }
             items.forEach(item => {
@@ -4481,6 +4587,7 @@ window.verificarStockCritico = async function() {
                     window._invActiveId = null;
                 }
             }
+            window.actualizarStockCriticoHeader();
         };
 
         // ==================== FUNCIONES DE RECUPERACIÓN ====================
@@ -4530,6 +4637,7 @@ window.verificarStockCritico = async function() {
                                 await window._notificarPlatillosReactivados(p.new.id, p.new.nombre);
                             }
                             window.cargarInventario();
+                            window.actualizarStockCriticoHeader();
                         })
                     .subscribe();
 
@@ -5936,8 +6044,82 @@ window._abrirDetalleVentasAdmin = async function() {
                 }, 3000);
             }
         };
+        // ==================== ACTUALIZAR TAGS DE STOCK CRÍTICO EN HEADER ====================
+window.actualizarStockCriticoHeader = function() {
+    const container = document.getElementById('stockCriticoTags');
+    if (!container) return;
+    
+    // Obtener ingredientes con stock crítico (disponible <= mínimo)
+    const criticos = (window.inventarioItems || []).filter(item => {
+        const disponible = (item.stock || 0) - (item.reservado || 0);
+        const minimo = item.minimo || 0;
+        return disponible <= minimo && minimo > 0;
+    });
+    
+    if (criticos.length === 0) {
+        container.innerHTML = '<span style="color:var(--text-muted)">Ningún ingrediente en stock crítico</span>';
+        return;
+    }
+    
+    // Mostrar máximo de tags que quepan en una línea (se maneja con flex wrap)
+    container.innerHTML = criticos.map(item => {
+        const disponible = (item.stock || 0) - (item.reservado || 0);
+        return `
+            <span class="stock-critico-tag" 
+                  data-ingrediente-id="${item.id}"
+                  onclick="window._irAIngrediente('${item.id}')"
+                  style="display:inline-flex; align-items:center; gap:4px; padding:2px 8px; background:rgba(239,68,68,.15); border-radius:20px; color:var(--danger); font-weight:600; font-size:.7rem; cursor:pointer; animation:pulse 1.5s infinite; transition:all .2s"
+                  onmouseover="this.style.transform='scale(1.05)'; this.style.background='rgba(239,68,68,.25)'"
+                  onmouseout="this.style.transform='scale(1)'; this.style.background='rgba(239,68,68,.15)'">
+                <i class="fas fa-box" style="font-size:.6rem"></i>
+                ${item.nombre}
+                <span style="background:var(--danger); color:#fff; padding:0 4px; border-radius:10px; font-size:.6rem">${disponible}</span>
+            </span>
+        `;
+    }).join('');
+};
 
+// Función para ir al ingrediente en la categoría Inventario
+window._irAIngrediente = function(ingredienteId) {
+    // Cambiar a la pestaña de Inventario
+    const tabs = document.querySelectorAll('.tab');
+    const panes = document.querySelectorAll('.tab-pane');
+    
+    tabs.forEach(tab => tab.classList.remove('active'));
+    panes.forEach(pane => pane.classList.remove('active'));
+    
+    const inventarioTab = document.querySelector('.tab[data-tab="inventario"]');
+    const inventarioPane = document.getElementById('inventarioPane');
+    
+    if (inventarioTab) inventarioTab.classList.add('active');
+    if (inventarioPane) inventarioPane.classList.add('active');
+    
+    // Esperar a que se renderice el inventario y luego seleccionar el ingrediente
+    setTimeout(() => {
+        // Buscar el elemento del ingrediente en la lista
+        const itemElement = document.getElementById(`invItem_${ingredienteId}`);
+        if (itemElement) {
+            itemElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            itemElement.click(); // Simular clic para abrir detalle
+            // Resaltar temporalmente
+            itemElement.style.transition = 'background .3s';
+            itemElement.style.background = 'rgba(211,47,47,.3)';
+            setTimeout(() => {
+                itemElement.style.background = '';
+            }, 1000);
+        } else {
+            // Si no está visible, recargar inventario y reintentar
+            window.renderizarInventario();
+            setTimeout(() => {
+                const retryElement = document.getElementById(`invItem_${ingredienteId}`);
+                if (retryElement) {
+                    retryElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    retryElement.click();
+                }
+            }, 300);
+        }
+    }, 200);
+};
     </script>
 </body>
 </html>
-    
