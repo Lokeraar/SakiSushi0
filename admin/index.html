@@ -2302,6 +2302,37 @@ html.dark-theme {
     color: #fff;
 }
 
+/* Botón Eliminar con tamaño completo */
+#deleteIngredienteBtn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: .5rem;
+    padding: .6rem 1.2rem;
+    background: var(--danger);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: .85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    white-space: nowrap;
+}
+
+#deleteIngredienteBtn:hover {
+    background: #c62828;
+    transform: translateY(-1px);
+}
+
+.dark-theme #deleteIngredienteBtn {
+    background: rgba(239,68,68,.8);
+}
+
+.dark-theme #deleteIngredienteBtn:hover {
+    background: var(--danger);
+}
+
     </style>
 </head>
 
@@ -2773,19 +2804,20 @@ html.dark-theme {
                 </div>
 
                 <!-- Stock Actual con overlay de contraseña -->
-                <div class="form-group" id="stockOverlay">
-                    <label style="display:flex; align-items:center; gap:.5rem">
-                        Stock Actual
-                        <span id="stockLockIcon" style="color:var(--text-muted); cursor:pointer" onclick="window.mostrarModalContraseñaStock()">
-                            <i class="fas fa-lock" style="font-size:.8rem"></i>
-                        </span>
-                    </label>
-                    <div style="position:relative">
-                        <input type="number" step="0.001" id="ingredienteStock" disabled
-                            style="width:100%; cursor:pointer; background:var(--input-bg); color:var(--text-dark); border:1px solid var(--border); border-radius:8px; padding:.65rem .9rem"
-                            title="Haz clic en el candado para desbloquear">
-                    </div>
-                </div>
+<div class="form-group" id="stockOverlay">
+    <label style="display:flex; align-items:center; gap:.5rem">
+        Stock Actual
+        <span id="stockLockIcon" style="color:var(--text-muted)">
+            <i class="fas fa-lock" style="font-size:.8rem"></i>
+        </span>
+    </label>
+    <div style="position:relative">
+        <input type="number" step="0.001" id="ingredienteStock" disabled
+            style="width:100%; cursor:pointer; background:var(--input-bg); color:var(--text-dark); border:1px solid var(--border); border-radius:8px; padding:.65rem .9rem"
+            title="Haz clic para desbloquear (requiere contraseña de administrador)"
+            onclick="window.mostrarModalContraseñaStock()">
+    </div>
+</div>
 
                 <!-- Mercancía a agregar + Unidad -->
                 <div class="form-group">
@@ -2858,17 +2890,17 @@ html.dark-theme {
             </form>
         </div>
         <div class="modal-footer" style="display:flex; justify-content:space-between; align-items:center">
-            <button class="btn-icon delete" id="deleteIngredienteBtn" type="button"
-                style="display:none; padding:.5rem 1rem; border-radius:8px; background:var(--danger); color:#fff; border:none; cursor:pointer"
-                onclick="window._eliminarIngredienteDesdeModal()"
-                title="Eliminar este ingrediente">
-                <i class="fas fa-trash"></i> Eliminar
-            </button>
-            <div style="display:flex; gap:.75rem">
-                <button class="btn-secondary" id="cancelIngrediente" type="button">Cancelar</button>
-                <button class="btn-primary" id="saveIngrediente" type="button">Guardar</button>
-            </div>
-        </div>
+    <button class="btn-primary" id="deleteIngredienteBtn" type="button"
+        style="display:none; padding:.6rem 1.2rem; border-radius:8px; background:var(--danger); color:#fff; border:none; cursor:pointer; font-size:.85rem; font-weight:600"
+        onclick="window._eliminarIngredienteDesdeModal()"
+        title="Eliminar este ingrediente">
+        <i class="fas fa-trash"></i> Eliminar
+    </button>
+    <div style="display:flex; gap:.75rem">
+        <button class="btn-secondary" id="cancelIngrediente" type="button">Cancelar</button>
+        <button class="btn-primary" id="saveIngrediente" type="button">Guardar</button>
+    </div>
+</div>
     </div>
 </div>
     
@@ -4271,11 +4303,11 @@ window.verificarStockCritico = async function() {
         _si.value = '0'; 
         _si.style.background = ''; 
         _si.style.cursor = 'text';
+        _si.onclick = null;  // En modo nuevo no necesita abrir modal
     }
     if (_li) { 
         _li.innerHTML = '<i class="fas fa-lock-open" style="font-size:.8rem; color:var(--success)"></i>';
         _li.style.cursor = 'default';
-        _li.onclick = null;  // En modo nuevo no necesita abrir modal de contraseña
     }
     if (_ud) { _ud.style.display = 'none'; }
     if (_unlockDiv) { _unlockDiv.style.display = 'none'; }
@@ -4321,7 +4353,7 @@ window.verificarStockCritico = async function() {
     const _sp = document.getElementById('stockTotalPreview'); if (_sp) _sp.textContent = '';
     const _sc = document.getElementById('stockConversionPreview'); if (_sc) _sc.textContent = '';
     
-    // Stock bloqueado al abrir (usar modal de contraseña)
+    // Stock bloqueado al abrir - el input tiene onclick que llama a mostrarModalContraseñaStock
     const _si = document.getElementById('ingredienteStock');
     const _li = document.getElementById('stockLockIcon');
     const _ud = document.getElementById('stockUnlockInline');
@@ -4331,14 +4363,14 @@ window.verificarStockCritico = async function() {
         _si.disabled = true;
         _si.style.background = 'var(--input-bg)';
         _si.style.cursor = 'pointer';
+        _si.onclick = function() { window.mostrarModalContraseñaStock(); };
     }
     if (_li) {
         _li.innerHTML = '<i class="fas fa-lock" style="font-size:.8rem"></i>';
-        _li.style.cursor = 'pointer';
-        _li.onclick = function() { window.mostrarModalContraseñaStock(); };
+        _li.style.cursor = 'default';
     }
-    if (_ud) { _ud.style.display = 'none'; }  // Ocultar el inline unlock
-    if (_unlockDiv) { _unlockDiv.style.display = 'none'; }  // Ocultar el div de desbloqueo
+    if (_ud) { _ud.style.display = 'none'; }
+    if (_unlockDiv) { _unlockDiv.style.display = 'none'; }
     
     // Mostrar botón Eliminar (solo en edición)
     const _delBtn = document.getElementById('deleteIngredienteBtn');
@@ -4373,9 +4405,10 @@ window.mostrarModalContraseñaStock = function() {
     }, 100);
 };
 
-window.verificarContraseñaStock = function() {
+window.verificarContraseñaStock = async function() {
     const pwd = document.getElementById('stockPasswordModalInput')?.value;
     const errorEl = document.getElementById('passwordStockError');
+    const btnConfirm = document.getElementById('confirmPasswordStockBtn');
     
     if (!pwd) {
         if (errorEl) {
@@ -4385,38 +4418,118 @@ window.verificarContraseñaStock = function() {
         return;
     }
     
-    // Verificar con la contraseña de admin
-    const adminPassword = window.configGlobal?.admin_password;
+    // Deshabilitar botón mientras se valida
+    if (btnConfirm) {
+        btnConfirm.disabled = true;
+        btnConfirm.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Validando...';
+    }
     
-    if (pwd === adminPassword) {
-        // Contraseña correcta - desbloquear campo
-        const stockInput = document.getElementById('ingredienteStock');
-        const lockIcon = document.getElementById('stockLockIcon');
+    try {
+        // Consultar la contraseña del admin desde la tabla usuarios
+        const { data, error } = await window.supabaseClient
+            .from('usuarios')
+            .select('username, rol, password_hash')
+            .eq('rol', 'admin')
+            .maybeSingle();
         
-        if (stockInput) {
-            stockInput.disabled = false;
-            stockInput.style.background = '';
-            stockInput.style.cursor = 'text';
-            stockInput.focus();
+        if (error) throw error;
+        
+        if (!data) {
+            // Fallback: usar configGlobal.admin_password si existe
+            const adminPassword = window.configGlobal?.admin_password;
+            if (pwd === adminPassword) {
+                await _desbloquearStock();
+                return;
+            }
+            if (errorEl) {
+                errorEl.textContent = 'No se encontró usuario administrador en el sistema';
+                errorEl.style.display = 'block';
+            }
+            return;
         }
         
-        if (lockIcon) {
-            lockIcon.innerHTML = '<i class="fas fa-lock-open" style="font-size:.8rem; color:var(--success)"></i>';
-            lockIcon.style.cursor = 'default';
-            lockIcon.onclick = null;
+        // Verificar contraseña usando la función RPC verify_user_credentials
+        const { data: authData, error: authError } = await window.supabaseClient
+            .rpc('verify_user_credentials', {
+                p_username: data.username,
+                p_password: pwd
+            });
+        
+        if (authError) {
+            console.error('Error en verificación:', authError);
+            // Fallback: comparación simple con configGlobal.admin_password
+            const adminPassword = window.configGlobal?.admin_password;
+            if (pwd === adminPassword) {
+                await _desbloquearStock();
+                return;
+            }
+            if (errorEl) {
+                errorEl.textContent = 'Error al validar la contraseña';
+                errorEl.style.display = 'block';
+            }
+            return;
         }
         
-        // Ocultar inline unlock si existe
-        const unlockInline = document.getElementById('stockUnlockInline');
-        if (unlockInline) unlockInline.style.display = 'none';
+        if (authData && authData.success === true) {
+            await _desbloquearStock();
+        } else {
+            if (errorEl) {
+                errorEl.textContent = 'Contraseña incorrecta. Intenta de nuevo.';
+                errorEl.style.display = 'block';
+            }
+            document.getElementById('stockPasswordModalInput')?.focus();
+            document.getElementById('stockPasswordModalInput')?.select();
+        }
         
-        // Cerrar modal
-        window.cerrarModal('passwordStockModal');
+    } catch (e) {
+        console.error('Error verificando contraseña:', e);
+        // Fallback: usar configGlobal.admin_password
+        const adminPassword = window.configGlobal?.admin_password;
+        if (pwd === adminPassword) {
+            await _desbloquearStock();
+        } else {
+            if (errorEl) {
+                errorEl.textContent = 'Error al validar la contraseña';
+                errorEl.style.display = 'block';
+            }
+        }
+    } finally {
+        if (btnConfirm) {
+            btnConfirm.disabled = false;
+            btnConfirm.innerHTML = 'Confirmar';
+        }
+    }
+};
+
+// Función auxiliar para desbloquear el stock
+async function _desbloquearStock() {
+    const stockInput = document.getElementById('ingredienteStock');
+    const lockIcon = document.getElementById('stockLockIcon');
+    
+    if (stockInput) {
+        stockInput.disabled = false;
+        stockInput.style.background = '';
+        stockInput.style.cursor = 'text';
+        stockInput.focus();
+    }
+    
+    if (lockIcon) {
+        lockIcon.innerHTML = '<i class="fas fa-lock-open" style="font-size:.8rem; color:var(--success)"></i>';
+        lockIcon.style.cursor = 'default';
+    }
+    
+    // Ocultar inline unlock si existe
+    const unlockInline = document.getElementById('stockUnlockInline');
+    if (unlockInline) unlockInline.style.display = 'none';
+    
+    // Cerrar modal
+    window.cerrarModal('passwordStockModal');
+    
+    // Mostrar mensaje de éxito
+    window.mostrarToast('🔓 Stock desbloqueado. Puedes editar la cantidad.', 'success');
+}
         
-        // Mostrar mensaje de éxito
-        window.mostrarToast('🔓 Stock desbloqueado. Puedes editar la cantidad.', 'success');
-        
-    } else {
+     else {
         // Contraseña incorrecta
         if (errorEl) {
             errorEl.textContent = 'Contraseña incorrecta. Intenta de nuevo.';
@@ -4440,17 +4553,17 @@ window.resetearBloqueoStock = function() {
     const unlockInline = document.getElementById('stockUnlockInline');
     const unlockDiv = document.getElementById('stockUnlock');
     
-    // Solo si es modo edición (el campo estaba bloqueado)
-    if (stockInput && stockInput.disabled === true) {
-        stockInput.disabled = false;
-        stockInput.style.background = '';
-        stockInput.style.cursor = 'text';
+    // Solo si es modo edición y el campo estaba bloqueado, restaurar a bloqueado
+    if (stockInput && stockInput.disabled === false && window.ingredienteEditandoId) {
+        stockInput.disabled = true;
+        stockInput.style.background = 'var(--input-bg)';
+        stockInput.style.cursor = 'pointer';
+        stockInput.onclick = function() { window.mostrarModalContraseñaStock(); };
     }
     
-    if (lockIcon) {
-        lockIcon.innerHTML = '<i class="fas fa-lock-open" style="font-size:.8rem; color:var(--success)"></i>';
+    if (lockIcon && window.ingredienteEditandoId) {
+        lockIcon.innerHTML = '<i class="fas fa-lock" style="font-size:.8rem"></i>';
         lockIcon.style.cursor = 'default';
-        lockIcon.onclick = null;
     }
     
     if (unlockInline) unlockInline.style.display = 'none';
