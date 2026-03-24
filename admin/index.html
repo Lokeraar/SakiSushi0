@@ -3022,48 +3022,49 @@ window._irAMesoneros = function() {
             }).join('');
         };
         window.renderizarPropinas = function() {
-            const total = window.propinas.reduce((s, p) => s + (p.monto_bs || 0), 0);
-            const cantidad = window.propinas.length;
-            const promedio = cantidad > 0 ? total / cantidad : 0;
-            
-            document.getElementById('propinasTotal').textContent = window.formatBs(total);
-            document.getElementById('propinasCantidad').textContent = cantidad;
-            document.getElementById('propinasPromedio').textContent = window.formatBs(promedio);
-            document.getElementById('propinasHoyDashboard').textContent = window.formatBs(total);
-            
-            const tbody = document.getElementById('propinasTableBody');
-            if (tbody) {
-                tbody.innerHTML = window.propinas.map(p => `<tr><td>${new Date(p.fecha).toLocaleString('es-VE', { timeZone: 'America/Caracas' })}</td><td>${p.mesoneros?.nombre || 'N/A'}</td><td>${p.mesa || 'N/A'}</td><td>${p.metodo}</td><td>${window.formatBs(p.monto_bs)}</td><td>${p.cajero || 'N/A'}</td></tr>`).join('');
-            }
-            
-            const ranking = {};
-            window.propinas.forEach(p => {
-                const nombre = p.mesoneros?.nombre || 'N/A';
-                ranking[nombre] = (ranking[nombre] || 0) + p.monto_bs;
-            });
-            
-            const rankingHtml = Object.entries(ranking)
-                .sort((a, b) => b[1] - a[1])
-                .map(([n, m], i) => `<div class="ranking-bar"><div class="ranking-position">${i + 1}</div><div class="ranking-info"><div class="ranking-name">${n}</div><div class="ranking-cantidad">${window.formatBs(m)}</div></div></div>`)
-                .join('');
-            
-            document.getElementById('mesonerosRanking').innerHTML = rankingHtml || '<p>No hay datos</p>';
-        };
-
-        window.verificarStockCritico = async function() {
-            try {
-                const { data, error } = await window.supabaseClient.rpc('verificar_stock_critico');
-                if (error) throw error;
-                const stockCriticoDiv = document.getElementById('stockCritico');
-                if (data && data.length > 0) {
-                    stockCriticoDiv.innerHTML = data.map(item => `<div class="alert-item critical"><span><strong>${item.nombre}</strong><br>Stock: ${item.stock_actual} / Mínimo: ${item.stock_minimo} (Faltan ${item.unidades_faltantes})</span><button class="btn-small" onclick="window.agregarStock('${item.ingrediente_id}')"><i class="fas fa-plus"></i> Agregar</button></div>`).join('');
-                    document.getElementById('alertasStock').textContent = data.length;
-                } else {
-                    stockCriticoDiv.innerHTML = '<p>No hay alertas de stock</p>';
-                    document.getElementById('alertasStock').textContent = '0';
-                }
-            } catch (e) { console.error('Error verificando stock crítico:', e); }
-        };
+    const total = window.propinas.reduce((s, p) => s + (p.monto_bs || 0), 0);
+    const cantidad = window.propinas.length;
+    const promedio = cantidad > 0 ? total / cantidad : 0;
+    
+    document.getElementById('propinasTotal').textContent = window.formatBs(total);
+    document.getElementById('propinasCantidad').textContent = cantidad;
+    document.getElementById('propinasPromedio').textContent = window.formatBs(promedio);
+    
+    // 🟢 CORRECCIÓN: Actualizar la tarjeta del Dashboard
+    const propinasDashboard = document.getElementById('propinasHoyDashboard');
+    if (propinasDashboard) {
+        propinasDashboard.textContent = window.formatBs(total);
+    }
+    
+    const tbody = document.getElementById('propinasTableBody');
+    if (tbody) {
+        tbody.innerHTML = window.propinas.map(p => `<tr>
+            <td>${new Date(p.fecha).toLocaleString('es-VE', { timeZone: 'America/Caracas' })}</td>
+            <td>${p.mesoneros?.nombre || 'N/A'}</td>
+            <td>${p.mesa || 'N/A'}</td>
+            <td>${p.metodo}</td>
+            <td>${window.formatBs(p.monto_bs)}</td>
+            <td>${p.cajero || 'N/A'}</td>
+        </tr>`).join('');
+    }
+    
+    // Ranking (si existe)
+    const ranking = {};
+    window.propinas.forEach(p => {
+        const nombre = p.mesoneros?.nombre || 'N/A';
+        ranking[nombre] = (ranking[nombre] || 0) + p.monto_bs;
+    });
+    
+    const rankingHtml = Object.entries(ranking)
+        .sort((a, b) => b[1] - a[1])
+        .map(([n, m], i) => `<div class="ranking-bar"><div class="ranking-position">${i + 1}</div><div class="ranking-info"><div class="ranking-name">${n}</div><div class="ranking-cantidad">${window.formatBs(m)}</div></div></div>`)
+        .join('');
+    
+    const rankingContainer = document.getElementById('mesonerosRanking');
+    if (rankingContainer) {
+        rankingContainer.innerHTML = rankingHtml || '<p>No hay datos</p>';
+    }
+};
 
 
 
@@ -5282,45 +5283,50 @@ window._abrirDetalleDeliverysAdmin = async function() {
         };
 
         document.addEventListener('DOMContentLoaded', async () => {
-            // Inicializar tema
-            window.initTheme();
-            
-            if (window.restaurarSesionAdmin()) {
-                window.mostrarPanel();
-                setTimeout(async () => {
-                    try {
-                        await window.cargarConfiguracionInicial();
-                        await window.cargarMenu();
-                        await window.cargarInventario();
-                        await window.cargarUsuarios();
-                        await window.cargarQRs();
-                        await window.cargarReportes();
-                        await window.cargarPedidosRecientes();
-                        await window.cargarMesoneros();
-                        await window.cargarDeliverys();
-                        await window.cargarPropinas();
-                        window.setupEventListeners();
-                        window.setupRealtimeSubscriptions();
-                        window.setupStockRealtime();
-                        window.restaurarWifiPersistente();
-                        window._registrarPushAdmin();
-                        window._verificarTasaDeHoy((tasa) => {
-                            document.getElementById('tasaBaseInput').value = tasa;
-                            window.configGlobal.tasa_cambio = tasa;
-                            window.recalcularTasaEfectiva();
-                            window._verificarAvisoLunes();
-                        });
-                        // Dentro del setTimeout después de cargar los datos
-await window._actualizarVentasHoyNeto();
-await window._actualizarDeliverysHoy();  // <-- AÑADIR ESTA LÍNEA
-setInterval(async () => { 
-    await window._actualizarVentasHoyNeto();
-    await window._actualizarDeliverysHoy();  // <-- AÑADIR ESTA LÍNEA
-}, 60000);
-            } else {
-                window.mostrarLogin();
+    // Inicializar tema
+    window.initTheme();
+    
+    if (window.restaurarSesionAdmin()) {
+        window.mostrarPanel();
+        setTimeout(async () => {
+            try {
+                await window.cargarConfiguracionInicial();
+                await window.cargarMenu();
+                await window.cargarInventario();
+                await window.cargarUsuarios();
+                await window.cargarQRs();
+                await window.cargarReportes();
+                await window.cargarPedidosRecientes();
+                await window.cargarMesoneros();
+                await window.cargarDeliverys();
+                await window.cargarPropinas();
+                window.setupEventListeners();
+                window.setupRealtimeSubscriptions();
+                window.setupStockRealtime();
+                window.restaurarWifiPersistente();
+                window._registrarPushAdmin();
+                window._verificarTasaDeHoy((tasa) => {
+                    document.getElementById('tasaBaseInput').value = tasa;
+                    window.configGlobal.tasa_cambio = tasa;
+                    window.recalcularTasaEfectiva();
+                    window._verificarAvisoLunes();
+                });
+                // Actualizar ventas y deliverys hoy
+                await window._actualizarVentasHoyNeto();
+                await window._actualizarDeliverysHoy();
+                setInterval(async () => { 
+                    await window._actualizarVentasHoyNeto();
+                    await window._actualizarDeliverysHoy();
+                }, 60000);
+               catch (e) { 
+                console.error('Error cargando datos:', e); 
+                window.mostrarToast('Error cargando datos: ' + e.message, 'error'); 
             }
-        });
+        }, 100);
+    } else {
+        window.mostrarLogin();
+    }
+});
 
         // 🧪 Simulador de lunes para probar aviso semanal (desde F12) 🧪
         window._simularLunes = function() {
