@@ -2840,12 +2840,12 @@ window._irAMesoneros = function() {
         };
 
         // ==================== FUNCIONES DE CARGA DE DATOS ====================
-        window.cargarConfiguracionInicial = async function() {
-            await window.cargarConfiguracion();
-            window.actualizarTasaUI();
-                    window.actualizarMenuTasaBanner();
-            // alertaStockMinimo se gestiona por ingrediente (campo Stock Mínimo en modal de inventario)
-        };
+window.cargarConfiguracionInicial = async function() {
+    await window.cargarConfiguracion();
+    window.actualizarTasaUI();
+    window.actualizarMenuTasaBanner();
+    // alertaStockMinimo se gestiona por ingrediente (campo Stock Mínimo en modal de inventario)
+};
 
         window.actualizarTasaUI = function() {
             document.getElementById('tasaBaseInput').value      = window.configGlobal.tasa_cambio || 400;
@@ -5318,7 +5318,7 @@ window._abrirDetalleDeliverysAdmin = async function() {
                     await window._actualizarVentasHoyNeto();
                     await window._actualizarDeliverysHoy();
                 }, 60000);
-               catch (e) { 
+            } catch (e) { 
                 console.error('Error cargando datos:', e); 
                 window.mostrarToast('Error cargando datos: ' + e.message, 'error'); 
             }
