@@ -3034,13 +3034,30 @@ window.cargarConfiguracion = async function() {
             recovery_email: 'admin@sakisushi.com'
         };
     }
-};
+};  // <--- ESTE PUNTO Y COMA ES IMPORTANTE
 
 window.cargarConfiguracionInicial = async function() {
-    await window.cargarConfiguracion();
-    window.actualizarTasaUI();
-    window.actualizarMenuTasaBanner();
-}; 
+    console.log('🔄 cargarConfiguracionInicial iniciada');
+    try {
+        await window.cargarConfiguracion();
+        console.log('✅ Configuración cargada');
+        if (typeof window.actualizarTasaUI === 'function') {
+            window.actualizarTasaUI();
+            console.log('✅ actualizarTasaUI ejecutada');
+        } else {
+            console.warn('⚠️ actualizarTasaUI no es función');
+        }
+        if (typeof window.actualizarMenuTasaBanner === 'function') {
+            window.actualizarMenuTasaBanner();
+            console.log('✅ actualizarMenuTasaBanner ejecutada');
+        } else {
+            console.warn('⚠️ actualizarMenuTasaBanner no es función');
+        }
+        console.log('✅ cargarConfiguracionInicial completada');
+    } catch (e) {
+        console.error('❌ Error en cargarConfiguracionInicial:', e);
+    }
+};
 
 window.actualizarTasaUI = function() {
     document.getElementById('tasaBaseInput').value      = window.configGlobal.tasa_cambio || 400;
