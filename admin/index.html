@@ -3034,7 +3034,7 @@ window.cargarConfiguracion = async function() {
             recovery_email: 'admin@sakisushi.com'
         };
     }
-};  // <--- ESTE PUNTO Y COMA ES IMPORTANTE
+};  
 
 window.cargarConfiguracionInicial = async function() {
     console.log('🔧 cargarConfiguracionInicial iniciada');
@@ -4543,7 +4543,7 @@ window.verificarContraseñaStock = async function() {
         if (authData && authData.success === true) {
             await _desbloquearStock();
         } else {
-            //  ESTA PARTE ES LA QUE FALTABA
+           
             if (errorEl) {
                 errorEl.textContent = 'Contraseña incorrecta. Intenta de nuevo.';
                 errorEl.style.display = 'block';
@@ -6306,7 +6306,7 @@ window._abrirDetalleVentasAdmin = async function() {
         console.error('Error abriendo detalle ventas admin:', e);
         window.mostrarToast('❌ Error al cargar el detalle de ventas', 'error');
     }
-}; // <--- ESTE PUNTO Y COMA ES EL QUE FALTA
+};
 
         // 📊 Helper: neto cobrado de un pedido (igual que cajero) 📊
         window._netoCobradoPedidoAdmin = function(pedido, tasa) {
@@ -6389,7 +6389,6 @@ window.actualizarStockCriticoHeader = function() {
     const container = document.getElementById('stockCriticoTags');
     if (!container) return;
     
-    // Obtener ingredientes con stock crítico (disponible <= mínimo)
     const criticos = (window.inventarioItems || []).filter(item => {
         const disponible = (item.stock || 0) - (item.reservado || 0);
         const minimo = item.minimo || 0;
@@ -6401,7 +6400,6 @@ window.actualizarStockCriticoHeader = function() {
         return;
     }
     
-    // Mostrar máximo de tags que quepan en una línea (se maneja con flex wrap)
     container.innerHTML = criticos.map(item => {
         const disponible = (item.stock || 0) - (item.reservado || 0);
         return `
@@ -6417,7 +6415,7 @@ window.actualizarStockCriticoHeader = function() {
             </span>
         `;
     }).join('');
-};
+}; 
 
 // Función para ir al ingrediente en la categoría Inventario
 window._irAIngrediente = function(ingredienteId) {
