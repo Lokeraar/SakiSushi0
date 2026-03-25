@@ -6061,6 +6061,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         };
 
         // ==================== MODAL DE DETALLE DE VENTAS (IDÉNTICO AL CAJERO) ====================
+// ==================== MODAL DE DETALLE DE VENTAS (IDÉNTICO AL CAJERO) ====================
 window._abrirDetalleVentasAdmin = async function() {
     try {
         const hoy = new Date(); 
@@ -6068,7 +6069,6 @@ window._abrirDetalleVentasAdmin = async function() {
         const manana = new Date(hoy); 
         manana.setDate(manana.getDate() + 1);
 
-        // Cargar ventas y pedidos del día
         const { data: ventasHoy } = await window.supabaseClient
             .from('ventas')
             .select('*')
@@ -6089,7 +6089,6 @@ window._abrirDetalleVentasAdmin = async function() {
         const tasa = window.configGlobal?.tasa_cambio || window.configGlobal?.tasa_efectiva || 400;
         const fmtBs = window.formatBs;
         
-        // Función neto cobrado (misma que usa el cajero)
         const _netoCobradoPedido = (pedido) => {
             if (!pedido) return 0;
             if (pedido.metodo_pago === 'invitacion') return 0;
@@ -6107,7 +6106,6 @@ window._abrirDetalleVentasAdmin = async function() {
             return Math.max(0, recibido - (pedido.vuelto_entregado || 0));
         };
         
-        // Calcular totales por método de pago
         let totalNeto = 0;
         let vt_ebs = 0, vt_eusd = 0, vt_pm = 0, vt_pv = 0;
         let vt_cond = 0, vt_favor = 0, vt_delivery = 0;
@@ -6171,7 +6169,6 @@ window._abrirDetalleVentasAdmin = async function() {
             }
         });
         
-        // Helper para mostrar fila de método de pago
         const vcol = (ico, label, val, color) => {
             if (val <= 0) return '';
             return `<div style="display:flex;align-items:center;gap:6px;padding:8px;background:rgba(0,0,0,.08);border-radius:8px;border-left:3px solid ${color}">
@@ -6183,7 +6180,6 @@ window._abrirDetalleVentasAdmin = async function() {
                     </div>`;
         };
         
-        // Detalle por cobro (lista de cada venta)
         const detallesCobros = ventasHoy.map(v => {
             const p = pedidosHoy.find(pd => pd.id === v.pedido_id);
             if (!p) return '';
@@ -6222,7 +6218,6 @@ window._abrirDetalleVentasAdmin = async function() {
                     </div>`;
         }).join('');
         
-        // Construir contenido del modal (igual al del cajero)
         const contenido = `
             <div style="margin-bottom:1rem;padding:.85rem;background:var(--table-header);border-radius:10px">
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.4rem">
@@ -6246,7 +6241,7 @@ window._abrirDetalleVentasAdmin = async function() {
                 ${vt_delivery > 0 ? vcol('fas fa-motorcycle', 'Deliverys', vt_delivery, 'var(--delivery)') : ''}
                 ${vt_inv_count > 0 ? `
                     <div style="grid-column:1/-1;padding:8px;background:rgba(0,0,0,.06);border-radius:8px;border-left:3px solid var(--propina);font-size:.82rem">
-                        <span style="color:var(--propina);font-weight:700">🎁 Invitaciones: ${vt_inv_count}</span>
+                        <span style="color:var(--propina);font-weight:700"> Invitaciones: ${vt_inv_count}</span>
                         <span style="color:var(--text-muted);font-size:.75rem;margin-left:.5rem">Valor real: ${fmtBs(vt_inv_acum)}</span>
                     </div>
                 ` : ''}
@@ -6262,7 +6257,6 @@ window._abrirDetalleVentasAdmin = async function() {
             ` : ''}
         `;
         
-        // Crear y mostrar modal
         const modal = document.createElement('div');
         modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:1rem';
         modal.innerHTML = `
@@ -6274,7 +6268,7 @@ window._abrirDetalleVentasAdmin = async function() {
                     </h3>
                     <button onclick="this.closest('[style*=fixed]').remove()" 
                         style="background:var(--table-header);border:none;border-radius:8px;width:30px;height:30px;cursor:pointer;font-size:.9rem;color:var(--text-muted)">
-                        ✕
+                        
                     </button>
                 </div>
                 <div style="padding:1.25rem">${contenido}</div>
@@ -6293,9 +6287,9 @@ window._abrirDetalleVentasAdmin = async function() {
         
     } catch (e) {
         console.error('Error abriendo detalle ventas admin:', e);
-        window.mostrarToast('❌ Error al cargar el detalle de ventas', 'error');
+        window.mostrarToast(' Error al cargar el detalle de ventas', 'error');
     }
-};
+}; // <--- ESTE PUNTO Y COMA ES EL QUE FALTA
 
         // 🟢 Helper: neto cobrado de un pedido (igual que cajero) 🟢
         window._netoCobradoPedidoAdmin = function(pedido, tasa) {
@@ -6448,7 +6442,7 @@ window._irAIngrediente = function(ingredienteId) {
             }, 300);
         }
     }, 200);
-};
+});
 
     </script>
     <!-- Modal para contraseña de stock -->
@@ -6477,4 +6471,5 @@ window._irAIngrediente = function(ingredienteId) {
     </div>
 </div>
 </body>
+}
 </html>
