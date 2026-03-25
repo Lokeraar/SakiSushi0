@@ -4411,33 +4411,20 @@ window.verificarStockCritico = async function() {
     if (_delBtn) _delBtn.style.display = 'inline-flex';
     
     document.getElementById('ingredienteModal').classList.add('active');
-
-//  NUEVO: Agregar evento de clic al div contenedor del stock
-setTimeout(function() {
-    const divContenedor = document.querySelector('#stockOverlay div');
-    const inputStock = document.getElementById('ingredienteStock');
     
-    if (divContenedor) {
-        console.log('Asignando evento click al contenedor del stock');
-        
-        // Hacer que el input no intercepte clics
-        if (inputStock) {
-            inputStock.style.pointerEvents = 'none';
+    //  NUEVO: Agregar evento de clic al div contenedor del stock
+    setTimeout(function() {
+        const divContenedor = document.querySelector('#stockOverlay div');
+        if (divContenedor) {
+            console.log('Asignando evento click al contenedor del stock');
+            divContenedor.onclick = function(e) {
+                e.stopPropagation();
+                console.log('Click en contenedor de stock');
+                window.mostrarModalContraseñaStock();
+            };
         }
-        
-        // Limpiar onclick anterior y asignar nuevo
-        divContenedor.onclick = null;
-        divContenedor.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            console.log('Click en contenedor de stock');
-            window.mostrarModalContraseñaStock();
-        });
-        
-        // También agregar estilo visual para indicar que es clickeable
-        divContenedor.style.cursor = 'pointer';
-    }
-}, 100);
+    }, 100);
+};
 
         window.desbloquearStockClick = function(inputEl) {
             if (!inputEl.disabled) return; // ya desbloqueado
