@@ -134,7 +134,7 @@
                     window.platillosNotificados[platillo.id] = 'disponible';
                     localStorage.setItem('saki_platillos_notificados', JSON.stringify(window.platillosNotificados));
                     
-                    const titulo = `🍣 ${platillo.nombre} disponible de nuevo!`;
+                    const titulo = `📢 ${platillo.nombre} disponible de nuevo!`;
                     const mensaje = `Ya tenemos ${platillo.nombre} en stock. ¡Pide ahora!`;
                     
                     try {
@@ -172,7 +172,7 @@
                     schema: 'public',
                     table: 'inventario'
                 }, async (payload) => {
-                    console.log('📦 Cambio en inventario detectado:', payload);
+                    console.log('🔄 Cambio en inventario detectado:', payload);
                     const index = window.inventarioItems.findIndex(i => i.id === payload.new.id);
                     if (index !== -1) {
                         window.inventarioItems[index] = payload.new;
@@ -183,7 +183,7 @@
                     await window.recalcularStockPlatillos();
                     if (payload.new.stock > 0 && payload.old?.stock <= 0) {
                         await window.enviarNotificacionPush(
-                            '📦 Stock actualizado',
+                            '📢 Stock actualizado',
                             `El ingrediente ${payload.new.nombre} está disponible nuevamente. ¡Revisa el menú!`
                         );
                     }
@@ -193,7 +193,7 @@
                     schema: 'public',
                     table: 'menu'
                 }, async (payload) => {
-                    console.log('🍣 Cambio en menú detectado:', payload);
+                    console.log('🔄 Cambio en menú detectado:', payload);
                     await window.cargarMenu();
                 })
                 .subscribe();
@@ -281,7 +281,7 @@
                 });
                 const data = await response.json();
                 if (!response.ok) throw new Error(data.error || `Error ${response.status}`);
-                if (!data.success) { window.mostrarToast('🔑 ' + (data.error || 'Contraseña incorrecta'), 'error'); return; }
+                if (!data.success) { window.mostrarToast('🔒 ' + (data.error || 'Contraseña incorrecta'), 'error'); return; }
                 if (data.user.rol !== 'admin') { window.mostrarToast('Acceso denegado. Se requiere rol de administrador.', 'error'); return; }
                 if (sessionStorage.getItem('admin_authenticated') === 'true') { window.mostrarToast('⚠️⚠️ Ya hay una sesión de administrador activa', 'warning'); return; }
 
@@ -293,7 +293,7 @@
                 window.supabaseClient = window.inicializarSupabaseCliente(window.jwtToken);
                 document.getElementById('loginContainer').style.display = 'none';
                 document.getElementById('panelContainer').classList.add('active');
-                window.mostrarToast('🔐 Bienvenido Administrador', 'success');
+                window.mostrarToast('👋 Bienvenido Administrador', 'success');
                 
                 setTimeout(async () => {
                     try {
@@ -323,10 +323,10 @@
     </script>
     
     <style>
-    /* 🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣
+    /* ============================================
        SAKI SUSHI ADMIN — Estilo Premium Restaurante
        Paleta: Rojo #D32F2F · Negro #1a1a2e · Dorado #FF9800
-       🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣 */
+       ============================================ */
     @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap');
 
 :root {
@@ -432,7 +432,7 @@ html.dark-theme {
         transition: background .3s ease, color .3s ease;
     }
 
-    /* 🍣 Login 🍣 */
+    /* 🔐 Login 🔐 */
     .login-container {
         display: flex;
         align-items: center;
@@ -501,11 +501,11 @@ html.dark-theme {
     .recovery-link a { color: rgba(255,255,255,.6); font-size: .85rem; text-decoration: none; }
     .recovery-link a:hover { color: var(--accent); }
 
-    /* 🍣 Panel Container 🍣 */
+    /* 📦 Panel Container 📦 */
     .panel-container { display: none; flex-direction: column; min-height: 100vh; width: 100%; overflow-x: hidden; background: var(--body-bg); }
     .panel-container.active { display: flex; }
 
-    /* 🍣 Header 🍣 */
+    /* 🧭 Header 🧭 */
     .header {
         background: var(--header-bg);
         color: var(--header-text);
@@ -611,7 +611,7 @@ html.dark-theme {
     html.dark-theme .theme-toggle { background: rgba(255,255,255,.1); color: #FFB300; border-color: rgba(255,255,255,.15); }
     html.dark-theme .theme-toggle:hover { background: rgba(255,255,255,.2); }
 
-    /*  Tasa Cards Bar (dentro del Dashboard)  */
+    /* 📊 Tasa Cards Bar (dentro del Dashboard) 📊 */
 .tasa-cards-bar {
     background: var(--card-bg);
     padding: 1rem 1.25rem;
@@ -699,7 +699,7 @@ html.dark-theme {
     white-space: nowrap;
 }
     
-    /* 🍣 Toggle Switch 🍣 */
+    /* 🔘 Toggle Switch 🔘 */
     .toggle-switch {
         position: relative;
         display: inline-block;
@@ -786,7 +786,7 @@ html.dark-theme {
         .tcb-value-big { font-size: .95rem; }
     }
 
-    /* 🍣 Navigation Tabs 🍣 */
+    /* 🧭 Navigation Tabs 🧭 */
     .tabs {
         background: var(--tabs-bg);
         display: flex;
@@ -817,7 +817,7 @@ html.dark-theme {
     html.dark-theme .tab:hover { color: rgba(255,255,255,.85); background: rgba(255,255,255,.05); }
     .tab.active { color: var(--tab-active); border-bottom-color: var(--tab-active); font-weight: 700; }
 
-    /* 🍣 Content 🍣 */
+    /* 📄 Content 📄 */
     .content { padding: 2rem; flex: 1; background: var(--body-bg); }
     .tab-pane { display: none; }
     .tab-pane.active { display: block; }
@@ -834,7 +834,7 @@ html.dark-theme {
     }
     .section-title i { color: var(--primary); }
 
-    /* 🍣 Dashboard Cards 🍣 */
+    /* 📊 Dashboard Cards 📊 */
     .dashboard-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -857,7 +857,7 @@ html.dark-theme {
     .card-value { font-size: 1.6rem; font-weight: 700; color: var(--text-dark); }
     .card-value.accent { color: var(--primary); }
 
-    /* 🍣 Buttons 🍣 */
+    /* 🔘 Buttons 🔘 */
     .btn-primary {
         display: inline-flex; align-items: center; gap: .4rem;
         padding: .6rem 1.3rem;
@@ -884,7 +884,7 @@ html.dark-theme {
         cursor: pointer; transition: var(--transition);
     }
 
-    /* 🍣 Forms 🍣 */
+    /* 📝 Forms 📝 */
     .form-group { margin-bottom: 1rem; }
     .form-group label { display: block; font-size: .82rem; font-weight: 600; color: var(--text-muted); margin-bottom: .35rem; }
     .form-group input:not([type=checkbox]):not([type=radio]),
@@ -907,7 +907,7 @@ html.dark-theme {
     }
     .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
 
-    /* 🍣 Cards (inventario, menu, qr) 🍣 */
+    /* 🃏 Cards (inventario, menu, qr) 🃏 */
     .inventario-grid, .menu-grid, .qr-grid {
         display: grid;
         grid-template-columns: repeat(2, 1fr);
@@ -960,13 +960,13 @@ html.dark-theme {
         border-left: 3px solid var(--accent);
     }
 
-    /* 🍣 Menu card 🍣 */
+    /* 🍱 Menu card 🍱 */
     .menu-card-img { width: 100%; height: 140px; object-fit: cover; border-radius: 8px; margin-bottom: .75rem; }
     .menu-card-nombre { font-weight: 700; font-size: .95rem; color: var(--text-dark); margin-bottom: .25rem; }
     .menu-card-precio { font-size: 1rem; font-weight: 700; color: var(--primary); margin-bottom: .5rem; }
     .menu-card-actions { display: flex; gap: .5rem; flex-wrap: wrap; }
 
-    /* 🍣 Usuarios grid 🍣 */
+    /* 👥 Usuarios grid 👥 */
     .usuarios-grid {
         display: grid;
         grid-template-columns: 1fr;
@@ -990,7 +990,7 @@ html.dark-theme {
     .usuario-info { font-size: .8rem; color: var(--text-muted); margin-top: .2rem; }
     .usuario-actions { display: flex; gap: .5rem; align-items: center; }
 
-    /* 🍣 Deliverys, Mesoneros, Propinas 🍣 */
+    /* 🛵 Deliverys, Mesoneros, Propinas 🛵 */
     .delivery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
     .delivery-card {
         background: var(--card-bg); border-radius: var(--radius);
@@ -1038,7 +1038,7 @@ html.dark-theme {
     .propinas-tabla td { padding: .75rem 1rem; border-bottom: 1px solid #f0f0f0; font-size: .85rem; }
     .propinas-tabla tr:hover td { background: #f9f9f9; }
 
-    /* 🍣 Charts 🍣 */
+    /* 📊 Charts 📊 */
     .charts-grid {
         display: grid;
         grid-template-columns: 1fr;
@@ -1049,7 +1049,7 @@ html.dark-theme {
     .chart-container h3 { font-size: 1rem; color: var(--text-dark); margin-bottom: 1rem; font-weight: 600; }
     .chart-wrapper { position: relative; height: 220px; }
 
-    /* 🍣 Data Table 🍣 */
+    /* 📋 Data Table 📋 */
     .data-table { width: 100%; border-collapse: collapse; background: var(--card-bg); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow-sm); }
     .data-table th { background: var(--table-header); color: var(--table-header-text); padding: .75rem 1rem; text-align: left; font-size: .82rem; font-weight: 600; }
   html.dark-theme .data-table th { background: var(--secondary); color: #fff; }
@@ -1057,13 +1057,13 @@ html.dark-theme {
     .data-table tr:hover td { background: #f9f9f9; }
     .table-responsive { overflow-x: auto; }
 
-    /* 🍣 Alerts / Stock 🍣 */
+    /* ⚠️ Alerts / Stock ⚠️ */
     .alert-list { display: flex; flex-direction: column; gap: .5rem; }
     .alert-item { display: flex; justify-content: space-between; align-items: center; padding: .75rem 1rem; border-radius: 8px; }
     .alert-item.critical { background: #ffebee; border-left: 4px solid var(--danger); }
     .critical { color: var(--danger); font-weight: 600; }
 
-    /* 🍣 Modals 🍣 */
+    /* 🔲 Modals 🔲 */
     .modal { display: none; position: fixed; top:0; left:0; right:0; bottom:0; background: rgba(0,0,0,.6); z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
     .modal.active { display: flex; }
     .modal-content { background: var(--card-bg); border-radius: 12px; width: 90%; max-width: 580px; max-height: 90vh; overflow-y: auto; box-shadow: var(--shadow-lg); }
@@ -1077,22 +1077,22 @@ html.dark-theme {
     .modal-body { padding: 1.5rem; }
     .modal-footer { padding: 1rem 1.5rem; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: .75rem; }
 
-    /* 🍣 Image preview 🍣 */
+    /* 🖼️ Image preview 🖼️ */
     .image-preview { display: flex; align-items: center; gap: 1rem; margin-top: .5rem; }
     .image-preview img { width: 80px; height: 80px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border); }
 
-    /* 🍣 Password overlay 🍣 */
+    /* 🔐 Password overlay 🔐 */
     .password-overlay { position: relative; }
     .password-protected input:disabled { background: #f5f5f5; cursor: not-allowed; }
     .password-unlock { display: flex; gap: .5rem; margin-top: .4rem; }
     .password-unlock input { flex: 1; }
     .password-unlock button { white-space: nowrap; }
 
-    /* 🍣 Ingrediente rows 🍣 */
+    /* 🧂 Ingrediente rows 🧂 */
     .ingrediente-row { display: flex; gap: .5rem; align-items: flex-end; margin-bottom: .5rem; padding: .5rem; background: #f9f9f9; border-radius: 8px; }
     .ingrediente-row .form-group { margin-bottom: 0; flex: 1; }
 
-  /* 🍣 Toast 🍣 */
+  /* 🍞 Toast 🍞 */
   .toast {
   position: fixed; bottom: 1.5rem; right: 1.5rem;
   padding: .9rem 1.5rem; border-radius: 10px;
@@ -1107,18 +1107,18 @@ html.dark-theme {
     .toast.error   { background: var(--danger);  }
     .toast.warning { background: var(--warning); }
 
-    /* 🍣 Loading 🍣 */
+    /* ⏳ Loading ⏳ */
     .loading { display: flex; align-items: center; justify-content: center; padding: 3rem; }
     .loading-spinner { width: 36px; height: 36px; border: 3px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin .8s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* 🍣 Configuración 🍣 */
+    /* ⚙️ Configuración ⚙️ */
     .config-section { background: var(--card-bg); border-radius: var(--radius); padding: 1.5rem; box-shadow: var(--shadow-sm); margin-bottom: 1.5rem; border: 1px solid var(--border); }
     .config-section h3 { font-size: 1rem; font-weight: 700; color: var(--text-dark); margin-bottom: 1.2rem; padding-bottom: .6rem; border-bottom: 1px solid var(--border); }
 
-    /* 🍣 Responsive 🍣 */
+    /* 📱 Responsive 📱 */
 
-        /* 🍣 Dashboard lower grid 🍣 */
+        /* 📊 Dashboard lower grid 📊 */
         .dashboard-lower-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -1132,7 +1132,7 @@ html.dark-theme {
             padding-bottom: .4rem;
             border-bottom: 2px solid var(--border);
         }
-        /* 🍣 Tasa bar fechas 🍣 */
+        /* 💱 Tasa bar fechas 💱 */
         .tasa-fechas {
             flex-wrap: wrap;
             align-items: center;
@@ -1150,7 +1150,7 @@ html.dark-theme {
             font-size: .82rem;
             font-family: 'Montserrat', sans-serif;
         }
-        /* 🍣 Mobile overrides 🍣 */
+        /* 📱 Mobile overrides 📱 */
         @media (max-width: 768px) {
             .dashboard-grid {
                 grid-template-columns: 1fr 1fr !important;
@@ -1159,7 +1159,7 @@ html.dark-theme {
                 grid-template-columns: 1fr;
             }
         }
-    /* 🍣 Dashboard lower grid 🍣 */
+    /* 📊 Dashboard lower grid 📊 */
         .dashboard-lower-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -1258,12 +1258,12 @@ html.dark-theme {
             word-break: break-word;
         }
 
-    /* 🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣
+    /* ============================================
        PREMIUM ADMIN DESIGN — Saki Sushi
        Paleta: Rojo #D32F2F · Negro #1a1a2e · Dorado #FF9800
-       🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣 */
+       ============================================ */
 
-    /* 🍣 Pane header universal 🍣 */
+    /* 🧩 Pane header universal 🧩 */
     .pane-header {
         display: flex;
         align-items: center;
@@ -1277,7 +1277,7 @@ html.dark-theme {
     .pane-header .section-title { margin-bottom: 0; padding-bottom: 0; border: none; }
     .pane-actions { display: flex; gap: .5rem; flex-wrap: wrap; }
 
-    /* 🍣 Dashboard cards mejoradas 🍣 */
+    /* 📊 Dashboard cards mejoradas 📊 */
     .dashboard-card {
         background: var(--card-bg);
         border-radius: 14px;
@@ -1314,7 +1314,7 @@ html.dark-theme {
         line-height: 1.1;
     }
 
-    /* 🍣 Dashboard lower grid 🍣 */
+    /* 📊 Dashboard lower grid 📊 */
     .lower-stock, .lower-pedidos {
         background: var(--card-bg);
         border-radius: 14px;
@@ -1334,7 +1334,7 @@ html.dark-theme {
         margin-bottom: 1rem;
     }
 
-    /* 🍣 Menú & Inventario grid cards 🍣 */
+    /* 🍱 Menú & Inventario grid cards 🍱 */
     .menu-card, .inventario-card {
         background: var(--card-bg);
         border-radius: 14px;
@@ -1413,7 +1413,7 @@ html.dark-theme {
         margin-top: auto;
     }
 
-    /* 🍣 Usuarios grid 🍣 */
+    /* 👥 Usuarios grid 👥 */
     .usuarios-grid {
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
@@ -1473,7 +1473,7 @@ html.dark-theme {
     .usuario-rol.cajero { background: #e3f2fd; color: var(--info); }
     .usuario-actions { display: flex; gap: .35rem; flex-shrink: 0; }
 
-    /* 🍣 Deliverys 🍣 */
+    /* 🛵 Deliverys 🛵 */
     .delivery-list {
         display: grid;
         grid-template-columns: 1fr;
@@ -1504,7 +1504,7 @@ html.dark-theme {
     .delivery-nombre { font-weight: 700; font-size: .9rem; color: var(--text-dark); flex: 1; }
     .delivery-actions { display: flex; gap: .35rem; flex-wrap: wrap; align-items: center; }
 
-    /* 🍣 Mesoneros grid 🍣 */
+    /* 👨‍🍳 Mesoneros grid 👨‍🍳 */
     .mesoneros-grid-OLD-REMOVED { display: none; }
     .mesonero-card {
         background: var(--card-bg);
@@ -1536,7 +1536,7 @@ html.dark-theme {
     .mesonero-card .mesonero-actions { display: flex; gap: .35rem; }
     .mesonero-nombre { font-weight: 700; font-size: .88rem; color: var(--text-dark); flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
 
-    /* 🍣 Propinas stats 🍣 */
+    /* 💰 Propinas stats 💰 */
     .propina-card {
         background: var(--card-bg);
         border-radius: 14px;
@@ -1558,7 +1558,7 @@ html.dark-theme {
         color: var(--text-muted); margin-top: .3rem;
     }
 
-    /* 🍣 QR grid 🍣 */
+    /* 🔲 QR grid 🔲 */
     .qr-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px,1fr)); gap: 1rem; }
     .qr-card {
         background: var(--card-bg);
@@ -1581,7 +1581,7 @@ html.dark-theme {
     }
     .qr-card-actions { display: flex; gap: .4rem; margin-top: .25rem; }
 
-    /* 🍣 Config pane 🍣 */
+    /* ⚙️ Config pane ⚙️ */
     .config-section {
         background: var(--card-bg);
         border-radius: 14px;
@@ -1604,7 +1604,7 @@ html.dark-theme {
         border-bottom: 1px solid var(--border);
     }
 
-    /* 🍣 Buttons refinement 🍣 */
+    /* 🔘 Buttons refinement 🔘 */
     .btn-sm {
         display: inline-flex; align-items: center; gap: .3rem;
         padding: .4rem .8rem;
@@ -1629,7 +1629,7 @@ html.dark-theme {
     .btn-icon.toggle-off { background: #fafafa; color: var(--text-muted); }
     .btn-icon.toggle-off:hover { background: #eee; }
 
-    /* 🍣 Reportes 🍣 */
+    /* 📊 Reportes 📊 */
     .reportes-filters {
         display: flex; gap: .75rem; flex-wrap: wrap;
         align-items: flex-end;
@@ -1654,7 +1654,7 @@ html.dark-theme {
         color: var(--text-muted); margin-bottom: 1rem;
     }
 
-    /* 🍣 Stock crítico badges 🍣 */
+    /* ⚠️ Stock crítico badges ⚠️ */
     .stock-badge {
         display: inline-flex; align-items: center; gap: .3rem;
         padding: .25rem .6rem;
@@ -1664,7 +1664,7 @@ html.dark-theme {
     .stock-badge.critico { background: #ffebee; color: var(--danger); }
     .stock-badge.bajo { background: #fff8e1; color: var(--warning); }
 
-    /* 🍣 Pedidos recientes 🍣 */
+    /* 📦 Pedidos recientes 📦 */
     .pedido-reciente {
         display: flex; align-items: center; gap: .75rem;
         padding: .6rem .75rem;
@@ -1682,7 +1682,7 @@ html.dark-theme {
         font-size: .75rem; flex-shrink: 0;
     }
 
-    /* 🍣 Content padding 🍣 */
+    /* 📄 Content padding 📄 */
     .content { padding: 1.5rem; }
     @media (max-width: 768px) {
         .content { padding: .85rem; }
@@ -1696,7 +1696,7 @@ html.dark-theme {
         .mesoneros-grid { grid-template-columns: 1fr; }
         .card-value { font-size: 1.6rem; font-weight: 800; color: var(--card-value-color, var(--text-dark)); }
     }
-    /* 🍣 pane-input (inline text input in pane-header) 🍣 */
+    /* 📝 pane-input (inline text input in pane-header) 📝 */
     .pane-input {
         flex: 1;
         min-width: 160px;
@@ -1713,7 +1713,7 @@ html.dark-theme {
     }
     .pane-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(211,47,47,.1); }
 
-    /* 🍣 btn-delivery 🍣 */
+    /* 🛵 btn-delivery 🛵 */
     .btn-delivery {
         display: inline-flex; align-items: center; gap: .4rem;
         padding: .6rem 1.3rem;
@@ -1725,7 +1725,7 @@ html.dark-theme {
     }
     .btn-delivery:hover { opacity: .88; transform: translateY(-1px); }
 
-    /* 🍣 table-section 🍣 */
+    /* 📋 table-section 📋 */
     .table-section {
         background: var(--card-bg);
         border-radius: 14px;
@@ -1746,7 +1746,7 @@ html.dark-theme {
         border-bottom: 1px solid var(--border);
     }
 
-    /* 🍣 QR generator card 🍣 */
+    /* 🔲 QR generator card 🔲 */
     .qr-generator-card {
         background: var(--card-bg);
         border-radius: 14px;
@@ -1776,7 +1776,7 @@ html.dark-theme {
         line-height: 1.45;
     }
 
-    /* 🍣 propinas-stats responsive 🍣 */
+    /* 📊 propinas-stats responsive 📊 */
     .propinas-stats {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
@@ -1787,7 +1787,7 @@ html.dark-theme {
         .propinas-stats { grid-template-columns: 1fr; }
         .qr-generator-grid { grid-template-columns: 1fr; }
     }
-    /* 🍣 Menu card v2 🍣 */
+    /* 🍱 Menu card v2 🍱 */
     .menu-card-v2 {
         background: var(--card-bg);
         border-radius: 14px;
@@ -1825,7 +1825,7 @@ html.dark-theme {
     .ing-tag-sin-stock { background: #ffebee; color: var(--danger); border-color: #ffcdd2; }
     .mc2-actions { display: flex; gap: .4rem; justify-content: flex-end; padding-top: .4rem; border-top: 1px solid var(--border); }
 
-    /* 🍣 Inventario card v2 🍣 */
+    /* 📦 Inventario card v2 📦 */
     .inventario-grid {
         display: block; /* overridden by JS-built panel */
     }
@@ -1861,7 +1861,7 @@ html.dark-theme {
     .inv-meta-val { font-size: .78rem; font-weight: 700; color: var(--text-dark); }
     .inv-meta-bs { font-size: .65rem; color: var(--text-muted); }
 
-    /* 🍣 Inventario buscador 🍣 */
+    /* 🔍 Inventario buscador 🔍 */
     .inv-search-wrap {
         position: relative;
         max-width: 380px;
@@ -1884,7 +1884,7 @@ html.dark-theme {
     }
     .inv-search-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(211,47,47,.1); }
 
-    /* 🍣 QR card v2 🍣 */
+    /* 🔲 QR card v2 🔲 */
     .qr-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; }
     .qr-card-v2 {
         background: var(--card-bg);
@@ -1910,9 +1910,9 @@ html.dark-theme {
     }
     .qr-del-btn:hover { background: var(--danger); color: #fff; }
 
-    /* 🍣 Reportes tabla resumen 🍣 */
+    /* 📊 Reportes tabla resumen 📊 */
     #ventasTableBody td { vertical-align: middle; }
-    /* 🍣 Tabs wrapper con chevrons 🍣 */
+    /* 🧭 Tabs wrapper con chevrons 🧭 */
     .tabs-wrapper {
         display: flex;
         align-items: stretch;
@@ -1945,7 +1945,7 @@ html.dark-theme {
     html.dark-theme .tabs-chevron-left, html.dark-theme .tabs-chevron-right { border-color: rgba(255,255,255,.08); }
     .tabs { flex: 1; overflow-x: auto; }
 
-    /* 🍣 btn-toggle (Activo/Inactivo) 🍣 */
+    /* 🔘 btn-toggle (Activo/Inactivo) 🔘 */
     .btn-toggle {
         display: inline-flex;
         align-items: center;
@@ -1961,10 +1961,10 @@ html.dark-theme {
         transition: var(--transition);
         min-width: 72px;
     }
-    /* btn-toggle-on: el elemento ESTÁ activo → el botón dice Inhabilitar → color rojo (advertencia) */
+    /* btn-toggle-on: el elemento ESTÁ activo 🔘 el botón dice Inhabilitar 🔴 color rojo (advertencia) */
     .btn-toggle-on  { background: #ffebee; color: var(--danger); border: 1px solid #ffcdd2; }
     .btn-toggle-on:hover  { background: var(--danger); color: #fff; }
-    /* btn-toggle-off: el elemento ESTÁ inactivo → el botón dice Activar → color verde (positivo) */
+    /* btn-toggle-off: el elemento ESTÁ inactivo 🔘 el botón dice Activar 🟢 color verde (positivo) */
     .btn-toggle-off { background: #e8f5e9; color: var(--success); border: 1px solid #c8e6c9; }
     .btn-toggle-off:hover { background: var(--success); color: #fff; }
     .dark-theme .btn-toggle-on  { background: rgba(239,68,68,.18); color: #ff6b6b; border-color: rgba(239,68,68,.3); }
@@ -1972,14 +1972,14 @@ html.dark-theme {
     .dark-theme .btn-toggle-off { background: rgba(56,142,60,.2); color: #69f0ae; border-color: rgba(56,142,60,.3); }
     .dark-theme .btn-toggle-off:hover { background: var(--success); color: #fff; }
 
-    /* 🍣 Config 2-col grid 🍣 */
+    /* ⚙️ Config 2-col grid ⚙️ */
     .config-grid {
         display: grid;
         grid-template-columns: 1fr;
         gap: 1.25rem;
     }
 
-    /* 🍣 Inventario panel 🍣 */
+    /* 📦 Inventario panel 📦 */
     .inv-panel { display: flex; gap: 1rem; align-items: flex-start; }
     .inv-list-col {
         flex: 0 0 260px;
@@ -2070,7 +2070,7 @@ html.dark-theme {
         .inv-list-item.mobile-expanded { background: #f0f4ff; color: var(--primary); }
     }
 
-    /* 🍣 RESPONSIVE BREAKPOINTS 🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣🍣 */
+    /* 📱 RESPONSIVE BREAKPOINTS 📱📱📱📱📱📱📱📱📱📱📱📱📱📱📱📱📱📱📱📱📱📱📱📱 */
 
     /* Tablet: 769px – 1200px */
     @media (min-width: 769px) {
@@ -2105,7 +2105,7 @@ html.dark-theme {
         .mesonero-card     { width: 100%; max-width: 100%; }
     }
 
-    /* 🍣 Menú: tarjeta desactivada/no disponible 🍣 */
+    /* 🍱 Menú: tarjeta desactivada/no disponible 🍱 */
     .menu-card-v2.no-disponible {
         opacity: .55;
         filter: grayscale(.7);
@@ -2116,10 +2116,10 @@ html.dark-theme {
     .menu-card-v2.no-disponible .mc2-precio { color: var(--text-muted) !important; }
     .menu-card-v2.no-disponible .mc2-precio-bs { color: var(--text-muted) !important; }
 
-    /* 🍣 Chart.js dark mode text 🍣 */
+    /* 📊 Chart.js dark mode text 📊 */
     .dark-theme canvas { filter: brightness(.95); }
 
-    /* 🍣 form inputs always use theme vars 🍣 */
+    /* 📝 form inputs always use theme vars 📝 */
     input, select, textarea {
         background: var(--input-bg);
         color: var(--text-dark);
@@ -2127,36 +2127,36 @@ html.dark-theme {
     }
     input::placeholder { color: var(--text-muted); opacity: .7; }
 
-    /* 🍣 Links adapt to theme 🍣 */
+    /* 🔗 Links adapt to theme 🔗 */
     a { color: var(--primary); }
     .dark-theme a { color: var(--accent); }
 
-    /* 🍣 Mesoneros text in light theme 🍣 */
+    /* 👨‍🍳 Mesoneros text in light theme 👨‍🍳 */
     .mesonero-nombre { color: var(--text-dark) !important; }
     .mesonero-card .usuario-rol { color: var(--text-dark); }
 
-    /* 🍣 delivery-estado badges adapt 🍣 */
+    /* 🛵 delivery-estado badges adapt 🛵 */
     .delivery-estado.activo   { color: #2e7d32; background: #e8f5e9; padding: 2px 8px; border-radius: 20px; font-size: .72rem; font-weight: 700; }
     .delivery-estado.inactivo { color: #757575; background: #f5f5f5; padding: 2px 8px; border-radius: 20px; font-size: .72rem; font-weight: 700; }
     .dark-theme .delivery-estado.activo   { color: #69f0ae; background: rgba(46,125,50,.3); }
     .dark-theme .delivery-estado.inactivo { color: #a0a0b0; background: rgba(255,255,255,.08); }
 
-    /* 🍣 qr-wifi-hint adapts 🍣 */
+    /* 🔲 qr-wifi-hint adapts 🔲 */
     .qr-wifi-hint { background: var(--table-header); border-color: var(--border); color: var(--text-muted); }
 
-    /* 🍣 table adapt 🍣 */
+    /* 📋 table adapt 📋 */
     .data-table th { background: var(--table-header); color: var(--table-header-text); }
     .data-table td { color: var(--text-dark); border-bottom: 1px solid var(--border); }
     .dark-theme .data-table tr:hover { background: rgba(255,255,255,.04); }
 
-    /* 🍣 pane section background 🍣 */
+    /* 🧩 pane section background 🧩 */
     .tab-pane { background: var(--body-bg); }
 
-    /* 🍣 config-section adapt 🍣 */
+    /* ⚙️ config-section adapt ⚙️ */
     .config-section { border-top-color: var(--primary); background: var(--card-bg); }
     .config-section h3 { color: var(--text-muted); border-bottom-color: var(--border); }
 
-    /* 🍣 inventory detail adapt 🍣 */
+    /* 📦 inventory detail adapt 📦 */
     .inv-list-col { background: var(--card-bg); border-color: var(--border); }
     .inv-list-search { background: var(--table-header); border-color: var(--border); }
     .inv-list-search input { background: var(--input-bg); color: var(--text-dark); border-color: var(--input-border); }
@@ -2165,9 +2165,9 @@ html.dark-theme {
     .inv-detail-close { background: var(--table-header); color: var(--text-muted); }
     .inv-detail-close:hover { background: var(--danger); color: #fff; }
 
-    /* 🍣 tcb cards text adapt 🍣 */
+    /* 📊 tcb cards text adapt 📊 */
 
-    /* 🍣 QR generator inputs legibles en ambos temas 🍣 */
+    /* 🔲 QR generator inputs legibles en ambos temas 🔲 */
     .qr-generator-card .form-group label { color: var(--text-dark); font-weight: 600; }
     .qr-generator-card input[type="text"] {
         background: var(--input-bg);
@@ -2176,12 +2176,12 @@ html.dark-theme {
     }
     .qr-generator-card input[type="text"]::placeholder { color: var(--text-muted); opacity: .7; }
 
-    /* 🍣 Mesonero/Usuario badge adapta al tema 🍣 */
+    /* 👥 Mesonero/Usuario badge adapta al tema 👥 */
     .usuario-rol.inactivo-badge { background: var(--table-header); color: var(--text-muted); }
     .usuario-rol.cajero { background: #e3f2fd; color: #1565c0; }
     .dark-theme .usuario-rol.cajero { background: rgba(21,101,192,.25); color: #64b5f6; }
 
-    /* 🍣 Reportes date inputs 🍣 */
+    /* 📊 Reportes date inputs 📊 */
     #reporteDesde, #reporteHasta {
         background: var(--input-bg);
         color: var(--text-dark);
@@ -2703,7 +2703,7 @@ html.dark-theme {
                 </div>
                 <div class="table-responsive" style="margin-top:2rem">
                     <h3 style="margin-bottom:1rem;font-weight:700">Detalle de Ventas</h3>
-                    <table class="data-table" id="ventasTable"><thead> <tr><th>Fecha</th><th>Pedido</th><th>Total</th><th>Items</th><th>Método</th><th>Tipo</th> </tr></thead><tbody id="ventasTableBody"></tbody></table>
+                    <table class="data-table" id="ventasTable"><thead>  </thead><tbody id="ventasTableBody"></tbody> </table>
                 </div>
             </div>
         </div>
@@ -3037,7 +3037,7 @@ window.cargarConfiguracion = async function() {
 };  // <--- ESTE PUNTO Y COMA ES IMPORTANTE
 
 window.cargarConfiguracionInicial = async function() {
-    console.log('🔄 cargarConfiguracionInicial iniciada');
+    console.log('🔧 cargarConfiguracionInicial iniciada');
     try {
         await window.cargarConfiguracion();
         console.log('✅ Configuración cargada');
@@ -3262,7 +3262,7 @@ window.cargarInventario = async function() {
     document.getElementById('propinasCantidad').textContent = cantidad;
     document.getElementById('propinasPromedio').textContent = window.formatBs(promedio);
     
-    // 🟢 CORRECCIÓN: Actualizar la tarjeta del Dashboard
+    // 🔧 CORRECCIÓN: Actualizar la tarjeta del Dashboard
     const propinasDashboard = document.getElementById('propinasHoyDashboard');
     if (propinasDashboard) {
         propinasDashboard.textContent = window.formatBs(total);
@@ -3270,14 +3270,14 @@ window.cargarInventario = async function() {
     
     const tbody = document.getElementById('propinasTableBody');
     if (tbody) {
-        tbody.innerHTML = window.propinas.map(p => `<tr>
-            <td>${new Date(p.fecha).toLocaleString('es-VE', { timeZone: 'America/Caracas' })}</td>
-            <td>${p.mesoneros?.nombre || 'N/A'}</td>
-            <td>${p.mesa || 'N/A'}</td>
-            <td>${p.metodo}</td>
-            <td>${window.formatBs(p.monto_bs)}</td>
-            <td>${p.cajero || 'N/A'}</td>
-        </tr>`).join('');
+        tbody.innerHTML = window.propinas.map(p => `——
+             <td>${new Date(p.fecha).toLocaleString('es-VE', { timeZone: 'America/Caracas' })}</td>
+             <td>${p.mesoneros?.nombre || 'N/A'}</td>
+              <td>${p.mesa || 'N/A'}</td>
+              <td>${p.metodo}</td>
+              <td>${window.formatBs(p.monto_bs)}</td>
+              <td>${p.cajero || 'N/A'}</td>
+          </tr>`).join('');
     }
     
     // Ranking (si existe)
@@ -3312,7 +3312,7 @@ window.cargarInventario = async function() {
                 if (error) throw error;
                 document.getElementById('nuevoMesonero').value = '';
                 await window.cargarMesoneros();
-                window.mostrarToast('👤 Mesonero agregado', 'success');
+                window.mostrarToast('👨‍🍳 Mesonero agregado', 'success');
             } catch (e) {
                 console.error('Error agregando mesonero:', e);
                 window.mostrarToast('❌ Error: ' + (e.message || e), 'error');
@@ -3686,7 +3686,7 @@ Esto marcará todas sus propinas pendientes como entregadas.`);
                 card.appendChild(nombre);
                 card.appendChild(btnDel);
 
-                // Clic en la tarjeta (no en basura) → ampliar
+                // Clic en la tarjeta (no en basura) 🔍 ampliar
                 card.addEventListener('click', function() {
                     window.ampliarQR(qr.id, qr.nombre, qrText);
                 });
@@ -3852,7 +3852,7 @@ Esto marcará todas sus propinas pendientes como entregadas.`);
                 const totalUSD = p.total || 0;
                 const totalBs  = window.formatBs(totalUSD * tasa);
                 return `——
-                    <td>${new Date(p.fecha).toLocaleDateString('es-VE', { timeZone: 'America/Caracas'})}</td>
+                     <td>${new Date(p.fecha).toLocaleDateString('es-VE', { timeZone: 'America/Caracas'})}</td>
                     <td style="max-width:200px;font-size:.82rem">${resumen}</td>
                     <td>${window.formatUSD(totalUSD)}<br><span style="font-size:.75rem;color:var(--text-muted)">${totalBs}</span></td>
                     <td>${totalItems}</td>
@@ -3865,7 +3865,7 @@ Esto marcará todas sus propinas pendientes como entregadas.`);
                         return labels2[p.metodo_pago] || p.metodo_pago || 'N/A';
                     })()}</td>
                     <td>${p.tipo || 'N/A'}</td>
-                </tr>`;
+                 `;
             }).join('');
         };
 
@@ -3982,7 +3982,7 @@ window.verificarStockCritico = async function() {
             try {
                 await window.supabaseClient.from('config').update({ admin_password: nueva }).eq('id', 1);
                 window.configGlobal.admin_password = nueva;
-                window.mostrarToast('🔒 Contraseña actualizada', 'success');
+                window.mostrarToast('🔐 Contraseña actualizada', 'success');
                 document.getElementById('currentPassword').value = '';
                 document.getElementById('newPassword').value = '';
                 document.getElementById('confirmPassword').value = '';
@@ -4034,8 +4034,8 @@ window.verificarStockCritico = async function() {
             const aumentoAcumulado = periodos * aumentoPct;
             const tasaEfectiva     = tasaBase * (1 + aumentoAcumulado / 100);
 
-            // 🧠 LOG DE DIAGNÓSTICO (visible en F12 → Consola) 🧠
-            console.group('%c🧮 Saki Sushi — Cálculo de Tasa', 'color:#FF9800;font-weight:700');
+            // 📊 LOG DE DIAGNÓSTICO (visible en F12 🔍 Consola) 📊
+            console.group('%c💰 Saki Sushi — Cálculo de Tasa', 'color:#FF9800;font-weight:700');
             console.log('Modo activo:', estaActivo ? (activoSemanal ? 'SEMANAL' : 'DIARIO') : 'DESACTIVADO');
             console.log('Fecha inicio (Desde):', desdeVal || '—');
             console.log('Fecha fin   (Hasta): ', hastaVal || (indefinido ? 'Indefinido' : '—'));
@@ -4058,7 +4058,7 @@ window.verificarStockCritico = async function() {
             console.log('Períodos aplicados:', periodos);
             console.log('Acumulado total:', aumentoAcumulado.toFixed(2) + '%');
             console.log('Tasa Base:', tasaBase);
-            console.log('Tasa Efectiva 🪙 Bs', tasaEfectiva.toFixed(2));
+            console.log('Tasa Efectiva 💰 Bs', tasaEfectiva.toFixed(2));
             console.groupEnd();
 
             document.getElementById('tasaEfectivaDisplay').textContent = tasaEfectiva.toFixed(2);
@@ -4267,7 +4267,7 @@ window.verificarStockCritico = async function() {
                 const _ingEntries = Object.entries(ingredientes);
                 let maxPlatillos;
                 if (!_ingEntries.length) {
-                    // Sin ingredientes → conservar stock existente (no sobreescribir con 0)
+                    // Sin ingredientes 🔁 conservar stock existente (no sobreescribir con 0)
                     const _existing = (window.menuItems || []).find(p => p.id === (window.platilloEditandoId || ''));
                     maxPlatillos = _existing ? (_existing.stock || 0) : 0;
                 } else {
@@ -4306,7 +4306,7 @@ window.verificarStockCritico = async function() {
                 window.platilloEditandoId = null;
                 window.limpiarImagenPreview();
                 await window.cargarMenu();
-                window.mostrarToast('🍣 Platillo guardado', 'success');
+                window.mostrarToast('🍽️ Platillo guardado', 'success');
             } catch (e) { console.error('Error guardando platillo:', e); window.mostrarToast('❌ Error al guardar el platillo: ' + e.message, 'error'); }
             finally { const saveBtn = document.getElementById('savePlatillo'); saveBtn.innerHTML = 'Guardar'; saveBtn.disabled = false; }
         });
@@ -4687,7 +4687,7 @@ async function _desbloquearStock() {
                 window.ingredienteEditandoId = null;
                 document.getElementById('ingredienteModal').classList.remove('active');
                 await window.cargarInventario();
-                window.mostrarToast('🥬 Ingrediente guardado', 'success');
+                window.mostrarToast('🥕 Ingrediente guardado', 'success');
             } catch (e) {
                 console.error('Error guardando ingrediente:', e);
                 window.mostrarToast('❌ Error: ' + (e.message || e), 'error');
@@ -4900,7 +4900,7 @@ async function _desbloquearStock() {
                     // Quitar detalle móvil previo
                     document.querySelectorAll('.inv-mobile-detail').forEach(e => e.remove());
                     if (wasActive) {
-                        // Ya estaba abierto → cerrar
+                        // Ya estaba abierto 🔒 cerrar
                         window._invActiveId = null;
                         const col = document.getElementById('invDetailCol');
                         if (col) col.innerHTML = '<div class="inv-detail-empty"><i class="fas fa-hand-point-left" style="font-size:2rem;margin-bottom:.75rem;display:block;opacity:.3"></i>Selecciona un ingrediente de la lista para ver su detalle</div>';
@@ -4945,13 +4945,13 @@ async function _desbloquearStock() {
             window.isAdminAuthenticated = false;
             window.jwtToken = null;
             window.mostrarLogin();
-            window.mostrarToast('👋 Sesión cerrada', 'info');
+            window.mostrarToast('🔓 Sesión cerrada', 'info');
             window.supabaseClient = window.inicializarSupabaseCliente();
         });
 
-        // 🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢
+        // 🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄
         // REALTIME SUBSCRIPTIONS
-        // 🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢
+        // 🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄🔄
         window.setupRealtimeSubscriptions = function() {
             try {
                 window.supabaseClient
@@ -4966,7 +4966,7 @@ async function _desbloquearStock() {
                         async (p) => {
                             if (p.eventType === 'UPDATE' && p.new.stock <= p.new.minimo) {
                                 window.verificarStockCritico();
-                                window.mostrarToast(`⚠️ Stock crítico: ${p.new.nombre}`, 'warning');
+                                window.mostrarToast(`⚠️⚠️ Stock crítico: ${p.new.nombre}`, 'warning');
                                 window._notificarAdminStockCritico && window._notificarAdminStockCritico(p.new.nombre);
                             }
                             if (p.eventType === 'UPDATE' && (p.old?.stock || 0) <= 0 && p.new.stock > 0) {
@@ -5026,19 +5026,19 @@ async function _desbloquearStock() {
                             const bi = document.getElementById('tasaBaseInput');
                             if (bi && p.new.tasa_cambio) bi.value = parseFloat(p.new.tasa_cambio).toFixed(2);
                             window.recalcularTasaEfectiva && window.recalcularTasaEfectiva();
-                            window.mostrarToast('💰 Tasa actualizada desde cajero: Bs ' + parseFloat(p.new.tasa_cambio||0).toFixed(2), 'info');
+                            window.mostrarToast('📊 Tasa actualizada desde cajero: Bs ' + parseFloat(p.new.tasa_cambio||0).toFixed(2), 'info');
                         })
                     .subscribe();
 
             } catch (e) { console.error('Error configurando suscripciones realtime:', e); }
         };
 
-        // 🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢
+        // 🎯🎯🎯🎯🎯🎯🎯🎯🎯🎯🎯🎯🎯🎯🎯🎯🎯🎯🎯
         // SETUP EVENT LISTENERS
-        // 🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢
+        // 🎯🎯🎯🎯🎯🎯🎯🎯🎯🎯🎯🎯🎯🎯🎯🎯🎯🎯🎯
         window.setupEventListeners = function() {
 
-            // ⬅️ Chevrons de navegación de tabs ➡️➡️➡️➡️➡️➡️➡️➡️➡️➡️➡️➡️➡️➡️➡️➡️➡️➡️➡️➡️➡️
+            // 📱📱 Chevrons de navegación de tabs 📱📱📱📱📱📱📱📱📱📱📱📱📱📱📱📱📱📱📱📱📱📱📱📱
             window._scrollTabs = function(dir) {
                 const c = document.getElementById('tabsContainer');
                 if (!c) return;
@@ -5059,7 +5059,7 @@ async function _desbloquearStock() {
             document.getElementById('tabsContainer')?.addEventListener('scroll', window._updateTabChevrons);
             window._updateTabChevrons();
 
-            // 🔁 Sync del checkbox Disponible en modal platillo 🔁🔁🔁🔁🔁🔁🔁🔁
+            // ✅ Sync del checkbox Disponible en modal platillo ✅✅✅✅✅✅
             document.getElementById('platilloDisponibleCheck')?.addEventListener('change', function() {
                 const lbl = document.getElementById('platilloDisponibleLabel');
                 const sel = document.getElementById('platilloDisponible');
@@ -5067,7 +5067,7 @@ async function _desbloquearStock() {
                 if (sel) sel.value = this.checked ? 'true' : 'false';
             });
 
-            // 🗂️ Navegación de tabs 🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️🗂️
+            // 📑📑 Navegación de tabs 📑📑📑📑📑📑📑📑📑📑📑📑📑📑📑📑📑📑📑📑📑📑📑📑📑📑📑
             document.querySelectorAll('.tab').forEach(tab => {
                 tab.addEventListener('click', () => {
                     const target = tab.dataset.tab;
@@ -5086,7 +5086,7 @@ async function _desbloquearStock() {
                 });
             });
 
-            // ❌ Cerrar todos los modales (X, Cancelar, fondo) ❌❌❌❌❌❌❌❌❌❌
+            // ❌ Cerrar todos los modales (X, Cancelar, fondo) ❌❌❌❌❌❌
 [
     ['closePlatilloModal',    'platilloModal', null],
     ['cancelPlatillo',        'platilloModal', null],
@@ -5114,12 +5114,12 @@ async function _desbloquearStock() {
                 });
             });
 
-            // 💾 Guardar configuración de tasa 💾💾💾💾💾💾💾💾💾💾💾💾💾💾💾💾💾
+            // 💾 Guardar configuración de tasa 💾💾💾💾💾💾💾💾💾
             document.getElementById('saveAllButton').addEventListener('click', async () => { await window.guardarConfiguracion(); });
 
         document.getElementById('tasaBaseInput').addEventListener('change', window.recalcularTasaEfectiva);
         document.getElementById('aumentoDiarioInput').addEventListener('change', window.recalcularTasaEfectiva);
-        // 🎛️ Toggles de aumento: mutuamente excluyentes 🎛️
+        // 🔘🔘 Toggles de aumento: mutuamente excluyentes 🔘🔘
         function _mostrarFechasAumento(visible) {
             document.getElementById('tasaFechasDiv').style.display = visible ? 'flex' : 'none';
         }
@@ -5178,9 +5178,9 @@ async function _desbloquearStock() {
 
         }; // fin window.setupEventListeners
 
-        // 🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢
+        // 📅📅📅📅📅📅📅📅📅📅📅📅📅📅📅📅📅📅📅
         // TASA DE HOY — Primer inicio de sesión del día
-        // 🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢
+        // 📅📅📅📅📅📅📅📅📅📅📅📅📅📅📅📅📅📅📅
         window._pedirTasaDeHoy = function(onConfirm) {
             // Crear overlay bloqueante
             const overlay = document.createElement('div');
@@ -5265,9 +5265,9 @@ async function _desbloquearStock() {
             }
         };
 
-        // 🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢
+        // 📅📅📅📅📅📅📅📅📅📅📅📅📅📅📅📅📅📅📅
         // AVISO DE LUNES — Cambio porcentaje semanal
-        // 🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢
+        // 📅📅📅📅📅📅📅📅📅📅📅📅📅📅📅📅📅📅📅
         window._verificarAvisoLunes = function() {
             // Solo si el toggle semanal está activo
             if (!window.configGlobal || !window.configGlobal.aumento_semanal) return;
@@ -5290,7 +5290,7 @@ async function _desbloquearStock() {
             ].join(';');
             notif.innerHTML = `
                 <div style="display:flex;align-items:flex-start;gap:.75rem">
-                    <div style="font-size:1.5rem;flex-shrink:0">📆</div>
+                    <div style="font-size:1.5rem;flex-shrink:0">📅</div>
                     <div style="flex:1">
                         <div style="font-weight:700;margin-bottom:.3rem;font-size:.95rem">Nueva semana — ¿Actualizas el porcentaje?</div>
                         <div style="font-size:.82rem;opacity:.85;margin-bottom:.75rem">
@@ -5334,9 +5334,9 @@ async function _desbloquearStock() {
             setTimeout(() => { if (notif.parentNode) notif.remove(); }, 30000);
         };
 
-        // 🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢
+        // 🪑🪑🪑🪑🪑🪑🪑🪑🪑🪑🪑🪑🪑🪑🪑🪑🪑🪑
         // SELECTOR DE MESAS (desde header Admin)
-        // 🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢
+        // 🪑🪑🪑🪑🪑🪑🪑🪑🪑🪑🪑🪑🪑🪑🪑🪑🪑🪑
         window.abrirSelectorMesaAdmin = async function() {
             const list = document.getElementById('adminMesaList');
             list.innerHTML = '<p style="color:var(--text-muted)">Cargando mesas...</p>';
@@ -5634,7 +5634,7 @@ window._toggleDeliveryDetalle = function(detalleId) {
                 if (disponible) {
                     window.mostrarToast(`✅ Platillo "${item?.nombre}" ahora está DISPONIBLE en el menú del cliente`, 'success');
                 } else {
-                    window.mostrarToast(`⚠️ Platillo "${item?.nombre}" ahora está NO DISPONIBLE (se mostrará como AGOTADO en el menú del cliente)`, 'warning');
+                    window.mostrarToast(`⛔ Platillo "${item?.nombre}" ahora está NO DISPONIBLE (se mostrará como AGOTADO en el menú del cliente)`, 'warning');
                 }
             } catch(e) {
                 console.error('Error toggle disponible:', e);
@@ -5642,9 +5642,9 @@ window._toggleDeliveryDetalle = function(detalleId) {
             }
         };
 
-        // 🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢
+        // 🔙🔙🔙🔙🔙🔙🔙🔙🔙🔙🔙🔙🔙🔙🔙🔙🔙🔙🔙
         // BACK-NAV + CONFIRMACIÓN DE SALIDA — ADMIN
-        // 🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢
+        // 🔙🔙🔙🔙🔙🔙🔙🔙🔙🔙🔙🔙🔙🔙🔙🔙🔙🔙🔙
         (function() {
             var _depth = 2;
             var _avisando = false, _avisoTimer = null;
@@ -5696,7 +5696,7 @@ window._toggleDeliveryDetalle = function(detalleId) {
                 _ocultarAviso(); _push();
             });
 
-            // 🖼️ Modales del admin 🖼️
+            // 🔲🔲 Modales del admin 🔲🔲
             function _getOpenModals() {
                 return Array.from(document.querySelectorAll('.modal.active'));
             }
@@ -5723,7 +5723,7 @@ window._toggleDeliveryDetalle = function(detalleId) {
                 _obs.observe(modal, { attributes: true, attributeFilter: ['class'] });
             });
 
-            // ⬅️ popstate ⬅️
+            // 📱📱 popstate 📱📱
             window.addEventListener('popstate', function(e) {
                 if (e.state && e.state.sakiAdmin) _depth = e.state.d || 0;
 
@@ -5763,7 +5763,7 @@ window._toggleDeliveryDetalle = function(detalleId) {
             window._adminCerrarModal = _cerrarTopModal;
         })();
 
-        // 🚨 Notificación push a dispositivos admin cuando stock es crítico 🚨
+        // 📢 Notificación push a dispositivos admin cuando stock es crítico 📢
         window._notificarAdminStockCritico = async function(ingredienteNombre) {
             try {
                 const { data: subs } = await window.supabaseClient
@@ -5775,7 +5775,7 @@ window._toggleDeliveryDetalle = function(detalleId) {
                 for (const sid of sessions) {
                     await window.supabaseClient.from('notificaciones').insert([{
                         pedido_id: null, tipo: 'stock_critico',
-                        titulo: '⚠️ Stock crítico',
+                        titulo: '⚠️⚠️ Stock crítico',
                         mensaje: `El ingrediente "${ingredienteNombre}" está por debajo del mínimo. Revisa el inventario.`,
                         session_id: sid, leida: false
                     }]);
@@ -5822,7 +5822,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         window.mostrarPanel();
         setTimeout(async () => {
             try {
-                //  PRIMERO: Cargar configuración inicial
+                // 🔧 PRIMERO: Cargar configuración inicial
                 await window.cargarConfiguracionInicial();
                 
                 // Luego cargar el resto de datos
@@ -5872,7 +5872,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // 🧪 Simulador de lunes para probar aviso semanal (desde F12) 🧪
         window._simularLunes = function() {
-            console.log('%c🧪 Simulando lunes para prueba de aviso semanal...', 'color:#FF9800;font-weight:700');
+            console.log('%c📅 Simulando lunes para prueba de aviso semanal...', 'color:#FF9800;font-weight:700');
             // Borrar la clave de "ya mostrado hoy" para que vuelva a aparecer
             const hoy = new Date().toISOString().split('T')[0];
             localStorage.removeItem('saki_aviso_lunes_' + hoy);
@@ -5886,7 +5886,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             Date.prototype.getDay = _orig; // restaurar
             if (window.configGlobal && estadoOriginal !== undefined)
                 window.configGlobal.aumento_semanal = estadoOriginal;
-            console.log('%c📢 Aviso de lunes disparado. Mira la pantalla.', 'color:green;font-weight:700');
+            console.log('%c✅ Aviso de lunes disparado. Mira la pantalla.', 'color:green;font-weight:700');
         };
 
         // 🧪 Simulador de recálculo por período para probar acumulado 🧪
@@ -5897,7 +5897,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const base = parseFloat(document.getElementById('tasaBaseInput')?.value) || 0;
             const acum = semanas * pct;
             const efectiva = base * (1 + acum / 100);
-            console.group('%c🧪 Simulación: ' + semanas + ' semana(s) de aumento semanal', 'color:#FF9800;font-weight:700');
+            console.group('%c💰 Simulación: ' + semanas + ' semana(s) de aumento semanal', 'color:#FF9800;font-weight:700');
             console.log('Tasa base:', base);
             console.log('% por semana:', pct + '%');
             console.log('Semanas simuladas:', semanas);
@@ -5908,7 +5908,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             console.log('%c💡 Tip: prueba window._simularPeriodoSemanal(3) para 3 semanas', 'color:gray');
         };
 
-        // 🟢 SUBCATEGORIAS 🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢
+        // 📂 SUBCATEGORIAS 📂📂📂📂📂📂📂📂📂📂📂📂📂📂📂
         const SUBCATEGORIAS = {
             'rolls': [
                 { id: 'rolls-frios', name: 'Rolls Fríos (10 pzas)' },
@@ -5935,7 +5935,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             ]
         };
 
-        // 🟢 _onCategoriaChange — subcategoría dinámica en modal platillo 🟢
+        // 🏷️ _onCategoriaChange — subcategoría dinámica en modal platillo 🏷️
         window._onCategoriaChange = function() {
             const cat = document.getElementById('platilloCategoria')?.value;
             const wrap = document.getElementById('subcategoriaContainer');
@@ -5953,15 +5953,15 @@ document.addEventListener('DOMContentLoaded', async () => {
             window._recalcularStockPlatillo();
         };
 
-        // 🟢 _previewPrecioBs — mostrar equivalente en Bs al escribir precio 🟢
+        // 💵 _previewPrecioBs — mostrar equivalente en Bs al escribir precio 💵
         window._previewPrecioBs = function() {
             const precio = parseFloat(document.getElementById('platilloPrecio')?.value) || 0;
             const tasa   = (window.configGlobal?.tasa_efectiva) || (window.configGlobal?.tasa_cambio) || 0;
             const el = document.getElementById('platilloPrecioBsPreview');
-            if (el) el.textContent = tasa > 0 && precio > 0 ? '🪙 ' + window.formatBs(precio * tasa) : '';
+            if (el) el.textContent = tasa > 0 && precio > 0 ? '💰 ' + window.formatBs(precio * tasa) : '';
         };
 
-        // 🟢 _previewPlatilloUrl — preview imagen por URL 🟢
+        // 🖼️ _previewPlatilloUrl — preview imagen por URL 🖼️
         window._previewPlatilloUrl = function(url) {
             if (!url) return;
             const prev = document.getElementById('imagenPreview');
@@ -5969,7 +5969,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (prev && img) { img.src = url; prev.style.display = 'flex'; }
         };
 
-        // 🟢 _convertirUnidad — convierte entre unidades compatibles 🟢
+        // 🔄 _convertirUnidad — convierte entre unidades compatibles 🔄
         window._convertirUnidad = function(valor, desde, hacia) {
             if (!desde || !hacia || desde === hacia) return valor;
             // Convertir a base (gramos o mililitros)
@@ -5982,7 +5982,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             return base; // gramos o mililitros
         };
 
-        // 🟢 _recalcularStockPlatillo — muestra cuántos platillos se pueden hacer 🟢
+        // 📊 _recalcularStockPlatillo — muestra cuántos platillos se pueden hacer 📊
         window._recalcularStockPlatillo = function() {
             const wrap = document.getElementById('stockCalculadoWrap');
             const txt  = document.getElementById('stockCalculadoText');
@@ -6013,10 +6013,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             txt.style.color = maxPlatillos > 5 ? '#166534' : maxPlatillos > 0 ? '#92400e' : '#991b1b';
             txt.textContent = maxPlatillos > 0
                 ? `Con el stock actual se pueden preparar ${maxPlatillos} porcion${maxPlatillos !== 1 ? 'es' : ''}`
-                : '⚠️ Stock insuficiente para preparar este platillo';
+                : '⚠️⚠️ Stock insuficiente para preparar este platillo';
         };
 
-        // 🟢 _syncIngredientePreview — preview stock resultante + conversión 🟢
+        // 🔄 _syncIngredientePreview — preview stock resultante + conversión 🔄
         window._syncIngredientePreview = function() {
             const stockActual = parseFloat(document.getElementById('ingredienteStock')?.value) || 0;
             const nuevo       = parseFloat(document.getElementById('ingredienteAgregar')?.value) || 0;
@@ -6040,7 +6040,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         };
 
-        // 🟢 _eliminarIngredienteDesdeModal — eliminar desde modal de edición 🟢
+        // 🗑️ _eliminarIngredienteDesdeModal — eliminar desde modal de edición 🗑️
         window._eliminarIngredienteDesdeModal = async function() {
             const id = window.ingredienteEditandoId;
             if (!id) return;
@@ -6059,10 +6059,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         };
 
-        // 🟢 recalcularCostos — recalcula costos en Bs de todos los ingredientes 🟢
+        // 💰 recalcularCostos — recalcula costos en Bs de todos los ingredientes 💰
         window.recalcularCostos = async function() {
             const tasa = (window.configGlobal?.tasa_efectiva) || (window.configGlobal?.tasa_cambio) || 0;
-            if (!tasa) { window.mostrarToast('⚠️ Configura la tasa efectiva primero', 'warning'); return; }
+            if (!tasa) { window.mostrarToast('⚠️⚠️ Configura la tasa efectiva primero', 'warning'); return; }
             let actualizados = 0;
             for (const ing of (window.inventarioItems || [])) {
                 const costoBs  = (ing.precio_costo  || 0) * tasa;
@@ -6258,7 +6258,7 @@ window._abrirDetalleVentasAdmin = async function() {
                 ${vt_delivery > 0 ? vcol('fas fa-motorcycle', 'Deliverys', vt_delivery, 'var(--delivery)') : ''}
                 ${vt_inv_count > 0 ? `
                     <div style="grid-column:1/-1;padding:8px;background:rgba(0,0,0,.06);border-radius:8px;border-left:3px solid var(--propina);font-size:.82rem">
-                        <span style="color:var(--propina);font-weight:700"> Invitaciones: ${vt_inv_count}</span>
+                        <span style="color:var(--propina);font-weight:700">🎁 Invitaciones: ${vt_inv_count}</span>
                         <span style="color:var(--text-muted);font-size:.75rem;margin-left:.5rem">Valor real: ${fmtBs(vt_inv_acum)}</span>
                     </div>
                 ` : ''}
@@ -6285,7 +6285,7 @@ window._abrirDetalleVentasAdmin = async function() {
                     </h3>
                     <button onclick="this.closest('[style*=fixed]').remove()" 
                         style="background:var(--table-header);border:none;border-radius:8px;width:30px;height:30px;cursor:pointer;font-size:.9rem;color:var(--text-muted)">
-                        
+                        ✕
                     </button>
                 </div>
                 <div style="padding:1.25rem">${contenido}</div>
@@ -6304,11 +6304,11 @@ window._abrirDetalleVentasAdmin = async function() {
         
     } catch (e) {
         console.error('Error abriendo detalle ventas admin:', e);
-        window.mostrarToast(' Error al cargar el detalle de ventas', 'error');
+        window.mostrarToast('❌ Error al cargar el detalle de ventas', 'error');
     }
 }; // <--- ESTE PUNTO Y COMA ES EL QUE FALTA
 
-        // 🟢 Helper: neto cobrado de un pedido (igual que cajero) 🟢
+        // 📊 Helper: neto cobrado de un pedido (igual que cajero) 📊
         window._netoCobradoPedidoAdmin = function(pedido, tasa) {
             if (!pedido) return 0;
             if (pedido.metodo_pago === 'invitacion') return 0;
@@ -6332,7 +6332,7 @@ window._abrirDetalleVentasAdmin = async function() {
             document.getElementById('panelContainer').classList.add('active');
         };
 
-        // 🟢 Registro de push para admin 🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢🟢
+        // 📡 Registro de push para admin 📡📡📡📡📡📡📡📡📡📡📡📡📡
         window._registrarPushAdmin = async function() {
             if (!('Notification' in window) || !('serviceWorker' in navigator)) return;
             if (location.protocol !== 'https:' && location.hostname !== 'localhost') return;
@@ -6370,8 +6370,8 @@ window._abrirDetalleVentasAdmin = async function() {
                         rol: 'admin',
                         user_agent: navigator.userAgent
                     }], { onConflict: 'endpoint' });
-                    console.log('📱 Push admin registrado:', sid);
-                } catch (e) { console.warn('⚠️ Push admin no disponible:', e.message); }
+                    console.log('📡 Push admin registrado:', sid);
+                } catch (e) { console.warn('⚠️⚠️ Push admin no disponible:', e.message); }
             };
 
             if (Notification.permission === 'granted') {
@@ -6460,7 +6460,7 @@ window._irAIngrediente = function(ingredienteId) {
         }
     }, 200);
 };
-        }
+
     </script>
     <!-- Modal para contraseña de stock -->
 <div class="modal" id="passwordStockModal">
