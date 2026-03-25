@@ -39,7 +39,7 @@
         
         // Control de tiempo real para stock
         window.stockUpdateChannel = null;
-
+        
         // ==================== FUNCIÓN DE TOAST CON FALLBACK ====================
         window.mostrarToast = function(mensaje, tipo = 'info') {
             console.log('Toast:', mensaje, tipo);
@@ -4411,6 +4411,19 @@ window.verificarStockCritico = async function() {
     if (_delBtn) _delBtn.style.display = 'inline-flex';
     
     document.getElementById('ingredienteModal').classList.add('active');
+    
+    //  NUEVO: Agregar evento de clic al div contenedor del stock
+    setTimeout(function() {
+        const divContenedor = document.querySelector('#stockOverlay div');
+        if (divContenedor) {
+            console.log('Asignando evento click al contenedor del stock');
+            divContenedor.onclick = function(e) {
+                e.stopPropagation();
+                console.log('Click en contenedor de stock');
+                window.mostrarModalContraseñaStock();
+            };
+        }
+    }, 100);
 };
 
         window.desbloquearStockClick = function(inputEl) {
