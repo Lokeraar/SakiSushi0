@@ -4394,11 +4394,11 @@ window.verificarStockCritico = async function() {
     const _unlockDiv = document.getElementById('stockUnlock');
     
     if (_si) {
-        _si.disabled = true;
-        _si.style.background = 'var(--input-bg)';
-        _si.style.cursor = 'pointer';
-        _si.onclick = function() { window.mostrarModalContraseñaStock(); };
-    }
+    _si.disabled = true;
+    _si.style.background = 'var(--input-bg)';
+    _si.style.cursor = 'pointer';
+    _si.onclick = function() { window.mostrarModalContraseñaStock(); };
+}
     if (_li) {
         _li.innerHTML = '<i class="fas fa-lock" style="font-size:.8rem"></i>';
         _li.style.cursor = 'default';
@@ -4452,7 +4452,6 @@ window.mostrarModalContraseñaStock = function() {
     }, 100);
 };
 
-// ==================== FUNCIÓN VERIFICAR CONTRASEÑA STOCK CORREGIDA ====================
 window.verificarContraseñaStock = async function() {
     const pwd = document.getElementById('stockPasswordModalInput')?.value;
     const errorEl = document.getElementById('passwordStockError');
@@ -4576,12 +4575,6 @@ async function _desbloquearStock() {
     // Mostrar mensaje de éxito
     window.mostrarToast('🔓 Stock desbloqueado. Puedes editar la cantidad.', 'success');
 }
-
-// Sobrescribir la función desbloquearStockClick para que use el modal en lugar del inline
-window.desbloquearStockClick = function(inputEl) {
-    if (!inputEl.disabled) return; // ya desbloqueado
-    window.mostrarModalContraseñaStock();
-};
 
 // Función para resetear el estado de bloqueo del stock (se llama al cerrar el modal de ingrediente)
 window.resetearBloqueoStock = function() {
