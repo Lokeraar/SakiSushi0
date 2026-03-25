@@ -3014,7 +3014,6 @@ window.cargarConfiguracion = async function() {
         if (error) throw error;
         window.configGlobal = data || {};
         
-        // Asegurar valores por defecto
         window.configGlobal.tasa_cambio = window.configGlobal.tasa_cambio || 400;
         window.configGlobal.tasa_efectiva = window.configGlobal.tasa_efectiva || 400;
         window.configGlobal.aumento_diario = window.configGlobal.aumento_diario || 0;
@@ -3025,7 +3024,6 @@ window.cargarConfiguracion = async function() {
         
     } catch (e) {
         console.error('Error cargando configuración:', e);
-        // Configuración por defecto
         window.configGlobal = {
             tasa_cambio: 400,
             tasa_efectiva: 400,
@@ -3042,8 +3040,7 @@ window.cargarConfiguracionInicial = async function() {
     await window.cargarConfiguracion();
     window.actualizarTasaUI();
     window.actualizarMenuTasaBanner();
-    // alertaStockMinimo se gestiona por ingrediente (campo Stock Mínimo en modal de inventario)
-};
+}; 
 
 window.actualizarTasaUI = function() {
     document.getElementById('tasaBaseInput').value      = window.configGlobal.tasa_cambio || 400;
@@ -5361,7 +5358,6 @@ window._actualizarVentasHoyNeto = async function() {
         const manana = new Date(hoy); 
         manana.setDate(manana.getDate() + 1);
         
-        // Obtener ventas del día
         const { data: ventasHoy } = await window.supabaseClient
             .from('ventas')
             .select('pedido_id')
@@ -5373,14 +5369,12 @@ window._actualizarVentasHoyNeto = async function() {
             return;
         }
         
-        // Obtener los pedidos correspondientes
         const pedidoIds = ventasHoy.map(v => v.pedido_id);
         const { data: pedidosData } = await window.supabaseClient
             .from('pedidos')
             .select('*')
             .in('id', pedidoIds);
         
-        // Función que calcula el neto cobrado (misma lógica que en Cajero)
         const _netoCobradoPedido = (pedido) => {
             if (!pedido) return 0;
             if (pedido.metodo_pago === 'invitacion') return 0;
@@ -5399,24 +5393,19 @@ window._actualizarVentasHoyNeto = async function() {
             return Math.max(0, recibido - (pedido.vuelto_entregado || 0));
         };
         
-        // Sumar neto cobrado de todos los pedidos
         let netoBs = 0;
         pedidosData.forEach(pedido => {
             netoBs += _netoCobradoPedido(pedido);
         });
         
-        // Calcular equivalente en USD
         const tasa = window.configGlobal?.tasa_efectiva || window.configGlobal?.tasa_cambio || 400;
         const netoUSD = netoBs / tasa;
         
-        // Mostrar en formato: USD / Bs (igual que en Cajero)
         const el = document.getElementById('ventasHoy');
         if (el) {
-            // Formato: $XX.XX / Bs XXX.XXX,XX
             el.textContent = `${window.formatUSD(netoUSD)} / Bs ${netoBs.toFixed(2)}`;
         }
         
-        // Guardar en variable global para el modal de detalle
         window._ventasHoyNeto = { netoBs, netoUSD, ventasHoy, pedidosData };
         
     } catch (e) { 
@@ -5424,7 +5413,7 @@ window._actualizarVentasHoyNeto = async function() {
         const el = document.getElementById('ventasHoy');
         if (el) el.textContent = '$0.00 / Bs 0.00';
     }
-};
+}; 
 
 // ==================== ACTUALIZAR DELIVERYS HOY (MISMA LÓGICA QUE CAJERO) ====================
 window._actualizarDeliverysHoy = async function() {
@@ -6459,7 +6448,7 @@ window._irAIngrediente = function(ingredienteId) {
             }, 300);
         }
     }, 200);
-};
+});
 
     </script>
     <!-- Modal para contraseña de stock -->
