@@ -4479,14 +4479,12 @@ window.verificarContraseñaStock = async function() {
         return;
     }
     
-    // Deshabilitar botón mientras se valida
     if (btnConfirm) {
         btnConfirm.disabled = true;
         btnConfirm.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Validando...';
     }
     
     try {
-        // Consultar la contraseña del admin desde la tabla usuarios
         const { data, error } = await window.supabaseClient
             .from('usuarios')
             .select('username, rol, password_hash')
@@ -4496,7 +4494,6 @@ window.verificarContraseñaStock = async function() {
         if (error) throw error;
         
         if (!data) {
-            // Fallback: usar configGlobal.admin_password si existe
             const adminPassword = window.configGlobal?.admin_password;
             if (pwd === adminPassword) {
                 await _desbloquearStock();
@@ -4509,7 +4506,6 @@ window.verificarContraseñaStock = async function() {
             return;
         }
         
-        // Verificar contraseña usando la función RPC verify_user_credentials
         const { data: authData, error: authError } = await window.supabaseClient
             .rpc('verify_user_credentials', {
                 p_username: data.username,
@@ -4518,7 +4514,6 @@ window.verificarContraseñaStock = async function() {
         
         if (authError) {
             console.error('Error en verificación:', authError);
-            // Fallback: comparación simple con configGlobal.admin_password
             const adminPassword = window.configGlobal?.admin_password;
             if (pwd === adminPassword) {
                 await _desbloquearStock();
@@ -4534,6 +4529,7 @@ window.verificarContraseñaStock = async function() {
         if (authData && authData.success === true) {
             await _desbloquearStock();
         } else {
+            //  ESTA PARTE ES LA QUE FALTABA
             if (errorEl) {
                 errorEl.textContent = 'Contraseña incorrecta. Intenta de nuevo.';
                 errorEl.style.display = 'block';
@@ -4544,7 +4540,6 @@ window.verificarContraseñaStock = async function() {
         
     } catch (e) {
         console.error('Error verificando contraseña:', e);
-        // Fallback: usar configGlobal.admin_password
         const adminPassword = window.configGlobal?.admin_password;
         if (pwd === adminPassword) {
             await _desbloquearStock();
@@ -4589,66 +4584,6 @@ async function _desbloquearStock() {
     // Mostrar mensaje de éxito
     window.mostrarToast('🔓 Stock desbloqueado. Puedes editar la cantidad.', 'success');
 }
-
-// Sobrescribir la función desbloquearStockClick para que use el modal en lugar del inline
-window.desbloquearStockClick = function(inputEl) {
-    if (!inputEl.disabled) return; // ya desbloqueado
-    window.mostrarModalContraseñaStock();
-};
-
-// Función para resetear el estado de bloqueo del stock (se llama al cerrar el modal de ingrediente)
-window.resetearBloqueoStock = function() {
-    const stockInput = document.getElementById('ingredienteStock');
-    const lockIcon = document.getElementById('stockLockIcon');
-    const unlockInline = document.getElementById('stockUnlockInline');
-    const unlockDiv = document.getElementById('stockUnlock');
-    
-    // Solo si es modo edición y el campo estaba bloqueado, restaurar a bloqueado
-    if (stockInput && stockInput.disabled === false && window.ingredienteEditandoId) {
-        stockInput.disabled = true;
-        stockInput.style.background = 'var(--input-bg)';
-        stockInput.style.cursor = 'pointer';
-        stockInput.onclick = function() { window.mostrarModalContraseñaStock(); };
-    }
-    
-    if (lockIcon && window.ingredienteEditandoId) {
-        lockIcon.innerHTML = '<i class="fas fa-lock" style="font-size:.8rem"></i>';
-        lockIcon.style.cursor = 'default';
-    }
-    
-    if (unlockInline) unlockInline.style.display = 'none';
-    if (unlockDiv) unlockDiv.style.display = 'none';
-};
-
-// Sobrescribir la función desbloquearStockClick para que use el modal en lugar del inline
-window.desbloquearStockClick = function(inputEl) {
-    if (!inputEl.disabled) return; // ya desbloqueado
-    window.mostrarModalContraseñaStock();
-};
-
-// Función para resetear el estado de bloqueo del stock (se llama al cerrar el modal de ingrediente)
-window.resetearBloqueoStock = function() {
-    const stockInput = document.getElementById('ingredienteStock');
-    const lockIcon = document.getElementById('stockLockIcon');
-    const unlockInline = document.getElementById('stockUnlockInline');
-    const unlockDiv = document.getElementById('stockUnlock');
-    
-    // Solo si es modo edición y el campo estaba bloqueado, restaurar a bloqueado
-    if (stockInput && stockInput.disabled === false && window.ingredienteEditandoId) {
-        stockInput.disabled = true;
-        stockInput.style.background = 'var(--input-bg)';
-        stockInput.style.cursor = 'pointer';
-        stockInput.onclick = function() { window.mostrarModalContraseñaStock(); };
-    }
-    
-    if (lockIcon && window.ingredienteEditandoId) {
-        lockIcon.innerHTML = '<i class="fas fa-lock" style="font-size:.8rem"></i>';
-        lockIcon.style.cursor = 'default';
-    }
-    
-    if (unlockInline) unlockInline.style.display = 'none';
-    if (unlockDiv) unlockDiv.style.display = 'none';
-};
 
         window.desbloquearStockInline = function() {
             const pwd = document.getElementById('stockPasswordInline')?.value;
