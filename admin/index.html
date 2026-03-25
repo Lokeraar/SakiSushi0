@@ -2811,11 +2811,10 @@ html.dark-theme {
             <i class="fas fa-lock" style="font-size:.8rem"></i>
         </span>
     </label>
-    <div style="position:relative">
+    <div style="position:relative; cursor:pointer" onclick="window.mostrarModalContraseñaStock()">
         <input type="number" step="0.001" id="ingredienteStock" disabled
             style="width:100%; cursor:pointer; background:var(--input-bg); color:var(--text-dark); border:1px solid var(--border); border-radius:8px; padding:.65rem .9rem"
-            title="Haz clic para desbloquear (requiere contraseña de administrador)"
-            onclick="window.mostrarModalContraseñaStock()">
+            title="Haz clic para desbloquear (requiere contraseña de administrador)">
     </div>
 </div>
 
