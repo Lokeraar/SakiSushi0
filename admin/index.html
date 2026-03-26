@@ -4653,47 +4653,6 @@ async function _desbloquearStock() {
     window.mostrarToast('✓ Stock desbloqueado. Puedes editar la cantidad.', 'success');
 }
 
-        // Función para resetear el bloqueo al cerrar el modal
-window.resetearBloqueoStock = function() {
-    console.log('Resetear bloqueo stock - modal cerrado');
-    const stockInput = document.getElementById('ingredienteStock');
-    const lockIcon = document.getElementById('stockLockIcon');
-    const clickArea = document.getElementById('stockClickArea');
-    
-    // Solo si estamos en modo edición Y el campo está desbloqueado
-    if (window.ingredienteEditandoId && stockInput && !stockInput.disabled) {
-        console.log('Restaurando bloqueo...');
-        stockInput.disabled = true;
-        stockInput.readOnly = true;
-        stockInput.style.background = '';
-        stockInput.style.cursor = 'pointer';
-        
-        // Pequeño retraso para asegurar que el DOM esté listo
-        setTimeout(() => {
-            if (clickArea && !clickArea.onclick) {
-                clickArea.onclick = function(e) {
-                    e.stopPropagation();
-                    window.mostrarModalContraseñaStock();
-                };
-                clickArea.style.cursor = 'pointer';
-                clickArea.style.borderColor = '';
-                clickArea.style.backgroundColor = '';
-            }
-        }, 50);
-        
-        if (lockIcon) {
-            lockIcon.innerHTML = '<i class="fas fa-lock" style="font-size:.8rem"></i>';
-            lockIcon.style.cursor = 'default';
-        }
-    }
-    
-    // Limpiar elementos inline si existen
-    const unlockInline = document.getElementById('stockUnlockInline');
-    const unlockDiv = document.getElementById('stockUnlock');
-    if (unlockInline) unlockInline.style.display = 'none';
-    if (unlockDiv) unlockDiv.style.display = 'none';
-};
-
         // Modal de contraseña
         window.mostrarModalContraseñaStock = function() {
             console.log('mostrarModalContraseñaStock llamado');
