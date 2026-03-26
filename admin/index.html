@@ -4257,9 +4257,6 @@ window.verificarStockCritico = async function() {
             tasaDisplay.textContent = (window.configGlobal.tasa_efectiva || 0).toFixed(2);
         }
         
-        // 5. Mostrar mensaje con la nueva tasa
-        window.mostrarToast(` Configuración guardada. Nueva tasa efectiva: Bs ${(window.configGlobal.tasa_efectiva || 0).toFixed(2)} por USD`, 'success');
-        
     } catch (e) { 
         console.error('Error guardando configuración:', e); 
         window.mostrarToast(' Error al guardar la configuración', 'error'); 
@@ -4574,15 +4571,17 @@ window.verificarStockCritico = async function() {
     const _sp = document.getElementById('stockTotalPreview'); if (_sp) _sp.textContent = '';
     const _sc = document.getElementById('stockConversionPreview'); if (_sc) _sc.textContent = '';
     
-    // Stock bloqueado al abrir - restaurar evento onclick
+    //  CORRECCIÓN: Asegurar que el stock comience BLOQUEADO al abrir
     const _si = document.getElementById('ingredienteStock');
     const _li = document.getElementById('stockLockIcon');
     const _divClickArea = document.getElementById('stockClickArea');
     
     if (_si) {
         _si.disabled = true;
-        _si.style.cursor = 'pointer';
         _si.readOnly = true;
+        _si.style.cursor = 'pointer';
+        _si.value = ingrediente.stock || 0;
+        _si.onclick = null; // Limpiar cualquier onclick previo
     }
     
     if (_li) {
@@ -4590,22 +4589,24 @@ window.verificarStockCritico = async function() {
         _li.style.cursor = 'default';
     }
     
-    // 🔑 RESTAURAR: Volver a asignar el evento onclick al div
+    //  RESTAURAR: Volver a asignar el evento onclick al div
     if (_divClickArea) {
+        // Limpiar cualquier referencia anterior
+        _divClickArea.onclick = null;
         _divClickArea.onclick = function(e) {
             e.stopPropagation();
-            console.log('🖱️ Click en área de stock');
+            console.log(' Click en área de stock - mostrando modal de contraseña');
             window.mostrarModalContraseñaStock();
         };
         _divClickArea.style.cursor = 'pointer';
-        _divClickArea.style.borderColor = 'var(--border)';
-        _divClickArea.style.backgroundColor = 'var(--input-bg)';
+        _divClickArea.style.borderColor = '';
+        _divClickArea.style.backgroundColor = '';
     } else {
         // Fallback: asignar al input directamente
         if (_si) {
             _si.onclick = function(e) {
                 e.stopPropagation();
-                console.log('🖱️ Click en input de stock (fallback)');
+                console.log(' Click en input de stock (fallback)');
                 window.mostrarModalContraseñaStock();
             };
         }
@@ -4617,7 +4618,7 @@ window.verificarStockCritico = async function() {
     
     document.getElementById('ingredienteModal').classList.add('active');
     
-    console.log('📝 Modal de edición de ingrediente abierto para:', ingrediente.nombre);
+    console.log(' Modal de edición de ingrediente abierto para:', ingrediente.nombre);
 };
 
         window.desbloquearStockClick = function(inputEl) {
@@ -4630,7 +4631,7 @@ window.verificarStockCritico = async function() {
         
         // ==================== FUNCIONES PARA MODAL DE CONTRASEÑA DE STOCK ====================
 window.mostrarModalContraseñaStock = function() {
-    console.log('🔐 mostrarModalContraseñaStock llamado');
+    console.log(' mostrarModalContraseñaStock llamado');
     
     // Limpiar campos previos
     const input = document.getElementById('stockPasswordModalInput');
@@ -4642,9 +4643,9 @@ window.mostrarModalContraseñaStock = function() {
     const modal = document.getElementById('passwordStockModal');
     if (modal) {
         modal.classList.add('active');
-        console.log('✅ Modal passwordStockModal activado');
+        console.log(' Modal passwordStockModal activado');
     } else {
-        console.error('❌ Modal passwordStockModal no encontrado');
+        console.error(' Modal passwordStockModal no encontrado');
         return;
     }
     
@@ -4653,7 +4654,7 @@ window.mostrarModalContraseñaStock = function() {
         const inp = document.getElementById('stockPasswordModalInput');
         if (inp) {
             inp.focus();
-            console.log('🎯 Focus en input de contraseña');
+            console.log(' Focus en input de contraseña');
         }
     }, 100);
 };
@@ -4748,16 +4749,16 @@ async function _desbloquearStock() {
     const clickArea = document.getElementById('stockClickArea');
     
     if (stockInput) {
-        //  CORRECCIÓN: Eliminar readOnly y disabled para permitir edición real
+        // Deshabilitar el atributo disabled y readonly
         stockInput.disabled = false;
         stockInput.readOnly = false;
         stockInput.style.background = '';
         stockInput.style.cursor = 'text';
         stockInput.style.pointerEvents = 'auto';
-        stockInput.focus();
-        //  Remover cualquier evento onclick que pueda interferir
+        //  IMPORTANTE: Eliminar el onclick que bloquea, pero NO eliminar el input del DOM
         stockInput.onclick = null;
         stockInput.onfocus = null;
+        stockInput.focus();
     }
     
     if (lockIcon) {
@@ -4765,25 +4766,19 @@ async function _desbloquearStock() {
         lockIcon.style.cursor = 'default';
     }
     
-    //  IMPORTANTE: Eliminar el evento onclick del div para que no vuelva a pedir contraseńa
+    //  NO clonar el elemento - solo modificar propiedades
     if (clickArea) {
-        // Remover todos los listeners clonando el elemento (más seguro)
-        const newClickArea = clickArea.cloneNode(true);
-        clickArea.parentNode.replaceChild(newClickArea, clickArea);
-        // Actualizar referencia al nuevo elemento
-        const newStockClickArea = document.getElementById('stockClickArea');
-        if (newStockClickArea) {
-            newStockClickArea.style.cursor = 'default';
-            newStockClickArea.style.borderColor = 'var(--success)';
-            newStockClickArea.style.backgroundColor = 'rgba(56,142,60,0.1)';
-            newStockClickArea.onclick = null;
-        }
-        // Actualizar también el input dentro del nuevo div
-        const newInput = document.getElementById('ingredienteStock');
-        if (newInput) {
-            newInput.disabled = false;
-            newInput.readOnly = false;
-            newInput.onclick = null;
+        // Eliminar el evento onclick original sin reemplazar el elemento
+        clickArea.onclick = null;
+        clickArea.style.cursor = 'default';
+        clickArea.style.borderColor = 'var(--success)';
+        clickArea.style.backgroundColor = 'rgba(56,142,60,0.1)';
+        // Asegurar que el input dentro mantiene su estado
+        const innerInput = clickArea.querySelector('input');
+        if (innerInput) {
+            innerInput.disabled = false;
+            innerInput.readOnly = false;
+            innerInput.onclick = null;
         }
     }
     
@@ -4795,29 +4790,49 @@ async function _desbloquearStock() {
     window.cerrarModal('passwordStockModal');
     
     // Mostrar mensaje de éxito
-    window.mostrarToast(' Stock desbloqueado. Puedes editar la cantidad.', 'success');
+    window.mostrarToast('🔓 Stock desbloqueado. Puedes editar la cantidad.', 'success');
 }
 
-// Función para resetear el estado de bloqueo del stock (se llama al cerrar el modal de ingrediente)
+// Función para resetear el estado de bloqueo del stock al cerrar el modal
 window.resetearBloqueoStock = function() {
     const stockInput = document.getElementById('ingredienteStock');
     const lockIcon = document.getElementById('stockLockIcon');
+    const clickArea = document.getElementById('stockClickArea');
+    
+    // Solo si estamos en modo edición y el campo estaba desbloqueado
+    if (window.ingredienteEditandoId && stockInput && !stockInput.disabled) {
+        // Bloquear nuevamente
+        stockInput.disabled = true;
+        stockInput.readOnly = true;
+        stockInput.style.background = '';
+        stockInput.style.cursor = 'pointer';
+        
+        // Restaurar el onclick para pedir contraseña
+        if (clickArea) {
+            clickArea.onclick = function(e) {
+                e.stopPropagation();
+                window.mostrarModalContraseñaStock();
+            };
+            clickArea.style.cursor = 'pointer';
+            clickArea.style.borderColor = '';
+            clickArea.style.backgroundColor = '';
+        } else if (stockInput) {
+            stockInput.onclick = function(e) {
+                e.stopPropagation();
+                window.mostrarModalContraseñaStock();
+            };
+        }
+        
+        // Restaurar ícono de candado
+        if (lockIcon) {
+            lockIcon.innerHTML = '<i class="fas fa-lock" style="font-size:.8rem"></i>';
+            lockIcon.style.cursor = 'default';
+        }
+    }
+    
+    // Ocultar elementos inline si existen
     const unlockInline = document.getElementById('stockUnlockInline');
     const unlockDiv = document.getElementById('stockUnlock');
-    
-    // Solo si es modo edición y el campo estaba bloqueado, restaurar a bloqueado
-    if (stockInput && stockInput.disabled === false && window.ingredienteEditandoId) {
-        stockInput.disabled = true;
-        stockInput.style.background = 'var(--input-bg)';
-        stockInput.style.cursor = 'pointer';
-        stockInput.onclick = function() { window.mostrarModalContraseñaStock(); };
-    }
-    
-    if (lockIcon && window.ingredienteEditandoId) {
-        lockIcon.innerHTML = '<i class="fas fa-lock" style="font-size:.8rem"></i>';
-        lockIcon.style.cursor = 'default';
-    }
-    
     if (unlockInline) unlockInline.style.display = 'none';
     if (unlockDiv) unlockDiv.style.display = 'none';
 };
