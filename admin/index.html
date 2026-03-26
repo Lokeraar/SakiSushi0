@@ -4648,42 +4648,42 @@ window.verificarStockCritico = async function() {
         }
 
         // Función para resetear el bloqueo al cerrar el modal
-        window.resetearBloqueoStock = function() {
-            console.log('Resetear bloqueo stock - modal cerrado');
-            const stockInput = document.getElementById('ingredienteStock');
-            const lockIcon = document.getElementById('stockLockIcon');
-            const clickArea = document.getElementById('stockClickArea');
-            
-            // Solo si estamos en modo edición Y el campo está desbloqueado
-            if (window.ingredienteEditandoId && stockInput && !stockInput.disabled) {
-                console.log('Restaurando bloqueo...');
-                stockInput.disabled = true;
-                stockInput.readOnly = true;
-                stockInput.style.background = '';
-                stockInput.style.cursor = 'pointer';
-                
-                if (clickArea) {
-                    clickArea.onclick = function(e) {
-                        e.stopPropagation();
-                        window.mostrarModalContraseñaStock();
-                    };
-                    clickArea.style.cursor = 'pointer';
-                    clickArea.style.borderColor = '';
-                    clickArea.style.backgroundColor = '';
-                }
-                
-                if (lockIcon) {
-                    lockIcon.innerHTML = '<i class="fas fa-lock" style="font-size:.8rem"></i>';
-                    lockIcon.style.cursor = 'default';
-                }
-            }
-            
-            // Limpiar elementos inline si existen
-            const unlockInline = document.getElementById('stockUnlockInline');
-            const unlockDiv = document.getElementById('stockUnlock');
-            if (unlockInline) unlockInline.style.display = 'none';
-            if (unlockDiv) unlockDiv.style.display = 'none';
-        };
+window.resetearBloqueoStock = function() {
+    console.log('Resetear bloqueo stock - modal cerrado');
+    const stockInput = document.getElementById('ingredienteStock');
+    const lockIcon = document.getElementById('stockLockIcon');
+    const clickArea = document.getElementById('stockClickArea');
+    
+    // Solo si estamos en modo edición Y el campo está desbloqueado
+    if (window.ingredienteEditandoId && stockInput && !stockInput.disabled) {
+        console.log('Restaurando bloqueo...');
+        stockInput.disabled = true;
+        stockInput.readOnly = true;
+        stockInput.style.background = '';
+        stockInput.style.cursor = 'pointer';
+        
+        if (clickArea) {
+            clickArea.onclick = function(e) {
+                e.stopPropagation();
+                window.mostrarModalContraseñaStock();
+            };
+            clickArea.style.cursor = 'pointer';
+            clickArea.style.borderColor = '';
+            clickArea.style.backgroundColor = '';
+        }
+        
+        if (lockIcon) {
+            lockIcon.innerHTML = '<i class="fas fa-lock" style="font-size:.8rem"></i>';
+            lockIcon.style.cursor = 'default';
+        }
+    }
+    
+    // Limpiar elementos inline si existen
+    const unlockInline = document.getElementById('stockUnlockInline');
+    const unlockDiv = document.getElementById('stockUnlock');
+    if (unlockInline) unlockInline.style.display = 'none';
+    if (unlockDiv) unlockDiv.style.display = 'none';
+};
 
         // Modal de contraseña
         window.mostrarModalContraseñaStock = function() {
@@ -5255,135 +5255,249 @@ window.verificarStockCritico = async function() {
         // ============================================
         // SETUP EVENT LISTENERS
         // ============================================
-        window.setupEventListeners = function() {
+        // ============================================
+// SETUP EVENT LISTENERS (CORREGIDO - SIN CLONAR BOTONES)
+// ============================================
+window.setupEventListeners = function() {
 
-            window._scrollTabs = function(dir) {
-                const c = document.getElementById('tabsContainer');
-                if (!c) return;
-                c.scrollBy({ left: dir * 180, behavior: 'smooth' });
-                setTimeout(window._updateTabChevrons, 200);
-            };
-            window._updateTabChevrons = function() {
-                const c = document.getElementById('tabsContainer');
-                const lBtn = document.getElementById('tabsChevronLeft');
-                const rBtn = document.getElementById('tabsChevronRight');
-                if (!c || !lBtn || !rBtn) return;
-                lBtn.style.opacity = c.scrollLeft > 4 ? '1' : '0.3';
-                lBtn.style.pointerEvents = c.scrollLeft > 4 ? 'auto' : 'none';
-                const atEnd = c.scrollLeft + c.clientWidth >= c.scrollWidth - 4;
-                rBtn.style.opacity = atEnd ? '0.3' : '1';
-                rBtn.style.pointerEvents = atEnd ? 'none' : 'auto';
-            };
-            document.getElementById('tabsContainer')?.addEventListener('scroll', window._updateTabChevrons);
-            window._updateTabChevrons();
+    window._scrollTabs = function(dir) {
+        const c = document.getElementById('tabsContainer');
+        if (!c) return;
+        c.scrollBy({ left: dir * 180, behavior: 'smooth' });
+        setTimeout(window._updateTabChevrons, 200);
+    };
+    window._updateTabChevrons = function() {
+        const c = document.getElementById('tabsContainer');
+        const lBtn = document.getElementById('tabsChevronLeft');
+        const rBtn = document.getElementById('tabsChevronRight');
+        if (!c || !lBtn || !rBtn) return;
+        lBtn.style.opacity = c.scrollLeft > 4 ? '1' : '0.3';
+        lBtn.style.pointerEvents = c.scrollLeft > 4 ? 'auto' : 'none';
+        const atEnd = c.scrollLeft + c.clientWidth >= c.scrollWidth - 4;
+        rBtn.style.opacity = atEnd ? '0.3' : '1';
+        rBtn.style.pointerEvents = atEnd ? 'none' : 'auto';
+    };
+    document.getElementById('tabsContainer')?.addEventListener('scroll', window._updateTabChevrons);
+    window._updateTabChevrons();
 
-            document.getElementById('platilloDisponibleCheck')?.addEventListener('change', function() {
-                const lbl = document.getElementById('platilloDisponibleLabel');
-                const sel = document.getElementById('platilloDisponible');
-                if (lbl) { lbl.textContent = this.checked ? 'Sí' : 'No'; lbl.style.color = this.checked ? 'var(--success)' : 'var(--text-muted)'; }
-                if (sel) sel.value = this.checked ? 'true' : 'false';
-            });
+    document.getElementById('platilloDisponibleCheck')?.addEventListener('change', function() {
+        const lbl = document.getElementById('platilloDisponibleLabel');
+        const sel = document.getElementById('platilloDisponible');
+        if (lbl) { lbl.textContent = this.checked ? 'Sí' : 'No'; lbl.style.color = this.checked ? 'var(--success)' : 'var(--text-muted)'; }
+        if (sel) sel.value = this.checked ? 'true' : 'false';
+    });
 
-            document.querySelectorAll('.tab').forEach(tab => {
-                tab.addEventListener('click', () => {
-                    const target = tab.dataset.tab;
-                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-                    tab.classList.add('active');
-                    document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
-                    const pane = document.getElementById(target + 'Pane');
-                    if (pane) pane.classList.add('active');
-                    if (target !== 'qr') {
-                        const el = document.getElementById('qrNombreMesa');
-                        if (el) el.value = '';
-                    }
-                });
-            });
-
-            // Cerrar modales - AHORA CON LOS BOTONES CORRECTOS
-            const closeButtons = [
-                ['closePlatilloModal', 'platilloModal', null],
-                ['cancelPlatillo', 'platilloModal', null],
-                ['closeIngredienteModal', 'ingredienteModal', 'resetearBloqueoStock'],
-                ['cancelIngrediente', 'ingredienteModal', 'resetearBloqueoStock'],
-                ['closeUsuarioModal', 'usuarioModal', null],
-                ['cancelUsuario', 'usuarioModal', null],
-                ['closeDeliveryModal', 'deliveryModal', null],
-                ['cancelDeliveryEdit', 'deliveryModal', null],
-            ];
-            
-            closeButtons.forEach(([btnId, modalId, callback]) => {
-                const btn = document.getElementById(btnId);
-                if (btn) {
-                    // Remover listeners anteriores para evitar duplicados
-                    const newBtn = btn.cloneNode(true);
-                    btn.parentNode.replaceChild(newBtn, btn);
-                    newBtn.addEventListener('click', () => {
-                        window.cerrarModal(modalId);
-                        if (callback && typeof window[callback] === 'function') {
-                            window[callback]();
-                        }
-                    });
-                }
-            });
-
-            document.querySelectorAll('.modal').forEach(modal => {
-                modal.addEventListener('click', function(e) {
-                    if (e.target === this) window.cerrarModal(this.id);
-                });
-            });
-
-            document.getElementById('saveAllButton').addEventListener('click', async () => { await window.guardarConfiguracion(); });
-
-            document.getElementById('tasaBaseInput').addEventListener('change', window.recalcularTasaEfectiva);
-            document.getElementById('aumentoDiarioInput').addEventListener('change', window.recalcularTasaEfectiva);
-            
-            function _mostrarFechasAumento(visible) {
-                document.getElementById('tasaFechasDiv').style.display = visible ? 'flex' : 'none';
+    document.querySelectorAll('.tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+            const target = tab.dataset.tab;
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
+            const pane = document.getElementById(target + 'Pane');
+            if (pane) pane.classList.add('active');
+            if (target !== 'qr') {
+                const el = document.getElementById('qrNombreMesa');
+                if (el) el.value = '';
             }
-            function _actualizarLabelAumento() {
-                const diario   = document.getElementById('aumentoActivoToggle').checked;
-                const semanal  = document.getElementById('aumentoSemanalToggle').checked;
-                const alguno   = diario || semanal;
-                const label = document.getElementById('labelAumentoPct');
-                if (label) label.textContent = semanal ? 'Aumento Semanal %:' : 'Aumento Diario %:';
-                const inputPct = document.getElementById('aumentoDiarioInput');
-                if (inputPct) {
-                    inputPct.disabled = !alguno;
-                    inputPct.style.opacity = alguno ? '1' : '0.4';
-                    inputPct.style.cursor  = alguno ? '' : 'not-allowed';
+        });
+    });
+
+    // *****************************************************
+    // CORRECCIÓN: NO clonar los botones, solo asignar eventos una vez
+    // *****************************************************
+    
+    // Botón Guardar ingrediente (asegurar que existe el evento)
+    const saveIngBtn = document.getElementById('saveIngrediente');
+    if (saveIngBtn && !saveIngBtn.hasAttribute('data-event-attached')) {
+        saveIngBtn.setAttribute('data-event-attached', 'true');
+        // Remover listeners anteriores si existen
+        const newSaveBtn = saveIngBtn.cloneNode(true);
+        saveIngBtn.parentNode.replaceChild(newSaveBtn, saveIngBtn);
+        const finalSaveBtn = document.getElementById('saveIngrediente');
+        finalSaveBtn.addEventListener('click', async function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            const btn = this;
+            if (btn.disabled) return;
+            
+            const esNuevo = !window.ingredienteEditandoId;
+            const id = esNuevo ? window.generarId('ing_') : window.ingredienteEditandoId;
+            
+            const nombre = document.getElementById('ingredienteNombre').value.trim();
+            const stockActual = parseFloat(document.getElementById('ingredienteStock').value) || 0;
+            const agregar = parseFloat(document.getElementById('ingredienteAgregar').value) || 0;
+            const unidad = document.getElementById('ingredienteUnidad').value;
+            const minimo = parseFloat(document.getElementById('ingredienteMinimo').value) || 0;
+            const costo = parseFloat(document.getElementById('ingredienteCosto').value) || 0;
+            const venta = parseFloat(document.getElementById('ingredienteVenta').value) || 0;
+            
+            if (!nombre) {
+                window.mostrarToast('Ingresa el nombre del ingrediente', 'error');
+                return;
+            }
+            
+            try {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+                
+                const ingrediente = { 
+                    id, nombre, 
+                    stock: stockActual + agregar, 
+                    reservado: 0,
+                    unidad_base: unidad, 
+                    minimo, 
+                    precio_costo: costo, 
+                    precio_unitario: venta 
+                };
+                
+                let error;
+                if (esNuevo) {
+                    ({ error } = await window.supabaseClient.from('inventario').insert([ingrediente]));
+                } else {
+                    ({ error } = await window.supabaseClient.from('inventario').update(ingrediente).eq('id', id));
                 }
-                _mostrarFechasAumento(alguno);
-                if (alguno && !document.getElementById('aumentoDesde').value) {
-                    document.getElementById('aumentoDesde').value = new Date().toISOString().split('T')[0];
+                
+                if (error) throw error;
+                
+                window.ingredienteEditandoId = null;
+                window.cerrarModal('ingredienteModal');
+                await window.cargarInventario();
+                window.mostrarToast('✓ Ingrediente guardado', 'success');
+                
+            } catch (e) {
+                console.error('Error guardando ingrediente:', e);
+                window.mostrarToast('✗ Error: ' + (e.message || e), 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = 'Guardar';
+            }
+        });
+    }
+    
+    // Botón Cancelar ingrediente
+    const cancelIngBtn = document.getElementById('cancelIngrediente');
+    if (cancelIngBtn && !cancelIngBtn.hasAttribute('data-event-attached')) {
+        cancelIngBtn.setAttribute('data-event-attached', 'true');
+        const newCancelBtn = cancelIngBtn.cloneNode(true);
+        cancelIngBtn.parentNode.replaceChild(newCancelBtn, cancelIngBtn);
+        const finalCancelBtn = document.getElementById('cancelIngrediente');
+        finalCancelBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            window.cerrarModal('ingredienteModal');
+            window.resetearBloqueoStock();
+        });
+    }
+    
+    // Botón Eliminar ingrediente
+    const deleteIngBtn = document.getElementById('deleteIngredienteBtn');
+    if (deleteIngBtn && !deleteIngBtn.hasAttribute('data-event-attached')) {
+        deleteIngBtn.setAttribute('data-event-attached', 'true');
+        const newDeleteBtn = deleteIngBtn.cloneNode(true);
+        deleteIngBtn.parentNode.replaceChild(newDeleteBtn, deleteIngBtn);
+        const finalDeleteBtn = document.getElementById('deleteIngredienteBtn');
+        finalDeleteBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            const id = window.ingredienteEditandoId;
+            if (!id) return;
+            const ing = (window.inventarioItems || []).find(i => i.id === id);
+            if (!confirm(`¿Eliminar el ingrediente "${ing?.nombre || id}"?`)) return;
+            
+            (async () => {
+                try {
+                    const { error } = await window.supabaseClient.from('inventario').delete().eq('id', id);
+                    if (error) throw error;
+                    window.cerrarModal('ingredienteModal');
+                    window.ingredienteEditandoId = null;
+                    await window.cargarInventario();
+                    window.mostrarToast('🗑️ Ingrediente eliminado', 'success');
+                } catch(e) {
+                    console.error('Error eliminando ingrediente:', e);
+                    window.mostrarToast('✗ Error: ' + (e.message || e), 'error');
+                }
+            })();
+        });
+    }
+    
+    // Botón Cerrar modal ingrediente (X)
+    const closeIngBtn = document.getElementById('closeIngredienteModal');
+    if (closeIngBtn && !closeIngBtn.hasAttribute('data-event-attached')) {
+        closeIngBtn.setAttribute('data-event-attached', 'true');
+        const newCloseBtn = closeIngBtn.cloneNode(true);
+        closeIngBtn.parentNode.replaceChild(newCloseBtn, closeIngBtn);
+        const finalCloseBtn = document.getElementById('closeIngredienteModal');
+        finalCloseBtn.addEventListener('click', function() {
+            window.cerrarModal('ingredienteModal');
+            window.resetearBloqueoStock();
+        });
+    }
+
+    // Cerrar al hacer clic en el fondo oscuro de cualquier modal
+    document.querySelectorAll('.modal').forEach(modal => {
+        modal.addEventListener('click', function(e) {
+            if (e.target === this) {
+                window.cerrarModal(this.id);
+                if (this.id === 'ingredienteModal') {
+                    window.resetearBloqueoStock();
                 }
             }
-            document.getElementById('aumentoActivoToggle').addEventListener('change', function() {
-                if (this.checked) document.getElementById('aumentoSemanalToggle').checked = false;
-                window.configGlobal.aumento_detenido = !this.checked;
-                _actualizarLabelAumento();
-                window.recalcularTasaEfectiva();
-            });
-            document.getElementById('aumentoSemanalToggle').addEventListener('change', function() {
-                if (this.checked) document.getElementById('aumentoActivoToggle').checked = false;
-                window.configGlobal.aumento_detenido = !this.checked;
-                _actualizarLabelAumento();
-                window.recalcularTasaEfectiva();
-            });
-            document.getElementById('aumentoIndefinido').addEventListener('change', function() {
-                document.getElementById('aumentoHasta').disabled = this.checked;
-                if (this.checked) document.getElementById('aumentoHasta').value = '';
-            });
+        });
+    });
 
-            const _closeQrBtn  = document.getElementById('closeQrAmpliado');
-            const _closeQrX    = document.getElementById('closeQrAmpliadoModal');
-            const _qrModal     = document.getElementById('qrAmpliadoModal');
-            if (_closeQrBtn) _closeQrBtn.addEventListener('click', () => window.cerrarModal('qrAmpliadoModal'));
-            if (_closeQrX)   _closeQrX.addEventListener('click',   () => window.cerrarModal('qrAmpliadoModal'));
-            if (_qrModal) _qrModal.addEventListener('click', function(e) {
-                if (e.target === this) window.cerrarModal('qrAmpliadoModal');
-            });
+    // Guardar configuración de tasa
+    document.getElementById('saveAllButton').addEventListener('click', async () => { await window.guardarConfiguracion(); });
 
-        };
+    document.getElementById('tasaBaseInput').addEventListener('change', window.recalcularTasaEfectiva);
+    document.getElementById('aumentoDiarioInput').addEventListener('change', window.recalcularTasaEfectiva);
+    
+    function _mostrarFechasAumento(visible) {
+        document.getElementById('tasaFechasDiv').style.display = visible ? 'flex' : 'none';
+    }
+    function _actualizarLabelAumento() {
+        const diario   = document.getElementById('aumentoActivoToggle').checked;
+        const semanal  = document.getElementById('aumentoSemanalToggle').checked;
+        const alguno   = diario || semanal;
+        const label = document.getElementById('labelAumentoPct');
+        if (label) label.textContent = semanal ? 'Aumento Semanal %:' : 'Aumento Diario %:';
+        const inputPct = document.getElementById('aumentoDiarioInput');
+        if (inputPct) {
+            inputPct.disabled = !alguno;
+            inputPct.style.opacity = alguno ? '1' : '0.4';
+            inputPct.style.cursor  = alguno ? '' : 'not-allowed';
+        }
+        _mostrarFechasAumento(alguno);
+        if (alguno && !document.getElementById('aumentoDesde').value) {
+            document.getElementById('aumentoDesde').value = new Date().toISOString().split('T')[0];
+        }
+    }
+    document.getElementById('aumentoActivoToggle').addEventListener('change', function() {
+        if (this.checked) document.getElementById('aumentoSemanalToggle').checked = false;
+        window.configGlobal.aumento_detenido = !this.checked;
+        _actualizarLabelAumento();
+        window.recalcularTasaEfectiva();
+    });
+    document.getElementById('aumentoSemanalToggle').addEventListener('change', function() {
+        if (this.checked) document.getElementById('aumentoActivoToggle').checked = false;
+        window.configGlobal.aumento_detenido = !this.checked;
+        _actualizarLabelAumento();
+        window.recalcularTasaEfectiva();
+    });
+    document.getElementById('aumentoIndefinido').addEventListener('change', function() {
+        document.getElementById('aumentoHasta').disabled = this.checked;
+        if (this.checked) document.getElementById('aumentoHasta').value = '';
+    });
+
+    const _closeQrBtn  = document.getElementById('closeQrAmpliado');
+    const _closeQrX    = document.getElementById('closeQrAmpliadoModal');
+    const _qrModal     = document.getElementById('qrAmpliadoModal');
+    if (_closeQrBtn) _closeQrBtn.addEventListener('click', () => window.cerrarModal('qrAmpliadoModal'));
+    if (_closeQrX)   _closeQrX.addEventListener('click',   () => window.cerrarModal('qrAmpliadoModal'));
+    if (_qrModal) _qrModal.addEventListener('click', function(e) {
+        if (e.target === this) window.cerrarModal('qrAmpliadoModal');
+    });
+
+};
 
         // ============================================
         // TASA DE HOY — Primer inicio de sesión del día
