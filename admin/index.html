@@ -4527,7 +4527,7 @@ window.verificarStockCritico = async function() {
     const _sp = document.getElementById('stockTotalPreview'); if (_sp) _sp.textContent = '';
     const _sc = document.getElementById('stockConversionPreview'); if (_sc) _sc.textContent = '';
     
-    // Stock bloqueado al abrir - el div contenedor tiene onclick que llama a mostrarModalContraseñaStock
+    // Stock bloqueado al abrir - restaurar evento onclick
     const _si = document.getElementById('ingredienteStock');
     const _li = document.getElementById('stockLockIcon');
     const _divClickArea = document.getElementById('stockClickArea');
@@ -4543,7 +4543,7 @@ window.verificarStockCritico = async function() {
         _li.style.cursor = 'default';
     }
     
-    // Asegurar que el div de clic tenga el evento
+    // 🔑 RESTAURAR: Volver a asignar el evento onclick al div
     if (_divClickArea) {
         _divClickArea.onclick = function(e) {
             e.stopPropagation();
@@ -4551,6 +4551,8 @@ window.verificarStockCritico = async function() {
             window.mostrarModalContraseñaStock();
         };
         _divClickArea.style.cursor = 'pointer';
+        _divClickArea.style.borderColor = 'var(--border)';
+        _divClickArea.style.backgroundColor = 'var(--input-bg)';
     } else {
         // Fallback: asignar al input directamente
         if (_si) {
@@ -4569,7 +4571,7 @@ window.verificarStockCritico = async function() {
     document.getElementById('ingredienteModal').classList.add('active');
     
     console.log('📝 Modal de edición de ingrediente abierto para:', ingrediente.nombre);
-};    
+};
 
         window.desbloquearStockClick = function(inputEl) {
             if (!inputEl.disabled) return; // ya desbloqueado
@@ -4696,6 +4698,7 @@ window.verificarContraseñaStock = async function() {
 async function _desbloquearStock() {
     const stockInput = document.getElementById('ingredienteStock');
     const lockIcon = document.getElementById('stockLockIcon');
+    const clickArea = document.getElementById('stockClickArea');
     
     if (stockInput) {
         stockInput.disabled = false;
@@ -4709,6 +4712,15 @@ async function _desbloquearStock() {
         lockIcon.style.cursor = 'default';
     }
     
+    // 🔑 IMPORTANTE: Eliminar el evento onclick del div para que no vuelva a pedir contraseña
+    if (clickArea) {
+        clickArea.onclick = null;
+        clickArea.style.cursor = 'default';
+        // Opcional: cambiar el estilo visual para indicar que ya está desbloqueado
+        clickArea.style.borderColor = 'var(--success)';
+        clickArea.style.backgroundColor = 'rgba(56,142,60,0.1)';
+    }
+    
     // Ocultar inline unlock si existe
     const unlockInline = document.getElementById('stockUnlockInline');
     if (unlockInline) unlockInline.style.display = 'none';
@@ -4717,7 +4729,7 @@ async function _desbloquearStock() {
     window.cerrarModal('passwordStockModal');
     
     // Mostrar mensaje de éxito
-    window.mostrarToast(' Stock desbloqueado. Puedes editar la cantidad.', 'success');
+    window.mostrarToast('🔓 Stock desbloqueado. Puedes editar la cantidad.', 'success');
 }
 
 // Función para resetear el estado de bloqueo del stock (se llama al cerrar el modal de ingrediente)
