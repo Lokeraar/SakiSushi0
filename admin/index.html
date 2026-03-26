@@ -3062,7 +3062,7 @@ window.cargarConfiguracion = async function() {
         window.configGlobal.admin_password = window.configGlobal.admin_password || 'admin123';
         window.configGlobal.recovery_email = window.configGlobal.recovery_email || 'admin@sakisushi.com';
         
-        console.log('✅ Configuración cargada. admin_password:', window.configGlobal.admin_password ? '***' : 'NO CARGADA');
+        console.log(' Configuración cargada. admin_password:', window.configGlobal.admin_password ? '***' : 'NO CARGADA');
         
     } catch (e) {
         console.error('Error cargando configuración:', e);
@@ -4098,9 +4098,9 @@ window.verificarStockCritico = async function() {
         document.getElementById('confirmPassword').value = '';
         
         // 8. Mostrar mensaje de éxito
-        window.mostrarToast('🔐 Contraseña actualizada correctamente en todo el sistema', 'success');
+        window.mostrarToast(' Contraseña actualizada correctamente en todo el sistema', 'success');
         
-        console.log('✅ Contraseña actualizada en tablas usuarios y config');
+        console.log(' Contraseña actualizada en tablas usuarios y config');
         
     } catch (e) {
         console.error('Error cambiando contraseña:', e);
@@ -4109,7 +4109,7 @@ window.verificarStockCritico = async function() {
             errorDiv.style.display = 'block';
             errorDiv.innerHTML = '<i class="fas fa-exclamation-circle"></i> Error: ' + (e.message || 'Error al cambiar la contraseña');
         }
-        window.mostrarToast('❌ Error al cambiar la contraseña: ' + (e.message || e), 'error');
+        window.mostrarToast(' Error al cambiar la contraseña: ' + (e.message || e), 'error');
     } finally {
         // Restaurar botón
         if (btn) {
@@ -4694,7 +4694,7 @@ window.verificarContraseñaStock = async function() {
         // Verificar con configGlobal.admin_password (más simple)
         if (pwd === adminPassword) {
             esValida = true;
-            console.log('✅ Contraseña válida (config)');
+            console.log(' Contraseña válida (config)');
         }
         
         // Si no, verificar con la tabla usuarios usando verify_user_credentials
@@ -4707,7 +4707,7 @@ window.verificarContraseñaStock = async function() {
             
             if (!authError && authData && authData.success === true) {
                 esValida = true;
-                console.log('✅ Contraseña válida (usuarios)');
+                console.log(' Contraseña válida (usuarios)');
             }
         }
         
@@ -4742,20 +4742,18 @@ window.verificarContraseñaStock = async function() {
     }
 };
 
-// Función auxiliar para desbloquear el stock
+// Función auxiliar para desbloquear el stock (NO modifica botones)
 async function _desbloquearStock() {
     const stockInput = document.getElementById('ingredienteStock');
     const lockIcon = document.getElementById('stockLockIcon');
     const clickArea = document.getElementById('stockClickArea');
     
     if (stockInput) {
-        // Deshabilitar el atributo disabled y readonly
         stockInput.disabled = false;
         stockInput.readOnly = false;
         stockInput.style.background = '';
         stockInput.style.cursor = 'text';
         stockInput.style.pointerEvents = 'auto';
-        //  IMPORTANTE: Eliminar el onclick que bloquea, pero NO eliminar el input del DOM
         stockInput.onclick = null;
         stockInput.onfocus = null;
         stockInput.focus();
@@ -4766,14 +4764,12 @@ async function _desbloquearStock() {
         lockIcon.style.cursor = 'default';
     }
     
-    //  NO clonar el elemento - solo modificar propiedades
+    // Solo modificar el área de clic, NO tocar los botones
     if (clickArea) {
-        // Eliminar el evento onclick original sin reemplazar el elemento
         clickArea.onclick = null;
         clickArea.style.cursor = 'default';
         clickArea.style.borderColor = 'var(--success)';
         clickArea.style.backgroundColor = 'rgba(56,142,60,0.1)';
-        // Asegurar que el input dentro mantiene su estado
         const innerInput = clickArea.querySelector('input');
         if (innerInput) {
             innerInput.disabled = false;
@@ -4782,15 +4778,11 @@ async function _desbloquearStock() {
         }
     }
     
-    // Ocultar inline unlock si existe
-    const unlockInline = document.getElementById('stockUnlockInline');
-    if (unlockInline) unlockInline.style.display = 'none';
-    
-    // Cerrar modal
+    // Cerrar modal de contraseña
     window.cerrarModal('passwordStockModal');
     
     // Mostrar mensaje de éxito
-    window.mostrarToast('🔓 Stock desbloqueado. Puedes editar la cantidad.', 'success');
+    window.mostrarToast(' Stock desbloqueado. Puedes editar la cantidad.', 'success');
 }
 
 // Función para resetear el estado de bloqueo del stock al cerrar el modal
@@ -4811,7 +4803,7 @@ window.resetearBloqueoStock = function() {
         if (clickArea) {
             clickArea.onclick = function(e) {
                 e.stopPropagation();
-                window.mostrarModalContraseñaStock();
+                window.mostrarModalContraseńaStock();
             };
             clickArea.style.cursor = 'pointer';
             clickArea.style.borderColor = '';
@@ -4819,7 +4811,7 @@ window.resetearBloqueoStock = function() {
         } else if (stockInput) {
             stockInput.onclick = function(e) {
                 e.stopPropagation();
-                window.mostrarModalContraseñaStock();
+                window.mostrarModalContraseńaStock();
             };
         }
         
@@ -4830,7 +4822,7 @@ window.resetearBloqueoStock = function() {
         }
     }
     
-    // Ocultar elementos inline si existen
+    // Ocultar elementos inline si existen (no afectan a los botones)
     const unlockInline = document.getElementById('stockUnlockInline');
     const unlockDiv = document.getElementById('stockUnlock');
     if (unlockInline) unlockInline.style.display = 'none';
@@ -6769,5 +6761,148 @@ window._irAIngrediente = function(ingredienteId) {
         </div>
     </div>
 </div>
+// ==================== CORRECCIÓN: ASEGURAR QUE LOS BOTONES DEL MODAL DE INGREDIENTE FUNCIONEN ====================
+(function asegurarBotonesIngrediente() {
+    // Esperar a que el DOM esté listo
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function() {
+            inicializarBotonesIngrediente();
+        });
+    } else {
+        inicializarBotonesIngrediente();
+    }
+    
+    function inicializarBotonesIngrediente() {
+        // Función para reasignar eventos a los botones si se pierden
+        function reasignarEventosBotones() {
+            // Botón Guardar
+            const saveBtn = document.getElementById('saveIngrediente');
+            if (saveBtn && !saveBtn.hasAttribute('data-event-fixed')) {
+                const oldBtn = saveBtn.cloneNode(true);
+                saveBtn.parentNode.replaceChild(oldBtn, saveBtn);
+                oldBtn.setAttribute('data-event-fixed', 'true');
+                oldBtn.addEventListener('click', async function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const btn = this;
+                    if (btn.disabled) return;
+                    
+                    // Llamar al guardado real
+                    const esNuevo = !window.ingredienteEditandoId;
+                    const id = esNuevo ? window.generarId('ing_') : window.ingredienteEditandoId;
+                    
+                    const nombre = document.getElementById('ingredienteNombre').value.trim();
+                    const stockActual = parseFloat(document.getElementById('ingredienteStock').value) || 0;
+                    const agregar = parseFloat(document.getElementById('ingredienteAgregar').value) || 0;
+                    const unidad = document.getElementById('ingredienteUnidad').value;
+                    const minimo = parseFloat(document.getElementById('ingredienteMinimo').value) || 0;
+                    const costo = parseFloat(document.getElementById('ingredienteCosto').value) || 0;
+                    const venta = parseFloat(document.getElementById('ingredienteVenta').value) || 0;
+                    
+                    if (!nombre) {
+                        window.mostrarToast('Ingresa el nombre del ingrediente', 'error');
+                        return;
+                    }
+                    
+                    try {
+                        btn.disabled = true;
+                        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+                        
+                        const ingrediente = { 
+                            id, nombre, 
+                            stock: stockActual + agregar, 
+                            reservado: 0,
+                            unidad_base: unidad, 
+                            minimo, 
+                            precio_costo: costo, 
+                            precio_unitario: venta 
+                        };
+                        
+                        let error;
+                        if (esNuevo) {
+                            ({ error } = await window.supabaseClient.from('inventario').insert([ingrediente]));
+                        } else {
+                            ({ error } = await window.supabaseClient.from('inventario').update(ingrediente).eq('id', id));
+                        }
+                        
+                        if (error) throw error;
+                        
+                        window.ingredienteEditandoId = null;
+                        window.cerrarModal('ingredienteModal');
+                        await window.cargarInventario();
+                        window.mostrarToast(' Ingrediente guardado', 'success');
+                        
+                    } catch (e) {
+                        console.error('Error guardando ingrediente:', e);
+                        window.mostrarToast(' Error: ' + (e.message || e), 'error');
+                    } finally {
+                        btn.disabled = false;
+                        btn.innerHTML = 'Guardar';
+                    }
+                });
+            }
+            
+            // Botón Cancelar
+            const cancelBtn = document.getElementById('cancelIngrediente');
+            if (cancelBtn && !cancelBtn.hasAttribute('data-event-fixed')) {
+                const oldBtn = cancelBtn.cloneNode(true);
+                cancelBtn.parentNode.replaceChild(oldBtn, cancelBtn);
+                oldBtn.setAttribute('data-event-fixed', 'true');
+                oldBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    window.cerrarModal('ingredienteModal');
+                    window.resetearBloqueoStock();
+                });
+            }
+            
+            // Botón Eliminar
+            const deleteBtn = document.getElementById('deleteIngredienteBtn');
+            if (deleteBtn && !deleteBtn.hasAttribute('data-event-fixed')) {
+                const oldBtn = deleteBtn.cloneNode(true);
+                deleteBtn.parentNode.replaceChild(oldBtn, deleteBtn);
+                oldBtn.setAttribute('data-event-fixed', 'true');
+                oldBtn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const id = window.ingredienteEditandoId;
+                    if (!id) return;
+                    const ing = (window.inventarioItems || []).find(i => i.id === id);
+                    if (!confirm(`żEliminar el ingrediente "${ing?.nombre || id}"?`)) return;
+                    
+                    (async () => {
+                        try {
+                            const { error } = await window.supabaseClient.from('inventario').delete().eq('id', id);
+                            if (error) throw error;
+                            window.cerrarModal('ingredienteModal');
+                            window.ingredienteEditandoId = null;
+                            await window.cargarInventario();
+                            window.mostrarToast(' Ingrediente eliminado', 'success');
+                        } catch(e) {
+                            console.error('Error eliminando ingrediente:', e);
+                            window.mostrarToast(' Error: ' + (e.message || e), 'error');
+                        }
+                    })();
+                });
+            }
+        }
+        
+        // Reasignar eventos cuando se abre el modal
+        const modal = document.getElementById('ingredienteModal');
+        if (modal) {
+            const observer = new MutationObserver(function(mutations) {
+                mutations.forEach(function(mutation) {
+                    if (mutation.attributeName === 'class' && modal.classList.contains('active')) {
+                        setTimeout(reasignarEventosBotones, 50);
+                    }
+                });
+            });
+            observer.observe(modal, { attributes: true });
+            
+            // También reasignar al cargar la página
+            setTimeout(reasignarEventosBotones, 500);
+        }
+    }
+})();
 </body>
 </html>
