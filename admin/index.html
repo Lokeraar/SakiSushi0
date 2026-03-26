@@ -4492,396 +4492,408 @@ window.verificarStockCritico = async function() {
             } catch (e) { console.error('Error eliminando platillo:', e); window.mostrarToast(' Error al eliminar el platillo', 'error'); }
         };
 
+                // ==================== FUNCIONES DEL MODAL DE INGREDIENTE ====================
+
         window.abrirModalNuevoIngrediente = function() {
-    window.ingredienteEditandoId = null;
-    document.getElementById('ingredienteModalTitle').textContent = 'Nuevo Ingrediente';
-    document.getElementById('ingredienteNombre').value = '';
-    document.getElementById('ingredienteMinimo').value = '';
-    document.getElementById('ingredienteCosto').value = '';
-    document.getElementById('ingredienteVenta').value = '';
-    document.getElementById('ingredienteAgregar').value = '';
-    
-    // Resetear calculadora
-    const _ct = document.getElementById('costoTotal'); if (_ct) _ct.value = '';
-    const _cc = document.getElementById('cantidadComprada'); if (_cc) _cc.value = '';
-    const _cr = document.getElementById('calcResultado'); if (_cr) _cr.style.display = 'none';
-    
-    // Resetear preview
-    const _sp = document.getElementById('stockTotalPreview'); if (_sp) _sp.textContent = '';
-    const _sc = document.getElementById('stockConversionPreview'); if (_sc) _sc.textContent = '';
-    
-    // En modo NUEVO, el stock es editable directamente (sin bloqueo)
-    const _si = document.getElementById('ingredienteStock');
-    const _li = document.getElementById('stockLockIcon');
-    const _ud = document.getElementById('stockUnlockInline');
-    const _unlockDiv = document.getElementById('stockUnlock');
-    
-    if (_si) { 
-        _si.disabled = false; 
-        _si.value = '0'; 
-        _si.style.background = ''; 
-        _si.style.cursor = 'text';
-        _si.onclick = null;  // En modo nuevo no necesita abrir modal
-    }
-    if (_li) { 
-        _li.innerHTML = '<i class="fas fa-lock-open" style="font-size:.8rem; color:var(--success)"></i>';
-        _li.style.cursor = 'default';
-    }
-    if (_ud) { _ud.style.display = 'none'; }
-    if (_unlockDiv) { _unlockDiv.style.display = 'none'; }
-    
-    // Ocultar botón Eliminar (solo aparece en edición)
-    const _delBtn = document.getElementById('deleteIngredienteBtn');
-    if (_delBtn) _delBtn.style.display = 'none';
-    
-    // Resetear formulario
-    document.getElementById('ingredienteForm').reset();
-    
-    // Asegurar que el campo stock tenga el valor correcto después del reset
-    if (_si) _si.value = 0;
-    
-    // Remover clase password-protected si existe
-    const stockField = document.getElementById('stockActualField');
-    if (stockField) stockField.classList.remove('password-protected');
-    
-    // Mostrar modal
-    document.getElementById('ingredienteModal').classList.add('active');
-};
+            window.ingredienteEditandoId = null;
+            document.getElementById('ingredienteModalTitle').textContent = 'Nuevo Ingrediente';
+            document.getElementById('ingredienteNombre').value = '';
+            document.getElementById('ingredienteMinimo').value = '';
+            document.getElementById('ingredienteCosto').value = '';
+            document.getElementById('ingredienteVenta').value = '';
+            document.getElementById('ingredienteAgregar').value = '';
+            
+            // Resetear calculadora
+            const _ct = document.getElementById('costoTotal'); if (_ct) _ct.value = '';
+            const _cc = document.getElementById('cantidadComprada'); if (_cc) _cc.value = '';
+            const _cr = document.getElementById('calcResultado'); if (_cr) _cr.style.display = 'none';
+            
+            // Resetear preview
+            const _sp = document.getElementById('stockTotalPreview'); if (_sp) _sp.textContent = '';
+            const _sc = document.getElementById('stockConversionPreview'); if (_sc) _sc.textContent = '';
+            
+            // En modo NUEVO, el stock es editable directamente (sin bloqueo)
+            const _si = document.getElementById('ingredienteStock');
+            const _li = document.getElementById('stockLockIcon');
+            const _divClickArea = document.getElementById('stockClickArea');
+            
+            if (_si) { 
+                _si.disabled = false; 
+                _si.readOnly = false;
+                _si.value = '0'; 
+                _si.style.background = ''; 
+                _si.style.cursor = 'text';
+                _si.onclick = null;
+            }
+            if (_li) { 
+                _li.innerHTML = '<i class="fas fa-lock-open" style="font-size:.8rem; color:var(--success)"></i>';
+                _li.style.cursor = 'default';
+            }
+            if (_divClickArea) {
+                _divClickArea.onclick = null;
+                _divClickArea.style.cursor = 'default';
+                _divClickArea.style.borderColor = '';
+                _divClickArea.style.backgroundColor = '';
+            }
+            
+            // Ocultar botón Eliminar (solo aparece en edición)
+            const _delBtn = document.getElementById('deleteIngredienteBtn');
+            if (_delBtn) _delBtn.style.display = 'none';
+            
+            document.getElementById('ingredienteModal').classList.add('active');
+        };
 
         window.editarIngrediente = function(id) {
-    const ingrediente = window.inventarioItems.find(i => i.id === id);
-    if (!ingrediente) return;
-    
-    window.ingredienteEditandoId = id;
-    document.getElementById('ingredienteModalTitle').textContent = 'Editar Ingrediente';
-    document.getElementById('ingredienteNombre').value = ingrediente.nombre || '';
-    document.getElementById('ingredienteStock').value = ingrediente.stock || 0;
-    document.getElementById('ingredienteUnidad').value = ingrediente.unidad_base || 'unidades';
-    document.getElementById('ingredienteMinimo').value = ingrediente.minimo || 0;
-    document.getElementById('ingredienteCosto').value = ingrediente.precio_costo || 0;
-    document.getElementById('ingredienteVenta').value = ingrediente.precio_unitario || 0;
-    document.getElementById('ingredienteAgregar').value = '';
-    
-    // Resetear calculadora
-    const _ct = document.getElementById('costoTotal'); if (_ct) _ct.value = '';
-    const _cc = document.getElementById('cantidadComprada'); if (_cc) _cc.value = '';
-    const _cr = document.getElementById('calcResultado'); if (_cr) _cr.style.display = 'none';
-    
-    // Resetear preview stock
-    const _sp = document.getElementById('stockTotalPreview'); if (_sp) _sp.textContent = '';
-    const _sc = document.getElementById('stockConversionPreview'); if (_sc) _sc.textContent = '';
-    
-    //  CORRECCIÓN: Asegurar que el stock comience BLOQUEADO al abrir
-    const _si = document.getElementById('ingredienteStock');
-    const _li = document.getElementById('stockLockIcon');
-    const _divClickArea = document.getElementById('stockClickArea');
-    
-    if (_si) {
-        _si.disabled = true;
-        _si.readOnly = true;
-        _si.style.cursor = 'pointer';
-        _si.value = ingrediente.stock || 0;
-        _si.onclick = null; // Limpiar cualquier onclick previo
-    }
-    
-    if (_li) {
-        _li.innerHTML = '<i class="fas fa-lock" style="font-size:.8rem"></i>';
-        _li.style.cursor = 'default';
-    }
-    
-    //  RESTAURAR: Volver a asignar el evento onclick al div
-    if (_divClickArea) {
-        // Limpiar cualquier referencia anterior
-        _divClickArea.onclick = null;
-        _divClickArea.onclick = function(e) {
-            e.stopPropagation();
-            console.log(' Click en área de stock - mostrando modal de contraseña');
-            window.mostrarModalContraseñaStock();
+            const ingrediente = window.inventarioItems.find(i => i.id === id);
+            if (!ingrediente) return;
+            
+            window.ingredienteEditandoId = id;
+            document.getElementById('ingredienteModalTitle').textContent = 'Editar Ingrediente';
+            document.getElementById('ingredienteNombre').value = ingrediente.nombre || '';
+            document.getElementById('ingredienteStock').value = ingrediente.stock || 0;
+            document.getElementById('ingredienteUnidad').value = ingrediente.unidad_base || 'unidades';
+            document.getElementById('ingredienteMinimo').value = ingrediente.minimo || 0;
+            document.getElementById('ingredienteCosto').value = ingrediente.precio_costo || 0;
+            document.getElementById('ingredienteVenta').value = ingrediente.precio_unitario || 0;
+            document.getElementById('ingredienteAgregar').value = '';
+            
+            // Resetear calculadora
+            const _ct = document.getElementById('costoTotal'); if (_ct) _ct.value = '';
+            const _cc = document.getElementById('cantidadComprada'); if (_cc) _cc.value = '';
+            const _cr = document.getElementById('calcResultado'); if (_cr) _cr.style.display = 'none';
+            
+            // Resetear preview stock
+            const _sp = document.getElementById('stockTotalPreview'); if (_sp) _sp.textContent = '';
+            const _sc = document.getElementById('stockConversionPreview'); if (_sc) _sc.textContent = '';
+            
+            // BLOQUEAR el stock al abrir (estado inicial)
+            const _si = document.getElementById('ingredienteStock');
+            const _li = document.getElementById('stockLockIcon');
+            const _divClickArea = document.getElementById('stockClickArea');
+            
+            if (_si) {
+                _si.disabled = true;
+                _si.readOnly = true;
+                _si.style.cursor = 'pointer';
+                _si.style.background = '';
+                _si.value = ingrediente.stock || 0;
+                _si.onclick = null;
+            }
+            
+            if (_li) {
+                _li.innerHTML = '<i class="fas fa-lock" style="font-size:.8rem"></i>';
+                _li.style.cursor = 'default';
+            }
+            
+            // RESTAURAR: Asignar evento onclick al div para pedir contraseña
+            if (_divClickArea) {
+                _divClickArea.onclick = function(e) {
+                    e.stopPropagation();
+                    console.log('Click en área de stock - mostrando modal');
+                    window.mostrarModalContraseñaStock();
+                };
+                _divClickArea.style.cursor = 'pointer';
+                _divClickArea.style.borderColor = '';
+                _divClickArea.style.backgroundColor = '';
+            } else if (_si) {
+                _si.onclick = function(e) {
+                    e.stopPropagation();
+                    window.mostrarModalContraseñaStock();
+                };
+            }
+            
+            // Mostrar botón Eliminar (solo en edición)
+            const _delBtn = document.getElementById('deleteIngredienteBtn');
+            if (_delBtn) _delBtn.style.display = 'inline-flex';
+            
+            document.getElementById('ingredienteModal').classList.add('active');
+            
+            console.log('Modal de edición abierto para:', ingrediente.nombre);
         };
-        _divClickArea.style.cursor = 'pointer';
-        _divClickArea.style.borderColor = '';
-        _divClickArea.style.backgroundColor = '';
-    } else {
-        // Fallback: asignar al input directamente
-        if (_si) {
-            _si.onclick = function(e) {
-                e.stopPropagation();
-                console.log(' Click en input de stock (fallback)');
-                window.mostrarModalContraseñaStock();
-            };
+
+        // Función para desbloquear el stock (llamada desde el modal de contraseña)
+        async function _desbloquearStock() {
+            console.log('Desbloqueando stock...');
+            const stockInput = document.getElementById('ingredienteStock');
+            const lockIcon = document.getElementById('stockLockIcon');
+            const clickArea = document.getElementById('stockClickArea');
+            
+            if (stockInput) {
+                stockInput.disabled = false;
+                stockInput.readOnly = false;
+                stockInput.style.background = '';
+                stockInput.style.cursor = 'text';
+                stockInput.style.pointerEvents = 'auto';
+                stockInput.onclick = null;
+                stockInput.focus();
+                console.log('Stock desbloqueado - input editable');
+            }
+            
+            if (lockIcon) {
+                lockIcon.innerHTML = '<i class="fas fa-lock-open" style="font-size:.8rem; color:var(--success)"></i>';
+                lockIcon.style.cursor = 'default';
+            }
+            
+            if (clickArea) {
+                clickArea.onclick = null;
+                clickArea.style.cursor = 'default';
+                clickArea.style.borderColor = 'var(--success)';
+                clickArea.style.backgroundColor = 'rgba(56,142,60,0.1)';
+            }
+            
+            // Cerrar modal de contraseña
+            window.cerrarModal('passwordStockModal');
+            
+            window.mostrarToast('✓ Stock desbloqueado. Puedes editar la cantidad.', 'success');
         }
-    }
-    
-    // Mostrar botón Eliminar (solo en edición)
-    const _delBtn = document.getElementById('deleteIngredienteBtn');
-    if (_delBtn) _delBtn.style.display = 'inline-flex';
-    
-    document.getElementById('ingredienteModal').classList.add('active');
-    
-    console.log(' Modal de edición de ingrediente abierto para:', ingrediente.nombre);
-};
+
+        // Función para resetear el bloqueo al cerrar el modal
+        window.resetearBloqueoStock = function() {
+            console.log('Resetear bloqueo stock - modal cerrado');
+            const stockInput = document.getElementById('ingredienteStock');
+            const lockIcon = document.getElementById('stockLockIcon');
+            const clickArea = document.getElementById('stockClickArea');
+            
+            // Solo si estamos en modo edición Y el campo está desbloqueado
+            if (window.ingredienteEditandoId && stockInput && !stockInput.disabled) {
+                console.log('Restaurando bloqueo...');
+                stockInput.disabled = true;
+                stockInput.readOnly = true;
+                stockInput.style.background = '';
+                stockInput.style.cursor = 'pointer';
+                
+                if (clickArea) {
+                    clickArea.onclick = function(e) {
+                        e.stopPropagation();
+                        window.mostrarModalContraseñaStock();
+                    };
+                    clickArea.style.cursor = 'pointer';
+                    clickArea.style.borderColor = '';
+                    clickArea.style.backgroundColor = '';
+                }
+                
+                if (lockIcon) {
+                    lockIcon.innerHTML = '<i class="fas fa-lock" style="font-size:.8rem"></i>';
+                    lockIcon.style.cursor = 'default';
+                }
+            }
+            
+            // Limpiar elementos inline si existen
+            const unlockInline = document.getElementById('stockUnlockInline');
+            const unlockDiv = document.getElementById('stockUnlock');
+            if (unlockInline) unlockInline.style.display = 'none';
+            if (unlockDiv) unlockDiv.style.display = 'none';
+        };
+
+        // Modal de contraseña
+        window.mostrarModalContraseñaStock = function() {
+            console.log('mostrarModalContraseñaStock llamado');
+            
+            const input = document.getElementById('stockPasswordModalInput');
+            const error = document.getElementById('passwordStockError');
+            if (input) input.value = '';
+            if (error) error.style.display = 'none';
+            
+            const modal = document.getElementById('passwordStockModal');
+            if (modal) {
+                modal.classList.add('active');
+                setTimeout(() => {
+                    const inp = document.getElementById('stockPasswordModalInput');
+                    if (inp) inp.focus();
+                }, 100);
+            }
+        };
+
+        window.verificarContraseñaStock = async function() {
+            const pwd = document.getElementById('stockPasswordModalInput')?.value;
+            const errorEl = document.getElementById('passwordStockError');
+            const btnConfirm = document.getElementById('confirmPasswordStockBtn');
+            
+            if (!pwd) {
+                if (errorEl) {
+                    errorEl.textContent = 'Ingresa la contraseña';
+                    errorEl.style.display = 'block';
+                }
+                return;
+            }
+            
+            if (btnConfirm) {
+                btnConfirm.disabled = true;
+                btnConfirm.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Validando...';
+            }
+            
+            try {
+                const adminPassword = window.configGlobal?.admin_password;
+                
+                let esValida = false;
+                if (pwd === adminPassword) {
+                    esValida = true;
+                    console.log('Contraseña válida (config)');
+                }
+                
+                if (!esValida) {
+                    const { data: adminData } = await window.supabaseClient
+                        .from('usuarios')
+                        .select('username')
+                        .eq('rol', 'admin')
+                        .maybeSingle();
+                        
+                    if (adminData) {
+                        const { data: authData } = await window.supabaseClient
+                            .rpc('verify_user_credentials', {
+                                p_username: adminData.username,
+                                p_password: pwd
+                            });
+                        if (authData && authData.success === true) {
+                            esValida = true;
+                            console.log('Contraseña válida (usuarios)');
+                        }
+                    }
+                }
+                
+                if (esValida) {
+                    await _desbloquearStock();
+                } else {
+                    if (errorEl) {
+                        errorEl.textContent = 'Contraseña incorrecta. Intenta de nuevo.';
+                        errorEl.style.display = 'block';
+                    }
+                    document.getElementById('stockPasswordModalInput')?.focus();
+                }
+            } catch (e) {
+                console.error('Error:', e);
+                if (errorEl) {
+                    errorEl.textContent = 'Error al validar la contraseña';
+                    errorEl.style.display = 'block';
+                }
+            } finally {
+                if (btnConfirm) {
+                    btnConfirm.disabled = false;
+                    btnConfirm.innerHTML = 'Confirmar';
+                }
+            }
+        };
+
+        // Guardar ingrediente (UNIFICADO)
+        document.getElementById('saveIngrediente').addEventListener('click', async function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            const btn = this;
+            if (btn.disabled) return;
+            
+            const esNuevo = !window.ingredienteEditandoId;
+            const id = esNuevo ? window.generarId('ing_') : window.ingredienteEditandoId;
+            
+            const nombre = document.getElementById('ingredienteNombre').value.trim();
+            const stockActual = parseFloat(document.getElementById('ingredienteStock').value) || 0;
+            const agregar = parseFloat(document.getElementById('ingredienteAgregar').value) || 0;
+            const unidad = document.getElementById('ingredienteUnidad').value;
+            const minimo = parseFloat(document.getElementById('ingredienteMinimo').value) || 0;
+            const costo = parseFloat(document.getElementById('ingredienteCosto').value) || 0;
+            const venta = parseFloat(document.getElementById('ingredienteVenta').value) || 0;
+            
+            if (!nombre) {
+                window.mostrarToast('Ingresa el nombre del ingrediente', 'error');
+                return;
+            }
+            
+            try {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+                
+                const ingrediente = { 
+                    id, nombre, 
+                    stock: stockActual + agregar, 
+                    reservado: 0,
+                    unidad_base: unidad, 
+                    minimo, 
+                    precio_costo: costo, 
+                    precio_unitario: venta 
+                };
+                
+                let error;
+                if (esNuevo) {
+                    ({ error } = await window.supabaseClient.from('inventario').insert([ingrediente]));
+                } else {
+                    ({ error } = await window.supabaseClient.from('inventario').update(ingrediente).eq('id', id));
+                }
+                
+                if (error) throw error;
+                
+                window.ingredienteEditandoId = null;
+                window.cerrarModal('ingredienteModal');
+                await window.cargarInventario();
+                window.mostrarToast('✓ Ingrediente guardado', 'success');
+                
+            } catch (e) {
+                console.error('Error guardando ingrediente:', e);
+                window.mostrarToast('✗ Error: ' + (e.message || e), 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = 'Guardar';
+            }
+        });
+
+        // Cancelar ingrediente
+        document.getElementById('cancelIngrediente').addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            window.cerrarModal('ingredienteModal');
+            window.resetearBloqueoStock();
+        });
+
+        // Eliminar ingrediente desde modal
+        window._eliminarIngredienteDesdeModal = async function() {
+            const id = window.ingredienteEditandoId;
+            if (!id) return;
+            const ing = (window.inventarioItems || []).find(i => i.id === id);
+            if (!confirm(`¿Eliminar el ingrediente "${ing?.nombre || id}"?`)) return;
+            
+            try {
+                const { error } = await window.supabaseClient.from('inventario').delete().eq('id', id);
+                if (error) throw error;
+                window.cerrarModal('ingredienteModal');
+                window.ingredienteEditandoId = null;
+                await window.cargarInventario();
+                window.mostrarToast('🗑️ Ingrediente eliminado', 'success');
+            } catch(e) {
+                console.error('Error eliminando ingrediente:', e);
+                window.mostrarToast('✗ Error: ' + (e.message || e), 'error');
+            }
+        };
+
+        // Cerrar modal con X
+        document.getElementById('closeIngredienteModal').addEventListener('click', function() {
+            window.cerrarModal('ingredienteModal');
+            window.resetearBloqueoStock();
+        });
+
+        // Asegurar que al abrir el modal de contraseña se limpie
+        const pwdModal = document.getElementById('passwordStockModal');
+        if (pwdModal) {
+            pwdModal.addEventListener('click', function(e) {
+                if (e.target === this) window.cerrarModal('passwordStockModal');
+            });
+        }
+
+        // Función para agregar stock desde alerta
+        window.agregarStock = function(ingredienteId) {
+            const ingrediente = window.inventarioItems.find(i => i.id === ingredienteId);
+            if (ingrediente) { 
+                window.editarIngrediente(ingredienteId); 
+                setTimeout(() => { 
+                    const agregarInput = document.getElementById('ingredienteAgregar');
+                    if (agregarInput) agregarInput.focus();
+                }, 500); 
+            }
+        };
 
         window.desbloquearStockClick = function(inputEl) {
-            if (!inputEl.disabled) return; // ya desbloqueado
-            const unlock = document.getElementById('stockUnlockInline');
-            const pwdField = document.getElementById('stockPasswordInline');
-            if (unlock) { unlock.style.display = 'block'; }
-            if (pwdField) { pwdField.value = ''; pwdField.focus(); }
-        };
-        
-        // ==================== FUNCIONES PARA MODAL DE CONTRASEÑA DE STOCK ====================
-window.mostrarModalContraseñaStock = function() {
-    console.log(' mostrarModalContraseñaStock llamado');
-    
-    // Limpiar campos previos
-    const input = document.getElementById('stockPasswordModalInput');
-    const error = document.getElementById('passwordStockError');
-    if (input) input.value = '';
-    if (error) error.style.display = 'none';
-    
-    // Mostrar modal
-    const modal = document.getElementById('passwordStockModal');
-    if (modal) {
-        modal.classList.add('active');
-        console.log(' Modal passwordStockModal activado');
-    } else {
-        console.error(' Modal passwordStockModal no encontrado');
-        return;
-    }
-    
-    // Focus en el input
-    setTimeout(() => {
-        const inp = document.getElementById('stockPasswordModalInput');
-        if (inp) {
-            inp.focus();
-            console.log(' Focus en input de contraseña');
-        }
-    }, 100);
-};
-
-window.verificarContraseñaStock = async function() {
-    const pwd = document.getElementById('stockPasswordModalInput')?.value;
-    const errorEl = document.getElementById('passwordStockError');
-    const btnConfirm = document.getElementById('confirmPasswordStockBtn');
-    
-    if (!pwd) {
-        if (errorEl) {
-            errorEl.textContent = 'Ingresa la contraseña';
-            errorEl.style.display = 'block';
-        }
-        return;
-    }
-    
-    // Deshabilitar botón mientras se valida
-    if (btnConfirm) {
-        btnConfirm.disabled = true;
-        btnConfirm.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Validando...';
-    }
-    
-    try {
-        // Primero intentar con la contraseña de la tabla config
-        const adminPassword = window.configGlobal?.admin_password;
-        
-        // También consultar la contraseña del admin desde la tabla usuarios como respaldo
-        const { data: adminData, error } = await window.supabaseClient
-            .from('usuarios')
-            .select('username, rol, password_hash')
-            .eq('rol', 'admin')
-            .maybeSingle();
-        
-        let esValida = false;
-        
-        // Verificar con configGlobal.admin_password (más simple)
-        if (pwd === adminPassword) {
-            esValida = true;
-            console.log(' Contraseña válida (config)');
-        }
-        
-        // Si no, verificar con la tabla usuarios usando verify_user_credentials
-        if (!esValida && adminData) {
-            const { data: authData, error: authError } = await window.supabaseClient
-                .rpc('verify_user_credentials', {
-                    p_username: adminData.username,
-                    p_password: pwd
-                });
-            
-            if (!authError && authData && authData.success === true) {
-                esValida = true;
-                console.log(' Contraseña válida (usuarios)');
-            }
-        }
-        
-        if (esValida) {
-            await _desbloquearStock();
-        } else {
-            if (errorEl) {
-                errorEl.textContent = 'Contraseña incorrecta. Intenta de nuevo.';
-                errorEl.style.display = 'block';
-            }
-            document.getElementById('stockPasswordModalInput')?.focus();
-            document.getElementById('stockPasswordModalInput')?.select();
-        }
-        
-    } catch (e) {
-        console.error('Error verificando contraseña:', e);
-        // Fallback: comparar con configGlobal.admin_password
-        const adminPassword = window.configGlobal?.admin_password;
-        if (pwd === adminPassword) {
-            await _desbloquearStock();
-        } else {
-            if (errorEl) {
-                errorEl.textContent = 'Error al validar la contraseña';
-                errorEl.style.display = 'block';
-            }
-        }
-    } finally {
-        if (btnConfirm) {
-            btnConfirm.disabled = false;
-            btnConfirm.innerHTML = 'Confirmar';
-        }
-    }
-};
-
-// Función auxiliar para desbloquear el stock (NO modifica botones)
-async function _desbloquearStock() {
-    const stockInput = document.getElementById('ingredienteStock');
-    const lockIcon = document.getElementById('stockLockIcon');
-    const clickArea = document.getElementById('stockClickArea');
-    
-    if (stockInput) {
-        stockInput.disabled = false;
-        stockInput.readOnly = false;
-        stockInput.style.background = '';
-        stockInput.style.cursor = 'text';
-        stockInput.style.pointerEvents = 'auto';
-        stockInput.onclick = null;
-        stockInput.onfocus = null;
-        stockInput.focus();
-    }
-    
-    if (lockIcon) {
-        lockIcon.innerHTML = '<i class="fas fa-lock-open" style="font-size:.8rem; color:var(--success)"></i>';
-        lockIcon.style.cursor = 'default';
-    }
-    
-    // Solo modificar el área de clic, NO tocar los botones
-    if (clickArea) {
-        clickArea.onclick = null;
-        clickArea.style.cursor = 'default';
-        clickArea.style.borderColor = 'var(--success)';
-        clickArea.style.backgroundColor = 'rgba(56,142,60,0.1)';
-        const innerInput = clickArea.querySelector('input');
-        if (innerInput) {
-            innerInput.disabled = false;
-            innerInput.readOnly = false;
-            innerInput.onclick = null;
-        }
-    }
-    
-    // Cerrar modal de contraseña
-    window.cerrarModal('passwordStockModal');
-    
-    // Mostrar mensaje de éxito
-    window.mostrarToast(' Stock desbloqueado. Puedes editar la cantidad.', 'success');
-}
-
-// Función para resetear el estado de bloqueo del stock al cerrar el modal
-window.resetearBloqueoStock = function() {
-    const stockInput = document.getElementById('ingredienteStock');
-    const lockIcon = document.getElementById('stockLockIcon');
-    const clickArea = document.getElementById('stockClickArea');
-    
-    // Solo si estamos en modo edición y el campo estaba desbloqueado
-    if (window.ingredienteEditandoId && stockInput && !stockInput.disabled) {
-        // Bloquear nuevamente
-        stockInput.disabled = true;
-        stockInput.readOnly = true;
-        stockInput.style.background = '';
-        stockInput.style.cursor = 'pointer';
-        
-        // Restaurar el onclick para pedir contraseña
-        if (clickArea) {
-            clickArea.onclick = function(e) {
-                e.stopPropagation();
-                window.mostrarModalContraseńaStock();
-            };
-            clickArea.style.cursor = 'pointer';
-            clickArea.style.borderColor = '';
-            clickArea.style.backgroundColor = '';
-        } else if (stockInput) {
-            stockInput.onclick = function(e) {
-                e.stopPropagation();
-                window.mostrarModalContraseńaStock();
-            };
-        }
-        
-        // Restaurar ícono de candado
-        if (lockIcon) {
-            lockIcon.innerHTML = '<i class="fas fa-lock" style="font-size:.8rem"></i>';
-            lockIcon.style.cursor = 'default';
-        }
-    }
-    
-    // Ocultar elementos inline si existen (no afectan a los botones)
-    const unlockInline = document.getElementById('stockUnlockInline');
-    const unlockDiv = document.getElementById('stockUnlock');
-    if (unlockInline) unlockInline.style.display = 'none';
-    if (unlockDiv) unlockDiv.style.display = 'none';
-};
-
-// Sobrescribir la función desbloquearStockClick para que use el modal en lugar del inline
-window.desbloquearStockClick = function(inputEl) {
-    if (!inputEl.disabled) return; // ya desbloqueado
-    window.mostrarModalContraseñaStock();
-};
-
-// Función para resetear el estado de bloqueo del stock (se llama al cerrar el modal de ingrediente)
-window.resetearBloqueoStock = function() {
-    const stockInput = document.getElementById('ingredienteStock');
-    const lockIcon = document.getElementById('stockLockIcon');
-    const unlockInline = document.getElementById('stockUnlockInline');
-    const unlockDiv = document.getElementById('stockUnlock');
-    
-    // Solo si es modo edición y el campo estaba bloqueado, restaurar a bloqueado
-    if (stockInput && stockInput.disabled === false && window.ingredienteEditandoId) {
-        stockInput.disabled = true;
-        stockInput.style.background = 'var(--input-bg)';
-        stockInput.style.cursor = 'pointer';
-        stockInput.onclick = function() { window.mostrarModalContraseñaStock(); };
-    }
-    
-    if (lockIcon && window.ingredienteEditandoId) {
-        lockIcon.innerHTML = '<i class="fas fa-lock" style="font-size:.8rem"></i>';
-        lockIcon.style.cursor = 'default';
-    }
-    
-    if (unlockInline) unlockInline.style.display = 'none';
-    if (unlockDiv) unlockDiv.style.display = 'none';
-};
-
-        window.desbloquearStockInline = function() {
-            const pwd = document.getElementById('stockPasswordInline')?.value;
-            const errEl = document.getElementById('stockUnlockError');
-            if (pwd === window.configGlobal.admin_password) {
-                const inp = document.getElementById('ingredienteStock');
-                const lock = document.getElementById('stockLockIcon');
-                const unlock = document.getElementById('stockUnlockInline');
-                if (inp)  { inp.disabled = false; inp.style.background = ''; inp.style.cursor = ''; inp.focus(); }
-                if (lock) lock.innerHTML = '<i class="fas fa-lock-open" style="font-size:.8rem;color:var(--success)"></i>';
-                if (unlock) unlock.style.display = 'none';
-                if (errEl) errEl.style.display = 'none';
-            } else {
-                if (errEl) { errEl.style.display = 'block'; }
-                document.getElementById('stockPasswordInline')?.focus();
-            }
+            if (!inputEl.disabled) return;
+            window.mostrarModalContraseñaStock();
         };
 
-        window._cerrarStockUnlock = function() {
-            const unlock = document.getElementById('stockUnlockInline');
-            if (unlock) unlock.style.display = 'none';
-        };
-
-        window.desbloquearStock = function() { window.desbloquearStockInline(); };
         window.calcularCostoUnitario = function() {
             const costoTotal = parseFloat(document.getElementById('costoTotal').value) || 0;
             const cantidad   = parseFloat(document.getElementById('cantidadComprada').value) || 0;
@@ -4900,75 +4912,43 @@ window.resetearBloqueoStock = function() {
             }
         };
 
-        window.agregarStock = function(ingredienteId) {
-    const ingrediente = window.inventarioItems.find(i => i.id === ingredienteId);
-    if (ingrediente) { 
-        window.editarIngrediente(ingredienteId); 
-        setTimeout(() => { 
-            const agregarInput = document.getElementById('ingredienteAgregar');
-            if (agregarInput) agregarInput.focus();
-        }, 500); 
-    }
-};
-
-        document.getElementById('saveIngrediente').addEventListener('click', async () => {
-            const btn = document.getElementById('saveIngrediente');
-            if (btn && btn.disabled) return;
-            if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...'; }
-
-            // Determinar si es nuevo o edición usando el ID guardado en window
-            const esNuevo = !window.ingredienteEditandoId;
-            const id = esNuevo ? window.generarId('ing_') : window.ingredienteEditandoId;
-
-            const nombre    = document.getElementById('ingredienteNombre').value.trim();
-            const stockActual = parseFloat(document.getElementById('ingredienteStock').value) || 0;
-            const agregar   = parseFloat(document.getElementById('ingredienteAgregar').value) || 0;
-            const unidad    = document.getElementById('ingredienteUnidad').value;
-            const minimo    = parseFloat(document.getElementById('ingredienteMinimo').value) || 0;
-            const costo     = parseFloat(document.getElementById('ingredienteCosto').value) || 0;
-            const venta     = parseFloat(document.getElementById('ingredienteVenta').value) || 0;
-
-            if (!nombre) {
-                window.mostrarToast('Ingresa el nombre del ingrediente', 'error');
-                if (btn) { btn.disabled = false; btn.innerHTML = 'Guardar'; }
-                return;
+        window._syncIngredientePreview = function() {
+            const stockActual = parseFloat(document.getElementById('ingredienteStock')?.value) || 0;
+            const nuevo       = parseFloat(document.getElementById('ingredienteAgregar')?.value) || 0;
+            const unidad      = document.getElementById('ingredienteUnidad')?.value || 'unidades';
+            const total       = stockActual + nuevo;
+            const sp = document.getElementById('stockTotalPreview');
+            const sc = document.getElementById('stockConversionPreview');
+            if (sp) {
+                sp.textContent = nuevo > 0
+                    ? `Stock resultante: ${total.toFixed(3)} ${unidad}`
+                    : '';
             }
-
-            try {
-                const ingrediente = { id, nombre, stock: stockActual + agregar, reservado: 0,
-                    unidad_base: unidad, minimo, precio_costo: costo, precio_unitario: venta };
-                let error;
-                if (esNuevo) {
-                    ({ error } = await window.supabaseClient.from('inventario').insert([ingrediente]));
+            if (sc) {
+                if (unidad === 'kilogramos' && nuevo > 0) {
+                    sc.textContent = `= ${(nuevo * 1000).toFixed(0)} gramos adicionales`;
+                } else if (unidad === 'litros' && nuevo > 0) {
+                    sc.textContent = `= ${(nuevo * 1000).toFixed(0)} mililitros adicionales`;
                 } else {
-                    ({ error } = await window.supabaseClient.from('inventario').update(ingrediente).eq('id', id));
+                    sc.textContent = '';
                 }
-                if (error) throw error;
-                window.ingredienteEditandoId = null;
-                document.getElementById('ingredienteModal').classList.remove('active');
-                await window.cargarInventario();
-                window.mostrarToast(' Ingrediente guardado', 'success');
-            } catch (e) {
-                console.error('Error guardando ingrediente:', e);
-                window.mostrarToast(' Error: ' + (e.message || e), 'error');
-            } finally {
-                if (btn) { btn.disabled = false; btn.innerHTML = 'Guardar'; }
             }
-        });
+        };
 
         window.eliminarIngrediente = async function(id) {
             if (!confirm('¿Estás seguro de eliminar este ingrediente?')) return;
             try {
                 await window.supabaseClient.from('inventario').delete().eq('id', id);
                 await window.cargarInventario();
-                window.mostrarToast(' Ingrediente eliminado', 'success');
-            } catch (e) { console.error('Error eliminando ingrediente:', e); window.mostrarToast(' Error al eliminar ingrediente', 'error'); }
+                window.mostrarToast('🗑️ Ingrediente eliminado', 'success');
+            } catch (e) { console.error('Error eliminando ingrediente:', e); window.mostrarToast('✗ Error al eliminar ingrediente', 'error'); }
         };
+
+        // ==================== FIN FUNCIONES DEL MODAL DE INGREDIENTE ====================
 
         window.renderizarMenu = function(filtro) {
             const grid = document.getElementById('menuGrid');
             grid.innerHTML = '';
-            // Normalizar texto para búsqueda sin sensibilidad a mayúsculas ni acentos
             const _norm = t => (t || '').normalize('NFD').replace(/[áéíóú]/g, '').toLowerCase();
             const _base = [...window.menuItems].sort((a,b) => a.nombre.localeCompare(b.nombre));
             const items = filtro
@@ -4992,16 +4972,9 @@ window.resetearBloqueoStock = function() {
                 }
                 const disponibleFinal = item.disponible && todosDisponibles;
                 const imgSrc = item.imagen || '';
-                const tagsHtml = ingredientesEstado.length
-                    ? ingredientesEstado.map(ing =>
-                        `<span class="ing-tag ${ing.disponible ? '' : 'ing-tag-sin-stock'}">${ing.nombre}</span>`
-                      ).join('')
-                    : '<span class="ing-tag" style="opacity:.5">Sin ingredientes</span>';
-
                 const card = document.createElement('div');
                 card.className = 'menu-card-v2' + (item.disponible ? '' : ' no-disponible');
                 card.innerHTML = `
-                    <!-- Cabecera: imagen derecha + info izquierda -->
                     <div class="mc2-header">
                         <div class="mc2-info">
                             <div class="mc2-nombre">${item.nombre}</div>
@@ -5018,15 +4991,12 @@ window.resetearBloqueoStock = function() {
                         </div>
                         ${imgSrc ? `<div class="mc2-img-wrap"><img src="${imgSrc}" class="mc2-img" alt="${item.nombre}" onerror="this.parentElement.style.display='none'"></div>` : ''}
                     </div>
-                    <!-- Descripción -->
                     ${item.descripcion ? `<div class="mc2-desc">${item.descripcion}</div>` : ''}
-                    <!-- Tags de ingredientes con estado de stock -->
                     <div class="mc2-tags">${ingredientesEstado.map(ing =>
                         `<span class="ing-tag ${ing.disponible ? '' : 'ing-tag-sin-stock'}" title="${ing.disponible ? 'En stock' : 'Sin stock suficiente'}">
                             ${ing.nombre} <i class="fas fa-${ing.disponible ? 'check' : 'times'}" style="font-size:.55rem;margin-left:2px"></i>
                          </span>`
                     ).join('') || '<span class="ing-tag" style="opacity:.5">Sin ingredientes</span>'}</div>
-                    <!-- Acciones -->
                     <div class="mc2-actions">
                         <label style="display:flex;align-items:center;gap:.35rem;cursor:pointer;margin-right:.25rem"
                             title="${disponibleFinal ? 'Marcar como no disponible' : 'Marcar como disponible'}">
@@ -5099,10 +5069,8 @@ window.resetearBloqueoStock = function() {
                 </div>`;
 
             if (isMobile) {
-                // Insertar debajo del item en la lista
                 const el = document.getElementById('invItem_' + item.id);
                 if (!el) return;
-                // Quitar detalle anterior si existía
                 const prev = el.nextElementSibling;
                 if (prev && prev.classList.contains('inv-mobile-detail')) prev.remove();
                 const wrap = document.createElement('div');
@@ -5110,7 +5078,6 @@ window.resetearBloqueoStock = function() {
                 wrap.innerHTML = detailHTML;
                 el.insertAdjacentElement('afterend', wrap);
             } else {
-                // Mostrar en columna derecha
                 const col = document.getElementById('invDetailCol');
                 if (!col) return;
                 col.innerHTML = detailHTML;
@@ -5119,12 +5086,9 @@ window.resetearBloqueoStock = function() {
 
         window._invCerrarDetalle = function(itemId) {
             window._invActiveId = null;
-            // Quitar highlight de lista
             document.querySelectorAll('.inv-list-item').forEach(el => el.classList.remove('active'));
-            // Mobile: quitar detalle inline
             const mDet = document.querySelector('.inv-mobile-detail');
             if (mDet) mDet.remove();
-            // Desktop: restaurar empty
             const col = document.getElementById('invDetailCol');
             if (col) col.innerHTML = '<div class="inv-detail-empty" id="invDetailEmpty"><i class="fas fa-hand-point-left" style="font-size:2rem;margin-bottom:.75rem;display:block;opacity:.3"></i>Selecciona un ingrediente de la lista para ver su detalle</div>';
         };
@@ -5155,12 +5119,9 @@ window.resetearBloqueoStock = function() {
                     <span class="inv-item-badge ${estado}">${disponible} ${item.unidad_base||'u'}</span>`;
                 el.addEventListener('click', function() {
                     const wasActive = item.id === window._invActiveId;
-                    // Quitar active de todos
                     document.querySelectorAll('.inv-list-item').forEach(e => e.classList.remove('active'));
-                    // Quitar detalle móvil previo
                     document.querySelectorAll('.inv-mobile-detail').forEach(e => e.remove());
                     if (wasActive) {
-                        // Ya estaba abierto  cerrar
                         window._invActiveId = null;
                         const col = document.getElementById('invDetailCol');
                         if (col) col.innerHTML = '<div class="inv-detail-empty"><i class="fas fa-hand-point-left" style="font-size:2rem;margin-bottom:.75rem;display:block;opacity:.3"></i>Selecciona un ingrediente de la lista para ver su detalle</div>';
@@ -5172,7 +5133,6 @@ window.resetearBloqueoStock = function() {
                 });
                 grid.appendChild(el);
             });
-            // Re-abrir detalle si había uno activo
             if (window._invActiveId) {
                 const activeItem = items.find(i => i.id === window._invActiveId);
                 if (activeItem) {
@@ -5205,7 +5165,7 @@ window.resetearBloqueoStock = function() {
             window.isAdminAuthenticated = false;
             window.jwtToken = null;
             window.mostrarLogin();
-            window.mostrarToast(' Sesión cerrada', 'info');
+            window.mostrarToast('✓ Sesión cerrada', 'info');
             window.supabaseClient = window.inicializarSupabaseCliente();
         });
 
@@ -5226,7 +5186,7 @@ window.resetearBloqueoStock = function() {
                         async (p) => {
                             if (p.eventType === 'UPDATE' && p.new.stock <= p.new.minimo) {
                                 window.verificarStockCritico();
-                                window.mostrarToast(` Stock crítico: ${p.new.nombre}`, 'warning');
+                                window.mostrarToast(`⚠️ Stock crítico: ${p.new.nombre}`, 'warning');
                                 window._notificarAdminStockCritico && window._notificarAdminStockCritico(p.new.nombre);
                             }
                             if (p.eventType === 'UPDATE' && (p.old?.stock || 0) <= 0 && p.new.stock > 0) {
@@ -5282,11 +5242,10 @@ window.resetearBloqueoStock = function() {
                     .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'config' },
                         (p) => {
                             window.configGlobal = { ...window.configGlobal, ...p.new };
-                            // Actualizar inputs de tasa si cambiaron desde cajero
                             const bi = document.getElementById('tasaBaseInput');
                             if (bi && p.new.tasa_cambio) bi.value = parseFloat(p.new.tasa_cambio).toFixed(2);
                             window.recalcularTasaEfectiva && window.recalcularTasaEfectiva();
-                            window.mostrarToast(' Tasa actualizada desde cajero: Bs ' + parseFloat(p.new.tasa_cambio||0).toFixed(2), 'info');
+                            window.mostrarToast('📊 Tasa actualizada desde cajero: Bs ' + parseFloat(p.new.tasa_cambio||0).toFixed(2), 'info');
                         })
                     .subscribe();
 
@@ -5298,7 +5257,6 @@ window.resetearBloqueoStock = function() {
         // ============================================
         window.setupEventListeners = function() {
 
-            // Chevrons de navegación de tabs
             window._scrollTabs = function(dir) {
                 const c = document.getElementById('tabsContainer');
                 if (!c) return;
@@ -5319,7 +5277,6 @@ window.resetearBloqueoStock = function() {
             document.getElementById('tabsContainer')?.addEventListener('scroll', window._updateTabChevrons);
             window._updateTabChevrons();
 
-            // Sync del checkbox Disponible en modal platillo
             document.getElementById('platilloDisponibleCheck')?.addEventListener('change', function() {
                 const lbl = document.getElementById('platilloDisponibleLabel');
                 const sel = document.getElementById('platilloDisponible');
@@ -5327,18 +5284,14 @@ window.resetearBloqueoStock = function() {
                 if (sel) sel.value = this.checked ? 'true' : 'false';
             });
 
-            // Navegación de tabs
             document.querySelectorAll('.tab').forEach(tab => {
                 tab.addEventListener('click', () => {
                     const target = tab.dataset.tab;
-                    // Activar tab
                     document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
                     tab.classList.add('active');
-                    // Mostrar pane correspondiente
                     document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
                     const pane = document.getElementById(target + 'Pane');
                     if (pane) pane.classList.add('active');
-                    // Limpiar nombre de mesa al ir a QR (SSID/pwd persisten)
                     if (target !== 'qr') {
                         const el = document.getElementById('qrNombreMesa');
                         if (el) el.value = '';
@@ -5346,103 +5299,96 @@ window.resetearBloqueoStock = function() {
                 });
             });
 
-            // Cerrar todos los modales (X, Cancelar, fondo)
-[
-    ['closePlatilloModal',    'platilloModal', null],
-    ['cancelPlatillo',        'platilloModal', null],
-    ['closeIngredienteModal', 'ingredienteModal', 'resetearBloqueoStock'],
-    ['cancelIngrediente',     'ingredienteModal', 'resetearBloqueoStock'],
-    ['closeUsuarioModal',     'usuarioModal', null],
-    ['cancelUsuario',         'usuarioModal', null],
-    ['closeDeliveryModal',    'deliveryModal', null],
-    ['cancelDeliveryEdit',    'deliveryModal', null],
-].forEach(([btnId, modalId, callback]) => {
-    const btn = document.getElementById(btnId);
-    if (btn) {
-        btn.addEventListener('click', () => {
-            window.cerrarModal(modalId);
-            if (callback && typeof window[callback] === 'function') {
-                window[callback]();
-            }
-        });
-    }
-});
-            // Cerrar al hacer clic en el fondo oscuro de cualquier modal
+            // Cerrar modales - AHORA CON LOS BOTONES CORRECTOS
+            const closeButtons = [
+                ['closePlatilloModal', 'platilloModal', null],
+                ['cancelPlatillo', 'platilloModal', null],
+                ['closeIngredienteModal', 'ingredienteModal', 'resetearBloqueoStock'],
+                ['cancelIngrediente', 'ingredienteModal', 'resetearBloqueoStock'],
+                ['closeUsuarioModal', 'usuarioModal', null],
+                ['cancelUsuario', 'usuarioModal', null],
+                ['closeDeliveryModal', 'deliveryModal', null],
+                ['cancelDeliveryEdit', 'deliveryModal', null],
+            ];
+            
+            closeButtons.forEach(([btnId, modalId, callback]) => {
+                const btn = document.getElementById(btnId);
+                if (btn) {
+                    // Remover listeners anteriores para evitar duplicados
+                    const newBtn = btn.cloneNode(true);
+                    btn.parentNode.replaceChild(newBtn, btn);
+                    newBtn.addEventListener('click', () => {
+                        window.cerrarModal(modalId);
+                        if (callback && typeof window[callback] === 'function') {
+                            window[callback]();
+                        }
+                    });
+                }
+            });
+
             document.querySelectorAll('.modal').forEach(modal => {
                 modal.addEventListener('click', function(e) {
                     if (e.target === this) window.cerrarModal(this.id);
                 });
             });
 
-            // Guardar configuración de tasa
             document.getElementById('saveAllButton').addEventListener('click', async () => { await window.guardarConfiguracion(); });
 
-        document.getElementById('tasaBaseInput').addEventListener('change', window.recalcularTasaEfectiva);
-        document.getElementById('aumentoDiarioInput').addEventListener('change', window.recalcularTasaEfectiva);
-        // Toggles de aumento: mutuamente excluyentes
-        function _mostrarFechasAumento(visible) {
-            document.getElementById('tasaFechasDiv').style.display = visible ? 'flex' : 'none';
-        }
-        function _actualizarLabelAumento() {
-            const diario   = document.getElementById('aumentoActivoToggle').checked;
-            const semanal  = document.getElementById('aumentoSemanalToggle').checked;
-            const alguno   = diario || semanal;
-
-            // Actualizar label según toggle activo
-            const label = document.getElementById('labelAumentoPct');
-            if (label) label.textContent = semanal ? 'Aumento Semanal %:' : 'Aumento Diario %:';
-
-            // Habilitar/deshabilitar el input de porcentaje según si hay algún toggle activo
-            const inputPct = document.getElementById('aumentoDiarioInput');
-            if (inputPct) {
-                inputPct.disabled = !alguno;
-                inputPct.style.opacity = alguno ? '1' : '0.4';
-                inputPct.style.cursor  = alguno ? '' : 'not-allowed';
+            document.getElementById('tasaBaseInput').addEventListener('change', window.recalcularTasaEfectiva);
+            document.getElementById('aumentoDiarioInput').addEventListener('change', window.recalcularTasaEfectiva);
+            
+            function _mostrarFechasAumento(visible) {
+                document.getElementById('tasaFechasDiv').style.display = visible ? 'flex' : 'none';
             }
-
-            // Mostrar u ocultar las fechas de vigencia
-            _mostrarFechasAumento(alguno);
-
-            // Si se acaba de activar y no hay fecha inicio, poner hoy
-            if (alguno && !document.getElementById('aumentoDesde').value) {
-                document.getElementById('aumentoDesde').value = new Date().toISOString().split('T')[0];
+            function _actualizarLabelAumento() {
+                const diario   = document.getElementById('aumentoActivoToggle').checked;
+                const semanal  = document.getElementById('aumentoSemanalToggle').checked;
+                const alguno   = diario || semanal;
+                const label = document.getElementById('labelAumentoPct');
+                if (label) label.textContent = semanal ? 'Aumento Semanal %:' : 'Aumento Diario %:';
+                const inputPct = document.getElementById('aumentoDiarioInput');
+                if (inputPct) {
+                    inputPct.disabled = !alguno;
+                    inputPct.style.opacity = alguno ? '1' : '0.4';
+                    inputPct.style.cursor  = alguno ? '' : 'not-allowed';
+                }
+                _mostrarFechasAumento(alguno);
+                if (alguno && !document.getElementById('aumentoDesde').value) {
+                    document.getElementById('aumentoDesde').value = new Date().toISOString().split('T')[0];
+                }
             }
-        }
-        document.getElementById('aumentoActivoToggle').addEventListener('change', function() {
-            if (this.checked) document.getElementById('aumentoSemanalToggle').checked = false;
-            window.configGlobal.aumento_detenido = !this.checked;
-            _actualizarLabelAumento();
-            window.recalcularTasaEfectiva();
-        });
-        document.getElementById('aumentoSemanalToggle').addEventListener('change', function() {
-            if (this.checked) document.getElementById('aumentoActivoToggle').checked = false;
-            window.configGlobal.aumento_detenido = !this.checked;
-            _actualizarLabelAumento();
-            window.recalcularTasaEfectiva();
-        });
-        document.getElementById('aumentoIndefinido').addEventListener('change', function() {
-            document.getElementById('aumentoHasta').disabled = this.checked;
-            if (this.checked) document.getElementById('aumentoHasta').value = '';
-        });
+            document.getElementById('aumentoActivoToggle').addEventListener('change', function() {
+                if (this.checked) document.getElementById('aumentoSemanalToggle').checked = false;
+                window.configGlobal.aumento_detenido = !this.checked;
+                _actualizarLabelAumento();
+                window.recalcularTasaEfectiva();
+            });
+            document.getElementById('aumentoSemanalToggle').addEventListener('change', function() {
+                if (this.checked) document.getElementById('aumentoActivoToggle').checked = false;
+                window.configGlobal.aumento_detenido = !this.checked;
+                _actualizarLabelAumento();
+                window.recalcularTasaEfectiva();
+            });
+            document.getElementById('aumentoIndefinido').addEventListener('change', function() {
+                document.getElementById('aumentoHasta').disabled = this.checked;
+                if (this.checked) document.getElementById('aumentoHasta').value = '';
+            });
 
-            // Cerrar modal QR ampliado
             const _closeQrBtn  = document.getElementById('closeQrAmpliado');
             const _closeQrX    = document.getElementById('closeQrAmpliadoModal');
             const _qrModal     = document.getElementById('qrAmpliadoModal');
             if (_closeQrBtn) _closeQrBtn.addEventListener('click', () => window.cerrarModal('qrAmpliadoModal'));
             if (_closeQrX)   _closeQrX.addEventListener('click',   () => window.cerrarModal('qrAmpliadoModal'));
-            // Cerrar al hacer clic en el fondo oscuro
             if (_qrModal) _qrModal.addEventListener('click', function(e) {
                 if (e.target === this) window.cerrarModal('qrAmpliadoModal');
             });
 
-        }; // fin window.setupEventListeners
+        };
 
         // ============================================
         // TASA DE HOY — Primer inicio de sesión del día
         // ============================================
         window._pedirTasaDeHoy = function(onConfirm) {
-            // Crear overlay bloqueante
             const overlay = document.createElement('div');
             overlay.id = 'tasaHoyOverlay';
             overlay.style.cssText = [
@@ -5453,7 +5399,7 @@ window.resetearBloqueoStock = function() {
             ].join(';');
             overlay.innerHTML = `
                 <div style="background:#fff;border-radius:16px;padding:2rem 2.5rem;width:90%;max-width:400px;box-shadow:0 8px 32px rgba(0,0,0,.3);text-align:center">
-                    <div style="font-size:2.5rem;margin-bottom:.75rem"></div>
+                    <div style="font-size:2.5rem;margin-bottom:.75rem">📊</div>
                     <h2 style="font-size:1.3rem;color:#1a1a2e;margin-bottom:.4rem">Tasa de cambio de hoy</h2>
                     <p style="font-size:.88rem;color:#666;margin-bottom:1.5rem">
                         Ingresa el valor actual del dólar en bolívares para que el sistema calcule correctamente todos los precios de hoy.
@@ -5479,13 +5425,11 @@ window.resetearBloqueoStock = function() {
             `;
             document.body.appendChild(overlay);
 
-            // Focus automático
             setTimeout(() => {
                 const input = document.getElementById('tasaHoyInput');
                 if (input) input.focus();
             }, 100);
 
-            // Confirmar con botón o Enter
             const confirmar = () => {
                 const val = parseFloat(document.getElementById('tasaHoyInput').value);
                 const errEl = document.getElementById('tasaHoyError');
@@ -5495,7 +5439,6 @@ window.resetearBloqueoStock = function() {
                     return;
                 }
                 errEl.style.display = 'none';
-                // Guardar: fecha de hoy + valor
                 const hoy = new Date().toISOString().split('T')[0];
                 localStorage.setItem('saki_tasa_fecha', hoy);
                 localStorage.setItem('saki_tasa_valor', val);
@@ -5515,10 +5458,8 @@ window.resetearBloqueoStock = function() {
             const valor = parseFloat(localStorage.getItem('saki_tasa_valor'));
 
             if (fecha === hoy && valor > 0) {
-                // Ya se ingresó la tasa hoy — aplicar y continuar
                 onReady(valor);
             } else {
-                // No se ingresó todavía — pedir en bucle hasta que se confirme
                 window._pedirTasaDeHoy((val) => {
                     onReady(val);
                 });
@@ -5529,17 +5470,15 @@ window.resetearBloqueoStock = function() {
         // AVISO DE LUNES — Cambio porcentaje semanal
         // ============================================
         window._verificarAvisoLunes = function() {
-            // Solo si el toggle semanal está activo
             if (!window.configGlobal || !window.configGlobal.aumento_semanal) return;
 
             const hoy = new Date();
-            if (hoy.getDay() !== 1) return; // 1 = lunes
+            if (hoy.getDay() !== 1) return;
 
             const claveAviso = 'saki_aviso_lunes_' + hoy.toISOString().split('T')[0];
-            if (localStorage.getItem(claveAviso)) return; // Ya se mostró hoy
+            if (localStorage.getItem(claveAviso)) return;
             localStorage.setItem(claveAviso, '1');
 
-            // Crear notificación
             const notif = document.createElement('div');
             notif.style.cssText = [
                 'position:fixed','top:1.5rem','left:50%','transform:translateX(-50%)',
@@ -5550,7 +5489,7 @@ window.resetearBloqueoStock = function() {
             ].join(';');
             notif.innerHTML = `
                 <div style="display:flex;align-items:flex-start;gap:.75rem">
-                    <div style="font-size:1.5rem;flex-shrink:0"></div>
+                    <div style="font-size:1.5rem;flex-shrink:0">📅</div>
                     <div style="flex:1">
                         <div style="font-weight:700;margin-bottom:.3rem;font-size:.95rem">Nueva semana — ¿Actualizas el porcentaje?</div>
                         <div style="font-size:.82rem;opacity:.85;margin-bottom:.75rem">
@@ -5579,7 +5518,6 @@ window.resetearBloqueoStock = function() {
             document.getElementById('avisoLunesNo').addEventListener('click', () => notif.remove());
             document.getElementById('avisoLunesSi').addEventListener('click', () => {
                 notif.remove();
-                // Ir a la barra de tasa y enfocar el campo
                 window.scrollTo({ top: 0, behavior: 'smooth' });
                 const input = document.getElementById('aumentoDiarioInput');
                 if (input) {
@@ -5590,7 +5528,6 @@ window.resetearBloqueoStock = function() {
                 }
             });
 
-            // Auto-cerrar después de 30 segundos si no hay acción
             setTimeout(() => { if (notif.parentNode) notif.remove(); }, 30000);
         };
 
@@ -5627,269 +5564,245 @@ window.resetearBloqueoStock = function() {
             }
         };
 
-        // ==================== ACTUALIZAR VENTAS HOY NETO (CORREGIDO - MISMA LÓGICA QUE CAJERO) ====================
-window._actualizarVentasHoyNeto = async function() {
-    try {
-        const hoy = new Date(); 
-        hoy.setHours(0, 0, 0, 0);
-        const manana = new Date(hoy); 
-        manana.setDate(manana.getDate() + 1);
-        
-        // Obtener ventas del día
-        const { data: ventasHoy } = await window.supabaseClient
-            .from('ventas')
-            .select('pedido_id')
-            .gte('fecha', hoy.toISOString())
-            .lt('fecha', manana.toISOString());
-        
-        if (!ventasHoy || ventasHoy.length === 0) {
-            document.getElementById('ventasHoy').textContent = '$0.00 / Bs 0.00';
-            return;
-        }
-        
-        // Obtener los pedidos correspondientes
-        const pedidoIds = ventasHoy.map(v => v.pedido_id);
-        const { data: pedidosData } = await window.supabaseClient
-            .from('pedidos')
-            .select('*')
-            .in('id', pedidoIds);
-        
-        // Función que calcula el neto cobrado (misma lógica que en Cajero)
-        const _netoCobradoPedido = (pedido) => {
-            if (!pedido) return 0;
-            if (pedido.metodo_pago === 'invitacion') return 0;
-            const tasa = window.configGlobal?.tasa_cambio || window.configGlobal?.tasa_efectiva || 400;
-            let recibido = 0;
-            if (pedido.pagos_mixtos && pedido.pagos_mixtos.length) {
-                pedido.pagos_mixtos.forEach(pg => {
-                    if (pg.metodo === 'invitacion') return;
-                    recibido += pg.metodo === 'efectivo_usd'
-                        ? (pg.monto || 0) * tasa
-                        : (pg.montoBs || pg.monto || 0);
-                });
-            } else {
-                recibido = pedido.subtotal_bs || 0;
-            }
-            return Math.max(0, recibido - (pedido.vuelto_entregado || 0));
-        };
-        
-        // Sumar neto cobrado de todos los pedidos
-        let netoBs = 0;
-        pedidosData.forEach(pedido => {
-            netoBs += _netoCobradoPedido(pedido);
-        });
-        
-        // Calcular equivalente en USD
-        const tasa = window.configGlobal?.tasa_efectiva || window.configGlobal?.tasa_cambio || 400;
-        const netoUSD = netoBs / tasa;
-        
-        // Mostrar en formato: USD / Bs (igual que en Cajero)
-        const el = document.getElementById('ventasHoy');
-        if (el) {
-            // Formato: $XX.XX / Bs XXX.XXX,XX
-            el.textContent = `${window.formatUSD(netoUSD)} / Bs ${netoBs.toFixed(2)}`;
-        }
-        
-        // Guardar en variable global para el modal de detalle
-        window._ventasHoyNeto = { netoBs, netoUSD, ventasHoy, pedidosData };
-        
-    } catch (e) { 
-        console.error('Error calculando neto cobrado:', e); 
-        const el = document.getElementById('ventasHoy');
-        if (el) el.textContent = '$0.00 / Bs 0.00';
-    }
-};
-
-// ==================== ACTUALIZAR DELIVERYS HOY (MISMA LÓGICA QUE CAJERO) ====================
-window._actualizarDeliverysHoy = async function() {
-    try {
-        const hoy = new Date();
-        hoy.setHours(0, 0, 0, 0);
-        const manana = new Date(hoy);
-        manana.setDate(manana.getDate() + 1);
-        
-        // Obtener pedidos del día que sean delivery y estén en estado 'enviado'
-        const { data: pedidosDelivery } = await window.supabaseClient
-            .from('pedidos')
-            .select('*')
-            .eq('tipo', 'delivery')
-            .eq('estado', 'enviado')
-            .gte('fecha', hoy.toISOString())
-            .lt('fecha', manana.toISOString());
-        
-        // Calcular total de deliverys del día (costo_delivery_bs)
-        let totalDeliverys = 0;
-        (pedidosDelivery || []).forEach(p => {
-            totalDeliverys += p.costo_delivery_bs || p.costoDelivery || 0;
-        });
-        
-        // Actualizar tarjeta
-        const el = document.getElementById('deliverysHoyDashboard');
-        if (el) {
-            const tasa = window.configGlobal?.tasa_efectiva || window.configGlobal?.tasa_cambio || 400;
-            const totalUSD = totalDeliverys / tasa;
-            // Mostrar en el mismo formato que el Cajero: Bs (y opcionalmente USD)
-            el.textContent = window.formatBs(totalDeliverys);
-            // Añadir tooltip con USD si se desea
-            el.setAttribute('title', `${window.formatUSD(totalUSD)} / ${window.formatBs(totalDeliverys)}`);
-        }
-        
-        // Guardar en variable global para el modal
-        window._deliverysHoyData = { totalDeliverys, pedidosDelivery };
-        
-    } catch (e) {
-        console.error('Error calculando deliverys hoy:', e);
-        const el = document.getElementById('deliverysHoyDashboard');
-        if (el) el.textContent = 'Bs 0.00';
-    }
-};
-
-// ==================== MODAL DE DELIVERYS (IDÉNTICO AL CAJERO) ====================
-window._abrirDetalleDeliverysAdmin = async function() {
-    try {
-        const hoy = new Date();
-        hoy.setHours(0, 0, 0, 0);
-        const manana = new Date(hoy);
-        manana.setDate(manana.getDate() + 1);
-        
-        // Obtener entregas del día
-        const { data: entregas } = await window.supabaseClient
-            .from('entregas_delivery')
-            .select('*, deliverys(*)')
-            .gte('fecha_entrega', hoy.toISOString())
-            .lt('fecha_entrega', manana.toISOString());
-        
-        // Obtener todos los motorizados (para mostrar los que no tienen entregas)
-        const { data: motorizados } = await window.supabaseClient
-            .from('deliverys')
-            .select('*')
-            .order('nombre');
-        
-        // Calcular acumulado por motorizado
-        const acumulado = {};
-        (entregas || []).forEach(e => {
-            acumulado[e.delivery_id] = (acumulado[e.delivery_id] || 0) + (e.monto_bs || 0);
-        });
-        
-        const totalAcumulado = Object.values(acumulado).reduce((s, v) => s + v, 0);
-        
-        // Generar HTML del modal con IDs únicos y evento onclick correcto
-        let motorizadosHtml = '';
-        if (!motorizados || motorizados.length === 0) {
-            motorizadosHtml = '<div class="empty-state"><i class="fas fa-motorcycle"></i><p>No hay motorizados registrados</p></div>';
-        } else {
-            motorizadosHtml = '<div class="motorizados-list" style="display:flex;flex-direction:column;gap:8px">';
-            motorizados.forEach(m => {
-                const monto = acumulado[m.id] || 0;
-                const hayE = monto > 0;
-                const detalleId = 'det_del_' + String(m.id).replace(/[^a-z0-9]/gi, '_');
+        // ==================== ACTUALIZAR VENTAS HOY NETO ====================
+        window._actualizarVentasHoyNeto = async function() {
+            try {
+                const hoy = new Date(); 
+                hoy.setHours(0, 0, 0, 0);
+                const manana = new Date(hoy); 
+                manana.setDate(manana.getDate() + 1);
                 
-                motorizadosHtml += `
-                    <div style="margin-bottom:8px">
-                        <div class="motorizado-item" style="background:rgba(0,0,0,.25);border-radius:8px;padding:12px;display:flex;justify-content:space-between;align-items:center;border-left:4px solid var(--delivery);cursor:${hayE ? 'pointer' : 'default'};opacity:${hayE ? '1' : '0.6'}" 
-                            onclick="${hayE ? `window._toggleDeliveryDetalle('${detalleId}')` : ''}">
-                            <span class="motorizado-nombre">
-                                <i class="fas fa-motorcycle" style="color:var(--delivery);margin-right:8px"></i>
-                                ${m.nombre}
-                            </span>
-                            <span class="motorizado-monto" style="color:${hayE ? 'var(--accent)' : 'var(--text-secondary)'};font-weight:700;display:flex;align-items:center;gap:6px">
-                                ${window.formatBs(monto)}
-                                ${hayE ? '<i class="fas fa-chevron-down" style="font-size:.7rem;transition:transform .2s" id="icon_' + detalleId + '"></i>' : ''}
-                            </span>
-                        </div>`;
+                const { data: ventasHoy } = await window.supabaseClient
+                    .from('ventas')
+                    .select('pedido_id')
+                    .gte('fecha', hoy.toISOString())
+                    .lt('fecha', manana.toISOString());
                 
-                if (hayE) {
-                    // Obtener pedidos de este motorizado
-                    const pedidosDelDia = (window.pedidos || []).filter(p => 
-                        p.delivery_id === m.id && 
-                        p.estado === 'enviado' &&
-                        new Date(p.fecha).toDateString() === hoy.toDateString()
-                    );
-                    
-                    motorizadosHtml += `
-                        <div id="${detalleId}" style="display:none;padding:8px 12px;background:rgba(0,0,0,.2);border-radius:0 0 8px 8px;margin-top:-4px;border:1px solid var(--border-color);border-top:none">
-                            ${pedidosDelDia.length > 0 ? pedidosDelDia.map(p => {
-                                const hora = new Date(p.fecha).toLocaleTimeString('es-VE', {
-                                    hour: 'numeric', minute: '2-digit', hour12: true
-                                }).toLowerCase();
-                                return `
-                                    <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.08);font-size:.78rem">
-                                        <span>
-                                            <i class="fas fa-map-marker-alt" style="color:var(--delivery);margin-right:6px"></i>
-                                            ${p.parroquia || 'Sin parroquia'}
-                                            <span style="color:var(--text-secondary);margin-left:8px">${hora}</span>
-                                        </span>
-                                        <span style="color:var(--accent);font-weight:700">${window.formatBs(p.costo_delivery_bs || 0)}</span>
-                                    </div>
-                                `;
-                            }).join('') : '<div style="padding:6px 0;color:var(--text-secondary);font-size:.78rem">No hay entregas registradas</div>'}
-                            <div style="padding:6px 0;margin-top:4px;font-size:.75rem;font-weight:600;border-top:1px solid rgba(255,255,255,.1);color:var(--text-secondary)">
-                                Total: ${pedidosDelDia.length} entrega${pedidosDelDia.length !== 1 ? 's' : ''}
-                            </div>
-                        </div>`;
+                if (!ventasHoy || ventasHoy.length === 0) {
+                    document.getElementById('ventasHoy').textContent = '$0.00 / Bs 0.00';
+                    return;
                 }
-                motorizadosHtml += `</div>`;
-            });
-            motorizadosHtml += '</div>';
-        }
-        
-        // Crear modal
-        const modal = document.createElement('div');
-        modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:10000;display:flex;align-items:center;justify-content:center;padding:1rem';
-        modal.innerHTML = `
-            <div style="background:var(--card-bg);border-radius:16px;width:100%;max-width:500px;max-height:90vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.4)">
-                <div style="background:linear-gradient(135deg, var(--delivery), #00838F);color:#fff;padding:1rem 1.2rem;display:flex;justify-content:space-between;align-items:center;border-radius:16px 16px 0 0">
-                    <h3 style="font-size:1rem;font-weight:700;display:flex;align-items:center;gap:.5rem">
-                        <i class="fas fa-motorcycle"></i> Acumulado Deliverys (Hoy)
-                    </h3>
-                    <button onclick="this.closest('[style*=fixed]').remove()" 
-                        style="background:rgba(255,255,255,.2);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;color:#fff;font-size:1rem;display:flex;align-items:center;justify-content:center">
-                        
-                    </button>
-                </div>
-                <div style="padding:1.25rem">
-                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;padding-bottom:12px;border-bottom:2px solid var(--border-color)">
-                        <span style="font-weight:700;font-size:1rem">Total acumulado hoy</span>
-                        <span style="font-weight:800;color:var(--delivery);font-size:1.2rem">${window.formatBs(totalAcumulado)}</span>
-                    </div>
-                    <h4 style="margin-bottom:12px;color:var(--text-secondary);font-size:.85rem;font-weight:600">Desglose por motorizado:</h4>
-                    ${motorizadosHtml}
-                </div>
-                <div style="padding:1rem 1.2rem;border-top:1px solid var(--border);display:flex;justify-content:flex-end">
-                    <button onclick="this.closest('[style*=fixed]').remove()" 
-                        class="btn-primary" style="padding:.5rem 1.2rem;font-size:.85rem;background:linear-gradient(135deg, var(--delivery), #00838F)">
-                        Cerrar
-                    </button>
-                </div>
-            </div>`;
-        
-        modal.addEventListener('click', e => {
-            if (e.target === modal) modal.remove();
-        });
-        document.body.appendChild(modal);
-        
-    } catch (e) {
-        console.error('Error abriendo detalle deliverys admin:', e);
-        window.mostrarToast(' Error al cargar datos de deliverys', 'error');
-    }
-};
+                
+                const pedidoIds = ventasHoy.map(v => v.pedido_id);
+                const { data: pedidosData } = await window.supabaseClient
+                    .from('pedidos')
+                    .select('*')
+                    .in('id', pedidoIds);
+                
+                const _netoCobradoPedido = (pedido) => {
+                    if (!pedido) return 0;
+                    if (pedido.metodo_pago === 'invitacion') return 0;
+                    const tasa = window.configGlobal?.tasa_cambio || window.configGlobal?.tasa_efectiva || 400;
+                    let recibido = 0;
+                    if (pedido.pagos_mixtos && pedido.pagos_mixtos.length) {
+                        pedido.pagos_mixtos.forEach(pg => {
+                            if (pg.metodo === 'invitacion') return;
+                            recibido += pg.metodo === 'efectivo_usd'
+                                ? (pg.monto || 0) * tasa
+                                : (pg.montoBs || pg.monto || 0);
+                        });
+                    } else {
+                        recibido = pedido.subtotal_bs || 0;
+                    }
+                    return Math.max(0, recibido - (pedido.vuelto_entregado || 0));
+                };
+                
+                let netoBs = 0;
+                pedidosData.forEach(pedido => {
+                    netoBs += _netoCobradoPedido(pedido);
+                });
+                
+                const tasa = window.configGlobal?.tasa_efectiva || window.configGlobal?.tasa_cambio || 400;
+                const netoUSD = netoBs / tasa;
+                
+                const el = document.getElementById('ventasHoy');
+                if (el) {
+                    el.textContent = `${window.formatUSD(netoUSD)} / Bs ${netoBs.toFixed(2)}`;
+                }
+                
+                window._ventasHoyNeto = { netoBs, netoUSD, ventasHoy, pedidosData };
+                
+            } catch (e) { 
+                console.error('Error calculando neto cobrado:', e); 
+                const el = document.getElementById('ventasHoy');
+                if (el) el.textContent = '$0.00 / Bs 0.00';
+            }
+        };
 
-// Función para toggle del detalle de motorizado
-window._toggleDeliveryDetalle = function(detalleId) {
-    const detalleEl = document.getElementById(detalleId);
-    const iconEl = document.getElementById('icon_' + detalleId);
-    if (detalleEl) {
-        if (detalleEl.style.display === 'none' || detalleEl.style.display === '') {
-            detalleEl.style.display = 'block';
-            if (iconEl) iconEl.style.transform = 'rotate(180deg)';
-        } else {
-            detalleEl.style.display = 'none';
-            if (iconEl) iconEl.style.transform = 'rotate(0deg)';
-        }
-    }
-};
+        // ==================== ACTUALIZAR DELIVERYS HOY ====================
+        window._actualizarDeliverysHoy = async function() {
+            try {
+                const hoy = new Date();
+                hoy.setHours(0, 0, 0, 0);
+                const manana = new Date(hoy);
+                manana.setDate(manana.getDate() + 1);
+                
+                const { data: pedidosDelivery } = await window.supabaseClient
+                    .from('pedidos')
+                    .select('*')
+                    .eq('tipo', 'delivery')
+                    .eq('estado', 'enviado')
+                    .gte('fecha', hoy.toISOString())
+                    .lt('fecha', manana.toISOString());
+                
+                let totalDeliverys = 0;
+                (pedidosDelivery || []).forEach(p => {
+                    totalDeliverys += p.costo_delivery_bs || p.costoDelivery || 0;
+                });
+                
+                const el = document.getElementById('deliverysHoyDashboard');
+                if (el) {
+                    el.textContent = window.formatBs(totalDeliverys);
+                }
+                
+                window._deliverysHoyData = { totalDeliverys, pedidosDelivery };
+                
+            } catch (e) {
+                console.error('Error calculando deliverys hoy:', e);
+                const el = document.getElementById('deliverysHoyDashboard');
+                if (el) el.textContent = 'Bs 0.00';
+            }
+        };
 
-        // ==================== TOGGLE DISPONIBLE PLATILLO (CORREGIDO) ====================
+        // ==================== MODAL DE DELIVERYS ====================
+        window._abrirDetalleDeliverysAdmin = async function() {
+            try {
+                const hoy = new Date();
+                hoy.setHours(0, 0, 0, 0);
+                const manana = new Date(hoy);
+                manana.setDate(manana.getDate() + 1);
+                
+                const { data: entregas } = await window.supabaseClient
+                    .from('entregas_delivery')
+                    .select('*, deliverys(*)')
+                    .gte('fecha_entrega', hoy.toISOString())
+                    .lt('fecha_entrega', manana.toISOString());
+                
+                const { data: motorizados } = await window.supabaseClient
+                    .from('deliverys')
+                    .select('*')
+                    .order('nombre');
+                
+                const acumulado = {};
+                (entregas || []).forEach(e => {
+                    acumulado[e.delivery_id] = (acumulado[e.delivery_id] || 0) + (e.monto_bs || 0);
+                });
+                
+                const totalAcumulado = Object.values(acumulado).reduce((s, v) => s + v, 0);
+                
+                let motorizadosHtml = '';
+                if (!motorizados || motorizados.length === 0) {
+                    motorizadosHtml = '<div class="empty-state"><i class="fas fa-motorcycle"></i><p>No hay motorizados registrados</p></div>';
+                } else {
+                    motorizadosHtml = '<div class="motorizados-list" style="display:flex;flex-direction:column;gap:8px">';
+                    motorizados.forEach(m => {
+                        const monto = acumulado[m.id] || 0;
+                        const hayE = monto > 0;
+                        const detalleId = 'det_del_' + String(m.id).replace(/[^a-z0-9]/gi, '_');
+                        
+                        motorizadosHtml += `
+                            <div style="margin-bottom:8px">
+                                <div class="motorizado-item" style="background:rgba(0,0,0,.25);border-radius:8px;padding:12px;display:flex;justify-content:space-between;align-items:center;border-left:4px solid var(--delivery);cursor:${hayE ? 'pointer' : 'default'};opacity:${hayE ? '1' : '0.6'}" 
+                                    onclick="${hayE ? `window._toggleDeliveryDetalle('${detalleId}')` : ''}">
+                                    <span class="motorizado-nombre">
+                                        <i class="fas fa-motorcycle" style="color:var(--delivery);margin-right:8px"></i>
+                                        ${m.nombre}
+                                    </span>
+                                    <span class="motorizado-monto" style="color:${hayE ? 'var(--accent)' : 'var(--text-secondary)'};font-weight:700;display:flex;align-items:center;gap:6px">
+                                        ${window.formatBs(monto)}
+                                        ${hayE ? '<i class="fas fa-chevron-down" style="font-size:.7rem;transition:transform .2s" id="icon_' + detalleId + '"></i>' : ''}
+                                    </span>
+                                </div>`;
+                        
+                        if (hayE) {
+                            const pedidosDelDia = (window.pedidos || []).filter(p => 
+                                p.delivery_id === m.id && 
+                                p.estado === 'enviado' &&
+                                new Date(p.fecha).toDateString() === hoy.toDateString()
+                            );
+                            
+                            motorizadosHtml += `
+                                <div id="${detalleId}" style="display:none;padding:8px 12px;background:rgba(0,0,0,.2);border-radius:0 0 8px 8px;margin-top:-4px;border:1px solid var(--border-color);border-top:none">
+                                    ${pedidosDelDia.length > 0 ? pedidosDelDia.map(p => {
+                                        const hora = new Date(p.fecha).toLocaleTimeString('es-VE', {
+                                            hour: 'numeric', minute: '2-digit', hour12: true
+                                        }).toLowerCase();
+                                        return `
+                                            <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.08);font-size:.78rem">
+                                                <span>
+                                                    <i class="fas fa-map-marker-alt" style="color:var(--delivery);margin-right:6px"></i>
+                                                    ${p.parroquia || 'Sin parroquia'}
+                                                    <span style="color:var(--text-secondary);margin-left:8px">${hora}</span>
+                                                </span>
+                                                <span style="color:var(--accent);font-weight:700">${window.formatBs(p.costo_delivery_bs || 0)}</span>
+                                            </div>
+                                        `;
+                                    }).join('') : '<div style="padding:6px 0;color:var(--text-secondary);font-size:.78rem">No hay entregas registradas</div>'}
+                                    <div style="padding:6px 0;margin-top:4px;font-size:.75rem;font-weight:600;border-top:1px solid rgba(255,255,255,.1);color:var(--text-secondary)">
+                                        Total: ${pedidosDelDia.length} entrega${pedidosDelDia.length !== 1 ? 's' : ''}
+                                    </div>
+                                </div>`;
+                        }
+                        motorizadosHtml += `</div>`;
+                    });
+                    motorizadosHtml += '</div>';
+                }
+                
+                const modal = document.createElement('div');
+                modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:10000;display:flex;align-items:center;justify-content:center;padding:1rem';
+                modal.innerHTML = `
+                    <div style="background:var(--card-bg);border-radius:16px;width:100%;max-width:500px;max-height:90vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.4)">
+                        <div style="background:linear-gradient(135deg, var(--delivery), #00838F);color:#fff;padding:1rem 1.2rem;display:flex;justify-content:space-between;align-items:center;border-radius:16px 16px 0 0">
+                            <h3 style="font-size:1rem;font-weight:700;display:flex;align-items:center;gap:.5rem">
+                                <i class="fas fa-motorcycle"></i> Acumulado Deliverys (Hoy)
+                            </h3>
+                            <button onclick="this.closest('[style*=fixed]').remove()" 
+                                style="background:rgba(255,255,255,.2);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;color:#fff;font-size:1rem;display:flex;align-items:center;justify-content:center">
+                                ✕
+                            </button>
+                        </div>
+                        <div style="padding:1.25rem">
+                            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;padding-bottom:12px;border-bottom:2px solid var(--border-color)">
+                                <span style="font-weight:700;font-size:1rem">Total acumulado hoy</span>
+                                <span style="font-weight:800;color:var(--delivery);font-size:1.2rem">${window.formatBs(totalAcumulado)}</span>
+                            </div>
+                            <h4 style="margin-bottom:12px;color:var(--text-secondary);font-size:.85rem;font-weight:600">Desglose por motorizado:</h4>
+                            ${motorizadosHtml}
+                        </div>
+                        <div style="padding:1rem 1.2rem;border-top:1px solid var(--border);display:flex;justify-content:flex-end">
+                            <button onclick="this.closest('[style*=fixed]').remove()" 
+                                class="btn-primary" style="padding:.5rem 1.2rem;font-size:.85rem;background:linear-gradient(135deg, var(--delivery), #00838F)">
+                                Cerrar
+                            </button>
+                        </div>
+                    </div>`;
+                
+                modal.addEventListener('click', e => {
+                    if (e.target === modal) modal.remove();
+                });
+                document.body.appendChild(modal);
+                
+            } catch (e) {
+                console.error('Error abriendo detalle deliverys admin:', e);
+                window.mostrarToast('✗ Error al cargar datos de deliverys', 'error');
+            }
+        };
+
+        window._toggleDeliveryDetalle = function(detalleId) {
+            const detalleEl = document.getElementById(detalleId);
+            const iconEl = document.getElementById('icon_' + detalleId);
+            if (detalleEl) {
+                if (detalleEl.style.display === 'none' || detalleEl.style.display === '') {
+                    detalleEl.style.display = 'block';
+                    if (iconEl) iconEl.style.transform = 'rotate(180deg)';
+                } else {
+                    detalleEl.style.display = 'none';
+                    if (iconEl) iconEl.style.transform = 'rotate(0deg)';
+                }
+            }
+        };
+
+        // ==================== TOGGLE DISPONIBLE PLATILLO ====================
         window.toggleDisponiblePlatillo = async function(id, disponible) {
             try {
                 const { error } = await window.supabaseClient.from('menu')
@@ -5898,15 +5811,14 @@ window._toggleDeliveryDetalle = function(detalleId) {
                 const item = (window.menuItems || []).find(p => p.id === id);
                 if (item) item.disponible = disponible;
                 window.renderizarMenu(document.getElementById('menuBuscador')?.value || '');
-                // Mostrar mensaje apropiado según el estado
                 if (disponible) {
-                    window.mostrarToast(` Platillo "${item?.nombre}" ahora está DISPONIBLE en el menú del cliente`, 'success');
+                    window.mostrarToast(`✓ Platillo "${item?.nombre}" ahora está DISPONIBLE en el menú del cliente`, 'success');
                 } else {
-                    window.mostrarToast(` Platillo "${item?.nombre}" ahora está NO DISPONIBLE (se mostrará como AGOTADO en el menú del cliente)`, 'warning');
+                    window.mostrarToast(`⚠️ Platillo "${item?.nombre}" ahora está NO DISPONIBLE (se mostrará como AGOTADO en el menú del cliente)`, 'warning');
                 }
             } catch(e) {
                 console.error('Error toggle disponible:', e);
-                window.mostrarToast(' Error: ' + (e.message || e), 'error');
+                window.mostrarToast('✗ Error: ' + (e.message || e), 'error');
             }
         };
 
@@ -5923,13 +5835,11 @@ window._toggleDeliveryDetalle = function(detalleId) {
                 try { history.pushState({ sakiAdmin: true, d: _depth }, ''); } catch(e) {}
             }
 
-            // Dos entradas iniciales — la página ya está "protegida" al cargar
             try {
                 history.pushState({ sakiAdmin: true, d: 1 }, '');
                 history.pushState({ sakiAdmin: true, d: 2 }, '');
             } catch(e) {}
 
-            // Aviso de salida
             function _mostrarAviso() {
                 if (_avisando) {
                     _avisando = false;
@@ -5952,7 +5862,6 @@ window._toggleDeliveryDetalle = function(detalleId) {
                 clearTimeout(_avisoTimer);
             }
 
-            // Botones del aviso
             var _btnSi = document.getElementById('_salidaSi');
             var _btnNo = document.getElementById('_salidaNo');
             if (_btnSi) _btnSi.addEventListener('click', function() {
@@ -5964,7 +5873,6 @@ window._toggleDeliveryDetalle = function(detalleId) {
                 _ocultarAviso(); _push();
             });
 
-            // Modales del admin
             function _getOpenModals() {
                 return Array.from(document.querySelectorAll('.modal.active'));
             }
@@ -5977,7 +5885,6 @@ window._toggleDeliveryDetalle = function(detalleId) {
                 return true;
             }
 
-            // MutationObserver — pushState al abrir modal
             var _obs = new MutationObserver(function(mutations) {
                 mutations.forEach(function(m) {
                     if (m.attributeName !== 'class') return;
@@ -5991,7 +5898,6 @@ window._toggleDeliveryDetalle = function(detalleId) {
                 _obs.observe(modal, { attributes: true, attributeFilter: ['class'] });
             });
 
-            // popstate
             window.addEventListener('popstate', function(e) {
                 if (e.state && e.state.sakiAdmin) _depth = e.state.d || 0;
 
@@ -6003,14 +5909,12 @@ window._toggleDeliveryDetalle = function(detalleId) {
                     return;
                 }
 
-                // Sin capas y panel activo: mostrar aviso
                 if (document.getElementById('panelContainer')?.classList.contains('active')) {
                     _depth = 0;
                     _mostrarAviso();
                 }
             });
 
-            // Swipe táctil
             var _tx = 0, _ty = 0;
             document.addEventListener('touchstart', function(e) {
                 _tx = e.touches[0].clientX;
@@ -6043,12 +5947,12 @@ window._toggleDeliveryDetalle = function(detalleId) {
                 for (const sid of sessions) {
                     await window.supabaseClient.from('notificaciones').insert([{
                         pedido_id: null, tipo: 'stock_critico',
-                        titulo: ' Stock crítico',
+                        titulo: '⚠️ Stock crítico',
                         mensaje: `El ingrediente "${ingredienteNombre}" está por debajo del mínimo. Revisa el inventario.`,
                         session_id: sid, leida: false
                     }]);
                 }
-                window.mostrarToast(` Alerta enviada: stock crítico en ${ingredienteNombre}`, 'warning');
+                window.mostrarToast(`📢 Alerta enviada: stock crítico en ${ingredienteNombre}`, 'warning');
             } catch (e) { console.error('Error notificando stock crítico:', e); }
         };
 
@@ -6058,16 +5962,13 @@ window._toggleDeliveryDetalle = function(detalleId) {
             const icon = document.getElementById('themeIcon');
             const isDark = html.classList.toggle('dark-theme');
             
-            // Cambiar icono
             if (icon) {
                 icon.className = isDark ? 'fas fa-moon' : 'fas fa-sun';
             }
             
-            // Guardar preferencia
             localStorage.setItem('saki_admin_theme', isDark ? 'dark' : 'light');
         };
         
-        // Restaurar tema guardado
         window.initTheme = function() {
             const savedTheme = localStorage.getItem('saki_admin_theme');
             const icon = document.getElementById('themeIcon');
@@ -6081,83 +5982,73 @@ window._toggleDeliveryDetalle = function(detalleId) {
             }
         };
 
-        // ==================== DOMContentLoaded - INICIALIZACIÓN CORREGIDA ====================
-document.addEventListener('DOMContentLoaded', async () => {
-    // Inicializar tema
-    window.initTheme();
-    
-    if (window.restaurarSesionAdmin()) {
-        window.mostrarPanel();
-        setTimeout(async () => {
-            try {
-                // PRIMERO: Cargar configuración inicial
-                await window.cargarConfiguracionInicial();
-                
-                // Luego cargar el resto de datos
-                await window.cargarMenu();
-                await window.cargarInventario();
-                await window.cargarUsuarios();
-                await window.cargarQRs();
-                await window.cargarReportes();
-                await window.cargarPedidosRecientes();
-                await window.cargarMesoneros();
-                await window.cargarDeliverys();
-                await window.cargarPropinas();
-                
-                window.setupEventListeners();
-                window.setupRealtimeSubscriptions();
-                window.setupStockRealtime();
-                window.restaurarWifiPersistente();
-                window._registrarPushAdmin();
-                
-                // Verificar tasa del día
-                window._verificarTasaDeHoy((tasa) => {
-                    const tasaInput = document.getElementById('tasaBaseInput');
-                    if (tasaInput) tasaInput.value = tasa;
-                    window.configGlobal.tasa_cambio = tasa;
-                    window.recalcularTasaEfectiva();
-                    window._verificarAvisoLunes();
-                });
-                
-                // Actualizar ventas y deliverys hoy
-                await window._actualizarVentasHoyNeto();
-                await window._actualizarDeliverysHoy();
-                
-                setInterval(async () => { 
-                    await window._actualizarVentasHoyNeto();
-                    await window._actualizarDeliverysHoy();
-                }, 60000);
-                
-            } catch (e) { 
-                console.error('Error cargando datos:', e); 
-                window.mostrarToast('Error cargando datos: ' + e.message, 'error'); 
+        // ==================== DOMContentLoaded - INICIALIZACIÓN ====================
+        document.addEventListener('DOMContentLoaded', async () => {
+            window.initTheme();
+            
+            if (window.restaurarSesionAdmin()) {
+                window.mostrarPanel();
+                setTimeout(async () => {
+                    try {
+                        await window.cargarConfiguracionInicial();
+                        await window.cargarMenu();
+                        await window.cargarInventario();
+                        await window.cargarUsuarios();
+                        await window.cargarQRs();
+                        await window.cargarReportes();
+                        await window.cargarPedidosRecientes();
+                        await window.cargarMesoneros();
+                        await window.cargarDeliverys();
+                        await window.cargarPropinas();
+                        
+                        window.setupEventListeners();
+                        window.setupRealtimeSubscriptions();
+                        window.setupStockRealtime();
+                        window.restaurarWifiPersistente();
+                        window._registrarPushAdmin();
+                        
+                        window._verificarTasaDeHoy((tasa) => {
+                            const tasaInput = document.getElementById('tasaBaseInput');
+                            if (tasaInput) tasaInput.value = tasa;
+                            window.configGlobal.tasa_cambio = tasa;
+                            window.recalcularTasaEfectiva();
+                            window._verificarAvisoLunes();
+                        });
+                        
+                        await window._actualizarVentasHoyNeto();
+                        await window._actualizarDeliverysHoy();
+                        
+                        setInterval(async () => { 
+                            await window._actualizarVentasHoyNeto();
+                            await window._actualizarDeliverysHoy();
+                        }, 60000);
+                        
+                    } catch (e) { 
+                        console.error('Error cargando datos:', e); 
+                        window.mostrarToast('Error cargando datos: ' + e.message, 'error'); 
+                    }
+                }, 100);
+            } else {
+                window.mostrarLogin();
             }
-        }, 100);
-    } else {
-        window.mostrarLogin();
-    }
-});
+        });
 
         // Simulador de lunes para probar aviso semanal (desde F12)
         window._simularLunes = function() {
-            console.log('%c Simulando lunes para prueba de aviso semanal...', 'color:#FF9800;font-weight:700');
-            // Borrar la clave de "ya mostrado hoy" para que vuelva a aparecer
+            console.log('%c📅 Simulando lunes para prueba de aviso semanal...', 'color:#FF9800;font-weight:700');
             const hoy = new Date().toISOString().split('T')[0];
             localStorage.removeItem('saki_aviso_lunes_' + hoy);
-            // Forzar configGlobal.aumento_semanal = true temporalmente para el test
             const estadoOriginal = window.configGlobal?.aumento_semanal;
             if (window.configGlobal) window.configGlobal.aumento_semanal = true;
-            // Simular que hoy es lunes usando una versión modificada
             const _orig = Date.prototype.getDay;
-            Date.prototype.getDay = function() { return 1; }; // 1 = lunes
+            Date.prototype.getDay = function() { return 1; };
             window._verificarAvisoLunes();
-            Date.prototype.getDay = _orig; // restaurar
+            Date.prototype.getDay = _orig;
             if (window.configGlobal && estadoOriginal !== undefined)
                 window.configGlobal.aumento_semanal = estadoOriginal;
-            console.log('%c Aviso de lunes disparado. Mira la pantalla.', 'color:green;font-weight:700');
+            console.log('%c✅ Aviso de lunes disparado. Mira la pantalla.', 'color:green;font-weight:700');
         };
 
-        // Simulador de recálculo por período para probar acumulado
         window._simularPeriodoSemanal = function(semanas) {
             semanas = semanas || 1;
             const input = document.getElementById('aumentoDiarioInput');
@@ -6165,7 +6056,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const base = parseFloat(document.getElementById('tasaBaseInput')?.value) || 0;
             const acum = semanas * pct;
             const efectiva = base * (1 + acum / 100);
-            console.group('%c Simulación: ' + semanas + ' semana(s) de aumento semanal', 'color:#FF9800;font-weight:700');
+            console.group('%c📊 Simulación: ' + semanas + ' semana(s) de aumento semanal', 'color:#FF9800;font-weight:700');
             console.log('Tasa base:', base);
             console.log('% por semana:', pct + '%');
             console.log('Semanas simuladas:', semanas);
@@ -6173,7 +6064,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             console.log('Tasa efectiva simulada: Bs', efectiva.toFixed(2));
             console.log('Diferencia vs actual: Bs', (efectiva - (window.configGlobal?.tasa_efectiva || base)).toFixed(2));
             console.groupEnd();
-            console.log('%c Tip: prueba window._simularPeriodoSemanal(3) para 3 semanas', 'color:gray');
+            console.log('%c💡 Tip: prueba window._simularPeriodoSemanal(3) para 3 semanas', 'color:gray');
         };
 
         // SUBCATEGORIAS
@@ -6203,7 +6094,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             ]
         };
 
-        // _onCategoriaChange — subcategoría dinámica en modal platillo
         window._onCategoriaChange = function() {
             const cat = document.getElementById('platilloCategoria')?.value;
             const wrap = document.getElementById('subcategoriaContainer');
@@ -6221,15 +6111,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             window._recalcularStockPlatillo();
         };
 
-        // _previewPrecioBs — mostrar equivalente en Bs al escribir precio
         window._previewPrecioBs = function() {
             const precio = parseFloat(document.getElementById('platilloPrecio')?.value) || 0;
             const tasa   = (window.configGlobal?.tasa_efectiva) || (window.configGlobal?.tasa_cambio) || 0;
             const el = document.getElementById('platilloPrecioBsPreview');
-            if (el) el.textContent = tasa > 0 && precio > 0 ? ' ' + window.formatBs(precio * tasa) : '';
+            if (el) el.textContent = tasa > 0 && precio > 0 ? '📊 ' + window.formatBs(precio * tasa) : '';
         };
 
-        // _previewPlatilloUrl — preview imagen por URL
         window._previewPlatilloUrl = function(url) {
             if (!url) return;
             const prev = document.getElementById('imagenPreview');
@@ -6237,20 +6125,16 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (prev && img) { img.src = url; prev.style.display = 'flex'; }
         };
 
-        // _convertirUnidad — convierte entre unidades compatibles
         window._convertirUnidad = function(valor, desde, hacia) {
             if (!desde || !hacia || desde === hacia) return valor;
-            // Convertir a base (gramos o mililitros)
             let base = valor;
             if (desde === 'kilogramos') base = valor * 1000;
             else if (desde === 'litros') base = valor * 1000;
-            // Convertir de base a destino
             if (hacia === 'kilogramos') return base / 1000;
             if (hacia === 'litros')     return base / 1000;
-            return base; // gramos o mililitros
+            return base;
         };
 
-        // _recalcularStockPlatillo — muestra cuántos platillos se pueden hacer
         window._recalcularStockPlatillo = function() {
             const wrap = document.getElementById('stockCalculadoWrap');
             const txt  = document.getElementById('stockCalculadoText');
@@ -6281,56 +6165,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             txt.style.color = maxPlatillos > 5 ? '#166534' : maxPlatillos > 0 ? '#92400e' : '#991b1b';
             txt.textContent = maxPlatillos > 0
                 ? `Con el stock actual se pueden preparar ${maxPlatillos} porcion${maxPlatillos !== 1 ? 'es' : ''}`
-                : ' Stock insuficiente para preparar este platillo';
+                : '⚠️ Stock insuficiente para preparar este platillo';
         };
 
-        // _syncIngredientePreview — preview stock resultante + conversión
-        window._syncIngredientePreview = function() {
-            const stockActual = parseFloat(document.getElementById('ingredienteStock')?.value) || 0;
-            const nuevo       = parseFloat(document.getElementById('ingredienteAgregar')?.value) || 0;
-            const unidad      = document.getElementById('ingredienteUnidad')?.value || 'unidades';
-            const total       = stockActual + nuevo;
-            const sp = document.getElementById('stockTotalPreview');
-            const sc = document.getElementById('stockConversionPreview');
-            if (sp) {
-                sp.textContent = nuevo > 0
-                    ? `Stock resultante: ${total.toFixed(3)} ${unidad}`
-                    : '';
-            }
-            if (sc) {
-                if (unidad === 'kilogramos' && nuevo > 0) {
-                    sc.textContent = `= ${(nuevo * 1000).toFixed(0)} gramos adicionales`;
-                } else if (unidad === 'litros' && nuevo > 0) {
-                    sc.textContent = `= ${(nuevo * 1000).toFixed(0)} mililitros adicionales`;
-                } else {
-                    sc.textContent = '';
-                }
-            }
-        };
-
-        // _eliminarIngredienteDesdeModal — eliminar desde modal de edición
-        window._eliminarIngredienteDesdeModal = async function() {
-            const id = window.ingredienteEditandoId;
-            if (!id) return;
-            const ing = (window.inventarioItems || []).find(i => i.id === id);
-            if (!confirm(`¿Eliminar el ingrediente "${ing?.nombre || id}"?`)) return;
-            try {
-                const { error } = await window.supabaseClient.from('inventario').delete().eq('id', id);
-                if (error) throw error;
-                window.cerrarModal('ingredienteModal');
-                window.ingredienteEditandoId = null;
-                await window.cargarInventario();
-                window.mostrarToast(' Ingrediente eliminado', 'success');
-            } catch(e) {
-                console.error('Error eliminando ingrediente:', e);
-                window.mostrarToast(' Error: ' + (e.message || e), 'error');
-            }
-        };
-
-        // recalcularCostos — recalcula costos en Bs de todos los ingredientes
         window.recalcularCostos = async function() {
             const tasa = (window.configGlobal?.tasa_efectiva) || (window.configGlobal?.tasa_cambio) || 0;
-            if (!tasa) { window.mostrarToast(' Configura la tasa efectiva primero', 'warning'); return; }
+            if (!tasa) { window.mostrarToast('⚠️ Configura la tasa efectiva primero', 'warning'); return; }
             let actualizados = 0;
             for (const ing of (window.inventarioItems || [])) {
                 const costoBs  = (ing.precio_costo  || 0) * tasa;
@@ -6342,247 +6182,239 @@ document.addEventListener('DOMContentLoaded', async () => {
                 } catch(e) { console.warn('No se pudo actualizar', ing.nombre, e.message); }
             }
             await window.cargarInventario();
-            window.mostrarToast(` ${actualizados} ingrediente${actualizados !== 1 ? 's' : ''} actualizados en Bs`, 'success');
+            window.mostrarToast(`✓ ${actualizados} ingrediente${actualizados !== 1 ? 's' : ''} actualizados en Bs`, 'success');
         };
 
-        // ==================== MODAL DE DETALLE DE VENTAS (IDÉNTICO AL CAJERO) ====================
-window._abrirDetalleVentasAdmin = async function() {
-    try {
-        const hoy = new Date(); 
-        hoy.setHours(0, 0, 0, 0);
-        const manana = new Date(hoy); 
-        manana.setDate(manana.getDate() + 1);
+        // ==================== MODAL DE DETALLE DE VENTAS ====================
+        window._abrirDetalleVentasAdmin = async function() {
+            try {
+                const hoy = new Date(); 
+                hoy.setHours(0, 0, 0, 0);
+                const manana = new Date(hoy); 
+                manana.setDate(manana.getDate() + 1);
 
-        // Cargar ventas y pedidos del día
-        const { data: ventasHoy } = await window.supabaseClient
-            .from('ventas')
-            .select('*')
-            .gte('fecha', hoy.toISOString())
-            .lt('fecha', manana.toISOString());
-        
-        if (!ventasHoy || ventasHoy.length === 0) {
-            window.mostrarToast('No hay ventas registradas hoy', 'info');
-            return;
-        }
-        
-        const pedidoIds = ventasHoy.map(v => v.pedido_id);
-        const { data: pedidosHoy } = await window.supabaseClient
-            .from('pedidos')
-            .select('*')
-            .in('id', pedidoIds);
+                const { data: ventasHoy } = await window.supabaseClient
+                    .from('ventas')
+                    .select('*')
+                    .gte('fecha', hoy.toISOString())
+                    .lt('fecha', manana.toISOString());
+                
+                if (!ventasHoy || ventasHoy.length === 0) {
+                    window.mostrarToast('No hay ventas registradas hoy', 'info');
+                    return;
+                }
+                
+                const pedidoIds = ventasHoy.map(v => v.pedido_id);
+                const { data: pedidosHoy } = await window.supabaseClient
+                    .from('pedidos')
+                    .select('*')
+                    .in('id', pedidoIds);
 
-        const tasa = window.configGlobal?.tasa_cambio || window.configGlobal?.tasa_efectiva || 400;
-        const fmtBs = window.formatBs;
-        
-        // Función neto cobrado (misma que usa el cajero)
-        const _netoCobradoPedido = (pedido) => {
-            if (!pedido) return 0;
-            if (pedido.metodo_pago === 'invitacion') return 0;
-            let recibido = 0;
-            if (pedido.pagos_mixtos && pedido.pagos_mixtos.length) {
-                pedido.pagos_mixtos.forEach(pg => {
-                    if (pg.metodo === 'invitacion') return;
-                    recibido += pg.metodo === 'efectivo_usd'
-                        ? (pg.monto || 0) * tasa
-                        : (pg.montoBs || pg.monto || 0);
-                });
-            } else {
-                recibido = pedido.subtotal_bs || 0;
-            }
-            return Math.max(0, recibido - (pedido.vuelto_entregado || 0));
-        };
-        
-        // Calcular totales por método de pago
-        let totalNeto = 0;
-        let vt_ebs = 0, vt_eusd = 0, vt_pm = 0, vt_pv = 0;
-        let vt_cond = 0, vt_favor = 0, vt_delivery = 0;
-        let vt_inv_count = 0, vt_inv_acum = 0;
-        
-        ventasHoy.forEach(v => {
-            const p = pedidosHoy.find(pd => pd.id === v.pedido_id);
-            if (!p) return;
-            
-            const neto = _netoCobradoPedido(p);
-            totalNeto += neto;
-            
-            if (p.condonado > 0) vt_cond += p.condonado;
-            if (p.a_favor_caja > 0) vt_favor += p.a_favor_caja;
-            if (p.tipo === 'delivery' && (p.costo_delivery_bs || 0) > 0) vt_delivery += p.costo_delivery_bs;
-            
-            const pagos = p.pagos_mixtos;
-            if (pagos && pagos.length) {
-                let vueltoR = p.vuelto_entregado || 0;
-                pagos.forEach(pg => {
-                    const mbs = pg.metodo === 'efectivo_usd' 
-                        ? (pg.monto || 0) * tasa 
-                        : (pg.montoBs || pg.monto || 0);
+                const tasa = window.configGlobal?.tasa_cambio || window.configGlobal?.tasa_efectiva || 400;
+                const fmtBs = window.formatBs;
+                
+                const _netoCobradoPedido = (pedido) => {
+                    if (!pedido) return 0;
+                    if (pedido.metodo_pago === 'invitacion') return 0;
+                    let recibido = 0;
+                    if (pedido.pagos_mixtos && pedido.pagos_mixtos.length) {
+                        pedido.pagos_mixtos.forEach(pg => {
+                            if (pg.metodo === 'invitacion') return;
+                            recibido += pg.metodo === 'efectivo_usd'
+                                ? (pg.monto || 0) * tasa
+                                : (pg.montoBs || pg.monto || 0);
+                        });
+                    } else {
+                        recibido = pedido.subtotal_bs || 0;
+                    }
+                    return Math.max(0, recibido - (pedido.vuelto_entregado || 0));
+                };
+                
+                let totalNeto = 0;
+                let vt_ebs = 0, vt_eusd = 0, vt_pm = 0, vt_pv = 0;
+                let vt_cond = 0, vt_favor = 0, vt_delivery = 0;
+                let vt_inv_count = 0, vt_inv_acum = 0;
+                
+                ventasHoy.forEach(v => {
+                    const p = pedidosHoy.find(pd => pd.id === v.pedido_id);
+                    if (!p) return;
                     
-                    if (pg.metodo === 'efectivo_bs') {
-                        const n = Math.max(0, mbs - vueltoR);
-                        vueltoR = Math.max(0, vueltoR - mbs);
-                        vt_ebs += n;
-                    } 
-                    else if (pg.metodo === 'efectivo_usd') {
-                        const n = Math.max(0, mbs - vueltoR);
-                        vueltoR = Math.max(0, vueltoR - mbs);
-                        vt_eusd += n;
-                    } 
-                    else if (pg.metodo === 'pago_movil') {
-                        vt_pm += mbs;
-                    } 
-                    else if (pg.metodo === 'punto_venta') {
-                        vt_pv += mbs;
-                    } 
-                    else if (pg.metodo === 'invitacion') {
-                        vt_inv_count++;
-                        const subtotalInv = (p.items || []).reduce((s, i) => 
-                            s + window.usdToBs((i.precioUnitarioUSD || 0) * (i.cantidad || 1)), 0);
-                        vt_inv_acum += subtotalInv + (p.costo_delivery_bs || 0);
+                    const neto = _netoCobradoPedido(p);
+                    totalNeto += neto;
+                    
+                    if (p.condonado > 0) vt_cond += p.condonado;
+                    if (p.a_favor_caja > 0) vt_favor += p.a_favor_caja;
+                    if (p.tipo === 'delivery' && (p.costo_delivery_bs || 0) > 0) vt_delivery += p.costo_delivery_bs;
+                    
+                    const pagos = p.pagos_mixtos;
+                    if (pagos && pagos.length) {
+                        let vueltoR = p.vuelto_entregado || 0;
+                        pagos.forEach(pg => {
+                            const mbs = pg.metodo === 'efectivo_usd' 
+                                ? (pg.monto || 0) * tasa 
+                                : (pg.montoBs || pg.monto || 0);
+                            
+                            if (pg.metodo === 'efectivo_bs') {
+                                const n = Math.max(0, mbs - vueltoR);
+                                vueltoR = Math.max(0, vueltoR - mbs);
+                                vt_ebs += n;
+                            } 
+                            else if (pg.metodo === 'efectivo_usd') {
+                                const n = Math.max(0, mbs - vueltoR);
+                                vueltoR = Math.max(0, vueltoR - mbs);
+                                vt_eusd += n;
+                            } 
+                            else if (pg.metodo === 'pago_movil') {
+                                vt_pm += mbs;
+                            } 
+                            else if (pg.metodo === 'punto_venta') {
+                                vt_pv += mbs;
+                            } 
+                            else if (pg.metodo === 'invitacion') {
+                                vt_inv_count++;
+                                const subtotalInv = (p.items || []).reduce((s, i) => 
+                                    s + window.usdToBs((i.precioUnitarioUSD || 0) * (i.cantidad || 1)), 0);
+                                vt_inv_acum += subtotalInv + (p.costo_delivery_bs || 0);
+                            }
+                        });
+                    } else {
+                        const metodo = p.metodo_pago || v.metodo_pago || '';
+                        const bs = neto;
+                        if (metodo === 'efectivo_bs') vt_ebs += bs;
+                        else if (metodo === 'efectivo_usd') vt_eusd += bs;
+                        else if (metodo === 'pago_movil') vt_pm += bs;
+                        else if (metodo === 'punto_venta') vt_pv += bs;
+                        else if (metodo === 'invitacion') {
+                            vt_inv_count++;
+                            const subtotalInv = (p.items || []).reduce((s, i) => 
+                                s + window.usdToBs((i.precioUnitarioUSD || 0) * (i.cantidad || 1)), 0);
+                            vt_inv_acum += subtotalInv + (p.costo_delivery_bs || 0);
+                        }
                     }
                 });
-            } else {
-                const metodo = p.metodo_pago || v.metodo_pago || '';
-                const bs = neto;
-                if (metodo === 'efectivo_bs') vt_ebs += bs;
-                else if (metodo === 'efectivo_usd') vt_eusd += bs;
-                else if (metodo === 'pago_movil') vt_pm += bs;
-                else if (metodo === 'punto_venta') vt_pv += bs;
-                else if (metodo === 'invitacion') {
-                    vt_inv_count++;
-                    const subtotalInv = (p.items || []).reduce((s, i) => 
-                        s + window.usdToBs((i.precioUnitarioUSD || 0) * (i.cantidad || 1)), 0);
-                    vt_inv_acum += subtotalInv + (p.costo_delivery_bs || 0);
-                }
-            }
-        });
-        
-        // Helper para mostrar fila de método de pago
-        const vcol = (ico, label, val, color) => {
-            if (val <= 0) return '';
-            return `<div style="display:flex;align-items:center;gap:6px;padding:8px;background:rgba(0,0,0,.08);border-radius:8px;border-left:3px solid ${color}">
-                        <i class="${ico}" style="color:${color};width:14px;text-align:center"></i>
-                        <div style="flex:1">
-                            <div style="font-size:.72rem;color:var(--text-muted)">${label}</div>
-                            <div style="font-weight:700;color:${color};font-size:.9rem">${fmtBs(val)}</div>
+                
+                const vcol = (ico, label, val, color) => {
+                    if (val <= 0) return '';
+                    return `<div style="display:flex;align-items:center;gap:6px;padding:8px;background:rgba(0,0,0,.08);border-radius:8px;border-left:3px solid ${color}">
+                                <i class="${ico}" style="color:${color};width:14px;text-align:center"></i>
+                                <div style="flex:1">
+                                    <div style="font-size:.72rem;color:var(--text-muted)">${label}</div>
+                                    <div style="font-weight:700;color:${color};font-size:.9rem">${fmtBs(val)}</div>
+                                </div>
+                            </div>`;
+                };
+                
+                const detallesCobros = ventasHoy.map(v => {
+                    const p = pedidosHoy.find(pd => pd.id === v.pedido_id);
+                    if (!p) return '';
+                    
+                    const hora = new Date(p.fecha).toLocaleTimeString('es-VE', {
+                        hour: '2-digit', minute: '2-digit', timeZone: 'America/Caracas'
+                    });
+                    
+                    const items = (p.items || []).slice(0, 2).map(i => 
+                        `${i.cantidad || 1}× ${i.nombre}`
+                    ).join(', ');
+                    const masItems = (p.items || []).length > 2 ? ` +${(p.items || []).length - 2} más` : '';
+                    
+                    const neto = _netoCobradoPedido(p);
+                    
+                    const metodoLabel = {
+                        efectivo_bs: 'Ef.Bs', efectivo_usd: 'Ef.USD',
+                        pago_movil: 'P.Móvil', punto_venta: 'Pto.Venta',
+                        invitacion: 'Invitación'
+                    };
+                    
+                    let metodoStr = p.metodo_pago || 'N/A';
+                    if (p.pagos_mixtos && p.pagos_mixtos.length > 1) {
+                        metodoStr = p.pagos_mixtos.map(pg => metodoLabel[pg.metodo] || pg.metodo).join(' + ');
+                    } else {
+                        metodoStr = metodoLabel[p.metodo_pago] || p.metodo_pago || 'N/A';
+                    }
+                    
+                    return `<div style="padding:.6rem .75rem;border-radius:8px;background:var(--table-header);margin-bottom:.4rem;font-size:.82rem">
+                                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.2rem">
+                                    <span style="font-weight:700;color:var(--text-dark)">${hora} · ${p.tipo || 'mesa'}</span>
+                                    <span style="font-weight:800;color:var(--success)">${fmtBs(neto)}</span>
+                                </div>
+                                <div style="color:var(--text-muted);font-size:.75rem">${items}${masItems}</div>
+                                <div style="font-size:.72rem;color:var(--text-muted);margin-top:.15rem">${metodoStr}</div>
+                            </div>`;
+                }).join('');
+                
+                const contenido = `
+                    <div style="margin-bottom:1rem;padding:.85rem;background:var(--table-header);border-radius:10px">
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.4rem">
+                            <span style="font-weight:700;color:var(--text-dark)">Neto cobrado hoy</span>
+                            <span style="font-weight:800;color:var(--success);font-size:1.15rem">${fmtBs(totalNeto)}</span>
                         </div>
-                    </div>`;
-        };
-        
-        // Detalle por cobro (lista de cada venta)
-        const detallesCobros = ventasHoy.map(v => {
-            const p = pedidosHoy.find(pd => pd.id === v.pedido_id);
-            if (!p) return '';
-            
-            const hora = new Date(p.fecha).toLocaleTimeString('es-VE', {
-                hour: '2-digit', minute: '2-digit', timeZone: 'America/Caracas'
-            });
-            
-            const items = (p.items || []).slice(0, 2).map(i => 
-                `${i.cantidad || 1}× ${i.nombre}`
-            ).join(', ');
-            const masItems = (p.items || []).length > 2 ? ` +${(p.items || []).length - 2} más` : '';
-            
-            const neto = _netoCobradoPedido(p);
-            
-            const metodoLabel = {
-                efectivo_bs: 'Ef.Bs', efectivo_usd: 'Ef.USD',
-                pago_movil: 'P.Móvil', punto_venta: 'Pto.Venta',
-                invitacion: 'Invitación'
-            };
-            
-            let metodoStr = p.metodo_pago || 'N/A';
-            if (p.pagos_mixtos && p.pagos_mixtos.length > 1) {
-                metodoStr = p.pagos_mixtos.map(pg => metodoLabel[pg.metodo] || pg.metodo).join(' + ');
-            } else {
-                metodoStr = metodoLabel[p.metodo_pago] || p.metodo_pago || 'N/A';
-            }
-            
-            return `<div style="padding:.6rem .75rem;border-radius:8px;background:var(--table-header);margin-bottom:.4rem;font-size:.82rem">
-                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.2rem">
-                            <span style="font-weight:700;color:var(--text-dark)">${hora} · ${p.tipo || 'mesa'}</span>
-                            <span style="font-weight:800;color:var(--success)">${fmtBs(neto)}</span>
+                        <div style="display:flex;justify-content:space-between;color:var(--text-muted);font-size:.82rem">
+                            <span>Pedidos cobrados</span><span style="font-weight:600">${ventasHoy.length}</span>
                         </div>
-                        <div style="color:var(--text-muted);font-size:.75rem">${items}${masItems}</div>
-                        <div style="font-size:.72rem;color:var(--text-muted);margin-top:.15rem">${metodoStr}</div>
-                    </div>`;
-        }).join('');
-        
-        // Construir contenido del modal (igual al del cajero)
-        const contenido = `
-            <div style="margin-bottom:1rem;padding:.85rem;background:var(--table-header);border-radius:10px">
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.4rem">
-                    <span style="font-weight:700;color:var(--text-dark)">Neto cobrado hoy</span>
-                    <span style="font-weight:800;color:var(--success);font-size:1.15rem">${fmtBs(totalNeto)}</span>
-                </div>
-                <div style="display:flex;justify-content:space-between;color:var(--text-muted);font-size:.82rem">
-                    <span>Pedidos cobrados</span><span style="font-weight:600">${ventasHoy.length}</span>
-                </div>
-            </div>
-            
-            <div style="font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);margin-bottom:.6rem">
-                Desglose por método de pago
-            </div>
-            
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:1rem">
-                ${vt_ebs > 0 ? vcol('fas fa-money-bill-wave', 'Efectivo Bs', vt_ebs, 'var(--success)') : ''}
-                ${vt_eusd > 0 ? vcol('fas fa-dollar-sign', 'Efectivo USD', vt_eusd, '#4CAF50') : ''}
-                ${vt_pm > 0 ? vcol('fas fa-mobile-alt', 'Pago Móvil', vt_pm, 'var(--info)') : ''}
-                ${vt_pv > 0 ? vcol('fas fa-credit-card', 'Punto de Venta', vt_pv, 'var(--warning)') : ''}
-                ${vt_delivery > 0 ? vcol('fas fa-motorcycle', 'Deliverys', vt_delivery, 'var(--delivery)') : ''}
-                ${vt_inv_count > 0 ? `
-                    <div style="grid-column:1/-1;padding:8px;background:rgba(0,0,0,.06);border-radius:8px;border-left:3px solid var(--propina);font-size:.82rem">
-                        <span style="color:var(--propina);font-weight:700"> Invitaciones: ${vt_inv_count}</span>
-                        <span style="color:var(--text-muted);font-size:.75rem;margin-left:.5rem">Valor real: ${fmtBs(vt_inv_acum)}</span>
                     </div>
-                ` : ''}
-                ${vt_cond > 0 ? vcol('fas fa-hand-holding-heart', 'Condonado', vt_cond, '#E91E63') : ''}
-                ${vt_favor > 0 ? vcol('fas fa-piggy-bank', 'A favor de caja', vt_favor, 'var(--accent)') : ''}
-            </div>
-            
-            ${detallesCobros ? `
-                <div style="font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);margin-bottom:.6rem">
-                    Detalle por cobro
-                </div>
-                ${detallesCobros}
-            ` : ''}
-        `;
-        
-        // Crear y mostrar modal
-        const modal = document.createElement('div');
-        modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:1rem';
-        modal.innerHTML = `
-            <div style="background:var(--card-bg);border-radius:16px;width:100%;max-width:500px;max-height:90vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.35)">
-                <div style="display:flex;justify-content:space-between;align-items:center;padding:1.2rem 1.5rem;border-bottom:2px solid var(--border);position:sticky;top:0;background:var(--card-bg);z-index:1">
-                    <h3 style="font-size:1rem;font-weight:700;color:var(--text-dark)">
-                        <i class="fas fa-chart-line" style="color:var(--accent);margin-right:.5rem"></i>
-                        Ventas Hoy — Neto Cobrado
-                    </h3>
-                    <button onclick="this.closest('[style*=fixed]').remove()" 
-                        style="background:var(--table-header);border:none;border-radius:8px;width:30px;height:30px;cursor:pointer;font-size:.9rem;color:var(--text-muted)">
-                        
-                    </button>
-                </div>
-                <div style="padding:1.25rem">${contenido}</div>
-                <div class="modal-footer" style="padding:1rem 1.5rem;border-top:1px solid var(--border);display:flex;justify-content:flex-end">
-                    <button onclick="this.closest('[style*=fixed]').remove()" 
-                        class="btn-primary" style="padding:.5rem 1.2rem;font-size:.85rem">
-                        Cerrar
-                    </button>
-                </div>
-            </div>`;
-        
-        modal.addEventListener('click', e => { 
-            if (e.target === modal) modal.remove(); 
-        });
-        document.body.appendChild(modal);
-        
-    } catch (e) {
-        console.error('Error abriendo detalle ventas admin:', e);
-        window.mostrarToast(' Error al cargar el detalle de ventas', 'error');
-    }
-};
+                    
+                    <div style="font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);margin-bottom:.6rem">
+                        Desglose por método de pago
+                    </div>
+                    
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:1rem">
+                        ${vt_ebs > 0 ? vcol('fas fa-money-bill-wave', 'Efectivo Bs', vt_ebs, 'var(--success)') : ''}
+                        ${vt_eusd > 0 ? vcol('fas fa-dollar-sign', 'Efectivo USD', vt_eusd, '#4CAF50') : ''}
+                        ${vt_pm > 0 ? vcol('fas fa-mobile-alt', 'Pago Móvil', vt_pm, 'var(--info)') : ''}
+                        ${vt_pv > 0 ? vcol('fas fa-credit-card', 'Punto de Venta', vt_pv, 'var(--warning)') : ''}
+                        ${vt_delivery > 0 ? vcol('fas fa-motorcycle', 'Deliverys', vt_delivery, 'var(--delivery)') : ''}
+                        ${vt_inv_count > 0 ? `
+                            <div style="grid-column:1/-1;padding:8px;background:rgba(0,0,0,.06);border-radius:8px;border-left:3px solid var(--propina);font-size:.82rem">
+                                <span style="color:var(--propina);font-weight:700">🎁 Invitaciones: ${vt_inv_count}</span>
+                                <span style="color:var(--text-muted);font-size:.75rem;margin-left:.5rem">Valor real: ${fmtBs(vt_inv_acum)}</span>
+                            </div>
+                        ` : ''}
+                        ${vt_cond > 0 ? vcol('fas fa-hand-holding-heart', 'Condonado', vt_cond, '#E91E63') : ''}
+                        ${vt_favor > 0 ? vcol('fas fa-piggy-bank', 'A favor de caja', vt_favor, 'var(--accent)') : ''}
+                    </div>
+                    
+                    ${detallesCobros ? `
+                        <div style="font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);margin-bottom:.6rem">
+                            Detalle por cobro
+                        </div>
+                        ${detallesCobros}
+                    ` : ''}
+                `;
+                
+                const modal = document.createElement('div');
+                modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:1rem';
+                modal.innerHTML = `
+                    <div style="background:var(--card-bg);border-radius:16px;width:100%;max-width:500px;max-height:90vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.35)">
+                        <div style="display:flex;justify-content:space-between;align-items:center;padding:1.2rem 1.5rem;border-bottom:2px solid var(--border);position:sticky;top:0;background:var(--card-bg);z-index:1">
+                            <h3 style="font-size:1rem;font-weight:700;color:var(--text-dark)">
+                                <i class="fas fa-chart-line" style="color:var(--accent);margin-right:.5rem"></i>
+                                Ventas Hoy — Neto Cobrado
+                            </h3>
+                            <button onclick="this.closest('[style*=fixed]').remove()" 
+                                style="background:var(--table-header);border:none;border-radius:8px;width:30px;height:30px;cursor:pointer;font-size:.9rem;color:var(--text-muted)">
+                                ✕
+                            </button>
+                        </div>
+                        <div style="padding:1.25rem">${contenido}</div>
+                        <div class="modal-footer" style="padding:1rem 1.5rem;border-top:1px solid var(--border);display:flex;justify-content:flex-end">
+                            <button onclick="this.closest('[style*=fixed]').remove()" 
+                                class="btn-primary" style="padding:.5rem 1.2rem;font-size:.85rem">
+                                Cerrar
+                            </button>
+                        </div>
+                    </div>`;
+                
+                modal.addEventListener('click', e => { 
+                    if (e.target === modal) modal.remove(); 
+                });
+                document.body.appendChild(modal);
+                
+            } catch (e) {
+                console.error('Error abriendo detalle ventas admin:', e);
+                window.mostrarToast('✗ Error al cargar el detalle de ventas', 'error');
+            }
+        };
 
-        // Helper: neto cobrado de un pedido (igual que cajero)
         window._netoCobradoPedidoAdmin = function(pedido, tasa) {
             if (!pedido) return 0;
             if (pedido.metodo_pago === 'invitacion') return 0;
@@ -6606,13 +6438,11 @@ window._abrirDetalleVentasAdmin = async function() {
             document.getElementById('panelContainer').classList.add('active');
         };
 
-        // Registro de push para admin
         window._registrarPushAdmin = async function() {
             if (!('Notification' in window) || !('serviceWorker' in navigator)) return;
             if (location.protocol !== 'https:' && location.hostname !== 'localhost') return;
             if (Notification.permission === 'denied') return;
 
-            // session_id único por dispositivo admin (persistente en localStorage)
             let sid = localStorage.getItem('saki_admin_session_id');
             if (!sid) {
                 sid = 'admin_' + Date.now() + '_' + Math.random().toString(36).slice(2, 9);
@@ -6644,266 +6474,114 @@ window._abrirDetalleVentasAdmin = async function() {
                         rol: 'admin',
                         user_agent: navigator.userAgent
                     }], { onConflict: 'endpoint' });
-                    console.log(' Push admin registrado:', sid);
-                } catch (e) { console.warn(' Push admin no disponible:', e.message); }
+                    console.log('✅ Push admin registrado:', sid);
+                } catch (e) { console.warn('⚠️ Push admin no disponible:', e.message); }
             };
 
             if (Notification.permission === 'granted') {
                 await _registrar();
             } else {
-                // Pedir permiso una sola vez, silenciosamente después de que el panel cargue
                 setTimeout(async () => {
                     const perm = await Notification.requestPermission();
                     if (perm === 'granted') await _registrar();
                 }, 3000);
             }
         };
-        // ==================== ACTUALIZAR TAGS DE STOCK CRÍTICO EN HEADER ====================
-window.actualizarStockCriticoHeader = function() {
-    const container = document.getElementById('stockCriticoTags');
-    if (!container) return;
-    
-    // Obtener ingredientes con stock crítico (disponible <= mínimo)
-    const criticos = (window.inventarioItems || []).filter(item => {
-        const disponible = (item.stock || 0) - (item.reservado || 0);
-        const minimo = item.minimo || 0;
-        return disponible <= minimo && minimo > 0;
-    });
-    
-    if (criticos.length === 0) {
-        container.innerHTML = '<span style="color:var(--text-muted)">Ningún ingrediente en stock crítico</span>';
-        return;
-    }
-    
-    // Mostrar máximo de tags que quepan en una línea (se maneja con flex wrap)
-    container.innerHTML = criticos.map(item => {
-        const disponible = (item.stock || 0) - (item.reservado || 0);
-        return `
-            <span class="stock-critico-tag" 
-                  data-ingrediente-id="${item.id}"
-                  onclick="window._irAIngrediente('${item.id}')"
-                  style="display:inline-flex; align-items:center; gap:4px; padding:2px 8px; background:rgba(239,68,68,.15); border-radius:20px; color:var(--danger); font-weight:600; font-size:.7rem; cursor:pointer; animation:pulse 1.5s infinite; transition:all .2s"
-                  onmouseover="this.style.transform='scale(1.05)'; this.style.background='rgba(239,68,68,.25)'"
-                  onmouseout="this.style.transform='scale(1)'; this.style.background='rgba(239,68,68,.15)'">
-                <i class="fas fa-box" style="font-size:.6rem"></i>
-                ${item.nombre}
-                <span style="background:var(--danger); color:#fff; padding:0 4px; border-radius:10px; font-size:.6rem">${disponible}</span>
-            </span>
-        `;
-    }).join('');
-};
-
-// Función para ir al ingrediente en la categoría Inventario
-window._irAIngrediente = function(ingredienteId) {
-    // Cambiar a la pestaña de Inventario
-    const tabs = document.querySelectorAll('.tab');
-    const panes = document.querySelectorAll('.tab-pane');
-    
-    tabs.forEach(tab => tab.classList.remove('active'));
-    panes.forEach(pane => pane.classList.remove('active'));
-    
-    const inventarioTab = document.querySelector('.tab[data-tab="inventario"]');
-    const inventarioPane = document.getElementById('inventarioPane');
-    
-    if (inventarioTab) inventarioTab.classList.add('active');
-    if (inventarioPane) inventarioPane.classList.add('active');
-    
-    // Esperar a que se renderice el inventario y luego seleccionar el ingrediente
-    setTimeout(() => {
-        // Buscar el elemento del ingrediente en la lista
-        const itemElement = document.getElementById(`invItem_${ingredienteId}`);
-        if (itemElement) {
-            itemElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            itemElement.click(); // Simular clic para abrir detalle
-            // Resaltar temporalmente
-            itemElement.style.transition = 'background .3s';
-            itemElement.style.background = 'rgba(211,47,47,.3)';
-            setTimeout(() => {
-                itemElement.style.background = '';
-            }, 1000);
-        } else {
-            // Si no está visible, recargar inventario y reintentar
-            window.renderizarInventario();
-            setTimeout(() => {
-                const retryElement = document.getElementById(`invItem_${ingredienteId}`);
-                if (retryElement) {
-                    retryElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    retryElement.click();
-                }
-            }, 300);
-        }
-    }, 200);
-};
-
-// ==================== CORRECCIÓN: ASEGURAR QUE LOS BOTONES DEL MODAL DE INGREDIENTE FUNCIONEN ====================
-(function asegurarBotonesIngrediente() {
-    // Esperar a que el DOM esté listo
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', function() {
-            inicializarBotonesIngrediente();
-        });
-    } else {
-        inicializarBotonesIngrediente();
-    }
-    
-    function inicializarBotonesIngrediente() {
-        // Función para reasignar eventos a los botones si se pierden
-        function reasignarEventosBotones() {
-            // Botón Guardar
-            const saveBtn = document.getElementById('saveIngrediente');
-            if (saveBtn && !saveBtn.hasAttribute('data-event-fixed')) {
-                const oldBtn = saveBtn.cloneNode(true);
-                saveBtn.parentNode.replaceChild(oldBtn, saveBtn);
-                oldBtn.setAttribute('data-event-fixed', 'true');
-                oldBtn.addEventListener('click', async function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    const btn = this;
-                    if (btn.disabled) return;
-                    
-                    // Llamar al guardado real
-                    const esNuevo = !window.ingredienteEditandoId;
-                    const id = esNuevo ? window.generarId('ing_') : window.ingredienteEditandoId;
-                    
-                    const nombre = document.getElementById('ingredienteNombre').value.trim();
-                    const stockActual = parseFloat(document.getElementById('ingredienteStock').value) || 0;
-                    const agregar = parseFloat(document.getElementById('ingredienteAgregar').value) || 0;
-                    const unidad = document.getElementById('ingredienteUnidad').value;
-                    const minimo = parseFloat(document.getElementById('ingredienteMinimo').value) || 0;
-                    const costo = parseFloat(document.getElementById('ingredienteCosto').value) || 0;
-                    const venta = parseFloat(document.getElementById('ingredienteVenta').value) || 0;
-                    
-                    if (!nombre) {
-                        window.mostrarToast('Ingresa el nombre del ingrediente', 'error');
-                        return;
-                    }
-                    
-                    try {
-                        btn.disabled = true;
-                        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
-                        
-                        const ingrediente = { 
-                            id, nombre, 
-                            stock: stockActual + agregar, 
-                            reservado: 0,
-                            unidad_base: unidad, 
-                            minimo, 
-                            precio_costo: costo, 
-                            precio_unitario: venta 
-                        };
-                        
-                        let error;
-                        if (esNuevo) {
-                            ({ error } = await window.supabaseClient.from('inventario').insert([ingrediente]));
-                        } else {
-                            ({ error } = await window.supabaseClient.from('inventario').update(ingrediente).eq('id', id));
-                        }
-                        
-                        if (error) throw error;
-                        
-                        window.ingredienteEditandoId = null;
-                        window.cerrarModal('ingredienteModal');
-                        await window.cargarInventario();
-                        window.mostrarToast(' Ingrediente guardado', 'success');
-                        
-                    } catch (e) {
-                        console.error('Error guardando ingrediente:', e);
-                        window.mostrarToast(' Error: ' + (e.message || e), 'error');
-                    } finally {
-                        btn.disabled = false;
-                        btn.innerHTML = 'Guardar';
-                    }
-                });
-            }
-            
-            // Botón Cancelar
-            const cancelBtn = document.getElementById('cancelIngrediente');
-            if (cancelBtn && !cancelBtn.hasAttribute('data-event-fixed')) {
-                const oldBtn = cancelBtn.cloneNode(true);
-                cancelBtn.parentNode.replaceChild(oldBtn, cancelBtn);
-                oldBtn.setAttribute('data-event-fixed', 'true');
-                oldBtn.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    window.cerrarModal('ingredienteModal');
-                    window.resetearBloqueoStock();
-                });
-            }
-            
-            // Botón Eliminar
-            const deleteBtn = document.getElementById('deleteIngredienteBtn');
-            if (deleteBtn && !deleteBtn.hasAttribute('data-event-fixed')) {
-                const oldBtn = deleteBtn.cloneNode(true);
-                deleteBtn.parentNode.replaceChild(oldBtn, deleteBtn);
-                oldBtn.setAttribute('data-event-fixed', 'true');
-                oldBtn.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    const id = window.ingredienteEditandoId;
-                    if (!id) return;
-                    const ing = (window.inventarioItems || []).find(i => i.id === id);
-                    if (!confirm(`żEliminar el ingrediente "${ing?.nombre || id}"?`)) return;
-                    
-                    (async () => {
-                        try {
-                            const { error } = await window.supabaseClient.from('inventario').delete().eq('id', id);
-                            if (error) throw error;
-                            window.cerrarModal('ingredienteModal');
-                            window.ingredienteEditandoId = null;
-                            await window.cargarInventario();
-                            window.mostrarToast(' Ingrediente eliminado', 'success');
-                        } catch(e) {
-                            console.error('Error eliminando ingrediente:', e);
-                            window.mostrarToast(' Error: ' + (e.message || e), 'error');
-                        }
-                    })();
-                });
-            }
-        }
         
-        // Reasignar eventos cuando se abre el modal
-        const modal = document.getElementById('ingredienteModal');
-        if (modal) {
-            const observer = new MutationObserver(function(mutations) {
-                mutations.forEach(function(mutation) {
-                    if (mutation.attributeName === 'class' && modal.classList.contains('active')) {
-                        setTimeout(reasignarEventosBotones, 50);
-                    }
-                });
-            });
-            observer.observe(modal, { attributes: true });
+        // ==================== ACTUALIZAR TAGS DE STOCK CRÍTICO EN HEADER ====================
+        window.actualizarStockCriticoHeader = function() {
+            const container = document.getElementById('stockCriticoTags');
+            if (!container) return;
             
-            // También reasignar al cargar la página
-            setTimeout(reasignarEventosBotones, 500);
-        }
-    }
-})();
+            const criticos = (window.inventarioItems || []).filter(item => {
+                const disponible = (item.stock || 0) - (item.reservado || 0);
+                const minimo = item.minimo || 0;
+                return disponible <= minimo && minimo > 0;
+            });
+            
+            if (criticos.length === 0) {
+                container.innerHTML = '<span style="color:var(--text-muted)">Ningún ingrediente en stock crítico</span>';
+                return;
+            }
+            
+            container.innerHTML = criticos.map(item => {
+                const disponible = (item.stock || 0) - (item.reservado || 0);
+                return `
+                    <span class="stock-critico-tag" 
+                          data-ingrediente-id="${item.id}"
+                          onclick="window._irAIngrediente('${item.id}')"
+                          style="display:inline-flex; align-items:center; gap:4px; padding:2px 8px; background:rgba(239,68,68,.15); border-radius:20px; color:var(--danger); font-weight:600; font-size:.7rem; cursor:pointer; animation:pulse 1.5s infinite; transition:all .2s"
+                          onmouseover="this.style.transform='scale(1.05)'; this.style.background='rgba(239,68,68,.25)'"
+                          onmouseout="this.style.transform='scale(1)'; this.style.background='rgba(239,68,68,.15)'">
+                        <i class="fas fa-box" style="font-size:.6rem"></i>
+                        ${item.nombre}
+                        <span style="background:var(--danger); color:#fff; padding:0 4px; border-radius:10px; font-size:.6rem">${disponible}</span>
+                    </span>
+                `;
+            }).join('');
+        };
+
+        window._irAIngrediente = function(ingredienteId) {
+            const tabs = document.querySelectorAll('.tab');
+            const panes = document.querySelectorAll('.tab-pane');
+            
+            tabs.forEach(tab => tab.classList.remove('active'));
+            panes.forEach(pane => pane.classList.remove('active'));
+            
+            const inventarioTab = document.querySelector('.tab[data-tab="inventario"]');
+            const inventarioPane = document.getElementById('inventarioPane');
+            
+            if (inventarioTab) inventarioTab.classList.add('active');
+            if (inventarioPane) inventarioPane.classList.add('active');
+            
+            setTimeout(() => {
+                const itemElement = document.getElementById(`invItem_${ingredienteId}`);
+                if (itemElement) {
+                    itemElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    itemElement.click();
+                    itemElement.style.transition = 'background .3s';
+                    itemElement.style.background = 'rgba(211,47,47,.3)';
+                    setTimeout(() => {
+                        itemElement.style.background = '';
+                    }, 1000);
+                } else {
+                    window.renderizarInventario();
+                    setTimeout(() => {
+                        const retryElement = document.getElementById(`invItem_${ingredienteId}`);
+                        if (retryElement) {
+                            retryElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            retryElement.click();
+                        }
+                    }, 300);
+                }
+            }, 200);
+        };
 
     </script>
     <!-- Modal para contraseña de stock -->
-<div class="modal" id="passwordStockModal">
-    <div class="modal-content" style="max-width: 400px">
-        <div class="modal-header" style="background:linear-gradient(135deg, var(--info), #1565C0)">
-            <h3><i class="fas fa-lock"></i> Desbloquear Stock</h3>
-            <button class="modal-close" onclick="window.cerrarModal('passwordStockModal')">&times;</button>
-        </div>
-        <div class="modal-body">
-            <p style="margin-bottom: 1rem; color: var(--text-muted)">Ingresa la contraseña de administrador para poder editar el stock actual:</p>
-            <div class="form-group">
-                <label>Contraseña de Administrador</label>
-                <input type="password" id="stockPasswordModalInput" placeholder="Contraseña" 
-                    style="width:100%; padding:.8rem; border:1px solid var(--border); border-radius:8px; background:var(--input-bg); color:var(--text-dark); font-size:.95rem"
-                    onkeydown="if(event.key === 'Enter') window.verificarContraseñaStock()">
+    <div class="modal" id="passwordStockModal">
+        <div class="modal-content" style="max-width: 400px">
+            <div class="modal-header" style="background:linear-gradient(135deg, var(--info), #1565C0)">
+                <h3><i class="fas fa-lock"></i> Desbloquear Stock</h3>
+                <button class="modal-close" onclick="window.cerrarModal('passwordStockModal')">&times;</button>
             </div>
-            <div id="passwordStockError" style="display:none; color:var(--danger); font-size:.8rem; margin-top:.5rem; text-align:center">
-                <i class="fas fa-exclamation-circle"></i> Contraseña incorrecta
+            <div class="modal-body">
+                <p style="margin-bottom: 1rem; color: var(--text-muted)">Ingresa la contraseña de administrador para poder editar el stock actual:</p>
+                <div class="form-group">
+                    <label>Contraseña de Administrador</label>
+                    <input type="password" id="stockPasswordModalInput" placeholder="Contraseña" 
+                        style="width:100%; padding:.8rem; border:1px solid var(--border); border-radius:8px; background:var(--input-bg); color:var(--text-dark); font-size:.95rem"
+                        onkeydown="if(event.key === 'Enter') window.verificarContraseñaStock()">
+                </div>
+                <div id="passwordStockError" style="display:none; color:var(--danger); font-size:.8rem; margin-top:.5rem; text-align:center">
+                    <i class="fas fa-exclamation-circle"></i> Contraseña incorrecta
+                </div>
             </div>
-        </div>
-        <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:.75rem">
-            <button class="btn-secondary" onclick="window.cerrarModal('passwordStockModal')">Cancelar</button>
-            <button class="btn-primary" id="confirmPasswordStockBtn" onclick="window.verificarContraseñaStock()">Confirmar</button>
+            <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:.75rem">
+                <button class="btn-secondary" onclick="window.cerrarModal('passwordStockModal')">Cancelar</button>
+                <button class="btn-primary" id="confirmPasswordStockBtn" onclick="window.verificarContraseñaStock()">Confirmar</button>
+            </div>
         </div>
     </div>
-</div>
 </body>
 </html>
