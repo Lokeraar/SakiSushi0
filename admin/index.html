@@ -2633,25 +2633,44 @@ html.dark-theme {
             </div>
 
             <!-- CONFIGURACIÓN -->
-            <div class="tab-pane" id="configuracionPane">
-                <div class="pane-header">
-                    <h2 class="section-title"><i class="fas fa-cog"></i> Configuración</h2>
-                </div>
-                <div class="config-grid">
-                    <div class="config-section">
-                        <h3><i class="fas fa-lock" style="color:var(--primary);margin-right:.4rem"></i>Cambiar Contraseña</h3>
-                        <div class="form-group"><label>Contraseña Actual</label><input type="password" id="currentPassword"></div>
-                        <div class="form-group"><label>Nueva Contraseña</label><input type="password" id="newPassword"></div>
-                        <div class="form-group"><label>Confirmar Nueva Contraseña</label><input type="password" id="confirmPassword"></div>
-                        <button class="btn-primary" onclick="window.cambiarPassword()"><i class="fas fa-save"></i> Guardar contraseña</button>
-                    </div>
-                    <div class="config-section">
-                        <h3><i class="fas fa-envelope" style="color:var(--info);margin-right:.4rem"></i>Correo de Recuperación</h3>
-                        <div class="form-group"><label>Correo Electrónico</label><input type="email" id="recoveryEmail" value="admin@sakisushi.com"></div>
-                        <button class="btn-primary" onclick="window.guardarRecoveryEmail()"><i class="fas fa-save"></i> Guardar correo</button>
-                    </div>
-                </div>
+<div class="tab-pane" id="configuracionPane">
+    <div class="pane-header">
+        <h2 class="section-title"><i class="fas fa-cog"></i> Configuración</h2>
+    </div>
+    <div class="config-grid">
+        <div class="config-section">
+            <h3><i class="fas fa-lock" style="color:var(--primary);margin-right:.4rem"></i>Cambiar Contraseña</h3>
+            <div class="form-group">
+                <label>Contraseña Actual</label>
+                <input type="password" id="currentPassword" placeholder="Ingresa tu contraseña actual">
             </div>
+            <div class="form-group">
+                <label>Nueva Contraseña</label>
+                <input type="password" id="newPassword" placeholder="Mínimo 4 caracteres">
+            </div>
+            <div class="form-group">
+                <label>Confirmar Nueva Contraseña</label>
+                <input type="password" id="confirmPassword" placeholder="Repite la nueva contraseña">
+            </div>
+            <div id="passwordChangeError" style="display:none; color:var(--danger); font-size:.8rem; margin-top:.5rem; text-align:center">
+                <i class="fas fa-exclamation-circle"></i> Error al cambiar la contraseña
+            </div>
+            <button class="btn-primary" onclick="window.cambiarPassword()" style="margin-top:.5rem">
+                <i class="fas fa-save"></i> Guardar contraseña
+            </button>
+        </div>
+        <div class="config-section">
+            <h3><i class="fas fa-envelope" style="color:var(--info);margin-right:.4rem"></i>Correo de Recuperación</h3>
+            <div class="form-group">
+                <label>Correo Electrónico</label>
+                <input type="email" id="recoveryEmail" value="admin@sakisushi.com">
+            </div>
+            <button class="btn-primary" onclick="window.guardarRecoveryEmail()">
+                <i class="fas fa-save"></i> Guardar correo
+            </button>
+        </div>
+    </div>
+</div>
             
             <!-- QR (MODIFICADO) -->
             <div class="tab-pane" id="qrPane">
@@ -3038,8 +3057,12 @@ window.cargarConfiguracion = async function() {
         window.configGlobal.aumento_diario = window.configGlobal.aumento_diario || 0;
         window.configGlobal.aumento_activo = window.configGlobal.aumento_activo || false;
         window.configGlobal.aumento_semanal = window.configGlobal.aumento_semanal || false;
+        
+        // IMPORTANTE: Asegurar que admin_password tenga un valor
         window.configGlobal.admin_password = window.configGlobal.admin_password || 'admin123';
         window.configGlobal.recovery_email = window.configGlobal.recovery_email || 'admin@sakisushi.com';
+        
+        console.log('✅ Configuración cargada. admin_password:', window.configGlobal.admin_password ? '***' : 'NO CARGADA');
         
     } catch (e) {
         console.error('Error cargando configuración:', e);
@@ -3050,7 +3073,7 @@ window.cargarConfiguracion = async function() {
             aumento_diario: 0,
             aumento_activo: false,
             aumento_semanal: false,
-            admin_password: 'admin123',
+            admin_password: 'admin123',  // Valor por defecto
             recovery_email: 'admin@sakisushi.com'
         };
     }
@@ -3977,21 +4000,120 @@ window.verificarStockCritico = async function() {
 };
 
         window.cambiarPassword = async function() {
-            const current = document.getElementById('currentPassword').value;
-            const nueva = document.getElementById('newPassword').value;
-            const confirm = document.getElementById('confirmPassword').value;
-            if (current !== window.configGlobal.admin_password) { window.mostrarToast('Contraseña actual incorrecta', 'error'); return; }
-            if (nueva !== confirm) { window.mostrarToast('Las contraseñas no coinciden', 'error'); return; }
-            if (nueva.length < 4) { window.mostrarToast('La contraseña debe tener al menos 4 caracteres', 'error'); return; }
-            try {
-                await window.supabaseClient.from('config').update({ admin_password: nueva }).eq('id', 1);
-                window.configGlobal.admin_password = nueva;
-                window.mostrarToast(' Contraseña actualizada', 'success');
-                document.getElementById('currentPassword').value = '';
-                document.getElementById('newPassword').value = '';
-                document.getElementById('confirmPassword').value = '';
-            } catch (e) { console.error('Error cambiando contraseña:', e); window.mostrarToast(' Error al cambiar la contraseña', 'error'); }
-        };
+    const current = document.getElementById('currentPassword').value;
+    const nueva = document.getElementById('newPassword').value;
+    const confirm = document.getElementById('confirmPassword').value;
+    const errorDiv = document.getElementById('passwordChangeError');
+    
+    // Ocultar error previo
+    if (errorDiv) errorDiv.style.display = 'none';
+    
+    // Validar campos vacíos
+    if (!current || !nueva || !confirm) {
+        window.mostrarToast('Completa todos los campos', 'error');
+        return;
+    }
+    
+    // Validar que nueva y confirm coincidan
+    if (nueva !== confirm) {
+        window.mostrarToast('Las contraseñas no coinciden', 'error');
+        return;
+    }
+    
+    // Validar longitud mínima
+    if (nueva.length < 4) {
+        window.mostrarToast('La contraseña debe tener al menos 4 caracteres', 'error');
+        return;
+    }
+    
+    // Deshabilitar botón mientras se procesa
+    const btn = document.querySelector('[onclick="window.cambiarPassword()"]');
+    const originalText = btn ? btn.innerHTML : '';
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Actualizando...';
+    }
+    
+    try {
+        // 1. Obtener el usuario administrador
+        const { data: adminData, error: userError } = await window.supabaseClient
+            .from('usuarios')
+            .select('username')
+            .eq('rol', 'admin')
+            .maybeSingle();
+        
+        if (userError) throw userError;
+        
+        if (!adminData) {
+            window.mostrarToast('No se encontró usuario administrador', 'error');
+            return;
+        }
+        
+        // 2. Verificar contraseña actual usando verify_user_credentials
+        const { data: authData, error: authError } = await window.supabaseClient
+            .rpc('verify_user_credentials', {
+                p_username: adminData.username,
+                p_password: current
+            });
+        
+        if (authError) throw authError;
+        
+        if (!authData || !authData.success) {
+            window.mostrarToast('Contraseña actual incorrecta', 'error');
+            return;
+        }
+        
+        // 3. Generar hash de la nueva contraseña
+        const { data: hashed, error: hashErr } = await window.supabaseClient
+            .rpc('hash_password', { plain_password: nueva });
+        
+        if (hashErr) throw hashErr;
+        
+        // 4. Actualizar tabla usuarios (para login)
+        const { error: updateUserError } = await window.supabaseClient
+            .from('usuarios')
+            .update({ password_hash: hashed })
+            .eq('rol', 'admin');
+        
+        if (updateUserError) throw updateUserError;
+        
+        // 5. Actualizar tabla config (para desbloquear stock y recuperación)
+        const { error: updateConfigError } = await window.supabaseClient
+            .from('config')
+            .update({ admin_password: nueva })
+            .eq('id', 1);
+        
+        if (updateConfigError) throw updateConfigError;
+        
+        // 6. Actualizar variable global
+        window.configGlobal.admin_password = nueva;
+        
+        // 7. Limpiar campos
+        document.getElementById('currentPassword').value = '';
+        document.getElementById('newPassword').value = '';
+        document.getElementById('confirmPassword').value = '';
+        
+        // 8. Mostrar mensaje de éxito
+        window.mostrarToast('🔐 Contraseña actualizada correctamente en todo el sistema', 'success');
+        
+        console.log('✅ Contraseña actualizada en tablas usuarios y config');
+        
+    } catch (e) {
+        console.error('Error cambiando contraseña:', e);
+        // Mostrar error en el div específico
+        if (errorDiv) {
+            errorDiv.style.display = 'block';
+            errorDiv.innerHTML = '<i class="fas fa-exclamation-circle"></i> Error: ' + (e.message || 'Error al cambiar la contraseña');
+        }
+        window.mostrarToast('❌ Error al cambiar la contraseña: ' + (e.message || e), 'error');
+    } finally {
+        // Restaurar botón
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = originalText;
+        }
+    }
+};
 
         window.guardarRecoveryEmail = async function() {
             const email = document.getElementById('recoveryEmail').value;
@@ -4507,52 +4629,39 @@ window.verificarContraseñaStock = async function() {
     }
     
     try {
-        // Consultar la contraseña del admin desde la tabla usuarios
-        const { data, error } = await window.supabaseClient
+        // Primero intentar con la contraseña de la tabla config
+        const adminPassword = window.configGlobal?.admin_password;
+        
+        // También consultar la contraseña del admin desde la tabla usuarios como respaldo
+        const { data: adminData, error } = await window.supabaseClient
             .from('usuarios')
             .select('username, rol, password_hash')
             .eq('rol', 'admin')
             .maybeSingle();
         
-        if (error) throw error;
+        let esValida = false;
         
-        if (!data) {
-            // Fallback: usar configGlobal.admin_password si existe
-            const adminPassword = window.configGlobal?.admin_password;
-            if (pwd === adminPassword) {
-                await _desbloquearStock();
-                return;
-            }
-            if (errorEl) {
-                errorEl.textContent = 'No se encontró usuario administrador en el sistema';
-                errorEl.style.display = 'block';
-            }
-            return;
+        // Verificar con configGlobal.admin_password (más simple)
+        if (pwd === adminPassword) {
+            esValida = true;
+            console.log('✅ Contraseña válida (config)');
         }
         
-        // Verificar contraseña usando la función RPC verify_user_credentials
-        const { data: authData, error: authError } = await window.supabaseClient
-            .rpc('verify_user_credentials', {
-                p_username: data.username,
-                p_password: pwd
-            });
-        
-        if (authError) {
-            console.error('Error en verificación:', authError);
-            // Fallback: comparación simple con configGlobal.admin_password
-            const adminPassword = window.configGlobal?.admin_password;
-            if (pwd === adminPassword) {
-                await _desbloquearStock();
-                return;
+        // Si no, verificar con la tabla usuarios usando verify_user_credentials
+        if (!esValida && adminData) {
+            const { data: authData, error: authError } = await window.supabaseClient
+                .rpc('verify_user_credentials', {
+                    p_username: adminData.username,
+                    p_password: pwd
+                });
+            
+            if (!authError && authData && authData.success === true) {
+                esValida = true;
+                console.log('✅ Contraseña válida (usuarios)');
             }
-            if (errorEl) {
-                errorEl.textContent = 'Error al validar la contraseña';
-                errorEl.style.display = 'block';
-            }
-            return;
         }
         
-        if (authData && authData.success === true) {
+        if (esValida) {
             await _desbloquearStock();
         } else {
             if (errorEl) {
@@ -4565,7 +4674,7 @@ window.verificarContraseñaStock = async function() {
         
     } catch (e) {
         console.error('Error verificando contraseña:', e);
-        // Fallback: usar configGlobal.admin_password
+        // Fallback: comparar con configGlobal.admin_password
         const adminPassword = window.configGlobal?.admin_password;
         if (pwd === adminPassword) {
             await _desbloquearStock();
