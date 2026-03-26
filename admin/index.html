@@ -134,7 +134,7 @@
                     window.platillosNotificados[platillo.id] = 'disponible';
                     localStorage.setItem('saki_platillos_notificados', JSON.stringify(window.platillosNotificados));
                     
-                    const titulo = `🍣 ${platillo.nombre} disponible de nuevo!`;
+                    const titulo = ` ${platillo.nombre} disponible de nuevo!`;
                     const mensaje = `Ya tenemos ${platillo.nombre} en stock. ¡Pide ahora!`;
                     
                     try {
@@ -148,7 +148,7 @@
                         for (const sessionId of sessionIds) {
                             await window.enviarNotificacionPush(titulo, mensaje, sessionId);
                         }
-                        window.mostrarToast(`📢 Notificación enviada: ${platillo.nombre} disponible`, 'success');
+                        window.mostrarToast(` Notificación enviada: ${platillo.nombre} disponible`, 'success');
                     } catch (e) {
                         console.error('Error enviando notificaciones masivas:', e);
                     }
@@ -172,7 +172,7 @@
                     schema: 'public',
                     table: 'inventario'
                 }, async (payload) => {
-                    console.log('📦 Cambio en inventario detectado:', payload);
+                    console.log(' Cambio en inventario detectado:', payload);
                     const index = window.inventarioItems.findIndex(i => i.id === payload.new.id);
                     if (index !== -1) {
                         window.inventarioItems[index] = payload.new;
@@ -183,7 +183,7 @@
                     await window.recalcularStockPlatillos();
                     if (payload.new.stock > 0 && payload.old?.stock <= 0) {
                         await window.enviarNotificacionPush(
-                            '📦 Stock actualizado',
+                            ' Stock actualizado',
                             `El ingrediente ${payload.new.nombre} está disponible nuevamente. ¡Revisa el menú!`
                         );
                     }
@@ -193,7 +193,7 @@
                     schema: 'public',
                     table: 'menu'
                 }, async (payload) => {
-                    console.log('📋 Cambio en menú detectado:', payload);
+                    console.log(' Cambio en menú detectado:', payload);
                     await window.cargarMenu();
                 })
                 .subscribe();
@@ -266,7 +266,7 @@
     <!-- FUNCIÓN HACER LOGIN (CORREGIDA - USA EDGE FUNCTION) -->
     <script>
         window.hacerLogin = async function() {
-            console.log('🔐 Intentando login admin...');
+            console.log(' Intentando login admin...');
             const password = document.getElementById('adminPassword').value;
             if (!password) { window.mostrarToast('Ingresa la contraseña', 'error'); return; }
             
@@ -281,9 +281,9 @@
                 });
                 const data = await response.json();
                 if (!response.ok) throw new Error(data.error || `Error ${response.status}`);
-                if (!data.success) { window.mostrarToast('❌ ' + (data.error || 'Contraseña incorrecta'), 'error'); return; }
+                if (!data.success) { window.mostrarToast(' ' + (data.error || 'Contraseña incorrecta'), 'error'); return; }
                 if (data.user.rol !== 'admin') { window.mostrarToast('Acceso denegado. Se requiere rol de administrador.', 'error'); return; }
-                if (sessionStorage.getItem('admin_authenticated') === 'true') { window.mostrarToast('⚠️⚠️ Ya hay una sesión de administrador activa', 'warning'); return; }
+                if (sessionStorage.getItem('admin_authenticated') === 'true') { window.mostrarToast(' Ya hay una sesión de administrador activa', 'warning'); return; }
 
                 window.isAdminAuthenticated = true;
                 window.jwtToken = data.token;
@@ -293,7 +293,7 @@
                 window.supabaseClient = window.inicializarSupabaseCliente(window.jwtToken);
                 document.getElementById('loginContainer').style.display = 'none';
                 document.getElementById('panelContainer').classList.add('active');
-                window.mostrarToast('✅ Bienvenido Administrador', 'success');
+                window.mostrarToast(' Bienvenido Administrador', 'success');
                 
                 setTimeout(async () => {
                     try {
@@ -314,8 +314,8 @@
                     } catch (e) { console.error('Error cargando datos:', e); window.mostrarToast('Error cargando datos: ' + e.message, 'error'); }
                 }, 500);
             } catch (error) {
-                console.error('❌ Error:', error);
-                window.mostrarToast('❌ Error: ' + error.message, 'error');
+                console.error(' Error:', error);
+                window.mostrarToast(' Error: ' + error.message, 'error');
             } finally {
                 if (loginBtn) { loginBtn.disabled = false; loginBtn.innerHTML = 'Ingresar'; }
             }
@@ -1961,10 +1961,10 @@ html.dark-theme {
         transition: var(--transition);
         min-width: 72px;
     }
-    /* btn-toggle-on: el elemento ESTÁ activo → el botón dice Inhabilitar → color rojo (advertencia) */
+    /* btn-toggle-on: el elemento ESTÁ activo  el botón dice Inhabilitar  color rojo (advertencia) */
     .btn-toggle-on  { background: #ffebee; color: var(--danger); border: 1px solid #ffcdd2; }
     .btn-toggle-on:hover  { background: var(--danger); color: #fff; }
-    /* btn-toggle-off: el elemento ESTÁ inactivo → el botón dice Activar → color verde (positivo) */
+    /* btn-toggle-off: el elemento ESTÁ inactivo  el botón dice Activar  color verde (positivo) */
     .btn-toggle-off { background: #e8f5e9; color: var(--success); border: 1px solid #c8e6c9; }
     .btn-toggle-off:hover { background: var(--success); color: #fff; }
     .dark-theme .btn-toggle-on  { background: rgba(239,68,68,.18); color: #ff6b6b; border-color: rgba(239,68,68,.3); }
@@ -2809,9 +2809,12 @@ html.dark-theme {
             <i class="fas fa-lock" style="font-size:.8rem"></i>
         </span>
     </label>
-    <div style="position:relative; cursor:pointer" onclick="window.mostrarModalContraseñaStock()">
+    <div id="stockClickArea" style="position:relative; cursor:pointer; border:1px solid var(--border); border-radius:8px; background:var(--input-bg); transition:all .2s" 
+         onclick="window.mostrarModalContraseñaStock()"
+         onmouseover="this.style.borderColor='var(--accent)'; this.style.boxShadow='0 0 0 2px rgba(255,152,0,.2)'"
+         onmouseout="this.style.borderColor='var(--border)'; this.style.boxShadow='none'">
         <input type="number" step="0.001" id="ingredienteStock" disabled
-            style="width:100%; cursor:pointer; background:var(--input-bg); color:var(--text-dark); border:1px solid var(--border); border-radius:8px; padding:.65rem .9rem"
+            style="width:100%; cursor:pointer; background:transparent; color:var(--text-dark); border:none; border-radius:8px; padding:.65rem .9rem; outline:none"
             title="Haz clic para desbloquear (requiere contraseña de administrador)">
     </div>
 </div>
@@ -3166,7 +3169,7 @@ window.cargarInventario = async function() {
                         <span class="delivery-estado ${d.activo ? 'activo' : 'inactivo'}">${d.activo ? 'Activo' : 'Inactivo'}</span>
                     </div>
                     <div class="delivery-acumulado">
-                        <span>📦 Acumulado total:</span>
+                        <span> Acumulado total:</span>
                         <span class="delivery-monto">${window.formatBs(acumulado)}</span>
                     </div>
                     <div class="delivery-actions">
@@ -3296,10 +3299,10 @@ window.cargarInventario = async function() {
                 if (error) throw error;
                 document.getElementById('nuevoMesonero').value = '';
                 await window.cargarMesoneros();
-                window.mostrarToast('✅ Mesonero agregado', 'success');
+                window.mostrarToast(' Mesonero agregado', 'success');
             } catch (e) {
                 console.error('Error agregando mesonero:', e);
-                window.mostrarToast('❌ Error: ' + (e.message || e), 'error');
+                window.mostrarToast(' Error: ' + (e.message || e), 'error');
             } finally {
                 if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-plus"></i> Agregar'; }
             }
@@ -3325,10 +3328,10 @@ Esto marcará todas sus propinas pendientes como entregadas.`);
                     .eq('entregado', false);
                 if (error) throw error;
                 await window.renderizarMesoneros();
-                window.mostrarToast(`💵 Propinas pagadas a ${nombre}`, 'success');
+                window.mostrarToast(` Propinas pagadas a ${nombre}`, 'success');
             } catch(e) {
                 console.error('Error pagando propinas:', e);
-                window.mostrarToast('❌ Error: ' + (e.message || e), 'error');
+                window.mostrarToast(' Error: ' + (e.message || e), 'error');
             }
         };
 
@@ -3337,7 +3340,7 @@ Esto marcará todas sus propinas pendientes como entregadas.`);
             try {
                 await window.supabaseClient.from('mesoneros').delete().eq('id', id);
                 await window.cargarMesoneros();
-                window.mostrarToast('🗑️ Eliminado', 'success');
+                window.mostrarToast(' Eliminado', 'success');
             } catch (e) { console.error('Error:', e); }
         };
 
@@ -3353,10 +3356,10 @@ Esto marcará todas sus propinas pendientes como entregadas.`);
                 if (error) throw error;
                 document.getElementById('nuevoDelivery').value = '';
                 await window.cargarDeliverys();
-                window.mostrarToast('✅ Motorizado agregado', 'success');
+                window.mostrarToast(' Motorizado agregado', 'success');
             } catch (e) {
                 console.error('Error agregando motorizado:', e);
-                window.mostrarToast('❌ Error: ' + (e.message || e), 'error');
+                window.mostrarToast(' Error: ' + (e.message || e), 'error');
             } finally {
                 if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-plus"></i> Agregar'; }
             }
@@ -3379,8 +3382,8 @@ Esto marcará todas sus propinas pendientes como entregadas.`);
                 await window.supabaseClient.from('deliverys').update({ nombre, activo }).eq('id', window.deliveryEditandoId);
                 document.getElementById('deliveryModal').classList.remove('active');
                 await window.cargarDeliverys();
-                window.mostrarToast('✅ Motorizado actualizado', 'success');
-            } catch (e) { console.error('Error:', e); window.mostrarToast('❌ Error al actualizar', 'error'); }
+                window.mostrarToast(' Motorizado actualizado', 'success');
+            } catch (e) { console.error('Error:', e); window.mostrarToast(' Error al actualizar', 'error'); }
         });
 
         window.eliminarDelivery = async function(id) {
@@ -3392,10 +3395,10 @@ Esto marcará todas sus propinas pendientes como entregadas.`);
                 await window.supabaseClient.from('entregas_delivery').delete().eq('delivery_id', id);
                 await window.supabaseClient.from('deliverys').delete().eq('id', id);
                 await window.cargarDeliverys();
-                window.mostrarToast('🗑️ Motorizado eliminado', 'success');
+                window.mostrarToast(' Motorizado eliminado', 'success');
             } catch (e) {
                 console.error('Error eliminando motorizado:', e);
-                window.mostrarToast('❌ Error al eliminar: ' + (e.message || e), 'error');
+                window.mostrarToast(' Error al eliminar: ' + (e.message || e), 'error');
             }
         };
 
@@ -3490,19 +3493,19 @@ Esto marcará todas sus propinas pendientes como entregadas.`);
                         fecha_entrega: new Date().toISOString()
                     }]);
                     if (error) throw error;
-                    window.mostrarToast('✅ Pago parcial registrado.', 'success');
+                    window.mostrarToast(' Pago parcial registrado.', 'success');
                 } else {
                     // Pago total — borrar todo el acumulado
                     const { error } = await window.supabaseClient.from('entregas_delivery')
                         .delete().eq('delivery_id', window.deliveryParaPago);
                     if (error) throw error;
-                    window.mostrarToast('✅ Pago total registrado. Acumulado reiniciado.', 'success');
+                    window.mostrarToast(' Pago total registrado. Acumulado reiniciado.', 'success');
                 }
                 window.cerrarModal('confirmPagoDeliveryModal');
                 await window.cargarDeliverys();
             } catch (e) {
                 console.error('Error registrando pago:', e);
-                window.mostrarToast('❌ Error al registrar pago: ' + (e.message || e), 'error');
+                window.mostrarToast(' Error al registrar pago: ' + (e.message || e), 'error');
             } finally {
                 if (btn) { btn.disabled = false; btn.innerHTML = 'Confirmar'; }
             }
@@ -3589,10 +3592,10 @@ Esto marcará todas sus propinas pendientes como entregadas.`);
                 if (error) throw error;
                 document.getElementById('usuarioModal').classList.remove('active');
                 await window.cargarUsuarios();
-                window.mostrarToast('✅ Cajero creado exitosamente', 'success');
+                window.mostrarToast(' Cajero creado exitosamente', 'success');
             } catch (e) {
                 console.error('Error creando cajero:', e);
-                window.mostrarToast('❌ Error: ' + (e.message || e), 'error');
+                window.mostrarToast(' Error: ' + (e.message || e), 'error');
             } finally {
                 if (btn) { btn.disabled = false; btn.innerHTML = 'Guardar'; }
             }
@@ -3602,8 +3605,8 @@ Esto marcará todas sus propinas pendientes como entregadas.`);
             try {
                 await window.supabaseClient.from('usuarios').update({ activo }).eq('id', userId);
                 await window.cargarUsuarios();
-                window.mostrarToast(`✅ Usuario ${activo ? 'activado' : 'desactivado'}`, 'success');
-            } catch (e) { console.error('Error actualizando usuario:', e); window.mostrarToast('❌ Error al actualizar usuario', 'error'); }
+                window.mostrarToast(` Usuario ${activo ? 'activado' : 'desactivado'}`, 'success');
+            } catch (e) { console.error('Error actualizando usuario:', e); window.mostrarToast(' Error al actualizar usuario', 'error'); }
         };
 
         window.eliminarUsuario = async function(userId) {
@@ -3611,8 +3614,8 @@ Esto marcará todas sus propinas pendientes como entregadas.`);
             try {
                 await window.supabaseClient.from('usuarios').delete().eq('id', userId);
                 await window.cargarUsuarios();
-                window.mostrarToast('🗑️ Usuario eliminado', 'success');
-            } catch (e) { console.error('Error eliminando usuario:', e); window.mostrarToast('❌ Error al eliminar usuario', 'error'); }
+                window.mostrarToast(' Usuario eliminado', 'success');
+            } catch (e) { console.error('Error eliminando usuario:', e); window.mostrarToast(' Error al eliminar usuario', 'error'); }
         };
 
         window.cargarQRs = async function() {
@@ -3655,7 +3658,7 @@ Esto marcará todas sus propinas pendientes como entregadas.`);
 
                 const nombre = document.createElement('div');
                 nombre.className = 'qr-nombre-v2';
-                nombre.textContent = (_ssid ? '📶 ' : '') + qr.nombre;
+                nombre.textContent = (_ssid ? ' ' : '') + qr.nombre;
 
                 const btnDel = document.createElement('button');
                 btnDel.className = 'btn-icon delete qr-del-btn';
@@ -3670,7 +3673,7 @@ Esto marcará todas sus propinas pendientes como entregadas.`);
                 card.appendChild(nombre);
                 card.appendChild(btnDel);
 
-                // Clic en la tarjeta (no en basura) → ampliar
+                // Clic en la tarjeta (no en basura)  ampliar
                 card.addEventListener('click', function() {
                     window.ampliarQR(qr.id, qr.nombre, qrText);
                 });
@@ -3711,10 +3714,10 @@ Esto marcará todas sus propinas pendientes como entregadas.`);
                 if (error) throw error;
                 document.getElementById('qrNombreMesa').value = '';
                 await window.cargarQRs();
-                window.mostrarToast('✅ QR generado', 'success');
+                window.mostrarToast(' QR generado', 'success');
             } catch(e) {
                 console.error('Error generando QR:', e);
-                window.mostrarToast('❌ Error al generar QR: ' + (e.message || e), 'error');
+                window.mostrarToast(' Error al generar QR: ' + (e.message || e), 'error');
             }
         };
 
@@ -3741,8 +3744,8 @@ Esto marcará todas sus propinas pendientes como entregadas.`);
             try {
                 await window.supabaseClient.from('codigos_qr').delete().eq('id', id);
                 await window.cargarQRs();
-                window.mostrarToast('🗑️ QR eliminado', 'success');
-            } catch (e) { console.error('Error eliminando QR:', e); window.mostrarToast('❌ Error al eliminar QR', 'error'); }
+                window.mostrarToast(' QR eliminado', 'success');
+            } catch (e) { console.error('Error eliminando QR:', e); window.mostrarToast(' Error al eliminar QR', 'error'); }
         };
 
         window.cargarReportes = async function() {
@@ -3866,7 +3869,7 @@ Esto marcará todas sus propinas pendientes como entregadas.`);
             const fecha = new Date(p.fecha).toLocaleDateString('es-VE', {day:'2-digit',month:'2-digit'});
             const items = (p.items || []).slice(0,2).map(i => `${i.cantidad||1}x ${i.nombre}`).join(', ');
             const masItems = (p.items||[]).length > 2 ? ` +${(p.items||[]).length-2} más` : '';
-            const tipoIcon = p.tipo==='delivery' ? '🛵' : p.tipo==='reserva' ? '📅' : '🍽️';
+            const tipoIcon = p.tipo==='delivery' ? '' : p.tipo==='reserva' ? '' : '';
             const tipoColor = p.tipo==='delivery' ? 'var(--delivery)' : p.tipo==='reserva' ? 'var(--propina)' : 'var(--info)';
             const totalBs = window.formatBs(window.usdToBs(p.total||0));
             const estadoText = p.estado ? p.estado.replace(/_/g,' ') : '';
@@ -3966,11 +3969,11 @@ window.verificarStockCritico = async function() {
             try {
                 await window.supabaseClient.from('config').update({ admin_password: nueva }).eq('id', 1);
                 window.configGlobal.admin_password = nueva;
-                window.mostrarToast('🔐 Contraseña actualizada', 'success');
+                window.mostrarToast(' Contraseña actualizada', 'success');
                 document.getElementById('currentPassword').value = '';
                 document.getElementById('newPassword').value = '';
                 document.getElementById('confirmPassword').value = '';
-            } catch (e) { console.error('Error cambiando contraseña:', e); window.mostrarToast('❌ Error al cambiar la contraseña', 'error'); }
+            } catch (e) { console.error('Error cambiando contraseña:', e); window.mostrarToast(' Error al cambiar la contraseña', 'error'); }
         };
 
         window.guardarRecoveryEmail = async function() {
@@ -3978,8 +3981,8 @@ window.verificarStockCritico = async function() {
             if (!email || !email.includes('@')) { window.mostrarToast('Ingresa un correo válido', 'error'); return; }
             try {
                 await window.supabaseClient.from('config').update({ recovery_email: email }).eq('id', 1);
-                window.mostrarToast('📧 Correo de recuperación guardado', 'success');
-            } catch (e) { console.error('Error guardando email:', e); window.mostrarToast('❌ Error al guardar el correo', 'error'); }
+                window.mostrarToast(' Correo de recuperación guardado', 'success');
+            } catch (e) { console.error('Error guardando email:', e); window.mostrarToast(' Error al guardar el correo', 'error'); }
         };
 
         // ==================== FUNCIONES DE CONFIGURACIÓN ====================
@@ -4018,8 +4021,8 @@ window.verificarStockCritico = async function() {
             const aumentoAcumulado = periodos * aumentoPct;
             const tasaEfectiva     = tasaBase * (1 + aumentoAcumulado / 100);
 
-            // LOG DE DIAGNÓSTICO (visible en F12 → Consola)
-            console.group('%c💰 Saki Sushi — Cálculo de Tasa', 'color:#FF9800;font-weight:700');
+            // LOG DE DIAGNÓSTICO (visible en F12  Consola)
+            console.group('%c Saki Sushi — Cálculo de Tasa', 'color:#FF9800;font-weight:700');
             console.log('Modo activo:', estaActivo ? (activoSemanal ? 'SEMANAL' : 'DIARIO') : 'DESACTIVADO');
             console.log('Fecha inicio (Desde):', desdeVal || '—');
             console.log('Fecha fin   (Hasta): ', hastaVal || (indefinido ? 'Indefinido' : '—'));
@@ -4035,14 +4038,14 @@ window.verificarStockCritico = async function() {
                     const _proxLunes = new Date(_desdeLog);
                     _proxLunes.setDate(_proxLunes.getDate() + periodos * 7);
                     console.log('Próximo período semanal:', _proxLunes.toLocaleDateString('es-VE'));
-                    console.log('💡 Para simular "ya es lunes": window._simularLunes()');
+                    console.log(' Para simular "ya es lunes": window._simularLunes()');
                 }
             }
             console.log('Porcentaje por período:', aumentoPct + '%');
             console.log('Períodos aplicados:', periodos);
             console.log('Acumulado total:', aumentoAcumulado.toFixed(2) + '%');
             console.log('Tasa Base:', tasaBase);
-            console.log('Tasa Efectiva → Bs', tasaEfectiva.toFixed(2));
+            console.log('Tasa Efectiva  Bs', tasaEfectiva.toFixed(2));
             console.groupEnd();
 
             document.getElementById('tasaEfectivaDisplay').textContent = tasaEfectiva.toFixed(2);
@@ -4073,8 +4076,8 @@ window.verificarStockCritico = async function() {
                     aumento_indefinido: document.getElementById('aumentoIndefinido')?.checked || false,
                     ultima_actualizacion: new Date().toISOString()
                 }).eq('id', 1);
-                window.mostrarToast('💾 Configuración guardada', 'success');
-            } catch (e) { console.error('Error guardando configuración:', e); window.mostrarToast('❌ Error al guardar la configuración', 'error'); }
+                window.mostrarToast(' Configuración guardada', 'success');
+            } catch (e) { console.error('Error guardando configuración:', e); window.mostrarToast(' Error al guardar la configuración', 'error'); }
         };
 
         // ==================== FUNCIONES DE MENÚ (PLATILLOS) ====================
@@ -4251,7 +4254,7 @@ window.verificarStockCritico = async function() {
                 const _ingEntries = Object.entries(ingredientes);
                 let maxPlatillos;
                 if (!_ingEntries.length) {
-                    // Sin ingredientes → conservar stock existente (no sobreescribir con 0)
+                    // Sin ingredientes  conservar stock existente (no sobreescribir con 0)
                     const _existing = (window.menuItems || []).find(p => p.id === (window.platilloEditandoId || ''));
                     maxPlatillos = _existing ? (_existing.stock || 0) : 0;
                 } else {
@@ -4290,8 +4293,8 @@ window.verificarStockCritico = async function() {
                 window.platilloEditandoId = null;
                 window.limpiarImagenPreview();
                 await window.cargarMenu();
-                window.mostrarToast('🍣 Platillo guardado', 'success');
-            } catch (e) { console.error('Error guardando platillo:', e); window.mostrarToast('❌ Error al guardar el platillo: ' + e.message, 'error'); }
+                window.mostrarToast(' Platillo guardado', 'success');
+            } catch (e) { console.error('Error guardando platillo:', e); window.mostrarToast(' Error al guardar el platillo: ' + e.message, 'error'); }
             finally { const saveBtn = document.getElementById('savePlatillo'); saveBtn.innerHTML = 'Guardar'; saveBtn.disabled = false; }
         });
 
@@ -4302,8 +4305,8 @@ window.verificarStockCritico = async function() {
                 if (platillo && platillo.imagen && platillo.imagen.includes('imagenes-platillos')) await window.eliminarImagenPlatillo(platillo.imagen);
                 await window.supabaseClient.from('menu').delete().eq('id', id);
                 await window.cargarMenu();
-                window.mostrarToast('🗑️ Platillo eliminado', 'success');
-            } catch (e) { console.error('Error eliminando platillo:', e); window.mostrarToast('❌ Error al eliminar el platillo', 'error'); }
+                window.mostrarToast(' Platillo eliminado', 'success');
+            } catch (e) { console.error('Error eliminando platillo:', e); window.mostrarToast(' Error al eliminar el platillo', 'error'); }
         };
 
         window.abrirModalNuevoIngrediente = function() {
@@ -4385,24 +4388,40 @@ window.verificarStockCritico = async function() {
     const _sp = document.getElementById('stockTotalPreview'); if (_sp) _sp.textContent = '';
     const _sc = document.getElementById('stockConversionPreview'); if (_sc) _sc.textContent = '';
     
-    // Stock bloqueado al abrir - el input tiene onclick que llama a mostrarModalContraseñaStock
+    // Stock bloqueado al abrir - el div contenedor tiene onclick que llama a mostrarModalContraseñaStock
     const _si = document.getElementById('ingredienteStock');
     const _li = document.getElementById('stockLockIcon');
-    const _ud = document.getElementById('stockUnlockInline');
-    const _unlockDiv = document.getElementById('stockUnlock');
+    const _divClickArea = document.getElementById('stockClickArea');
     
     if (_si) {
         _si.disabled = true;
-        _si.style.background = 'var(--input-bg)';
         _si.style.cursor = 'pointer';
-        _si.onclick = function() { window.mostrarModalContraseñaStock(); };
+        _si.readOnly = true;
     }
+    
     if (_li) {
         _li.innerHTML = '<i class="fas fa-lock" style="font-size:.8rem"></i>';
         _li.style.cursor = 'default';
     }
-    if (_ud) { _ud.style.display = 'none'; }
-    if (_unlockDiv) { _unlockDiv.style.display = 'none'; }
+    
+    // Asegurar que el div de clic tenga el evento
+    if (_divClickArea) {
+        _divClickArea.onclick = function(e) {
+            e.stopPropagation();
+            console.log('🖱️ Click en área de stock');
+            window.mostrarModalContraseñaStock();
+        };
+        _divClickArea.style.cursor = 'pointer';
+    } else {
+        // Fallback: asignar al input directamente
+        if (_si) {
+            _si.onclick = function(e) {
+                e.stopPropagation();
+                console.log('🖱️ Click en input de stock (fallback)');
+                window.mostrarModalContraseñaStock();
+            };
+        }
+    }
     
     // Mostrar botón Eliminar (solo en edición)
     const _delBtn = document.getElementById('deleteIngredienteBtn');
@@ -4410,19 +4429,8 @@ window.verificarStockCritico = async function() {
     
     document.getElementById('ingredienteModal').classList.add('active');
     
-    // NUEVO: Agregar evento de clic al div contenedor del stock
-    setTimeout(function() {
-        const divContenedor = document.querySelector('#stockOverlay div');
-        if (divContenedor) {
-            console.log('Asignando evento click al contenedor del stock');
-            divContenedor.onclick = function(e) {
-                e.stopPropagation();
-                console.log('Click en contenedor de stock');
-                window.mostrarModalContraseñaStock();
-            };
-        }
-    }, 100);
-};
+    console.log('📝 Modal de edición de ingrediente abierto para:', ingrediente.nombre);
+};    
 
         window.desbloquearStockClick = function(inputEl) {
             if (!inputEl.disabled) return; // ya desbloqueado
@@ -4434,7 +4442,8 @@ window.verificarStockCritico = async function() {
         
         // ==================== FUNCIONES PARA MODAL DE CONTRASEÑA DE STOCK ====================
 window.mostrarModalContraseñaStock = function() {
-    console.log('mostrarModalContraseñaStock llamado');
+    console.log('🔐 mostrarModalContraseñaStock llamado');
+    
     // Limpiar campos previos
     const input = document.getElementById('stockPasswordModalInput');
     const error = document.getElementById('passwordStockError');
@@ -4445,15 +4454,19 @@ window.mostrarModalContraseñaStock = function() {
     const modal = document.getElementById('passwordStockModal');
     if (modal) {
         modal.classList.add('active');
-        console.log('Modal passwordStockModal activado');
+        console.log('✅ Modal passwordStockModal activado');
     } else {
-        console.error('Modal passwordStockModal no encontrado');
+        console.error('❌ Modal passwordStockModal no encontrado');
+        return;
     }
     
     // Focus en el input
     setTimeout(() => {
         const inp = document.getElementById('stockPasswordModalInput');
-        if (inp) inp.focus();
+        if (inp) {
+            inp.focus();
+            console.log('🎯 Focus en input de contraseña');
+        }
     }, 100);
 };
 
@@ -4578,7 +4591,7 @@ async function _desbloquearStock() {
     window.cerrarModal('passwordStockModal');
     
     // Mostrar mensaje de éxito
-    window.mostrarToast('🔓 Stock desbloqueado. Puedes editar la cantidad.', 'success');
+    window.mostrarToast(' Stock desbloqueado. Puedes editar la cantidad.', 'success');
 }
 
 // Función para resetear el estado de bloqueo del stock (se llama al cerrar el modal de ingrediente)
@@ -4723,10 +4736,10 @@ window.resetearBloqueoStock = function() {
                 window.ingredienteEditandoId = null;
                 document.getElementById('ingredienteModal').classList.remove('active');
                 await window.cargarInventario();
-                window.mostrarToast('✅ Ingrediente guardado', 'success');
+                window.mostrarToast(' Ingrediente guardado', 'success');
             } catch (e) {
                 console.error('Error guardando ingrediente:', e);
-                window.mostrarToast('❌ Error: ' + (e.message || e), 'error');
+                window.mostrarToast(' Error: ' + (e.message || e), 'error');
             } finally {
                 if (btn) { btn.disabled = false; btn.innerHTML = 'Guardar'; }
             }
@@ -4737,8 +4750,8 @@ window.resetearBloqueoStock = function() {
             try {
                 await window.supabaseClient.from('inventario').delete().eq('id', id);
                 await window.cargarInventario();
-                window.mostrarToast('🗑️ Ingrediente eliminado', 'success');
-            } catch (e) { console.error('Error eliminando ingrediente:', e); window.mostrarToast('❌ Error al eliminar ingrediente', 'error'); }
+                window.mostrarToast(' Ingrediente eliminado', 'success');
+            } catch (e) { console.error('Error eliminando ingrediente:', e); window.mostrarToast(' Error al eliminar ingrediente', 'error'); }
         };
 
         window.renderizarMenu = function(filtro) {
@@ -4936,7 +4949,7 @@ window.resetearBloqueoStock = function() {
                     // Quitar detalle móvil previo
                     document.querySelectorAll('.inv-mobile-detail').forEach(e => e.remove());
                     if (wasActive) {
-                        // Ya estaba abierto → cerrar
+                        // Ya estaba abierto  cerrar
                         window._invActiveId = null;
                         const col = document.getElementById('invDetailCol');
                         if (col) col.innerHTML = '<div class="inv-detail-empty"><i class="fas fa-hand-point-left" style="font-size:2rem;margin-bottom:.75rem;display:block;opacity:.3"></i>Selecciona un ingrediente de la lista para ver su detalle</div>';
@@ -4981,7 +4994,7 @@ window.resetearBloqueoStock = function() {
             window.isAdminAuthenticated = false;
             window.jwtToken = null;
             window.mostrarLogin();
-            window.mostrarToast('👋 Sesión cerrada', 'info');
+            window.mostrarToast(' Sesión cerrada', 'info');
             window.supabaseClient = window.inicializarSupabaseCliente();
         });
 
@@ -5002,7 +5015,7 @@ window.resetearBloqueoStock = function() {
                         async (p) => {
                             if (p.eventType === 'UPDATE' && p.new.stock <= p.new.minimo) {
                                 window.verificarStockCritico();
-                                window.mostrarToast(`⚠️ Stock crítico: ${p.new.nombre}`, 'warning');
+                                window.mostrarToast(` Stock crítico: ${p.new.nombre}`, 'warning');
                                 window._notificarAdminStockCritico && window._notificarAdminStockCritico(p.new.nombre);
                             }
                             if (p.eventType === 'UPDATE' && (p.old?.stock || 0) <= 0 && p.new.stock > 0) {
@@ -5062,7 +5075,7 @@ window.resetearBloqueoStock = function() {
                             const bi = document.getElementById('tasaBaseInput');
                             if (bi && p.new.tasa_cambio) bi.value = parseFloat(p.new.tasa_cambio).toFixed(2);
                             window.recalcularTasaEfectiva && window.recalcularTasaEfectiva();
-                            window.mostrarToast('💱 Tasa actualizada desde cajero: Bs ' + parseFloat(p.new.tasa_cambio||0).toFixed(2), 'info');
+                            window.mostrarToast(' Tasa actualizada desde cajero: Bs ' + parseFloat(p.new.tasa_cambio||0).toFixed(2), 'info');
                         })
                     .subscribe();
 
@@ -5229,7 +5242,7 @@ window.resetearBloqueoStock = function() {
             ].join(';');
             overlay.innerHTML = `
                 <div style="background:#fff;border-radius:16px;padding:2rem 2.5rem;width:90%;max-width:400px;box-shadow:0 8px 32px rgba(0,0,0,.3);text-align:center">
-                    <div style="font-size:2.5rem;margin-bottom:.75rem">💰</div>
+                    <div style="font-size:2.5rem;margin-bottom:.75rem"></div>
                     <h2 style="font-size:1.3rem;color:#1a1a2e;margin-bottom:.4rem">Tasa de cambio de hoy</h2>
                     <p style="font-size:.88rem;color:#666;margin-bottom:1.5rem">
                         Ingresa el valor actual del dólar en bolívares para que el sistema calcule correctamente todos los precios de hoy.
@@ -5326,7 +5339,7 @@ window.resetearBloqueoStock = function() {
             ].join(';');
             notif.innerHTML = `
                 <div style="display:flex;align-items:flex-start;gap:.75rem">
-                    <div style="font-size:1.5rem;flex-shrink:0">📅</div>
+                    <div style="font-size:1.5rem;flex-shrink:0"></div>
                     <div style="flex:1">
                         <div style="font-weight:700;margin-bottom:.3rem;font-size:.95rem">Nueva semana — ¿Actualizas el porcentaje?</div>
                         <div style="font-size:.82rem;opacity:.85;margin-bottom:.75rem">
@@ -5620,7 +5633,7 @@ window._abrirDetalleDeliverysAdmin = async function() {
                     </h3>
                     <button onclick="this.closest('[style*=fixed]').remove()" 
                         style="background:rgba(255,255,255,.2);border:none;border-radius:50%;width:32px;height:32px;cursor:pointer;color:#fff;font-size:1rem;display:flex;align-items:center;justify-content:center">
-                        ✕
+                        
                     </button>
                 </div>
                 <div style="padding:1.25rem">
@@ -5646,7 +5659,7 @@ window._abrirDetalleDeliverysAdmin = async function() {
         
     } catch (e) {
         console.error('Error abriendo detalle deliverys admin:', e);
-        window.mostrarToast('❌ Error al cargar datos de deliverys', 'error');
+        window.mostrarToast(' Error al cargar datos de deliverys', 'error');
     }
 };
 
@@ -5676,13 +5689,13 @@ window._toggleDeliveryDetalle = function(detalleId) {
                 window.renderizarMenu(document.getElementById('menuBuscador')?.value || '');
                 // Mostrar mensaje apropiado según el estado
                 if (disponible) {
-                    window.mostrarToast(`✅ Platillo "${item?.nombre}" ahora está DISPONIBLE en el menú del cliente`, 'success');
+                    window.mostrarToast(` Platillo "${item?.nombre}" ahora está DISPONIBLE en el menú del cliente`, 'success');
                 } else {
-                    window.mostrarToast(`⚠️ Platillo "${item?.nombre}" ahora está NO DISPONIBLE (se mostrará como AGOTADO en el menú del cliente)`, 'warning');
+                    window.mostrarToast(` Platillo "${item?.nombre}" ahora está NO DISPONIBLE (se mostrará como AGOTADO en el menú del cliente)`, 'warning');
                 }
             } catch(e) {
                 console.error('Error toggle disponible:', e);
-                window.mostrarToast('❌ Error: ' + (e.message || e), 'error');
+                window.mostrarToast(' Error: ' + (e.message || e), 'error');
             }
         };
 
@@ -5819,12 +5832,12 @@ window._toggleDeliveryDetalle = function(detalleId) {
                 for (const sid of sessions) {
                     await window.supabaseClient.from('notificaciones').insert([{
                         pedido_id: null, tipo: 'stock_critico',
-                        titulo: '⚠️ Stock crítico',
+                        titulo: ' Stock crítico',
                         mensaje: `El ingrediente "${ingredienteNombre}" está por debajo del mínimo. Revisa el inventario.`,
                         session_id: sid, leida: false
                     }]);
                 }
-                window.mostrarToast(`📢 Alerta enviada: stock crítico en ${ingredienteNombre}`, 'warning');
+                window.mostrarToast(` Alerta enviada: stock crítico en ${ingredienteNombre}`, 'warning');
             } catch (e) { console.error('Error notificando stock crítico:', e); }
         };
 
@@ -5916,7 +5929,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // Simulador de lunes para probar aviso semanal (desde F12)
         window._simularLunes = function() {
-            console.log('%c📅 Simulando lunes para prueba de aviso semanal...', 'color:#FF9800;font-weight:700');
+            console.log('%c Simulando lunes para prueba de aviso semanal...', 'color:#FF9800;font-weight:700');
             // Borrar la clave de "ya mostrado hoy" para que vuelva a aparecer
             const hoy = new Date().toISOString().split('T')[0];
             localStorage.removeItem('saki_aviso_lunes_' + hoy);
@@ -5930,7 +5943,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             Date.prototype.getDay = _orig; // restaurar
             if (window.configGlobal && estadoOriginal !== undefined)
                 window.configGlobal.aumento_semanal = estadoOriginal;
-            console.log('%c✅ Aviso de lunes disparado. Mira la pantalla.', 'color:green;font-weight:700');
+            console.log('%c Aviso de lunes disparado. Mira la pantalla.', 'color:green;font-weight:700');
         };
 
         // Simulador de recálculo por período para probar acumulado
@@ -5941,7 +5954,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const base = parseFloat(document.getElementById('tasaBaseInput')?.value) || 0;
             const acum = semanas * pct;
             const efectiva = base * (1 + acum / 100);
-            console.group('%c📊 Simulación: ' + semanas + ' semana(s) de aumento semanal', 'color:#FF9800;font-weight:700');
+            console.group('%c Simulación: ' + semanas + ' semana(s) de aumento semanal', 'color:#FF9800;font-weight:700');
             console.log('Tasa base:', base);
             console.log('% por semana:', pct + '%');
             console.log('Semanas simuladas:', semanas);
@@ -5949,7 +5962,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             console.log('Tasa efectiva simulada: Bs', efectiva.toFixed(2));
             console.log('Diferencia vs actual: Bs', (efectiva - (window.configGlobal?.tasa_efectiva || base)).toFixed(2));
             console.groupEnd();
-            console.log('%c💡 Tip: prueba window._simularPeriodoSemanal(3) para 3 semanas', 'color:gray');
+            console.log('%c Tip: prueba window._simularPeriodoSemanal(3) para 3 semanas', 'color:gray');
         };
 
         // SUBCATEGORIAS
@@ -6002,7 +6015,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const precio = parseFloat(document.getElementById('platilloPrecio')?.value) || 0;
             const tasa   = (window.configGlobal?.tasa_efectiva) || (window.configGlobal?.tasa_cambio) || 0;
             const el = document.getElementById('platilloPrecioBsPreview');
-            if (el) el.textContent = tasa > 0 && precio > 0 ? '💰 ' + window.formatBs(precio * tasa) : '';
+            if (el) el.textContent = tasa > 0 && precio > 0 ? ' ' + window.formatBs(precio * tasa) : '';
         };
 
         // _previewPlatilloUrl — preview imagen por URL
@@ -6057,7 +6070,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             txt.style.color = maxPlatillos > 5 ? '#166534' : maxPlatillos > 0 ? '#92400e' : '#991b1b';
             txt.textContent = maxPlatillos > 0
                 ? `Con el stock actual se pueden preparar ${maxPlatillos} porcion${maxPlatillos !== 1 ? 'es' : ''}`
-                : '⚠️ Stock insuficiente para preparar este platillo';
+                : ' Stock insuficiente para preparar este platillo';
         };
 
         // _syncIngredientePreview — preview stock resultante + conversión
@@ -6096,17 +6109,17 @@ document.addEventListener('DOMContentLoaded', async () => {
                 window.cerrarModal('ingredienteModal');
                 window.ingredienteEditandoId = null;
                 await window.cargarInventario();
-                window.mostrarToast('🗑️ Ingrediente eliminado', 'success');
+                window.mostrarToast(' Ingrediente eliminado', 'success');
             } catch(e) {
                 console.error('Error eliminando ingrediente:', e);
-                window.mostrarToast('❌ Error: ' + (e.message || e), 'error');
+                window.mostrarToast(' Error: ' + (e.message || e), 'error');
             }
         };
 
         // recalcularCostos — recalcula costos en Bs de todos los ingredientes
         window.recalcularCostos = async function() {
             const tasa = (window.configGlobal?.tasa_efectiva) || (window.configGlobal?.tasa_cambio) || 0;
-            if (!tasa) { window.mostrarToast('⚠️ Configura la tasa efectiva primero', 'warning'); return; }
+            if (!tasa) { window.mostrarToast(' Configura la tasa efectiva primero', 'warning'); return; }
             let actualizados = 0;
             for (const ing of (window.inventarioItems || [])) {
                 const costoBs  = (ing.precio_costo  || 0) * tasa;
@@ -6118,7 +6131,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 } catch(e) { console.warn('No se pudo actualizar', ing.nombre, e.message); }
             }
             await window.cargarInventario();
-            window.mostrarToast(`💰 ${actualizados} ingrediente${actualizados !== 1 ? 's' : ''} actualizados en Bs`, 'success');
+            window.mostrarToast(` ${actualizados} ingrediente${actualizados !== 1 ? 's' : ''} actualizados en Bs`, 'success');
         };
 
         // ==================== MODAL DE DETALLE DE VENTAS (IDÉNTICO AL CAJERO) ====================
@@ -6307,7 +6320,7 @@ window._abrirDetalleVentasAdmin = async function() {
                 ${vt_delivery > 0 ? vcol('fas fa-motorcycle', 'Deliverys', vt_delivery, 'var(--delivery)') : ''}
                 ${vt_inv_count > 0 ? `
                     <div style="grid-column:1/-1;padding:8px;background:rgba(0,0,0,.06);border-radius:8px;border-left:3px solid var(--propina);font-size:.82rem">
-                        <span style="color:var(--propina);font-weight:700">🎁 Invitaciones: ${vt_inv_count}</span>
+                        <span style="color:var(--propina);font-weight:700"> Invitaciones: ${vt_inv_count}</span>
                         <span style="color:var(--text-muted);font-size:.75rem;margin-left:.5rem">Valor real: ${fmtBs(vt_inv_acum)}</span>
                     </div>
                 ` : ''}
@@ -6335,7 +6348,7 @@ window._abrirDetalleVentasAdmin = async function() {
                     </h3>
                     <button onclick="this.closest('[style*=fixed]').remove()" 
                         style="background:var(--table-header);border:none;border-radius:8px;width:30px;height:30px;cursor:pointer;font-size:.9rem;color:var(--text-muted)">
-                        ✕
+                        
                     </button>
                 </div>
                 <div style="padding:1.25rem">${contenido}</div>
@@ -6354,7 +6367,7 @@ window._abrirDetalleVentasAdmin = async function() {
         
     } catch (e) {
         console.error('Error abriendo detalle ventas admin:', e);
-        window.mostrarToast('❌ Error al cargar el detalle de ventas', 'error');
+        window.mostrarToast(' Error al cargar el detalle de ventas', 'error');
     }
 };
 
@@ -6420,8 +6433,8 @@ window._abrirDetalleVentasAdmin = async function() {
                         rol: 'admin',
                         user_agent: navigator.userAgent
                     }], { onConflict: 'endpoint' });
-                    console.log('✅ Push admin registrado:', sid);
-                } catch (e) { console.warn('⚠️ Push admin no disponible:', e.message); }
+                    console.log(' Push admin registrado:', sid);
+                } catch (e) { console.warn(' Push admin no disponible:', e.message); }
             };
 
             if (Notification.permission === 'granted') {
