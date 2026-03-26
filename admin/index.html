@@ -2998,7 +2998,7 @@ html.dark-theme {
     <div class="toast" id="toast"></div>
     
     <script src="../supabase-config.js"></script>
-    <script>
+        <script>
     // ==================== REDIRIGIR A SECCIÓN MESONEROS ====================
 window._irAMesoneros = function() {
     // Cambiar tab activo a Mesoneros
@@ -3062,7 +3062,7 @@ window.cargarConfiguracion = async function() {
         window.configGlobal.admin_password = window.configGlobal.admin_password || 'admin123';
         window.configGlobal.recovery_email = window.configGlobal.recovery_email || 'admin@sakisushi.com';
         
-        console.log(' Configuración cargada. admin_password:', window.configGlobal.admin_password ? '***' : 'NO CARGADA');
+        console.log('📊 Configuración cargada. admin_password:', window.configGlobal.admin_password ? '***' : 'NO CARGADA');
         
     } catch (e) {
         console.error('Error cargando configuración:', e);
@@ -3083,7 +3083,7 @@ window.cargarConfiguracionInicial = async function() {
     await window.cargarConfiguracion();
     window.actualizarTasaUI();
     
-    //  CORRECCIÓN: Forzar recalcular tasa efectiva después de cargar configuración
+    //  CORRECCIÓN: Forzar recalcular tasa efectiva después de cargar configuración
     // para asegurar que los valores de aumento se apliquen correctamente
     window.recalcularTasaEfectiva();
     
@@ -3213,7 +3213,7 @@ window.cargarInventario = async function() {
                         <span class="delivery-estado ${d.activo ? 'activo' : 'inactivo'}">${d.activo ? 'Activo' : 'Inactivo'}</span>
                     </div>
                     <div class="delivery-acumulado">
-                        <span> Acumulado total:</span>
+                        <span>📦 Acumulado total:</span>
                         <span class="delivery-monto">${window.formatBs(acumulado)}</span>
                     </div>
                     <div class="delivery-actions">
@@ -3301,14 +3301,14 @@ window.cargarInventario = async function() {
     
     const tbody = document.getElementById('propinasTableBody');
     if (tbody) {
-        tbody.innerHTML = window.propinas.map(p => `——
+        tbody.innerHTML = window.propinas.map(p => `<tr>
             <td>${new Date(p.fecha).toLocaleString('es-VE', { timeZone: 'America/Caracas' })}</td>
             <td>${p.mesoneros?.nombre || 'N/A'}</td>
             <td>${p.mesa || 'N/A'}</td>
             <td>${p.metodo}</td>
             <td>${window.formatBs(p.monto_bs)}</td>
             <td>${p.cajero || 'N/A'}</td>
-         ——`).join('');
+        </tr>`).join('');
     }
     
     // Ranking (si existe)
@@ -3343,10 +3343,10 @@ window.cargarInventario = async function() {
                 if (error) throw error;
                 document.getElementById('nuevoMesonero').value = '';
                 await window.cargarMesoneros();
-                window.mostrarToast(' Mesonero agregado', 'success');
+                window.mostrarToast('✓ Mesonero agregado', 'success');
             } catch (e) {
                 console.error('Error agregando mesonero:', e);
-                window.mostrarToast(' Error: ' + (e.message || e), 'error');
+                window.mostrarToast('✗ Error: ' + (e.message || e), 'error');
             } finally {
                 if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-plus"></i> Agregar'; }
             }
@@ -3372,10 +3372,10 @@ Esto marcará todas sus propinas pendientes como entregadas.`);
                     .eq('entregado', false);
                 if (error) throw error;
                 await window.renderizarMesoneros();
-                window.mostrarToast(` Propinas pagadas a ${nombre}`, 'success');
+                window.mostrarToast(`✓ Propinas pagadas a ${nombre}`, 'success');
             } catch(e) {
                 console.error('Error pagando propinas:', e);
-                window.mostrarToast(' Error: ' + (e.message || e), 'error');
+                window.mostrarToast('✗ Error: ' + (e.message || e), 'error');
             }
         };
 
@@ -3384,7 +3384,7 @@ Esto marcará todas sus propinas pendientes como entregadas.`);
             try {
                 await window.supabaseClient.from('mesoneros').delete().eq('id', id);
                 await window.cargarMesoneros();
-                window.mostrarToast(' Eliminado', 'success');
+                window.mostrarToast('🗑️ Eliminado', 'success');
             } catch (e) { console.error('Error:', e); }
         };
 
@@ -3400,10 +3400,10 @@ Esto marcará todas sus propinas pendientes como entregadas.`);
                 if (error) throw error;
                 document.getElementById('nuevoDelivery').value = '';
                 await window.cargarDeliverys();
-                window.mostrarToast(' Motorizado agregado', 'success');
+                window.mostrarToast('✓ Motorizado agregado', 'success');
             } catch (e) {
                 console.error('Error agregando motorizado:', e);
-                window.mostrarToast(' Error: ' + (e.message || e), 'error');
+                window.mostrarToast('✗ Error: ' + (e.message || e), 'error');
             } finally {
                 if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-plus"></i> Agregar'; }
             }
@@ -3426,8 +3426,8 @@ Esto marcará todas sus propinas pendientes como entregadas.`);
                 await window.supabaseClient.from('deliverys').update({ nombre, activo }).eq('id', window.deliveryEditandoId);
                 document.getElementById('deliveryModal').classList.remove('active');
                 await window.cargarDeliverys();
-                window.mostrarToast(' Motorizado actualizado', 'success');
-            } catch (e) { console.error('Error:', e); window.mostrarToast(' Error al actualizar', 'error'); }
+                window.mostrarToast('✓ Motorizado actualizado', 'success');
+            } catch (e) { console.error('Error:', e); window.mostrarToast('✗ Error al actualizar', 'error'); }
         });
 
         window.eliminarDelivery = async function(id) {
@@ -3439,10 +3439,10 @@ Esto marcará todas sus propinas pendientes como entregadas.`);
                 await window.supabaseClient.from('entregas_delivery').delete().eq('delivery_id', id);
                 await window.supabaseClient.from('deliverys').delete().eq('id', id);
                 await window.cargarDeliverys();
-                window.mostrarToast(' Motorizado eliminado', 'success');
+                window.mostrarToast('🗑️ Motorizado eliminado', 'success');
             } catch (e) {
                 console.error('Error eliminando motorizado:', e);
-                window.mostrarToast(' Error al eliminar: ' + (e.message || e), 'error');
+                window.mostrarToast('✗ Error al eliminar: ' + (e.message || e), 'error');
             }
         };
 
@@ -3537,19 +3537,19 @@ Esto marcará todas sus propinas pendientes como entregadas.`);
                         fecha_entrega: new Date().toISOString()
                     }]);
                     if (error) throw error;
-                    window.mostrarToast(' Pago parcial registrado.', 'success');
+                    window.mostrarToast('✓ Pago parcial registrado.', 'success');
                 } else {
                     // Pago total — borrar todo el acumulado
                     const { error } = await window.supabaseClient.from('entregas_delivery')
                         .delete().eq('delivery_id', window.deliveryParaPago);
                     if (error) throw error;
-                    window.mostrarToast(' Pago total registrado. Acumulado reiniciado.', 'success');
+                    window.mostrarToast('✓ Pago total registrado. Acumulado reiniciado.', 'success');
                 }
                 window.cerrarModal('confirmPagoDeliveryModal');
                 await window.cargarDeliverys();
             } catch (e) {
                 console.error('Error registrando pago:', e);
-                window.mostrarToast(' Error al registrar pago: ' + (e.message || e), 'error');
+                window.mostrarToast('✗ Error al registrar pago: ' + (e.message || e), 'error');
             } finally {
                 if (btn) { btn.disabled = false; btn.innerHTML = 'Confirmar'; }
             }
@@ -3636,10 +3636,10 @@ Esto marcará todas sus propinas pendientes como entregadas.`);
                 if (error) throw error;
                 document.getElementById('usuarioModal').classList.remove('active');
                 await window.cargarUsuarios();
-                window.mostrarToast(' Cajero creado exitosamente', 'success');
+                window.mostrarToast('✓ Cajero creado exitosamente', 'success');
             } catch (e) {
                 console.error('Error creando cajero:', e);
-                window.mostrarToast(' Error: ' + (e.message || e), 'error');
+                window.mostrarToast('✗ Error: ' + (e.message || e), 'error');
             } finally {
                 if (btn) { btn.disabled = false; btn.innerHTML = 'Guardar'; }
             }
@@ -3649,8 +3649,8 @@ Esto marcará todas sus propinas pendientes como entregadas.`);
             try {
                 await window.supabaseClient.from('usuarios').update({ activo }).eq('id', userId);
                 await window.cargarUsuarios();
-                window.mostrarToast(` Usuario ${activo ? 'activado' : 'desactivado'}`, 'success');
-            } catch (e) { console.error('Error actualizando usuario:', e); window.mostrarToast(' Error al actualizar usuario', 'error'); }
+                window.mostrarToast(`✓ Usuario ${activo ? 'activado' : 'desactivado'}`, 'success');
+            } catch (e) { console.error('Error actualizando usuario:', e); window.mostrarToast('✗ Error al actualizar usuario', 'error'); }
         };
 
         window.eliminarUsuario = async function(userId) {
@@ -3658,8 +3658,8 @@ Esto marcará todas sus propinas pendientes como entregadas.`);
             try {
                 await window.supabaseClient.from('usuarios').delete().eq('id', userId);
                 await window.cargarUsuarios();
-                window.mostrarToast(' Usuario eliminado', 'success');
-            } catch (e) { console.error('Error eliminando usuario:', e); window.mostrarToast(' Error al eliminar usuario', 'error'); }
+                window.mostrarToast('🗑️ Usuario eliminado', 'success');
+            } catch (e) { console.error('Error eliminando usuario:', e); window.mostrarToast('✗ Error al eliminar usuario', 'error'); }
         };
 
         window.cargarQRs = async function() {
@@ -3702,7 +3702,7 @@ Esto marcará todas sus propinas pendientes como entregadas.`);
 
                 const nombre = document.createElement('div');
                 nombre.className = 'qr-nombre-v2';
-                nombre.textContent = (_ssid ? ' ' : '') + qr.nombre;
+                nombre.textContent = (_ssid ? '📶 ' : '') + qr.nombre;
 
                 const btnDel = document.createElement('button');
                 btnDel.className = 'btn-icon delete qr-del-btn';
@@ -3717,7 +3717,7 @@ Esto marcará todas sus propinas pendientes como entregadas.`);
                 card.appendChild(nombre);
                 card.appendChild(btnDel);
 
-                // Clic en la tarjeta (no en basura)  ampliar
+                // Clic en la tarjeta (no en basura) ➕ ampliar
                 card.addEventListener('click', function() {
                     window.ampliarQR(qr.id, qr.nombre, qrText);
                 });
@@ -3758,10 +3758,10 @@ Esto marcará todas sus propinas pendientes como entregadas.`);
                 if (error) throw error;
                 document.getElementById('qrNombreMesa').value = '';
                 await window.cargarQRs();
-                window.mostrarToast(' QR generado', 'success');
+                window.mostrarToast('✓ QR generado', 'success');
             } catch(e) {
                 console.error('Error generando QR:', e);
-                window.mostrarToast(' Error al generar QR: ' + (e.message || e), 'error');
+                window.mostrarToast('✗ Error al generar QR: ' + (e.message || e), 'error');
             }
         };
 
@@ -3788,8 +3788,8 @@ Esto marcará todas sus propinas pendientes como entregadas.`);
             try {
                 await window.supabaseClient.from('codigos_qr').delete().eq('id', id);
                 await window.cargarQRs();
-                window.mostrarToast(' QR eliminado', 'success');
-            } catch (e) { console.error('Error eliminando QR:', e); window.mostrarToast(' Error al eliminar QR', 'error'); }
+                window.mostrarToast('🗑️ QR eliminado', 'success');
+            } catch (e) { console.error('Error eliminando QR:', e); window.mostrarToast('✗ Error al eliminar QR', 'error'); }
         };
 
         window.cargarReportes = async function() {
@@ -3882,8 +3882,8 @@ Esto marcará todas sus propinas pendientes como entregadas.`);
                     : 'Sin detalle';
                 const totalUSD = p.total || 0;
                 const totalBs  = window.formatBs(totalUSD * tasa);
-                return `——
-                     <td>${new Date(p.fecha).toLocaleDateString('es-VE', { timeZone: 'America/Caracas'})}</td>
+                return `<tr>
+                      <td>${new Date(p.fecha).toLocaleDateString('es-VE', { timeZone: 'America/Caracas'})}</td>
                     <td style="max-width:200px;font-size:.82rem">${resumen}</td>
                     <td>${window.formatUSD(totalUSD)}<br><span style="font-size:.75rem;color:var(--text-muted)">${totalBs}</span></td>
                     <td>${totalItems}</td>
@@ -3896,7 +3896,7 @@ Esto marcará todas sus propinas pendientes como entregadas.`);
                         return labels2[p.metodo_pago] || p.metodo_pago || 'N/A';
                     })()}</td>
                     <td>${p.tipo || 'N/A'}</td>
-                 ——`;
+                 </tr>`;
             }).join('');
         };
 
@@ -3913,7 +3913,7 @@ Esto marcará todas sus propinas pendientes como entregadas.`);
             const fecha = new Date(p.fecha).toLocaleDateString('es-VE', {day:'2-digit',month:'2-digit'});
             const items = (p.items || []).slice(0,2).map(i => `${i.cantidad||1}x ${i.nombre}`).join(', ');
             const masItems = (p.items||[]).length > 2 ? ` +${(p.items||[]).length-2} más` : '';
-            const tipoIcon = p.tipo==='delivery' ? '' : p.tipo==='reserva' ? '' : '';
+            const tipoIcon = p.tipo==='delivery' ? '🛵' : p.tipo==='reserva' ? '📅' : '🍽️';
             const tipoColor = p.tipo==='delivery' ? 'var(--delivery)' : p.tipo==='reserva' ? 'var(--propina)' : 'var(--info)';
             const totalBs = window.formatBs(window.usdToBs(p.total||0));
             const estadoText = p.estado ? p.estado.replace(/_/g,' ') : '';
@@ -4098,9 +4098,9 @@ window.verificarStockCritico = async function() {
         document.getElementById('confirmPassword').value = '';
         
         // 8. Mostrar mensaje de éxito
-        window.mostrarToast(' Contraseña actualizada correctamente en todo el sistema', 'success');
+        window.mostrarToast('✓ Contraseña actualizada correctamente en todo el sistema', 'success');
         
-        console.log(' Contraseña actualizada en tablas usuarios y config');
+        console.log('✓ Contraseña actualizada en tablas usuarios y config');
         
     } catch (e) {
         console.error('Error cambiando contraseña:', e);
@@ -4109,7 +4109,7 @@ window.verificarStockCritico = async function() {
             errorDiv.style.display = 'block';
             errorDiv.innerHTML = '<i class="fas fa-exclamation-circle"></i> Error: ' + (e.message || 'Error al cambiar la contraseña');
         }
-        window.mostrarToast(' Error al cambiar la contraseña: ' + (e.message || e), 'error');
+        window.mostrarToast('✗ Error al cambiar la contraseña: ' + (e.message || e), 'error');
     } finally {
         // Restaurar botón
         if (btn) {
@@ -4124,13 +4124,13 @@ window.verificarStockCritico = async function() {
             if (!email || !email.includes('@')) { window.mostrarToast('Ingresa un correo válido', 'error'); return; }
             try {
                 await window.supabaseClient.from('config').update({ recovery_email: email }).eq('id', 1);
-                window.mostrarToast(' Correo de recuperación guardado', 'success');
-            } catch (e) { console.error('Error guardando email:', e); window.mostrarToast(' Error al guardar el correo', 'error'); }
+                window.mostrarToast('✓ Correo de recuperación guardado', 'success');
+            } catch (e) { console.error('Error guardando email:', e); window.mostrarToast('✗ Error al guardar el correo', 'error'); }
         };
 
         // ==================== FUNCIONES DE CONFIGURACIÓN ====================
         window.recalcularTasaEfectiva = function() {
-    //  CORRECCIÓN: Sincronizar configGlobal con el valor actual del input ANTES de calcular
+    //  CORRECCIÓN: Sincronizar configGlobal con el valor actual del input ANTES de calcular
     const tasaBaseInput = document.getElementById('tasaBaseInput');
     if (tasaBaseInput && window.configGlobal) {
         window.configGlobal.tasa_cambio = parseFloat(tasaBaseInput.value) || 0;
@@ -4169,8 +4169,8 @@ window.verificarStockCritico = async function() {
             const aumentoAcumulado = periodos * aumentoPct;
             const tasaEfectiva     = tasaBase * (1 + aumentoAcumulado / 100);
 
-            // LOG DE DIAGNÓSTICO (visible en F12  Consola)
-            console.group('%c Saki Sushi — Cálculo de Tasa', 'color:#FF9800;font-weight:700');
+            // LOG DE DIAGNÓSTICO (visible en F12 📊 Consola)
+            console.group('%c📊 Saki Sushi — Cálculo de Tasa', 'color:#FF9800;font-weight:700');
             console.log('Modo activo:', estaActivo ? (activoSemanal ? 'SEMANAL' : 'DIARIO') : 'DESACTIVADO');
             console.log('Fecha inicio (Desde):', desdeVal || '—');
             console.log('Fecha fin   (Hasta): ', hastaVal || (indefinido ? 'Indefinido' : '—'));
@@ -4186,14 +4186,14 @@ window.verificarStockCritico = async function() {
                     const _proxLunes = new Date(_desdeLog);
                     _proxLunes.setDate(_proxLunes.getDate() + periodos * 7);
                     console.log('Próximo período semanal:', _proxLunes.toLocaleDateString('es-VE'));
-                    console.log(' Para simular "ya es lunes": window._simularLunes()');
+                    console.log('💡 Para simular "ya es lunes": window._simularLunes()');
                 }
             }
             console.log('Porcentaje por período:', aumentoPct + '%');
             console.log('Períodos aplicados:', periodos);
             console.log('Acumulado total:', aumentoAcumulado.toFixed(2) + '%');
             console.log('Tasa Base:', tasaBase);
-            console.log('Tasa Efectiva  Bs', tasaEfectiva.toFixed(2));
+            console.log('Tasa Efectiva 💰 Bs', tasaEfectiva.toFixed(2));
             console.groupEnd();
 
             document.getElementById('tasaEfectivaDisplay').textContent = tasaEfectiva.toFixed(2);
@@ -4211,7 +4211,7 @@ window.verificarStockCritico = async function() {
 
         window.guardarConfiguracion = async function() {
     try {
-        //  CORRECCIÓN: Asegurar que window.configGlobal tenga los valores actuales antes de guardar
+        //  CORRECCIÓN: Asegurar que window.configGlobal tenga los valores actuales antes de guardar
         const tasaBase = parseFloat(document.getElementById('tasaBaseInput').value) || 0;
         const aumentoPct = parseFloat(document.getElementById('aumentoDiarioInput').value) || 0;
         const activoDiario = document.getElementById('aumentoActivoToggle').checked;
@@ -4241,7 +4241,7 @@ window.verificarStockCritico = async function() {
             ultima_actualizacion: new Date().toISOString()
         }).eq('id', 1);
         
-        //  CORRECCIÓN: Reflejar cambios en elementos encadenados
+        //  CORRECCIÓN: Reflejar cambios en elementos encadenados
         // 1. Recalcular y mostrar precios en Bs en el menú
         window.renderizarMenu(document.getElementById('menuBuscador')?.value || '');
         
@@ -4257,9 +4257,12 @@ window.verificarStockCritico = async function() {
             tasaDisplay.textContent = (window.configGlobal.tasa_efectiva || 0).toFixed(2);
         }
         
+        // 5. Mostrar mensaje de éxito (UN SOLO TOAST)
+        window.mostrarToast(`✓ Configuración guardada. Nueva tasa efectiva: Bs ${(window.configGlobal.tasa_efectiva || 0).toFixed(2)} por USD`, 'success');
+        
     } catch (e) { 
         console.error('Error guardando configuración:', e); 
-        window.mostrarToast(' Error al guardar la configuración', 'error'); 
+        window.mostrarToast('✗ Error al guardar la configuración', 'error'); 
     }
 };
 
@@ -4437,7 +4440,7 @@ window.verificarStockCritico = async function() {
                 const _ingEntries = Object.entries(ingredientes);
                 let maxPlatillos;
                 if (!_ingEntries.length) {
-                    // Sin ingredientes  conservar stock existente (no sobreescribir con 0)
+                    // Sin ingredientes ➕ conservar stock existente (no sobreescribir con 0)
                     const _existing = (window.menuItems || []).find(p => p.id === (window.platilloEditandoId || ''));
                     maxPlatillos = _existing ? (_existing.stock || 0) : 0;
                 } else {
@@ -4476,8 +4479,8 @@ window.verificarStockCritico = async function() {
                 window.platilloEditandoId = null;
                 window.limpiarImagenPreview();
                 await window.cargarMenu();
-                window.mostrarToast(' Platillo guardado', 'success');
-            } catch (e) { console.error('Error guardando platillo:', e); window.mostrarToast(' Error al guardar el platillo: ' + e.message, 'error'); }
+                window.mostrarToast('✓ Platillo guardado', 'success');
+            } catch (e) { console.error('Error guardando platillo:', e); window.mostrarToast('✗ Error al guardar el platillo: ' + e.message, 'error'); }
             finally { const saveBtn = document.getElementById('savePlatillo'); saveBtn.innerHTML = 'Guardar'; saveBtn.disabled = false; }
         });
 
@@ -4488,11 +4491,11 @@ window.verificarStockCritico = async function() {
                 if (platillo && platillo.imagen && platillo.imagen.includes('imagenes-platillos')) await window.eliminarImagenPlatillo(platillo.imagen);
                 await window.supabaseClient.from('menu').delete().eq('id', id);
                 await window.cargarMenu();
-                window.mostrarToast(' Platillo eliminado', 'success');
-            } catch (e) { console.error('Error eliminando platillo:', e); window.mostrarToast(' Error al eliminar el platillo', 'error'); }
+                window.mostrarToast('🗑️ Platillo eliminado', 'success');
+            } catch (e) { console.error('Error eliminando platillo:', e); window.mostrarToast('✗ Error al eliminar el platillo', 'error'); }
         };
 
-                // ==================== FUNCIONES DEL MODAL DE INGREDIENTE ====================
+        // ==================== FUNCIONES DEL MODAL DE INGREDIENTE ====================
 
         window.abrirModalNuevoIngrediente = function() {
             window.ingredienteEditandoId = null;
@@ -4648,42 +4651,42 @@ window.verificarStockCritico = async function() {
         }
 
         // Función para resetear el bloqueo al cerrar el modal
-window.resetearBloqueoStock = function() {
-    console.log('Resetear bloqueo stock - modal cerrado');
-    const stockInput = document.getElementById('ingredienteStock');
-    const lockIcon = document.getElementById('stockLockIcon');
-    const clickArea = document.getElementById('stockClickArea');
-    
-    // Solo si estamos en modo edición Y el campo está desbloqueado
-    if (window.ingredienteEditandoId && stockInput && !stockInput.disabled) {
-        console.log('Restaurando bloqueo...');
-        stockInput.disabled = true;
-        stockInput.readOnly = true;
-        stockInput.style.background = '';
-        stockInput.style.cursor = 'pointer';
-        
-        if (clickArea) {
-            clickArea.onclick = function(e) {
-                e.stopPropagation();
-                window.mostrarModalContraseñaStock();
-            };
-            clickArea.style.cursor = 'pointer';
-            clickArea.style.borderColor = '';
-            clickArea.style.backgroundColor = '';
-        }
-        
-        if (lockIcon) {
-            lockIcon.innerHTML = '<i class="fas fa-lock" style="font-size:.8rem"></i>';
-            lockIcon.style.cursor = 'default';
-        }
-    }
-    
-    // Limpiar elementos inline si existen
-    const unlockInline = document.getElementById('stockUnlockInline');
-    const unlockDiv = document.getElementById('stockUnlock');
-    if (unlockInline) unlockInline.style.display = 'none';
-    if (unlockDiv) unlockDiv.style.display = 'none';
-};
+        window.resetearBloqueoStock = function() {
+            console.log('Resetear bloqueo stock - modal cerrado');
+            const stockInput = document.getElementById('ingredienteStock');
+            const lockIcon = document.getElementById('stockLockIcon');
+            const clickArea = document.getElementById('stockClickArea');
+            
+            // Solo si estamos en modo edición Y el campo está desbloqueado
+            if (window.ingredienteEditandoId && stockInput && !stockInput.disabled) {
+                console.log('Restaurando bloqueo...');
+                stockInput.disabled = true;
+                stockInput.readOnly = true;
+                stockInput.style.background = '';
+                stockInput.style.cursor = 'pointer';
+                
+                if (clickArea) {
+                    clickArea.onclick = function(e) {
+                        e.stopPropagation();
+                        window.mostrarModalContraseñaStock();
+                    };
+                    clickArea.style.cursor = 'pointer';
+                    clickArea.style.borderColor = '';
+                    clickArea.style.backgroundColor = '';
+                }
+                
+                if (lockIcon) {
+                    lockIcon.innerHTML = '<i class="fas fa-lock" style="font-size:.8rem"></i>';
+                    lockIcon.style.cursor = 'default';
+                }
+            }
+            
+            // Limpiar elementos inline si existen
+            const unlockInline = document.getElementById('stockUnlockInline');
+            const unlockDiv = document.getElementById('stockUnlock');
+            if (unlockInline) unlockInline.style.display = 'none';
+            if (unlockDiv) unlockDiv.style.display = 'none';
+        };
 
         // Modal de contraseña
         window.mostrarModalContraseñaStock = function() {
@@ -5253,251 +5256,123 @@ window.resetearBloqueoStock = function() {
         };
 
         // ============================================
-        // SETUP EVENT LISTENERS
+        // SETUP EVENT LISTENERS (VERSIÓN SIMPLIFICADA - SIN CLONAR BOTONES)
         // ============================================
-        // ============================================
-// SETUP EVENT LISTENERS (CORREGIDO - SIN CLONAR BOTONES)
-// ============================================
-window.setupEventListeners = function() {
+        window.setupEventListeners = function() {
 
-    window._scrollTabs = function(dir) {
-        const c = document.getElementById('tabsContainer');
-        if (!c) return;
-        c.scrollBy({ left: dir * 180, behavior: 'smooth' });
-        setTimeout(window._updateTabChevrons, 200);
-    };
-    window._updateTabChevrons = function() {
-        const c = document.getElementById('tabsContainer');
-        const lBtn = document.getElementById('tabsChevronLeft');
-        const rBtn = document.getElementById('tabsChevronRight');
-        if (!c || !lBtn || !rBtn) return;
-        lBtn.style.opacity = c.scrollLeft > 4 ? '1' : '0.3';
-        lBtn.style.pointerEvents = c.scrollLeft > 4 ? 'auto' : 'none';
-        const atEnd = c.scrollLeft + c.clientWidth >= c.scrollWidth - 4;
-        rBtn.style.opacity = atEnd ? '0.3' : '1';
-        rBtn.style.pointerEvents = atEnd ? 'none' : 'auto';
-    };
-    document.getElementById('tabsContainer')?.addEventListener('scroll', window._updateTabChevrons);
-    window._updateTabChevrons();
+            window._scrollTabs = function(dir) {
+                const c = document.getElementById('tabsContainer');
+                if (!c) return;
+                c.scrollBy({ left: dir * 180, behavior: 'smooth' });
+                setTimeout(window._updateTabChevrons, 200);
+            };
+            window._updateTabChevrons = function() {
+                const c = document.getElementById('tabsContainer');
+                const lBtn = document.getElementById('tabsChevronLeft');
+                const rBtn = document.getElementById('tabsChevronRight');
+                if (!c || !lBtn || !rBtn) return;
+                lBtn.style.opacity = c.scrollLeft > 4 ? '1' : '0.3';
+                lBtn.style.pointerEvents = c.scrollLeft > 4 ? 'auto' : 'none';
+                const atEnd = c.scrollLeft + c.clientWidth >= c.scrollWidth - 4;
+                rBtn.style.opacity = atEnd ? '0.3' : '1';
+                rBtn.style.pointerEvents = atEnd ? 'none' : 'auto';
+            };
+            document.getElementById('tabsContainer')?.addEventListener('scroll', window._updateTabChevrons);
+            window._updateTabChevrons();
 
-    document.getElementById('platilloDisponibleCheck')?.addEventListener('change', function() {
-        const lbl = document.getElementById('platilloDisponibleLabel');
-        const sel = document.getElementById('platilloDisponible');
-        if (lbl) { lbl.textContent = this.checked ? 'Sí' : 'No'; lbl.style.color = this.checked ? 'var(--success)' : 'var(--text-muted)'; }
-        if (sel) sel.value = this.checked ? 'true' : 'false';
-    });
+            document.getElementById('platilloDisponibleCheck')?.addEventListener('change', function() {
+                const lbl = document.getElementById('platilloDisponibleLabel');
+                const sel = document.getElementById('platilloDisponible');
+                if (lbl) { lbl.textContent = this.checked ? 'Sí' : 'No'; lbl.style.color = this.checked ? 'var(--success)' : 'var(--text-muted)'; }
+                if (sel) sel.value = this.checked ? 'true' : 'false';
+            });
 
-    document.querySelectorAll('.tab').forEach(tab => {
-        tab.addEventListener('click', () => {
-            const target = tab.dataset.tab;
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            tab.classList.add('active');
-            document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
-            const pane = document.getElementById(target + 'Pane');
-            if (pane) pane.classList.add('active');
-            if (target !== 'qr') {
-                const el = document.getElementById('qrNombreMesa');
-                if (el) el.value = '';
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const target = tab.dataset.tab;
+                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
+                    const pane = document.getElementById(target + 'Pane');
+                    if (pane) pane.classList.add('active');
+                    if (target !== 'qr') {
+                        const el = document.getElementById('qrNombreMesa');
+                        if (el) el.value = '';
+                    }
+                });
+            });
+
+            // *****************************************************
+            // Los eventos de los botones YA están asignados
+            // en las definiciones originales (saveIngrediente, cancelIngrediente, etc.)
+            // NO es necesario clonarlos ni reasignarlos aquí.
+            // *****************************************************
+
+            // Cerrar al hacer clic en el fondo oscuro de cualquier modal
+            document.querySelectorAll('.modal').forEach(modal => {
+                modal.addEventListener('click', function(e) {
+                    if (e.target === this) {
+                        window.cerrarModal(this.id);
+                        if (this.id === 'ingredienteModal') {
+                            window.resetearBloqueoStock();
+                        }
+                    }
+                });
+            });
+
+            // Guardar configuración de tasa
+            document.getElementById('saveAllButton').addEventListener('click', async () => { await window.guardarConfiguracion(); });
+
+            document.getElementById('tasaBaseInput').addEventListener('change', window.recalcularTasaEfectiva);
+            document.getElementById('aumentoDiarioInput').addEventListener('change', window.recalcularTasaEfectiva);
+            
+            function _mostrarFechasAumento(visible) {
+                document.getElementById('tasaFechasDiv').style.display = visible ? 'flex' : 'none';
             }
-        });
-    });
-
-    // *****************************************************
-    // CORRECCIÓN: NO clonar los botones, solo asignar eventos una vez
-    // *****************************************************
-    
-    // Botón Guardar ingrediente (asegurar que existe el evento)
-    const saveIngBtn = document.getElementById('saveIngrediente');
-    if (saveIngBtn && !saveIngBtn.hasAttribute('data-event-attached')) {
-        saveIngBtn.setAttribute('data-event-attached', 'true');
-        // Remover listeners anteriores si existen
-        const newSaveBtn = saveIngBtn.cloneNode(true);
-        saveIngBtn.parentNode.replaceChild(newSaveBtn, saveIngBtn);
-        const finalSaveBtn = document.getElementById('saveIngrediente');
-        finalSaveBtn.addEventListener('click', async function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            const btn = this;
-            if (btn.disabled) return;
-            
-            const esNuevo = !window.ingredienteEditandoId;
-            const id = esNuevo ? window.generarId('ing_') : window.ingredienteEditandoId;
-            
-            const nombre = document.getElementById('ingredienteNombre').value.trim();
-            const stockActual = parseFloat(document.getElementById('ingredienteStock').value) || 0;
-            const agregar = parseFloat(document.getElementById('ingredienteAgregar').value) || 0;
-            const unidad = document.getElementById('ingredienteUnidad').value;
-            const minimo = parseFloat(document.getElementById('ingredienteMinimo').value) || 0;
-            const costo = parseFloat(document.getElementById('ingredienteCosto').value) || 0;
-            const venta = parseFloat(document.getElementById('ingredienteVenta').value) || 0;
-            
-            if (!nombre) {
-                window.mostrarToast('Ingresa el nombre del ingrediente', 'error');
-                return;
-            }
-            
-            try {
-                btn.disabled = true;
-                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
-                
-                const ingrediente = { 
-                    id, nombre, 
-                    stock: stockActual + agregar, 
-                    reservado: 0,
-                    unidad_base: unidad, 
-                    minimo, 
-                    precio_costo: costo, 
-                    precio_unitario: venta 
-                };
-                
-                let error;
-                if (esNuevo) {
-                    ({ error } = await window.supabaseClient.from('inventario').insert([ingrediente]));
-                } else {
-                    ({ error } = await window.supabaseClient.from('inventario').update(ingrediente).eq('id', id));
+            function _actualizarLabelAumento() {
+                const diario   = document.getElementById('aumentoActivoToggle').checked;
+                const semanal  = document.getElementById('aumentoSemanalToggle').checked;
+                const alguno   = diario || semanal;
+                const label = document.getElementById('labelAumentoPct');
+                if (label) label.textContent = semanal ? 'Aumento Semanal %:' : 'Aumento Diario %:';
+                const inputPct = document.getElementById('aumentoDiarioInput');
+                if (inputPct) {
+                    inputPct.disabled = !alguno;
+                    inputPct.style.opacity = alguno ? '1' : '0.4';
+                    inputPct.style.cursor  = alguno ? '' : 'not-allowed';
                 }
-                
-                if (error) throw error;
-                
-                window.ingredienteEditandoId = null;
-                window.cerrarModal('ingredienteModal');
-                await window.cargarInventario();
-                window.mostrarToast('✓ Ingrediente guardado', 'success');
-                
-            } catch (e) {
-                console.error('Error guardando ingrediente:', e);
-                window.mostrarToast('✗ Error: ' + (e.message || e), 'error');
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = 'Guardar';
-            }
-        });
-    }
-    
-    // Botón Cancelar ingrediente
-    const cancelIngBtn = document.getElementById('cancelIngrediente');
-    if (cancelIngBtn && !cancelIngBtn.hasAttribute('data-event-attached')) {
-        cancelIngBtn.setAttribute('data-event-attached', 'true');
-        const newCancelBtn = cancelIngBtn.cloneNode(true);
-        cancelIngBtn.parentNode.replaceChild(newCancelBtn, cancelIngBtn);
-        const finalCancelBtn = document.getElementById('cancelIngrediente');
-        finalCancelBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            window.cerrarModal('ingredienteModal');
-            window.resetearBloqueoStock();
-        });
-    }
-    
-    // Botón Eliminar ingrediente
-    const deleteIngBtn = document.getElementById('deleteIngredienteBtn');
-    if (deleteIngBtn && !deleteIngBtn.hasAttribute('data-event-attached')) {
-        deleteIngBtn.setAttribute('data-event-attached', 'true');
-        const newDeleteBtn = deleteIngBtn.cloneNode(true);
-        deleteIngBtn.parentNode.replaceChild(newDeleteBtn, deleteIngBtn);
-        const finalDeleteBtn = document.getElementById('deleteIngredienteBtn');
-        finalDeleteBtn.addEventListener('click', function(e) {
-            e.preventDefault();
-            e.stopPropagation();
-            const id = window.ingredienteEditandoId;
-            if (!id) return;
-            const ing = (window.inventarioItems || []).find(i => i.id === id);
-            if (!confirm(`¿Eliminar el ingrediente "${ing?.nombre || id}"?`)) return;
-            
-            (async () => {
-                try {
-                    const { error } = await window.supabaseClient.from('inventario').delete().eq('id', id);
-                    if (error) throw error;
-                    window.cerrarModal('ingredienteModal');
-                    window.ingredienteEditandoId = null;
-                    await window.cargarInventario();
-                    window.mostrarToast('🗑️ Ingrediente eliminado', 'success');
-                } catch(e) {
-                    console.error('Error eliminando ingrediente:', e);
-                    window.mostrarToast('✗ Error: ' + (e.message || e), 'error');
-                }
-            })();
-        });
-    }
-    
-    // Botón Cerrar modal ingrediente (X)
-    const closeIngBtn = document.getElementById('closeIngredienteModal');
-    if (closeIngBtn && !closeIngBtn.hasAttribute('data-event-attached')) {
-        closeIngBtn.setAttribute('data-event-attached', 'true');
-        const newCloseBtn = closeIngBtn.cloneNode(true);
-        closeIngBtn.parentNode.replaceChild(newCloseBtn, closeIngBtn);
-        const finalCloseBtn = document.getElementById('closeIngredienteModal');
-        finalCloseBtn.addEventListener('click', function() {
-            window.cerrarModal('ingredienteModal');
-            window.resetearBloqueoStock();
-        });
-    }
-
-    // Cerrar al hacer clic en el fondo oscuro de cualquier modal
-    document.querySelectorAll('.modal').forEach(modal => {
-        modal.addEventListener('click', function(e) {
-            if (e.target === this) {
-                window.cerrarModal(this.id);
-                if (this.id === 'ingredienteModal') {
-                    window.resetearBloqueoStock();
+                _mostrarFechasAumento(alguno);
+                if (alguno && !document.getElementById('aumentoDesde').value) {
+                    document.getElementById('aumentoDesde').value = new Date().toISOString().split('T')[0];
                 }
             }
-        });
-    });
+            document.getElementById('aumentoActivoToggle').addEventListener('change', function() {
+                if (this.checked) document.getElementById('aumentoSemanalToggle').checked = false;
+                window.configGlobal.aumento_detenido = !this.checked;
+                _actualizarLabelAumento();
+                window.recalcularTasaEfectiva();
+            });
+            document.getElementById('aumentoSemanalToggle').addEventListener('change', function() {
+                if (this.checked) document.getElementById('aumentoActivoToggle').checked = false;
+                window.configGlobal.aumento_detenido = !this.checked;
+                _actualizarLabelAumento();
+                window.recalcularTasaEfectiva();
+            });
+            document.getElementById('aumentoIndefinido').addEventListener('change', function() {
+                document.getElementById('aumentoHasta').disabled = this.checked;
+                if (this.checked) document.getElementById('aumentoHasta').value = '';
+            });
 
-    // Guardar configuración de tasa
-    document.getElementById('saveAllButton').addEventListener('click', async () => { await window.guardarConfiguracion(); });
+            const _closeQrBtn  = document.getElementById('closeQrAmpliado');
+            const _closeQrX    = document.getElementById('closeQrAmpliadoModal');
+            const _qrModal     = document.getElementById('qrAmpliadoModal');
+            if (_closeQrBtn) _closeQrBtn.addEventListener('click', () => window.cerrarModal('qrAmpliadoModal'));
+            if (_closeQrX)   _closeQrX.addEventListener('click',   () => window.cerrarModal('qrAmpliadoModal'));
+            if (_qrModal) _qrModal.addEventListener('click', function(e) {
+                if (e.target === this) window.cerrarModal('qrAmpliadoModal');
+            });
 
-    document.getElementById('tasaBaseInput').addEventListener('change', window.recalcularTasaEfectiva);
-    document.getElementById('aumentoDiarioInput').addEventListener('change', window.recalcularTasaEfectiva);
-    
-    function _mostrarFechasAumento(visible) {
-        document.getElementById('tasaFechasDiv').style.display = visible ? 'flex' : 'none';
-    }
-    function _actualizarLabelAumento() {
-        const diario   = document.getElementById('aumentoActivoToggle').checked;
-        const semanal  = document.getElementById('aumentoSemanalToggle').checked;
-        const alguno   = diario || semanal;
-        const label = document.getElementById('labelAumentoPct');
-        if (label) label.textContent = semanal ? 'Aumento Semanal %:' : 'Aumento Diario %:';
-        const inputPct = document.getElementById('aumentoDiarioInput');
-        if (inputPct) {
-            inputPct.disabled = !alguno;
-            inputPct.style.opacity = alguno ? '1' : '0.4';
-            inputPct.style.cursor  = alguno ? '' : 'not-allowed';
-        }
-        _mostrarFechasAumento(alguno);
-        if (alguno && !document.getElementById('aumentoDesde').value) {
-            document.getElementById('aumentoDesde').value = new Date().toISOString().split('T')[0];
-        }
-    }
-    document.getElementById('aumentoActivoToggle').addEventListener('change', function() {
-        if (this.checked) document.getElementById('aumentoSemanalToggle').checked = false;
-        window.configGlobal.aumento_detenido = !this.checked;
-        _actualizarLabelAumento();
-        window.recalcularTasaEfectiva();
-    });
-    document.getElementById('aumentoSemanalToggle').addEventListener('change', function() {
-        if (this.checked) document.getElementById('aumentoActivoToggle').checked = false;
-        window.configGlobal.aumento_detenido = !this.checked;
-        _actualizarLabelAumento();
-        window.recalcularTasaEfectiva();
-    });
-    document.getElementById('aumentoIndefinido').addEventListener('change', function() {
-        document.getElementById('aumentoHasta').disabled = this.checked;
-        if (this.checked) document.getElementById('aumentoHasta').value = '';
-    });
-
-    const _closeQrBtn  = document.getElementById('closeQrAmpliado');
-    const _closeQrX    = document.getElementById('closeQrAmpliadoModal');
-    const _qrModal     = document.getElementById('qrAmpliadoModal');
-    if (_closeQrBtn) _closeQrBtn.addEventListener('click', () => window.cerrarModal('qrAmpliadoModal'));
-    if (_closeQrX)   _closeQrX.addEventListener('click',   () => window.cerrarModal('qrAmpliadoModal'));
-    if (_qrModal) _qrModal.addEventListener('click', function(e) {
-        if (e.target === this) window.cerrarModal('qrAmpliadoModal');
-    });
-
-};
+        };
 
         // ============================================
         // TASA DE HOY — Primer inicio de sesión del día
@@ -5513,7 +5388,7 @@ window.setupEventListeners = function() {
             ].join(';');
             overlay.innerHTML = `
                 <div style="background:#fff;border-radius:16px;padding:2rem 2.5rem;width:90%;max-width:400px;box-shadow:0 8px 32px rgba(0,0,0,.3);text-align:center">
-                    <div style="font-size:2.5rem;margin-bottom:.75rem">📊</div>
+                    <div style="font-size:2.5rem;margin-bottom:.75rem">💰</div>
                     <h2 style="font-size:1.3rem;color:#1a1a2e;margin-bottom:.4rem">Tasa de cambio de hoy</h2>
                     <p style="font-size:.88rem;color:#666;margin-bottom:1.5rem">
                         Ingresa el valor actual del dólar en bolívares para que el sistema calcule correctamente todos los precios de hoy.
