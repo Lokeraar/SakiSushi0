@@ -3082,8 +3082,12 @@ window.cargarConfiguracion = async function() {
 window.cargarConfiguracionInicial = async function() {
     await window.cargarConfiguracion();
     window.actualizarTasaUI();
+    
+    //  CORRECCIÓN: Forzar recalcular tasa efectiva después de cargar configuración
+    // para asegurar que los valores de aumento se apliquen correctamente
+    window.recalcularTasaEfectiva();
+    
     window.actualizarMenuTasaBanner();
-    // alertaStockMinimo se gestiona por ingrediente (campo Stock Mínimo en modal de inventario)
 };
 
 window.actualizarTasaUI = function() {
@@ -4126,6 +4130,11 @@ window.verificarStockCritico = async function() {
 
         // ==================== FUNCIONES DE CONFIGURACIÓN ====================
         window.recalcularTasaEfectiva = function() {
+    //  CORRECCIÓN: Sincronizar configGlobal con el valor actual del input ANTES de calcular
+    const tasaBaseInput = document.getElementById('tasaBaseInput');
+    if (tasaBaseInput && window.configGlobal) {
+        window.configGlobal.tasa_cambio = parseFloat(tasaBaseInput.value) || 0;
+    }
             const tasaBase     = parseFloat(document.getElementById('tasaBaseInput').value) || 0;
             const aumentoPct   = parseFloat(document.getElementById('aumentoDiarioInput').value) || 0;
             const activoDiario  = document.getElementById('aumentoActivoToggle').checked;
@@ -4201,23 +4210,61 @@ window.verificarStockCritico = async function() {
         };
 
         window.guardarConfiguracion = async function() {
-            try {
-                await window.supabaseClient.from('config').update({
-                    tasa_cambio:       window.configGlobal.tasa_cambio,
-                    aumento_diario:    window.configGlobal.aumento_diario,
-                    aumento_activo:    window.configGlobal.aumento_activo,
-                    aumento_semanal:   window.configGlobal.aumento_semanal || false,
-                    aumento_detenido:  window.configGlobal.aumento_detenido,
-                    aumento_acumulado: window.configGlobal.aumento_acumulado,
-                    tasa_efectiva:     window.configGlobal.tasa_efectiva,
-                    aumento_desde:     (document.getElementById('aumentoDesde') && document.getElementById('aumentoDesde').value) || null,
-                    aumento_hasta:     (!document.getElementById('aumentoIndefinido')?.checked && document.getElementById('aumentoHasta')?.value) || null,
-                    aumento_indefinido: document.getElementById('aumentoIndefinido')?.checked || false,
-                    ultima_actualizacion: new Date().toISOString()
-                }).eq('id', 1);
-                window.mostrarToast(' Configuración guardada', 'success');
-            } catch (e) { console.error('Error guardando configuración:', e); window.mostrarToast(' Error al guardar la configuración', 'error'); }
-        };
+    try {
+        //  CORRECCIÓN: Asegurar que window.configGlobal tenga los valores actuales antes de guardar
+        const tasaBase = parseFloat(document.getElementById('tasaBaseInput').value) || 0;
+        const aumentoPct = parseFloat(document.getElementById('aumentoDiarioInput').value) || 0;
+        const activoDiario = document.getElementById('aumentoActivoToggle').checked;
+        const activoSemanal = document.getElementById('aumentoSemanalToggle')?.checked || false;
+        const indefinido = document.getElementById('aumentoIndefinido')?.checked || false;
+        
+        // Actualizar configGlobal con los valores actuales
+        window.configGlobal.tasa_cambio = tasaBase;
+        window.configGlobal.aumento_diario = aumentoPct;
+        window.configGlobal.aumento_activo = activoDiario;
+        window.configGlobal.aumento_semanal = activoSemanal;
+        
+        // Recalcular tasa efectiva para obtener el valor correcto
+        window.recalcularTasaEfectiva();
+        
+        await window.supabaseClient.from('config').update({
+            tasa_cambio:       window.configGlobal.tasa_cambio,
+            aumento_diario:    window.configGlobal.aumento_diario,
+            aumento_activo:    window.configGlobal.aumento_activo,
+            aumento_semanal:   window.configGlobal.aumento_semanal || false,
+            aumento_detenido:  window.configGlobal.aumento_detenido,
+            aumento_acumulado: window.configGlobal.aumento_acumulado,
+            tasa_efectiva:     window.configGlobal.tasa_efectiva,
+            aumento_desde:     (document.getElementById('aumentoDesde') && document.getElementById('aumentoDesde').value) || null,
+            aumento_hasta:     (!document.getElementById('aumentoIndefinido')?.checked && document.getElementById('aumentoHasta')?.value) || null,
+            aumento_indefinido: document.getElementById('aumentoIndefinido')?.checked || false,
+            ultima_actualizacion: new Date().toISOString()
+        }).eq('id', 1);
+        
+        //  CORRECCIÓN: Reflejar cambios en elementos encadenados
+        // 1. Recalcular y mostrar precios en Bs en el menú
+        window.renderizarMenu(document.getElementById('menuBuscador')?.value || '');
+        
+        // 2. Actualizar ventas hoy (usa la nueva tasa)
+        await window._actualizarVentasHoyNeto();
+        
+        // 3. Actualizar deliverys hoy
+        await window._actualizarDeliverysHoy();
+        
+        // 4. Actualizar el banner de tasa en todas las vistas
+        const tasaDisplay = document.getElementById('tasaEfectivaDisplay');
+        if (tasaDisplay) {
+            tasaDisplay.textContent = (window.configGlobal.tasa_efectiva || 0).toFixed(2);
+        }
+        
+        // 5. Mostrar mensaje con la nueva tasa
+        window.mostrarToast(` Configuración guardada. Nueva tasa efectiva: Bs ${(window.configGlobal.tasa_efectiva || 0).toFixed(2)} por USD`, 'success');
+        
+    } catch (e) { 
+        console.error('Error guardando configuración:', e); 
+        window.mostrarToast(' Error al guardar la configuración', 'error'); 
+    }
+};
 
         // ==================== FUNCIONES DE MENÚ (PLATILLOS) ====================
         window.abrirModalNuevoPlatillo = function() {
@@ -4701,10 +4748,16 @@ async function _desbloquearStock() {
     const clickArea = document.getElementById('stockClickArea');
     
     if (stockInput) {
+        //  CORRECCIÓN: Eliminar readOnly y disabled para permitir edición real
         stockInput.disabled = false;
+        stockInput.readOnly = false;
         stockInput.style.background = '';
         stockInput.style.cursor = 'text';
+        stockInput.style.pointerEvents = 'auto';
         stockInput.focus();
+        //  Remover cualquier evento onclick que pueda interferir
+        stockInput.onclick = null;
+        stockInput.onfocus = null;
     }
     
     if (lockIcon) {
@@ -4712,13 +4765,26 @@ async function _desbloquearStock() {
         lockIcon.style.cursor = 'default';
     }
     
-    // 🔑 IMPORTANTE: Eliminar el evento onclick del div para que no vuelva a pedir contraseña
+    //  IMPORTANTE: Eliminar el evento onclick del div para que no vuelva a pedir contraseńa
     if (clickArea) {
-        clickArea.onclick = null;
-        clickArea.style.cursor = 'default';
-        // Opcional: cambiar el estilo visual para indicar que ya está desbloqueado
-        clickArea.style.borderColor = 'var(--success)';
-        clickArea.style.backgroundColor = 'rgba(56,142,60,0.1)';
+        // Remover todos los listeners clonando el elemento (más seguro)
+        const newClickArea = clickArea.cloneNode(true);
+        clickArea.parentNode.replaceChild(newClickArea, clickArea);
+        // Actualizar referencia al nuevo elemento
+        const newStockClickArea = document.getElementById('stockClickArea');
+        if (newStockClickArea) {
+            newStockClickArea.style.cursor = 'default';
+            newStockClickArea.style.borderColor = 'var(--success)';
+            newStockClickArea.style.backgroundColor = 'rgba(56,142,60,0.1)';
+            newStockClickArea.onclick = null;
+        }
+        // Actualizar también el input dentro del nuevo div
+        const newInput = document.getElementById('ingredienteStock');
+        if (newInput) {
+            newInput.disabled = false;
+            newInput.readOnly = false;
+            newInput.onclick = null;
+        }
     }
     
     // Ocultar inline unlock si existe
@@ -4729,7 +4795,7 @@ async function _desbloquearStock() {
     window.cerrarModal('passwordStockModal');
     
     // Mostrar mensaje de éxito
-    window.mostrarToast('🔓 Stock desbloqueado. Puedes editar la cantidad.', 'success');
+    window.mostrarToast(' Stock desbloqueado. Puedes editar la cantidad.', 'success');
 }
 
 // Función para resetear el estado de bloqueo del stock (se llama al cerrar el modal de ingrediente)
