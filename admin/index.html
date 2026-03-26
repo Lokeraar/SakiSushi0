@@ -2332,6 +2332,23 @@ html.dark-theme {
     background: var(--danger);
 }
 
+/* Asegurar que el área de stock sea completamente clickeable */
+#stockClickArea {
+    display: flex;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+#stockClickArea input {
+    flex: 1;
+    cursor: pointer;
+    pointer-events: none; /* Esto hace que el input no capture eventos, delegando todo al div padre */
+}
+
+/* Opcional: mantener el cursor pointer en todo el área */
+#stockClickArea:hover {
+    cursor: pointer;
+}
     </style>
 </head>
 
@@ -2809,14 +2826,14 @@ html.dark-theme {
             <i class="fas fa-lock" style="font-size:.8rem"></i>
         </span>
     </label>
-    <div id="stockClickArea" style="position:relative; cursor:pointer; border:1px solid var(--border); border-radius:8px; background:var(--input-bg); transition:all .2s" 
-         onclick="window.mostrarModalContraseñaStock()"
-         onmouseover="this.style.borderColor='var(--accent)'; this.style.boxShadow='0 0 0 2px rgba(255,152,0,.2)'"
-         onmouseout="this.style.borderColor='var(--border)'; this.style.boxShadow='none'">
-        <input type="number" step="0.001" id="ingredienteStock" disabled
-            style="width:100%; cursor:pointer; background:transparent; color:var(--text-dark); border:none; border-radius:8px; padding:.65rem .9rem; outline:none"
-            title="Haz clic para desbloquear (requiere contraseña de administrador)">
-    </div>
+    <div id="stockClickArea" style="position:relative; cursor:pointer; border:1px solid var(--border); border-radius:8px; background:var(--input-bg); transition:all .2s; display:flex; align-items:center; width:100%; box-sizing:border-box" 
+     onclick="window.mostrarModalContraseñaStock()"
+     onmouseover="this.style.borderColor='var(--accent)'; this.style.boxShadow='0 0 0 2px rgba(255,152,0,.2)'"
+     onmouseout="this.style.borderColor='var(--border)'; this.style.boxShadow='none'">
+    <input type="number" step="0.001" id="ingredienteStock" disabled
+        style="width:100%; cursor:pointer; background:transparent; color:var(--text-dark); border:none; border-radius:8px; padding:.65rem .9rem; outline:none; box-sizing:border-box"
+        title="Haz clic para desbloquear (requiere contraseña de administrador)">
+</div>
 </div>
 
                 <!-- Mercancía a agregar + Unidad -->
