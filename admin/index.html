@@ -6735,32 +6735,6 @@ window._irAIngrediente = function(ingredienteId) {
     }, 200);
 };
 
-    </script>
-    <!-- Modal para contraseña de stock -->
-<div class="modal" id="passwordStockModal">
-    <div class="modal-content" style="max-width: 400px">
-        <div class="modal-header" style="background:linear-gradient(135deg, var(--info), #1565C0)">
-            <h3><i class="fas fa-lock"></i> Desbloquear Stock</h3>
-            <button class="modal-close" onclick="window.cerrarModal('passwordStockModal')">&times;</button>
-        </div>
-        <div class="modal-body">
-            <p style="margin-bottom: 1rem; color: var(--text-muted)">Ingresa la contraseña de administrador para poder editar el stock actual:</p>
-            <div class="form-group">
-                <label>Contraseña de Administrador</label>
-                <input type="password" id="stockPasswordModalInput" placeholder="Contraseña" 
-                    style="width:100%; padding:.8rem; border:1px solid var(--border); border-radius:8px; background:var(--input-bg); color:var(--text-dark); font-size:.95rem"
-                    onkeydown="if(event.key === 'Enter') window.verificarContraseñaStock()">
-            </div>
-            <div id="passwordStockError" style="display:none; color:var(--danger); font-size:.8rem; margin-top:.5rem; text-align:center">
-                <i class="fas fa-exclamation-circle"></i> Contraseña incorrecta
-            </div>
-        </div>
-        <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:.75rem">
-            <button class="btn-secondary" onclick="window.cerrarModal('passwordStockModal')">Cancelar</button>
-            <button class="btn-primary" id="confirmPasswordStockBtn" onclick="window.verificarContraseñaStock()">Confirmar</button>
-        </div>
-    </div>
-</div>
 // ==================== CORRECCIÓN: ASEGURAR QUE LOS BOTONES DEL MODAL DE INGREDIENTE FUNCIONEN ====================
 (function asegurarBotonesIngrediente() {
     // Esperar a que el DOM esté listo
@@ -6904,5 +6878,32 @@ window._irAIngrediente = function(ingredienteId) {
         }
     }
 })();
+
+    </script>
+    <!-- Modal para contraseña de stock -->
+<div class="modal" id="passwordStockModal">
+    <div class="modal-content" style="max-width: 400px">
+        <div class="modal-header" style="background:linear-gradient(135deg, var(--info), #1565C0)">
+            <h3><i class="fas fa-lock"></i> Desbloquear Stock</h3>
+            <button class="modal-close" onclick="window.cerrarModal('passwordStockModal')">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p style="margin-bottom: 1rem; color: var(--text-muted)">Ingresa la contraseña de administrador para poder editar el stock actual:</p>
+            <div class="form-group">
+                <label>Contraseña de Administrador</label>
+                <input type="password" id="stockPasswordModalInput" placeholder="Contraseña" 
+                    style="width:100%; padding:.8rem; border:1px solid var(--border); border-radius:8px; background:var(--input-bg); color:var(--text-dark); font-size:.95rem"
+                    onkeydown="if(event.key === 'Enter') window.verificarContraseñaStock()">
+            </div>
+            <div id="passwordStockError" style="display:none; color:var(--danger); font-size:.8rem; margin-top:.5rem; text-align:center">
+                <i class="fas fa-exclamation-circle"></i> Contraseña incorrecta
+            </div>
+        </div>
+        <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:.75rem">
+            <button class="btn-secondary" onclick="window.cerrarModal('passwordStockModal')">Cancelar</button>
+            <button class="btn-primary" id="confirmPasswordStockBtn" onclick="window.verificarContraseñaStock()">Confirmar</button>
+        </div>
+    </div>
+</div>
 </body>
 </html>
