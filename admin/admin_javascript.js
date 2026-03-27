@@ -1913,6 +1913,11 @@ async function _desbloquearStock() {
         clickArea.style.cursor = 'default';
         clickArea.style.borderColor = 'var(--success)';
         clickArea.style.backgroundColor = 'rgba(56,142,60,0.1)';
+        
+        // Asegurar que todo el div sea clickeable
+        clickArea.style.minHeight = '48px';
+        clickArea.style.display = 'flex';
+        clickArea.style.alignItems = 'center';
     }
     
     // Cerrar modal de contraseña
@@ -2060,14 +2065,15 @@ window.verificarContraseñaStock = async function() {
     }
 };
 
-// Guardar ingrediente (UNIFICADO) - VERSIÓN MEJORADA PARA MÓVIL
+// Guardar ingrediente - VERSIÓN MEJORADA CON SOPORTE TÁCTIL
 const saveIngrediente = document.getElementById('saveIngrediente');
 if (saveIngrediente) {
-    // Eliminar listeners anteriores para evitar duplicados
+    // Eliminar listeners anteriores
     const newSaveBtn = saveIngrediente.cloneNode(true);
     saveIngrediente.parentNode.replaceChild(newSaveBtn, saveIngrediente);
     
-    newSaveBtn.addEventListener('click', async function(e) {
+    // Función común para guardar
+    const handleSave = async function(e) {
         e.preventDefault();
         e.stopPropagation();
         
@@ -2125,24 +2131,48 @@ if (saveIngrediente) {
             btn.disabled = false;
             btn.innerHTML = 'Guardar';
         }
-    });
+    };
+    
+    // Agregar ambos eventos para máxima compatibilidad
+    newSaveBtn.addEventListener('click', handleSave);
+    newSaveBtn.addEventListener('touchstart', handleSave, { passive: false });
 }
 
-// Cancelar ingrediente - VERSIÓN MEJORADA PARA MÓVIL
+// Cancelar ingrediente - VERSIÓN MEJORADA CON SOPORTE TÁCTIL
 const cancelIngrediente = document.getElementById('cancelIngrediente');
 if (cancelIngrediente) {
     const newCancelBtn = cancelIngrediente.cloneNode(true);
     cancelIngrediente.parentNode.replaceChild(newCancelBtn, cancelIngrediente);
     
-    newCancelBtn.addEventListener('click', function(e) {
+    const handleCancel = function(e) {
         e.preventDefault();
         e.stopPropagation();
         window.cerrarModal('ingredienteModal');
         window.resetearBloqueoStock();
-    });
+    };
+    
+    newCancelBtn.addEventListener('click', handleCancel);
+    newCancelBtn.addEventListener('touchstart', handleCancel, { passive: false });
 }
 
-// Eliminar ingrediente desde modal - VERSIÓN MEJORADA
+// Cerrar modal con X - VERSIÓN MEJORADA CON SOPORTE TÁCTIL
+const closeIngredienteModal = document.getElementById('closeIngredienteModal');
+if (closeIngredienteModal) {
+    const newCloseBtn = closeIngredienteModal.cloneNode(true);
+    closeIngredienteModal.parentNode.replaceChild(newCloseBtn, closeIngredienteModal);
+    
+    const handleClose = function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        window.cerrarModal('ingredienteModal');
+        window.resetearBloqueoStock();
+    };
+    
+    newCloseBtn.addEventListener('click', handleClose);
+    newCloseBtn.addEventListener('touchstart', handleClose, { passive: false });
+}
+
+// Eliminar ingrediente desde modal - VERSIÓN MEJORADA CON SOPORTE TÁCTIL
 window._eliminarIngredienteDesdeModal = async function() {
     const id = window.ingredienteEditandoId;
     if (!id) return;
@@ -2172,18 +2202,6 @@ window._eliminarIngredienteDesdeModal = async function() {
         }
     }
 };
-
-// Cerrar modal con X - VERSIÓN MEJORADA PARA MÓVIL
-const closeIngredienteModal = document.getElementById('closeIngredienteModal');
-if (closeIngredienteModal) {
-    const newCloseBtn = closeIngredienteModal.cloneNode(true);
-    closeIngredienteModal.parentNode.replaceChild(newCloseBtn, closeIngredienteModal);
-    
-    newCloseBtn.addEventListener('click', function() {
-        window.cerrarModal('ingredienteModal');
-        window.resetearBloqueoStock();
-    });
-}
 
 // Asegurar que al abrir el modal de contraseña se limpie y al cerrar se restablezca
 const pwdModal = document.getElementById('passwordStockModal');
