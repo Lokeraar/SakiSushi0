@@ -101,9 +101,9 @@ window.mostrarErrorEnModal = function(modalId, mensajeError) {
 // ==================== FUNCIONES DE UTILIDAD ====================
 window.formatBs = function(m) {
     try {
-        return new Intl.NumberFormat('es-VE', { style: 'currency', currency: 'VES', minimumFractionDigits: 2 }).format(m).replace('VES', 'Bs.');
+        return new Intl.NumberFormat('es-VE', { style: 'currency', currency: 'VES', minimumFractionDigits: 2 }).format(m).replace('VES', 'Bs').replace('Bs.', 'Bs');
     } catch (e) {
-        return 'Bs. ' + (m || 0).toFixed(2);
+        return 'Bs ' + (m || 0).toFixed(2);
     }
 };
 
