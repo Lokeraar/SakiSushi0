@@ -858,41 +858,102 @@ html.dark-theme {
         }
 
         @media (max-width: 768px) {
-            .content { padding: .75rem; }
-            .header { padding: 0 .75rem; height: auto; min-height: 56px; flex-wrap: wrap; gap: .5rem; padding-top: .5rem; padding-bottom: .5rem; }
-            .header-left { flex: 1; min-width: 0; }
-            .header-left h2 { font-size: .9rem; }
-            .header-right { flex-wrap: wrap; gap: .4rem; }
-            .nav-button, .save-button, .logout-button { padding: .4rem .7rem; font-size: .75rem; }
-            .form-row { grid-template-columns: 1fr; }
-            .tasa-bar { padding: .4rem .75rem; font-size: .75rem; }
-            .tasa-row { gap: .4rem; }
-            .tasa-item input[type="number"] { width: 65px; }
-            .save-button { font-size: .75rem; padding: .4rem .8rem; }
-            /* Cada toggle en su propia línea en móvil */
-            .tasa-toggle-item {
-                width: 100%;
-                justify-content: flex-start;
-                gap: .75rem;
-                padding: .3rem 0;
-                border-bottom: 1px solid #f5f5f5;
-            }
-            .tasa-toggle-item label:first-child {
-                font-weight: 600;
-                color: var(--text-dark);
-            }
-            .tasa-row-controles { flex-direction: column; align-items: stretch; }
-            .tasa-row-controles .tasa-item:last-child { align-self: flex-end; margin-left: 0; margin-top: .4rem; }
-            /* Dashboard: 2 columnas en móvil */
-            .dashboard-grid { grid-template-columns: 1fr 1fr; }
-            .inventario-grid, .menu-grid, .qr-grid { grid-template-columns: 1fr; }
-            .tabs { padding: 0 .5rem; }
-            .tab { padding: .7rem .9rem; font-size: .78rem; }
-            .modal-content { width: 96%; }
-            .charts-grid { grid-template-columns: 1fr; }
-            /* Stock crítico y pedidos recientes: columna única en móvil */
-            .dashboard-lower-grid { grid-template-columns: 1fr; }
-        }
+    .content { padding: .75rem; }
+    .header { padding: 0 .75rem; height: auto; min-height: 56px; flex-wrap: wrap; gap: .5rem; padding-top: .5rem; padding-bottom: .5rem; }
+    .header-left { flex: 1; min-width: 0; }
+    .header-left h2 { font-size: .9rem; }
+    .header-right { flex-wrap: wrap; gap: .4rem; }
+    .nav-button, .save-button, .logout-button { padding: .4rem .7rem; font-size: .75rem; }
+    .form-row { grid-template-columns: 1fr; }
+    .tasa-bar { padding: .4rem .75rem; font-size: .75rem; }
+    .tasa-row { gap: .4rem; }
+    .tasa-item input[type="number"] { width: 65px; }
+    .save-button { font-size: .75rem; padding: .4rem .8rem; }
+    /* Cada toggle en su propia línea en móvil */
+    .tasa-toggle-item {
+        width: 100%;
+        justify-content: flex-start;
+        gap: .75rem;
+        padding: .3rem 0;
+        border-bottom: 1px solid #f5f5f5;
+    }
+    .tasa-toggle-item label:first-child {
+        font-weight: 600;
+        color: var(--text-dark);
+    }
+    .tasa-row-controles { flex-direction: column; align-items: stretch; }
+    .tasa-row-controles .tasa-item:last-child { align-self: flex-end; margin-left: 0; margin-top: .4rem; }
+    /* Dashboard: 2 columnas en móvil */
+    .dashboard-grid { grid-template-columns: 1fr 1fr; }
+    .inventario-grid, .menu-grid, .qr-grid { grid-template-columns: 1fr; }
+    .tabs { padding: 0 .5rem; }
+    .tab { padding: .7rem .9rem; font-size: .78rem; }
+    .modal-content { width: 96%; }
+    .charts-grid { grid-template-columns: 1fr; }
+    /* Stock crítico y pedidos recientes: columna única en móvil */
+    .dashboard-lower-grid { grid-template-columns: 1fr; }
+
+    /* ── Mejoras táctiles y de espaciado ── */
+    button, .btn-primary, .btn-secondary, .btn-sm, .btn-icon, .btn-toggle,
+    .tab, .modal-close, .nav-button, .save-button, .logout-button,
+    .theme-toggle, .btn-delivery, .pagination-btn, .pagination-num {
+        min-height: 44px !important;
+        min-width: 44px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+
+    .btn-primary, .btn-secondary, .btn-sm, .btn-delivery, .save-button,
+    .nav-button, .logout-button {
+        width: 100%;
+        margin-top: 0.25rem;
+        margin-bottom: 0.25rem;
+    }
+
+    .ingrediente-row {
+        grid-template-columns: 1fr !important;
+        gap: 0.5rem;
+    }
+    .ingrediente-row select,
+    .ingrediente-row input,
+    .ingrediente-row button {
+        width: 100%;
+    }
+
+    .modal-body {
+        padding: 1rem;
+    }
+    .modal-footer {
+        flex-direction: column;
+    }
+    .modal-footer .btn-primary,
+    .modal-footer .btn-secondary {
+        width: 100%;
+        margin: 0.25rem 0;
+    }
+
+    .modal-close {
+        width: 44px;
+        height: 44px;
+        font-size: 1.5rem;
+        background: rgba(0,0,0,0.1);
+        border-radius: 8px;
+    }
+
+    .menu-card-v2, .inv-card, .delivery-card, .usuario-card, .mesonero-card {
+        margin: 0;
+        width: 100%;
+        box-sizing: border-box;
+    }
+
+    .modal-content {
+        width: 95%;
+        max-width: 95%;
+        margin: 0 auto;
+    }
+}
+
         @media (max-width: 480px) {
             .header-right .nav-button:nth-child(n+3) { display: none; }
         }
@@ -1360,13 +1421,19 @@ html.dark-theme {
     /* Content padding */
     .content { padding: 1.5rem; }
     @media (max-width: 768px) {
-        .content { padding: .85rem; }
-        .pane-header { flex-direction: column; align-items: flex-start; }
-        .usuarios-grid { grid-template-columns: 1fr; }
-        .mesoneros-grid { grid-template-columns: 1fr 1fr; }
-        .config-section { max-width: 100%; }
-        .reportes-filters { flex-direction: column; }
+    .content { padding: .85rem; }
+    .pane-header { flex-direction: column; align-items: flex-start; }
+    .usuarios-grid { grid-template-columns: 1fr; }
+    .mesoneros-grid { grid-template-columns: 1fr 1fr; }
+    .config-section { max-width: 100%; }
+    .reportes-filters { flex-direction: column; }
+
+    /* Botones dentro de los filtros de reportes */
+    .reportes-filters .btn-primary {
+        width: 100%;
+        margin-top: 0.5rem;
     }
+}
     @media (max-width: 480px) {
         .mesoneros-grid { grid-template-columns: 1fr; }
         .card-value { font-size: 1.6rem; font-weight: 800; color: var(--card-value-color, var(--text-dark)); }
@@ -1739,11 +1806,19 @@ html.dark-theme {
 
     /* Mobile: stack vertically */
     @media (max-width: 768px) {
-        .inv-panel { flex-direction: column; }
-        .inv-list-col { flex: none; width: 100%; }
-        .inv-list-items { max-height: none; }
-        .inv-list-item.mobile-expanded { background: #f0f4ff; color: var(--primary); }
+    .inv-panel { flex-direction: column; }
+    .inv-list-col { flex: none; width: 100%; }
+    .inv-list-items { max-height: none; }
+    .inv-list-item.mobile-expanded { background: #f0f4ff; color: var(--primary); }
+
+    /* Botones de acción en inventario móvil */
+    .inv-list-item button,
+    .inv-detail-card button {
+        min-height: 44px !important;
+        min-width: 44px !important;
+        padding: 0.5rem 0.8rem !important;
     }
+}
 
     /* RESPONSIVE BREAKPOINTS */
     /* Tablet: 769px – 1200px */
@@ -1772,12 +1847,21 @@ html.dark-theme {
 
     /* Mobile: up to 768px — ensure mesonero cards are full width */
     @media (max-width: 768px) {
-        .mesoneros-grid    { grid-template-columns: 1fr; }
-        .usuarios-grid     { grid-template-columns: 1fr; }
-        .delivery-list     { grid-template-columns: 1fr; }
-        .qr-grid           { grid-template-columns: repeat(2, 1fr); }
-        .mesonero-card     { width: 100%; max-width: 100%; }
+    .mesoneros-grid    { grid-template-columns: 1fr; }
+    .usuarios-grid     { grid-template-columns: 1fr; }
+    .delivery-list     { grid-template-columns: 1fr; }
+    .qr-grid           { grid-template-columns: repeat(2, 1fr); }
+    .mesonero-card     { width: 100%; max-width: 100%; }
+
+    /* Asegurar que los botones dentro de estas tarjetas también sean táctiles */
+    .mesonero-card button,
+    .usuario-card button,
+    .delivery-card button {
+        min-height: 44px !important;
+        min-width: 44px !important;
+        padding: 0.5rem 0.8rem !important;
     }
+}
 
     /* Menú: tarjeta desactivada/no disponible */
     .menu-card-v2.no-disponible {
@@ -2066,4 +2150,22 @@ html.dark-theme {
         min-height: 48px !important;
         padding: 12px 20px !important;
     }
+}
+
+/* Ajustes para botones dentro de modales de edición */
+.modal .btn-icon,
+.modal .btn-sm,
+.modal .btn-primary,
+.modal .btn-secondary {
+    min-height: 44px;
+    min-width: 44px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Mejora para los botones de toggle (Activo/Inactivo) */
+.btn-toggle {
+    min-height: 44px;
+    padding: 0.4rem 1rem;
 }
