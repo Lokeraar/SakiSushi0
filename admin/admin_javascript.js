@@ -346,11 +346,8 @@ window.cargarConfiguracionInicial = async function() {
     await window.cargarConfiguracion();
     window.actualizarTasaUI();
     
-    //  CORRECCIÓN: Forzar recalcular tasa efectiva después de cargar configuración
-    // para asegurar que los valores de aumento se apliquen correctamente
+    // CORRECCIÓN: Forzar recalcular tasa efectiva después de cargar configuración
     window.recalcularTasaEfectiva();
-    
-    window.actualizarMenuTasaBanner();
 };
 
 window.actualizarTasaUI = function() {
@@ -2216,6 +2213,7 @@ window.eliminarIngrediente = async function(id) {
 
 window.renderizarMenu = function(filtro) {
     const grid = document.getElementById('menuGrid');
+    if (!grid) return;
     grid.innerHTML = '';
     const _norm = t => (t || '').normalize('NFD').replace(/[áéíóú]/g, '').toLowerCase();
     const _base = [...window.menuItems].sort((a,b) => a.nombre.localeCompare(b.nombre));
@@ -2245,8 +2243,8 @@ window.renderizarMenu = function(filtro) {
         card.innerHTML = `
                     <div class="mc2-header">
                         <div class="mc2-info">
-                            <div class="mc2-nombre">${item.nombre}</div>
-                            <div class="mc2-cat">${item.categoria || ''}${item.subcategoria ? ' · ' + item.subcategoria : ''}</div>
+                            <div class="mc2-nombre">${escapeHtml(item.nombre)}</div>
+                            <div class="mc2-cat">${escapeHtml(item.categoria || '')}${item.subcategoria ? ' · ' + escapeHtml(item.subcategoria) : ''}</div>
                             <div class="mc2-precio">${window.formatUSD(item.precio || 0)}
                                 <span class="mc2-precio-bs">/ ${window.formatBs(window.usdToBs(item.precio || 0))}</span>
                             </div>
@@ -2257,12 +2255,12 @@ window.renderizarMenu = function(filtro) {
                                 </span>
                             </div>
                         </div>
-                        ${imgSrc ? `<div class="mc2-img-wrap"><img src="${imgSrc}" class="mc2-img" alt="${item.nombre}" onerror="this.parentElement.style.display='none'"></div>` : ''}
+                        ${imgSrc ? `<div class="mc2-img-wrap"><img src="${imgSrc}" class="mc2-img" alt="${escapeHtml(item.nombre)}" onerror="this.parentElement.style.display='none'"></div>` : ''}
                     </div>
-                    ${item.descripcion ? `<div class="mc2-desc">${item.descripcion}</div>` : ''}
+                    ${item.descripcion ? `<div class="mc2-desc">${escapeHtml(item.descripcion)}</div>` : ''}
                     <div class="mc2-tags">${ingredientesEstado.map(ing =>
                         `<span class="ing-tag ${ing.disponible ? '' : 'ing-tag-sin-stock'}" title="${ing.disponible ? 'En stock' : 'Sin stock suficiente'}">
-                            ${ing.nombre} <i class="fas fa-${ing.disponible ? 'check' : 'times'}" style="font-size:.55rem;margin-left:2px"></i>
+                            ${escapeHtml(ing.nombre)} <i class="fas fa-${ing.disponible ? 'check' : 'times'}" style="font-size:.55rem;margin-left:2px"></i>
                          </span>`
                     ).join('') || '<span class="ing-tag" style="opacity:.5">Sin ingredientes</span>'}</div>
                     <div class="mc2-actions">
@@ -2285,6 +2283,19 @@ window.renderizarMenu = function(filtro) {
         grid.appendChild(card);
     });
 };
+
+// Función auxiliar para escapar HTML y evitar errores con caracteres especiales
+function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/[&<>]/g, function(m) {
+        if (m === '&') return '&amp;';
+        if (m === '<') return '&lt;';
+        if (m === '>') return '&gt;';
+        return m;
+    }).replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, function(c) {
+        return c;
+    });
+}
 
 window._invActiveId = null;
 
