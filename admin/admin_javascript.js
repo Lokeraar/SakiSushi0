@@ -13,6 +13,8 @@ window.deliveryEditandoId = null;
 window.deliveryParaPago = null;
 window.propinas = [];
 window.pedidos = [];
+window._currentClickArea = null;
+window._stockOriginalValue = null;
 
 // Variables persistentes para WiFi (guardadas en localStorage)
 window.wifiSsidPersistente = localStorage.getItem('saki_wifi_ssid') || '';
@@ -1838,7 +1840,7 @@ window.editarIngrediente = function(id) {
     // BLOQUEAR el stock al abrir (estado inicial)
     const _si = document.getElementById('ingredienteStock');
     const _li = document.getElementById('stockLockIcon');
-    const _divClickArea = document.getElementById('stockClickArea');
+    window._currentClickArea = newDiv;
     
     if (_si) {
         _si.disabled = true;
@@ -3323,6 +3325,25 @@ window.initTheme = function() {
 };
 
 // ==================== DOMContentLoaded - INICIALIZACIÓN ====================
+window.restaurarSesionAdmin = function() {
+    const token = sessionStorage.getItem('admin_jwt_token');
+    const userData = sessionStorage.getItem('admin_user');
+    if (token && userData) {
+        try {
+            window.jwtToken = token;
+            const user = JSON.parse(userData);
+            if (user.rol === 'admin') {
+                window.isAdminAuthenticated = true;
+                window.supabaseClient = window.inicializarSupabaseCliente(window.jwtToken);
+                return true;
+            }
+        } catch (e) {
+            console.error('Error restaurando sesión admin:', e);
+        }
+    }
+    return false;
+};
+
 document.addEventListener('DOMContentLoaded', async () => {
     window.initTheme();
     
