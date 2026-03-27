@@ -406,8 +406,8 @@
     </div>
     
     <!-- MODALES -->
-    <div class="modal" id="platilloModal"><div class="modal-content" style="max-width:600px"><div class="modal-header"><h3 id="platilloModalTitle">Nuevo Platillo</h3><button class="modal-close" id="closePlatilloModal">&times;</button></div><div class="modal-body"><form id="platilloForm">
-
+    <div class="modal" id="platilloModal"><div class="modal-content" style="max-width:600px"><div class="modal-header"><h3 id="platilloModalTitle">Nuevo Platillo</h3><button class="modal-close" id="closePlatilloModal" onclick="window.cerrarModal('platilloModal')">&times;</button></div>
+    
                 <!-- Imagen -->
                 <div class="form-group">
                     <label>Imagen del Platillo</label>
@@ -522,8 +522,8 @@
                     <div style="display:flex; gap:.75rem; align-items:flex-end">
                         <div style="flex:1">
                             <label>Mercancía Nueva a Agregar</label>
-                            <input type="number" step="0.001" id="ingredienteAgregar" placeholder="0"
-                                oninput="window._syncIngredientePreview()">
+                            <input type="number" step="0.001" id="ingredienteAgregar" placeholder="0" min="0"
+    oninput="if(this.value<0)this.value=0; window._syncIngredientePreview()">
                         </div>
                         <div style="flex:1">
                             <label>Unidad de Medida</label>
@@ -602,7 +602,7 @@
     </div>
 </div>
     
-    <div class="modal" id="usuarioModal"><div class="modal-content"><div class="modal-header"><h3>Nuevo Cajero</h3><button class="modal-close" id="closeUsuarioModal">&times;</button></div><div class="modal-body"><form id="usuarioForm">
+    <div class="modal" id="usuarioModal"><div class="modal-content"><div class="modal-header"><h3>Nuevo Cajero</h3><button class="modal-close" id="closeUsuarioModal" onclick="window.cerrarModal('usuarioModal')">&times;</button></div>
                         <!-- Línea 1: Nombre completo + estado activo -->
                         <div style="display:flex;gap:.75rem;align-items:flex-end">
                             <div class="form-group" style="flex:1">
@@ -630,7 +630,33 @@
                         </div>
                     </form></div><div class="modal-footer"><button class="btn-secondary" id="cancelUsuario" type="button">Cancelar</button><button class="btn-primary" id="saveUsuario" type="button">Guardar</button></div></div></div>
     
-    <div class="modal" id="deliveryModal"><div class="modal-content"><div class="modal-header" style="background:linear-gradient(135deg,var(--delivery),#00838F)"><h3><i class="fas fa-motorcycle"></i> Editar Motorizado</h3><button class="modal-close" id="closeDeliveryModal">&times;</button></div><div class="modal-body"><form id="deliveryForm"><div class="form-group"><label>Nombre</label><input type="text" id="deliveryNombre" required></div><div class="form-group"><label>Estado</label><select id="deliveryEstado"><option value="true">Activo</option><option value="false">Inactivo</option></select></div></form></div><div class="modal-footer"><button class="btn-secondary" id="cancelDeliveryEdit" type="button">Cancelar</button><button class="btn-primary" id="saveDelivery" type="button" style="background:linear-gradient(135deg,var(--delivery),#00838F)">Guardar</button></div></div></div>
+    <div class="modal" id="deliveryModal">
+    <div class="modal-content">
+        <div class="modal-header" style="background:linear-gradient(135deg,var(--delivery),#00838F)">
+            <h3><i class="fas fa-motorcycle"></i> Editar Motorizado</h3>
+            <button class="modal-close" id="closeDeliveryModal" onclick="window.cerrarModal('deliveryModal')">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form id="deliveryForm">
+                <div class="form-group">
+                    <label>Nombre</label>
+                    <input type="text" id="deliveryNombre" required>
+                </div>
+                <div class="form-group">
+                    <label>Estado</label>
+                    <select id="deliveryEstado">
+                        <option value="true">Activo</option>
+                        <option value="false">Inactivo</option>
+                    </select>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-secondary" id="cancelDeliveryEdit" type="button">Cancelar</button>
+            <button class="btn-primary" id="saveDelivery" type="button" style="background:linear-gradient(135deg,var(--delivery),#00838F)">Guardar</button>
+        </div>
+    </div>
+</div>
     
     <div class="modal" id="confirmPagoDeliveryModal"><div class="modal-content"><div class="modal-header" style="background:linear-gradient(135deg,var(--success),#2E7D32)"><h3><i class="fas fa-hand-holding-usd"></i> Confirmar Pago</h3><button class="modal-close" onclick="window.cerrarModal('confirmPagoDeliveryModal')">&times;</button></div><div class="modal-body" id="confirmPagoDeliveryBody"></div><div class="modal-footer"><button class="btn-secondary" onclick="window.cerrarModal('confirmPagoDeliveryModal')">Cancelar</button><button class="btn-primary" id="confirmPagoDeliveryBtn" onclick="window.confirmarPagoDelivery()">Confirmar</button></div></div></div>
     
