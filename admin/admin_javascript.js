@@ -1840,7 +1840,7 @@ window.editarIngrediente = function(id) {
     // BLOQUEAR el stock al abrir (estado inicial)
     const _si = document.getElementById('ingredienteStock');
     const _li = document.getElementById('stockLockIcon');
-    window._currentClickArea = newDiv;
+    const _divClickArea = document.getElementById('stockClickArea');  // <--- AGREGADO
     
     if (_si) {
         _si.disabled = true;
@@ -1871,7 +1871,7 @@ window.editarIngrediente = function(id) {
         newDiv.style.backgroundColor = '';
         
         // Actualizar referencia
-        document.getElementById('stockClickArea', newDiv);
+        window._currentClickArea = newDiv;  // <--- MOVIDA AQUÍ
     }
     
     // Mostrar botón Eliminar (solo en edición)
