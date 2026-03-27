@@ -869,7 +869,6 @@ html.dark-theme {
     .tasa-row { gap: .4rem; }
     .tasa-item input[type="number"] { width: 65px; }
     .save-button { font-size: .75rem; padding: .4rem .8rem; }
-    /* Cada toggle en su propia línea en móvil */
     .tasa-toggle-item {
         width: 100%;
         justify-content: flex-start;
@@ -883,14 +882,12 @@ html.dark-theme {
     }
     .tasa-row-controles { flex-direction: column; align-items: stretch; }
     .tasa-row-controles .tasa-item:last-child { align-self: flex-end; margin-left: 0; margin-top: .4rem; }
-    /* Dashboard: 2 columnas en móvil */
     .dashboard-grid { grid-template-columns: 1fr 1fr; }
     .inventario-grid, .menu-grid, .qr-grid { grid-template-columns: 1fr; }
     .tabs { padding: 0 .5rem; }
     .tab { padding: .7rem .9rem; font-size: .78rem; }
     .modal-content { width: 96%; }
     .charts-grid { grid-template-columns: 1fr; }
-    /* Stock crítico y pedidos recientes: columna única en móvil */
     .dashboard-lower-grid { grid-template-columns: 1fr; }
 
     /* ── Mejoras táctiles y de espaciado ── */
@@ -904,11 +901,18 @@ html.dark-theme {
         justify-content: center !important;
     }
 
-    .btn-primary, .btn-secondary, .btn-sm, .btn-delivery, .save-button,
-    .nav-button, .logout-button {
-        width: 100%;
-        margin-top: 0.25rem;
-        margin-bottom: 0.25rem;
+    /* Botones de acción en modales: lado a lado */
+    .modal-footer {
+        flex-direction: row !important;
+        justify-content: flex-end !important;
+        gap: 0.75rem !important;
+    }
+    .modal-footer .btn-primary,
+    .modal-footer .btn-secondary {
+        width: auto !important;
+        flex: 0 1 auto !important;
+        margin: 0 !important;
+        min-width: 100px !important;
     }
 
     .ingrediente-row {
@@ -923,14 +927,6 @@ html.dark-theme {
 
     .modal-body {
         padding: 1rem;
-    }
-    .modal-footer {
-        flex-direction: column;
-    }
-    .modal-footer .btn-primary,
-    .modal-footer .btn-secondary {
-        width: 100%;
-        margin: 0.25rem 0;
     }
 
     .modal-close {
@@ -951,6 +947,58 @@ html.dark-theme {
         width: 95%;
         max-width: 95%;
         margin: 0 auto;
+    }
+
+    /* Dashboard cards - evitar texto superpuesto */
+    .dashboard-card {
+        padding: 0.8rem !important;
+    }
+    .card-title {
+        font-size: 0.65rem !important;
+        white-space: normal !important;
+        word-break: break-word !important;
+    }
+    .card-value {
+        font-size: 1rem !important;
+        word-break: break-word !important;
+    }
+
+    /* Tasa cards bar - evitar superposición */
+    .tcb-cards {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 0.4rem !important;
+    }
+    .tcb-card {
+        padding: 0.4rem !important;
+    }
+    .tcb-label {
+        font-size: 0.55rem !important;
+    }
+    .tcb-value-big {
+        font-size: 0.85rem !important;
+    }
+    .tcb-input {
+        font-size: 0.8rem !important;
+        padding: 0.2rem 0.4rem !important;
+    }
+
+    /* Control de tasa */
+    .tcb-controls {
+        flex-direction: column !important;
+        align-items: stretch !important;
+    }
+    .tcb-toggle-card {
+        width: 100%;
+    }
+    .tcb-fechas-card {
+        width: 100%;
+    }
+    .tcb-save-wrap {
+        margin-left: 0 !important;
+        width: 100%;
+    }
+    .tcb-save-btn {
+        width: 100%;
     }
 }
 
@@ -1422,16 +1470,28 @@ html.dark-theme {
     .content { padding: 1.5rem; }
     @media (max-width: 768px) {
     .content { padding: .85rem; }
-    .pane-header { flex-direction: column; align-items: flex-start; }
+    .pane-header { 
+        flex-direction: column; 
+        align-items: flex-start;
+        gap: 0.75rem;
+    }
+    .pane-header .section-title {
+        font-size: 1.2rem;
+        margin-bottom: 0;
+    }
     .usuarios-grid { grid-template-columns: 1fr; }
-    .mesoneros-grid { grid-template-columns: 1fr 1fr; }
+    .mesoneros-grid { grid-template-columns: 1fr; }
     .config-section { max-width: 100%; }
-    .reportes-filters { flex-direction: column; }
-
-    /* Botones dentro de los filtros de reportes */
+    .reportes-filters { 
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+    .reportes-filters .form-group {
+        width: 100%;
+        margin: 0;
+    }
     .reportes-filters .btn-primary {
         width: 100%;
-        margin-top: 0.5rem;
     }
 }
     @media (max-width: 480px) {
@@ -1811,12 +1871,24 @@ html.dark-theme {
     .inv-list-items { max-height: none; }
     .inv-list-item.mobile-expanded { background: #f0f4ff; color: var(--primary); }
 
-    /* Botones de acción en inventario móvil */
-    .inv-list-item button,
-    .inv-detail-card button {
-        min-height: 44px !important;
-        min-width: 44px !important;
-        padding: 0.5rem 0.8rem !important;
+    .inv-list-item {
+        padding: 0.8rem !important;
+        gap: 0.5rem !important;
+    }
+    .inv-list-item span:first-child {
+        font-size: 0.85rem !important;
+        white-space: normal !important;
+        word-break: break-word !important;
+    }
+    .inv-detail-card {
+        padding: 0.8rem !important;
+    }
+    .inv-stock-num {
+        font-size: 1.2rem !important;
+    }
+    .inv-meta-grid {
+        grid-template-columns: 1fr !important;
+        gap: 0.5rem !important;
     }
 }
 
@@ -1853,13 +1925,28 @@ html.dark-theme {
     .qr-grid           { grid-template-columns: repeat(2, 1fr); }
     .mesonero-card     { width: 100%; max-width: 100%; }
 
-    /* Asegurar que los botones dentro de estas tarjetas también sean táctiles */
+    /* Botones dentro de tarjetas */
     .mesonero-card button,
     .usuario-card button,
     .delivery-card button {
-        min-height: 44px !important;
-        min-width: 44px !important;
-        padding: 0.5rem 0.8rem !important;
+        min-height: 40px !important;
+        min-width: 40px !important;
+        padding: 0.4rem 0.6rem !important;
+    }
+    
+    /* Evitar superposición en tarjetas de usuario */
+    .usuario-card {
+        grid-template-columns: 40px 1fr auto !important;
+        gap: 0.5rem !important;
+        padding: 0.8rem !important;
+    }
+    .usuario-nombre {
+        font-size: 0.85rem !important;
+        white-space: normal !important;
+        word-break: break-word !important;
+    }
+    .usuario-username {
+        font-size: 0.7rem !important;
     }
 }
 
@@ -2168,4 +2255,34 @@ html.dark-theme {
 .btn-toggle {
     min-height: 44px;
     padding: 0.4rem 1rem;
+}
+
+/* Evitar texto superpuesto en móvil para dashboard */
+@media (max-width: 768px) {
+    .dashboard-card .card-title {
+        font-size: 0.6rem;
+        line-height: 1.3;
+    }
+    .dashboard-card .card-value {
+        font-size: 0.9rem;
+        line-height: 1.2;
+        word-break: break-all;
+    }
+    .dashboard-card div[style*="font-size:.72rem"] {
+        font-size: 0.6rem !important;
+    }
+}
+
+/* Asegurar que los botones en móvil no se desborden */
+.btn-primary, .btn-secondary, .btn-sm {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+@media (max-width: 480px) {
+    .btn-primary, .btn-secondary, .btn-sm {
+        white-space: normal;
+        word-break: break-word;
+        font-size: 0.7rem;
+    }
 }
