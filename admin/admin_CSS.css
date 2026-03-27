@@ -182,23 +182,23 @@ html.dark-theme {
 
     /* Header */
     .header {
-        background: var(--header-bg);
-        color: var(--header-text);
-        padding: 0 1.5rem;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        min-height: 56px;
-        box-shadow: 0 2px 12px rgba(0,0,0,.1);
-        position: sticky;
-        top: 0;
-        z-index: 100;
-        flex-shrink: 0;
-        flex-wrap: wrap;
-        gap: .5rem;
-        border-bottom: 1px solid var(--border);
-        transition: background .3s ease, color .3s ease;
-    }
+    background: var(--header-bg);
+    color: var(--header-text);
+    padding: 0 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    min-height: 56px;
+    box-shadow: 0 2px 12px rgba(0,0,0,.1);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+    gap: .5rem;
+    border-bottom: 1px solid var(--border);
+    transition: background .3s ease, color .3s ease;
+}
     html.dark-theme .header {
         box-shadow: 0 2px 12px rgba(0,0,0,.3);
     }
@@ -901,18 +901,11 @@ html.dark-theme {
         justify-content: center !important;
     }
 
-    /* Botones de acción en modales: lado a lado */
-    .modal-footer {
-        flex-direction: row !important;
-        justify-content: flex-end !important;
-        gap: 0.75rem !important;
-    }
-    .modal-footer .btn-primary,
-    .modal-footer .btn-secondary {
-        width: auto !important;
-        flex: 0 1 auto !important;
-        margin: 0 !important;
-        min-width: 100px !important;
+    .btn-primary, .btn-secondary, .btn-sm, .btn-delivery, .save-button,
+    .nav-button, .logout-button {
+        width: 100%;
+        margin-top: 0.25rem;
+        margin-bottom: 0.25rem;
     }
 
     .ingrediente-row {
@@ -927,6 +920,18 @@ html.dark-theme {
 
     .modal-body {
         padding: 1rem;
+    }
+    .modal-footer {
+        flex-direction: row !important;
+        justify-content: flex-end !important;
+        gap: 0.75rem !important;
+    }
+    .modal-footer .btn-primary,
+    .modal-footer .btn-secondary {
+        width: auto !important;
+        flex: 0 1 auto !important;
+        margin: 0 !important;
+        min-width: 100px !important;
     }
 
     .modal-close {
@@ -949,7 +954,6 @@ html.dark-theme {
         margin: 0 auto;
     }
 
-    /* Dashboard cards - evitar texto superpuesto */
     .dashboard-card {
         padding: 0.8rem !important;
     }
@@ -963,7 +967,6 @@ html.dark-theme {
         word-break: break-word !important;
     }
 
-    /* Tasa cards bar - evitar superposición */
     .tcb-cards {
         grid-template-columns: repeat(2, 1fr) !important;
         gap: 0.4rem !important;
@@ -982,7 +985,6 @@ html.dark-theme {
         padding: 0.2rem 0.4rem !important;
     }
 
-    /* Control de tasa */
     .tcb-controls {
         flex-direction: column !important;
         align-items: stretch !important;
@@ -999,6 +1001,23 @@ html.dark-theme {
     }
     .tcb-save-btn {
         width: 100%;
+    }
+
+    /* Tabs móvil - mejor espaciado y scroll */
+    .tabs-wrapper {
+        position: relative;
+    }
+    .tabs-chevron {
+        width: 32px;
+        font-size: .5rem;
+    }
+    .tab {
+        padding: .7rem .8rem;
+        font-size: .72rem;
+    }
+    .tabs {
+        scrollbar-width: thin;
+        -webkit-overflow-scrolling: touch;
     }
 }
 
@@ -1716,36 +1735,76 @@ html.dark-theme {
     #ventasTableBody td { vertical-align: middle; }
     /* Tabs wrapper con chevrons */
     .tabs-wrapper {
-        display: flex;
-        align-items: stretch;
-        background: var(--tabs-bg);
-        border-bottom: 1px solid var(--border);
-        position: relative;
-    }
-    html.dark-theme .tabs-wrapper { background: var(--secondary); border-color: rgba(255,255,255,.08); }
-    .tabs-chevron {
-        flex-shrink: 0;
-        width: 36px;
-        background: rgba(0,0,0,.03);
-        border: none;
-        color: var(--text-muted);
-        cursor: pointer;
-        font-size: .6rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: -2px;
-        transition: var(--transition);
-        letter-spacing: -3px;
-        padding: 0 4px;
-    }
-    html.dark-theme .tabs-chevron { background: rgba(255,255,255,.06); color: rgba(255,255,255,.7); }
-    .tabs-chevron:hover { background: rgba(0,0,0,.08); color: var(--accent); }
-    html.dark-theme .tabs-chevron:hover { background: rgba(255,255,255,.12); }
-    .tabs-chevron-left { border-right: 1px solid var(--border); }
-    .tabs-chevron-right { border-left: 1px solid var(--border); }
-    html.dark-theme .tabs-chevron-left, html.dark-theme .tabs-chevron-right { border-color: rgba(255,255,255,.08); }
-    .tabs { flex: 1; overflow-x: auto; }
+    display: flex;
+    align-items: stretch;
+    background: var(--tabs-bg);
+    border-bottom: 1px solid var(--border);
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+}
+html.dark-theme .tabs-wrapper { background: var(--secondary); border-color: rgba(255,255,255,.08); }
+.tabs-chevron {
+    flex-shrink: 0;
+    width: 36px;
+    background: rgba(0,0,0,.03);
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: .6rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: -2px;
+    transition: var(--transition);
+    letter-spacing: -3px;
+    padding: 0 4px;
+}
+html.dark-theme .tabs-chevron { background: rgba(255,255,255,.06); color: rgba(255,255,255,.7); }
+.tabs-chevron:hover { background: rgba(0,0,0,.08); color: var(--accent); }
+html.dark-theme .tabs-chevron:hover { background: rgba(255,255,255,.12); }
+.tabs-chevron-left { border-right: 1px solid var(--border); }
+.tabs-chevron-right { border-left: 1px solid var(--border); }
+html.dark-theme .tabs-chevron-left, html.dark-theme .tabs-chevron-right { border-color: rgba(255,255,255,.08); }
+.tabs {
+    flex: 1;
+    overflow-x: auto;
+    scrollbar-width: thin;
+    -webkit-overflow-scrolling: touch;
+    display: flex;
+    flex-wrap: nowrap;
+    white-space: nowrap;
+}
+.tabs::-webkit-scrollbar {
+    height: 3px;
+}
+.tabs::-webkit-scrollbar-track {
+    background: var(--border);
+    border-radius: 3px;
+}
+.tabs::-webkit-scrollbar-thumb {
+    background: var(--primary);
+    border-radius: 3px;
+}
+.tab {
+    padding: .9rem 1.2rem;
+    cursor: pointer;
+    font-weight: 500;
+    font-size: .85rem;
+    color: var(--tab-text);
+    border: none;
+    border-bottom: 3px solid transparent;
+    white-space: nowrap;
+    transition: var(--transition);
+    font-family: 'Montserrat', sans-serif;
+    background: transparent;
+    letter-spacing: .3px;
+    flex-shrink: 0;
+}
+html.dark-theme .tab { color: rgba(255,255,255,.55); }
+.tab:hover { color: var(--text-dark); background: rgba(0,0,0,.03); }
+html.dark-theme .tab:hover { color: rgba(255,255,255,.85); background: rgba(255,255,255,.05); }
+.tab.active { color: var(--tab-active); border-bottom-color: var(--tab-active); font-weight: 700; }
 
     /* btn-toggle (Activo/Inactivo) */
     .btn-toggle {
@@ -2285,4 +2344,37 @@ html.dark-theme {
         word-break: break-word;
         font-size: 0.7rem;
     }
+}
+
+/* Eliminar cualquier símbolo chino o extraño en textos monetarios */
+.card-value, .tcb-value-big, #tasaEfectivaDisplay, #ventasHoy,
+#ventasDia, #ventasSemana, #ticketPromedio, #propinasTotal,
+#propinasPromedio, #deliverysHoyDashboard, .stat-value {
+    font-family: 'Montserrat', monospace;
+}
+
+/* Asegurar que los textos en dashboard cards no se solapen */
+.dashboard-card .card-title {
+    white-space: normal;
+    word-break: break-word;
+    line-height: 1.3;
+}
+.dashboard-card .card-value {
+    white-space: normal;
+    word-break: break-word;
+    line-height: 1.2;
+}
+
+/* Espaciado correcto en las tarjetas de tasa */
+.tcb-card {
+    min-width: 0;
+    overflow: hidden;
+}
+.tcb-label {
+    white-space: normal;
+    word-break: break-word;
+}
+.tcb-value-big {
+    white-space: normal;
+    word-break: break-word;
 }
