@@ -26,6 +26,11 @@ window.platillosNotificados = JSON.parse(localStorage.getItem('saki_platillos_no
 // Control de tiempo real para stock
 window.stockUpdateChannel = null;
 
+// Namespace para administración - evita contaminación global
+window.adminApp = window.adminApp || {};
+window.adminApp.modalHandlers = window.adminApp.modalHandlers || {};
+window.adminApp.stockCache = window.adminApp.stockCache || {};
+
 // ==================== FUNCIÓN DE TOAST CON FALLBACK ====================
 window.mostrarToast = function(mensaje, tipo = 'info') {
     console.log('Toast:', mensaje, tipo);
@@ -41,6 +46,56 @@ window.mostrarToast = function(mensaje, tipo = 'info') {
     } catch (e) {
         alert(mensaje);
     }
+};
+
+// Función mejorada para manejar errores con reintentos
+window.manejarErrorConReintento = async function(error, nombreFuncion, maxReintentos = 3, delay = 1000) {
+    console.error(`❌ Error en ${nombreFuncion}:`, error);
+    window.mostrarToast(`⚠️ Error en ${nombreFuncion}: ${error.message || error}`, 'error');
+    
+    for (let intento = 1; intento <= maxReintentos; intento++) {
+        console.log(`🔄 Reintento ${intento}/${maxReintentos} para ${nombreFuncion}...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        try {
+            const resultado = await window[nombreFuncion]();
+            window.mostrarToast(`✓ ${nombreFuncion} recuperado exitosamente`, 'success');
+            return resultado;
+        } catch (retryError) {
+            console.error(`❌ Reintento ${intento} falló:`, retryError);
+            if (intento === maxReintentos) {
+                window.mostrarToast(`❌ Error persistente en ${nombreFuncion}. Revisa conexión.`, 'error');
+                throw retryError;
+            }
+        }
+    }
+};
+
+// Función para mostrar errores en modales
+window.mostrarErrorEnModal = function(modalId, mensajeError) {
+    const modal = document.getElementById(modalId);
+    if (!modal) return;
+    
+    const body = modal.querySelector('.modal-body');
+    if (!body) return;
+    
+    // Buscar o crear contenedor de error
+    let errorContainer = body.querySelector('.error-message-container');
+    if (!errorContainer) {
+        errorContainer = document.createElement('div');
+        errorContainer.className = 'error-message-container';
+        errorContainer.style.cssText = 'background:rgba(239,68,68,.15); border-left:4px solid var(--danger); padding:.75rem; border-radius:8px; margin-bottom:1rem; display:flex; align-items:center; gap:.5rem';
+        errorContainer.innerHTML = '<i class="fas fa-exclamation-circle" style="color:var(--danger)"></i><span style="flex:1; font-size:.85rem"></span>';
+        body.insertBefore(errorContainer, body.firstChild);
+    }
+    
+    const span = errorContainer.querySelector('span');
+    if (span) span.textContent = mensajeError;
+    errorContainer.style.display = 'flex';
+    
+    // Ocultar después de 5 segundos
+    setTimeout(() => {
+        if (errorContainer) errorContainer.style.display = 'none';
+    }, 5000);
 };
 
 // ==================== FUNCIONES DE UTILIDAD ====================
@@ -66,6 +121,92 @@ window.usdToBs = function(u) {
 
 window.generarId = function(prefix = '') {
     return `${prefix}${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+};
+
+// ==================== FUNCIONES CENTRALIZADAS DE RENDERIZADO ====================
+
+/**
+ * Renderiza una lista genérica con un patrón de tarjeta
+ * @param {string} containerId - ID del contenedor donde renderizar
+ * @param {Array} items - Array de items a renderizar
+ * @param {Function} renderCardFn - Función que recibe un item y retorna HTML de tarjeta
+ * @param {string} mensajeVacio - Mensaje a mostrar si no hay items
+ */
+window.renderizarListaGenerica = function(containerId, items, renderCardFn, mensajeVacio = 'No hay elementos registrados') {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+    
+    if (!items || items.length === 0) {
+        container.innerHTML = `<p style="color:var(--text-muted);font-size:.88rem;padding:.5rem">${mensajeVacio}</p>`;
+        return;
+    }
+    
+    container.innerHTML = items.map(renderCardFn).join('');
+};
+
+/**
+ * Cierra un modal con limpieza de estado asociado
+ * @param {string} modalId - ID del modal a cerrar
+ * @param {Function} cleanupFn - Función opcional de limpieza a ejecutar
+ */
+window.cerrarModalConLimpieza = function(modalId, cleanupFn = null) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.classList.remove('active');
+        if (cleanupFn && typeof cleanupFn === 'function') {
+            cleanupFn();
+        }
+    }
+};
+
+/**
+ * Actualiza el stock precalculado de todos los platillos
+ * Versión optimizada con caché de dependencias
+ */
+window.actualizarStockPrecalculado = function() {
+    if (!window.inventarioItems || !window.menuItems) return;
+    
+    // Crear mapa de ingredientes por platillo para búsqueda rápida
+    const platillosPorIngrediente = {};
+    window.menuItems.forEach(platillo => {
+        if (platillo.ingredientes) {
+            Object.keys(platillo.ingredientes).forEach(ingId => {
+                if (!platillosPorIngrediente[ingId]) platillosPorIngrediente[ingId] = [];
+                platillosPorIngrediente[ingId].push(platillo);
+            });
+        }
+    });
+    
+    window._platillosPorIngrediente = platillosPorIngrediente;
+};
+
+/**
+ * Obtiene los platillos que dependen de un ingrediente específico
+ * @param {string} ingredienteId - ID del ingrediente
+ * @returns {Array} - Lista de platillos que usan este ingrediente
+ */
+window.obtenerPlatillosPorIngrediente = function(ingredienteId) {
+    if (!window._platillosPorIngrediente) {
+        window.actualizarStockPrecalculado();
+    }
+    return window._platillosPorIngrediente[ingredienteId] || [];
+};
+
+/**
+ * Escapa caracteres especiales para HTML (versión centralizada)
+ * @param {string} str - String a escapar
+ * @returns {string} - String escapado
+ */
+window.escapeHtml = function(str) {
+    if (!str) return '';
+    return str.replace(/[&<>]/g, function(m) {
+        if (m === '&') return '&amp;';
+        if (m === '<') return '&lt;';
+        if (m === '>') return '&gt;';
+        return m;
+    }).replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, function(c) {
+        return c;
+    });
 };
 
 window.cerrarModal = function(modalId) {
@@ -165,8 +306,9 @@ window.setupStockRealtime = function() {
             } else {
                 window.inventarioItems.push(payload.new);
             }
+            // Solo recalcular platillos que usan este ingrediente
             await window.verificarYNotificarStockReactivado(payload.new.id, payload.new.nombre);
-            await window.recalcularStockPlatillos();
+            await window.recalcularStockPlatillos(payload.new.id);
             if (payload.new.stock > 0 && payload.old?.stock <= 0) {
                 await window.enviarNotificacionPush(
                     '✓ Stock actualizado',
@@ -186,8 +328,20 @@ window.setupStockRealtime = function() {
 };
 
 // ==================== FUNCIÓN PARA RECALCULAR STOCK DE PLATILLOS ====================
-window.recalcularStockPlatillos = async function() {
-    for (const platillo of window.menuItems) {
+window.recalcularStockPlatillos = async function(ingredienteId = null) {
+    // Si se especifica un ingrediente, solo recalcular platillos que lo usan
+    let platillosARevisar = window.menuItems;
+    
+    if (ingredienteId) {
+        platillosARevisar = window.menuItems.filter(platillo => 
+            platillo.ingredientes && platillo.ingredientes[ingredienteId]
+        );
+        if (platillosARevisar.length === 0) return;
+    }
+    
+    const updates = [];
+    
+    for (const platillo of platillosARevisar) {
         let stockDisponible = Infinity;
         let todosIngredientes = true;
         
@@ -210,14 +364,22 @@ window.recalcularStockPlatillos = async function() {
         
         const nuevoStock = todosIngredientes ? Math.max(0, stockDisponible) : 0;
         if (platillo.stock !== nuevoStock) {
-            await window.supabaseClient
-                .from('menu')
-                .update({ stock: nuevoStock })
-                .eq('id', platillo.id);
+            updates.push({ id: platillo.id, stock: nuevoStock });
             platillo.stock = nuevoStock;
         }
     }
-    window.renderizarMenu();
+    
+    // Ejecutar actualizaciones en batch
+    for (const update of updates) {
+        await window.supabaseClient
+            .from('menu')
+            .update({ stock: update.stock })
+            .eq('id', update.id);
+    }
+    
+    if (updates.length > 0) {
+        window.renderizarMenu();
+    }
 };
 
 // ==================== FUNCIÓN PARA GUARDAR WIFI PERSISTENTE ====================
@@ -279,23 +441,68 @@ window.hacerLogin = async function() {
         document.getElementById('panelContainer').classList.add('active');
         window.mostrarToast('✓ Bienvenido Administrador', 'success');
         
-        setTimeout(async () => {
+setTimeout(async () => {
             try {
                 await window.cargarConfiguracionInicial();
-                await window.cargarMenu();
-                await window.cargarInventario();
-                await window.cargarUsuarios();
-                await window.cargarQRs();
-                await window.cargarReportes();
-                await window.cargarPedidosRecientes();
-                await window.cargarMesoneros();
-                await window.cargarDeliverys();
-                await window.cargarPropinas();
+                
+                // Cargar en paralelo las tablas independientes
+                const [
+                    menuResult,
+                    inventarioResult,
+                    usuariosResult,
+                    qrsResult,
+                    mesonerosResult,
+                    deliverysResult
+                ] = await Promise.allSettled([
+                    window.cargarMenu(),
+                    window.cargarInventario(),
+                    window.cargarUsuarios(),
+                    window.cargarQRs(),
+                    window.cargarMesoneros(),
+                    window.cargarDeliverys()
+                ]);
+                
+                // Reportar errores individuales pero continuar
+                if (menuResult.status === 'rejected') console.error('Error cargando menú:', menuResult.reason);
+                if (inventarioResult.status === 'rejected') console.error('Error cargando inventario:', inventarioResult.reason);
+                if (usuariosResult.status === 'rejected') console.error('Error cargando usuarios:', usuariosResult.reason);
+                if (qrsResult.status === 'rejected') console.error('Error cargando QRs:', qrsResult.reason);
+                if (mesonerosResult.status === 'rejected') console.error('Error cargando mesoneros:', mesonerosResult.reason);
+                if (deliverysResult.status === 'rejected') console.error('Error cargando deliverys:', deliverysResult.reason);
+                
+                // Cargar reportes y pedidos recientes después
+                await Promise.allSettled([
+                    window.cargarReportes(),
+                    window.cargarPedidosRecientes(),
+                    window.cargarPropinas()
+                ]);
+                
                 window.setupEventListeners();
                 window.setupRealtimeSubscriptions();
                 window.setupStockRealtime();
                 window.restaurarWifiPersistente();
-            } catch (e) { console.error('Error cargando datos:', e); window.mostrarToast('Error cargando datos: ' + e.message, 'error'); }
+                window._registrarPushAdmin();
+                
+                window._verificarTasaDeHoy((tasa) => {
+                    const tasaInput = document.getElementById('tasaBaseInput');
+                    if (tasaInput) tasaInput.value = tasa;
+                    window.configGlobal.tasa_cambio = tasa;
+                    window.recalcularTasaEfectiva();
+                    window._verificarAvisoLunes();
+                });
+                
+                await window._actualizarVentasHoyNeto();
+                await window._actualizarDeliverysHoy();
+                
+                setInterval(async () => { 
+                    await window._actualizarVentasHoyNeto();
+                    await window._actualizarDeliverysHoy();
+                }, 60000);
+                
+            } catch (e) { 
+                console.error('Error cargando datos:', e); 
+                window.mostrarToast('Error cargando datos: ' + e.message, 'error'); 
+            }
         }, 500);
     } catch (error) {
         console.error('✓ Error:', error);
@@ -306,6 +513,22 @@ window.hacerLogin = async function() {
 };
 
 // ==================== FUNCIONES DE CARGA DE DATOS ====================
+/**
+ * Carga la configuración global del sistema desde la tabla 'config'
+ * Incluye:
+ * - tasa_cambio: Tasa base de cambio (Bs/USD)
+ * - tasa_efectiva: Tasa con aumentos aplicados
+ * - aumento_diario: Porcentaje de aumento diario
+ * - aumento_semanal: Porcentaje de aumento semanal
+ * - aumento_activo: Flag para activar aumento diario
+ * - aumento_semanal_activo: Flag para activar aumento semanal
+ * - admin_password: Contraseña de administrador (para desbloquear stock)
+ * - recovery_email: Correo para recuperación de contraseña
+ * 
+ * Si falla la carga, establece valores por defecto seguros.
+ * @async
+ * @returns {Promise<void>}
+ */
 window.cargarConfiguracion = async function() {
     try {
         const { data, error } = await window.supabaseClient
@@ -347,9 +570,11 @@ window.cargarConfiguracion = async function() {
 window.cargarConfiguracionInicial = async function() {
     await window.cargarConfiguracion();
     window.actualizarTasaUI();
-    
-    // CORRECCIÓN: Forzar recalcular tasa efectiva después de cargar configuración
     window.recalcularTasaEfectiva();
+    // Registrar push admin después de cargar configuración
+    if (window._registrarPushAdmin && typeof window._registrarPushAdmin === 'function') {
+        setTimeout(() => window._registrarPushAdmin(), 2000);
+    }
 };
 
 window.actualizarTasaUI = function() {
@@ -784,6 +1009,10 @@ window.confirmarPagoDelivery = async function() {
     if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...'; }
     try {
         const tipoPago = document.querySelector('[name="tipoPago"]:checked')?.value || 'total';
+        
+        // Obtener acumulado actual para validación
+        const acumulado = await window.obtenerAcumuladoDelivery(window.deliveryParaPago);
+        
         if (tipoPago === 'parcial') {
             const monto = parseFloat(document.getElementById('montoPagoParcial')?.value);
             if (!monto || monto <= 0) {
@@ -791,7 +1020,12 @@ window.confirmarPagoDelivery = async function() {
                 if (btn) { btn.disabled = false; btn.innerHTML = 'Confirmar'; }
                 return;
             }
-            // Registrar entrega negativa = descuento del acumulado
+            // Validar que el monto no exceda el acumulado
+            if (monto > acumulado) {
+                window.mostrarToast(`El monto (${window.formatBs(monto)}) excede el acumulado (${window.formatBs(acumulado)})`, 'error');
+                if (btn) { btn.disabled = false; btn.innerHTML = 'Confirmar'; }
+                return;
+            }
             const { error } = await window.supabaseClient.from('entregas_delivery').insert([{
                 delivery_id: window.deliveryParaPago,
                 monto_bs: -monto,
@@ -801,7 +1035,6 @@ window.confirmarPagoDelivery = async function() {
             if (error) throw error;
             window.mostrarToast('✓ Pago parcial registrado.', 'success');
         } else {
-            // Pago total — borrar todo el acumulado
             const { error } = await window.supabaseClient.from('entregas_delivery')
                 .delete().eq('delivery_id', window.deliveryParaPago);
             if (error) throw error;
@@ -1273,28 +1506,23 @@ window.cambiarPassword = async function() {
     const confirm = document.getElementById('confirmPassword').value;
     const errorDiv = document.getElementById('passwordChangeError');
     
-    // Ocultar error previo
     if (errorDiv) errorDiv.style.display = 'none';
     
-    // Validar campos vacíos
     if (!current || !nueva || !confirm) {
         window.mostrarToast('Completa todos los campos', 'error');
         return;
     }
     
-    // Validar que nueva y confirm coincidan
     if (nueva !== confirm) {
         window.mostrarToast('Las contraseñas no coinciden', 'error');
         return;
     }
     
-    // Validar longitud mínima
     if (nueva.length < 4) {
         window.mostrarToast('La contraseña debe tener al menos 4 caracteres', 'error');
         return;
     }
     
-    // Deshabilitar botón mientras se procesa
     const btn = document.querySelector('[onclick="window.cambiarPassword()"]');
     const originalText = btn ? btn.innerHTML : '';
     if (btn) {
@@ -1303,7 +1531,6 @@ window.cambiarPassword = async function() {
     }
     
     try {
-        // 1. Obtener el usuario administrador
         const { data: adminData, error: userError } = await window.supabaseClient
             .from('usuarios')
             .select('username')
@@ -1317,7 +1544,6 @@ window.cambiarPassword = async function() {
             return;
         }
         
-        // 2. Verificar contraseña actual usando verify_user_credentials
         const { data: authData, error: authError } = await window.supabaseClient
             .rpc('verify_user_credentials', {
                 p_username: adminData.username,
@@ -1331,13 +1557,11 @@ window.cambiarPassword = async function() {
             return;
         }
         
-        // 3. Generar hash de la nueva contraseña
         const { data: hashed, error: hashErr } = await window.supabaseClient
             .rpc('hash_password', { plain_password: nueva });
         
         if (hashErr) throw hashErr;
         
-        // 4. Actualizar tabla usuarios (para login)
         const { error: updateUserError } = await window.supabaseClient
             .from('usuarios')
             .update({ password_hash: hashed })
@@ -1345,37 +1569,25 @@ window.cambiarPassword = async function() {
         
         if (updateUserError) throw updateUserError;
         
-        // 5. Actualizar tabla config (para desbloquear stock y recuperación)
-        const { error: updateConfigError } = await window.supabaseClient
-            .from('config')
-            .update({ admin_password: nueva })
-            .eq('id', 1);
+        // NO actualizar config.admin_password - eliminado por seguridad
         
-        if (updateConfigError) throw updateConfigError;
-        
-        // 6. Actualizar variable global
+        // Solo actualizar variable global para que el modal de stock use la nueva
         window.configGlobal.admin_password = nueva;
         
-        // 7. Limpiar campos
         document.getElementById('currentPassword').value = '';
         document.getElementById('newPassword').value = '';
         document.getElementById('confirmPassword').value = '';
         
-        // 8. Mostrar mensaje de éxito
-        window.mostrarToast('✓ Contraseña actualizada correctamente en todo el sistema', 'success');
-        
-        console.log('✓ Contraseña actualizada en tablas usuarios y config');
+        window.mostrarToast('✓ Contraseña actualizada correctamente', 'success');
         
     } catch (e) {
         console.error('Error cambiando contraseña:', e);
-        // Mostrar error en el div específico
         if (errorDiv) {
             errorDiv.style.display = 'block';
             errorDiv.innerHTML = '<i class="fas fa-exclamation-circle"></i> Error: ' + (e.message || 'Error al cambiar la contraseña');
         }
         window.mostrarToast('✓ Error al cambiar la contraseña: ' + (e.message || e), 'error');
     } finally {
-        // Restaurar botón
         if (btn) {
             btn.disabled = false;
             btn.innerHTML = originalText;
@@ -2067,14 +2279,11 @@ window.verificarContraseñaStock = async function() {
     }
 };
 
-// Guardar ingrediente - VERSIÓN MEJORADA CON SOPORTE TÁCTIL
 const saveIngrediente = document.getElementById('saveIngrediente');
 if (saveIngrediente) {
-    // Eliminar listeners anteriores
     const newSaveBtn = saveIngrediente.cloneNode(true);
     saveIngrediente.parentNode.replaceChild(newSaveBtn, saveIngrediente);
     
-    // Función común para guardar
     const handleSave = async function(e) {
         e.preventDefault();
         e.stopPropagation();
@@ -2088,6 +2297,13 @@ if (saveIngrediente) {
         const nombre = document.getElementById('ingredienteNombre').value.trim();
         const stockActual = parseFloat(document.getElementById('ingredienteStock').value) || 0;
         const agregar = parseFloat(document.getElementById('ingredienteAgregar').value) || 0;
+        
+        // Validar que agregar no sea negativo
+        if (agregar < 0) {
+            window.mostrarToast('La cantidad a agregar no puede ser negativa', 'error');
+            return;
+        }
+        
         const unidad = document.getElementById('ingredienteUnidad').value;
         const minimo = parseFloat(document.getElementById('ingredienteMinimo').value) || 0;
         const costo = parseFloat(document.getElementById('ingredienteCosto').value) || 0;
@@ -2135,7 +2351,6 @@ if (saveIngrediente) {
         }
     };
     
-    // Agregar ambos eventos para máxima compatibilidad
     newSaveBtn.addEventListener('click', handleSave);
     newSaveBtn.addEventListener('touchstart', handleSave, { passive: false });
 }
@@ -2546,8 +2761,8 @@ window.setupRealtimeSubscriptions = function() {
                         window._notificarAdminStockCritico && window._notificarAdminStockCritico(p.new.nombre);
                     }
                     if (p.eventType === 'UPDATE' && (p.old?.stock || 0) <= 0 && p.new.stock > 0) {
-                        await window._notificarPlatillosReactivados(p.new.id, p.new.nombre);
-                    }
+    await window.verificarYNotificarStockReactivado(p.new.id, p.new.nombre);
+}
                     window.cargarInventario();
                     window.actualizarStockCriticoHeader();
                 })
@@ -3277,25 +3492,33 @@ window.toggleDisponiblePlatillo = async function(id, disponible) {
     window._adminCerrarModal = _cerrarTopModal;
 })();
 
-// Notificación push a dispositivos admin cuando stock es crítico
 window._notificarAdminStockCritico = async function(ingredienteNombre) {
     try {
-        const { data: subs } = await window.supabaseClient
-            .from('push_subscriptions')
-            .select('session_id')
-            .in('rol', ['admin', 'cajero']);
-        if (!subs || !subs.length) return;
-        const sessions = [...new Set(subs.map(s => s.session_id).filter(Boolean))];
-        for (const sid of sessions) {
-            await window.supabaseClient.from('notificaciones').insert([{
-                pedido_id: null, tipo: 'stock_critico',
-                titulo: '⚠️ Stock crítico',
-                mensaje: `El ingrediente "${ingredienteNombre}" está por debajo del mínimo. Revisa el inventario.`,
-                session_id: sid, leida: false
-            }]);
+        // Obtener session_id del admin actual desde localStorage
+        let adminSessionId = localStorage.getItem('saki_admin_session_id');
+        if (!adminSessionId) {
+            adminSessionId = 'admin_' + Date.now() + '_' + Math.random().toString(36).slice(2, 9);
+            localStorage.setItem('saki_admin_session_id', adminSessionId);
         }
-        window.mostrarToast(`✓ Alerta enviada: stock crítico en ${ingredienteNombre}`, 'warning');
-    } catch (e) { console.error('Error notificando stock crítico:', e); }
+        
+        // Insertar notificación para el admin
+        const { error } = await window.supabaseClient.from('notificaciones').insert([{
+            pedido_id: null,
+            tipo: 'stock_critico',
+            titulo: '⚠️ Stock crítico',
+            mensaje: `El ingrediente "${ingredienteNombre}" está por debajo del mínimo. Revisa el inventario.`,
+            session_id: adminSessionId,
+            leida: false
+        }]);
+        
+        if (error) throw error;
+        
+        // Mostrar toast local también
+        window.mostrarToast(`⚠️ Alerta: stock crítico en ${ingredienteNombre}`, 'warning');
+        
+    } catch (e) {
+        console.error('Error notificando stock crítico:', e);
+    }
 };
 
 // ==================== TOGGLE DE TEMA CLARO/OSCURO ====================
