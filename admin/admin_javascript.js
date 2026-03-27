@@ -1815,7 +1815,11 @@ window.editarIngrediente = function(id) {
     window.ingredienteEditandoId = id;
     document.getElementById('ingredienteModalTitle').textContent = 'Editar Ingrediente';
     document.getElementById('ingredienteNombre').value = ingrediente.nombre || '';
-    document.getElementById('ingredienteStock').value = ingrediente.stock || 0;
+    
+    // Guardar el valor original para poder restaurarlo al cancelar
+    window._stockOriginalValue = ingrediente.stock || 0;
+    document.getElementById('ingredienteStock').value = window._stockOriginalValue;
+    
     document.getElementById('ingredienteUnidad').value = ingrediente.unidad_base || 'unidades';
     document.getElementById('ingredienteMinimo').value = ingrediente.minimo || 0;
     document.getElementById('ingredienteCosto').value = ingrediente.precio_costo || 0;
@@ -1841,7 +1845,6 @@ window.editarIngrediente = function(id) {
         _si.readOnly = true;
         _si.style.cursor = 'pointer';
         _si.style.background = '';
-        _si.value = ingrediente.stock || 0;
         _si.onclick = null;
     }
     
@@ -1852,19 +1855,21 @@ window.editarIngrediente = function(id) {
     
     // RESTAURAR: Asignar evento onclick al div para pedir contraseña
     if (_divClickArea) {
-        _divClickArea.onclick = function(e) {
+        // Remover listeners anteriores
+        const newDiv = _divClickArea.cloneNode(true);
+        _divClickArea.parentNode.replaceChild(newDiv, _divClickArea);
+        
+        newDiv.onclick = function(e) {
             e.stopPropagation();
             console.log('Click en área de stock - mostrando modal');
             window.mostrarModalContraseñaStock();
         };
-        _divClickArea.style.cursor = 'pointer';
-        _divClickArea.style.borderColor = '';
-        _divClickArea.style.backgroundColor = '';
-    } else if (_si) {
-        _si.onclick = function(e) {
-            e.stopPropagation();
-            window.mostrarModalContraseñaStock();
-        };
+        newDiv.style.cursor = 'pointer';
+        newDiv.style.borderColor = '';
+        newDiv.style.backgroundColor = '';
+        
+        // Actualizar referencia
+        document.getElementById('stockClickArea', newDiv);
     }
     
     // Mostrar botón Eliminar (solo en edición)
@@ -1883,13 +1888,17 @@ async function _desbloquearStock() {
     const lockIcon = document.getElementById('stockLockIcon');
     const clickArea = document.getElementById('stockClickArea');
     
+    // Guardar el valor original antes de desbloquear
+    if (stockInput && !window._stockOriginalValue) {
+        window._stockOriginalValue = stockInput.value;
+    }
+    
     if (stockInput) {
         stockInput.disabled = false;
         stockInput.readOnly = false;
         stockInput.style.background = '';
         stockInput.style.cursor = 'text';
         stockInput.style.pointerEvents = 'auto';
-        stockInput.onclick = null;
         stockInput.focus();
         console.log('Stock desbloqueado - input editable');
     }
@@ -1919,29 +1928,41 @@ window.resetearBloqueoStock = function() {
     const lockIcon = document.getElementById('stockLockIcon');
     const clickArea = document.getElementById('stockClickArea');
     
-    // Solo si estamos en modo edición Y el campo está desbloqueado
-    if (window.ingredienteEditandoId && stockInput && !stockInput.disabled) {
-        console.log('Restaurando bloqueo...');
+    // Siempre restaurar el bloqueo al cerrar el modal, independientemente del estado
+    if (stockInput) {
         stockInput.disabled = true;
         stockInput.readOnly = true;
         stockInput.style.background = '';
         stockInput.style.cursor = 'pointer';
-        
-        if (clickArea) {
-            clickArea.onclick = function(e) {
-                e.stopPropagation();
-                window.mostrarModalContraseñaStock();
-            };
-            clickArea.style.cursor = 'pointer';
-            clickArea.style.borderColor = '';
-            clickArea.style.backgroundColor = '';
-        }
-        
-        if (lockIcon) {
-            lockIcon.innerHTML = '<i class="fas fa-lock" style="font-size:.8rem"></i>';
-            lockIcon.style.cursor = 'default';
-        }
+        stockInput.value = window._stockOriginalValue || 0;
     }
+    
+    if (clickArea) {
+        // Remover todos los listeners anteriores
+        const newClickArea = clickArea.cloneNode(true);
+        clickArea.parentNode.replaceChild(newClickArea, clickArea);
+        
+        newClickArea.onclick = function(e) {
+            e.stopPropagation();
+            console.log('Click en área de stock - mostrando modal');
+            window.mostrarModalContraseñaStock();
+        };
+        newClickArea.style.cursor = 'pointer';
+        newClickArea.style.borderColor = '';
+        newClickArea.style.backgroundColor = '';
+        
+        // Actualizar la referencia global
+        window._currentClickArea = newClickArea;
+        document.getElementById('stockClickArea', newClickArea);
+    }
+    
+    if (lockIcon) {
+        lockIcon.innerHTML = '<i class="fas fa-lock" style="font-size:.8rem"></i>';
+        lockIcon.style.cursor = 'default';
+    }
+    
+    // Limpiar la variable que guarda el valor original
+    window._stockOriginalValue = null;
     
     // Limpiar elementos inline si existen
     const unlockInline = document.getElementById('stockUnlockInline');
@@ -2039,81 +2060,100 @@ window.verificarContraseñaStock = async function() {
     }
 };
 
-// Guardar ingrediente (UNIFICADO)
-document.getElementById('saveIngrediente').addEventListener('click', async function(e) {
-    e.preventDefault();
-    e.stopPropagation();
+// Guardar ingrediente (UNIFICADO) - VERSIÓN MEJORADA PARA MÓVIL
+const saveIngrediente = document.getElementById('saveIngrediente');
+if (saveIngrediente) {
+    // Eliminar listeners anteriores para evitar duplicados
+    const newSaveBtn = saveIngrediente.cloneNode(true);
+    saveIngrediente.parentNode.replaceChild(newSaveBtn, saveIngrediente);
     
-    const btn = this;
-    if (btn.disabled) return;
-    
-    const esNuevo = !window.ingredienteEditandoId;
-    const id = esNuevo ? window.generarId('ing_') : window.ingredienteEditandoId;
-    
-    const nombre = document.getElementById('ingredienteNombre').value.trim();
-    const stockActual = parseFloat(document.getElementById('ingredienteStock').value) || 0;
-    const agregar = parseFloat(document.getElementById('ingredienteAgregar').value) || 0;
-    const unidad = document.getElementById('ingredienteUnidad').value;
-    const minimo = parseFloat(document.getElementById('ingredienteMinimo').value) || 0;
-    const costo = parseFloat(document.getElementById('ingredienteCosto').value) || 0;
-    const venta = parseFloat(document.getElementById('ingredienteVenta').value) || 0;
-    
-    if (!nombre) {
-        window.mostrarToast('Ingresa el nombre del ingrediente', 'error');
-        return;
-    }
-    
-    try {
-        btn.disabled = true;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+    newSaveBtn.addEventListener('click', async function(e) {
+        e.preventDefault();
+        e.stopPropagation();
         
-        const ingrediente = { 
-            id, nombre, 
-            stock: stockActual + agregar, 
-            reservado: 0,
-            unidad_base: unidad, 
-            minimo, 
-            precio_costo: costo, 
-            precio_unitario: venta 
-        };
+        const btn = this;
+        if (btn.disabled) return;
         
-        let error;
-        if (esNuevo) {
-            ({ error } = await window.supabaseClient.from('inventario').insert([ingrediente]));
-        } else {
-            ({ error } = await window.supabaseClient.from('inventario').update(ingrediente).eq('id', id));
+        const esNuevo = !window.ingredienteEditandoId;
+        const id = esNuevo ? window.generarId('ing_') : window.ingredienteEditandoId;
+        
+        const nombre = document.getElementById('ingredienteNombre').value.trim();
+        const stockActual = parseFloat(document.getElementById('ingredienteStock').value) || 0;
+        const agregar = parseFloat(document.getElementById('ingredienteAgregar').value) || 0;
+        const unidad = document.getElementById('ingredienteUnidad').value;
+        const minimo = parseFloat(document.getElementById('ingredienteMinimo').value) || 0;
+        const costo = parseFloat(document.getElementById('ingredienteCosto').value) || 0;
+        const venta = parseFloat(document.getElementById('ingredienteVenta').value) || 0;
+        
+        if (!nombre) {
+            window.mostrarToast('Ingresa el nombre del ingrediente', 'error');
+            return;
         }
         
-        if (error) throw error;
-        
-        window.ingredienteEditandoId = null;
+        try {
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+            
+            const ingrediente = { 
+                id, nombre, 
+                stock: stockActual + agregar, 
+                reservado: 0,
+                unidad_base: unidad, 
+                minimo, 
+                precio_costo: costo, 
+                precio_unitario: venta 
+            };
+            
+            let error;
+            if (esNuevo) {
+                ({ error } = await window.supabaseClient.from('inventario').insert([ingrediente]));
+            } else {
+                ({ error } = await window.supabaseClient.from('inventario').update(ingrediente).eq('id', id));
+            }
+            
+            if (error) throw error;
+            
+            window.ingredienteEditandoId = null;
+            window.cerrarModal('ingredienteModal');
+            await window.cargarInventario();
+            window.mostrarToast('✓ Ingrediente guardado', 'success');
+            
+        } catch (e) {
+            console.error('Error guardando ingrediente:', e);
+            window.mostrarToast('✓ Error: ' + (e.message || e), 'error');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = 'Guardar';
+        }
+    });
+}
+
+// Cancelar ingrediente - VERSIÓN MEJORADA PARA MÓVIL
+const cancelIngrediente = document.getElementById('cancelIngrediente');
+if (cancelIngrediente) {
+    const newCancelBtn = cancelIngrediente.cloneNode(true);
+    cancelIngrediente.parentNode.replaceChild(newCancelBtn, cancelIngrediente);
+    
+    newCancelBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
         window.cerrarModal('ingredienteModal');
-        await window.cargarInventario();
-        window.mostrarToast('✓ Ingrediente guardado', 'success');
-        
-    } catch (e) {
-        console.error('Error guardando ingrediente:', e);
-        window.mostrarToast('✓ Error: ' + (e.message || e), 'error');
-    } finally {
-        btn.disabled = false;
-        btn.innerHTML = 'Guardar';
-    }
-});
+        window.resetearBloqueoStock();
+    });
+}
 
-// Cancelar ingrediente
-document.getElementById('cancelIngrediente').addEventListener('click', function(e) {
-    e.preventDefault();
-    e.stopPropagation();
-    window.cerrarModal('ingredienteModal');
-    window.resetearBloqueoStock();
-});
-
-// Eliminar ingrediente desde modal
+// Eliminar ingrediente desde modal - VERSIÓN MEJORADA
 window._eliminarIngredienteDesdeModal = async function() {
     const id = window.ingredienteEditandoId;
     if (!id) return;
     const ing = (window.inventarioItems || []).find(i => i.id === id);
-    if (!confirm(`¿Eliminar el ingrediente "${ing?.nombre || id}"?`)) return;
+    if (!confirm(`¿Eliminar el ingrediente "${ing?.nombre || id}"? Esta acción no se puede deshacer.`)) return;
+    
+    const deleteBtn = document.getElementById('deleteIngredienteBtn');
+    if (deleteBtn) {
+        deleteBtn.disabled = true;
+        deleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    }
     
     try {
         const { error } = await window.supabaseClient.from('inventario').delete().eq('id', id);
@@ -2125,20 +2165,37 @@ window._eliminarIngredienteDesdeModal = async function() {
     } catch(e) {
         console.error('Error eliminando ingrediente:', e);
         window.mostrarToast('✓ Error: ' + (e.message || e), 'error');
+    } finally {
+        if (deleteBtn) {
+            deleteBtn.disabled = false;
+            deleteBtn.innerHTML = '<i class="fas fa-trash"></i> Eliminar';
+        }
     }
 };
 
-// Cerrar modal con X
-document.getElementById('closeIngredienteModal').addEventListener('click', function() {
-    window.cerrarModal('ingredienteModal');
-    window.resetearBloqueoStock();
-});
+// Cerrar modal con X - VERSIÓN MEJORADA PARA MÓVIL
+const closeIngredienteModal = document.getElementById('closeIngredienteModal');
+if (closeIngredienteModal) {
+    const newCloseBtn = closeIngredienteModal.cloneNode(true);
+    closeIngredienteModal.parentNode.replaceChild(newCloseBtn, closeIngredienteModal);
+    
+    newCloseBtn.addEventListener('click', function() {
+        window.cerrarModal('ingredienteModal');
+        window.resetearBloqueoStock();
+    });
+}
 
-// Asegurar que al abrir el modal de contraseña se limpie
+// Asegurar que al abrir el modal de contraseña se limpie y al cerrar se restablezca
 const pwdModal = document.getElementById('passwordStockModal');
 if (pwdModal) {
-    pwdModal.addEventListener('click', function(e) {
-        if (e.target === this) window.cerrarModal('passwordStockModal');
+    // Eliminar listeners anteriores
+    const newPwdModal = pwdModal.cloneNode(true);
+    pwdModal.parentNode.replaceChild(newPwdModal, pwdModal);
+    
+    newPwdModal.addEventListener('click', function(e) {
+        if (e.target === this) {
+            window.cerrarModal('passwordStockModal');
+        }
     });
 }
 
