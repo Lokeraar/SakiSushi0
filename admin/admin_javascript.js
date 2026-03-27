@@ -101,7 +101,10 @@ window.mostrarErrorEnModal = function(modalId, mensajeError) {
 // ==================== FUNCIONES DE UTILIDAD ====================
 window.formatBs = function(m) {
     try {
-        return new Intl.NumberFormat('es-VE', { style: 'currency', currency: 'VES', minimumFractionDigits: 2 }).format(m).replace('VES', 'Bs').replace('Bs.', 'Bs');
+        const valor = Math.round((m || 0) * 100) / 100;
+        let [entero, decimal] = valor.toFixed(2).split('.');
+        entero = entero.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+        return 'Bs ' + entero + ',' + decimal;
     } catch (e) {
         return 'Bs ' + (m || 0).toFixed(2);
     }
@@ -1675,7 +1678,8 @@ window.recalcularTasaEfectiva = function() {
     document.getElementById('tasaEfectivaDisplay').textContent = tasaEfectiva.toFixed(2);
     document.getElementById('aumentoAcumuladoDisplay').textContent = aumentoAcumulado.toFixed(2) + '%';
     if (document.getElementById('tasaEfectivaCard'))
-        document.getElementById('tasaEfectivaCard').textContent = 'Bs. ' + tasaEfectiva.toFixed(2);
+        document.getElementById('tasaEfectivaCard').textContent = 'Bs ' + tasaEfectiva.toFixed(2);
+        
 
     window.configGlobal.tasa_cambio       = tasaBase;
     window.configGlobal.aumento_diario    = aumentoPct;
