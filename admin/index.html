@@ -394,20 +394,18 @@
             <div class="modal-body">
                 <!-- Imagen -->
                 <div class="form-group">
-                    <label>Imagen del Platillo</label>
-                    <div style="display:flex;gap:.6rem;align-items:flex-start">
-                        <div style="flex:1">
-                            <input type="file" id="platilloImagen" accept="image/*" style="margin-bottom:.3rem">
-                            <input type="url" id="platilloImagenUrl" placeholder="O pega aquí el link de la imagen" oninput="window._previewPlatilloUrl(this.value)">
-                        </div>
-                        <div id="imagenPreview" class="image-preview" style="display:none;width:80px;height:80px;flex-shrink:0">
-                            <img id="previewImg" style="width:100%;height:100%;object-fit:cover;border-radius:8px">
-                            <div style="margin-top:.2rem;text-align:center">
-                                <button type="button" class="btn-small" onclick="window.limpiarImagenPreview()" style="font-size:.65rem">Quitar</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+    <label>Imagen del Platillo</label>
+    <div style="display:flex;gap:.6rem;align-items:flex-start">
+        <div style="flex:1">
+            <input type="file" id="platilloImagen" accept="image/*" style="margin-bottom:.3rem">
+            <input type="url" id="platilloImagenUrl" placeholder="O pega aquí el link de la imagen" oninput="window._previewPlatilloUrl(this.value)">
+        </div>
+        <div id="imagenPreview" class="image-preview" style="display:none; position:relative; width:80px; height:80px; flex-shrink:0">
+            <img id="previewImg" style="width:100%; height:100%; object-fit:cover; border-radius:8px">
+            <button type="button" class="img-remove-btn" onclick="window.limpiarImagenPreview()" title="Eliminar imagen">×</button>
+        </div>
+    </div>
+</div>
 
                 <!-- Nombre + Categoría -->
                 <div class="form-row">
