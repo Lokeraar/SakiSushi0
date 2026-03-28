@@ -185,6 +185,11 @@ body {
   transform: translateY(-1px);
   box-shadow: 0 4px 12px rgba(211,47,47,.3);
 }
+.login-form button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none;
+}
 .recovery-link {
   margin-top: 1rem;
 }
@@ -276,6 +281,11 @@ body {
   transform: translateY(-1px);
   box-shadow: 0 3px 8px rgba(211,47,47,.3);
 }
+.save-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
 
 /* Stock crítico header */
 #stockCriticoHeader {
@@ -309,7 +319,7 @@ body {
   font-size: .7rem;
   cursor: pointer;
   transition: all .2s;
-  animation: pulse 1.5s infinite;
+  animation: pulse 1.5s 2; /* Solo 2 ciclos para reducir repintados */
 }
 .stock-critico-tag:hover {
   transform: scale(1.05);
@@ -831,6 +841,12 @@ body {
 .inv-list-items {
   max-height: calc(100vh - 280px);
   overflow-y: auto;
+  min-height: 200px;
+}
+@media (max-width: 768px) {
+  .inv-list-items {
+    max-height: 50vh;
+  }
 }
 .inv-list-item {
   display: flex;
@@ -975,6 +991,7 @@ body {
   display: flex;
   gap: .5rem;
   flex-wrap: wrap;
+  align-items: center;
 }
 .status-activo, .status-inactivo {
   font-size: .7rem;
@@ -1357,13 +1374,17 @@ textarea:focus-visible {
   width: 80px;
   height: 80px;
   flex-shrink: 0;
+  border-radius: 8px;
+  overflow: hidden;
+  background: rgba(0,0,0,.05);
+  border: 1px solid var(--border);
 }
 .img-remove-btn {
   position: absolute;
   top: 4px;
   right: 4px;
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
   background: rgba(0,0,0,.7);
   color: #fff;
@@ -1379,6 +1400,30 @@ textarea:focus-visible {
 .img-remove-btn:hover {
   background: var(--danger);
   transform: scale(1.1);
+}
+
+/* Filas de ingredientes en modal de platillo: responsive */
+.ingrediente-row {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr auto;
+  gap: .4rem;
+  align-items: center;
+  margin-bottom: .4rem;
+}
+@media (max-width: 640px) {
+  .ingrediente-row {
+    grid-template-columns: 1fr;
+    gap: .6rem;
+    background: var(--card-bg);
+    padding: .8rem;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+  }
+  .ingrediente-row select,
+  .ingrediente-row input,
+  .ingrediente-row button {
+    width: 100%;
+  }
 }
 
 /* Responsive: unificar media queries */
