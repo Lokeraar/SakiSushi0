@@ -177,7 +177,7 @@
                 </div>
             </div>
             
-            <!-- MENÚ -->
+            <!-- MENÚ (con buscador unificado) -->
             <div class="tab-pane" id="menuPane">
                 <div class="pane-header">
                     <h2 class="section-title"><i class="fas fa-utensils"></i> Menú y Precios</h2>
@@ -186,16 +186,14 @@
                     </div>
                 </div>
 
-                <div class="inv-search-wrap">
-                    <i class="fas fa-search inv-search-icon"></i>
-                    <input type="text" id="menuBuscador" class="inv-search-input"
-                        placeholder="Buscar platillo por nombre..."
-                        oninput="window.renderizarMenu(this.value.trim())">
+                <div class="menu-search-container">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="menuBuscador" placeholder="Buscar platillo por nombre..." oninput="window.renderizarMenu(this.value.trim())">
                 </div>
                 <div class="menu-grid" id="menuGrid"></div>
             </div>
             
-            <!-- INVENTARIO -->
+            <!-- INVENTARIO (con buscador unificado) -->
             <div class="tab-pane" id="inventarioPane">
                 <div class="pane-header">
                     <h2 class="section-title"><i class="fas fa-boxes"></i> Inventario</h2>
@@ -205,9 +203,9 @@
                 </div>
                 <div class="inv-panel" id="invPanel">
                     <div class="inv-list-col">
-                        <div class="inv-list-search">
-                            <input type="text" id="inventarioBuscador" placeholder="Buscar ingrediente..."
-                                oninput="window.renderizarInventario(this.value.trim())">
+                        <div class="inventario-search-container">
+                            <i class="fas fa-search"></i>
+                            <input type="text" id="inventarioBuscador" placeholder="Buscar ingrediente..." oninput="window.renderizarInventario(this.value.trim())">
                         </div>
                         <div class="inv-list-items" id="inventarioGrid"></div>
                     </div>
@@ -231,7 +229,7 @@
                 <div class="usuarios-grid" id="usuariosGrid"></div>
             </div>
             
-            <!-- DELIVERYS -->
+            <!-- DELIVERYS (con buscador unificado) -->
             <div class="tab-pane" id="deliverysPane">
                 <div class="pane-header">
                     <h2 class="section-title"><i class="fas fa-motorcycle" style="color:var(--delivery)"></i> Motorizados</h2>
@@ -242,10 +240,14 @@
                         </button>
                     </div>
                 </div>
+                <div class="deliverys-search-container">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="deliverysBuscador" placeholder="Buscar motorizado..." oninput="window.renderizarDeliverys(this.value.trim())">
+                </div>
                 <div class="delivery-list" id="deliverysGrid" style="display:grid"></div>
             </div>
             
-            <!-- MESONEROS -->
+            <!-- MESONEROS (con buscador unificado) -->
             <div class="tab-pane" id="mesonerosPane">
                 <div class="pane-header">
                     <h2 class="section-title"><i class="fas fa-user-tie" style="color:var(--propina)"></i> Mesoneros y Propinas</h2>
@@ -263,13 +265,20 @@
                     <div class="propina-card"><div class="stat-value" id="propinasPromedio">Bs. 0</div><div class="stat-label">Promedio</div></div>
                 </div>
 
+                <div class="mesoneros-search-container">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="mesonerosBuscador" placeholder="Buscar mesonero..." oninput="window.renderizarMesoneros(this.value.trim())">
+                </div>
                 <div id="mesonerosList" class="mesoneros-grid"></div>
 
                 <div class="table-section" style="margin-top:1.5rem">
                     <h3 class="table-section-title">Historial de Propinas de Hoy</h3>
                     <div class="table-responsive">
                         <table class="data-table" id="propinasTable">
-                            <thead><tr><th>Hora</th><th>Mesonero</th><th>Mesa</th><th>Método</th><th>Monto</th><th>Cajero</th></tr></thead>
+                            <thead>——
+                                <th>Hora</th><th>Mesonero</th><th>Mesa</th><th>Método</th><th>Monto</th><th>Cajero</th>
+                            </tr>
+                            </thead>
                             <tbody id="propinasTableBody"></tbody>
                         </table>
                     </div>
@@ -381,7 +390,12 @@
                 </div>
                 <div class="table-responsive" style="margin-top:2rem">
                     <h3 style="margin-bottom:1rem;font-weight:700">Detalle de Ventas</h3>
-                    <table class="data-table" id="ventasTable"><thead><tr><th>Fecha</th><th>Pedido</th><th>Total</th><th>Items</th><th>Método</th><th>Tipo</th></tr></thead><tbody id="ventasTableBody"></tbody></table>
+                    <table class="data-table" id="ventasTable">
+                        <thead>
+                            <tr><th>Fecha</th><th>Pedido</th><th>Total</th><th>Items</th><th>Método</th><th>Tipo</th></tr>
+                        </thead>
+                        <tbody id="ventasTableBody"></tbody>
+                    </table>
                 </div>
             </div>
         </div>
@@ -395,14 +409,14 @@
                 <!-- Imagen -->
                 <div class="form-group">
                     <label>Imagen del Platillo</label>
-                    <div style="display:flex;gap:.6rem;align-items:flex-start">
-                        <div style="flex:1">
-                            <input type="file" id="platilloImagen" accept="image/*" style="margin-bottom:.3rem">
-                            <input type="url" id="platilloImagenUrl" placeholder="O pega aquí el link de la imagen" oninput="window._previewPlatilloUrl(this.value)">
+                    <div style="display:flex;gap:.6rem;align-items:flex-start;flex-wrap:wrap">
+                        <div style="flex:1; min-width:200px">
+                            <input type="file" id="platilloImagen" accept="image/*" style="margin-bottom:.3rem" onchange="window.actualizarPreviewDesdeArchivo(this)">
+                            <input type="url" id="platilloImagenUrl" placeholder="O pega aquí el link de la imagen" oninput="window.actualizarPreviewDesdeUrl(this)">
                         </div>
                         <div id="imagenPreview" class="image-preview" style="display:none; position:relative; width:80px; height:80px; flex-shrink:0">
                             <img id="previewImg" style="width:100%; height:100%; object-fit:cover; border-radius:8px">
-                            <button type="button" class="img-remove-btn" onclick="window.limpiarImagenPreview()" title="Eliminar imagen">×</button>
+                            <button type="button" class="img-remove-btn" onclick="window.eliminarImagenAdjunta()" title="Eliminar imagen">×</button>
                         </div>
                     </div>
                 </div>
@@ -421,9 +435,13 @@
                     <select id="platilloSubcategoria"><option value="">Ninguna</option></select>
                 </div>
 
-                <!-- Precio + Disponible (toggle) -->
+                <!-- Precio + Disponible (toggle) con tooltip -->
                 <div class="form-row" style="align-items:center">
-                    <div class="form-group"><label>Precio (USD)</label>
+                    <div class="form-group">
+                        <label style="display:flex; align-items:center; gap:.3rem">
+                            Precio (USD)
+                            <i class="fas fa-info-circle" style="color:var(--text-muted); font-size:.7rem; cursor:help" data-tooltip="El precio se convertirá a la tasa efectiva y se mostrará en bolívares al cliente."></i>
+                        </label>
                         <input type="number" step="0.01" id="platilloPrecio" required placeholder="0.00" oninput="window._previewPrecioBs()">
                         <div id="platilloPrecioBsPreview" style="font-size:.75rem;color:var(--text-muted);margin-top:.2rem"></div>
                     </div>
@@ -469,7 +487,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3 id="ingredienteModalTitle">Nuevo Ingrediente</h3>
-                <button class="modal-close" id="closeIngredienteModal" onclick="window.cerrarModal('ingredienteModal')">&times;</button>
+                <button class="modal-close" id="closeIngredienteModal">&times;</button>
             </div>
             <div class="modal-body">
                 <form id="ingredienteForm">
