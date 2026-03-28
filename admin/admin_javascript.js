@@ -158,7 +158,6 @@ window.hacerLogin = async function() {
                     window.recalcularTasaEfectiva();
                 });
                 
-                // Inicializar ventas y deliverys
                 await window._actualizarVentasHoyNeto();
                 await window._actualizarDeliverysHoy();
                 
@@ -244,16 +243,17 @@ window.cargarInventario = async function() {
         const { data, error } = await window.supabaseClient.from('inventario').select('*');
         if (error) throw error;
         window.inventarioItems = data || [];
-        window.renderizarInventario(window._inventarioBuscadorValue || '');
-        window.actualizarAlertasStock();
-        await window.cargarMenu();
-        window.actualizarStockCriticoHeader();
-        window.verificarStockCritico();
     } catch (e) { 
         console.error('Error cargando inventario:', e);
-        if (!e.message?.includes('inventarioGrid')) {
-            window.mostrarToast('Error cargando inventario', 'error');
-        }
+        window.inventarioItems = [];
+        window.mostrarToast('Error cargando inventario. Los datos se mostrarán cuando se recarguen.', 'error');
+    } finally {
+        window.renderizarInventario(window._inventarioBuscadorValue || '');
+        window.actualizarAlertasStock();
+        window.actualizarStockCriticoHeader();
+        window.verificarStockCritico();
+        // Recargar menú después de inventario para sincronizar stocks
+        await window.cargarMenu();
     }
 };
 
@@ -691,14 +691,14 @@ window.renderizarPropinas = function() {
     const tbody = document.getElementById('propinasTableBody');
     if (tbody) {
         tbody.innerHTML = window.propinas.map(p => `
-             <tr>
-                 <td>${new Date(p.fecha).toLocaleString('es-VE', { timeZone: 'America/Caracas' })}</td>
-                 <td>${p.mesoneros?.nombre || 'N/A'}</td>
-                 <td>${p.mesa || 'N/A'}</td>
-                 <td>${p.metodo}</td>
-                 <td>${window.formatBs(p.monto_bs)}</td>
-                 <td>${p.cajero || 'N/A'}</td>
-             </tr>
+              <tr>
+                  <td>${new Date(p.fecha).toLocaleString('es-VE', { timeZone: 'America/Caracas' })}</td>
+                  <td>${p.mesoneros?.nombre || 'N/A'}</td>
+                  <td>${p.mesa || 'N/A'}</td>
+                  <td>${p.metodo}</td>
+                  <td>${window.formatBs(p.monto_bs)}</td>
+                  <td>${p.cajero || 'N/A'}</td>
+              </tr>
         `).join('');
     }
 };
@@ -1223,7 +1223,6 @@ window.setupRealtimeSubscriptions = function() {
             })
             .subscribe();
         
-        // Agregar suscripción a ventas para actualizar el indicador en tiempo real
         window.supabaseClient
             .channel('admin-ventas')
             .on('postgres_changes', { event: '*', schema: 'public', table: 'ventas' }, () => {
@@ -2048,7 +2047,7 @@ window.actualizarTablaVentas = function(pedidos) {
                 <td>${totalItems}</td>
                 <td>${metodoStr}</td>
                 <td>${p.tipo || 'N/A'}</td>
-             </tr>`;
+              </tr>`;
     }).join('');
 };
 
@@ -2490,7 +2489,9 @@ window.agregarIngredienteRow = function(ingredienteId, cantidad, unidad) {
 window.limpiarImagenPreview = function() {
     document.getElementById('platilloImagen').value = '';
     document.getElementById('platilloImagenUrl').value = '';
-    document.getElementById('imagenPreview').style.display = 'none';
+    // Ocultar contenedor de preview
+    const previewDiv = document.getElementById('imagenPreview');
+    if (previewDiv) previewDiv.style.display = 'none';
     document.getElementById('previewImg').src = '';
 };
 
@@ -2512,7 +2513,8 @@ window.editarPlatillo = function(id) {
     if (lblD) { lblD.textContent = platillo.disponible ? 'Sí' : 'No'; lblD.style.color = platillo.disponible ? 'var(--success)' : 'var(--text-muted)'; }
     if (platillo.imagen) {
         document.getElementById('previewImg').src = platillo.imagen;
-        document.getElementById('imagenPreview').style.display = 'flex';
+        const previewDiv = document.getElementById('imagenPreview');
+        if (previewDiv) previewDiv.style.display = 'flex';
         document.getElementById('platilloImagenUrl').value = platillo.imagen;
     }
     window.cargarSubcategoriasSelect(platillo.categoria);
@@ -2576,6 +2578,7 @@ window.setupEventListeners = function() {
         });
     });
     
+    // Cerrar modal al hacer clic en el fondo
     document.querySelectorAll('.modal').forEach(modal => {
         modal.addEventListener('click', function(e) {
             if (e.target === this) {
@@ -2817,6 +2820,93 @@ window.setupEventListeners = function() {
             window.supabaseClient = window.inicializarSupabaseCliente();
         });
     }
+    
+    // ========== BOTONES DEL MODAL DE INGREDIENTE (SIN CLONAR) ==========
+    const saveIngredienteBtn = document.getElementById('saveIngrediente');
+    const cancelIngredienteBtn = document.getElementById('cancelIngrediente');
+    const closeIngredienteBtn = document.getElementById('closeIngredienteModal');
+    
+    if (saveIngredienteBtn) {
+        // Eliminar cualquier listener previo clonando para evitar duplicados (solo si hay listener anterior)
+        // Pero lo más seguro es reemplazar el botón por uno nuevo con el listener.
+        const newSaveBtn = saveIngredienteBtn.cloneNode(true);
+        saveIngredienteBtn.parentNode.replaceChild(newSaveBtn, saveIngredienteBtn);
+        newSaveBtn.addEventListener('click', async (e) => {
+            e.preventDefault();
+            const btn = newSaveBtn;
+            if (btn.disabled) return;
+            
+            const esNuevo = !window.ingredienteEditandoId;
+            const id = esNuevo ? window.generarId('ing_') : window.ingredienteEditandoId;
+            
+            const nombre = document.getElementById('ingredienteNombre').value.trim();
+            const stockActual = parseFloat(document.getElementById('ingredienteStock').value) || 0;
+            const agregar = parseFloat(document.getElementById('ingredienteAgregar').value) || 0;
+            if (agregar < 0) { window.mostrarToast('La cantidad a agregar no puede ser negativa', 'error'); return; }
+            const unidad = document.getElementById('ingredienteUnidad').value;
+            const minimo = parseFloat(document.getElementById('ingredienteMinimo').value) || 0;
+            const costo = parseFloat(document.getElementById('ingredienteCosto').value) || 0;
+            const venta = parseFloat(document.getElementById('ingredienteVenta').value) || 0;
+            if (!nombre) { window.mostrarToast('Ingresa el nombre del ingrediente', 'error'); return; }
+            
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+            try {
+                const ingrediente = { 
+                    id, nombre, 
+                    stock: stockActual + agregar, 
+                    reservado: 0,
+                    unidad_base: unidad, 
+                    minimo, 
+                    precio_costo: costo, 
+                    precio_unitario: venta 
+                };
+                let error;
+                if (esNuevo) {
+                    ({ error } = await window.supabaseClient.from('inventario').insert([ingrediente]));
+                } else {
+                    ({ error } = await window.supabaseClient.from('inventario').update(ingrediente).eq('id', id));
+                }
+                if (error) throw error;
+                window.ingredienteEditandoId = null;
+                window.cerrarModal('ingredienteModal');
+                await window.cargarInventario();
+                window.mostrarToast('✓ Ingrediente guardado', 'success');
+            } catch (e) {
+                console.error('Error guardando ingrediente:', e);
+                window.mostrarToast('Error: ' + (e.message || e), 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = 'Guardar';
+            }
+        });
+    }
+    
+    if (cancelIngredienteBtn) {
+        const newCancelBtn = cancelIngredienteBtn.cloneNode(true);
+        cancelIngredienteBtn.parentNode.replaceChild(newCancelBtn, cancelIngredienteBtn);
+        newCancelBtn.addEventListener('click', () => {
+            window.cerrarModal('ingredienteModal');
+            window.resetearBloqueoStock();
+        });
+    }
+    
+    if (closeIngredienteBtn) {
+        const newCloseBtn = closeIngredienteBtn.cloneNode(true);
+        closeIngredienteBtn.parentNode.replaceChild(newCloseBtn, closeIngredienteBtn);
+        newCloseBtn.addEventListener('click', () => {
+            window.cerrarModal('ingredienteModal');
+            window.resetearBloqueoStock();
+        });
+    }
+    
+    const deleteIngredienteBtn = document.getElementById('deleteIngredienteBtn');
+    if (deleteIngredienteBtn) {
+        // Asegurar que el evento onclick existente no se sobreescriba; pero por si acaso, lo reforzamos.
+        deleteIngredienteBtn.onclick = function() {
+            window._eliminarIngredienteDesdeModal();
+        };
+    }
 };
 
 // ==================== UTILIDADES ADICIONALES ====================
@@ -2901,7 +2991,6 @@ window._verificarAvisoLunes = function() {
     if (localStorage.getItem(claveAviso)) return;
     localStorage.setItem(claveAviso, '1');
 
-    // Retrasar la aparición 1 segundo para no interferir con la carga inicial
     setTimeout(() => {
         const notif = document.createElement('div');
         notif.className = 'aviso-lunes';
