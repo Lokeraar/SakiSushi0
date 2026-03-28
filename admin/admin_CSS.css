@@ -18,7 +18,7 @@
   --body-bg:      #f4f4f8;
   --card-bg:      #ffffff;
   --text-dark:    #1a1a2e;
-  --text-muted:   #5f6368;
+  --text-muted:   #3c4043;
   --border:       #e0e0e0;
   --tabs-bg:      #ffffff;
   --tab-text:     #1a1a2e;
@@ -328,6 +328,10 @@ body {
 @keyframes pulse {
   0%, 100% { opacity: 1; transform: scale(1); }
   50% { opacity: 0.85; transform: scale(1.02); }
+}
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
 }
 
 /* Tasa Cards Bar */
@@ -745,17 +749,19 @@ body {
     grid-template-columns: repeat(3, 1fr);
   }
 }
-.usuarios-grid, .delivery-list {
+.usuarios-grid, .delivery-list, .mesoneros-grid {
   display: grid;
   gap: 1rem;
 }
 @media (min-width: 769px) {
   .usuarios-grid { grid-template-columns: repeat(2, 1fr); }
   .delivery-list { grid-template-columns: repeat(2, 1fr); }
+  .mesoneros-grid { grid-template-columns: repeat(2, 1fr); }
 }
 @media (min-width: 1201px) {
   .usuarios-grid { grid-template-columns: repeat(3, 1fr); }
   .delivery-list { grid-template-columns: repeat(3, 1fr); }
+  .mesoneros-grid { grid-template-columns: repeat(3, 1fr); }
 }
 
 /* Tarjetas de menú */
@@ -1454,62 +1460,6 @@ textarea:focus-visible {
 /* ============================================
    BUSCADORES UNIFICADOS
    ============================================ */
-.search-wrapper {
-  position: relative;
-  max-width: 380px;
-  margin-bottom: 1rem;
-}
-.search-wrapper i {
-  position: absolute;
-  left: .85rem;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--text-muted);
-  font-size: .85rem;
-  pointer-events: none;
-}
-.search-wrapper input {
-  width: 100%;
-  padding: .6rem .9rem .6rem 2.2rem;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  font-family: 'Montserrat', sans-serif;
-  font-size: .88rem;
-  color: var(--text-dark);
-  background: var(--input-bg);
-  outline: none;
-  transition: var(--transition);
-}
-.search-wrapper input:focus {
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(211,47,47,.1);
-}
-
-/* Aplicar a todos los buscadores */
-#menuBuscador,
-#inventarioBuscador,
-#mesonerosBuscador,
-#deliverysBuscador {
-  width: 100%;
-  padding: .6rem .9rem .6rem 2.2rem;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  font-family: 'Montserrat', sans-serif;
-  font-size: .88rem;
-  color: var(--text-dark);
-  background: var(--input-bg);
-  outline: none;
-  transition: var(--transition);
-}
-#menuBuscador:focus,
-#inventarioBuscador:focus,
-#mesonerosBuscador:focus,
-#deliverysBuscador:focus {
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(211,47,47,.1);
-}
-
-/* Contenedores para los buscadores */
 .menu-search-container,
 .inventario-search-container,
 .mesoneros-search-container,
@@ -1530,18 +1480,43 @@ textarea:focus-visible {
   font-size: .85rem;
   pointer-events: none;
 }
+.menu-search-container input,
+.inventario-search-container input,
+.mesoneros-search-container input,
+.deliverys-search-container input {
+  width: 100%;
+  padding: .6rem .9rem .6rem 2.2rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-family: 'Montserrat', sans-serif;
+  font-size: .88rem;
+  color: var(--text-dark);
+  background: var(--input-bg);
+  outline: none;
+  transition: var(--transition);
+}
+.menu-search-container input:focus,
+.inventario-search-container input:focus,
+.mesoneros-search-container input:focus,
+.deliverys-search-container input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(211,47,47,.1);
+}
 
-/* Mesoneros y Deliverys grids */
-.mesoneros-grid,
-.delivery-list {
-  display: grid;
-  gap: 1rem;
+/* Skeleton loading */
+.skeleton-card {
+  background: var(--card-bg);
+  border-radius: 12px;
+  padding: 1rem;
+  margin-bottom: .5rem;
+  border: 1px solid var(--border);
+  overflow: hidden;
 }
-@media (min-width: 769px) {
-  .mesoneros-grid { grid-template-columns: repeat(2, 1fr); }
-}
-@media (min-width: 1201px) {
-  .mesoneros-grid { grid-template-columns: repeat(3, 1fr); }
+.skeleton-card div {
+  background: linear-gradient(90deg, var(--border) 25%, rgba(0,0,0,.1) 50%, var(--border) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.2s infinite;
+  border-radius: 4px;
 }
 
 /* Responsive: unificar media queries */
@@ -1647,5 +1622,43 @@ textarea:focus-visible {
   }
   .qr-grid {
     grid-template-columns: 1fr;
+  }
+}
+
+/* Tooltip para precio en menú */
+[data-tooltip] {
+  position: relative;
+  cursor: help;
+}
+[data-tooltip]:before {
+  content: attr(data-tooltip);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 6px 12px;
+  background: var(--toast-bg);
+  color: var(--toast-text);
+  font-size: .75rem;
+  border-radius: 8px;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity .2s;
+  pointer-events: none;
+  z-index: 1000;
+  box-shadow: var(--shadow-md);
+}
+[data-tooltip]:hover:before {
+  opacity: 1;
+  visibility: visible;
+}
+@media (max-width: 768px) {
+  [data-tooltip]:before {
+    white-space: normal;
+    width: 200px;
+    text-align: center;
+    left: 50%;
+    transform: translateX(-50%);
   }
 }
