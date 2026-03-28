@@ -23,7 +23,7 @@
   --tabs-bg:      #ffffff;
   --tab-text:     #1a1a2e;
   --tab-active:   #D32F2F;
-  --tab-active-bg: #1a1a2e;
+  --tab-active-bg:#1a1a2e;
   --table-header: #f1f3f4;
   --table-header-text: #1a1a2e;
   --input-bg:     #ffffff;
@@ -1024,7 +1024,7 @@ body {
   overflow-x: auto;
 }
 
-/* Modales */
+/* Modales – Tamaño por defecto (compacto) */
 .modal {
   display: none;
   position: fixed;
@@ -1049,6 +1049,23 @@ body {
   max-height: 90vh;
   overflow-y: auto;
 }
+
+/* Modales grandes (para formularios extensos) */
+.modal-lg .modal-content {
+  max-width: 1000px;
+  width: 90%;
+}
+@media (max-width: 768px) {
+  .modal-lg .modal-content {
+    width: 95%;
+    max-width: 95%;
+    max-height: 95vh;
+  }
+  .modal-lg .modal-body {
+    padding: 1rem;
+  }
+}
+
 .modal-header {
   background: var(--modal-header-bg);
   color: var(--modal-header-text);
@@ -1112,6 +1129,17 @@ body {
   align-items: center;
   margin-left: .5rem;
   color: var(--text-muted);
+}
+.stock-unlock-hint {
+  font-size: .7rem;
+  color: var(--text-muted);
+  margin-top: .2rem;
+  display: flex;
+  align-items: center;
+  gap: .3rem;
+}
+.stock-unlock-hint i {
+  font-size: .65rem;
 }
 
 /* QR */
@@ -1218,7 +1246,87 @@ body {
 .toast.error { background: var(--danger); }
 .toast.warning { background: var(--warning); }
 
-/* Responsive */
+/* Notificación de lunes (estilos externalizados) */
+.aviso-lunes {
+  position: fixed;
+  top: 1.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1a1a2e;
+  color: #fff;
+  border-radius: 12px;
+  padding: 1.2rem 1.5rem;
+  z-index: 8000;
+  box-shadow: 0 4px 20px rgba(0,0,0,.4);
+  max-width: 420px;
+  width: 90%;
+  font-family: Montserrat, sans-serif;
+  border-left: 4px solid #FF9800;
+}
+.aviso-lunes .flex {
+  display: flex;
+  align-items: flex-start;
+  gap: .75rem;
+}
+.aviso-lunes .emoji {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+.aviso-lunes .content {
+  flex: 1;
+}
+.aviso-lunes .title {
+  font-weight: 700;
+  margin-bottom: .3rem;
+  font-size: .95rem;
+}
+.aviso-lunes .message {
+  font-size: .82rem;
+  opacity: .85;
+  margin-bottom: .75rem;
+}
+.aviso-lunes .buttons {
+  display: flex;
+  gap: .5rem;
+  justify-content: flex-end;
+}
+.aviso-lunes .btn-no {
+  padding: .4rem .9rem;
+  background: rgba(255,255,255,.15);
+  color: #fff;
+  border: 1px solid rgba(255,255,255,.3);
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: .82rem;
+}
+.aviso-lunes .btn-si {
+  padding: .4rem .9rem;
+  background: #FF9800;
+  color: #1a1a2e;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: .82rem;
+}
+@media (max-width: 480px) {
+  .aviso-lunes {
+    width: 95%;
+    padding: 1rem;
+  }
+}
+
+/* Accesibilidad: foco visible */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Responsive: unificar media queries */
 @media (max-width: 768px) {
   .content {
     padding: .75rem;
@@ -1267,7 +1375,46 @@ body {
     align-items: center !important;
     justify-content: center !important;
   }
+  /* Tarjetas de usuario, mesonero, delivery se ajustan a 1 columna */
+  .usuarios-grid,
+  .mesoneros-grid,
+  .delivery-list {
+    grid-template-columns: 1fr;
+  }
+  .mesonero-card,
+  .usuario-card,
+  .delivery-item {
+    width: 100%;
+    max-width: 100%;
+  }
+  .usuario-card {
+    grid-template-columns: 40px 1fr auto !important;
+    gap: 0.5rem !important;
+    padding: 0.8rem !important;
+  }
+  .usuario-nombre {
+    font-size: 0.85rem !important;
+    white-space: normal !important;
+    word-break: break-word !important;
+  }
+  .usuario-username {
+    font-size: 0.7rem !important;
+  }
+  .mesonero-card button,
+  .usuario-card button,
+  .delivery-card button {
+    min-height: 40px !important;
+    min-width: 40px !important;
+    padding: 0.4rem 0.6rem !important;
+  }
+  .propinas-stats {
+    grid-template-columns: 1fr;
+  }
+  .qr-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
+
 @media (max-width: 480px) {
   .header-right .nav-button:nth-child(n+3) {
     display: none;
