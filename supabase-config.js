@@ -45,7 +45,7 @@ window.configGlobal = {
     aumento_detenido: false,
     fecha_ultimo_aumento: null,
     ultima_actualizacion: null,
-    admin_password: 'admin123',  // ← CAMBIADO de '654321' a 'admin123'
+    admin_password: 'admin123',
     recovery_email: 'admin@sakisushi.com',
     alerta_stock_minimo: 5
 };
@@ -111,11 +111,11 @@ window.formatearFechaGMT4 = function(timestamp) {
         let ts = timestamp;
         if (typeof ts === 'string' && !ts.endsWith('Z') && !/[+\-]\d{2}(:\d{2})?$/.test(ts)) ts += 'Z';
         const fecha = new Date(ts);
-        const opts  = z => fecha.toLocaleString('en-US', { timeZone: 'America/Caracas', ...z });
-        const dia     = String(opts({ day:    'numeric' })).padStart(2, '0');
-        const mes     = String(opts({ month:  'numeric' })).padStart(2, '0');
-        const ano     = opts({ year: 'numeric' });
-        const hhmm    = opts({ hour: 'numeric', minute: '2-digit', hour12: true });
+        const opts = z => fecha.toLocaleString('en-US', { timeZone: 'America/Caracas', ...z });
+        const dia = String(opts({ day: 'numeric' })).padStart(2, '0');
+        const mes = String(opts({ month: 'numeric' })).padStart(2, '0');
+        const ano = opts({ year: 'numeric' });
+        const hhmm = opts({ hour: 'numeric', minute: '2-digit', hour12: true });
         return `${dia}/${mes}/${ano} ${hhmm}`.toLowerCase();
     } catch (e) {
         return timestamp;
@@ -130,9 +130,9 @@ window.formatearHora12GMT4 = function(timestamp) {
         const fecha = new Date(ts);
         return fecha.toLocaleString('en-US', {
             timeZone: 'America/Caracas',
-            hour:     'numeric',
-            minute:   '2-digit',
-            hour12:   true
+            hour: 'numeric',
+            minute: '2-digit',
+            hour12: true
         }).toLowerCase();
     } catch (e) {
         return timestamp;
@@ -419,6 +419,31 @@ window.actualizarBadgeNotificaciones = function(conteo) {
             badge.classList.remove('has-unread');
         }
     }
+};
+
+// ============================================
+// FUNCIÓN AUXILIAR PARA WIFI (cliente)
+// ============================================
+window._mostrarPantallaWifi = function(wifiSsid, wifiPwd) {
+    document.body.innerHTML = `
+        <div style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;
+            background:linear-gradient(135deg,#1a1a2e,#16213e);color:#fff;padding:2rem;text-align:center;font-family:Roboto,sans-serif">
+            <div style="font-size:3rem;margin-bottom:1rem">📶</div>
+            <h2 style="color:#FF9800;font-size:1.4rem;margin-bottom:.75rem">Conéctate al WiFi del restaurante</h2>
+            <p style="font-size:1rem;opacity:.85;margin-bottom:1.5rem">Para acceder al menú necesitas estar conectado a:</p>
+            <div style="background:rgba(255,255,255,.1);border-radius:12px;padding:1.2rem 2rem;margin-bottom:2rem;border:1px solid rgba(255,255,255,.2)">
+                <div style="font-size:1.3rem;font-weight:700;color:#fff;letter-spacing:1px">${wifiSsid}</div>
+                ${wifiPwd ? '<div style="font-size:.85rem;opacity:.6;margin-top:.3rem">Contraseña: ' + wifiPwd + '</div>' : ''}
+            </div>
+            <p style="font-size:.85rem;opacity:.65;margin-bottom:2rem">Ve a Ajustes → WiFi, conéctate a la red y luego toca:</p>
+            <button onclick="window.location.reload()" 
+                style="background:linear-gradient(135deg,#D32F2F,#B71C1C);color:#fff;border:none;padding:.9rem 2rem;
+                border-radius:10px;font-size:1rem;font-weight:700;cursor:pointer;letter-spacing:.5px;margin-bottom:1rem">
+                🔄 Ya me conecté — Abrir Menú
+            </button>
+            <p style="font-size:.75rem;opacity:.4">O escanea el QR nuevamente</p>
+        </div>
+    `;
 };
 
 console.log('✅ supabase-config.js cargado correctamente');
