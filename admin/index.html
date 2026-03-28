@@ -12,8 +12,8 @@
     <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="stylesheet" href="admin_CSS.css">
-	<script src="admin_javascript.js" defer></script>
-	<script src="../supabase-config.js"></script>
+    <script src="admin_javascript.js" defer></script>
+    <script src="../supabase-config.js"></script>
 </head>
 <body>
 <!-- Aviso de salida -->
@@ -47,7 +47,7 @@
     <button class="theme-toggle" id="themeToggle" onclick="window.toggleTheme()" title="Cambiar tema"><i class="fas fa-sun" id="themeIcon"></i></button>
     <button class="logout-button" id="logoutButton"><i class="fas fa-sign-out-alt"></i> Salir</button>
 </div>
-<!-- NUEVA LÍNEA: Stock crítico -->
+<!-- Stock crítico -->
 <div id="stockCriticoHeader" style="width:100%; margin-top:.5rem; padding:.4rem .8rem; background:rgba(0,0,0,.2); border-radius:8px; display:flex; align-items:center; gap:.8rem; flex-wrap:wrap; font-size:.75rem">
     <span style="font-weight:700; color:var(--danger); white-space:nowrap"><i class="fas fa-exclamation-triangle"></i> Stock crítico:</span>
     <div id="stockCriticoTags" style="display:flex; flex-wrap:wrap; gap:.4rem; flex:1; min-width:0"></div>
@@ -83,52 +83,41 @@
                 
                 <!-- Configuración de Tasa de Cambio -->
                 <div class="tasa-cards-bar" id="tasaBar">
-                    <!-- Fila 1: 4 tarjetas de valores -->
                     <div class="tcb-cards">
-                        <!-- Tasa Base -->
                         <div class="tcb-card tcb-card-base">
                             <div class="tcb-label">Tasa Base:</div>
-                            <input type="number" step="0.01" id="tasaBaseInput" class="tcb-input"
-                                oninput="window.recalcularTasaEfectiva && window.recalcularTasaEfectiva()">
+                            <input type="number" step="0.01" id="tasaBaseInput" class="tcb-input" oninput="window.recalcularTasaEfectiva && window.recalcularTasaEfectiva()">
                             <div class="tcb-sublabel">Bs. por $1</div>
                         </div>
-                        <!-- Aumento % -->
                         <div class="tcb-card tcb-card-pct">
                             <div class="tcb-label" id="labelAumentoPct">Aumento Diario %:</div>
-                            <input type="number" step="0.1" id="aumentoDiarioInput" class="tcb-input"
-                                oninput="window.recalcularTasaEfectiva && window.recalcularTasaEfectiva()">
+                            <input type="number" step="0.1" id="aumentoDiarioInput" class="tcb-input" oninput="window.recalcularTasaEfectiva && window.recalcularTasaEfectiva()">
                             <div class="tcb-sublabel">por periodo</div>
                         </div>
-                        <!-- Tasa Efectiva -->
                         <div class="tcb-card tcb-card-efectiva">
                             <div class="tcb-label">Tasa Efectiva:</div>
                             <div class="tcb-value-big" id="tasaEfectivaDisplay">400.00</div>
                             <div class="tcb-sublabel">Bs. por $1 hoy</div>
                         </div>
-                        <!-- Acumulado -->
                         <div class="tcb-card tcb-card-acum">
                             <div class="tcb-label">Acumulado:</div>
                             <div class="tcb-value-big tcb-acum-val" id="aumentoAcumuladoDisplay">0%</div>
                             <div class="tcb-sublabel">aumento total</div>
                         </div>
                     </div>
-                    <!-- Fila 2: toggles + fechas + guardar -->
                     <div class="tcb-controls">
-                        <!-- Toggle diario -->
                         <div class="tcb-toggle-card">
                             <div class="tcb-toggle-top">
                                 <span class="tcb-toggle-label">Aumento diario activo</span>
                                 <label class="toggle-switch"><input type="checkbox" id="aumentoActivoToggle"><span class="toggle-slider"></span></label>
                             </div>
                         </div>
-                        <!-- Toggle semanal -->
                         <div class="tcb-toggle-card">
                             <div class="tcb-toggle-top">
                                 <span class="tcb-toggle-label">Aumento semanal activo</span>
                                 <label class="toggle-switch"><input type="checkbox" id="aumentoSemanalToggle"><span class="toggle-slider"></span></label>
                             </div>
                         </div>
-                        <!-- Fechas (visibles solo cuando hay toggle activo) -->
                         <div class="tcb-fechas-card" id="tasaFechasDiv" style="display:none">
                             <div class="tcb-fecha-row">
                                 <span class="tcb-fecha-label">Desde:</span>
@@ -149,7 +138,6 @@
                                 </span>
                             </div>
                         </div>
-                        <!-- Guardar -->
                         <div class="tcb-save-wrap">
                             <button class="btn-primary tcb-save-btn" id="saveAllButton">
                                 <i class="fas fa-save"></i> Guardar cambios en tasa
@@ -167,25 +155,25 @@
                     <div class="dashboard-card"><div class="card-title">Productos Activos</div><div class="card-value" id="productosActivos">0</div></div>
                     <div class="dashboard-card"><div class="card-title">Alertas Stock</div><div class="card-value" id="alertasStock">0</div></div>
                     <div class="dashboard-card" id="propinasHoyCard" style="cursor:pointer" onclick="window._irAMesoneros()" title="Ir a gestión de mesoneros y propinas">
-    <div class="card-title">Propinas Hoy <i class="fas fa-external-link-alt" style="font-size:.6rem;opacity:.5;margin-left:.3rem"></i></div>
-    <div class="card-value" id="propinasHoyDashboard">Bs. 0</div>
-    <div style="font-size:.72rem;color:var(--text-muted);margin-top:.25rem">Toca para gestionar propinas</div>
-</div>
+                        <div class="card-title">Propinas Hoy <i class="fas fa-external-link-alt" style="font-size:.6rem;opacity:.5;margin-left:.3rem"></i></div>
+                        <div class="card-value" id="propinasHoyDashboard">Bs. 0</div>
+                        <div style="font-size:.72rem;color:var(--text-muted);margin-top:.25rem">Toca para gestionar propinas</div>
+                    </div>
                     <div class="dashboard-card" id="deliverysHoyCard" style="cursor:pointer" onclick="window._abrirDetalleDeliverysAdmin()" title="Ver detalle de deliverys">
-    <div class="card-title">Deliverys Hoy <i class="fas fa-external-link-alt" style="font-size:.6rem;opacity:.5;margin-left:.3rem"></i></div>
-    <div class="card-value" id="deliverysHoyDashboard">Bs. 0</div>
-    <div style="font-size:.72rem;color:var(--text-muted);margin-top:.25rem">Toca para ver desglose</div>
-</div>
+                        <div class="card-title">Deliverys Hoy <i class="fas fa-external-link-alt" style="font-size:.6rem;opacity:.5;margin-left:.3rem"></i></div>
+                        <div class="card-value" id="deliverysHoyDashboard">Bs. 0</div>
+                        <div style="font-size:.72rem;color:var(--text-muted);margin-top:.25rem">Toca para ver desglose</div>
+                    </div>
                 </div>
                 <div class="dashboard-lower-grid">
                     <div class="alert-list lower-stock"><h3>Stock Crítico</h3><div id="stockCritico"></div></div>
                     <div class="alert-list lower-pedidos">
-    <h3 style="display:flex; align-items:center; gap:.5rem; margin-bottom:1rem; padding-bottom:.5rem; border-bottom:2px solid var(--border)">
-        <i class="fas fa-clock" style="color:var(--accent)"></i> Pedidos Recientes
-        <span id="pedidosCountBadge" style="background:var(--primary); color:#fff; padding:.15rem .6rem; border-radius:20px; font-size:.7rem; margin-left:auto">0</span>
-    </h3>
-    <div id="pedidosRecientes" style="display:flex; flex-direction:column; gap:.6rem"></div>
-</div>
+                        <h3 style="display:flex; align-items:center; gap:.5rem; margin-bottom:1rem; padding-bottom:.5rem; border-bottom:2px solid var(--border)">
+                            <i class="fas fa-clock" style="color:var(--accent)"></i> Pedidos Recientes
+                            <span id="pedidosCountBadge" style="background:var(--primary); color:#fff; padding:.15rem .6rem; border-radius:20px; font-size:.7rem; margin-left:auto">0</span>
+                        </h3>
+                        <div id="pedidosRecientes" style="display:flex; flex-direction:column; gap:.6rem"></div>
+                    </div>
                 </div>
             </div>
             
@@ -216,7 +204,6 @@
                     </div>
                 </div>
                 <div class="inv-panel" id="invPanel">
-                    <!-- Columna izquierda: lista -->
                     <div class="inv-list-col">
                         <div class="inv-list-search">
                             <input type="text" id="inventarioBuscador" placeholder="Buscar ingrediente..."
@@ -224,7 +211,6 @@
                         </div>
                         <div class="inv-list-items" id="inventarioGrid"></div>
                     </div>
-                    <!-- Columna derecha: detalle -->
                     <div class="inv-detail-col" id="invDetailCol">
                         <div class="inv-detail-empty" id="invDetailEmpty">
                             <i class="fas fa-hand-point-left" style="font-size:2rem;margin-bottom:.75rem;display:block;opacity:.3"></i>
@@ -264,25 +250,21 @@
                 <div class="pane-header">
                     <h2 class="section-title"><i class="fas fa-user-tie" style="color:var(--propina)"></i> Mesoneros y Propinas</h2>
                     <div class="pane-actions" style="margin-left:auto">
-                        <input type="text" id="nuevoMesonero" placeholder="Nombre del mesonero"
-                            class="pane-input">
+                        <input type="text" id="nuevoMesonero" placeholder="Nombre del mesonero" class="pane-input">
                         <button class="btn-primary" onclick="window.agregarMesonero()">
                             <i class="fas fa-plus"></i> Agregar
                         </button>
                     </div>
                 </div>
 
-                <!-- Stats de propinas -->
                 <div class="propinas-stats" style="margin-bottom:1.5rem">
                     <div class="propina-card"><div class="stat-value" id="propinasTotal">Bs. 0</div><div class="stat-label">Total del Día</div></div>
                     <div class="propina-card"><div class="stat-value" id="propinasCantidad">0</div><div class="stat-label">Propinas Hoy</div></div>
                     <div class="propina-card"><div class="stat-value" id="propinasPromedio">Bs. 0</div><div class="stat-label">Promedio</div></div>
                 </div>
 
-                <!-- Tarjetas de mesoneros con acumulado -->
                 <div id="mesonerosList" class="mesoneros-grid"></div>
 
-                <!-- Historial de propinas del día -->
                 <div class="table-section" style="margin-top:1.5rem">
                     <h3 class="table-section-title">Historial de Propinas de Hoy</h3>
                     <div class="table-responsive">
@@ -295,46 +277,46 @@
             </div>
 
             <!-- CONFIGURACIÓN -->
-<div class="tab-pane" id="configuracionPane">
-    <div class="pane-header">
-        <h2 class="section-title"><i class="fas fa-cog"></i> Configuración</h2>
-    </div>
-    <div class="config-grid">
-        <div class="config-section">
-            <h3><i class="fas fa-lock" style="color:var(--primary);margin-right:.4rem"></i>Cambiar Contraseña</h3>
-            <div class="form-group">
-                <label>Contraseña Actual</label>
-                <input type="password" id="currentPassword" placeholder="Ingresa tu contraseña actual">
+            <div class="tab-pane" id="configuracionPane">
+                <div class="pane-header">
+                    <h2 class="section-title"><i class="fas fa-cog"></i> Configuración</h2>
+                </div>
+                <div class="config-grid">
+                    <div class="config-section">
+                        <h3><i class="fas fa-lock" style="color:var(--primary);margin-right:.4rem"></i>Cambiar Contraseña</h3>
+                        <div class="form-group">
+                            <label>Contraseña Actual</label>
+                            <input type="password" id="currentPassword" placeholder="Ingresa tu contraseña actual">
+                        </div>
+                        <div class="form-group">
+                            <label>Nueva Contraseña</label>
+                            <input type="password" id="newPassword" placeholder="Mínimo 4 caracteres">
+                        </div>
+                        <div class="form-group">
+                            <label>Confirmar Nueva Contraseña</label>
+                            <input type="password" id="confirmPassword" placeholder="Repite la nueva contraseña">
+                        </div>
+                        <div id="passwordChangeError" style="display:none; color:var(--danger); font-size:.8rem; margin-top:.5rem; text-align:center">
+                            <i class="fas fa-exclamation-circle"></i> Error al cambiar la contraseña
+                        </div>
+                        <button class="btn-primary" onclick="window.cambiarPassword()" style="margin-top:.5rem">
+                            <i class="fas fa-save"></i> Guardar contraseña
+                        </button>
+                    </div>
+                    <div class="config-section">
+                        <h3><i class="fas fa-envelope" style="color:var(--info);margin-right:.4rem"></i>Correo de Recuperación</h3>
+                        <div class="form-group">
+                            <label>Correo Electrónico</label>
+                            <input type="email" id="recoveryEmail" value="admin@sakisushi.com">
+                        </div>
+                        <button class="btn-primary" onclick="window.guardarRecoveryEmail()">
+                            <i class="fas fa-save"></i> Guardar correo
+                        </button>
+                    </div>
+                </div>
             </div>
-            <div class="form-group">
-                <label>Nueva Contraseña</label>
-                <input type="password" id="newPassword" placeholder="Mínimo 4 caracteres">
-            </div>
-            <div class="form-group">
-                <label>Confirmar Nueva Contraseña</label>
-                <input type="password" id="confirmPassword" placeholder="Repite la nueva contraseña">
-            </div>
-            <div id="passwordChangeError" style="display:none; color:var(--danger); font-size:.8rem; margin-top:.5rem; text-align:center">
-                <i class="fas fa-exclamation-circle"></i> Error al cambiar la contraseña
-            </div>
-            <button class="btn-primary" onclick="window.cambiarPassword()" style="margin-top:.5rem">
-                <i class="fas fa-save"></i> Guardar contraseña
-            </button>
-        </div>
-        <div class="config-section">
-            <h3><i class="fas fa-envelope" style="color:var(--info);margin-right:.4rem"></i>Correo de Recuperación</h3>
-            <div class="form-group">
-                <label>Correo Electrónico</label>
-                <input type="email" id="recoveryEmail" value="admin@sakisushi.com">
-            </div>
-            <button class="btn-primary" onclick="window.guardarRecoveryEmail()">
-                <i class="fas fa-save"></i> Guardar correo
-            </button>
-        </div>
-    </div>
-</div>
             
-            <!-- QR (MODIFICADO) -->
+            <!-- QR -->
             <div class="tab-pane" id="qrPane">
                 <div class="pane-header">
                     <h2 class="section-title"><i class="fas fa-qrcode"></i> Códigos QR</h2>
@@ -373,18 +355,18 @@
                     <h2 class="section-title"><i class="fas fa-chart-bar"></i> Reportes</h2>
                 </div>
                 <div class="reportes-filters" style="display:flex; gap:1rem; flex-wrap:wrap; align-items:flex-end; background:var(--card-bg); border-radius:14px; padding:1.2rem; box-shadow:var(--shadow-sm); border:1px solid var(--border); margin-bottom:1.5rem">
-    <div class="form-group" style="margin:0; flex:1; min-width:180px">
-        <label style="display:block; margin-bottom:.3rem; font-weight:600; font-size:.75rem; color:var(--text-muted)">Desde</label>
-        <input type="date" id="reporteDesde" style="width:100%; padding:.7rem; border:1px solid var(--border); border-radius:8px; background:var(--input-bg); color:var(--text-dark); font-size:.9rem">
-    </div>
-    <div class="form-group" style="margin:0; flex:1; min-width:180px">
-        <label style="display:block; margin-bottom:.3rem; font-weight:600; font-size:.75rem; color:var(--text-muted)">Hasta</label>
-        <input type="date" id="reporteHasta" style="width:100%; padding:.7rem; border:1px solid var(--border); border-radius:8px; background:var(--input-bg); color:var(--text-dark); font-size:.9rem">
-    </div>
-    <button class="btn-primary" onclick="window.cargarReportes()" style="padding:.7rem 1.5rem; white-space:nowrap">
-        <i class="fas fa-search"></i> Buscar
-    </button>
-</div>
+                    <div class="form-group" style="margin:0; flex:1; min-width:180px">
+                        <label style="display:block; margin-bottom:.3rem; font-weight:600; font-size:.75rem; color:var(--text-muted)">Desde</label>
+                        <input type="date" id="reporteDesde" style="width:100%; padding:.7rem; border:1px solid var(--border); border-radius:8px; background:var(--input-bg); color:var(--text-dark); font-size:.9rem">
+                    </div>
+                    <div class="form-group" style="margin:0; flex:1; min-width:180px">
+                        <label style="display:block; margin-bottom:.3rem; font-weight:600; font-size:.75rem; color:var(--text-muted)">Hasta</label>
+                        <input type="date" id="reporteHasta" style="width:100%; padding:.7rem; border:1px solid var(--border); border-radius:8px; background:var(--input-bg); color:var(--text-dark); font-size:.9rem">
+                    </div>
+                    <button class="btn-primary" onclick="window.cargarReportes()" style="padding:.7rem 1.5rem; white-space:nowrap">
+                        <i class="fas fa-search"></i> Buscar
+                    </button>
+                </div>
                 <div class="dashboard-grid">
                     <div class="dashboard-card"><div class="card-title">Ventas Día</div><div class="card-value" id="ventasDia">$0.00</div></div>
                     <div class="dashboard-card"><div class="card-title">Ventas Semana</div><div class="card-value" id="ventasSemana">$0.00</div></div>
@@ -406,16 +388,17 @@
     </div>
     
     <!-- MODALES -->
-    <div class="modal" id="platilloModal"><div class="modal-content" style="max-width:600px"><div class="modal-header"><h3 id="platilloModalTitle">Nuevo Platillo</h3><button class="modal-close" id="closePlatilloModal" onclick="window.cerrarModal('platilloModal')">&times;</button></div>
-    
+    <div class="modal modal-lg" id="platilloModal">
+        <div class="modal-content" style="max-width:600px">
+            <div class="modal-header"><h3 id="platilloModalTitle">Nuevo Platillo</h3><button class="modal-close" id="closePlatilloModal" onclick="window.cerrarModal('platilloModal')">&times;</button></div>
+            <div class="modal-body">
                 <!-- Imagen -->
                 <div class="form-group">
                     <label>Imagen del Platillo</label>
                     <div style="display:flex;gap:.6rem;align-items:flex-start">
                         <div style="flex:1">
                             <input type="file" id="platilloImagen" accept="image/*" style="margin-bottom:.3rem">
-                            <input type="url" id="platilloImagenUrl" placeholder="O pega aquí el link de la imagen"
-                                oninput="window._previewPlatilloUrl(this.value)">
+                            <input type="url" id="platilloImagenUrl" placeholder="O pega aquí el link de la imagen" oninput="window._previewPlatilloUrl(this.value)">
                         </div>
                         <div id="imagenPreview" class="image-preview" style="display:none;width:80px;height:80px;flex-shrink:0">
                             <img id="previewImg" style="width:100%;height:100%;object-fit:cover;border-radius:8px">
@@ -443,8 +426,7 @@
                 <!-- Precio + Disponible (toggle) -->
                 <div class="form-row" style="align-items:center">
                     <div class="form-group"><label>Precio (USD)</label>
-                        <input type="number" step="0.01" id="platilloPrecio" required placeholder="0.00"
-                            oninput="window._previewPrecioBs()">
+                        <input type="number" step="0.01" id="platilloPrecio" required placeholder="0.00" oninput="window._previewPrecioBs()">
                         <div id="platilloPrecioBsPreview" style="font-size:.75rem;color:var(--text-muted);margin-top:.2rem"></div>
                     </div>
                     <div class="form-group" style="flex:0 0 auto">
@@ -453,7 +435,6 @@
                             <input type="checkbox" id="platilloDisponibleCheck" checked style="accent-color:var(--success);width:16px;height:16px">
                             <span id="platilloDisponibleLabel" style="font-size:.82rem;font-weight:600;color:var(--success)">Sí</span>
                         </label>
-                        <!-- campo oculto para compatibilidad con el listener existente -->
                         <select id="platilloDisponible" style="display:none">
                             <option value="true">Sí</option><option value="false">No</option>
                         </select>
@@ -478,129 +459,131 @@
                     <i class="fas fa-layer-group" style="margin-right:.35rem"></i>
                     <span id="stockCalculadoText">Agrega ingredientes para calcular</span>
                 </div>
-
-            </form></div>
+            </div>
             <div class="modal-footer">
                 <button class="btn-secondary" id="cancelPlatillo" type="button">Cancelar</button>
                 <button class="btn-primary" id="savePlatillo" type="button">Guardar</button>
             </div>
-        </div></div>
-        
-<div class="modal" id="ingredienteModal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3 id="ingredienteModalTitle">Nuevo Ingrediente</h3>
-            <button class="modal-close" id="closeIngredienteModal">&times;</button>
         </div>
-        <div class="modal-body">
-            <form id="ingredienteForm">
-                <div class="form-group">
-                    <label>Nombre del Ingrediente</label>
-                    <input type="text" id="ingredienteNombre" required placeholder="Ej: Salmón fresco">
-                </div>
-
-                <!-- Stock Actual con overlay de contraseña -->
-<div class="form-group" id="stockOverlay">
-    <label style="display:flex; align-items:center; gap:.5rem">
-        Stock Actual
-        <span id="stockLockIcon" style="color:var(--text-muted)">
-            <i class="fas fa-lock" style="font-size:.8rem"></i>
-        </span>
-    </label>
-    <div id="stockClickArea" style="position:relative; cursor:pointer; border:1px solid var(--border); border-radius:8px; background:var(--input-bg); transition:all .2s; display:flex; align-items:center; width:100%; box-sizing:border-box" 
-     onclick="window.mostrarModalContraseñaStock()"
-     onmouseover="this.style.borderColor='var(--accent)'; this.style.boxShadow='0 0 0 2px rgba(255,152,0,.2)'"
-     onmouseout="this.style.borderColor='var(--border)'; this.style.boxShadow='none'">
-    <input type="number" step="0.001" id="ingredienteStock" disabled
-        style="width:100%; cursor:pointer; background:transparent; color:var(--text-dark); border:none; border-radius:8px; padding:.65rem .9rem; outline:none; box-sizing:border-box"
-        title="Haz clic para desbloquear (requiere contraseña de administrador)">
-</div>
-</div>
-
-                <!-- Mercancía a agregar + Unidad -->
-                <div class="form-group">
-                    <div style="display:flex; gap:.75rem; align-items:flex-end">
-                        <div style="flex:1">
-                            <label>Mercancía Nueva a Agregar</label>
-                            <input type="number" step="0.001" id="ingredienteAgregar" placeholder="0" min="0"
-    oninput="if(this.value<0)this.value=0; window._syncIngredientePreview()">
-                        </div>
-                        <div style="flex:1">
-                            <label>Unidad de Medida</label>
-                            <select id="ingredienteUnidad" onchange="window._syncIngredientePreview()">
-                                <option value="unidades">Unidades/Piezas</option>
-                                <option value="gramos">Gramos</option>
-                                <option value="mililitros">Mililitros</option>
-                                <option value="kilogramos">Kilogramos</option>
-                                <option value="litros">Litros</option>
-                            </select>
-                        </div>
+    </div>
+    
+    <div class="modal" id="ingredienteModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="ingredienteModalTitle">Nuevo Ingrediente</h3>
+                <button class="modal-close" id="closeIngredienteModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="ingredienteForm">
+                    <div class="form-group">
+                        <label>Nombre del Ingrediente</label>
+                        <input type="text" id="ingredienteNombre" required placeholder="Ej: Salmón fresco">
                     </div>
-                    <div id="stockTotalPreview" style="margin-top:.4rem; font-size:.82rem; color:var(--text-muted)"></div>
-                    <div id="stockConversionPreview" style="margin-top:.2rem; font-size:.75rem; color:var(--text-muted)"></div>
-                </div>
 
-                <!-- Stock Mínimo -->
-                <div class="form-group">
-                    <label style="display:flex; align-items:center; gap:.4rem">
-                        Stock Mínimo
-                        <span class="tooltip-wrap" style="position:relative; display:inline-flex; cursor:help">
-                            <span style="display:inline-flex; align-items:center; justify-content:center; width:15px; height:15px; background:#aaa; color:#fff; border-radius:50%; font-size:.65rem; font-weight:700">?</span>
-                            <span class="tooltip-text" style="display:none; position:absolute; bottom:calc(100% + 6px); left:50%; transform:translateX(-50%); background:var(--toast-bg); color:var(--toast-text); padding:.5rem .75rem; border-radius:8px; font-size:.75rem; white-space:normal; width:230px; text-align:center; box-shadow:0 4px 12px rgba(0,0,0,.3); z-index:100; line-height:1.4">
-                                Cuando el stock disponible baje de este valor, aparecerá una alerta en el Dashboard (Stock Crítico) y se enviará una notificación push.
+                    <!-- Stock Actual con overlay de contraseña + hint -->
+                    <div class="form-group" id="stockOverlay">
+                        <label style="display:flex; align-items:center; gap:.5rem">
+                            Stock Actual
+                            <span id="stockLockIcon" style="color:var(--text-muted)">
+                                <i class="fas fa-lock" style="font-size:.8rem"></i>
                             </span>
-                        </span>
-                    </label>
-                    <input type="number" step="0.001" id="ingredienteMinimo" placeholder="Ej: 5">
-                </div>
-
-                <!-- Calculadora de costo unitario -->
-                <div class="form-group" style="background:var(--card-bg); border-radius:10px; padding:.85rem; border:1px solid var(--border)">
-                    <label style="font-weight:700; font-size:.8rem; text-transform:uppercase; letter-spacing:.5px; color:var(--text-muted); margin-bottom:.5rem; display:block">
-                        <i class="fas fa-calculator" style="margin-right:.3rem; color:var(--accent)"></i>Calculadora de Costo Unitario
-                    </label>
-                    <div style="display:flex; gap:.75rem; align-items:flex-end">
-                        <div style="flex:1">
-                            <label style="font-size:.78rem">Costo Total Compra (USD)</label>
-                            <input type="number" step="0.01" id="costoTotal" placeholder="0.00" oninput="window.calcularCostoUnitario()">
+                        </label>
+                        <div id="stockClickArea" style="position:relative; cursor:pointer; border:1px solid var(--border); border-radius:8px; background:var(--input-bg); transition:all .2s; display:flex; align-items:center; width:100%; box-sizing:border-box" 
+                             onclick="window.mostrarModalContraseñaStock()"
+                             onmouseover="this.style.borderColor='var(--accent)'; this.style.boxShadow='0 0 0 2px rgba(255,152,0,.2)'"
+                             onmouseout="this.style.borderColor='var(--border)'; this.style.boxShadow='none'">
+                            <input type="number" step="0.001" id="ingredienteStock" disabled
+                                style="width:100%; cursor:pointer; background:transparent; color:var(--text-dark); border:none; border-radius:8px; padding:.65rem .9rem; outline:none; box-sizing:border-box"
+                                title="Haz clic para desbloquear (requiere contraseña de administrador)">
                         </div>
-                        <div style="flex:1">
-                            <label style="font-size:.78rem">Cantidad Comprada</label>
-                            <input type="number" step="0.001" id="cantidadComprada" placeholder="0" oninput="window.calcularCostoUnitario()">
+                        <div class="stock-unlock-hint">
+                            <i class="fas fa-info-circle"></i> <span>Haz clic para editar (requiere contraseña)</span>
                         </div>
                     </div>
-                    <div id="calcResultado" style="display:none; margin-top:.5rem; padding:.4rem .6rem; background:rgba(0,0,0,.2); border-radius:6px; border:1px solid var(--border); font-size:.82rem">
-                        Costo unitario: <strong id="calcPrecioUnitario">0.00</strong> USD
-                        <span id="calcUnidadResult" style="color:var(--text-muted)"></span>
-                    </div>
-                </div>
 
-                <div class="form-row">
+                    <!-- Mercancía a agregar + Unidad -->
                     <div class="form-group">
-                        <label>Precio de Costo (USD/ud)</label>
-                        <input type="number" step="0.01" id="ingredienteCosto" placeholder="0.00">
+                        <div style="display:flex; gap:.75rem; align-items:flex-end">
+                            <div style="flex:1">
+                                <label>Mercancía Nueva a Agregar</label>
+                                <input type="number" step="0.001" id="ingredienteAgregar" placeholder="0" min="0" oninput="if(this.value<0)this.value=0; window._syncIngredientePreview()">
+                            </div>
+                            <div style="flex:1">
+                                <label>Unidad de Medida</label>
+                                <select id="ingredienteUnidad" onchange="window._syncIngredientePreview()">
+                                    <option value="unidades">Unidades/Piezas</option>
+                                    <option value="gramos">Gramos</option>
+                                    <option value="mililitros">Mililitros</option>
+                                    <option value="kilogramos">Kilogramos</option>
+                                    <option value="litros">Litros</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div id="stockTotalPreview" style="margin-top:.4rem; font-size:.82rem; color:var(--text-muted)"></div>
+                        <div id="stockConversionPreview" style="margin-top:.2rem; font-size:.75rem; color:var(--text-muted)"></div>
                     </div>
+
+                    <!-- Stock Mínimo -->
                     <div class="form-group">
-                        <label>Precio de Venta (USD/ud)</label>
-                        <input type="number" step="0.01" id="ingredienteVenta" placeholder="0.00">
+                        <label style="display:flex; align-items:center; gap:.4rem">
+                            Stock Mínimo
+                            <span class="tooltip-wrap" style="position:relative; display:inline-flex; cursor:help">
+                                <span style="display:inline-flex; align-items:center; justify-content:center; width:15px; height:15px; background:#aaa; color:#fff; border-radius:50%; font-size:.65rem; font-weight:700">?</span>
+                                <span class="tooltip-text" style="display:none; position:absolute; bottom:calc(100% + 6px); left:50%; transform:translateX(-50%); background:var(--toast-bg); color:var(--toast-text); padding:.5rem .75rem; border-radius:8px; font-size:.75rem; white-space:normal; width:230px; text-align:center; box-shadow:0 4px 12px rgba(0,0,0,.3); z-index:100; line-height:1.4">
+                                    Cuando el stock disponible baje de este valor, aparecerá una alerta en el Dashboard (Stock Crítico) y se enviará una notificación push.
+                                </span>
+                            </span>
+                        </label>
+                        <input type="number" step="0.001" id="ingredienteMinimo" placeholder="Ej: 5">
                     </div>
+
+                    <!-- Calculadora de costo unitario -->
+                    <div class="form-group" style="background:var(--card-bg); border-radius:10px; padding:.85rem; border:1px solid var(--border)">
+                        <label style="font-weight:700; font-size:.8rem; text-transform:uppercase; letter-spacing:.5px; color:var(--text-muted); margin-bottom:.5rem; display:block">
+                            <i class="fas fa-calculator" style="margin-right:.3rem; color:var(--accent)"></i>Calculadora de Costo Unitario
+                        </label>
+                        <div style="display:flex; gap:.75rem; align-items:flex-end">
+                            <div style="flex:1">
+                                <label style="font-size:.78rem">Costo Total Compra (USD)</label>
+                                <input type="number" step="0.01" id="costoTotal" placeholder="0.00" oninput="window.calcularCostoUnitario()">
+                            </div>
+                            <div style="flex:1">
+                                <label style="font-size:.78rem">Cantidad Comprada</label>
+                                <input type="number" step="0.001" id="cantidadComprada" placeholder="0" oninput="window.calcularCostoUnitario()">
+                            </div>
+                        </div>
+                        <div id="calcResultado" style="display:none; margin-top:.5rem; padding:.4rem .6rem; background:rgba(0,0,0,.2); border-radius:6px; border:1px solid var(--border); font-size:.82rem">
+                            Costo unitario: <strong id="calcPrecioUnitario">0.00</strong> USD
+                            <span id="calcUnidadResult" style="color:var(--text-muted)"></span>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Precio de Costo (USD/ud)</label>
+                            <input type="number" step="0.01" id="ingredienteCosto" placeholder="0.00">
+                        </div>
+                        <div class="form-group">
+                            <label>Precio de Venta (USD/ud)</label>
+                            <input type="number" step="0.01" id="ingredienteVenta" placeholder="0.00">
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer" style="display:flex; justify-content:space-between; align-items:center">
+                <button class="btn-primary" id="deleteIngredienteBtn" type="button"
+                    style="display:none; padding:.6rem 1.2rem; border-radius:8px; background:var(--danger); color:#fff; border:none; cursor:pointer; font-size:.85rem; font-weight:600"
+                    onclick="window._eliminarIngredienteDesdeModal()"
+                    title="Eliminar este ingrediente">
+                    <i class="fas fa-trash"></i> Eliminar
+                </button>
+                <div style="display:flex; gap:.75rem">
+                    <button class="btn-secondary" id="cancelIngrediente" type="button">Cancelar</button>
+                    <button class="btn-primary" id="saveIngrediente" type="button">Guardar</button>
                 </div>
-            </form>
+            </div>
         </div>
-        <div class="modal-footer" style="display:flex; justify-content:space-between; align-items:center">
-    <button class="btn-primary" id="deleteIngredienteBtn" type="button"
-        style="display:none; padding:.6rem 1.2rem; border-radius:8px; background:var(--danger); color:#fff; border:none; cursor:pointer; font-size:.85rem; font-weight:600"
-        onclick="window._eliminarIngredienteDesdeModal()"
-        title="Eliminar este ingrediente">
-        <i class="fas fa-trash"></i> Eliminar
-    </button>
-    <div style="display:flex; gap:.75rem">
-        <button class="btn-secondary" id="cancelIngrediente" type="button">Cancelar</button>
-        <button class="btn-primary" id="saveIngrediente" type="button">Guardar</button>
     </div>
-</div>
-    </div>
-</div>
     
     <div class="modal" id="usuarioModal"><div class="modal-content"><div class="modal-header"><h3>Nuevo Cajero</h3><button class="modal-close" id="closeUsuarioModal" onclick="window.cerrarModal('usuarioModal')">&times;</button></div>
                         <!-- Línea 1: Nombre completo + estado activo -->
@@ -628,35 +611,35 @@
                                 <input type="text" id="usuarioPassword" value="123456" required>
                             </div>
                         </div>
-                    </form></div><div class="modal-footer"><button class="btn-secondary" id="cancelUsuario" type="button">Cancelar</button><button class="btn-primary" id="saveUsuario" type="button">Guardar</button></div></div></div>
+                    </div><div class="modal-footer"><button class="btn-secondary" id="cancelUsuario" type="button">Cancelar</button><button class="btn-primary" id="saveUsuario" type="button">Guardar</button></div></div></div>
     
     <div class="modal" id="deliveryModal">
-    <div class="modal-content">
-        <div class="modal-header" style="background:linear-gradient(135deg,var(--delivery),#00838F)">
-            <h3><i class="fas fa-motorcycle"></i> Editar Motorizado</h3>
-            <button class="modal-close" id="closeDeliveryModal" onclick="window.cerrarModal('deliveryModal')">&times;</button>
-        </div>
-        <div class="modal-body">
-            <form id="deliveryForm">
-                <div class="form-group">
-                    <label>Nombre</label>
-                    <input type="text" id="deliveryNombre" required>
-                </div>
-                <div class="form-group">
-                    <label>Estado</label>
-                    <select id="deliveryEstado">
-                        <option value="true">Activo</option>
-                        <option value="false">Inactivo</option>
-                    </select>
-                </div>
-            </form>
-        </div>
-        <div class="modal-footer">
-            <button class="btn-secondary" id="cancelDeliveryEdit" type="button">Cancelar</button>
-            <button class="btn-primary" id="saveDelivery" type="button" style="background:linear-gradient(135deg,var(--delivery),#00838F)">Guardar</button>
+        <div class="modal-content">
+            <div class="modal-header" style="background:linear-gradient(135deg,var(--delivery),#00838F)">
+                <h3><i class="fas fa-motorcycle"></i> Editar Motorizado</h3>
+                <button class="modal-close" id="closeDeliveryModal" onclick="window.cerrarModal('deliveryModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="deliveryForm">
+                    <div class="form-group">
+                        <label>Nombre</label>
+                        <input type="text" id="deliveryNombre" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Estado</label>
+                        <select id="deliveryEstado">
+                            <option value="true">Activo</option>
+                            <option value="false">Inactivo</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="cancelDeliveryEdit" type="button">Cancelar</button>
+                <button class="btn-primary" id="saveDelivery" type="button" style="background:linear-gradient(135deg,var(--delivery),#00838F)">Guardar</button>
+            </div>
         </div>
     </div>
-</div>
     
     <div class="modal" id="confirmPagoDeliveryModal"><div class="modal-content"><div class="modal-header" style="background:linear-gradient(135deg,var(--success),#2E7D32)"><h3><i class="fas fa-hand-holding-usd"></i> Confirmar Pago</h3><button class="modal-close" onclick="window.cerrarModal('confirmPagoDeliveryModal')">&times;</button></div><div class="modal-body" id="confirmPagoDeliveryBody"></div><div class="modal-footer"><button class="btn-secondary" onclick="window.cerrarModal('confirmPagoDeliveryModal')">Cancelar</button><button class="btn-primary" id="confirmPagoDeliveryBtn" onclick="window.confirmarPagoDelivery()">Confirmar</button></div></div></div>
     
