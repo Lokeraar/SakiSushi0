@@ -102,6 +102,22 @@ window.throttle = function(func, limit) {
     };
 };
 
+// ==================== WRAPPER SEGURO PARA LLAMADAS SUPABASE ====================
+window.safeSupabaseCall = async (promise, retries = 2) => {
+    for (let i = 0; i <= retries; i++) {
+        try {
+            const result = await promise;
+            return result;
+        } catch (error) {
+            if (window.interceptarError401(error)) {
+                throw new Error('Sesión expirada');
+            }
+            if (i === retries) throw error;
+            await new Promise(resolve => setTimeout(resolve, 1000 * (i + 1)));
+        }
+    }
+};
+
 // ==================== LOGIN CON MANEJO DE JWT ====================
 window.hacerLogin = async function() {
     const password = document.getElementById('adminPassword').value;
@@ -176,7 +192,7 @@ window.hacerLogin = async function() {
 
 // Interceptar errores 401 (JWT expirado)
 window.interceptarError401 = function(error) {
-    if (error?.status === 401 || error?.message?.includes('JWT')) {
+    if (error?.status === 401 || error?.message?.includes('JWT') || error?.code === 'PGRST301') {
         window.mostrarToast('Sesión expirada. Por favor, inicia sesión nuevamente.', 'error');
         sessionStorage.removeItem('admin_authenticated');
         sessionStorage.removeItem('admin_jwt_token');
@@ -190,7 +206,7 @@ window.interceptarError401 = function(error) {
 // ==================== CARGA DE DATOS ====================
 window.cargarConfiguracion = async function() {
     try {
-        const { data, error } = await window.supabaseClient.from('config').select('*').eq('id', 1).single();
+        const { data, error } = await window.safeSupabaseCall(window.supabaseClient.from('config').select('*').eq('id', 1).single());
         if (error && error.code !== 'PGRST116') throw error;
         window.configGlobal = { ...window.configGlobal, ...(data || {}) };
         window.configGlobal.tasa_cambio = window.configGlobal.tasa_cambio || 400;
@@ -230,7 +246,7 @@ window.actualizarTasaUI = function() {
 
 window.cargarMenu = async function() {
     try {
-        const { data, error } = await window.supabaseClient.from('menu').select('*');
+        const { data, error } = await window.safeSupabaseCall(window.supabaseClient.from('menu').select('*'));
         if (error) throw error;
         window.menuItems = data || [];
         window.renderizarMenu(window._menuBuscadorValue || '');
@@ -240,14 +256,17 @@ window.cargarMenu = async function() {
 
 window.cargarInventario = async function() {
     try {
-        const { data, error } = await window.supabaseClient.from('inventario').select('*');
+        const { data, error } = await window.safeSupabaseCall(window.supabaseClient.from('inventario').select('*'));
         if (error) throw error;
         window.inventarioItems = data || [];
     } catch (e) { 
         console.error('Error cargando inventario:', e);
         window.inventarioItems = [];
-        window.mostrarToast('Error cargando inventario. Los datos se mostrarán cuando se recarguen.', 'error');
+        window.mostrarToast('Error cargando inventario. Reintentando...', 'warning');
+        // Reintentar después de 3 segundos
+        setTimeout(() => window.cargarInventario(), 3000);
     } finally {
+        // Siempre renderizar, incluso si hay error (mostrará mensaje de vacío o error)
         window.renderizarInventario(window._inventarioBuscadorValue || '');
         window.actualizarAlertasStock();
         window.actualizarStockCriticoHeader();
@@ -259,7 +278,7 @@ window.cargarInventario = async function() {
 
 window.cargarUsuarios = async function() {
     try {
-        const { data, error } = await window.supabaseClient.from('usuarios').select('*').order('nombre');
+        const { data, error } = await window.safeSupabaseCall(window.supabaseClient.from('usuarios').select('*').order('nombre'));
         if (error) throw error;
         window.usuarios = data || [];
         window.renderizarUsuarios();
@@ -268,7 +287,7 @@ window.cargarUsuarios = async function() {
 
 window.cargarQRs = async function() {
     try {
-        const { data, error } = await window.supabaseClient.from('codigos_qr').select('*').order('fecha', { ascending: false });
+        const { data, error } = await window.safeSupabaseCall(window.supabaseClient.from('codigos_qr').select('*').order('fecha', { ascending: false }));
         if (error) throw error;
         window.qrCodes = data || [];
         window.renderizarQRs();
@@ -281,7 +300,7 @@ window.cargarQRs = async function() {
 
 window.cargarMesoneros = async function() {
     try {
-        const { data, error } = await window.supabaseClient.from('mesoneros').select('*').order('nombre');
+        const { data, error } = await window.safeSupabaseCall(window.supabaseClient.from('mesoneros').select('*').order('nombre'));
         if (error) throw error;
         window.mesoneros = data || [];
         window.renderizarMesoneros();
@@ -291,7 +310,7 @@ window.cargarMesoneros = async function() {
 
 window.cargarDeliverys = async function() {
     try {
-        const { data, error } = await window.supabaseClient.from('deliverys').select('*').order('nombre');
+        const { data, error } = await window.safeSupabaseCall(window.supabaseClient.from('deliverys').select('*').order('nombre'));
         if (error) throw error;
         window.deliverys = data || [];
         window.renderizarDeliverys();
@@ -302,12 +321,14 @@ window.cargarPropinas = async function() {
     try {
         const hoy = new Date(); hoy.setHours(0,0,0,0);
         const manana = new Date(hoy); manana.setDate(manana.getDate() + 1);
-        const { data, error } = await window.supabaseClient
-            .from('propinas')
-            .select('*, mesoneros(nombre)')
-            .gte('fecha', hoy.toISOString())
-            .lt('fecha', manana.toISOString())
-            .order('fecha', { ascending: false });
+        const { data, error } = await window.safeSupabaseCall(
+            window.supabaseClient
+                .from('propinas')
+                .select('*, mesoneros(nombre)')
+                .gte('fecha', hoy.toISOString())
+                .lt('fecha', manana.toISOString())
+                .order('fecha', { ascending: false })
+        );
         if (error) throw error;
         window.propinas = data || [];
         window.renderizarPropinas();
@@ -316,7 +337,7 @@ window.cargarPropinas = async function() {
 
 window.cargarPedidosRecientes = async function() {
     try {
-        const { data, error } = await window.supabaseClient.from('pedidos').select('*').order('fecha', { ascending: false }).limit(5);
+        const { data, error } = await window.safeSupabaseCall(window.supabaseClient.from('pedidos').select('*').order('fecha', { ascending: false }).limit(5));
         if (error) throw error;
         const pedidosCount = document.getElementById('pedidosCountBadge');
         if (pedidosCount) pedidosCount.textContent = (data || []).length;
@@ -596,10 +617,12 @@ window.renderizarMesoneros = async function() {
     
     let acumulados = {};
     try {
-        const { data: allProp } = await window.supabaseClient
-            .from('propinas')
-            .select('mesonero_id, monto_bs, entregado')
-            .eq('entregado', false);
+        const { data: allProp } = await window.safeSupabaseCall(
+            window.supabaseClient
+                .from('propinas')
+                .select('mesonero_id, monto_bs, entregado')
+                .eq('entregado', false)
+        );
         (allProp || []).forEach(p => {
             acumulados[p.mesonero_id] = (acumulados[p.mesonero_id] || 0) + (p.monto_bs || 0);
         });
@@ -691,14 +714,14 @@ window.renderizarPropinas = function() {
     const tbody = document.getElementById('propinasTableBody');
     if (tbody) {
         tbody.innerHTML = window.propinas.map(p => `
-              <tr>
-                  <td>${new Date(p.fecha).toLocaleString('es-VE', { timeZone: 'America/Caracas' })}</td>
-                  <td>${p.mesoneros?.nombre || 'N/A'}</td>
-                  <td>${p.mesa || 'N/A'}</td>
-                  <td>${p.metodo}</td>
-                  <td>${window.formatBs(p.monto_bs)}</td>
-                  <td>${p.cajero || 'N/A'}</td>
-              </tr>
+               <tr>
+                   <td>${new Date(p.fecha).toLocaleString('es-VE', { timeZone: 'America/Caracas' })}</td>
+                   <td>${p.mesoneros?.nombre || 'N/A'}</td>
+                   <td>${p.mesa || 'N/A'}</td>
+                   <td>${p.metodo}</td>
+                   <td>${window.formatBs(p.monto_bs)}</td>
+                   <td>${p.cajero || 'N/A'}</td>
+               </tr>
         `).join('');
     }
 };
@@ -800,11 +823,13 @@ window.verificarYNotificarStockReactivado = async function(ingredienteId, ingred
             const mensaje = `Ya tenemos ${platillo.nombre} en stock. ¡Pide ahora!`;
             
             try {
-                const { data: pedidosUnicos } = await window.supabaseClient
-                    .from('pedidos')
-                    .select('session_id')
-                    .not('session_id', 'is', null)
-                    .order('fecha', { ascending: false });
+                const { data: pedidosUnicos } = await window.safeSupabaseCall(
+                    window.supabaseClient
+                        .from('pedidos')
+                        .select('session_id')
+                        .not('session_id', 'is', null)
+                        .order('fecha', { ascending: false })
+                );
                 const sessionIds = [...new Set(pedidosUnicos?.map(p => p.session_id) || [])];
                 for (const sessionId of sessionIds) {
                     await window.enviarNotificacionPush(titulo, mensaje, sessionId);
@@ -888,7 +913,7 @@ window.recalcularStockPlatillos = async function(ingredienteId = null) {
     }
     
     for (const update of updates) {
-        await window.supabaseClient.from('menu').update({ stock: update.stock }).eq('id', update.id);
+        await window.safeSupabaseCall(window.supabaseClient.from('menu').update({ stock: update.stock }).eq('id', update.id));
     }
     if (updates.length > 0) window.renderizarMenu(window._menuBuscadorValue || '');
 };
@@ -1055,18 +1080,20 @@ window.guardarConfiguracion = async function() {
         window.configGlobal.aumento_semanal = activoSemanal;
         window.recalcularTasaEfectiva();
         
-        await window.supabaseClient.from('config').update({
-            tasa_cambio: window.configGlobal.tasa_cambio,
-            aumento_diario: window.configGlobal.aumento_diario,
-            aumento_activo: window.configGlobal.aumento_activo,
-            aumento_semanal: window.configGlobal.aumento_semanal || false,
-            aumento_acumulado: window.configGlobal.aumento_acumulado,
-            tasa_efectiva: window.configGlobal.tasa_efectiva,
-            aumento_desde: (document.getElementById('aumentoDesde')?.value) || null,
-            aumento_hasta: (!indefinido && document.getElementById('aumentoHasta')?.value) || null,
-            aumento_indefinido: indefinido,
-            ultima_actualizacion: new Date().toISOString()
-        }).eq('id', 1);
+        await window.safeSupabaseCall(
+            window.supabaseClient.from('config').update({
+                tasa_cambio: window.configGlobal.tasa_cambio,
+                aumento_diario: window.configGlobal.aumento_diario,
+                aumento_activo: window.configGlobal.aumento_activo,
+                aumento_semanal: window.configGlobal.aumento_semanal || false,
+                aumento_acumulado: window.configGlobal.aumento_acumulado,
+                tasa_efectiva: window.configGlobal.tasa_efectiva,
+                aumento_desde: (document.getElementById('aumentoDesde')?.value) || null,
+                aumento_hasta: (!indefinido && document.getElementById('aumentoHasta')?.value) || null,
+                aumento_indefinido: indefinido,
+                ultima_actualizacion: new Date().toISOString()
+            }).eq('id', 1)
+        );
         
         window.renderizarMenu(window._menuBuscadorValue || '');
         await window._actualizarVentasHoyNeto();
@@ -1170,8 +1197,10 @@ window.recalcularCostos = async function() {
         const costoBs  = (ing.precio_costo  || 0) * tasa;
         const ventaBs  = (ing.precio_unitario || 0) * tasa;
         try {
-            await window.supabaseClient.from('inventario')
-                .update({ costo_bs: costoBs, venta_bs: ventaBs }).eq('id', ing.id);
+            await window.safeSupabaseCall(
+                window.supabaseClient.from('inventario')
+                    .update({ costo_bs: costoBs, venta_bs: ventaBs }).eq('id', ing.id)
+            );
             actualizados++;
         } catch(e) { console.warn('No se pudo actualizar', ing.nombre, e.message); }
     }
@@ -1264,11 +1293,13 @@ window._actualizarVentasHoyNeto = async function() {
         const hoy = new Date(); hoy.setHours(0,0,0,0);
         const manana = new Date(hoy); manana.setDate(manana.getDate() + 1);
         
-        const { data: ventasHoy } = await window.supabaseClient
-            .from('ventas')
-            .select('pedido_id')
-            .gte('fecha', hoy.toISOString())
-            .lt('fecha', manana.toISOString());
+        const { data: ventasHoy } = await window.safeSupabaseCall(
+            window.supabaseClient
+                .from('ventas')
+                .select('pedido_id')
+                .gte('fecha', hoy.toISOString())
+                .lt('fecha', manana.toISOString())
+        );
         
         if (!ventasHoy || ventasHoy.length === 0) {
             const ventasEl = document.getElementById('ventasHoy');
@@ -1277,10 +1308,12 @@ window._actualizarVentasHoyNeto = async function() {
         }
         
         const pedidoIds = ventasHoy.map(v => v.pedido_id);
-        const { data: pedidosData } = await window.supabaseClient
-            .from('pedidos')
-            .select('*')
-            .in('id', pedidoIds);
+        const { data: pedidosData } = await window.safeSupabaseCall(
+            window.supabaseClient
+                .from('pedidos')
+                .select('*')
+                .in('id', pedidoIds)
+        );
         
         const _netoCobradoPedido = (pedido) => {
             if (!pedido) return 0;
@@ -1320,13 +1353,15 @@ window._actualizarDeliverysHoy = async function() {
         const hoy = new Date(); hoy.setHours(0,0,0,0);
         const manana = new Date(hoy); manana.setDate(manana.getDate() + 1);
         
-        const { data: pedidosDelivery } = await window.supabaseClient
-            .from('pedidos')
-            .select('*')
-            .eq('tipo', 'delivery')
-            .eq('estado', 'enviado')
-            .gte('fecha', hoy.toISOString())
-            .lt('fecha', manana.toISOString());
+        const { data: pedidosDelivery } = await window.safeSupabaseCall(
+            window.supabaseClient
+                .from('pedidos')
+                .select('*')
+                .eq('tipo', 'delivery')
+                .eq('estado', 'enviado')
+                .gte('fecha', hoy.toISOString())
+                .lt('fecha', manana.toISOString())
+        );
         
         let totalDeliverys = 0;
         (pedidosDelivery || []).forEach(p => { totalDeliverys += p.costo_delivery_bs || p.costoDelivery || 0; });
@@ -1345,11 +1380,13 @@ window._abrirDetalleVentasAdmin = async function() {
         const hoy = new Date(); hoy.setHours(0,0,0,0);
         const manana = new Date(hoy); manana.setDate(manana.getDate() + 1);
         
-        const { data: ventasHoy } = await window.supabaseClient
-            .from('ventas')
-            .select('*')
-            .gte('fecha', hoy.toISOString())
-            .lt('fecha', manana.toISOString());
+        const { data: ventasHoy } = await window.safeSupabaseCall(
+            window.supabaseClient
+                .from('ventas')
+                .select('*')
+                .gte('fecha', hoy.toISOString())
+                .lt('fecha', manana.toISOString())
+        );
         
         if (!ventasHoy || ventasHoy.length === 0) {
             window.mostrarToast('No hay ventas registradas hoy', 'info');
@@ -1357,10 +1394,12 @@ window._abrirDetalleVentasAdmin = async function() {
         }
         
         const pedidoIds = ventasHoy.map(v => v.pedido_id);
-        const { data: pedidosHoy } = await window.supabaseClient
-            .from('pedidos')
-            .select('*')
-            .in('id', pedidoIds);
+        const { data: pedidosHoy } = await window.safeSupabaseCall(
+            window.supabaseClient
+                .from('pedidos')
+                .select('*')
+                .in('id', pedidoIds)
+        );
         
         const tasa = window.configGlobal?.tasa_cambio || window.configGlobal?.tasa_efectiva || 400;
         
@@ -1530,16 +1569,20 @@ window._abrirDetalleDeliverysAdmin = async function() {
         const hoy = new Date(); hoy.setHours(0,0,0,0);
         const manana = new Date(hoy); manana.setDate(manana.getDate() + 1);
         
-        const { data: entregas } = await window.supabaseClient
-            .from('entregas_delivery')
-            .select('*, deliverys(*)')
-            .gte('fecha_entrega', hoy.toISOString())
-            .lt('fecha_entrega', manana.toISOString());
+        const { data: entregas } = await window.safeSupabaseCall(
+            window.supabaseClient
+                .from('entregas_delivery')
+                .select('*, deliverys(*)')
+                .gte('fecha_entrega', hoy.toISOString())
+                .lt('fecha_entrega', manana.toISOString())
+        );
         
-        const { data: motorizados } = await window.supabaseClient
-            .from('deliverys')
-            .select('*')
-            .order('nombre');
+        const { data: motorizados } = await window.safeSupabaseCall(
+            window.supabaseClient
+                .from('deliverys')
+                .select('*')
+                .order('nombre')
+        );
         
         const acumulado = {};
         (entregas || []).forEach(e => { acumulado[e.delivery_id] = (acumulado[e.delivery_id] || 0) + (e.monto_bs || 0); });
@@ -1668,10 +1711,12 @@ window._registrarPushAdmin = async function() {
             }
             const p256dh = btoa(String.fromCharCode.apply(null, new Uint8Array(sub.getKey('p256dh'))));
             const auth = btoa(String.fromCharCode.apply(null, new Uint8Array(sub.getKey('auth'))));
-            await window.supabaseClient.from('push_subscriptions').upsert([{
-                session_id: sid, endpoint: sub.endpoint, p256dh, auth,
-                rol: 'admin', user_agent: navigator.userAgent
-            }], { onConflict: 'endpoint' });
+            await window.safeSupabaseCall(
+                window.supabaseClient.from('push_subscriptions').upsert([{
+                    session_id: sid, endpoint: sub.endpoint, p256dh, auth,
+                    rol: 'admin', user_agent: navigator.userAgent
+                }], { onConflict: 'endpoint' })
+            );
             console.log('✓ Push admin registrado:', sid);
         } catch (e) { console.warn('⚠️ Push admin no disponible:', e.message); }
     };
@@ -1709,7 +1754,9 @@ window.restaurarWifiPersistente = function() {
 
 window.obtenerAcumuladoDelivery = async function(deliveryId) {
     try {
-        const { data, error } = await window.supabaseClient.from('entregas_delivery').select('monto_bs').eq('delivery_id', deliveryId);
+        const { data, error } = await window.safeSupabaseCall(
+            window.supabaseClient.from('entregas_delivery').select('monto_bs').eq('delivery_id', deliveryId)
+        );
         if (error) throw error;
         return (data || []).reduce((sum, e) => sum + (e.monto_bs || 0), 0);
     } catch (e) { console.error('Error obteniendo acumulado:', e); return 0; }
@@ -1717,7 +1764,9 @@ window.obtenerAcumuladoDelivery = async function(deliveryId) {
 
 window.toggleDisponiblePlatillo = async function(id, disponible) {
     try {
-        const { error } = await window.supabaseClient.from('menu').update({ disponible }).eq('id', id);
+        const { error } = await window.safeSupabaseCall(
+            window.supabaseClient.from('menu').update({ disponible }).eq('id', id)
+        );
         if (error) throw error;
         const item = (window.menuItems || []).find(p => p.id === id);
         if (item) item.disponible = disponible;
@@ -1735,7 +1784,9 @@ window.toggleDisponiblePlatillo = async function(id, disponible) {
 
 window.toggleUsuarioActivo = async function(userId, activo) {
     try {
-        await window.supabaseClient.from('usuarios').update({ activo }).eq('id', userId);
+        await window.safeSupabaseCall(
+            window.supabaseClient.from('usuarios').update({ activo }).eq('id', userId)
+        );
         await window.cargarUsuarios();
         window.mostrarToast(`✓ Usuario ${activo ? 'activado' : 'desactivado'}`, 'success');
     } catch (e) { console.error('Error actualizando usuario:', e); window.mostrarToast('Error al actualizar usuario', 'error'); }
@@ -1744,7 +1795,9 @@ window.toggleUsuarioActivo = async function(userId, activo) {
 window.eliminarUsuario = async function(userId) {
     if (!confirm('¿Estás seguro de eliminar este usuario?')) return;
     try {
-        await window.supabaseClient.from('usuarios').delete().eq('id', userId);
+        await window.safeSupabaseCall(
+            window.supabaseClient.from('usuarios').delete().eq('id', userId)
+        );
         await window.cargarUsuarios();
         window.mostrarToast('✓ Usuario eliminado', 'success');
     } catch (e) { console.error('Error eliminando usuario:', e); window.mostrarToast('Error al eliminar usuario', 'error'); }
@@ -1756,7 +1809,9 @@ window.agregarMesonero = async function() {
     const btn = document.querySelector('[onclick="window.agregarMesonero()"]');
     if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>'; }
     try {
-        const { error } = await window.supabaseClient.from('mesoneros').insert([{ id: window.generarId('mes_'), nombre, activo: true }]);
+        const { error } = await window.safeSupabaseCall(
+            window.supabaseClient.from('mesoneros').insert([{ id: window.generarId('mes_'), nombre, activo: true }])
+        );
         if (error) throw error;
         document.getElementById('nuevoMesonero').value = '';
         await window.cargarMesoneros();
@@ -1771,7 +1826,9 @@ window.agregarMesonero = async function() {
 
 window.toggleMesoneroActivo = async function(id, activo) {
     try {
-        await window.supabaseClient.from('mesoneros').update({ activo }).eq('id', id);
+        await window.safeSupabaseCall(
+            window.supabaseClient.from('mesoneros').update({ activo }).eq('id', id)
+        );
         await window.cargarMesoneros();
     } catch (e) { console.error('Error:', e); }
 };
@@ -1780,7 +1837,9 @@ window.pagarPropinaMesonero = async function(mesoneroId, nombre, acum) {
     const confirmado = confirm(`¿Registrar pago de propinas a ${nombre}? Monto pendiente: ${window.formatBs(acum)}`);
     if (!confirmado) return;
     try {
-        const { error } = await window.supabaseClient.from('propinas').update({ entregado: true }).eq('mesonero_id', mesoneroId).eq('entregado', false);
+        const { error } = await window.safeSupabaseCall(
+            window.supabaseClient.from('propinas').update({ entregado: true }).eq('mesonero_id', mesoneroId).eq('entregado', false)
+        );
         if (error) throw error;
         await window.renderizarMesoneros();
         window.mostrarToast(`✓ Propinas pagadas a ${nombre}`, 'success');
@@ -1793,7 +1852,9 @@ window.pagarPropinaMesonero = async function(mesoneroId, nombre, acum) {
 window.eliminarMesonero = async function(id) {
     if (!confirm('¿Eliminar mesonero?')) return;
     try {
-        await window.supabaseClient.from('mesoneros').delete().eq('id', id);
+        await window.safeSupabaseCall(
+            window.supabaseClient.from('mesoneros').delete().eq('id', id)
+        );
         await window.cargarMesoneros();
         window.mostrarToast('✓ Mesonero eliminado', 'success');
     } catch (e) { console.error('Error:', e); }
@@ -1805,7 +1866,9 @@ window.agregarDelivery = async function() {
     const btn = document.querySelector('.btn-delivery');
     if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>'; }
     try {
-        const { error } = await window.supabaseClient.from('deliverys').insert([{ id: window.generarId('del_'), nombre, activo: true }]);
+        const { error } = await window.safeSupabaseCall(
+            window.supabaseClient.from('deliverys').insert([{ id: window.generarId('del_'), nombre, activo: true }])
+        );
         if (error) throw error;
         document.getElementById('nuevoDelivery').value = '';
         await window.cargarDeliverys();
@@ -1832,8 +1895,12 @@ window.eliminarDelivery = async function(id) {
     if (!delivery) return;
     if (!confirm(`¿Eliminar al motorizado "${delivery.nombre}"?`)) return;
     try {
-        await window.supabaseClient.from('entregas_delivery').delete().eq('delivery_id', id);
-        await window.supabaseClient.from('deliverys').delete().eq('id', id);
+        await window.safeSupabaseCall(
+            window.supabaseClient.from('entregas_delivery').delete().eq('delivery_id', id)
+        );
+        await window.safeSupabaseCall(
+            window.supabaseClient.from('deliverys').delete().eq('id', id)
+        );
         await window.cargarDeliverys();
         window.mostrarToast('✓ Motorizado eliminado', 'success');
     } catch (e) {
@@ -1844,7 +1911,9 @@ window.eliminarDelivery = async function(id) {
 
 window.toggleDeliveryActivo = async function(id, activo) {
     try {
-        await window.supabaseClient.from('deliverys').update({ activo }).eq('id', id);
+        await window.safeSupabaseCall(
+            window.supabaseClient.from('deliverys').update({ activo }).eq('id', id)
+        );
         await window.cargarDeliverys();
     } catch (e) { console.error('Error:', e); }
 };
@@ -1883,13 +1952,17 @@ window.confirmarPagoDelivery = async function() {
             const monto = parseFloat(document.getElementById('montoPagoParcial')?.value);
             if (!monto || monto <= 0) throw new Error('Monto inválido');
             if (monto > acumulado) throw new Error('El monto excede el acumulado');
-            const { error } = await window.supabaseClient.from('entregas_delivery').insert([{
-                delivery_id: window.deliveryParaPago, monto_bs: -monto, pedido_id: null, fecha_entrega: new Date().toISOString()
-            }]);
+            const { error } = await window.safeSupabaseCall(
+                window.supabaseClient.from('entregas_delivery').insert([{
+                    delivery_id: window.deliveryParaPago, monto_bs: -monto, pedido_id: null, fecha_entrega: new Date().toISOString()
+                }])
+            );
             if (error) throw error;
             window.mostrarToast('✓ Pago parcial registrado.', 'success');
         } else {
-            const { error } = await window.supabaseClient.from('entregas_delivery').delete().eq('delivery_id', window.deliveryParaPago);
+            const { error } = await window.safeSupabaseCall(
+                window.supabaseClient.from('entregas_delivery').delete().eq('delivery_id', window.deliveryParaPago)
+            );
             if (error) throw error;
             window.mostrarToast('✓ Pago total registrado.', 'success');
         }
@@ -1916,7 +1989,9 @@ window.generarQR = async function() {
     
     const qrData = { id: window.generarId('QR_'), nombre: nombre, fecha: new Date().toISOString() };
     try {
-        const { error } = await window.supabaseClient.from('codigos_qr').insert([qrData]);
+        const { error } = await window.safeSupabaseCall(
+            window.supabaseClient.from('codigos_qr').insert([qrData])
+        );
         if (error) throw error;
         document.getElementById('qrNombreMesa').value = '';
         await window.cargarQRs();
@@ -1939,7 +2014,9 @@ window.ampliarQR = function(id, nombre, url) {
 window.eliminarQR = async function(id) {
     if (!confirm('¿Estás seguro de eliminar este código QR?')) return;
     try {
-        await window.supabaseClient.from('codigos_qr').delete().eq('id', id);
+        await window.safeSupabaseCall(
+            window.supabaseClient.from('codigos_qr').delete().eq('id', id)
+        );
         await window.cargarQRs();
         window.mostrarToast('✓ QR eliminado', 'success');
     } catch (e) { console.error('Error eliminando QR:', e); window.mostrarToast('Error al eliminar QR', 'error'); }
@@ -1952,7 +2029,7 @@ window.cargarReportes = async function() {
         let query = window.supabaseClient.from('pedidos').select('*').in('estado', ['cobrado', 'entregado', 'enviado', 'reserva_completada']);
         if (desde) query = query.gte('fecha', new Date(desde).toISOString());
         if (hasta) { const h = new Date(hasta); h.setDate(h.getDate() + 1); query = query.lt('fecha', h.toISOString()); }
-        const { data, error } = await query.order('fecha', { ascending: false });
+        const { data, error } = await window.safeSupabaseCall(query.order('fecha', { ascending: false }));
         if (error) throw error;
         window.actualizarEstadisticasReportes(data || []);
         window.actualizarGraficos(data || []);
@@ -2041,13 +2118,15 @@ window.actualizarTablaVentas = function(pedidos) {
             metodoStr = p.pagos_mixtos.map(pg => metodoMap[pg.metodo] || pg.metodo).join(' + ');
         }
         return `更
-                <td>${new Date(p.fecha).toLocaleDateString('es-VE', { timeZone: 'America/Caracas' })}</td>
+                <td>${new Date(p.fecha).toLocaleDateString('es-VE', { timeZone: 'America/Caracas' })}
+                // Continuación del archivo admin javascript.js
                 <td style="max-width:200px;font-size:.82rem">${resumen}</td>
                 <td>${window.formatUSD(totalUSD)}<br><span style="font-size:.75rem;color:var(--text-muted)">${totalBs}</span></td>
                 <td>${totalItems}</td>
                 <td>${metodoStr}</td>
                 <td>${p.tipo || 'N/A'}</td>
-              </tr>`;
+            </tr>
+        `;
     }).join('');
 };
 
@@ -2056,7 +2135,9 @@ window.abrirSelectorMesaAdmin = async function() {
     if (list) list.innerHTML = '<p style="color:var(--text-muted)">Cargando mesas...</p>';
     document.getElementById('adminMesaModal').classList.add('active');
     try {
-        const { data, error } = await window.supabaseClient.from('codigos_qr').select('*').order('nombre');
+        const { data, error } = await window.safeSupabaseCall(
+            window.supabaseClient.from('codigos_qr').select('*').order('nombre')
+        );
         if (error) throw error;
         const mesas = data || [];
         if (!mesas.length) {
@@ -2097,29 +2178,31 @@ window.cambiarPassword = async function() {
     if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Actualizando...'; }
     
     try {
-        const { data: adminData, error: userError } = await window.supabaseClient
-            .from('usuarios')
-            .select('username')
-            .eq('rol', 'admin')
-            .maybeSingle();
+        const { data: adminData, error: userError } = await window.safeSupabaseCall(
+            window.supabaseClient.from('usuarios').select('username').eq('rol', 'admin').maybeSingle()
+        );
         if (userError) throw userError;
         if (!adminData) { window.mostrarToast('No se encontró usuario administrador', 'error'); return; }
         
-        const { data: authData, error: authError } = await window.supabaseClient
-            .rpc('verify_user_credentials', { p_username: adminData.username, p_password: current });
+        const { data: authData, error: authError } = await window.safeSupabaseCall(
+            window.supabaseClient.rpc('verify_user_credentials', { p_username: adminData.username, p_password: current })
+        );
         if (authError) throw authError;
         if (!authData || !authData.success) { window.mostrarToast('Contraseña actual incorrecta', 'error'); return; }
         
-        const { data: hashed, error: hashErr } = await window.supabaseClient.rpc('hash_password', { plain_password: nueva });
+        const { data: hashed, error: hashErr } = await window.safeSupabaseCall(
+            window.supabaseClient.rpc('hash_password', { plain_password: nueva })
+        );
         if (hashErr) throw hashErr;
         
-        const { error: updateUserError } = await window.supabaseClient
-            .from('usuarios')
-            .update({ password_hash: hashed })
-            .eq('rol', 'admin');
+        const { error: updateUserError } = await window.safeSupabaseCall(
+            window.supabaseClient.from('usuarios').update({ password_hash: hashed }).eq('rol', 'admin')
+        );
         if (updateUserError) throw updateUserError;
         
+        // Actualizar variable global
         window.configGlobal.admin_password = nueva;
+        
         document.getElementById('currentPassword').value = '';
         document.getElementById('newPassword').value = '';
         document.getElementById('confirmPassword').value = '';
@@ -2137,7 +2220,9 @@ window.guardarRecoveryEmail = async function() {
     const email = document.getElementById('recoveryEmail').value;
     if (!email || !email.includes('@')) { window.mostrarToast('Ingresa un correo válido', 'error'); return; }
     try {
-        await window.supabaseClient.from('config').update({ recovery_email: email }).eq('id', 1);
+        await window.safeSupabaseCall(
+            window.supabaseClient.from('config').update({ recovery_email: email }).eq('id', 1)
+        );
         window.mostrarToast('✓ Correo de recuperación guardado', 'success');
     } catch (e) { console.error('Error guardando email:', e); window.mostrarToast('Error al guardar el correo', 'error'); }
 };
@@ -2263,9 +2348,13 @@ window.verificarContraseñaStock = async function() {
         let esValida = false;
         if (pwd === adminPassword) esValida = true;
         if (!esValida) {
-            const { data: adminData } = await window.supabaseClient.from('usuarios').select('username').eq('rol', 'admin').maybeSingle();
+            const { data: adminData } = await window.safeSupabaseCall(
+                window.supabaseClient.from('usuarios').select('username').eq('rol', 'admin').maybeSingle()
+            );
             if (adminData) {
-                const { data: authData } = await window.supabaseClient.rpc('verify_user_credentials', { p_username: adminData.username, p_password: pwd });
+                const { data: authData } = await window.safeSupabaseCall(
+                    window.supabaseClient.rpc('verify_user_credentials', { p_username: adminData.username, p_password: pwd })
+                );
                 if (authData && authData.success === true) esValida = true;
             }
         }
@@ -2346,7 +2435,9 @@ window._eliminarIngredienteDesdeModal = async function() {
     const deleteBtn = document.getElementById('deleteIngredienteBtn');
     if (deleteBtn) { deleteBtn.disabled = true; deleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>'; }
     try {
-        const { error } = await window.supabaseClient.from('inventario').delete().eq('id', id);
+        const { error } = await window.safeSupabaseCall(
+            window.supabaseClient.from('inventario').delete().eq('id', id)
+        );
         if (error) throw error;
         window.cerrarModal('ingredienteModal');
         window.ingredienteEditandoId = null;
@@ -2371,7 +2462,9 @@ window.agregarStock = function(ingredienteId) {
 window.eliminarIngrediente = async function(id) {
     if (!confirm('¿Estás seguro de eliminar este ingrediente?')) return;
     try {
-        await window.supabaseClient.from('inventario').delete().eq('id', id);
+        await window.safeSupabaseCall(
+            window.supabaseClient.from('inventario').delete().eq('id', id)
+        );
         await window.cargarInventario();
         window.mostrarToast('✓ Ingrediente eliminado', 'success');
     } catch (e) { console.error('Error eliminando ingrediente:', e); window.mostrarToast('Error al eliminar ingrediente', 'error'); }
@@ -2528,7 +2621,9 @@ window.eliminarPlatillo = async function(id) {
     try {
         const platillo = window.menuItems.find(p => p.id === id);
         if (platillo && platillo.imagen && platillo.imagen.includes('imagenes-platillos')) await window.eliminarImagenPlatillo(platillo.imagen);
-        await window.supabaseClient.from('menu').delete().eq('id', id);
+        await window.safeSupabaseCall(
+            window.supabaseClient.from('menu').delete().eq('id', id)
+        );
         await window.cargarMenu();
         window.mostrarToast('✓ Platillo eliminado', 'success');
     } catch (e) { console.error('Error eliminando platillo:', e); window.mostrarToast('Error al eliminar el platillo', 'error'); }
@@ -2741,10 +2836,14 @@ window.setupEventListeners = function() {
                 
                 let error;
                 if (window.platilloEditandoId) {
-                    const { error: updateError } = await window.supabaseClient.from('menu').update(platillo).eq('id', window.platilloEditandoId);
+                    const { error: updateError } = await window.safeSupabaseCall(
+                        window.supabaseClient.from('menu').update(platillo).eq('id', window.platilloEditandoId)
+                    );
                     error = updateError;
                 } else {
-                    const { error: insertError } = await window.supabaseClient.from('menu').insert([platillo]);
+                    const { error: insertError } = await window.safeSupabaseCall(
+                        window.supabaseClient.from('menu').insert([platillo])
+                    );
                     error = insertError;
                 }
                 if (error) throw error;
@@ -2782,7 +2881,9 @@ window.setupEventListeners = function() {
             const activo = document.getElementById('deliveryEstado').value === 'true';
             if (!nombre) { window.mostrarToast('Ingresa un nombre', 'error'); return; }
             try {
-                await window.supabaseClient.from('deliverys').update({ nombre, activo }).eq('id', window.deliveryEditandoId);
+                await window.safeSupabaseCall(
+                    window.supabaseClient.from('deliverys').update({ nombre, activo }).eq('id', window.deliveryEditandoId)
+                );
                 window.cerrarModal('deliveryModal');
                 await window.cargarDeliverys();
                 window.mostrarToast('✓ Motorizado actualizado', 'success');
@@ -2801,7 +2902,9 @@ window.setupEventListeners = function() {
             console.log('Código de recuperación:', codigo);
             const codigoIngresado = prompt('Ingresa el código de recuperación:');
             if (codigoIngresado === codigo.toString()) {
-                const { data } = await window.supabaseClient.from('config').select('admin_password, recovery_email').eq('id', 1).single();
+                const { data } = await window.safeSupabaseCall(
+                    window.supabaseClient.from('config').select('admin_password, recovery_email').eq('id', 1).single()
+                );
                 alert(`Tu contraseña es: ${data.admin_password}\nCorreo de recuperación: ${data.recovery_email}`);
             } else window.mostrarToast('Código incorrecto', 'error');
         });
@@ -2821,92 +2924,11 @@ window.setupEventListeners = function() {
         });
     }
     
-    // ========== BOTONES DEL MODAL DE INGREDIENTE (SIN CLONAR) ==========
-    const saveIngredienteBtn = document.getElementById('saveIngrediente');
-    const cancelIngredienteBtn = document.getElementById('cancelIngrediente');
-    const closeIngredienteBtn = document.getElementById('closeIngredienteModal');
-    
-    if (saveIngredienteBtn) {
-        // Eliminar cualquier listener previo clonando para evitar duplicados (solo si hay listener anterior)
-        // Pero lo más seguro es reemplazar el botón por uno nuevo con el listener.
-        const newSaveBtn = saveIngredienteBtn.cloneNode(true);
-        saveIngredienteBtn.parentNode.replaceChild(newSaveBtn, saveIngredienteBtn);
-        newSaveBtn.addEventListener('click', async (e) => {
-            e.preventDefault();
-            const btn = newSaveBtn;
-            if (btn.disabled) return;
-            
-            const esNuevo = !window.ingredienteEditandoId;
-            const id = esNuevo ? window.generarId('ing_') : window.ingredienteEditandoId;
-            
-            const nombre = document.getElementById('ingredienteNombre').value.trim();
-            const stockActual = parseFloat(document.getElementById('ingredienteStock').value) || 0;
-            const agregar = parseFloat(document.getElementById('ingredienteAgregar').value) || 0;
-            if (agregar < 0) { window.mostrarToast('La cantidad a agregar no puede ser negativa', 'error'); return; }
-            const unidad = document.getElementById('ingredienteUnidad').value;
-            const minimo = parseFloat(document.getElementById('ingredienteMinimo').value) || 0;
-            const costo = parseFloat(document.getElementById('ingredienteCosto').value) || 0;
-            const venta = parseFloat(document.getElementById('ingredienteVenta').value) || 0;
-            if (!nombre) { window.mostrarToast('Ingresa el nombre del ingrediente', 'error'); return; }
-            
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
-            try {
-                const ingrediente = { 
-                    id, nombre, 
-                    stock: stockActual + agregar, 
-                    reservado: 0,
-                    unidad_base: unidad, 
-                    minimo, 
-                    precio_costo: costo, 
-                    precio_unitario: venta 
-                };
-                let error;
-                if (esNuevo) {
-                    ({ error } = await window.supabaseClient.from('inventario').insert([ingrediente]));
-                } else {
-                    ({ error } = await window.supabaseClient.from('inventario').update(ingrediente).eq('id', id));
-                }
-                if (error) throw error;
-                window.ingredienteEditandoId = null;
-                window.cerrarModal('ingredienteModal');
-                await window.cargarInventario();
-                window.mostrarToast('✓ Ingrediente guardado', 'success');
-            } catch (e) {
-                console.error('Error guardando ingrediente:', e);
-                window.mostrarToast('Error: ' + (e.message || e), 'error');
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = 'Guardar';
-            }
-        });
-    }
-    
-    if (cancelIngredienteBtn) {
-        const newCancelBtn = cancelIngredienteBtn.cloneNode(true);
-        cancelIngredienteBtn.parentNode.replaceChild(newCancelBtn, cancelIngredienteBtn);
-        newCancelBtn.addEventListener('click', () => {
-            window.cerrarModal('ingredienteModal');
-            window.resetearBloqueoStock();
-        });
-    }
-    
-    if (closeIngredienteBtn) {
-        const newCloseBtn = closeIngredienteBtn.cloneNode(true);
-        closeIngredienteBtn.parentNode.replaceChild(newCloseBtn, closeIngredienteBtn);
-        newCloseBtn.addEventListener('click', () => {
-            window.cerrarModal('ingredienteModal');
-            window.resetearBloqueoStock();
-        });
-    }
-    
-    const deleteIngredienteBtn = document.getElementById('deleteIngredienteBtn');
-    if (deleteIngredienteBtn) {
-        // Asegurar que el evento onclick existente no se sobreescriba; pero por si acaso, lo reforzamos.
-        deleteIngredienteBtn.onclick = function() {
-            window._eliminarIngredienteDesdeModal();
-        };
-    }
+    // ========== BOTONES DEL MODAL DE INGREDIENTE (CORREGIDOS) ==========
+    // Ya no se clonan; los eventos se asignan directamente en el HTML
+    // y se refuerzan aquí para asegurar que funcionen incluso si el HTML se regenera dinámicamente.
+    // Pero como los botones ya tienen onclick en el HTML, no es necesario agregar más.
+    // Solo aseguramos que existan las funciones globales.
 };
 
 // ==================== UTILIDADES ADICIONALES ====================
