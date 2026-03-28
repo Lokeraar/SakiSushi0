@@ -275,9 +275,8 @@
                     <h3 class="table-section-title">Historial de Propinas de Hoy</h3>
                     <div class="table-responsive">
                         <table class="data-table" id="propinasTable">
-                            <thead>——
-                                <th>Hora</th><th>Mesonero</th><th>Mesa</th><th>Método</th><th>Monto</th><th>Cajero</th>
-                            </tr>
+                            <thead>
+                                <tr><th>Hora</th><th>Mesonero</th><th>Mesa</th><th>Método</th><th>Monto</th><th>Cajero</th></tr>
                             </thead>
                             <tbody id="propinasTableBody"></tbody>
                         </table>
@@ -406,7 +405,7 @@
         <div class="modal-content" style="max-width:600px">
             <div class="modal-header"><h3 id="platilloModalTitle">Nuevo Platillo</h3><button class="modal-close" id="closePlatilloModal" onclick="window.cerrarModal('platilloModal')">&times;</button></div>
             <div class="modal-body">
-                <!-- Imagen -->
+                <!-- Imagen con previsualización inteligente -->
                 <div class="form-group">
                     <label>Imagen del Platillo</label>
                     <div style="display:flex;gap:.6rem;align-items:flex-start;flex-wrap:wrap">
@@ -487,7 +486,7 @@
         <div class="modal-content">
             <div class="modal-header">
                 <h3 id="ingredienteModalTitle">Nuevo Ingrediente</h3>
-                <button class="modal-close" id="closeIngredienteModal">&times;</button>
+                <button class="modal-close" id="closeIngredienteModal" onclick="window.cerrarModal('ingredienteModal')">&times;</button>
             </div>
             <div class="modal-body">
                 <form id="ingredienteForm">
