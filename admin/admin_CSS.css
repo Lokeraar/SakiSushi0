@@ -319,7 +319,7 @@ body {
   font-size: .7rem;
   cursor: pointer;
   transition: all .2s;
-  animation: pulse 1.5s 2; /* Solo 2 ciclos para reducir repintados */
+  animation: pulse 1.5s 2;
 }
 .stock-critico-tag:hover {
   transform: scale(1.05);
@@ -781,7 +781,15 @@ body {
 .mc2-info { flex: 1; min-width: 0; }
 .mc2-nombre { font-weight: 800; font-size: .95rem; }
 .mc2-cat { font-size: .68rem; color: var(--text-muted); text-transform: uppercase; }
-.mc2-precio { font-size: 1rem; font-weight: 800; color: var(--primary); }
+.mc2-precio { 
+  font-size: 1rem; 
+  font-weight: 800; 
+  color: var(--primary);
+  display: flex;
+  align-items: center;
+  gap: .3rem;
+  flex-wrap: wrap;
+}
 .mc2-precio-bs { font-size: .75rem; font-weight: 600; color: var(--text-muted); }
 .mc2-img-wrap {
   width: 68px;
@@ -1443,6 +1451,99 @@ textarea:focus-visible {
   }
 }
 
+/* ============================================
+   BUSCADORES UNIFICADOS
+   ============================================ */
+.search-wrapper {
+  position: relative;
+  max-width: 380px;
+  margin-bottom: 1rem;
+}
+.search-wrapper i {
+  position: absolute;
+  left: .85rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  font-size: .85rem;
+  pointer-events: none;
+}
+.search-wrapper input {
+  width: 100%;
+  padding: .6rem .9rem .6rem 2.2rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-family: 'Montserrat', sans-serif;
+  font-size: .88rem;
+  color: var(--text-dark);
+  background: var(--input-bg);
+  outline: none;
+  transition: var(--transition);
+}
+.search-wrapper input:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(211,47,47,.1);
+}
+
+/* Aplicar a todos los buscadores */
+#menuBuscador,
+#inventarioBuscador,
+#mesonerosBuscador,
+#deliverysBuscador {
+  width: 100%;
+  padding: .6rem .9rem .6rem 2.2rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  font-family: 'Montserrat', sans-serif;
+  font-size: .88rem;
+  color: var(--text-dark);
+  background: var(--input-bg);
+  outline: none;
+  transition: var(--transition);
+}
+#menuBuscador:focus,
+#inventarioBuscador:focus,
+#mesonerosBuscador:focus,
+#deliverysBuscador:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(211,47,47,.1);
+}
+
+/* Contenedores para los buscadores */
+.menu-search-container,
+.inventario-search-container,
+.mesoneros-search-container,
+.deliverys-search-container {
+  position: relative;
+  max-width: 380px;
+  margin-bottom: 1rem;
+}
+.menu-search-container i,
+.inventario-search-container i,
+.mesoneros-search-container i,
+.deliverys-search-container i {
+  position: absolute;
+  left: .85rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  font-size: .85rem;
+  pointer-events: none;
+}
+
+/* Mesoneros y Deliverys grids */
+.mesoneros-grid,
+.delivery-list {
+  display: grid;
+  gap: 1rem;
+}
+@media (min-width: 769px) {
+  .mesoneros-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (min-width: 1201px) {
+  .mesoneros-grid { grid-template-columns: repeat(3, 1fr); }
+}
+
 /* Responsive: unificar media queries */
 @media (max-width: 768px) {
   .content {
@@ -1529,6 +1630,12 @@ textarea:focus-visible {
   .qr-grid {
     grid-template-columns: repeat(2, 1fr);
   }
+  .menu-search-container,
+  .inventario-search-container,
+  .mesoneros-search-container,
+  .deliverys-search-container {
+    max-width: 100%;
+  }
 }
 
 @media (max-width: 480px) {
@@ -1536,6 +1643,9 @@ textarea:focus-visible {
     display: none;
   }
   .propinas-stats {
+    grid-template-columns: 1fr;
+  }
+  .qr-grid {
     grid-template-columns: 1fr;
   }
 }
