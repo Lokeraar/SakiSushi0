@@ -158,6 +158,7 @@ window.hacerLogin = async function() {
                     window.recalcularTasaEfectiva();
                 });
                 
+                // Inicializar ventas y deliverys
                 await window._actualizarVentasHoyNeto();
                 await window._actualizarDeliverysHoy();
                 
@@ -690,14 +691,14 @@ window.renderizarPropinas = function() {
     const tbody = document.getElementById('propinasTableBody');
     if (tbody) {
         tbody.innerHTML = window.propinas.map(p => `
-            <tr>
-                <td>${new Date(p.fecha).toLocaleString('es-VE', { timeZone: 'America/Caracas' })}</td>
-                <td>${p.mesoneros?.nombre || 'N/A'}</td>
-                <td>${p.mesa || 'N/A'}</td>
-                <td>${p.metodo}</td>
-                <td>${window.formatBs(p.monto_bs)}</td>
-                <td>${p.cajero || 'N/A'}</td>
-            </tr>
+             <tr>
+                 <td>${new Date(p.fecha).toLocaleString('es-VE', { timeZone: 'America/Caracas' })}</td>
+                 <td>${p.mesoneros?.nombre || 'N/A'}</td>
+                 <td>${p.mesa || 'N/A'}</td>
+                 <td>${p.metodo}</td>
+                 <td>${window.formatBs(p.monto_bs)}</td>
+                 <td>${p.cajero || 'N/A'}</td>
+             </tr>
         `).join('');
     }
 };
@@ -1215,8 +1216,18 @@ window.setupRealtimeSubscriptions = function() {
             .channel('admin-pedidos')
             .on('postgres_changes', { event: '*', schema: 'public', table: 'pedidos' }, () => {
                 window.cargarPedidosRecientes();
+                window._actualizarVentasHoyNeto();
+                window._actualizarDeliverysHoy();
                 const rPane = document.getElementById('reportesPane');
                 if (rPane && rPane.classList.contains('active')) window.cargarReportes();
+            })
+            .subscribe();
+        
+        // Agregar suscripción a ventas para actualizar el indicador en tiempo real
+        window.supabaseClient
+            .channel('admin-ventas')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'ventas' }, () => {
+                window._actualizarVentasHoyNeto();
             })
             .subscribe();
         
@@ -2037,7 +2048,7 @@ window.actualizarTablaVentas = function(pedidos) {
                 <td>${totalItems}</td>
                 <td>${metodoStr}</td>
                 <td>${p.tipo || 'N/A'}</td>
-            更`;
+             </tr>`;
     }).join('');
 };
 
@@ -2879,7 +2890,7 @@ window._syncIngredientePreview = function() {
     }
 };
 
-// ==================== AVISO DE LUNES (RESTAURADO) ====================
+// ==================== AVISO DE LUNES (RESTAURADO CON CLASE CSS) ====================
 window._verificarAvisoLunes = function() {
     if (!window.configGlobal || !window.configGlobal.aumento_semanal) return;
 
@@ -2890,56 +2901,43 @@ window._verificarAvisoLunes = function() {
     if (localStorage.getItem(claveAviso)) return;
     localStorage.setItem(claveAviso, '1');
 
-    const notif = document.createElement('div');
-    notif.style.cssText = [
-        'position:fixed','top:1.5rem','left:50%','transform:translateX(-50%)',
-        'background:#1a1a2e','color:#fff','border-radius:12px',
-        'padding:1.2rem 1.5rem','z-index:8000','box-shadow:0 4px 20px rgba(0,0,0,.4)',
-        'max-width:420px','width:90%','font-family:Montserrat,sans-serif',
-        'border-left:4px solid #FF9800'
-    ].join(';');
-    notif.innerHTML = `
-                <div style="display:flex;align-items:flex-start;gap:.75rem">
-                    <div style="font-size:1.5rem;flex-shrink:0">📅</div>
-                    <div style="flex:1">
-                        <div style="font-weight:700;margin-bottom:.3rem;font-size:.95rem">Nueva semana — ¿Actualizas el porcentaje?</div>
-                        <div style="font-size:.82rem;opacity:.85;margin-bottom:.75rem">
-                            Hoy es lunes y tienes activo el aumento semanal.
-                            ¿Quieres ajustar el porcentaje de aumento para esta semana?
-                        </div>
-                        <div style="display:flex;gap:.5rem;justify-content:flex-end">
-                            <button id="avisoLunesNo"
-                                style="padding:.4rem .9rem;background:rgba(255,255,255,.15);color:#fff;
-                                       border:1px solid rgba(255,255,255,.3);border-radius:6px;
-                                       cursor:pointer;font-family:Montserrat,sans-serif;font-size:.82rem">
-                                No, dejarlo igual
-                            </button>
-                            <button id="avisoLunesSi"
-                                style="padding:.4rem .9rem;background:#FF9800;color:#1a1a2e;border:none;
-                                       border-radius:6px;cursor:pointer;font-family:Montserrat,sans-serif;
-                                       font-weight:700;font-size:.82rem">
-                                Sí, cambiar %
-                            </button>
-                        </div>
+    // Retrasar la aparición 1 segundo para no interferir con la carga inicial
+    setTimeout(() => {
+        const notif = document.createElement('div');
+        notif.className = 'aviso-lunes';
+        notif.innerHTML = `
+            <div class="flex">
+                <div class="emoji">📅</div>
+                <div class="content">
+                    <div class="title">Nueva semana — ¿Actualizas el porcentaje?</div>
+                    <div class="message">
+                        Hoy es lunes y tienes activo el aumento semanal.
+                        ¿Quieres ajustar el porcentaje de aumento para esta semana?
+                    </div>
+                    <div class="buttons">
+                        <button class="btn-no" id="avisoLunesNo">No, dejarlo igual</button>
+                        <button class="btn-si" id="avisoLunesSi">Sí, cambiar %</button>
                     </div>
                 </div>
-            `;
-    document.body.appendChild(notif);
+            </div>
+        `;
+        document.body.appendChild(notif);
 
-    document.getElementById('avisoLunesNo').addEventListener('click', () => notif.remove());
-    document.getElementById('avisoLunesSi').addEventListener('click', () => {
-        notif.remove();
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-        const input = document.getElementById('aumentoDiarioInput');
-        if (input) {
-            input.focus();
-            input.select();
-            input.style.outline = '3px solid #FF9800';
-            setTimeout(() => { input.style.outline = ''; }, 3000);
-        }
-    });
+        document.getElementById('avisoLunesNo').addEventListener('click', () => notif.remove());
+        document.getElementById('avisoLunesSi').addEventListener('click', () => {
+            notif.remove();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            const input = document.getElementById('aumentoDiarioInput');
+            if (input) {
+                input.focus();
+                input.select();
+                input.style.outline = '3px solid #FF9800';
+                setTimeout(() => { input.style.outline = ''; }, 3000);
+            }
+        });
 
-    setTimeout(() => { if (notif.parentNode) notif.remove(); }, 30000);
+        setTimeout(() => { if (notif.parentNode) notif.remove(); }, 30000);
+    }, 1000);
 };
 
 // ==================== TEMA CLARO/OSCURO ====================
@@ -3023,10 +3021,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                 await window._actualizarVentasHoyNeto();
                 await window._actualizarDeliverysHoy();
                 
-                setInterval(async () => { 
-                    await window._actualizarVentasHoyNeto();
-                    await window._actualizarDeliverysHoy();
-                }, 60000);
             } catch (e) { 
                 console.error('Error cargando datos:', e); 
                 window.mostrarToast('Error cargando datos: ' + e.message, 'error'); 
