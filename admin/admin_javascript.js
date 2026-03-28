@@ -498,8 +498,10 @@ window.renderizarMenu = window.debounce(function(filtro = '') {
                         <div class="mc2-info">
                             <div class="mc2-nombre">${window.escapeHtml(item.nombre)}</div>
                             <div class="mc2-cat">${window.escapeHtml(item.categoria || '')}${item.subcategoria ? ' · ' + window.escapeHtml(item.subcategoria) : ''}</div>
-                            <div class="mc2-precio">${window.formatUSD(item.precio || 0)}
+                            <div class="mc2-precio">
+                                ${window.formatUSD(item.precio || 0)}
                                 <span class="mc2-precio-bs">/ ${window.formatBs(window.usdToBs(item.precio || 0))}</span>
+                                <i class="fas fa-info-circle" style="font-size:.7rem; margin-left:.3rem; color:var(--text-muted); cursor:help" data-tooltip="El precio se convertirá a la tasa efectiva y se mostrará en bolívares al cliente."></i>
                             </div>
                             <div class="mc2-stock-line">
                                 Stock: <span class="mc2-stock-val">${item.stock || 0}</span>
@@ -537,125 +539,185 @@ window.renderizarMenu = window.debounce(function(filtro = '') {
     }).join('');
 }, 300);
 
+// ==================== RENDERIZADO DE INVENTARIO (MEJORADO) ====================
+window._invActiveId = null;
+
 window.renderizarInventario = window.debounce(function(filtro = '') {
     window._inventarioBuscadorValue = filtro;
-    const grid = document.getElementById('inventarioGrid');
-    if (!grid) return;
+    const container = document.getElementById('inventarioGrid');
+    if (!container) return;
     
     const _normI = t => (t || '').normalize('NFD').replace(/[áéíóú]/g, '').toLowerCase();
     const _baseI = [...window.inventarioItems].sort((a,b) => a.nombre.localeCompare(b.nombre));
     const items = filtro ? _baseI.filter(i => _normI(i.nombre).includes(_normI(filtro))) : _baseI;
     
     if (!items.length) {
-        grid.innerHTML = '<p style="color:var(--text-muted);font-size:.85rem;padding:.75rem">' +
+        container.innerHTML = '<p style="color:var(--text-muted);font-size:.85rem;padding:.75rem">' +
             (filtro ? 'Sin resultados para "' + filtro + '"' : 'No hay ingredientes registrados.') + '</p>';
         window.actualizarStockCriticoHeader();
         return;
     }
     
-    grid.innerHTML = items.map(item => {
+    // Guardar estado del ingrediente activo antes de redibujar
+    const wasActive = window._invActiveId;
+    const activeItemId = wasActive;
+    
+    container.innerHTML = '';
+    
+    // En móvil, almacenaremos el detalle expandido debajo del elemento seleccionado
+    const isMobile = window.innerWidth <= 768;
+    
+    items.forEach(item => {
         const disponible = (item.stock||0) - (item.reservado||0);
         const estado = disponible <= 0 ? 'critico' : disponible <= (item.minimo||0) ? 'bajo' : 'ok';
         const isActive = item.id === window._invActiveId;
-        return `<div class="inv-list-item${isActive ? ' active' : ''}" id="invItem_${item.id}" onclick="window._invSeleccionarIngrediente('${item.id}')">
-                    <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${item.nombre}</span>
-                    <span class="inv-item-badge ${estado}">${disponible} ${item.unidad_base||'u'}</span>
-                </div>`;
-    }).join('');
-    
-    if (window._invActiveId) {
-        const activeItem = items.find(i => i.id === window._invActiveId);
-        if (activeItem) window._invMostrarDetalle(activeItem);
-    } else {
-        const emptyDiv = document.getElementById('invDetailEmpty');
-        if (emptyDiv) emptyDiv.style.display = 'block';
-        const col = document.getElementById('invDetailCol');
-        if (col && !col.querySelector('#invDetailEmpty')) {
-            col.innerHTML = '<div class="inv-detail-empty" id="invDetailEmpty"><i class="fas fa-hand-point-left" style="font-size:2rem;margin-bottom:.75rem;display:block;opacity:.3"></i>Selecciona un ingrediente de la lista para ver su detalle</div>';
+        
+        const listItem = document.createElement('div');
+        listItem.className = `inv-list-item${isActive ? ' active' : ''}`;
+        listItem.id = `invItem_${item.id}`;
+        listItem.setAttribute('data-ingrediente-id', item.id);
+        listItem.innerHTML = `
+            <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${window.escapeHtml(item.nombre)}</span>
+            <span class="inv-item-badge ${estado}">${disponible} ${item.unidad_base||'u'}</span>
+        `;
+        
+        listItem.addEventListener('click', (function(ingId) {
+            return function() { window._invSeleccionarIngrediente(ingId); };
+        })(item.id));
+        
+        container.appendChild(listItem);
+        
+        // En móvil, si este es el activo, insertar detalle debajo
+        if (isMobile && isActive) {
+            const detailDiv = document.createElement('div');
+            detailDiv.className = 'inv-mobile-detail';
+            detailDiv.id = `invMobileDetail_${item.id}`;
+            detailDiv.style.cssText = 'margin:0.5rem 0 0.75rem 0; padding:0.75rem; background:var(--card-bg); border-radius:10px; border:1px solid var(--border); border-top:2px solid var(--info)';
+            detailDiv.innerHTML = window._generarDetalleHTML(item);
+            container.appendChild(detailDiv);
         }
+    });
+    
+    // En escritorio, mantener el detalle en la columna derecha
+    if (!isMobile && window._invActiveId) {
+        const activeItem = items.find(i => i.id === window._invActiveId);
+        if (activeItem) {
+            const col = document.getElementById('invDetailCol');
+            if (col) col.innerHTML = window._generarDetalleHTML(activeItem);
+        }
+    } else if (!isMobile && !window._invActiveId) {
+        const col = document.getElementById('invDetailCol');
+        if (col) col.innerHTML = '<div class="inv-detail-empty" id="invDetailEmpty"><i class="fas fa-hand-point-left" style="font-size:2rem;margin-bottom:.75rem;display:block;opacity:.3"></i>Selecciona un ingrediente de la lista para ver su detalle</div>';
     }
     
     window.actualizarStockCriticoHeader();
 }, 300);
 
-window._invActiveId = null;
-
-window._invSeleccionarIngrediente = function(ingredienteId) {
-    const item = window.inventarioItems.find(i => i.id === ingredienteId);
-    if (!item) return;
-    
-    const wasActive = window._invActiveId === ingredienteId;
-    document.querySelectorAll('.inv-list-item').forEach(el => el.classList.remove('active'));
-    
-    if (wasActive) {
-        window._invActiveId = null;
-        const col = document.getElementById('invDetailCol');
-        if (col) col.innerHTML = '<div class="inv-detail-empty" id="invDetailEmpty"><i class="fas fa-hand-point-left" style="font-size:2rem;margin-bottom:.75rem;display:block;opacity:.3"></i>Selecciona un ingrediente de la lista para ver su detalle</div>';
-    } else {
-        window._invActiveId = ingredienteId;
-        const el = document.getElementById(`invItem_${ingredienteId}`);
-        if (el) el.classList.add('active');
-        window._invMostrarDetalle(item);
-    }
-};
-
-window._invMostrarDetalle = function(item) {
+window._generarDetalleHTML = function(item) {
     const estado = (item.stock||0)-(item.reservado||0) <= 0 ? 'critico'
         : (item.stock||0)-(item.reservado||0) <= (item.minimo||0) ? 'bajo' : 'ok';
     const disponible = (item.stock||0) - (item.reservado||0);
     const porcentaje = item.minimo > 0 ? Math.min((disponible/item.minimo)*100, 100) : 100;
     const colorEstado = estado === 'critico' ? 'var(--danger)' : estado === 'bajo' ? 'var(--warning)' : 'var(--success)';
     
-    const detailHTML = `<div class="inv-detail-card">
-                            <div class="inv-detail-title">
-                                <span>${item.nombre}</span>
-                                <button class="inv-detail-close" onclick="window._invCerrarDetalle()" title="Cerrar">
-                                    <i class="fas fa-times"></i>
-                                </button>
-                            </div>
-                            <div class="inv-stock-row" style="margin-bottom:.5rem">
-                                <span class="inv-stock-num ${estado}" style="font-size:2rem">${disponible}</span>
-                                <span class="inv-stock-unit" style="font-size:.9rem">${item.unidad_base||'u'}</span>
-                                <span style="font-size:.75rem;color:var(--text-muted);margin-left:auto">Reservado: ${item.reservado||0}</span>
-                            </div>
-                            <div class="inv-bar" style="margin-bottom:.85rem"><div class="inv-bar-fill ${estado}" style="width:${porcentaje}%"></div></div>
-                            <div class="inv-meta-grid">
-                                <div class="inv-meta-item">
-                                    <span class="inv-meta-label">Mínimo</span>
-                                    <span class="inv-meta-val" style="color:${colorEstado}">${item.minimo||0} ${item.unidad_base||'u'}</span>
-                                </div>
-                                <div class="inv-meta-item">
-                                    <span class="inv-meta-label">Costo</span>
-                                    <span class="inv-meta-val">${window.formatUSD(item.precio_costo||0)}</span>
-                                    <span class="inv-meta-bs">${window.formatBs(window.usdToBs(item.precio_costo||0))}</span>
-                                </div>
-                                <div class="inv-meta-item">
-                                    <span class="inv-meta-label">Venta</span>
-                                    <span class="inv-meta-val">${window.formatUSD(item.precio_unitario||0)}</span>
-                                    <span class="inv-meta-bs">${window.formatBs(window.usdToBs(item.precio_unitario||0))}</span>
-                                </div>
-                            </div>
-                            <div style="display:flex;gap:.5rem;flex-wrap:wrap">
-                                <button class="btn-icon edit" onclick="window.editarIngrediente('${item.id}')" title="Editar ingrediente" style="width:auto;padding:.45rem .9rem;border-radius:8px">
-                                    <i class="fas fa-pen"></i> Editar
-                                </button>
-                                <button class="btn-icon delete" onclick="window.eliminarIngrediente('${item.id}')" title="Eliminar ingrediente" style="width:auto;padding:.45rem .9rem;border-radius:8px">
-                                    <i class="fas fa-trash"></i> Eliminar
-                                </button>
-                            </div>
-                        </div>`;
+    return `<div class="inv-detail-card">
+                <div class="inv-detail-title">
+                    <span>${window.escapeHtml(item.nombre)}</span>
+                    <button class="inv-detail-close" onclick="window._invCerrarDetalle()" title="Cerrar">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="inv-stock-row" style="margin-bottom:.5rem">
+                    <span class="inv-stock-num ${estado}" style="font-size:2rem">${disponible}</span>
+                    <span class="inv-stock-unit" style="font-size:.9rem">${item.unidad_base||'u'}</span>
+                    <span style="font-size:.75rem;color:var(--text-muted);margin-left:auto">Reservado: ${item.reservado||0}</span>
+                </div>
+                <div class="inv-bar" style="margin-bottom:.85rem"><div class="inv-bar-fill ${estado}" style="width:${porcentaje}%"></div></div>
+                <div class="inv-meta-grid">
+                    <div class="inv-meta-item">
+                        <span class="inv-meta-label">Mínimo</span>
+                        <span class="inv-meta-val" style="color:${colorEstado}">${item.minimo||0} ${item.unidad_base||'u'}</span>
+                    </div>
+                    <div class="inv-meta-item">
+                        <span class="inv-meta-label">Costo</span>
+                        <span class="inv-meta-val">${window.formatUSD(item.precio_costo||0)}</span>
+                        <span class="inv-meta-bs">${window.formatBs(window.usdToBs(item.precio_costo||0))}</span>
+                    </div>
+                    <div class="inv-meta-item">
+                        <span class="inv-meta-label">Venta</span>
+                        <span class="inv-meta-val">${window.formatUSD(item.precio_unitario||0)}</span>
+                        <span class="inv-meta-bs">${window.formatBs(window.usdToBs(item.precio_unitario||0))}</span>
+                    </div>
+                </div>
+                <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+                    <button class="btn-icon edit" onclick="window.editarIngrediente('${item.id}')" title="Editar ingrediente" style="width:auto;padding:.45rem .9rem;border-radius:8px">
+                        <i class="fas fa-pen"></i> Editar
+                    </button>
+                    <button class="btn-icon delete" onclick="window.eliminarIngrediente('${item.id}')" title="Eliminar ingrediente" style="width:auto;padding:.45rem .9rem;border-radius:8px">
+                        <i class="fas fa-trash"></i> Eliminar
+                    </button>
+                </div>
+            </div>`;
+};
+
+window._invSeleccionarIngrediente = function(ingredienteId) {
+    const item = window.inventarioItems.find(i => i.id === ingredienteId);
+    if (!item) return;
     
-    const col = document.getElementById('invDetailCol');
-    if (col) col.innerHTML = detailHTML;
+    const wasActive = window._invActiveId === ingredienteId;
+    const isMobile = window.innerWidth <= 768;
+    
+    if (wasActive) {
+        // Cerrar detalle
+        window._invActiveId = null;
+        if (isMobile) {
+            const detailDiv = document.getElementById(`invMobileDetail_${ingredienteId}`);
+            if (detailDiv) detailDiv.remove();
+        } else {
+            const col = document.getElementById('invDetailCol');
+            if (col) col.innerHTML = '<div class="inv-detail-empty" id="invDetailEmpty"><i class="fas fa-hand-point-left" style="font-size:2rem;margin-bottom:.75rem;display:block;opacity:.3"></i>Selecciona un ingrediente de la lista para ver su detalle</div>';
+        }
+        document.querySelectorAll('.inv-list-item').forEach(el => el.classList.remove('active'));
+    } else {
+        // Activar nuevo ingrediente
+        window._invActiveId = ingredienteId;
+        document.querySelectorAll('.inv-list-item').forEach(el => el.classList.remove('active'));
+        const selectedEl = document.getElementById(`invItem_${ingredienteId}`);
+        if (selectedEl) selectedEl.classList.add('active');
+        
+        if (isMobile) {
+            // Eliminar cualquier detalle móvil existente
+            document.querySelectorAll('.inv-mobile-detail').forEach(el => el.remove());
+            // Insertar detalle después del elemento seleccionado
+            const detailDiv = document.createElement('div');
+            detailDiv.className = 'inv-mobile-detail';
+            detailDiv.id = `invMobileDetail_${ingredienteId}`;
+            detailDiv.style.cssText = 'margin:0.5rem 0 0.75rem 0; padding:0.75rem; background:var(--card-bg); border-radius:10px; border:1px solid var(--border); border-top:2px solid var(--info)';
+            detailDiv.innerHTML = window._generarDetalleHTML(item);
+            selectedEl.insertAdjacentElement('afterend', detailDiv);
+        } else {
+            const col = document.getElementById('invDetailCol');
+            if (col) col.innerHTML = window._generarDetalleHTML(item);
+        }
+    }
 };
 
 window._invCerrarDetalle = function() {
+    const isMobile = window.innerWidth <= 768;
+    const wasActive = window._invActiveId;
+    
     window._invActiveId = null;
     document.querySelectorAll('.inv-list-item').forEach(el => el.classList.remove('active'));
-    const col = document.getElementById('invDetailCol');
-    if (col) col.innerHTML = '<div class="inv-detail-empty" id="invDetailEmpty"><i class="fas fa-hand-point-left" style="font-size:2rem;margin-bottom:.75rem;display:block;opacity:.3"></i>Selecciona un ingrediente de la lista para ver su detalle</div>';
+    
+    if (isMobile && wasActive) {
+        document.querySelectorAll('.inv-mobile-detail').forEach(el => el.remove());
+    } else {
+        const col = document.getElementById('invDetailCol');
+        if (col) col.innerHTML = '<div class="inv-detail-empty" id="invDetailEmpty"><i class="fas fa-hand-point-left" style="font-size:2rem;margin-bottom:.75rem;display:block;opacity:.3"></i>Selecciona un ingrediente de la lista para ver su detalle</div>';
+    }
 };
 
+// ==================== RENDERIZADO DE USUARIOS ====================
 window.renderizarUsuarios = function() {
     const grid = document.getElementById('usuariosGrid');
     if (!grid) return;
@@ -689,12 +751,23 @@ window.renderizarUsuarios = function() {
     }).join('');
 };
 
-window.renderizarMesoneros = async function() {
+// ==================== RENDERIZADO DE MESONEROS (CON BUSCADOR) ====================
+window._mesonerosBuscadorValue = '';
+
+window.renderizarMesoneros = window.debounce(async function(filtro = '') {
+    window._mesonerosBuscadorValue = filtro;
     const container = document.getElementById('mesonerosList');
     if (!container) return;
+    
     if (!window.mesoneros || !window.mesoneros.length) {
         container.innerHTML = '<p style="color:var(--text-muted);font-size:.88rem">No hay mesoneros registrados.</p>';
         return;
+    }
+    
+    const _normM = t => (t || '').normalize('NFD').replace(/[áéíóú]/g, '').toLowerCase();
+    let filtered = [...window.mesoneros];
+    if (filtro) {
+        filtered = filtered.filter(m => _normM(m.nombre).includes(_normM(filtro)));
     }
     
     let acumulados = {};
@@ -710,7 +783,7 @@ window.renderizarMesoneros = async function() {
         });
     } catch(e) { console.error('Error obteniendo acumulado propinas:', e); }
 
-    const sorted = [...window.mesoneros].sort((a, b) => a.nombre.localeCompare(b.nombre));
+    const sorted = filtered.sort((a, b) => a.nombre.localeCompare(b.nombre));
     container.innerHTML = sorted.map(m => {
         const inicial = m.nombre.charAt(0).toUpperCase();
         const acum = acumulados[m.id] || 0;
@@ -741,16 +814,27 @@ window.renderizarMesoneros = async function() {
                     </div>
                 </div>`;
     }).join('');
-};
+}, 300);
 
-window.renderizarDeliverys = async function() {
+// ==================== RENDERIZADO DE DELIVERYS (CON BUSCADOR) ====================
+window._deliverysBuscadorValue = '';
+
+window.renderizarDeliverys = window.debounce(async function(filtro = '') {
+    window._deliverysBuscadorValue = filtro;
     const grid = document.getElementById('deliverysGrid');
     if (!grid) return;
     if (window._renderizandoDeliverys) return;
     window._renderizandoDeliverys = true;
     grid.innerHTML = '';
+    
+    const _normD = t => (t || '').normalize('NFD').replace(/[áéíóú]/g, '').toLowerCase();
+    let filtered = [...(window.deliverys || [])];
+    if (filtro) {
+        filtered = filtered.filter(d => _normD(d.nombre).includes(_normD(filtro)));
+    }
+    
     try {
-        for (const d of (window.deliverys || [])) {
+        for (const d of filtered) {
             const acumulado = await window.obtenerAcumuladoDelivery(d.id);
             const card = document.createElement('div');
             card.className = 'delivery-item';
@@ -775,8 +859,11 @@ window.renderizarDeliverys = async function() {
                 </div>`;
             grid.appendChild(card);
         }
+        if (filtered.length === 0) {
+            grid.innerHTML = '<p style="color:var(--text-muted);font-size:.88rem;padding:.5rem">' + (filtro ? 'Sin resultados para "' + filtro + '"' : 'No hay motorizados registrados.') + '</p>';
+        }
     } finally { window._renderizandoDeliverys = false; }
-};
+}, 300);
 
 window.renderizarPropinas = function() {
     const total = window.propinas.reduce((s, p) => s + (p.monto_bs || 0), 0);
@@ -1014,7 +1101,6 @@ window.verificarStockCritico = async function() {
         stockCriticoDiv.innerHTML = criticos.map(item => {
             const disponible = (item.stock || 0) - (item.reservado || 0);
             const faltantes = (item.minimo || 0) - disponible;
-            // Notificar al admin sobre este stock crítico
             window._notificarAdminStockCritico(item.nombre);
             return `<div class="alert-item critical" style="display:flex;justify-content:space-between;align-items:center;padding:.75rem 1rem;border-radius:8px;background:#ffebee;border-left:4px solid var(--danger);margin-bottom:.5rem">
                         <div>
@@ -2235,13 +2321,13 @@ window.actualizarTablaVentas = function(pedidos) {
             metodoStr = p.pagos_mixtos.map(pg => metodoMap[pg.metodo] || pg.metodo).join(' + ');
         }
         return `——
-                    <td>${new Date(p.fecha).toLocaleDateString('es-VE', { timeZone: 'America/Caracas' })}</td>
+                     <td>${new Date(p.fecha).toLocaleDateString('es-VE', { timeZone: 'America/Caracas' })}</td>
                     <td style="max-width:200px;font-size:.82rem">${resumen}</td>
                     <td>${window.formatUSD(totalUSD)}<br><span style="font-size:.75rem;color:var(--text-muted)">${totalBs}</span></td>
                     <td>${totalItems}</td>
                     <td>${metodoStr}</td>
                     <td>${p.tipo || 'N/A'}</td>
-                </tr>`;
+                 </tr>`;
     }).join('');
 };
 
@@ -2667,7 +2753,7 @@ window.calcularCostoUnitario = function() {
     }
 };
 
-// ==================== MODAL DE PLATILLO ====================
+// ==================== MODAL DE PLATILLO (CON PREVISUALIZACIÓN INTELIGENTE) ====================
 window.abrirModalNuevoPlatillo = function() {
     document.getElementById('platilloModalTitle').textContent = 'Nuevo Platillo';
     document.getElementById('platilloForm').reset();
@@ -2764,6 +2850,59 @@ window.limpiarImagenPreview = function() {
     const previewDiv = document.getElementById('imagenPreview');
     if (previewDiv) previewDiv.style.display = 'none';
     document.getElementById('previewImg').src = '';
+    document.getElementById('platilloImagenUrl').disabled = false;
+};
+
+window.actualizarPreviewDesdeArchivo = function(input) {
+    const file = input.files[0];
+    if (!file) return;
+    
+    // Limpiar URL y deshabilitar campo URL
+    document.getElementById('platilloImagenUrl').value = '';
+    document.getElementById('platilloImagenUrl').disabled = true;
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const previewDiv = document.getElementById('imagenPreview');
+        const previewImg = document.getElementById('previewImg');
+        previewImg.src = e.target.result;
+        previewDiv.style.display = 'flex';
+    };
+    reader.readAsDataURL(file);
+};
+
+window.actualizarPreviewDesdeUrl = function(urlInput) {
+    const url = urlInput.value.trim();
+    const archivoInput = document.getElementById('platilloImagen');
+    
+    // Si hay un archivo seleccionado, no permitir URL hasta que se elimine el archivo
+    if (archivoInput.files.length > 0) {
+        urlInput.value = '';
+        window.mostrarToast('Primero elimina la imagen adjunta para usar URL', 'warning');
+        return;
+    }
+    
+    if (url) {
+        const previewDiv = document.getElementById('imagenPreview');
+        const previewImg = document.getElementById('previewImg');
+        previewImg.src = url;
+        previewDiv.style.display = 'flex';
+    } else {
+        document.getElementById('imagenPreview').style.display = 'none';
+    }
+};
+
+window.eliminarImagenAdjunta = function() {
+    const archivoInput = document.getElementById('platilloImagen');
+    const urlInput = document.getElementById('platilloImagenUrl');
+    const previewDiv = document.getElementById('imagenPreview');
+    
+    archivoInput.value = '';
+    urlInput.disabled = false;
+    urlInput.value = '';
+    previewDiv.style.display = 'none';
+    document.getElementById('previewImg').src = '';
+    window.mostrarToast('Imagen eliminada. Puedes usar URL o seleccionar otra.', 'info');
 };
 
 window.editarPlatillo = function(id) {
@@ -2787,6 +2926,7 @@ window.editarPlatillo = function(id) {
         const previewDiv = document.getElementById('imagenPreview');
         if (previewDiv) previewDiv.style.display = 'flex';
         document.getElementById('platilloImagenUrl').value = platillo.imagen;
+        document.getElementById('platilloImagenUrl').disabled = false;
     }
     window.cargarSubcategoriasSelect(platillo.categoria);
     document.getElementById('ingredientesContainer').innerHTML = '';
@@ -2939,6 +3079,16 @@ window.setupEventListeners = function() {
     const inventarioBuscador = document.getElementById('inventarioBuscador');
     if (inventarioBuscador) {
         inventarioBuscador.addEventListener('input', (e) => { window.renderizarInventario(e.target.value); });
+    }
+    
+    // Buscadores para mesoneros y deliverys
+    const mesonerosBuscador = document.getElementById('mesonerosBuscador');
+    if (mesonerosBuscador) {
+        mesonerosBuscador.addEventListener('input', (e) => { window.renderizarMesoneros(e.target.value); });
+    }
+    const deliverysBuscador = document.getElementById('deliverysBuscador');
+    if (deliverysBuscador) {
+        deliverysBuscador.addEventListener('input', (e) => { window.renderizarDeliverys(e.target.value); });
     }
     
     const closePlatilloModal = document.getElementById('closePlatilloModal');
