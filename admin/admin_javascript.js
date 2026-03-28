@@ -37,6 +37,87 @@ window.mostrarToast = function(mensaje, tipo = 'info') {
     }
 };
 
+// ==================== FUNCIONES DE UTILIDAD AVANZADAS ====================
+window.mostrarErrorEnModal = function(modalId, mensajeError) {
+    const modal = document.getElementById(modalId);
+    if (!modal) return;
+    
+    const body = modal.querySelector('.modal-body');
+    if (!body) return;
+    
+    let errorContainer = body.querySelector('.error-message-container');
+    if (!errorContainer) {
+        errorContainer = document.createElement('div');
+        errorContainer.className = 'error-message-container';
+        errorContainer.style.cssText = 'background:rgba(239,68,68,.15); border-left:4px solid var(--danger); padding:.75rem; border-radius:8px; margin-bottom:1rem; display:flex; align-items:center; gap:.5rem';
+        errorContainer.innerHTML = '<i class="fas fa-exclamation-circle" style="color:var(--danger)"></i><span style="flex:1; font-size:.85rem"></span>';
+        body.insertBefore(errorContainer, body.firstChild);
+    }
+    
+    const span = errorContainer.querySelector('span');
+    if (span) span.textContent = mensajeError;
+    errorContainer.style.display = 'flex';
+    
+    setTimeout(() => {
+        if (errorContainer) errorContainer.style.display = 'none';
+    }, 5000);
+};
+
+window.cerrarModalConLimpieza = function(modalId, cleanupFn = null) {
+    const modal = document.getElementById(modalId);
+    if (modal) {
+        modal.classList.remove('active');
+        if (cleanupFn && typeof cleanupFn === 'function') {
+            cleanupFn();
+        }
+    }
+};
+
+window.manejarErrorConReintento = async function(error, nombreFuncion, maxReintentos = 3, delay = 1000) {
+    console.error(`❌ Error en ${nombreFuncion}:`, error);
+    window.mostrarToast(`⚠️ Error en ${nombreFuncion}: ${error.message || error}`, 'error');
+    
+    for (let intento = 1; intento <= maxReintentos; intento++) {
+        console.log(`🔄 Reintento ${intento}/${maxReintentos} para ${nombreFuncion}...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+        try {
+            const resultado = await window[nombreFuncion]();
+            window.mostrarToast(`✓ ${nombreFuncion} recuperado exitosamente`, 'success');
+            return resultado;
+        } catch (retryError) {
+            console.error(`❌ Reintento ${intento} falló:`, retryError);
+            if (intento === maxReintentos) {
+                window.mostrarToast(`❌ Error persistente en ${nombreFuncion}. Revisa conexión.`, 'error');
+                throw retryError;
+            }
+        }
+    }
+};
+
+window._notificarAdminStockCritico = async function(ingredienteNombre) {
+    try {
+        let adminSessionId = localStorage.getItem('saki_admin_session_id');
+        if (!adminSessionId) {
+            adminSessionId = 'admin_' + Date.now() + '_' + Math.random().toString(36).slice(2, 9);
+            localStorage.setItem('saki_admin_session_id', adminSessionId);
+        }
+        
+        const { error } = await window.supabaseClient.from('notificaciones').insert([{
+            pedido_id: null,
+            tipo: 'stock_critico',
+            titulo: '⚠️ Stock crítico',
+            mensaje: `El ingrediente "${ingredienteNombre}" está por debajo del mínimo. Revisa el inventario.`,
+            session_id: adminSessionId,
+            leida: false
+        }]);
+        
+        if (error) throw error;
+        
+    } catch (e) {
+        console.error('Error notificando stock crítico:', e);
+    }
+};
+
 // ==================== UTILIDADES ====================
 window.formatBs = function(m) {
     try {
@@ -715,7 +796,7 @@ window.renderizarPropinas = function() {
     const tbody = document.getElementById('propinasTableBody');
     if (tbody) {
         tbody.innerHTML = window.propinas.map(p => `
-                <tr>
+                 <tr>
                     <td>${new Date(p.fecha).toLocaleString('es-VE', { timeZone: 'America/Caracas' })}</td>
                     <td>${p.mesoneros?.nombre || 'N/A'}</td>
                     <td>${p.mesa || 'N/A'}</td>
@@ -933,6 +1014,8 @@ window.verificarStockCritico = async function() {
         stockCriticoDiv.innerHTML = criticos.map(item => {
             const disponible = (item.stock || 0) - (item.reservado || 0);
             const faltantes = (item.minimo || 0) - disponible;
+            // Notificar al admin sobre este stock crítico
+            window._notificarAdminStockCritico(item.nombre);
             return `<div class="alert-item critical" style="display:flex;justify-content:space-between;align-items:center;padding:.75rem 1rem;border-radius:8px;background:#ffebee;border-left:4px solid var(--danger);margin-bottom:.5rem">
                         <div>
                             <strong>${item.nombre}</strong><br>
@@ -2151,7 +2234,7 @@ window.actualizarTablaVentas = function(pedidos) {
         if (p.pagos_mixtos && p.pagos_mixtos.length > 1) {
             metodoStr = p.pagos_mixtos.map(pg => metodoMap[pg.metodo] || pg.metodo).join(' + ');
         }
-        return `<tr>
+        return `——
                     <td>${new Date(p.fecha).toLocaleDateString('es-VE', { timeZone: 'America/Caracas' })}</td>
                     <td style="max-width:200px;font-size:.82rem">${resumen}</td>
                     <td>${window.formatUSD(totalUSD)}<br><span style="font-size:.75rem;color:var(--text-muted)">${totalBs}</span></td>
@@ -2492,7 +2575,10 @@ window.guardarIngrediente = async function() {
     
     try {
         const nombre = document.getElementById('ingredienteNombre').value.trim();
-        if (!nombre) throw new Error('El nombre es obligatorio');
+        if (!nombre) {
+            window.mostrarErrorEnModal('ingredienteModal', 'El nombre es obligatorio');
+            return;
+        }
         
         let stockActual = parseFloat(document.getElementById('ingredienteStock').value) || 0;
         const nuevoStock = parseFloat(document.getElementById('ingredienteAgregar').value) || 0;
@@ -2537,7 +2623,7 @@ window.guardarIngrediente = async function() {
         
     } catch (error) {
         console.error('Error guardando ingrediente:', error);
-        window.mostrarToast('Error: ' + (error.message || 'Error al guardar'), 'error');
+        window.mostrarErrorEnModal('ingredienteModal', 'Error al guardar: ' + (error.message || error));
     } finally {
         btn.disabled = false;
         btn.innerHTML = originalText;
@@ -2873,7 +2959,10 @@ window.setupEventListeners = function() {
                 const precio = parseFloat(document.getElementById('platilloPrecio').value);
                 const descripcion = document.getElementById('platilloDescripcion').value;
                 const disponible = document.getElementById('platilloDisponibleCheck').checked;
-                if (!nombre || !categoria || !precio) { window.mostrarToast('Completa los campos obligatorios', 'error'); return; }
+                if (!nombre || !categoria || !precio) {
+                    window.mostrarErrorEnModal('platilloModal', 'Completa los campos obligatorios');
+                    return;
+                }
                 
                 let imagenUrl = '';
                 const archivoImagen = document.getElementById('platilloImagen').files[0];
@@ -2945,7 +3034,7 @@ window.setupEventListeners = function() {
                 window.mostrarToast('✓ Platillo guardado', 'success');
             } catch (e) {
                 console.error('Error guardando platillo:', e);
-                window.mostrarToast('Error al guardar el platillo: ' + e.message, 'error');
+                window.mostrarErrorEnModal('platilloModal', 'Error al guardar: ' + e.message);
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = 'Guardar';
