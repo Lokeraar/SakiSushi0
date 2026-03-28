@@ -17,6 +17,7 @@ window._currentClickArea = null;
 window._stockOriginalValue = null;
 window._debounceTimeout = null;
 window._throttlePending = false;
+window._realtimeChannels = [];
 
 // WiFi persistentes
 window.wifiSsidPersistente = localStorage.getItem('saki_wifi_ssid') || '';
@@ -190,7 +191,6 @@ window.hacerLogin = async function() {
     }
 };
 
-// Interceptar errores 401 (JWT expirado)
 window.interceptarError401 = function(error) {
     if (error?.status === 401 || error?.message?.includes('JWT') || error?.code === 'PGRST301') {
         window.mostrarToast('Sesión expirada. Por favor, inicia sesión nuevamente.', 'error');
@@ -254,25 +254,26 @@ window.cargarMenu = async function() {
     } catch (e) { console.error('Error cargando menú:', e); window.mostrarToast('Error cargando menú', 'error'); }
 };
 
-window.cargarInventario = async function() {
+window.cargarInventario = async function(retry = 0) {
     try {
         const { data, error } = await window.safeSupabaseCall(window.supabaseClient.from('inventario').select('*'));
         if (error) throw error;
         window.inventarioItems = data || [];
-    } catch (e) { 
-        console.error('Error cargando inventario:', e);
-        window.inventarioItems = [];
-        window.mostrarToast('Error cargando inventario. Reintentando...', 'warning');
-        // Reintentar después de 3 segundos
-        setTimeout(() => window.cargarInventario(), 3000);
-    } finally {
-        // Siempre renderizar, incluso si hay error (mostrará mensaje de vacío o error)
         window.renderizarInventario(window._inventarioBuscadorValue || '');
         window.actualizarAlertasStock();
         window.actualizarStockCriticoHeader();
         window.verificarStockCritico();
-        // Recargar menú después de inventario para sincronizar stocks
         await window.cargarMenu();
+    } catch (e) {
+        console.error('Error cargando inventario:', e);
+        if (retry < 2) {
+            setTimeout(() => window.cargarInventario(retry + 1), 3000);
+            window.mostrarToast('Reintentando cargar inventario...', 'warning');
+        } else {
+            window.mostrarToast('Error cargando inventario. Algunas funciones pueden no estar disponibles.', 'error');
+            window.inventarioItems = [];
+            window.renderizarInventario('');
+        }
     }
 };
 
@@ -714,14 +715,14 @@ window.renderizarPropinas = function() {
     const tbody = document.getElementById('propinasTableBody');
     if (tbody) {
         tbody.innerHTML = window.propinas.map(p => `
-               <tr>
-                   <td>${new Date(p.fecha).toLocaleString('es-VE', { timeZone: 'America/Caracas' })}</td>
-                   <td>${p.mesoneros?.nombre || 'N/A'}</td>
-                   <td>${p.mesa || 'N/A'}</td>
-                   <td>${p.metodo}</td>
-                   <td>${window.formatBs(p.monto_bs)}</td>
-                   <td>${p.cajero || 'N/A'}</td>
-               </tr>
+                <tr>
+                    <td>${new Date(p.fecha).toLocaleString('es-VE', { timeZone: 'America/Caracas' })}</td>
+                    <td>${p.mesoneros?.nombre || 'N/A'}</td>
+                    <td>${p.mesa || 'N/A'}</td>
+                    <td>${p.metodo}</td>
+                    <td>${window.formatBs(p.monto_bs)}</td>
+                    <td>${p.cajero || 'N/A'}</td>
+                </tr>
         `).join('');
     }
 };
@@ -1067,6 +1068,11 @@ window.recalcularTasaEfectiva = function() {
 };
 
 window.guardarConfiguracion = async function() {
+    const btn = document.getElementById('saveAllButton');
+    if (btn.disabled) return;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+    
     try {
         const tasaBase = parseFloat(document.getElementById('tasaBaseInput').value) || 0;
         const aumentoPct = parseFloat(document.getElementById('aumentoDiarioInput').value) || 0;
@@ -1103,6 +1109,9 @@ window.guardarConfiguracion = async function() {
     } catch (e) { 
         console.error('Error guardando configuración:', e); 
         window.mostrarToast('Error al guardar la configuración', 'error'); 
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-save"></i> Guardar cambios en tasa';
     }
 };
 
@@ -1155,7 +1164,7 @@ window._pedirTasaDeHoy = function(onConfirm) {
     document.getElementById('tasaHoyInput').addEventListener('keydown', e => { if (e.key === 'Enter') confirmar(); });
 };
 
-// ==================== FUNCIONES DE DEBUG (RESTAURADAS) ====================
+// ==================== FUNCIONES DE DEBUG ====================
 window._simularLunes = function() {
     console.log('%c✓ Simulando lunes para prueba de aviso semanal...', 'color:#FF9800;font-weight:700');
     const hoy = new Date().toISOString().split('T')[0];
@@ -1211,12 +1220,12 @@ window.recalcularCostos = async function() {
 // ==================== REALTIME SUBSCRIPTIONS ====================
 window.setupRealtimeSubscriptions = function() {
     try {
-        window.supabaseClient
+        const channel1 = window.supabaseClient
             .channel('admin-menu')
             .on('postgres_changes', { event: '*', schema: 'public', table: 'menu' }, () => window.cargarMenu())
             .subscribe();
         
-        window.supabaseClient
+        const channel2 = window.supabaseClient
             .channel('admin-inventario')
             .on('postgres_changes', { event: '*', schema: 'public', table: 'inventario' }, async (p) => {
                 if (p.eventType === 'UPDATE' && p.new.stock <= p.new.minimo) {
@@ -1231,17 +1240,17 @@ window.setupRealtimeSubscriptions = function() {
             })
             .subscribe();
         
-        window.supabaseClient
+        const channel3 = window.supabaseClient
             .channel('admin-usuarios')
             .on('postgres_changes', { event: '*', schema: 'public', table: 'usuarios' }, () => window.cargarUsuarios())
             .subscribe();
         
-        window.supabaseClient
+        const channel4 = window.supabaseClient
             .channel('admin-qr')
             .on('postgres_changes', { event: '*', schema: 'public', table: 'codigos_qr' }, () => window.cargarQRs())
             .subscribe();
         
-        window.supabaseClient
+        const channel5 = window.supabaseClient
             .channel('admin-pedidos')
             .on('postgres_changes', { event: '*', schema: 'public', table: 'pedidos' }, () => {
                 window.cargarPedidosRecientes();
@@ -1252,29 +1261,29 @@ window.setupRealtimeSubscriptions = function() {
             })
             .subscribe();
         
-        window.supabaseClient
+        const channel6 = window.supabaseClient
             .channel('admin-ventas')
             .on('postgres_changes', { event: '*', schema: 'public', table: 'ventas' }, () => {
                 window._actualizarVentasHoyNeto();
             })
             .subscribe();
         
-        window.supabaseClient
+        const channel7 = window.supabaseClient
             .channel('admin-mesoneros')
             .on('postgres_changes', { event: '*', schema: 'public', table: 'mesoneros' }, () => window.cargarMesoneros())
             .subscribe();
         
-        window.supabaseClient
+        const channel8 = window.supabaseClient
             .channel('admin-deliverys')
             .on('postgres_changes', { event: '*', schema: 'public', table: 'deliverys' }, () => window.cargarDeliverys())
             .subscribe();
         
-        window.supabaseClient
+        const channel9 = window.supabaseClient
             .channel('admin-propinas')
             .on('postgres_changes', { event: '*', schema: 'public', table: 'propinas' }, () => window.cargarPropinas())
             .subscribe();
         
-        window.supabaseClient
+        const channel10 = window.supabaseClient
             .channel('admin-config')
             .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'config' }, (p) => {
                 window.configGlobal = { ...window.configGlobal, ...p.new };
@@ -1284,7 +1293,23 @@ window.setupRealtimeSubscriptions = function() {
                 window.mostrarToast('✓ Tasa actualizada desde cajero: Bs ' + parseFloat(p.new.tasa_cambio||0).toFixed(2), 'info');
             })
             .subscribe();
+        
+        window._realtimeChannels = [channel1, channel2, channel3, channel4, channel5, channel6, channel7, channel8, channel9, channel10];
+        
     } catch (e) { console.error('Error configurando suscripciones realtime:', e); }
+};
+
+window.cleanupRealtimeSubscriptions = function() {
+    if (window._realtimeChannels && window._realtimeChannels.length) {
+        window._realtimeChannels.forEach(channel => {
+            try { window.supabaseClient.removeChannel(channel); } catch(e) {}
+        });
+        window._realtimeChannels = [];
+    }
+    if (window.stockUpdateChannel) {
+        try { window.supabaseClient.removeChannel(window.stockUpdateChannel); } catch(e) {}
+        window.stockUpdateChannel = null;
+    }
 };
 
 // ==================== VENTAS Y DELIVERYS ====================
@@ -1763,6 +1788,7 @@ window.obtenerAcumuladoDelivery = async function(deliveryId) {
 };
 
 window.toggleDisponiblePlatillo = async function(id, disponible) {
+    const btn = document.querySelector(`.menu-card-v2 .btn-icon[onclick*="toggleDisponiblePlatillo('${id}'"]`);
     try {
         const { error } = await window.safeSupabaseCall(
             window.supabaseClient.from('menu').update({ disponible }).eq('id', id)
@@ -1783,6 +1809,8 @@ window.toggleDisponiblePlatillo = async function(id, disponible) {
 };
 
 window.toggleUsuarioActivo = async function(userId, activo) {
+    const btn = event?.target;
+    if (btn && !btn.disabled) btn.disabled = true;
     try {
         await window.safeSupabaseCall(
             window.supabaseClient.from('usuarios').update({ activo }).eq('id', userId)
@@ -1790,6 +1818,7 @@ window.toggleUsuarioActivo = async function(userId, activo) {
         await window.cargarUsuarios();
         window.mostrarToast(`✓ Usuario ${activo ? 'activado' : 'desactivado'}`, 'success');
     } catch (e) { console.error('Error actualizando usuario:', e); window.mostrarToast('Error al actualizar usuario', 'error'); }
+    finally { if (btn) btn.disabled = false; }
 };
 
 window.eliminarUsuario = async function(userId) {
@@ -1987,6 +2016,9 @@ window.generarQR = async function() {
     if (!nombre) { window.mostrarToast('Ingresa el nombre de la mesa', 'error'); return; }
     if (ssid && !password) { window.mostrarToast('Ingresa la contraseña WiFi', 'error'); return; }
     
+    const btn = document.querySelector('[onclick="window.generarQR()"]');
+    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generando...'; }
+    
     const qrData = { id: window.generarId('QR_'), nombre: nombre, fecha: new Date().toISOString() };
     try {
         const { error } = await window.safeSupabaseCall(
@@ -1999,6 +2031,8 @@ window.generarQR = async function() {
     } catch(e) {
         console.error('Error generando QR:', e);
         window.mostrarToast('Error al generar QR: ' + (e.message || e), 'error');
+    } finally {
+        if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-qrcode"></i> Generar QR'; }
     }
 };
 
@@ -2117,16 +2151,14 @@ window.actualizarTablaVentas = function(pedidos) {
         if (p.pagos_mixtos && p.pagos_mixtos.length > 1) {
             metodoStr = p.pagos_mixtos.map(pg => metodoMap[pg.metodo] || pg.metodo).join(' + ');
         }
-        return `更
-                <td>${new Date(p.fecha).toLocaleDateString('es-VE', { timeZone: 'America/Caracas' })}
-                // Continuación del archivo admin javascript.js
-                <td style="max-width:200px;font-size:.82rem">${resumen}</td>
-                <td>${window.formatUSD(totalUSD)}<br><span style="font-size:.75rem;color:var(--text-muted)">${totalBs}</span></td>
-                <td>${totalItems}</td>
-                <td>${metodoStr}</td>
-                <td>${p.tipo || 'N/A'}</td>
-            </tr>
-        `;
+        return `<tr>
+                    <td>${new Date(p.fecha).toLocaleDateString('es-VE', { timeZone: 'America/Caracas' })}</td>
+                    <td style="max-width:200px;font-size:.82rem">${resumen}</td>
+                    <td>${window.formatUSD(totalUSD)}<br><span style="font-size:.75rem;color:var(--text-muted)">${totalBs}</span></td>
+                    <td>${totalItems}</td>
+                    <td>${metodoStr}</td>
+                    <td>${p.tipo || 'N/A'}</td>
+                </tr>`;
     }).join('');
 };
 
@@ -2200,7 +2232,6 @@ window.cambiarPassword = async function() {
         );
         if (updateUserError) throw updateUserError;
         
-        // Actualizar variable global
         window.configGlobal.admin_password = nueva;
         
         document.getElementById('currentPassword').value = '';
@@ -2451,6 +2482,68 @@ window._eliminarIngredienteDesdeModal = async function() {
     }
 };
 
+window.guardarIngrediente = async function() {
+    const isEdit = !!window.ingredienteEditandoId;
+    const btn = document.getElementById('saveIngrediente');
+    if (btn.disabled) return;
+    btn.disabled = true;
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+    
+    try {
+        const nombre = document.getElementById('ingredienteNombre').value.trim();
+        if (!nombre) throw new Error('El nombre es obligatorio');
+        
+        let stockActual = parseFloat(document.getElementById('ingredienteStock').value) || 0;
+        const nuevoStock = parseFloat(document.getElementById('ingredienteAgregar').value) || 0;
+        const stockTotal = stockActual + nuevoStock;
+        const unidadBase = document.getElementById('ingredienteUnidad').value;
+        const minimo = parseFloat(document.getElementById('ingredienteMinimo').value) || 0;
+        const precioCosto = parseFloat(document.getElementById('ingredienteCosto').value) || 0;
+        const precioVenta = parseFloat(document.getElementById('ingredienteVenta').value) || 0;
+        
+        const ingredienteData = {
+            nombre,
+            stock: stockTotal,
+            reservado: isEdit ? (window.inventarioItems.find(i => i.id === window.ingredienteEditandoId)?.reservado || 0) : 0,
+            unidad_base: unidadBase,
+            minimo,
+            precio_costo: precioCosto,
+            precio_unitario: precioVenta,
+            updated_at: new Date().toISOString()
+        };
+        
+        if (isEdit) {
+            const { error } = await window.safeSupabaseCall(
+                window.supabaseClient.from('inventario').update(ingredienteData).eq('id', window.ingredienteEditandoId)
+            );
+            if (error) throw error;
+            window.mostrarToast('✓ Ingrediente actualizado', 'success');
+        } else {
+            const newId = window.generarId('ing_');
+            ingredienteData.id = newId;
+            ingredienteData.created_at = new Date().toISOString();
+            const { error } = await window.safeSupabaseCall(
+                window.supabaseClient.from('inventario').insert([ingredienteData])
+            );
+            if (error) throw error;
+            window.mostrarToast('✓ Ingrediente creado', 'success');
+        }
+        
+        window.cerrarModal('ingredienteModal');
+        await window.cargarInventario();
+        window.resetearBloqueoStock();
+        window.ingredienteEditandoId = null;
+        
+    } catch (error) {
+        console.error('Error guardando ingrediente:', error);
+        window.mostrarToast('Error: ' + (error.message || 'Error al guardar'), 'error');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+    }
+};
+
 window.agregarStock = function(ingredienteId) {
     const ingrediente = window.inventarioItems.find(i => i.id === ingredienteId);
     if (ingrediente) {
@@ -2582,7 +2675,6 @@ window.agregarIngredienteRow = function(ingredienteId, cantidad, unidad) {
 window.limpiarImagenPreview = function() {
     document.getElementById('platilloImagen').value = '';
     document.getElementById('platilloImagenUrl').value = '';
-    // Ocultar contenedor de preview
     const previewDiv = document.getElementById('imagenPreview');
     if (previewDiv) previewDiv.style.display = 'none';
     document.getElementById('previewImg').src = '';
@@ -2673,7 +2765,6 @@ window.setupEventListeners = function() {
         });
     });
     
-    // Cerrar modal al hacer clic en el fondo
     document.querySelectorAll('.modal').forEach(modal => {
         modal.addEventListener('click', function(e) {
             if (e.target === this) {
@@ -2764,7 +2855,6 @@ window.setupEventListeners = function() {
         inventarioBuscador.addEventListener('input', (e) => { window.renderizarInventario(e.target.value); });
     }
     
-    // Botones de modales
     const closePlatilloModal = document.getElementById('closePlatilloModal');
     if (closePlatilloModal) closePlatilloModal.addEventListener('click', () => window.cerrarModal('platilloModal'));
     const cancelPlatillo = document.getElementById('cancelPlatillo');
@@ -2918,17 +3008,12 @@ window.setupEventListeners = function() {
             sessionStorage.removeItem('admin_user');
             window.isAdminAuthenticated = false;
             window.jwtToken = null;
+            window.cleanupRealtimeSubscriptions();
             window.mostrarLogin();
             window.mostrarToast('✓ Sesión cerrada', 'info');
             window.supabaseClient = window.inicializarSupabaseCliente();
         });
     }
-    
-    // ========== BOTONES DEL MODAL DE INGREDIENTE (CORREGIDOS) ==========
-    // Ya no se clonan; los eventos se asignan directamente en el HTML
-    // y se refuerzan aquí para asegurar que funcionen incluso si el HTML se regenera dinámicamente.
-    // Pero como los botones ya tienen onclick en el HTML, no es necesario agregar más.
-    // Solo aseguramos que existan las funciones globales.
 };
 
 // ==================== UTILIDADES ADICIONALES ====================
@@ -3002,7 +3087,7 @@ window._syncIngredientePreview = function() {
     }
 };
 
-// ==================== AVISO DE LUNES (RESTAURADO CON CLASE CSS) ====================
+// ==================== AVISO DE LUNES ====================
 window._verificarAvisoLunes = function() {
     if (!window.configGlobal || !window.configGlobal.aumento_semanal) return;
 
