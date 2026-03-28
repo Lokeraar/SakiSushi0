@@ -1144,6 +1144,20 @@ body {
   gap: .75rem;
 }
 
+/* Mejoras táctiles para botones dentro de modales */
+.modal .btn-icon,
+.modal .btn-sm,
+.modal .btn-primary,
+.modal .btn-secondary,
+.modal .btn-toggle,
+.modal .modal-close {
+  min-height: 44px !important;
+  min-width: 44px !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
 /* Stock bloqueado */
 #stockClickArea {
   display: flex;
@@ -1153,6 +1167,7 @@ body {
   border-radius: 8px;
   background: var(--input-bg);
   transition: all .2s;
+  min-height: 48px;
 }
 #stockClickArea:hover {
   border-color: var(--accent);
@@ -1165,6 +1180,8 @@ body {
   border: none;
   padding: .65rem .9rem;
   outline: none;
+  min-height: 48px;
+  font-size: 16px;
 }
 #stockLockIcon {
   display: inline-flex;
