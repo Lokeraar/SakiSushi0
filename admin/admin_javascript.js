@@ -184,7 +184,7 @@ window.throttle = function(func, limit) {
     };
 };
 
-// ==================== WRAPPER SEGURO PARA LLAMADAS SUPABASE (solo para operaciones críticas) ====================
+// ==================== WRAPPER SEGURO PARA LLAMADAS SUPABASE ====================
 window.safeSupabaseCall = async (promise, retries = 2) => {
     for (let i = 0; i <= retries; i++) {
         try {
@@ -284,7 +284,7 @@ window.interceptarError401 = function(error) {
     return false;
 };
 
-// ==================== CARGA DE DATOS ====================
+// ==================== CARGA DE DATOS DESDE SUPABASE ====================
 window.cargarConfiguracion = async function() {
     try {
         const { data, error } = await window.safeSupabaseCall(window.supabaseClient.from('config').select('*').eq('id', 1).single());
@@ -325,18 +325,15 @@ window.actualizarTasaUI = function() {
     if (acumuladoDisplay) acumuladoDisplay.textContent = (window.configGlobal.aumento_acumulado || 0).toFixed(2) + '%';
 };
 
-// ==================== CARGA DE DATOS PRINCIPALES (SIN safeSupabaseCall para evitar problemas) ====================
 window.cargarMenu = async function() {
     try {
-        console.log('🔄 Cargando menú desde Supabase...');
-        const { data, error } = await window.supabaseClient.from('menu').select('*');
+        const { data, error } = await window.safeSupabaseCall(window.supabaseClient.from('menu').select('*'));
         if (error) throw error;
         window.menuItems = data || [];
-        console.log(`✅ Menú cargado: ${window.menuItems.length} platillos`);
         window.renderizarMenu(window._menuBuscadorValue || '');
         window.actualizarProductosActivos();
     } catch (e) { 
-        console.error('❌ Error cargando menú:', e); 
+        console.error('Error cargando menú:', e); 
         window.mostrarToast('Error cargando menú', 'error');
         window.menuItems = [];
         window.renderizarMenu('');
@@ -346,7 +343,7 @@ window.cargarMenu = async function() {
 window.cargarInventario = async function(retry = 0) {
     try {
         console.log('🔄 Cargando inventario desde Supabase...');
-        const { data, error } = await window.supabaseClient.from('inventario').select('*');
+        const { data, error } = await window.safeSupabaseCall(window.supabaseClient.from('inventario').select('*'));
         if (error) throw error;
         window.inventarioItems = data || [];
         console.log(`✅ Inventario cargado: ${window.inventarioItems.length} ingredientes`);
@@ -371,7 +368,7 @@ window.cargarInventario = async function(retry = 0) {
 window.cargarMesoneros = async function(retry = 0) {
     try {
         console.log('🔄 Cargando mesoneros desde Supabase...');
-        const { data, error } = await window.supabaseClient.from('mesoneros').select('*').order('nombre');
+        const { data, error } = await window.safeSupabaseCall(window.supabaseClient.from('mesoneros').select('*').order('nombre'));
         if (error) throw error;
         window.mesoneros = data || [];
         console.log(`✅ Mesoneros cargados: ${window.mesoneros.length}`);
@@ -393,7 +390,7 @@ window.cargarMesoneros = async function(retry = 0) {
 window.cargarDeliverys = async function(retry = 0) {
     try {
         console.log('🔄 Cargando deliverys desde Supabase...');
-        const { data, error } = await window.supabaseClient.from('deliverys').select('*').order('nombre');
+        const { data, error } = await window.safeSupabaseCall(window.supabaseClient.from('deliverys').select('*').order('nombre'));
         if (error) throw error;
         window.deliverys = data || [];
         console.log(`✅ Deliverys cargados: ${window.deliverys.length}`);
@@ -413,7 +410,7 @@ window.cargarDeliverys = async function(retry = 0) {
 
 window.cargarUsuarios = async function() {
     try {
-        const { data, error } = await window.supabaseClient.from('usuarios').select('*').order('nombre');
+        const { data, error } = await window.safeSupabaseCall(window.supabaseClient.from('usuarios').select('*').order('nombre'));
         if (error) throw error;
         window.usuarios = data || [];
         window.renderizarUsuarios();
@@ -422,7 +419,7 @@ window.cargarUsuarios = async function() {
 
 window.cargarQRs = async function() {
     try {
-        const { data, error } = await window.supabaseClient.from('codigos_qr').select('*').order('fecha', { ascending: false });
+        const { data, error } = await window.safeSupabaseCall(window.supabaseClient.from('codigos_qr').select('*').order('fecha', { ascending: false }));
         if (error) throw error;
         window.qrCodes = data || [];
         window.renderizarQRs();
@@ -437,12 +434,14 @@ window.cargarPropinas = async function() {
     try {
         const hoy = new Date(); hoy.setHours(0,0,0,0);
         const manana = new Date(hoy); manana.setDate(manana.getDate() + 1);
-        const { data, error } = await window.supabaseClient
-            .from('propinas')
-            .select('*, mesoneros(nombre)')
-            .gte('fecha', hoy.toISOString())
-            .lt('fecha', manana.toISOString())
-            .order('fecha', { ascending: false });
+        const { data, error } = await window.safeSupabaseCall(
+            window.supabaseClient
+                .from('propinas')
+                .select('*, mesoneros(nombre)')
+                .gte('fecha', hoy.toISOString())
+                .lt('fecha', manana.toISOString())
+                .order('fecha', { ascending: false })
+        );
         if (error) throw error;
         window.propinas = data || [];
         window.renderizarPropinas();
@@ -451,7 +450,7 @@ window.cargarPropinas = async function() {
 
 window.cargarPedidosRecientes = async function() {
     try {
-        const { data, error } = await window.supabaseClient.from('pedidos').select('*').order('fecha', { ascending: false }).limit(5);
+        const { data, error } = await window.safeSupabaseCall(window.supabaseClient.from('pedidos').select('*').order('fecha', { ascending: false }).limit(5));
         if (error) throw error;
         const pedidosCount = document.getElementById('pedidosCountBadge');
         if (pedidosCount) pedidosCount.textContent = (data || []).length;
@@ -592,8 +591,8 @@ window.renderizarInventario = window.debounce(function(filtro = '') {
         return;
     }
     
-    const isMobile = window.innerWidth <= 768;
     const wasActive = window._invActiveId;
+    const isMobile = window.innerWidth <= 768;
     
     container.innerHTML = '';
     
@@ -794,10 +793,12 @@ window.renderizarMesoneros = window.debounce(async function(filtro = '') {
     
     let acumulados = {};
     try {
-        const { data: allProp } = await window.supabaseClient
-            .from('propinas')
-            .select('mesonero_id, monto_bs, entregado')
-            .eq('entregado', false);
+        const { data: allProp } = await window.safeSupabaseCall(
+            window.supabaseClient
+                .from('propinas')
+                .select('mesonero_id, monto_bs, entregado')
+                .eq('entregado', false)
+        );
         (allProp || []).forEach(p => {
             acumulados[p.mesonero_id] = (acumulados[p.mesonero_id] || 0) + (p.monto_bs || 0);
         });
@@ -1010,11 +1011,13 @@ window.verificarYNotificarStockReactivado = async function(ingredienteId, ingred
             const mensaje = `Ya tenemos ${platillo.nombre} en stock. ¡Pide ahora!`;
             
             try {
-                const { data: pedidosUnicos } = await window.supabaseClient
-                    .from('pedidos')
-                    .select('session_id')
-                    .not('session_id', 'is', null)
-                    .order('fecha', { ascending: false });
+                const { data: pedidosUnicos } = await window.safeSupabaseCall(
+                    window.supabaseClient
+                        .from('pedidos')
+                        .select('session_id')
+                        .not('session_id', 'is', null)
+                        .order('fecha', { ascending: false })
+                );
                 const sessionIds = [...new Set(pedidosUnicos?.map(p => p.session_id) || [])];
                 for (const sessionId of sessionIds) {
                     await window.enviarNotificacionPush(titulo, mensaje, sessionId);
@@ -1098,7 +1101,7 @@ window.recalcularStockPlatillos = async function(ingredienteId = null) {
     }
     
     for (const update of updates) {
-        await window.supabaseClient.from('menu').update({ stock: update.stock }).eq('id', update.id);
+        await window.safeSupabaseCall(window.supabaseClient.from('menu').update({ stock: update.stock }).eq('id', update.id));
     }
     if (updates.length > 0) window.renderizarMenu(window._menuBuscadorValue || '');
 };
@@ -1391,8 +1394,10 @@ window.recalcularCostos = async function() {
         const costoBs  = (ing.precio_costo  || 0) * tasa;
         const ventaBs  = (ing.precio_unitario || 0) * tasa;
         try {
-            await window.supabaseClient.from('inventario')
-                .update({ costo_bs: costoBs, venta_bs: ventaBs }).eq('id', ing.id);
+            await window.safeSupabaseCall(
+                window.supabaseClient.from('inventario')
+                    .update({ costo_bs: costoBs, venta_bs: ventaBs }).eq('id', ing.id)
+            );
             actualizados++;
         } catch(e) { console.warn('No se pudo actualizar', ing.nombre, e.message); }
     }
@@ -1501,11 +1506,13 @@ window._actualizarVentasHoyNeto = async function() {
         const hoy = new Date(); hoy.setHours(0,0,0,0);
         const manana = new Date(hoy); manana.setDate(manana.getDate() + 1);
         
-        const { data: ventasHoy } = await window.supabaseClient
-            .from('ventas')
-            .select('pedido_id')
-            .gte('fecha', hoy.toISOString())
-            .lt('fecha', manana.toISOString());
+        const { data: ventasHoy } = await window.safeSupabaseCall(
+            window.supabaseClient
+                .from('ventas')
+                .select('pedido_id')
+                .gte('fecha', hoy.toISOString())
+                .lt('fecha', manana.toISOString())
+        );
         
         if (!ventasHoy || ventasHoy.length === 0) {
             const ventasEl = document.getElementById('ventasHoy');
@@ -1514,10 +1521,12 @@ window._actualizarVentasHoyNeto = async function() {
         }
         
         const pedidoIds = ventasHoy.map(v => v.pedido_id);
-        const { data: pedidosData } = await window.supabaseClient
-            .from('pedidos')
-            .select('*')
-            .in('id', pedidoIds);
+        const { data: pedidosData } = await window.safeSupabaseCall(
+            window.supabaseClient
+                .from('pedidos')
+                .select('*')
+                .in('id', pedidoIds)
+        );
         
         const _netoCobradoPedido = (pedido) => {
             if (!pedido) return 0;
@@ -1557,13 +1566,15 @@ window._actualizarDeliverysHoy = async function() {
         const hoy = new Date(); hoy.setHours(0,0,0,0);
         const manana = new Date(hoy); manana.setDate(manana.getDate() + 1);
         
-        const { data: pedidosDelivery } = await window.supabaseClient
-            .from('pedidos')
-            .select('*')
-            .eq('tipo', 'delivery')
-            .eq('estado', 'enviado')
-            .gte('fecha', hoy.toISOString())
-            .lt('fecha', manana.toISOString());
+        const { data: pedidosDelivery } = await window.safeSupabaseCall(
+            window.supabaseClient
+                .from('pedidos')
+                .select('*')
+                .eq('tipo', 'delivery')
+                .eq('estado', 'enviado')
+                .gte('fecha', hoy.toISOString())
+                .lt('fecha', manana.toISOString())
+        );
         
         let totalDeliverys = 0;
         (pedidosDelivery || []).forEach(p => { totalDeliverys += p.costo_delivery_bs || p.costoDelivery || 0; });
@@ -1582,11 +1593,13 @@ window._abrirDetalleVentasAdmin = async function() {
         const hoy = new Date(); hoy.setHours(0,0,0,0);
         const manana = new Date(hoy); manana.setDate(manana.getDate() + 1);
         
-        const { data: ventasHoy } = await window.supabaseClient
-            .from('ventas')
-            .select('*')
-            .gte('fecha', hoy.toISOString())
-            .lt('fecha', manana.toISOString());
+        const { data: ventasHoy } = await window.safeSupabaseCall(
+            window.supabaseClient
+                .from('ventas')
+                .select('*')
+                .gte('fecha', hoy.toISOString())
+                .lt('fecha', manana.toISOString())
+        );
         
         if (!ventasHoy || ventasHoy.length === 0) {
             window.mostrarToast('No hay ventas registradas hoy', 'info');
@@ -1594,10 +1607,12 @@ window._abrirDetalleVentasAdmin = async function() {
         }
         
         const pedidoIds = ventasHoy.map(v => v.pedido_id);
-        const { data: pedidosHoy } = await window.supabaseClient
-            .from('pedidos')
-            .select('*')
-            .in('id', pedidoIds);
+        const { data: pedidosHoy } = await window.safeSupabaseCall(
+            window.supabaseClient
+                .from('pedidos')
+                .select('*')
+                .in('id', pedidoIds)
+        );
         
         const tasa = window.configGlobal?.tasa_cambio || window.configGlobal?.tasa_efectiva || 400;
         
@@ -1767,16 +1782,20 @@ window._abrirDetalleDeliverysAdmin = async function() {
         const hoy = new Date(); hoy.setHours(0,0,0,0);
         const manana = new Date(hoy); manana.setDate(manana.getDate() + 1);
         
-        const { data: entregas } = await window.supabaseClient
-            .from('entregas_delivery')
-            .select('*, deliverys(*)')
-            .gte('fecha_entrega', hoy.toISOString())
-            .lt('fecha_entrega', manana.toISOString());
+        const { data: entregas } = await window.safeSupabaseCall(
+            window.supabaseClient
+                .from('entregas_delivery')
+                .select('*, deliverys(*)')
+                .gte('fecha_entrega', hoy.toISOString())
+                .lt('fecha_entrega', manana.toISOString())
+        );
         
-        const { data: motorizados } = await window.supabaseClient
-            .from('deliverys')
-            .select('*')
-            .order('nombre');
+        const { data: motorizados } = await window.safeSupabaseCall(
+            window.supabaseClient
+                .from('deliverys')
+                .select('*')
+                .order('nombre')
+        );
         
         const acumulado = {};
         (entregas || []).forEach(e => { acumulado[e.delivery_id] = (acumulado[e.delivery_id] || 0) + (e.monto_bs || 0); });
@@ -1948,7 +1967,9 @@ window.restaurarWifiPersistente = function() {
 
 window.obtenerAcumuladoDelivery = async function(deliveryId) {
     try {
-        const { data, error } = await window.supabaseClient.from('entregas_delivery').select('monto_bs').eq('delivery_id', deliveryId);
+        const { data, error } = await window.safeSupabaseCall(
+            window.supabaseClient.from('entregas_delivery').select('monto_bs').eq('delivery_id', deliveryId)
+        );
         if (error) throw error;
         return (data || []).reduce((sum, e) => sum + (e.monto_bs || 0), 0);
     } catch (e) { console.error('Error obteniendo acumulado:', e); return 0; }
@@ -1957,7 +1978,9 @@ window.obtenerAcumuladoDelivery = async function(deliveryId) {
 window.toggleDisponiblePlatillo = async function(id, disponible) {
     const btn = document.querySelector(`.menu-card-v2 .btn-icon[onclick*="toggleDisponiblePlatillo('${id}'"]`);
     try {
-        const { error } = await window.supabaseClient.from('menu').update({ disponible }).eq('id', id);
+        const { error } = await window.safeSupabaseCall(
+            window.supabaseClient.from('menu').update({ disponible }).eq('id', id)
+        );
         if (error) throw error;
         const item = (window.menuItems || []).find(p => p.id === id);
         if (item) item.disponible = disponible;
@@ -1977,7 +2000,9 @@ window.toggleUsuarioActivo = async function(userId, activo) {
     const btn = event?.target;
     if (btn && !btn.disabled) btn.disabled = true;
     try {
-        await window.supabaseClient.from('usuarios').update({ activo }).eq('id', userId);
+        await window.safeSupabaseCall(
+            window.supabaseClient.from('usuarios').update({ activo }).eq('id', userId)
+        );
         await window.cargarUsuarios();
         window.mostrarToast(`✓ Usuario ${activo ? 'activado' : 'desactivado'}`, 'success');
     } catch (e) { console.error('Error actualizando usuario:', e); window.mostrarToast('Error al actualizar usuario', 'error'); }
@@ -1987,7 +2012,9 @@ window.toggleUsuarioActivo = async function(userId, activo) {
 window.eliminarUsuario = async function(userId) {
     if (!confirm('¿Estás seguro de eliminar este usuario?')) return;
     try {
-        await window.supabaseClient.from('usuarios').delete().eq('id', userId);
+        await window.safeSupabaseCall(
+            window.supabaseClient.from('usuarios').delete().eq('id', userId)
+        );
         await window.cargarUsuarios();
         window.mostrarToast('✓ Usuario eliminado', 'success');
     } catch (e) { console.error('Error eliminando usuario:', e); window.mostrarToast('Error al eliminar usuario', 'error'); }
@@ -1999,7 +2026,9 @@ window.agregarMesonero = async function() {
     const btn = document.querySelector('[onclick="window.agregarMesonero()"]');
     if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>'; }
     try {
-        const { error } = await window.supabaseClient.from('mesoneros').insert([{ id: window.generarId('mes_'), nombre, activo: true }]);
+        const { error } = await window.safeSupabaseCall(
+            window.supabaseClient.from('mesoneros').insert([{ id: window.generarId('mes_'), nombre, activo: true }])
+        );
         if (error) throw error;
         document.getElementById('nuevoMesonero').value = '';
         await window.cargarMesoneros();
@@ -2014,7 +2043,9 @@ window.agregarMesonero = async function() {
 
 window.toggleMesoneroActivo = async function(id, activo) {
     try {
-        await window.supabaseClient.from('mesoneros').update({ activo }).eq('id', id);
+        await window.safeSupabaseCall(
+            window.supabaseClient.from('mesoneros').update({ activo }).eq('id', id)
+        );
         await window.cargarMesoneros();
     } catch (e) { console.error('Error:', e); }
 };
@@ -2023,7 +2054,9 @@ window.pagarPropinaMesonero = async function(mesoneroId, nombre, acum) {
     const confirmado = confirm(`¿Registrar pago de propinas a ${nombre}? Monto pendiente: ${window.formatBs(acum)}`);
     if (!confirmado) return;
     try {
-        const { error } = await window.supabaseClient.from('propinas').update({ entregado: true }).eq('mesonero_id', mesoneroId).eq('entregado', false);
+        const { error } = await window.safeSupabaseCall(
+            window.supabaseClient.from('propinas').update({ entregado: true }).eq('mesonero_id', mesoneroId).eq('entregado', false)
+        );
         if (error) throw error;
         await window.renderizarMesoneros();
         window.mostrarToast(`✓ Propinas pagadas a ${nombre}`, 'success');
@@ -2036,7 +2069,9 @@ window.pagarPropinaMesonero = async function(mesoneroId, nombre, acum) {
 window.eliminarMesonero = async function(id) {
     if (!confirm('¿Eliminar mesonero?')) return;
     try {
-        await window.supabaseClient.from('mesoneros').delete().eq('id', id);
+        await window.safeSupabaseCall(
+            window.supabaseClient.from('mesoneros').delete().eq('id', id)
+        );
         await window.cargarMesoneros();
         window.mostrarToast('✓ Mesonero eliminado', 'success');
     } catch (e) { console.error('Error:', e); }
@@ -2048,7 +2083,9 @@ window.agregarDelivery = async function() {
     const btn = document.querySelector('.btn-delivery');
     if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>'; }
     try {
-        const { error } = await window.supabaseClient.from('deliverys').insert([{ id: window.generarId('del_'), nombre, activo: true }]);
+        const { error } = await window.safeSupabaseCall(
+            window.supabaseClient.from('deliverys').insert([{ id: window.generarId('del_'), nombre, activo: true }])
+        );
         if (error) throw error;
         document.getElementById('nuevoDelivery').value = '';
         await window.cargarDeliverys();
@@ -2075,8 +2112,12 @@ window.eliminarDelivery = async function(id) {
     if (!delivery) return;
     if (!confirm(`¿Eliminar al motorizado "${delivery.nombre}"?`)) return;
     try {
-        await window.supabaseClient.from('entregas_delivery').delete().eq('delivery_id', id);
-        await window.supabaseClient.from('deliverys').delete().eq('id', id);
+        await window.safeSupabaseCall(
+            window.supabaseClient.from('entregas_delivery').delete().eq('delivery_id', id)
+        );
+        await window.safeSupabaseCall(
+            window.supabaseClient.from('deliverys').delete().eq('id', id)
+        );
         await window.cargarDeliverys();
         window.mostrarToast('✓ Motorizado eliminado', 'success');
     } catch (e) {
@@ -2087,7 +2128,9 @@ window.eliminarDelivery = async function(id) {
 
 window.toggleDeliveryActivo = async function(id, activo) {
     try {
-        await window.supabaseClient.from('deliverys').update({ activo }).eq('id', id);
+        await window.safeSupabaseCall(
+            window.supabaseClient.from('deliverys').update({ activo }).eq('id', id)
+        );
         await window.cargarDeliverys();
     } catch (e) { console.error('Error:', e); }
 };
@@ -2126,13 +2169,17 @@ window.confirmarPagoDelivery = async function() {
             const monto = parseFloat(document.getElementById('montoPagoParcial')?.value);
             if (!monto || monto <= 0) throw new Error('Monto inválido');
             if (monto > acumulado) throw new Error('El monto excede el acumulado');
-            const { error } = await window.supabaseClient.from('entregas_delivery').insert([{
-                delivery_id: window.deliveryParaPago, monto_bs: -monto, pedido_id: null, fecha_entrega: new Date().toISOString()
-            }]);
+            const { error } = await window.safeSupabaseCall(
+                window.supabaseClient.from('entregas_delivery').insert([{
+                    delivery_id: window.deliveryParaPago, monto_bs: -monto, pedido_id: null, fecha_entrega: new Date().toISOString()
+                }])
+            );
             if (error) throw error;
             window.mostrarToast('✓ Pago parcial registrado.', 'success');
         } else {
-            const { error } = await window.supabaseClient.from('entregas_delivery').delete().eq('delivery_id', window.deliveryParaPago);
+            const { error } = await window.safeSupabaseCall(
+                window.supabaseClient.from('entregas_delivery').delete().eq('delivery_id', window.deliveryParaPago)
+            );
             if (error) throw error;
             window.mostrarToast('✓ Pago total registrado.', 'success');
         }
@@ -2162,7 +2209,9 @@ window.generarQR = async function() {
     
     const qrData = { id: window.generarId('QR_'), nombre: nombre, fecha: new Date().toISOString() };
     try {
-        const { error } = await window.supabaseClient.from('codigos_qr').insert([qrData]);
+        const { error } = await window.safeSupabaseCall(
+            window.supabaseClient.from('codigos_qr').insert([qrData])
+        );
         if (error) throw error;
         document.getElementById('qrNombreMesa').value = '';
         await window.cargarQRs();
@@ -2187,7 +2236,9 @@ window.ampliarQR = function(id, nombre, url) {
 window.eliminarQR = async function(id) {
     if (!confirm('¿Estás seguro de eliminar este código QR?')) return;
     try {
-        await window.supabaseClient.from('codigos_qr').delete().eq('id', id);
+        await window.safeSupabaseCall(
+            window.supabaseClient.from('codigos_qr').delete().eq('id', id)
+        );
         await window.cargarQRs();
         window.mostrarToast('✓ QR eliminado', 'success');
     } catch (e) { console.error('Error eliminando QR:', e); window.mostrarToast('Error al eliminar QR', 'error'); }
@@ -2200,7 +2251,7 @@ window.cargarReportes = async function() {
         let query = window.supabaseClient.from('pedidos').select('*').in('estado', ['cobrado', 'entregado', 'enviado', 'reserva_completada']);
         if (desde) query = query.gte('fecha', new Date(desde).toISOString());
         if (hasta) { const h = new Date(hasta); h.setDate(h.getDate() + 1); query = query.lt('fecha', h.toISOString()); }
-        const { data, error } = await query.order('fecha', { ascending: false });
+        const { data, error } = await window.safeSupabaseCall(query.order('fecha', { ascending: false }));
         if (error) throw error;
         window.actualizarEstadisticasReportes(data || []);
         window.actualizarGraficos(data || []);
@@ -2289,13 +2340,13 @@ window.actualizarTablaVentas = function(pedidos) {
             metodoStr = p.pagos_mixtos.map(pg => metodoMap[pg.metodo] || pg.metodo).join(' + ');
         }
         return `——
-                      <td style="white-space:nowrap">${new Date(p.fecha).toLocaleDateString('es-VE', { timeZone: 'America/Caracas' })}</td>
+                     <td>${new Date(p.fecha).toLocaleDateString('es-VE', { timeZone: 'America/Caracas' })}</td>
                     <td style="max-width:200px;font-size:.82rem">${resumen}</td>
-                     <td>${window.formatUSD(totalUSD)}<br><span style="font-size:.75rem;color:var(--text-muted)">${totalBs}</span></td>
-                     <td>${totalItems}</td>
-                     <td>${metodoStr}</td>
-                     <td>${p.tipo || 'N/A'}</td>
-                 </tr>`;
+                    <td>${window.formatUSD(totalUSD)}<br><span style="font-size:.75rem;color:var(--text-muted)">${totalBs}</span></td>
+                    <td>${totalItems}</td>
+                    <td>${metodoStr}</td>
+                    <td>${p.tipo || 'N/A'}}`
+                    .replace(/\s+/g, ' ') + '</td></tr>';
     }).join('');
 };
 
@@ -2304,7 +2355,9 @@ window.abrirSelectorMesaAdmin = async function() {
     if (list) list.innerHTML = '<p style="color:var(--text-muted)">Cargando mesas...</p>';
     document.getElementById('adminMesaModal').classList.add('active');
     try {
-        const { data, error } = await window.supabaseClient.from('codigos_qr').select('*').order('nombre');
+        const { data, error } = await window.safeSupabaseCall(
+            window.supabaseClient.from('codigos_qr').select('*').order('nombre')
+        );
         if (error) throw error;
         const mesas = data || [];
         if (!mesas.length) {
@@ -2345,18 +2398,26 @@ window.cambiarPassword = async function() {
     if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Actualizando...'; }
     
     try {
-        const { data: adminData, error: userError } = await window.supabaseClient.from('usuarios').select('username').eq('rol', 'admin').maybeSingle();
+        const { data: adminData, error: userError } = await window.safeSupabaseCall(
+            window.supabaseClient.from('usuarios').select('username').eq('rol', 'admin').maybeSingle()
+        );
         if (userError) throw userError;
         if (!adminData) { window.mostrarToast('No se encontró usuario administrador', 'error'); return; }
         
-        const { data: authData, error: authError } = await window.supabaseClient.rpc('verify_user_credentials', { p_username: adminData.username, p_password: current });
+        const { data: authData, error: authError } = await window.safeSupabaseCall(
+            window.supabaseClient.rpc('verify_user_credentials', { p_username: adminData.username, p_password: current })
+        );
         if (authError) throw authError;
         if (!authData || !authData.success) { window.mostrarToast('Contraseña actual incorrecta', 'error'); return; }
         
-        const { data: hashed, error: hashErr } = await window.supabaseClient.rpc('hash_password', { plain_password: nueva });
+        const { data: hashed, error: hashErr } = await window.safeSupabaseCall(
+            window.supabaseClient.rpc('hash_password', { plain_password: nueva })
+        );
         if (hashErr) throw hashErr;
         
-        const { error: updateUserError } = await window.supabaseClient.from('usuarios').update({ password_hash: hashed }).eq('rol', 'admin');
+        const { error: updateUserError } = await window.safeSupabaseCall(
+            window.supabaseClient.from('usuarios').update({ password_hash: hashed }).eq('rol', 'admin')
+        );
         if (updateUserError) throw updateUserError;
         
         window.configGlobal.admin_password = nueva;
@@ -2378,12 +2439,14 @@ window.guardarRecoveryEmail = async function() {
     const email = document.getElementById('recoveryEmail').value;
     if (!email || !email.includes('@')) { window.mostrarToast('Ingresa un correo válido', 'error'); return; }
     try {
-        await window.supabaseClient.from('config').update({ recovery_email: email }).eq('id', 1);
+        await window.safeSupabaseCall(
+            window.supabaseClient.from('config').update({ recovery_email: email }).eq('id', 1)
+        );
         window.mostrarToast('✓ Correo de recuperación guardado', 'success');
     } catch (e) { console.error('Error guardando email:', e); window.mostrarToast('Error al guardar el correo', 'error'); }
 };
 
-// ==================== MODAL DE INGREDIENTE (stock bloqueado) ====================
+// ==================== MODAL DE INGREDIENTE ====================
 window.abrirModalNuevoIngrediente = function() {
     window.ingredienteEditandoId = null;
     document.getElementById('ingredienteModalTitle').textContent = 'Nuevo Ingrediente';
@@ -2504,9 +2567,13 @@ window.verificarContraseñaStock = async function() {
         let esValida = false;
         if (pwd === adminPassword) esValida = true;
         if (!esValida) {
-            const { data: adminData } = await window.supabaseClient.from('usuarios').select('username').eq('rol', 'admin').maybeSingle();
+            const { data: adminData } = await window.safeSupabaseCall(
+                window.supabaseClient.from('usuarios').select('username').eq('rol', 'admin').maybeSingle()
+            );
             if (adminData) {
-                const { data: authData } = await window.supabaseClient.rpc('verify_user_credentials', { p_username: adminData.username, p_password: pwd });
+                const { data: authData } = await window.safeSupabaseCall(
+                    window.supabaseClient.rpc('verify_user_credentials', { p_username: adminData.username, p_password: pwd })
+                );
                 if (authData && authData.success === true) esValida = true;
             }
         }
@@ -2587,7 +2654,9 @@ window._eliminarIngredienteDesdeModal = async function() {
     const deleteBtn = document.getElementById('deleteIngredienteBtn');
     if (deleteBtn) { deleteBtn.disabled = true; deleteBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>'; }
     try {
-        const { error } = await window.supabaseClient.from('inventario').delete().eq('id', id);
+        const { error } = await window.safeSupabaseCall(
+            window.supabaseClient.from('inventario').delete().eq('id', id)
+        );
         if (error) throw error;
         window.cerrarModal('ingredienteModal');
         window.ingredienteEditandoId = null;
@@ -2636,14 +2705,18 @@ window.guardarIngrediente = async function() {
         };
         
         if (isEdit) {
-            const { error } = await window.supabaseClient.from('inventario').update(ingredienteData).eq('id', window.ingredienteEditandoId);
+            const { error } = await window.safeSupabaseCall(
+                window.supabaseClient.from('inventario').update(ingredienteData).eq('id', window.ingredienteEditandoId)
+            );
             if (error) throw error;
             window.mostrarToast('✓ Ingrediente actualizado', 'success');
         } else {
             const newId = window.generarId('ing_');
             ingredienteData.id = newId;
             ingredienteData.created_at = new Date().toISOString();
-            const { error } = await window.supabaseClient.from('inventario').insert([ingredienteData]);
+            const { error } = await window.safeSupabaseCall(
+                window.supabaseClient.from('inventario').insert([ingredienteData])
+            );
             if (error) throw error;
             window.mostrarToast('✓ Ingrediente creado', 'success');
         }
@@ -2673,7 +2746,9 @@ window.agregarStock = function(ingredienteId) {
 window.eliminarIngrediente = async function(id) {
     if (!confirm('¿Estás seguro de eliminar este ingrediente?')) return;
     try {
-        await window.supabaseClient.from('inventario').delete().eq('id', id);
+        await window.safeSupabaseCall(
+            window.supabaseClient.from('inventario').delete().eq('id', id)
+        );
         await window.cargarInventario();
         window.mostrarToast('✓ Ingrediente eliminado', 'success');
     } catch (e) { console.error('Error eliminando ingrediente:', e); window.mostrarToast('Error al eliminar ingrediente', 'error'); }
@@ -2697,7 +2772,7 @@ window.calcularCostoUnitario = function() {
     }
 };
 
-// ==================== MODAL DE PLATILLO (CON PREVISUALIZACIÓN INTELIGENTE) ====================
+// ==================== MODAL DE PLATILLO ====================
 window.abrirModalNuevoPlatillo = function() {
     document.getElementById('platilloModalTitle').textContent = 'Nuevo Platillo';
     document.getElementById('platilloForm').reset();
@@ -2801,7 +2876,6 @@ window.actualizarPreviewDesdeArchivo = function(input) {
     const file = input.files[0];
     if (!file) return;
     
-    // Limpiar URL y deshabilitar campo URL
     document.getElementById('platilloImagenUrl').value = '';
     document.getElementById('platilloImagenUrl').disabled = true;
     
@@ -2819,7 +2893,6 @@ window.actualizarPreviewDesdeUrl = function(urlInput) {
     const url = urlInput.value.trim();
     const archivoInput = document.getElementById('platilloImagen');
     
-    // Si hay un archivo seleccionado, no permitir URL hasta que se elimine el archivo
     if (archivoInput.files.length > 0) {
         urlInput.value = '';
         window.mostrarToast('Primero elimina la imagen adjunta para usar URL', 'warning');
@@ -2883,7 +2956,9 @@ window.eliminarPlatillo = async function(id) {
     try {
         const platillo = window.menuItems.find(p => p.id === id);
         if (platillo && platillo.imagen && platillo.imagen.includes('imagenes-platillos')) await window.eliminarImagenPlatillo(platillo.imagen);
-        await window.supabaseClient.from('menu').delete().eq('id', id);
+        await window.safeSupabaseCall(
+            window.supabaseClient.from('menu').delete().eq('id', id)
+        );
         await window.cargarMenu();
         window.mostrarToast('✓ Platillo eliminado', 'success');
     } catch (e) { console.error('Error eliminando platillo:', e); window.mostrarToast('Error al eliminar el platillo', 'error'); }
@@ -3023,7 +3098,6 @@ window.setupEventListeners = function() {
         inventarioBuscador.addEventListener('input', (e) => { window.renderizarInventario(e.target.value); });
     }
     
-    // Buscadores para mesoneros y deliverys
     const mesonerosBuscador = document.getElementById('mesonerosBuscador');
     if (mesonerosBuscador) {
         mesonerosBuscador.addEventListener('input', (e) => { window.renderizarMesoneros(e.target.value); });
@@ -3107,10 +3181,14 @@ window.setupEventListeners = function() {
                 
                 let error;
                 if (window.platilloEditandoId) {
-                    const { error: updateError } = await window.supabaseClient.from('menu').update(platillo).eq('id', window.platilloEditandoId);
+                    const { error: updateError } = await window.safeSupabaseCall(
+                        window.supabaseClient.from('menu').update(platillo).eq('id', window.platilloEditandoId)
+                    );
                     error = updateError;
                 } else {
-                    const { error: insertError } = await window.supabaseClient.from('menu').insert([platillo]);
+                    const { error: insertError } = await window.safeSupabaseCall(
+                        window.supabaseClient.from('menu').insert([platillo])
+                    );
                     error = insertError;
                 }
                 if (error) throw error;
@@ -3148,7 +3226,9 @@ window.setupEventListeners = function() {
             const activo = document.getElementById('deliveryEstado').value === 'true';
             if (!nombre) { window.mostrarToast('Ingresa un nombre', 'error'); return; }
             try {
-                await window.supabaseClient.from('deliverys').update({ nombre, activo }).eq('id', window.deliveryEditandoId);
+                await window.safeSupabaseCall(
+                    window.supabaseClient.from('deliverys').update({ nombre, activo }).eq('id', window.deliveryEditandoId)
+                );
                 window.cerrarModal('deliveryModal');
                 await window.cargarDeliverys();
                 window.mostrarToast('✓ Motorizado actualizado', 'success');
@@ -3167,7 +3247,9 @@ window.setupEventListeners = function() {
             console.log('Código de recuperación:', codigo);
             const codigoIngresado = prompt('Ingresa el código de recuperación:');
             if (codigoIngresado === codigo.toString()) {
-                const { data } = await window.supabaseClient.from('config').select('admin_password, recovery_email').eq('id', 1).single();
+                const { data } = await window.safeSupabaseCall(
+                    window.supabaseClient.from('config').select('admin_password, recovery_email').eq('id', 1).single()
+                );
                 alert(`Tu contraseña es: ${data.admin_password}\nCorreo de recuperación: ${data.recovery_email}`);
             } else window.mostrarToast('Código incorrecto', 'error');
         });
