@@ -568,6 +568,9 @@ window.renderizarInventario = window.debounce(function(filtro = '') {
     container.innerHTML = '';
     const isMobile = window.innerWidth <= 768;
     
+    // Usar fragmento para mejorar rendimiento
+    const fragment = document.createDocumentFragment();
+    
     items.forEach(item => {
         const disponible = (item.stock||0) - (item.reservado||0);
         const estado = disponible <= 0 ? 'critico' : disponible <= (item.minimo||0) ? 'bajo' : 'ok';
@@ -586,7 +589,7 @@ window.renderizarInventario = window.debounce(function(filtro = '') {
             return function() { window._invSeleccionarIngrediente(ingId); };
         })(item.id));
         
-        container.appendChild(listItem);
+        fragment.appendChild(listItem);
         
         // En móvil, si este es el activo, insertar detalle debajo
         if (isMobile && isActive) {
@@ -595,9 +598,11 @@ window.renderizarInventario = window.debounce(function(filtro = '') {
             detailDiv.id = `invMobileDetail_${item.id}`;
             detailDiv.style.cssText = 'margin:0.5rem 0 0.75rem 0; padding:0.75rem; background:var(--card-bg); border-radius:10px; border:1px solid var(--border); border-top:2px solid var(--info)';
             detailDiv.innerHTML = window._generarDetalleHTML(item);
-            container.appendChild(detailDiv);
+            fragment.appendChild(detailDiv);
         }
     });
+    
+    container.appendChild(fragment);
     
     // En escritorio, mantener el detalle en la columna derecha
     if (!isMobile && window._invActiveId) {
@@ -783,36 +788,42 @@ window.renderizarMesoneros = window.debounce(async function(filtro = '') {
     } catch(e) { console.error('Error obteniendo acumulado propinas:', e); }
 
     const sorted = filtered.sort((a, b) => a.nombre.localeCompare(b.nombre));
-    container.innerHTML = sorted.map(m => {
+    const fragment = document.createDocumentFragment();
+    sorted.forEach(m => {
         const inicial = m.nombre.charAt(0).toUpperCase();
         const acum = acumulados[m.id] || 0;
         const hayAcum = acum > 0;
-        return `<div class="mesonero-card">
-                    <div class="mesonero-avatar">${inicial}</div>
-                    <div style="flex:1;min-width:0">
-                        <span class="mesonero-nombre">${m.nombre}</span>
-                        <div style="font-size:.72rem;color:${hayAcum ? 'var(--propina)' : 'var(--text-muted)'};font-weight:${hayAcum ? '700' : '400'};margin-top:2px">
-                            Propinas pendientes: ${window.formatBs(acum)}
-                        </div>
-                    </div>
-                    ${m.activo 
-                        ? '<span class="status-activo"><i class="fas fa-check-circle"></i> Activo</span>'
-                        : '<span class="status-inactivo"><i class="fas fa-circle"></i> Inactivo</span>'}
-                    <div class="mesonero-actions">
-                        ${hayAcum ? `<button class="btn-sm" style="background:linear-gradient(135deg,var(--propina),#7B1FA2);color:#fff;white-space:nowrap"
-                            onclick="window.pagarPropinaMesonero('${m.id}', '${m.nombre}', ${acum})">
-                            <i class="fas fa-hand-holding-heart"></i> Pagar
-                        </button>` : ''}
-                        <button class="btn-toggle ${m.activo ? 'btn-toggle-on' : 'btn-toggle-off'}"
-                            onclick="window.toggleMesoneroActivo('${m.id}', ${!m.activo})">
-                            ${m.activo ? 'Inhabilitar' : 'Activar'}
-                        </button>
-                        <button class="btn-icon delete" onclick="window.eliminarMesonero('${m.id}')" title="Eliminar">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </div>
-                </div>`;
-    }).join('');
+        const card = document.createElement('div');
+        card.className = 'mesonero-card';
+        card.innerHTML = `
+            <div class="mesonero-avatar">${inicial}</div>
+            <div style="flex:1;min-width:0">
+                <span class="mesonero-nombre">${m.nombre}</span>
+                <div style="font-size:.72rem;color:${hayAcum ? 'var(--propina)' : 'var(--text-muted)'};font-weight:${hayAcum ? '700' : '400'};margin-top:2px">
+                    Propinas pendientes: ${window.formatBs(acum)}
+                </div>
+            </div>
+            ${m.activo 
+                ? '<span class="status-activo"><i class="fas fa-check-circle"></i> Activo</span>'
+                : '<span class="status-inactivo"><i class="fas fa-circle"></i> Inactivo</span>'}
+            <div class="mesonero-actions">
+                ${hayAcum ? `<button class="btn-sm" style="background:linear-gradient(135deg,var(--propina),#7B1FA2);color:#fff;white-space:nowrap"
+                    onclick="window.pagarPropinaMesonero('${m.id}', '${m.nombre}', ${acum})">
+                    <i class="fas fa-hand-holding-heart"></i> Pagar
+                </button>` : ''}
+                <button class="btn-toggle ${m.activo ? 'btn-toggle-on' : 'btn-toggle-off'}"
+                    onclick="window.toggleMesoneroActivo('${m.id}', ${!m.activo})">
+                    ${m.activo ? 'Inhabilitar' : 'Activar'}
+                </button>
+                <button class="btn-icon delete" onclick="window.eliminarMesonero('${m.id}')" title="Eliminar">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        `;
+        fragment.appendChild(card);
+    });
+    container.innerHTML = '';
+    container.appendChild(fragment);
 }, 300);
 
 // ==================== RENDERIZADO DE DELIVERYS (CON BUSCADOR) ====================
@@ -836,6 +847,7 @@ window.renderizarDeliverys = window.debounce(async function(filtro = '') {
         return;
     }
     
+    const fragment = document.createDocumentFragment();
     try {
         for (const d of filtered) {
             const acumulado = await window.obtenerAcumuladoDelivery(d.id);
@@ -860,8 +872,9 @@ window.renderizarDeliverys = window.debounce(async function(filtro = '') {
                         <i class="fas fa-trash"></i>
                     </button>
                 </div>`;
-            grid.appendChild(card);
+            fragment.appendChild(card);
         }
+        grid.appendChild(fragment);
     } finally { window._renderizandoDeliverys = false; }
 }, 300);
 
@@ -883,14 +896,14 @@ window.renderizarPropinas = function() {
     const tbody = document.getElementById('propinasTableBody');
     if (tbody) {
         tbody.innerHTML = window.propinas.map(p => `
-                  <tr>
-                    <td>${new Date(p.fecha).toLocaleString('es-VE', { timeZone: 'America/Caracas' })}</td>
-                    <td>${p.mesoneros?.nombre || 'N/A'}</td>
-                    <td>${p.mesa || 'N/A'}</td>
-                    <td>${p.metodo}</td>
-                    <td>${window.formatBs(p.monto_bs)}</td>
-                    <td>${p.cajero || 'N/A'}</td>
-                  </tr>
+                   ——
+                     <td>${new Date(p.fecha).toLocaleString('es-VE', { timeZone: 'America/Caracas' })}</td>
+                     <td>${p.mesoneros?.nombre || 'N/A'}</td>
+                     <td>${p.mesa || 'N/A'}</td>
+                     <td>${p.metodo}</td>
+                     <td>${window.formatBs(p.monto_bs)}</td>
+                     <td>${p.cajero || 'N/A'}</td>
+                   ——
         `).join('');
     }
 };
@@ -2321,13 +2334,13 @@ window.actualizarTablaVentas = function(pedidos) {
             metodoStr = p.pagos_mixtos.map(pg => metodoMap[pg.metodo] || pg.metodo).join(' + ');
         }
         return `——
-                      <td>${new Date(p.fecha).toLocaleDateString('es-VE', { timeZone: 'America/Caracas' })}</td>
+                    <table>${new Date(p.fecha).toLocaleDateString('es-VE', { timeZone: 'America/Caracas' })}</td>
                     <td style="max-width:200px;font-size:.82rem">${resumen}</td>
                     <td>${window.formatUSD(totalUSD)}<br><span style="font-size:.75rem;color:var(--text-muted)">${totalBs}</span></td>
                     <td>${totalItems}</td>
                     <td>${metodoStr}</td>
                     <td>${p.tipo || 'N/A'}</td>
-                 </tr>`;
+                </tr>`;
     }).join('');
 };
 
@@ -2989,6 +3002,17 @@ window.setupEventListeners = function() {
             document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
             const pane = document.getElementById(target + 'Pane');
             if (pane) pane.classList.add('active');
+            
+            // Refrescar contenido al cambiar de pestaña
+            if (target === 'inventario' && window.inventarioItems.length) {
+                window.renderizarInventario(window._inventarioBuscadorValue || '');
+            } else if (target === 'mesoneros' && window.mesoneros.length) {
+                window.renderizarMesoneros(window._mesonerosBuscadorValue || '');
+            } else if (target === 'deliverys' && window.deliverys.length) {
+                window.renderizarDeliverys(window._deliverysBuscadorValue || '');
+            } else if (target === 'menu' && window.menuItems.length) {
+                window.renderizarMenu(window._menuBuscadorValue || '');
+            }
         });
     });
     
