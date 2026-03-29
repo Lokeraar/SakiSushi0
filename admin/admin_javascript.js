@@ -284,7 +284,7 @@ window.interceptarError401 = function(error) {
     return false;
 };
 
-// ==================== CARGA DE DATOS DESDE SUPABASE ====================
+// ==================== CARGA DE DATOS ====================
 window.cargarConfiguracion = async function() {
     try {
         const { data, error } = await window.safeSupabaseCall(window.supabaseClient.from('config').select('*').eq('id', 1).single());
@@ -332,28 +332,21 @@ window.cargarMenu = async function() {
         window.menuItems = data || [];
         window.renderizarMenu(window._menuBuscadorValue || '');
         window.actualizarProductosActivos();
-    } catch (e) { 
-        console.error('Error cargando menú:', e); 
-        window.mostrarToast('Error cargando menú', 'error');
-        window.menuItems = [];
-        window.renderizarMenu('');
-    }
+    } catch (e) { console.error('Error cargando menú:', e); window.mostrarToast('Error cargando menú', 'error'); }
 };
 
 window.cargarInventario = async function(retry = 0) {
     try {
-        console.log('🔄 Cargando inventario desde Supabase...');
         const { data, error } = await window.safeSupabaseCall(window.supabaseClient.from('inventario').select('*'));
         if (error) throw error;
         window.inventarioItems = data || [];
-        console.log(`✅ Inventario cargado: ${window.inventarioItems.length} ingredientes`);
         window.renderizarInventario(window._inventarioBuscadorValue || '');
         window.actualizarAlertasStock();
         window.actualizarStockCriticoHeader();
         window.verificarStockCritico();
         await window.cargarMenu();
     } catch (e) {
-        console.error('❌ Error cargando inventario:', e);
+        console.error('Error cargando inventario:', e);
         if (retry < 2) {
             setTimeout(() => window.cargarInventario(retry + 1), 3000);
             window.mostrarToast('Reintentando cargar inventario...', 'warning');
@@ -361,49 +354,6 @@ window.cargarInventario = async function(retry = 0) {
             window.mostrarToast('Error cargando inventario. Algunas funciones pueden no estar disponibles.', 'error');
             window.inventarioItems = [];
             window.renderizarInventario('');
-        }
-    }
-};
-
-window.cargarMesoneros = async function(retry = 0) {
-    try {
-        console.log('🔄 Cargando mesoneros desde Supabase...');
-        const { data, error } = await window.safeSupabaseCall(window.supabaseClient.from('mesoneros').select('*').order('nombre'));
-        if (error) throw error;
-        window.mesoneros = data || [];
-        console.log(`✅ Mesoneros cargados: ${window.mesoneros.length}`);
-        await window.renderizarMesoneros(window._mesonerosBuscadorValue || '');
-        window.renderizarPropinas();
-    } catch (e) {
-        console.error('❌ Error cargando mesoneros:', e);
-        if (retry < 2) {
-            setTimeout(() => window.cargarMesoneros(retry + 1), 3000);
-            window.mostrarToast('Reintentando cargar mesoneros...', 'warning');
-        } else {
-            window.mostrarToast('Error cargando mesoneros', 'error');
-            window.mesoneros = [];
-            window.renderizarMesoneros('');
-        }
-    }
-};
-
-window.cargarDeliverys = async function(retry = 0) {
-    try {
-        console.log('🔄 Cargando deliverys desde Supabase...');
-        const { data, error } = await window.safeSupabaseCall(window.supabaseClient.from('deliverys').select('*').order('nombre'));
-        if (error) throw error;
-        window.deliverys = data || [];
-        console.log(`✅ Deliverys cargados: ${window.deliverys.length}`);
-        await window.renderizarDeliverys(window._deliverysBuscadorValue || '');
-    } catch (e) {
-        console.error('❌ Error cargando deliverys:', e);
-        if (retry < 2) {
-            setTimeout(() => window.cargarDeliverys(retry + 1), 3000);
-            window.mostrarToast('Reintentando cargar deliverys...', 'warning');
-        } else {
-            window.mostrarToast('Error cargando deliverys', 'error');
-            window.deliverys = [];
-            window.renderizarDeliverys('');
         }
     }
 };
@@ -428,6 +378,25 @@ window.cargarQRs = async function() {
         if (ssid) { const el = document.getElementById('qrWifiSsid'); if (el) el.value = ssid; }
         if (pwd) { const el = document.getElementById('qrWifiPassword'); if (el) el.value = pwd; }
     } catch (e) { console.error('Error cargando QRs:', e); window.mostrarToast('Error cargando QRs', 'error'); }
+};
+
+window.cargarMesoneros = async function() {
+    try {
+        const { data, error } = await window.safeSupabaseCall(window.supabaseClient.from('mesoneros').select('*').order('nombre'));
+        if (error) throw error;
+        window.mesoneros = data || [];
+        window.renderizarMesoneros(window._mesonerosBuscadorValue || '');
+        window.renderizarPropinas();
+    } catch (e) { console.error('Error cargando mesoneros:', e); }
+};
+
+window.cargarDeliverys = async function() {
+    try {
+        const { data, error } = await window.safeSupabaseCall(window.supabaseClient.from('deliverys').select('*').order('nombre'));
+        if (error) throw error;
+        window.deliverys = data || [];
+        window.renderizarDeliverys(window._deliverysBuscadorValue || '');
+    } catch (e) { console.error('Error cargando deliverys:', e); }
 };
 
 window.cargarPropinas = async function() {
@@ -582,6 +551,7 @@ window.renderizarInventario = window.debounce(function(filtro = '') {
     
     const _normI = t => (t || '').normalize('NFD').replace(/[áéíóú]/g, '').toLowerCase();
     const _baseI = [...window.inventarioItems].sort((a,b) => a.nombre.localeCompare(b.nombre));
+    // Siempre mostrar todos los ingredientes, luego filtrar si hay filtro
     const items = filtro ? _baseI.filter(i => _normI(i.nombre).includes(_normI(filtro))) : _baseI;
     
     if (!items.length) {
@@ -591,10 +561,12 @@ window.renderizarInventario = window.debounce(function(filtro = '') {
         return;
     }
     
+    // Guardar estado del ingrediente activo antes de redibujar
     const wasActive = window._invActiveId;
-    const isMobile = window.innerWidth <= 768;
+    const activeItemId = wasActive;
     
     container.innerHTML = '';
+    const isMobile = window.innerWidth <= 768;
     
     items.forEach(item => {
         const disponible = (item.stock||0) - (item.reservado||0);
@@ -616,6 +588,7 @@ window.renderizarInventario = window.debounce(function(filtro = '') {
         
         container.appendChild(listItem);
         
+        // En móvil, si este es el activo, insertar detalle debajo
         if (isMobile && isActive) {
             const detailDiv = document.createElement('div');
             detailDiv.className = 'inv-mobile-detail';
@@ -626,6 +599,7 @@ window.renderizarInventario = window.debounce(function(filtro = '') {
         }
     });
     
+    // En escritorio, mantener el detalle en la columna derecha
     if (!isMobile && window._invActiveId) {
         const activeItem = items.find(i => i.id === window._invActiveId);
         if (activeItem) {
@@ -695,6 +669,7 @@ window._invSeleccionarIngrediente = function(ingredienteId) {
     const isMobile = window.innerWidth <= 768;
     
     if (wasActive) {
+        // Cerrar detalle
         window._invActiveId = null;
         if (isMobile) {
             const detailDiv = document.getElementById(`invMobileDetail_${ingredienteId}`);
@@ -705,13 +680,16 @@ window._invSeleccionarIngrediente = function(ingredienteId) {
         }
         document.querySelectorAll('.inv-list-item').forEach(el => el.classList.remove('active'));
     } else {
+        // Activar nuevo ingrediente
         window._invActiveId = ingredienteId;
         document.querySelectorAll('.inv-list-item').forEach(el => el.classList.remove('active'));
         const selectedEl = document.getElementById(`invItem_${ingredienteId}`);
         if (selectedEl) selectedEl.classList.add('active');
         
         if (isMobile) {
+            // Eliminar cualquier detalle móvil existente
             document.querySelectorAll('.inv-mobile-detail').forEach(el => el.remove());
+            // Insertar detalle después del elemento seleccionado
             const detailDiv = document.createElement('div');
             detailDiv.className = 'inv-mobile-detail';
             detailDiv.id = `invMobileDetail_${ingredienteId}`;
@@ -852,6 +830,12 @@ window.renderizarDeliverys = window.debounce(async function(filtro = '') {
         filtered = filtered.filter(d => _normD(d.nombre).includes(_normD(filtro)));
     }
     
+    if (!filtered.length) {
+        grid.innerHTML = '<p style="color:var(--text-muted);font-size:.88rem;padding:.5rem">' + (filtro ? 'Sin resultados para "' + filtro + '"' : 'No hay motorizados registrados.') + '</p>';
+        window._renderizandoDeliverys = false;
+        return;
+    }
+    
     try {
         for (const d of filtered) {
             const acumulado = await window.obtenerAcumuladoDelivery(d.id);
@@ -877,9 +861,6 @@ window.renderizarDeliverys = window.debounce(async function(filtro = '') {
                     </button>
                 </div>`;
             grid.appendChild(card);
-        }
-        if (filtered.length === 0) {
-            grid.innerHTML = '<p style="color:var(--text-muted);font-size:.88rem;padding:.5rem">' + (filtro ? 'Sin resultados para "' + filtro + '"' : 'No hay motorizados registrados.') + '</p>';
         }
     } finally { window._renderizandoDeliverys = false; }
 }, 300);
@@ -2340,13 +2321,13 @@ window.actualizarTablaVentas = function(pedidos) {
             metodoStr = p.pagos_mixtos.map(pg => metodoMap[pg.metodo] || pg.metodo).join(' + ');
         }
         return `——
-                     <td>${new Date(p.fecha).toLocaleDateString('es-VE', { timeZone: 'America/Caracas' })}</td>
+                      <td>${new Date(p.fecha).toLocaleDateString('es-VE', { timeZone: 'America/Caracas' })}</td>
                     <td style="max-width:200px;font-size:.82rem">${resumen}</td>
                     <td>${window.formatUSD(totalUSD)}<br><span style="font-size:.75rem;color:var(--text-muted)">${totalBs}</span></td>
                     <td>${totalItems}</td>
                     <td>${metodoStr}</td>
-                    <td>${p.tipo || 'N/A'}}`
-                    .replace(/\s+/g, ' ') + '</td></tr>';
+                    <td>${p.tipo || 'N/A'}</td>
+                 </tr>`;
     }).join('');
 };
 
@@ -2446,7 +2427,7 @@ window.guardarRecoveryEmail = async function() {
     } catch (e) { console.error('Error guardando email:', e); window.mostrarToast('Error al guardar el correo', 'error'); }
 };
 
-// ==================== MODAL DE INGREDIENTE ====================
+// ==================== MODAL DE INGREDIENTE (stock bloqueado) ====================
 window.abrirModalNuevoIngrediente = function() {
     window.ingredienteEditandoId = null;
     document.getElementById('ingredienteModalTitle').textContent = 'Nuevo Ingrediente';
@@ -2772,7 +2753,7 @@ window.calcularCostoUnitario = function() {
     }
 };
 
-// ==================== MODAL DE PLATILLO ====================
+// ==================== MODAL DE PLATILLO (CON PREVISUALIZACIÓN INTELIGENTE) ====================
 window.abrirModalNuevoPlatillo = function() {
     document.getElementById('platilloModalTitle').textContent = 'Nuevo Platillo';
     document.getElementById('platilloForm').reset();
@@ -2876,6 +2857,7 @@ window.actualizarPreviewDesdeArchivo = function(input) {
     const file = input.files[0];
     if (!file) return;
     
+    // Limpiar URL y deshabilitar campo URL
     document.getElementById('platilloImagenUrl').value = '';
     document.getElementById('platilloImagenUrl').disabled = true;
     
@@ -2893,6 +2875,7 @@ window.actualizarPreviewDesdeUrl = function(urlInput) {
     const url = urlInput.value.trim();
     const archivoInput = document.getElementById('platilloImagen');
     
+    // Si hay un archivo seleccionado, no permitir URL hasta que se elimine el archivo
     if (archivoInput.files.length > 0) {
         urlInput.value = '';
         window.mostrarToast('Primero elimina la imagen adjunta para usar URL', 'warning');
@@ -2919,6 +2902,7 @@ window.eliminarImagenAdjunta = function() {
     urlInput.value = '';
     previewDiv.style.display = 'none';
     document.getElementById('previewImg').src = '';
+    // Mostrar mensaje de toast, pero asegurar que no quede texto oculto en el DOM
     window.mostrarToast('Imagen eliminada. Puedes usar URL o seleccionar otra.', 'info');
 };
 
@@ -3098,6 +3082,7 @@ window.setupEventListeners = function() {
         inventarioBuscador.addEventListener('input', (e) => { window.renderizarInventario(e.target.value); });
     }
     
+    // Buscadores para mesoneros y deliverys
     const mesonerosBuscador = document.getElementById('mesonerosBuscador');
     if (mesonerosBuscador) {
         mesonerosBuscador.addEventListener('input', (e) => { window.renderizarMesoneros(e.target.value); });
