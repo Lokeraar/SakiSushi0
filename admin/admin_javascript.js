@@ -551,7 +551,6 @@ window.renderizarInventario = window.debounce(function(filtro = '') {
     
     const _normI = t => (t || '').normalize('NFD').replace(/[áéíóú]/g, '').toLowerCase();
     const _baseI = [...window.inventarioItems].sort((a,b) => a.nombre.localeCompare(b.nombre));
-    // Siempre mostrar todos los ingredientes, luego filtrar si hay filtro
     const items = filtro ? _baseI.filter(i => _normI(i.nombre).includes(_normI(filtro))) : _baseI;
     
     if (!items.length) {
@@ -826,7 +825,7 @@ window.renderizarMesoneros = window.debounce(async function(filtro = '') {
     container.appendChild(fragment);
 }, 300);
 
-// ==================== RENDERIZADO DE DELIVERYS (CON BUSCADOR) ====================
+// ==================== RENDERIZADO DE DELIVERYS (OPTIMIZADO) ====================
 window.renderizarDeliverys = window.debounce(async function(filtro = '') {
     window._deliverysBuscadorValue = filtro;
     const grid = document.getElementById('deliverysGrid');
@@ -847,35 +846,53 @@ window.renderizarDeliverys = window.debounce(async function(filtro = '') {
         return;
     }
     
-    const fragment = document.createDocumentFragment();
+    // Obtener acumulados de todos los deliverys en una sola consulta
+    let acumulados = {};
     try {
-        for (const d of filtered) {
-            const acumulado = await window.obtenerAcumuladoDelivery(d.id);
-            const card = document.createElement('div');
-            card.className = 'delivery-item';
-            card.innerHTML = `
-                <div class="delivery-icon"><i class="fas fa-motorcycle"></i></div>
-                <div style="flex:1;min-width:0">
-                    <div class="delivery-nombre">${d.nombre}</div>
-                    <div style="font-size:.72rem;margin-top:2px">Acumulado: <strong>${window.formatBs(acumulado)}</strong></div>
+        const { data: entregas } = await window.safeSupabaseCall(
+            window.supabaseClient
+                .from('entregas_delivery')
+                .select('delivery_id, monto_bs')
+        );
+        (entregas || []).forEach(e => {
+            acumulados[e.delivery_id] = (acumulados[e.delivery_id] || 0) + (e.monto_bs || 0);
+        });
+    } catch(e) { console.error('Error obteniendo acumulados de deliverys:', e); }
+    
+    const fragment = document.createDocumentFragment();
+    for (const d of filtered) {
+        const acumulado = acumulados[d.id] || 0;
+        const hayAcum = acumulado > 0;
+        const card = document.createElement('div');
+        card.className = 'delivery-item';
+        card.innerHTML = `
+            <div class="delivery-icon"><i class="fas fa-motorcycle"></i></div>
+            <div style="flex:1;min-width:0">
+                <span class="delivery-nombre">${d.nombre}</span>
+                <div style="font-size:.72rem;margin-top:2px;color:${hayAcum ? 'var(--accent)' : 'var(--text-muted)'};font-weight:${hayAcum ? '700' : '400'}">
+                    Acumulado: <strong>${window.formatBs(acumulado)}</strong>
                 </div>
-                <div class="delivery-actions">
-                    <button class="btn-icon edit" onclick="window.editarDelivery('${d.id}')" title="Editar"><i class="fas fa-edit"></i></button>
-                    <button class="btn-toggle ${d.activo ? 'btn-toggle-on' : 'btn-toggle-off'}" onclick="window.toggleDeliveryActivo('${d.id}', ${!d.activo})">
-                        ${d.activo ? 'Inhabilitar' : 'Activar'}
-                    </button>
-                    <button class="btn-sm" style="background:linear-gradient(135deg,var(--success),#2E7D32);color:#fff"
-                        onclick="window.mostrarPagoDelivery('${d.id}')">
-                        <i class="fas fa-hand-holding-usd"></i> Pagado
-                    </button>
-                    <button class="btn-icon delete" onclick="window.eliminarDelivery('${d.id}')" title="Eliminar">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </div>`;
-            fragment.appendChild(card);
-        }
-        grid.appendChild(fragment);
-    } finally { window._renderizandoDeliverys = false; }
+            </div>
+            ${d.activo 
+                ? '<span class="status-activo"><i class="fas fa-check-circle"></i> Activo</span>'
+                : '<span class="status-inactivo"><i class="fas fa-circle"></i> Inactivo</span>'}
+            <div class="delivery-actions">
+                <button class="btn-toggle ${d.activo ? 'btn-toggle-on' : 'btn-toggle-off'}" onclick="window.toggleDeliveryActivo('${d.id}', ${!d.activo})">
+                    ${d.activo ? 'Inhabilitar' : 'Activar'}
+                </button>
+                <button class="btn-sm" style="background:linear-gradient(135deg,var(--success),#2E7D32);color:#fff"
+                    onclick="window.mostrarPagoDelivery('${d.id}')">
+                    <i class="fas fa-hand-holding-usd"></i> Pagado
+                </button>
+                <button class="btn-icon delete" onclick="window.eliminarDelivery('${d.id}')" title="Eliminar">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </div>
+        `;
+        fragment.appendChild(card);
+    }
+    grid.appendChild(fragment);
+    window._renderizandoDeliverys = false;
 }, 300);
 
 window.renderizarPropinas = function() {
@@ -896,14 +913,14 @@ window.renderizarPropinas = function() {
     const tbody = document.getElementById('propinasTableBody');
     if (tbody) {
         tbody.innerHTML = window.propinas.map(p => `
-                   ——
-                     <td>${new Date(p.fecha).toLocaleString('es-VE', { timeZone: 'America/Caracas' })}</td>
-                     <td>${p.mesoneros?.nombre || 'N/A'}</td>
-                     <td>${p.mesa || 'N/A'}</td>
-                     <td>${p.metodo}</td>
-                     <td>${window.formatBs(p.monto_bs)}</td>
-                     <td>${p.cajero || 'N/A'}</td>
-                   ——
+                 <tr>
+                    <td>${new Date(p.fecha).toLocaleString('es-VE', { timeZone: 'America/Caracas' })}</td>
+                    <td>${p.mesoneros?.nombre || 'N/A'}</td>
+                    <td>${p.mesa || 'N/A'}</td>
+                    <td>${p.metodo}</td>
+                    <td>${window.formatBs(p.monto_bs)}</td>
+                    <td>${p.cajero || 'N/A'}</td>
+                 </tr>
         `).join('');
     }
 };
@@ -2334,13 +2351,13 @@ window.actualizarTablaVentas = function(pedidos) {
             metodoStr = p.pagos_mixtos.map(pg => metodoMap[pg.metodo] || pg.metodo).join(' + ');
         }
         return `——
-                    <table>${new Date(p.fecha).toLocaleDateString('es-VE', { timeZone: 'America/Caracas' })}</td>
+                      <td>${new Date(p.fecha).toLocaleDateString('es-VE', { timeZone: 'America/Caracas' })}</td>
                     <td style="max-width:200px;font-size:.82rem">${resumen}</td>
                     <td>${window.formatUSD(totalUSD)}<br><span style="font-size:.75rem;color:var(--text-muted)">${totalBs}</span></td>
                     <td>${totalItems}</td>
                     <td>${metodoStr}</td>
                     <td>${p.tipo || 'N/A'}</td>
-                </tr>`;
+                 </tr>`;
     }).join('');
 };
 
