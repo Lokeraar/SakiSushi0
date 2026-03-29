@@ -756,7 +756,7 @@ window.renderizarUsuarios = function() {
     }).join('');
 };
 
-// ==================== RENDERIZADO DE MESONEROS (CON BUSCADOR) ====================
+// ==================== RENDERIZADO DE MESONEROS (NUEVA ESTRUCTURA) ====================
 window.renderizarMesoneros = window.debounce(async function(filtro = '') {
     window._mesonerosBuscadorValue = filtro;
     const container = document.getElementById('mesonerosList');
@@ -796,20 +796,22 @@ window.renderizarMesoneros = window.debounce(async function(filtro = '') {
         card.className = 'mesonero-card';
         card.innerHTML = `
             <div class="mesonero-avatar">${inicial}</div>
-            <div style="flex:1;min-width:0">
-                <span class="mesonero-nombre">${m.nombre}</span>
-                <div style="font-size:.72rem;color:${hayAcum ? 'var(--propina)' : 'var(--text-muted)'};font-weight:${hayAcum ? '700' : '400'};margin-top:2px">
-                    Propinas pendientes: ${window.formatBs(acum)}
+            <div style="flex:1; min-width:0">
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:.5rem; margin-bottom:.3rem">
+                    <span class="mesonero-nombre">${m.nombre}</span>
+                    ${m.activo 
+                        ? '<span class="status-activo"><i class="fas fa-check-circle"></i> Activo</span>'
+                        : '<span class="status-inactivo"><i class="fas fa-circle"></i> Inactivo</span>'}
+                </div>
+                <div style="font-size:.82rem; color:${hayAcum ? 'var(--accent)' : 'var(--text-muted)'}; font-weight:${hayAcum ? '700' : '400'}; margin-top:.1rem">
+                    Acumulado: <strong>${window.formatBs(acum)}</strong>
                 </div>
             </div>
-            ${m.activo 
-                ? '<span class="status-activo"><i class="fas fa-check-circle"></i> Activo</span>'
-                : '<span class="status-inactivo"><i class="fas fa-circle"></i> Inactivo</span>'}
             <div class="mesonero-actions">
-                ${hayAcum ? `<button class="btn-sm" style="background:linear-gradient(135deg,var(--propina),#7B1FA2);color:#fff;white-space:nowrap"
+                <button class="btn-sm" style="background:linear-gradient(135deg,var(--success),#2E7D32);color:#fff;white-space:nowrap"
                     onclick="window.pagarPropinaMesonero('${m.id}', '${m.nombre}', ${acum})">
-                    <i class="fas fa-hand-holding-heart"></i> Pagar
-                </button>` : ''}
+                    <i class="fas fa-hand-holding-usd"></i> Pagado
+                </button>
                 <button class="btn-toggle ${m.activo ? 'btn-toggle-on' : 'btn-toggle-off'}"
                     onclick="window.toggleMesoneroActivo('${m.id}', ${!m.activo})">
                     ${m.activo ? 'Inhabilitar' : 'Activar'}
@@ -825,7 +827,7 @@ window.renderizarMesoneros = window.debounce(async function(filtro = '') {
     container.appendChild(fragment);
 }, 300);
 
-// ==================== RENDERIZADO DE DELIVERYS (OPTIMIZADO) ====================
+// ==================== RENDERIZADO DE DELIVERYS (NUEVA ESTRUCTURA) ====================
 window.renderizarDeliverys = window.debounce(async function(filtro = '') {
     window._deliverysBuscadorValue = filtro;
     const grid = document.getElementById('deliverysGrid');
@@ -867,22 +869,24 @@ window.renderizarDeliverys = window.debounce(async function(filtro = '') {
         card.className = 'delivery-item';
         card.innerHTML = `
             <div class="delivery-icon"><i class="fas fa-motorcycle"></i></div>
-            <div style="flex:1;min-width:0">
-                <span class="delivery-nombre">${d.nombre}</span>
-                <div style="font-size:.72rem;margin-top:2px;color:${hayAcum ? 'var(--accent)' : 'var(--text-muted)'};font-weight:${hayAcum ? '700' : '400'}">
+            <div style="flex:1; min-width:0">
+                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:.5rem; margin-bottom:.3rem">
+                    <span class="delivery-nombre">${d.nombre}</span>
+                    ${d.activo 
+                        ? '<span class="status-activo"><i class="fas fa-check-circle"></i> Activo</span>'
+                        : '<span class="status-inactivo"><i class="fas fa-circle"></i> Inactivo</span>'}
+                </div>
+                <div style="font-size:.82rem; color:${hayAcum ? 'var(--accent)' : 'var(--text-muted)'}; font-weight:${hayAcum ? '700' : '400'}; margin-top:.1rem">
                     Acumulado: <strong>${window.formatBs(acumulado)}</strong>
                 </div>
             </div>
-            ${d.activo 
-                ? '<span class="status-activo"><i class="fas fa-check-circle"></i> Activo</span>'
-                : '<span class="status-inactivo"><i class="fas fa-circle"></i> Inactivo</span>'}
             <div class="delivery-actions">
-                <button class="btn-toggle ${d.activo ? 'btn-toggle-on' : 'btn-toggle-off'}" onclick="window.toggleDeliveryActivo('${d.id}', ${!d.activo})">
-                    ${d.activo ? 'Inhabilitar' : 'Activar'}
-                </button>
-                <button class="btn-sm" style="background:linear-gradient(135deg,var(--success),#2E7D32);color:#fff"
+                <button class="btn-sm" style="background:linear-gradient(135deg,var(--success),#2E7D32);color:#fff;white-space:nowrap"
                     onclick="window.mostrarPagoDelivery('${d.id}')">
                     <i class="fas fa-hand-holding-usd"></i> Pagado
+                </button>
+                <button class="btn-toggle ${d.activo ? 'btn-toggle-on' : 'btn-toggle-off'}" onclick="window.toggleDeliveryActivo('${d.id}', ${!d.activo})">
+                    ${d.activo ? 'Inhabilitar' : 'Activar'}
                 </button>
                 <button class="btn-icon delete" onclick="window.eliminarDelivery('${d.id}')" title="Eliminar">
                     <i class="fas fa-trash"></i>
@@ -913,14 +917,14 @@ window.renderizarPropinas = function() {
     const tbody = document.getElementById('propinasTableBody');
     if (tbody) {
         tbody.innerHTML = window.propinas.map(p => `
-                 <tr>
-                    <td>${new Date(p.fecha).toLocaleString('es-VE', { timeZone: 'America/Caracas' })}</td>
-                    <td>${p.mesoneros?.nombre || 'N/A'}</td>
-                    <td>${p.mesa || 'N/A'}</td>
-                    <td>${p.metodo}</td>
-                    <td>${window.formatBs(p.monto_bs)}</td>
-                    <td>${p.cajero || 'N/A'}</td>
-                 </tr>
+                  ——
+                      <td>${new Date(p.fecha).toLocaleString('es-VE', { timeZone: 'America/Caracas' })}</td>
+                      <td>${p.mesoneros?.nombre || 'N/A'}</td>
+                      <td>${p.mesa || 'N/A'}</td>
+                      <td>${p.metodo}</td>
+                      <td>${window.formatBs(p.monto_bs)}</td>
+                      <td>${p.cajero || 'N/A'}</td>
+                   ——
         `).join('');
     }
 };
@@ -2351,7 +2355,7 @@ window.actualizarTablaVentas = function(pedidos) {
             metodoStr = p.pagos_mixtos.map(pg => metodoMap[pg.metodo] || pg.metodo).join(' + ');
         }
         return `——
-                      <td>${new Date(p.fecha).toLocaleDateString('es-VE', { timeZone: 'America/Caracas' })}</td>
+                     <td>${new Date(p.fecha).toLocaleDateString('es-VE', { timeZone: 'America/Caracas' })}</td>
                     <td style="max-width:200px;font-size:.82rem">${resumen}</td>
                     <td>${window.formatUSD(totalUSD)}<br><span style="font-size:.75rem;color:var(--text-muted)">${totalBs}</span></td>
                     <td>${totalItems}</td>
@@ -2932,7 +2936,6 @@ window.eliminarImagenAdjunta = function() {
     urlInput.value = '';
     previewDiv.style.display = 'none';
     document.getElementById('previewImg').src = '';
-    // Mostrar mensaje de toast, pero asegurar que no quede texto oculto en el DOM
     window.mostrarToast('Imagen eliminada. Puedes usar URL o seleccionar otra.', 'info');
 };
 
