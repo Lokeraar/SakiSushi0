@@ -95,6 +95,20 @@ html.dark-theme {
   --badge-bajo-text: #ffcc02;
   --badge-critico-bg: rgba(198,40,40,.3);
   --badge-critico-text: #ff6b6b;
+  --btn-secondary-bg: rgba(255,255,255,.12);
+  --btn-secondary-text: #ffffff;
+  --btn-secondary-border: rgba(255,255,255,.25);
+}
+
+/* Aplicar corrección de contraste a botones secundarios en tema oscuro */
+html.dark-theme .btn-secondary {
+  background: var(--btn-secondary-bg);
+  color: var(--btn-secondary-text);
+  border-color: var(--btn-secondary-border);
+}
+html.dark-theme .btn-secondary:hover:not(:disabled) {
+  background: rgba(255,255,255,.2);
+  border-color: rgba(255,255,255,.35);
 }
 
 * {
@@ -781,9 +795,9 @@ body {
 .mc2-info { flex: 1; min-width: 0; }
 .mc2-nombre { font-weight: 800; font-size: .95rem; }
 .mc2-cat { font-size: .68rem; color: var(--text-muted); text-transform: uppercase; }
-.mc2-precio { 
-  font-size: 1rem; 
-  font-weight: 800; 
+.mc2-precio {
+  font-size: 1rem;
+  font-weight: 800;
   color: var(--primary);
   display: flex;
   align-items: center;
