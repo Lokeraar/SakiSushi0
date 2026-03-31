@@ -21,3 +21,8 @@ export function usdToBs(usd) {
   const tasa = window.configGlobal?.tasa_efectiva || 400;
   return usd * tasa;
 }
+
+export function usdToBs(usd) {
+  const tasa = (typeof window !== 'undefined' && window.configGlobal?.tasa_efectiva) || 400;
+  return usd * tasa;
+}
