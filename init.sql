@@ -1,6 +1,7 @@
 -- ============================================
 -- SCRIPT COMPLETO PARA SUPABASE - SAKI SUSHI
 -- VERSIÓN FINAL CON AUTENTICACIÓN JWT Y NOTIFICACIONES
+-- + ATOMICIDAD EN STOCK (RPCs)
 -- ============================================
 
 -- HABILITAR EXTENSIONES NECESARIAS
@@ -27,6 +28,9 @@ DROP FUNCTION IF EXISTS get_propinas_dia CASCADE;
 DROP FUNCTION IF EXISTS get_ventas_dia CASCADE;
 DROP FUNCTION IF EXISTS get_pedidos_activos CASCADE;
 DROP FUNCTION IF EXISTS verify_user_credentials CASCADE;
+DROP FUNCTION IF EXISTS validate_and_commit_order CASCADE;
+DROP FUNCTION IF EXISTS update_stock_atomic CASCADE;
+DROP FUNCTION IF EXISTS sync_recipe_ingredients CASCADE;
 
 DROP TABLE IF EXISTS push_subscriptions CASCADE;
 DROP TABLE IF EXISTS notificaciones CASCADE;
@@ -41,16 +45,15 @@ DROP TABLE IF EXISTS deliverys CASCADE;
 DROP TABLE IF EXISTS mesoneros CASCADE;
 DROP TABLE IF EXISTS usuarios CASCADE;
 DROP TABLE IF EXISTS config CASCADE;
+DROP TABLE IF EXISTS recipe_ingredients CASCADE;  -- NUEVA
 
 -- ============================================
 -- TABLA: config
 -- ============================================
 CREATE TABLE config (
     id INTEGER PRIMARY KEY DEFAULT 1,
-    -- Tasa de cambio (NULL = no definida todavia hoy)
     tasa_cambio NUMERIC(10,2) DEFAULT NULL,
     tasa_efectiva NUMERIC(10,2) DEFAULT NULL,
-    -- Aumento automatico de tasa
     aumento_diario NUMERIC(5,2) DEFAULT 0,
     aumento_acumulado NUMERIC(5,2) DEFAULT 0,
     aumento_activo BOOLEAN DEFAULT FALSE,
@@ -61,7 +64,6 @@ CREATE TABLE config (
     aumento_indefinido BOOLEAN DEFAULT FALSE,
     fecha_ultimo_aumento TIMESTAMP WITH TIME ZONE,
     ultima_actualizacion TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    -- Seguridad y alertas
     admin_password TEXT DEFAULT '654321',
     recovery_email TEXT DEFAULT 'admin@sakisushi.com',
     alerta_stock_minimo INTEGER DEFAULT 5,
@@ -78,15 +80,13 @@ INSERT INTO config (
     admin_password, recovery_email, alerta_stock_minimo
 ) VALUES (
     1,
-    NULL,   -- Sin tasa definida: el primer usuario en iniciar sesion la ingresara
-    NULL,   -- Se calcula automaticamente tras ingresar la tasa base
+    NULL, NULL,
     0, 0,
     FALSE, FALSE, FALSE,
     NULL, NULL, FALSE,
     '654321', 'admin@sakisushi.com', 5
 )
 ON CONFLICT (id) DO UPDATE SET
-    -- Al re-ejecutar el script, NO se pisa la tasa ni las fechas que ya existan
     admin_password      = COALESCE(EXCLUDED.admin_password,      config.admin_password),
     recovery_email      = COALESCE(EXCLUDED.recovery_email,      config.recovery_email),
     alerta_stock_minimo = COALESCE(EXCLUDED.alerta_stock_minimo, config.alerta_stock_minimo);
@@ -381,6 +381,67 @@ BEGIN
 END $$;
 
 -- ============================================
+-- TABLA: recipe_ingredients (NUEVA - normalización para atomicidad)
+-- ============================================
+CREATE TABLE IF NOT EXISTS recipe_ingredients (
+    id SERIAL PRIMARY KEY,
+    dish_id TEXT NOT NULL REFERENCES menu(id) ON DELETE CASCADE,
+    ingredient_id TEXT NOT NULL REFERENCES inventario(id) ON DELETE CASCADE,
+    quantity_required NUMERIC(10,3) NOT NULL DEFAULT 1,
+    unit TEXT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    UNIQUE(dish_id, ingredient_id)
+);
+
+-- Migrar datos existentes desde menu.ingredientes (JSONB) a recipe_ingredients
+INSERT INTO recipe_ingredients (dish_id, ingredient_id, quantity_required, unit)
+SELECT
+    m.id AS dish_id,
+    key AS ingredient_id,
+    (value->>'cantidad')::NUMERIC AS quantity_required,
+    COALESCE(value->>'unidad', 'unidades') AS unit
+FROM menu m,
+     LATERAL jsonb_each(m.ingredientes) AS ingredients(key, value)
+WHERE m.ingredientes IS NOT NULL
+  AND jsonb_typeof(m.ingredientes) = 'object'
+ON CONFLICT (dish_id, ingredient_id) DO NOTHING;
+
+CREATE INDEX IF NOT EXISTS idx_recipe_ingredients_dish_id ON recipe_ingredients(dish_id);
+CREATE INDEX IF NOT EXISTS idx_recipe_ingredients_ingredient_id ON recipe_ingredients(ingredient_id);
+
+-- Trigger para sincronizar recipe_ingredients cuando se modifica menu.ingredientes
+CREATE OR REPLACE FUNCTION sync_recipe_ingredients()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    IF TG_OP = 'INSERT' OR TG_OP = 'UPDATE' THEN
+        DELETE FROM recipe_ingredients WHERE dish_id = NEW.id;
+        IF NEW.ingredientes IS NOT NULL THEN
+            INSERT INTO recipe_ingredients (dish_id, ingredient_id, quantity_required, unit)
+            SELECT
+                NEW.id,
+                key,
+                (value->>'cantidad')::NUMERIC,
+                COALESCE(value->>'unidad', 'unidades')
+            FROM jsonb_each(NEW.ingredientes) AS ingredients(key, value)
+            WHERE jsonb_typeof(NEW.ingredientes) = 'object';
+        END IF;
+    ELSIF TG_OP = 'DELETE' THEN
+        DELETE FROM recipe_ingredients WHERE dish_id = OLD.id;
+    END IF;
+    RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS sync_recipe_ingredients_trigger ON menu;
+CREATE TRIGGER sync_recipe_ingredients_trigger
+    AFTER INSERT OR UPDATE OR DELETE ON menu
+    FOR EACH ROW
+    EXECUTE FUNCTION sync_recipe_ingredients();
+
+-- ============================================
 -- TABLA: pedidos
 -- ============================================
 CREATE TABLE pedidos (
@@ -542,6 +603,7 @@ CREATE TABLE push_subscriptions (
     endpoint TEXT UNIQUE NOT NULL,
     p256dh TEXT NOT NULL,
     auth TEXT NOT NULL,
+    rol TEXT DEFAULT 'cliente',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     last_used TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     user_agent TEXT
@@ -1054,6 +1116,109 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- ============================================
+-- FUNCIONES RPC ATOMICAS (NUEVAS)
+-- ============================================
+
+-- Función: validar y confirmar pedido con atomicidad (usa recipe_ingredients)
+CREATE OR REPLACE FUNCTION validate_and_commit_order(pedido JSONB)
+RETURNS JSONB
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    item JSONB;
+    ingrediente RECORD;
+    stock_actual NUMERIC;
+    dish_id TEXT;
+    cantidad_porcion INTEGER;
+BEGIN
+    -- Validación (con bloqueo pesimista)
+    FOR item IN SELECT * FROM jsonb_array_elements(pedido->'items')
+    LOOP
+        dish_id := item->>'dish_id';
+        cantidad_porcion := (item->>'cantidad')::INTEGER;
+
+        FOR ingrediente IN
+            SELECT ri.ingredient_id,
+                   ri.quantity_required * cantidad_porcion AS total_needed
+            FROM recipe_ingredients ri
+            WHERE ri.dish_id = dish_id
+        LOOP
+            SELECT stock INTO stock_actual
+            FROM inventario
+            WHERE id = ingrediente.ingredient_id
+            FOR UPDATE;
+
+            IF stock_actual < ingrediente.total_needed THEN
+                RETURN jsonb_build_object(
+                    'success', false,
+                    'error', 'Stock insuficiente',
+                    'ingredient_id', ingrediente.ingredient_id,
+                    'dish_id', dish_id
+                );
+            END IF;
+        END LOOP;
+    END LOOP;
+
+    -- Descuento real
+    FOR item IN SELECT * FROM jsonb_array_elements(pedido->'items')
+    LOOP
+        dish_id := item->>'dish_id';
+        cantidad_porcion := (item->>'cantidad')::INTEGER;
+
+        FOR ingrediente IN
+            SELECT ri.ingredient_id,
+                   ri.quantity_required * cantidad_porcion AS total_needed
+            FROM recipe_ingredients ri
+            WHERE ri.dish_id = dish_id
+        LOOP
+            UPDATE inventario
+            SET stock = stock - ingrediente.total_needed
+            WHERE id = ingrediente.ingredient_id;
+        END LOOP;
+    END LOOP;
+
+    RETURN jsonb_build_object('success', true);
+END;
+$$;
+
+-- Función: actualizar stock de un ingrediente con bloqueo pesimista
+CREATE OR REPLACE FUNCTION update_stock_atomic(
+    p_ingredient_id TEXT,
+    p_delta NUMERIC
+)
+RETURNS JSONB
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    current_stock NUMERIC;
+BEGIN
+    SELECT stock INTO current_stock
+    FROM inventario
+    WHERE id = p_ingredient_id
+    FOR UPDATE;
+
+    IF current_stock + p_delta < 0 THEN
+        RETURN jsonb_build_object(
+            'success', false,
+            'error', 'Stock no puede ser negativo',
+            'current_stock', current_stock,
+            'delta', p_delta
+        );
+    END IF;
+
+    UPDATE inventario
+    SET stock = stock + p_delta
+    WHERE id = p_ingredient_id;
+
+    RETURN jsonb_build_object('success', true);
+END;
+$$;
+
+-- Permisos para las nuevas funciones
+GRANT EXECUTE ON FUNCTION validate_and_commit_order TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION update_stock_atomic TO anon, authenticated;
+
+-- ============================================
 -- CONFIGURACIÓN DE STORAGE
 -- ============================================
 INSERT INTO storage.buckets (id, name, public) VALUES
@@ -1112,10 +1277,10 @@ ALTER PUBLICATION supabase_realtime ADD TABLE deliverys;
 
 -- ============================================
 -- MIGRACION PARA BD YA EXISTENTE EN PRODUCCION
--- Si ya tienes datos y NO quieres borrar todo,
--- ejecuta solo este bloque en el SQL Editor de Supabase:
+-- (Si ya tienes datos y NO quieres borrar todo)
 -- ============================================
 ALTER TABLE config ADD COLUMN IF NOT EXISTS aumento_semanal    BOOLEAN DEFAULT FALSE;
+ALTER TABLE push_subscriptions ADD COLUMN IF NOT EXISTS rol TEXT DEFAULT 'cliente';
 ALTER TABLE config ADD COLUMN IF NOT EXISTS aumento_desde      DATE    DEFAULT NULL;
 ALTER TABLE config ADD COLUMN IF NOT EXISTS aumento_hasta      DATE    DEFAULT NULL;
 ALTER TABLE config ADD COLUMN IF NOT EXISTS aumento_indefinido BOOLEAN DEFAULT FALSE;
@@ -1126,5 +1291,6 @@ ALTER TABLE config ADD COLUMN IF NOT EXISTS aumento_indefinido BOOLEAN DEFAULT F
 SELECT '✅ SCRIPT COMPLETADO EXITOSAMENTE' as mensaje;
 SELECT '✅ NOTIFICACIONES AUTOMÁTICAS ACTIVADAS' as notificaciones;
 SELECT '✅ FUNCIÓN verify_user_credentials CREADA' as auth;
+SELECT '✅ FUNCIONES ATOMICAS validate_and_commit_order y update_stock_atomic CREADAS' as atomic;
 SELECT '✅ Usuario admin: contraseña admin123' as admin_info;
-SELECT '✅ Usuarios cajero: cajero1/123456, cajero2/123456' as cajero_info;p
+SELECT '✅ Usuarios cajero: cajero1/123456, cajero2/123456' as cajero_info;
