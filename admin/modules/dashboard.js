@@ -1,0 +1,232 @@
+import { supabase } from '../services/supabaseClient.js';
+import { subscribe } from '../services/realtimeManager.js';
+import { showToast } from '../utils/toast.js';
+import { formatBs, formatUSD, usdToBs } from '../utils/formatters.js';
+
+export function dashboardComponent() {
+  return {
+    // Datos del dashboard
+    ventasHoy: { usd: 0, bs: 0 },
+    deliverysHoy: 0,
+    propinasHoy: 0,
+    stockCritico: [],
+    pedidosRecientes: [],
+    // Tasa config
+    tasaBase: 400,
+    aumentoDiario: 0,
+    aumentoActivo: false,
+    aumentoSemanal: false,
+    aumentoDesde: '',
+    aumentoHasta: '',
+    aumentoIndefinido: false,
+    aumentoAcumulado: 0,
+    tasaEfectiva: 400,
+    // Loading
+    loading: false,
+    // Timeout para guardar
+    saveTimeout: null,
+
+    async init() {
+      await this.cargarConfiguracion();
+      await this.actualizarVentasHoy();
+      await this.actualizarDeliverysHoy();
+      await this.actualizarPropinasHoy();
+      await this.actualizarStockCritico();
+      await this.actualizarPedidosRecientes();
+
+      // Suscripciones en tiempo real
+      subscribe('config', (payload) => {
+        if (payload.eventType === 'UPDATE') {
+          this.configGlobal = { ...this.configGlobal, ...payload.new };
+          this.tasaBase = this.configGlobal.tasa_cambio || 400;
+          this.aumentoDiario = this.configGlobal.aumento_diario || 0;
+          this.aumentoActivo = this.configGlobal.aumento_activo || false;
+          this.aumentoSemanal = this.configGlobal.aumento_semanal || false;
+          this.aumentoDesde = this.configGlobal.aumento_desde || '';
+          this.aumentoHasta = this.configGlobal.aumento_hasta || '';
+          this.aumentoIndefinido = this.configGlobal.aumento_indefinido || false;
+          this.recalcularTasaEfectiva();
+          this.tasaEfectiva = this.configGlobal.tasa_efectiva || 400;
+        }
+      });
+      subscribe('ventas', () => this.actualizarVentasHoy());
+      subscribe('pedidos', () => {
+        this.actualizarVentasHoy();
+        this.actualizarDeliverysHoy();
+        this.actualizarPedidosRecientes();
+      });
+      subscribe('propinas', () => this.actualizarPropinasHoy());
+      subscribe('inventario', () => this.actualizarStockCritico());
+    },
+
+    async cargarConfiguracion() {
+      const { data, error } = await supabase
+        .from('config')
+        .select('*')
+        .eq('id', 1)
+        .single();
+      if (error) return;
+      this.configGlobal = data || {};
+      this.tasaBase = data.tasa_cambio || 400;
+      this.aumentoDiario = data.aumento_diario || 0;
+      this.aumentoActivo = data.aumento_activo || false;
+      this.aumentoSemanal = data.aumento_semanal || false;
+      this.aumentoDesde = data.aumento_desde || '';
+      this.aumentoHasta = data.aumento_hasta || '';
+      this.aumentoIndefinido = data.aumento_indefinido || false;
+      this.recalcularTasaEfectiva();
+      this.tasaEfectiva = data.tasa_efectiva || 400;
+    },
+
+    recalcularTasaEfectiva() {
+      let periodos = 0;
+      const activo = this.aumentoActivo || this.aumentoSemanal;
+      if (activo && this.aumentoDesde) {
+        const hoy = new Date();
+        hoy.setHours(0, 0, 0, 0);
+        const desde = new Date(this.aumentoDesde + 'T00:00:00');
+        let hasta = null;
+        if (!this.aumentoIndefinido && this.aumentoHasta) {
+          hasta = new Date(this.aumentoHasta + 'T00:00:00');
+        }
+        if (desde <= hoy) {
+          const fin = hasta && hasta < hoy ? hasta : hoy;
+          const msDia = 24 * 60 * 60 * 1000;
+          const msPeriodo = this.aumentoSemanal ? 7 * msDia : msDia;
+          const diffMs = fin - desde;
+          periodos = Math.max(0, Math.floor(diffMs / msPeriodo) + 1);
+        }
+      }
+      const aumentoAcum = periodos * (this.aumentoDiario || 0);
+      this.aumentoAcumulado = aumentoAcum;
+      this.tasaEfectiva = this.tasaBase * (1 + aumentoAcum / 100);
+    },
+
+    async guardarConfiguracion() {
+      this.loading = true;
+      try {
+        await supabase.from('config').update({
+          tasa_cambio: this.tasaBase,
+          aumento_diario: this.aumentoDiario,
+          aumento_activo: this.aumentoActivo,
+          aumento_semanal: this.aumentoSemanal,
+          aumento_desde: this.aumentoDesde || null,
+          aumento_hasta: (!this.aumentoIndefinido && this.aumentoHasta) || null,
+          aumento_indefinido: this.aumentoIndefinido,
+          aumento_acumulado: this.aumentoAcumulado,
+          tasa_efectiva: this.tasaEfectiva,
+          ultima_actualizacion: new Date().toISOString()
+        }).eq('id', 1);
+        showToast('Configuración guardada', 'success');
+      } catch (err) {
+        showToast('Error guardando configuración: ' + err.message, 'error');
+      } finally {
+        this.loading = false;
+      }
+    },
+
+    async actualizarVentasHoy() {
+      const hoy = new Date();
+      hoy.setHours(0, 0, 0, 0);
+      const manana = new Date(hoy);
+      manana.setDate(manana.getDate() + 1);
+      const { data: ventas, error } = await supabase
+        .from('ventas')
+        .select('pedido_id')
+        .gte('fecha', hoy.toISOString())
+        .lt('fecha', manana.toISOString());
+      if (error) return;
+      if (!ventas || ventas.length === 0) {
+        this.ventasHoy = { usd: 0, bs: 0 };
+        return;
+      }
+      const pedidoIds = ventas.map(v => v.pedido_id);
+      const { data: pedidos, error: pedErr } = await supabase
+        .from('pedidos')
+        .select('*')
+        .in('id', pedidoIds);
+      if (pedErr) return;
+
+      let netoBs = 0;
+      pedidos.forEach(p => {
+        netoBs += this._netoCobradoPedido(p);
+      });
+      const netoUSD = netoBs / this.tasaEfectiva;
+      this.ventasHoy = { usd: netoUSD, bs: netoBs };
+    },
+
+    async actualizarDeliverysHoy() {
+      const hoy = new Date();
+      hoy.setHours(0, 0, 0, 0);
+      const manana = new Date(hoy);
+      manana.setDate(manana.getDate() + 1);
+      const { data, error } = await supabase
+        .from('pedidos')
+        .select('costo_delivery_bs')
+        .eq('tipo', 'delivery')
+        .eq('estado', 'enviado')
+        .gte('fecha', hoy.toISOString())
+        .lt('fecha', manana.toISOString());
+      if (error) return;
+      this.deliverysHoy = (data || []).reduce((s, p) => s + (p.costo_delivery_bs || 0), 0);
+    },
+
+    async actualizarPropinasHoy() {
+      const hoy = new Date();
+      hoy.setHours(0, 0, 0, 0);
+      const manana = new Date(hoy);
+      manana.setDate(manana.getDate() + 1);
+      const { data, error } = await supabase
+        .from('propinas')
+        .select('monto_bs')
+        .gte('fecha', hoy.toISOString())
+        .lt('fecha', manana.toISOString());
+      if (error) return;
+      this.propinasHoy = (data || []).reduce((s, p) => s + (p.monto_bs || 0), 0);
+    },
+
+    async actualizarStockCritico() {
+      const { data, error } = await supabase
+        .from('inventario')
+        .select('id, nombre, stock, reservado, minimo');
+      if (error) return;
+      this.stockCritico = (data || []).filter(i => {
+        const disponible = (i.stock || 0) - (i.reservado || 0);
+        return disponible <= (i.minimo || 0) && i.minimo > 0;
+      });
+    },
+
+    async actualizarPedidosRecientes() {
+      const { data, error } = await supabase
+        .from('pedidos')
+        .select('*')
+        .order('fecha', { ascending: false })
+        .limit(5);
+      if (error) return;
+      this.pedidosRecientes = data || [];
+    },
+
+    _netoCobradoPedido(pedido) {
+      if (!pedido) return 0;
+      if (pedido.metodo_pago === 'invitacion') return 0;
+      let recibido = 0;
+      if (pedido.pagos_mixtos && pedido.pagos_mixtos.length) {
+        pedido.pagos_mixtos.forEach(pg => {
+          if (pg.metodo === 'invitacion') return;
+          if (pg.metodo === 'efectivo_usd') {
+            recibido += (pg.monto || 0) * this.tasaEfectiva;
+          } else {
+            recibido += (pg.montoBs || pg.monto || 0);
+          }
+        });
+      } else {
+        recibido = pedido.subtotal_bs || 0;
+      }
+      return Math.max(0, recibido - (pedido.vuelto_entregado || 0));
+    },
+
+    formatBs,
+    formatUSD,
+    usdToBs
+  };
+}
