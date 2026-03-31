@@ -1,10 +1,9 @@
-
-import { inventoryStore } from '../stores/inventoryStore.js';
-import { fetchInventory, updateStockAtomic } from '../services/inventoryService.js';
+import { supabase } from '../services/supabaseClient.js';
+import { updateStockAtomic } from '../services/inventoryService.js';
 import { subscribe } from '../services/realtimeManager.js';
-import { debounce } from '../utils/debounce.js';
 import { showToast } from '../utils/toast.js';
 import { formatBs, formatUSD, usdToBs } from '../utils/formatters.js';
+import { debounce } from '../utils/debounce.js';
 
 export function inventoryComponent() {
   return {
@@ -27,29 +26,33 @@ export function inventoryComponent() {
     tempPassword: '',
     passwordError: '',
 
-    init() {
-      this.loadInventory();
+    async init() {
+      await this.loadInventory();
       subscribe('inventario', (payload) => {
         if (payload.eventType === 'INSERT') {
-          inventoryStore.addItem(payload.new);
-          this.render();
+          this.loadInventory();
         } else if (payload.eventType === 'UPDATE') {
-          inventoryStore.updateItem(payload.new);
-          this.render();
+          this.loadInventory();
         } else if (payload.eventType === 'DELETE') {
-          inventoryStore.removeItem(payload.old.id);
-          this.render();
+          this.loadInventory();
         }
-        this.render(); // forcer actualización UI
       });
     },
 
     async loadInventory() {
       this.isLoading = true;
       try {
-        const items = await fetchInventory();
-        inventoryStore.set(items);
-        this.render();
+        const { data, error } = await supabase
+          .from('inventario')
+          .select('*')
+          .order('nombre');
+        if (error) throw error;
+        this.inventoryItems = data || [];
+        if (this.selectedIngredient) {
+          const updated = this.inventoryItems.find(i => i.id === this.selectedIngredient.id);
+          if (updated) this.selectedIngredient = updated;
+        }
+        this.$forceUpdate();
       } catch (err) {
         showToast('Error cargando inventario: ' + err.message, 'error');
       } finally {
@@ -59,37 +62,52 @@ export function inventoryComponent() {
 
     filteredItems() {
       const term = this.search.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-      return inventoryStore.items.filter(i =>
+      return (this.inventoryItems || []).filter(i =>
         i.nombre.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').includes(term)
       );
     },
 
     selectIngredient(id) {
-      this.selectedIngredient = inventoryStore.items.find(i => i.id === id);
+      this.selectedIngredient = this.inventoryItems.find(i => i.id === id);
       this.form = { ...this.selectedIngredient };
       this.editMode = true;
-      this.showForm = true;
-      this.resetPasswordFields();
-    },
-
-    resetPasswordFields() {
-      this.tempPassword = '';
-      this.passwordError = '';
+      this.showForm = false; // No abrir formulario, solo mostrar detalle
     },
 
     async updateStock(delta) {
       if (!this.selectedIngredient) return;
-      const prev = [...inventoryStore.items];
-      inventoryStore.updateItem({ id: this.selectedIngredient.id, stock: this.selectedIngredient.stock + delta });
-      this.render();
+      const prevStock = this.selectedIngredient.stock;
+      const newStock = prevStock + delta;
+      if (newStock < 0) {
+        showToast('Stock no puede ser negativo', 'error');
+        return;
+      }
+      // Optimistic update
+      this.selectedIngredient.stock = newStock;
       try {
-        await updateStockAtomic(this.selectedIngredient.id, delta);
+        const result = await updateStockAtomic(this.selectedIngredient.id, delta);
+        if (!result.success) throw new Error(result.error);
         showToast(`Stock actualizado: ${delta > 0 ? '+' : ''}${delta}`, 'success');
       } catch (err) {
-        inventoryStore.set(prev);
-        this.render();
+        this.selectedIngredient.stock = prevStock;
         showToast(err.message, 'error');
       }
+    },
+
+    newIngredient() {
+      this.editMode = false;
+      this.form = {
+        id: null,
+        nombre: '',
+        stock: 0,
+        agregar: 0,
+        unidad: 'unidades',
+        minimo: 0,
+        precio_costo: 0,
+        precio_unitario: 0
+      };
+      this.showForm = true;
+      this.passwordModal = false;
     },
 
     async saveIngredient() {
@@ -99,12 +117,11 @@ export function inventoryComponent() {
       }
       const token = sessionStorage.getItem('admin_jwt_token');
       if (!token) {
-        showToast('Sesión expirada, por favor recarga la página', 'error');
+        showToast('Sesión expirada, recarga la página', 'error');
         return;
       }
-      const supabase = window.supabaseClient || (await import('../services/supabaseClient.js')).supabase;
       const data = {
-        id: this.form.id || window.crypto.randomUUID ? crypto.randomUUID() : 'ing_' + Date.now(),
+        id: this.form.id || crypto.randomUUID ? crypto.randomUUID() : 'ing_' + Date.now(),
         nombre: this.form.nombre,
         stock: (parseFloat(this.form.stock) || 0) + (parseFloat(this.form.agregar) || 0),
         reservado: 0,
@@ -131,46 +148,51 @@ export function inventoryComponent() {
     async deleteIngredient() {
       if (!confirm('¿Eliminar este ingrediente? Se perderán todas las referencias en platillos.')) return;
       try {
-        const supabase = (await import('../services/supabaseClient.js')).supabase;
         await supabase.from('inventario').delete().eq('id', this.selectedIngredient.id);
         showToast('Ingrediente eliminado', 'success');
-        this.closeForm();
+        this.selectedIngredient = null;
         await this.loadInventory();
       } catch (err) {
         showToast('Error eliminando: ' + err.message, 'error');
       }
     },
 
-    newIngredient() {
-      this.editMode = false;
-      this.form = {
-        id: null,
-        nombre: '',
-        stock: 0,
-        agregar: 0,
-        unidad: 'unidades',
-        minimo: 0,
-        precio_costo: 0,
-        precio_unitario: 0
-      };
-      this.showForm = true;
-      this.selectedIngredient = null;
-      this.resetPasswordFields();
-    },
-
     closeForm() {
       this.showForm = false;
-      this.selectedIngredient = null;
-      this.editMode = false;
     },
 
-    render() {
-      // Forzar actualización de la vista (Alpine automáticamente lo hace)
-      this.$forceUpdate();
+    async verifyPassword() {
+      if (!this.tempPassword) {
+        this.passwordError = 'Ingresa la contraseña';
+        return;
+      }
+      // Verificar contra admin_password en config
+      const { data, error } = await supabase
+        .from('config')
+        .select('admin_password')
+        .eq('id', 1)
+        .single();
+      if (error || !data || data.admin_password !== this.tempPassword) {
+        this.passwordError = 'Contraseña incorrecta';
+        return;
+      }
+      this.passwordModal = false;
+      this.passwordError = '';
+      // Desbloquear input de stock
+      this.$refs.stockInput.disabled = false;
+      this.$refs.stockInput.focus();
+    },
+
+    updatePreview() {
+      const stockActual = parseFloat(this.form.stock) || 0;
+      const agregar = parseFloat(this.form.agregar) || 0;
+      const total = stockActual + agregar;
+      const preview = document.getElementById('stockTotalPreview');
+      if (preview) preview.textContent = agregar > 0 ? `Stock resultante: ${total} ${this.form.unidad}` : '';
     },
 
     debouncedSearch: debounce(function() {
-      this.render();
+      this.$forceUpdate();
     }, 300),
 
     formatBs,
