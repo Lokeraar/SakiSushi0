@@ -15,11 +15,17 @@ export function reportesComponent() {
     isLoading: false,
 
     async init() {
+      console.log('🔧 Reportes component iniciado');
       const hoy = new Date();
       const primerDiaMes = new Date(hoy.getFullYear(), hoy.getMonth(), 1).toISOString().split('T')[0];
       this.desde = primerDiaMes;
       this.hasta = hoy.toISOString().split('T')[0];
       await this.cargarReportes();
+
+      window.addEventListener('supabase-token-updated', () => {
+        console.log('Token actualizado, recargando reportes');
+        this.cargarReportes();
+      });
     },
 
     async cargarReportes() {
@@ -87,7 +93,6 @@ export function reportesComponent() {
     },
 
     actualizarGraficos() {
-      // Ventas por día últimos 7 días
       const ventasPorDia = {};
       for (let i = 6; i >= 0; i--) {
         const f = new Date();
@@ -106,14 +111,10 @@ export function reportesComponent() {
       if (ctxVentas) {
         this.charts.ventas = new Chart(ctxVentas, {
           type: 'line',
-          data: {
-            labels: Object.keys(ventasPorDia),
-            datasets: [{ label: 'Ventas (USD)', data: Object.values(ventasPorDia), borderColor: '#D32F2F', backgroundColor: 'rgba(211,47,47,0.1)', tension: 0.1 }]
-          }
+          data: { labels: Object.keys(ventasPorDia), datasets: [{ label: 'Ventas (USD)', data: Object.values(ventasPorDia), borderColor: '#D32F2F', backgroundColor: 'rgba(211,47,47,0.1)', tension: 0.1 }] }
         });
       }
 
-      // Ventas por categoría
       const categorias = {};
       this.pedidos.forEach(p => {
         if (p.items) {
@@ -129,14 +130,10 @@ export function reportesComponent() {
       if (ctxCat) {
         this.charts.categorias = new Chart(ctxCat, {
           type: 'doughnut',
-          data: {
-            labels: Object.keys(categorias),
-            datasets: [{ data: Object.values(categorias), backgroundColor: ['#D32F2F', '#FF9800', '#1976D2', '#388E3C', '#F57C00', '#6c757d'] }]
-          }
+          data: { labels: Object.keys(categorias), datasets: [{ data: Object.values(categorias), backgroundColor: ['#D32F2F', '#FF9800', '#1976D2', '#388E3C', '#F57C00', '#6c757d'] }] }
         });
       }
 
-      // Métodos de pago
       const metodos = {};
       this.pedidos.forEach(p => {
         if (p.pagos_mixtos) {
@@ -161,7 +158,6 @@ export function reportesComponent() {
         });
       }
 
-      // Ventas por hora
       const horas = {};
       for (let i = 0; i < 24; i++) horas[i] = 0;
       this.pedidos.forEach(p => {
