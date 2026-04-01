@@ -15,10 +15,16 @@ export function qrComponent() {
     qrModalNombre: '',
 
     async init() {
+      console.log('🔧 QR component iniciado');
       await this.cargarQRs();
       subscribe('codigos_qr', () => this.cargarQRs());
       this.wifiSsid = localStorage.getItem('saki_wifi_ssid') || '';
       this.wifiPassword = localStorage.getItem('saki_wifi_pwd') || '';
+
+      window.addEventListener('supabase-token-updated', () => {
+        console.log('Token actualizado, recargando QRs');
+        this.cargarQRs();
+      });
     },
 
     async cargarQRs() {
@@ -30,6 +36,8 @@ export function qrComponent() {
           .order('fecha', { ascending: false });
         if (error) throw error;
         this.qrs = data || [];
+        // No generamos los QR aquí porque se hace en el HTML con QRCode.js
+        // Dejamos que el HTML lo maneje en su template
       } catch (err) {
         showToast('Error cargando QRs: ' + err.message, 'error');
       } finally {
@@ -46,7 +54,6 @@ export function qrComponent() {
         showToast('Si agregas WiFi, también debes poner la contraseña', 'error');
         return;
       }
-      // Guardar WiFi en localStorage
       localStorage.setItem('saki_wifi_ssid', this.wifiSsid);
       localStorage.setItem('saki_wifi_pwd', this.wifiPassword);
       try {
