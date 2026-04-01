@@ -2180,91 +2180,279 @@
     
     console.log('✅ Utilidades definidas');
     
-    // ========== COMPONENTES PLACEHOLDER MÍNIMOS ==========
-    window.dashboardComponent = function() {
-      return {
-        init() { console.log('Dashboard iniciado'); },
-        formatBs: window.formatBs,
-        formatUSD: window.formatUSD,
-        usdToBs: window.usdToBs
-      };
-    };
+    // ========== COMPONENTES CON TODAS LAS PROPIEDADES NECESARIAS ==========
+window.dashboardComponent = function() {
+  return {
+    tasaBase: 400,
+    aumentoDiario: 0,
+    aumentoActivo: false,
+    aumentoSemanal: false,
+    aumentoDesde: '',
+    aumentoHasta: '',
+    aumentoIndefinido: false,
+    aumentoAcumulado: 0,
+    tasaEfectiva: 400,
+    loading: false,
+    ventasHoy: { usd: 0, bs: 0 },
+    deliverysHoy: 0,
+    propinasHoy: 0,
+    stockCritico: [],
+    pedidosRecientes: [],
+    productosActivos: 0,
     
-    window.inventoryComponent = function() {
-      return {
-        init() { console.log('Inventory iniciado'); },
-        search: '',
-        debouncedSearch() {}
-      };
-    };
+    init() {
+      console.log('Dashboard iniciado');
+    },
     
-    window.menuComponent = function() {
-      return {
-        init() { console.log('Menu iniciado'); },
-        search: '',
-        debouncedSearch() {}
-      };
-    };
+    recalcularTasaEfectiva() {},
+    guardarConfiguracion() {},
+    abrirDetalleVentas() {},
+    abrirDetallePropinas() {},
+    abrirDetalleDeliverys() {},
+    irAIngrediente() {},
+    abrirDetallePedido() {},
     
-    window.usuariosComponent = function() {
-      return {
-        init() { console.log('Usuarios iniciado'); },
-        search: '',
-        debouncedSearch() {}
-      };
-    };
+    formatBs: window.formatBs,
+    formatUSD: window.formatUSD,
+    usdToBs: window.usdToBs
+  };
+};
+
+window.inventoryComponent = function() {
+  return {
+    search: '',
+    inventoryItems: [],
+    selectedIngredient: null,
+    form: {
+      id: null,
+      nombre: '',
+      stock: 0,
+      agregar: 0,
+      unidad: 'unidades',
+      minimo: 0,
+      precio_costo: 0,
+      precio_unitario: 0
+    },
+    editMode: false,
+    showForm: false,
+    isLoading: false,
     
-    window.deliverysComponent = function() {
-      return {
-        init() { console.log('Deliverys iniciado'); },
-        search: '',
-        newNombre: '',
-        debouncedSearch() {},
-        agregarDelivery() {}
-      };
-    };
+    init() {
+      console.log('Inventory iniciado');
+    },
     
-    window.mesonerosComponent = function() {
-      return {
-        init() { console.log('Mesoneros iniciado'); },
-        search: '',
-        newNombre: '',
-        debouncedSearch() {},
-        agregarMesonero() {}
-      };
-    };
+    filteredItems() { return []; },
+    selectIngredient() {},
+    updateStock() {},
+    newIngredient() {},
+    saveIngredient() {},
+    deleteIngredient() {},
+    closeForm() {},
+    debouncedSearch() {},
     
-    window.configComponent = function() {
-      return {
-        init() { console.log('Config iniciado'); },
-        currentPassword: '',
-        newPassword: '',
-        confirmPassword: '',
-        recoveryEmail: '',
-        isLoading: false
-      };
-    };
+    formatBs: window.formatBs,
+    formatUSD: window.formatUSD,
+    usdToBs: window.usdToBs
+  };
+};
+
+window.menuComponent = function() {
+  return {
+    search: '',
+    menuItems: [],
+    form: {
+      id: null,
+      nombre: '',
+      categoria: '',
+      subcategoria: '',
+      precio: 0,
+      descripcion: '',
+      imagen: '',
+      disponible: true
+    },
+    editMode: false,
+    showForm: false,
+    isLoading: false,
+    categorias: ['Entradas', 'Sushi', 'Rolls', 'Tragos y bebidas', 'Pokes', 'Ensaladas', 'Comida China', 'Comida Japonesa', 'Ofertas Especiales', 'Para Niños', 'Combo Ejecutivo'],
+    subcategorias: {
+      'Rolls': ['Rolls Fríos de 10 piezas', 'Rolls Tempura de 12 piezas'],
+      'Comida China': ['Arroz Chino', 'Arroz Cantones', 'Chopsuey', 'Lomey', 'Chow Mein', 'Fideos de Arroz', 'Tallarines Cantones', 'Mariscos', 'Foo Yong', 'Sopas', 'Entremeses'],
+      'Comida Japonesa': ['Yakimeshi', 'Yakisoba', 'Pasta Udon', 'Churrasco']
+    },
     
-    window.qrComponent = function() {
-      return {
-        init() { console.log('QR iniciado'); },
-        nuevaMesa: '',
-        wifiSsid: '',
-        wifiPassword: '',
-        guardarWifi() {},
-        generarQR() {}
-      };
-    };
+    init() {
+      console.log('Menu iniciado');
+    },
     
-    window.reportesComponent = function() {
-      return {
-        init() { console.log('Reportes iniciado'); },
-        desde: '',
-        hasta: '',
-        isLoading: false,
-        cargarReportes() {}
-      };
-    };
+    filteredItems() { return []; },
+    getAvailableSubcategorias() { return []; },
+    savePlatillo() {},
+    deletePlatillo() {},
+    toggleDisponible() {},
+    editPlatillo() {},
+    newPlatillo() {},
+    closeForm() {},
+    debouncedSearch() {},
+    
+    formatBs: window.formatBs,
+    formatUSD: window.formatUSD,
+    usdToBs: window.usdToBs
+  };
+};
+
+window.usuariosComponent = function() {
+  return {
+    search: '',
+    usuarios: [],
+    form: {
+      id: null,
+      nombre: '',
+      username: '',
+      password: '123456',
+      activo: true
+    },
+    editMode: false,
+    showForm: false,
+    isLoading: false,
+    
+    init() {
+      console.log('Usuarios iniciado');
+    },
+    
+    filteredUsuarios() { return []; },
+    nuevoUsuario() {},
+    editarUsuario() {},
+    guardarUsuario() {},
+    toggleActivo() {},
+    eliminarUsuario() {},
+    closeForm() {},
+    debouncedSearch() {}
+  };
+};
+
+window.deliverysComponent = function() {
+  return {
+    search: '',
+    newNombre: '',
+    deliverys: [],
+    acumulado: {},
+    showForm: false,
+    form: { id: null, nombre: '', activo: true },
+    editMode: false,
+    
+    init() {
+      console.log('Deliverys iniciado');
+    },
+    
+    filteredDeliverys() { return []; },
+    agregarDelivery() {},
+    editarDelivery() {},
+    guardarDelivery() {},
+    toggleActivo() {},
+    eliminarDelivery() {},
+    registrarPago() {},
+    closeForm() {},
+    debouncedSearch() {},
+    formatBs: window.formatBs
+  };
+};
+
+window.mesonerosComponent = function() {
+  return {
+    search: '',
+    newNombre: '',
+    mesoneros: [],
+    propinas: [],
+    totalPropinas: 0,
+    cantidadPropinas: 0,
+    promedioPropinas: 0,
+    showForm: false,
+    form: { id: null, nombre: '', activo: true },
+    editMode: false,
+    
+    init() {
+      console.log('Mesoneros iniciado');
+    },
+    
+    filteredMesoneros() { return []; },
+    agregarMesonero() {},
+    editarMesonero() {},
+    guardarMesonero() {},
+    toggleActivo() {},
+    eliminarMesonero() {},
+    pagarPropinas() {},
+    closeForm() {},
+    debouncedSearch() {},
+    formatBs: window.formatBs
+  };
+};
+
+window.configComponent = function() {
+  return {
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: '',
+    recoveryEmail: '',
+    isLoading: false,
+    
+    init() {
+      console.log('Config iniciado');
+    },
+    
+    cambiarPassword() {},
+    guardarRecoveryEmail() {}
+  };
+};
+
+window.qrComponent = function() {
+  return {
+    qrs: [],
+    nuevaMesa: '',
+    wifiSsid: '',
+    wifiPassword: '',
+    qrModalVisible: false,
+    qrModalUrl: '',
+    qrModalNombre: '',
+    
+    init() {
+      console.log('QR iniciado');
+    },
+    
+    cargarQRs() {},
+    generarQR() {},
+    eliminarQR() {},
+    abrirQR() {},
+    cerrarModal() {},
+    guardarWifi() {}
+  };
+};
+
+window.reportesComponent = function() {
+  return {
+    desde: '',
+    hasta: '',
+    pedidos: [],
+    ventasDia: { usd: 0, bs: 0 },
+    ventasSemana: { usd: 0, bs: 0 },
+    ticketPromedio: { usd: 0, bs: 0 },
+    platilloTop: '-',
+    charts: {},
+    isLoading: false,
+    
+    init() {
+      console.log('Reportes iniciado');
+    },
+    
+    cargarReportes() {},
+    calcularEstadisticas() {},
+    actualizarGraficos() {},
+    actualizarTablaVentas() {},
+    
+    formatBs: window.formatBs,
+    formatUSD: window.formatUSD,
+    usdToBs: window.usdToBs
+  };
+};
     
     // ========== APP PRINCIPAL ==========
     window.app = function() {
