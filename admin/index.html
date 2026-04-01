@@ -2139,7 +2139,9 @@
     </div>
   </div>
 
-  <script type="module">
+  
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.3/dist/cdn.js"></script>
+    <script type="module" src="./admin.js"></script>
     console.log('🚀 Iniciando script module...');
     
     import { supabase } from './services/supabaseClient.js';
@@ -2603,7 +2605,5 @@ window.reportesComponent = function() {
     console.log('✅ Script module completado, app definida globalmente');
     console.log('window.app disponible:', typeof window.app);
   </script>
-  
-  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.3/dist/cdn.js"></script>
 </body>
 </html>
