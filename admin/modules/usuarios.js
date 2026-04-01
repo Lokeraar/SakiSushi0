@@ -19,8 +19,14 @@ export function usuariosComponent() {
     isLoading: false,
 
     async init() {
+      console.log('🔧 Usuarios component iniciado');
       await this.cargarUsuarios();
       subscribe('usuarios', () => this.cargarUsuarios());
+
+      window.addEventListener('supabase-token-updated', () => {
+        console.log('Token actualizado, recargando usuarios');
+        this.cargarUsuarios();
+      });
     },
 
     async cargarUsuarios() {
@@ -77,7 +83,6 @@ export function usuariosComponent() {
           if (error) throw error;
           showToast('Usuario actualizado', 'success');
         } else {
-          // Generar hash de contraseña
           const { data: hashed, error: hashErr } = await supabase
             .rpc('hash_password', { plain_password: this.form.password });
           if (hashErr) throw hashErr;
@@ -103,10 +108,7 @@ export function usuariosComponent() {
 
     async toggleActivo(usuario) {
       try {
-        await supabase
-          .from('usuarios')
-          .update({ activo: !usuario.activo })
-          .eq('id', usuario.id);
+        await supabase.from('usuarios').update({ activo: !usuario.activo }).eq('id', usuario.id);
         showToast(`Usuario ${usuario.activo ? 'desactivado' : 'activado'}`, 'success');
         await this.cargarUsuarios();
       } catch (err) {
