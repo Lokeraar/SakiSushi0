@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
   <title>Saki Sushi - Panel Administración</title>
+  <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-eval' https://cdn.jsdelivr.net https://iqwwoihiiyrtypyqzhgy.supabase.co; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://iqwwoihiiyrtypyqzhgy.supabase.co wss://iqwwoihiiyrtypyqzhgy.supabase.co; img-src 'self' data: https:; frame-src 'self';">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
@@ -12,6 +13,7 @@
   <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
   
   <style>
+    /* ====== ESTILOS COMPLETOS ====== */
     * {
       margin: 0;
       padding: 0;
@@ -355,21 +357,10 @@
       transition: background .2s;
     }
 
-    .tcb-card-base {
-      border-top-color: var(--primary);
-    }
-
-    .tcb-card-pct {
-      border-top-color: var(--accent);
-    }
-
-    .tcb-card-efectiva {
-      border-top-color: #4ade80;
-    }
-
-    .tcb-card-acum {
-      border-top-color: var(--warning);
-    }
+    .tcb-card-base { border-top-color: var(--primary); }
+    .tcb-card-pct { border-top-color: var(--accent); }
+    .tcb-card-efectiva { border-top-color: #4ade80; }
+    .tcb-card-acum { border-top-color: var(--warning); }
 
     .tcb-label {
       font-size: .65rem;
@@ -394,9 +385,7 @@
       transition: border-color .2s;
     }
 
-    .tcb-input:focus {
-      border-color: var(--accent);
-    }
+    .tcb-input:focus { border-color: var(--accent); }
 
     .tcb-value-big {
       font-size: 1.1rem;
@@ -405,13 +394,8 @@
       line-height: 1.2;
     }
 
-    .tcb-card-efectiva .tcb-value-big {
-      color: #4ade80;
-    }
-
-    .tcb-acum-val {
-      color: var(--accent) !important;
-    }
+    .tcb-card-efectiva .tcb-value-big { color: #4ade80; }
+    .tcb-acum-val { color: var(--accent) !important; }
 
     .tcb-sublabel {
       font-size: .6rem;
@@ -486,11 +470,11 @@
       box-shadow: 0 2px 4px rgba(0,0,0,.2);
     }
 
-    .toggle-switch input:checked+.toggle-slider {
+    .toggle-switch input:checked + .toggle-slider {
       background-color: var(--success);
     }
 
-    .toggle-switch input:checked+.toggle-slider:before {
+    .toggle-switch input:checked + .toggle-slider:before {
       transform: translateX(18px);
     }
 
@@ -512,12 +496,7 @@
       color: var(--text-muted);
     }
 
-    .tcb-fecha-label {
-      font-size: .7rem;
-      color: var(--text-muted);
-      white-space: nowrap;
-    }
-
+    .tcb-fecha-label { font-size: .7rem; color: var(--text-muted); white-space: nowrap; }
     .tcb-fecha-input {
       padding: .2rem .4rem;
       border-radius: 6px;
@@ -528,11 +507,7 @@
       font-family: 'Montserrat', sans-serif;
     }
 
-    .tcb-save-wrap {
-      margin-left: auto;
-      flex-shrink: 0;
-    }
-
+    .tcb-save-wrap { margin-left: auto; flex-shrink: 0; }
     .tcb-save-btn {
       font-size: .82rem;
       padding: .55rem 1.1rem;
@@ -567,13 +542,8 @@
       color: var(--accent);
     }
 
-    .tabs-chevron-left {
-      border-right: 1px solid var(--border);
-    }
-
-    .tabs-chevron-right {
-      border-left: 1px solid var(--border);
-    }
+    .tabs-chevron-left { border-right: 1px solid var(--border); }
+    .tabs-chevron-right { border-left: 1px solid var(--border); }
 
     .tabs {
       flex: 1;
@@ -584,9 +554,7 @@
       scrollbar-width: none;
     }
 
-    .tabs::-webkit-scrollbar {
-      display: none;
-    }
+    .tabs::-webkit-scrollbar { display: none; }
 
     .tab {
       padding: .9rem 1.4rem;
@@ -866,14 +834,8 @@
     }
 
     @keyframes inv-detail-in {
-      from {
-        opacity: 0;
-        transform: translateY(6px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
     }
 
     .inv-detail-title {
@@ -929,17 +891,9 @@
       font-weight: 800;
     }
 
-    .inv-stock-num.ok {
-      color: var(--success);
-    }
-
-    .inv-stock-num.bajo {
-      color: var(--warning);
-    }
-
-    .inv-stock-num.critico {
-      color: var(--danger);
-    }
+    .inv-stock-num.ok { color: var(--success); }
+    .inv-stock-num.bajo { color: var(--warning); }
+    .inv-stock-num.critico { color: var(--danger); }
 
     .inv-stock-unit {
       font-size: .9rem;
@@ -960,17 +914,9 @@
       transition: width .4s;
     }
 
-    .inv-bar-fill.ok {
-      background: var(--success);
-    }
-
-    .inv-bar-fill.bajo {
-      background: var(--warning);
-    }
-
-    .inv-bar-fill.critico {
-      background: var(--danger);
-    }
+    .inv-bar-fill.ok { background: var(--success); }
+    .inv-bar-fill.bajo { background: var(--warning); }
+    .inv-bar-fill.critico { background: var(--danger); }
 
     .inv-meta-grid {
       display: grid;
@@ -1641,17 +1587,9 @@
       transform: translateY(0);
     }
 
-    .toast.success {
-      background: var(--success);
-    }
-
-    .toast.error {
-      background: var(--danger);
-    }
-
-    .toast.warning {
-      background: var(--warning);
-    }
+    .toast.success { background: var(--success); }
+    .toast.error { background: var(--danger); }
+    .toast.warning { background: var(--warning); }
 
     .empty-state {
       text-align: center;
@@ -1692,16 +1630,8 @@
     }
 
     @keyframes pulse {
-      0%, 100% {
-        opacity: 1;
-        transform: scale(1);
-        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
-      }
-      50% {
-        opacity: 0.85;
-        transform: scale(1.02);
-        box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
-      }
+      0%, 100% { opacity: 1; transform: scale(1); box-shadow: 0 0 0 0 rgba(239,68,68,0.4); }
+      50% { opacity: 0.85; transform: scale(1.02); box-shadow: 0 0 0 3px rgba(239,68,68,0.2); }
     }
 
     .pane-header {
@@ -1764,11 +1694,6 @@
       background: #ffebee;
       border-left: 4px solid var(--danger);
       margin-bottom: .5rem;
-    }
-
-    .alert-item.critical {
-      background: #ffebee;
-      border-left: 4px solid var(--danger);
     }
 
     .pedido-item-modern {
@@ -1838,53 +1763,23 @@
     }
 
     @media (max-width: 768px) {
-      .content {
-        padding: .75rem;
-      }
-      .dashboard-grid {
-        grid-template-columns: 1fr 1fr !important;
-      }
-      .tcb-cards {
-        grid-template-columns: repeat(2, 1fr);
-      }
-      .tcb-controls {
-        flex-direction: column;
-        align-items: stretch;
-      }
-      .tcb-save-wrap {
-        margin-left: 0;
-      }
-      .tcb-save-btn {
-        width: 100%;
-      }
-      .inv-panel {
-        flex-direction: column;
-      }
-      .inv-list-col {
-        flex: none;
-        width: 100%;
-      }
-      .menu-grid {
-        grid-template-columns: 1fr;
-      }
-      .qr-grid {
-        grid-template-columns: 1fr;
-      }
-      .config-grid {
-        grid-template-columns: 1fr;
-      }
-      .dashboard-lower-grid {
-        grid-template-columns: 1fr;
-      }
+      .content { padding: .75rem; }
+      .dashboard-grid { grid-template-columns: 1fr 1fr !important; }
+      .tcb-cards { grid-template-columns: repeat(2, 1fr); }
+      .tcb-controls { flex-direction: column; align-items: stretch; }
+      .tcb-save-wrap { margin-left: 0; }
+      .tcb-save-btn { width: 100%; }
+      .inv-panel { flex-direction: column; }
+      .inv-list-col { flex: none; width: 100%; }
+      .menu-grid { grid-template-columns: 1fr; }
+      .qr-grid { grid-template-columns: 1fr; }
+      .config-grid { grid-template-columns: 1fr; }
+      .dashboard-lower-grid { grid-template-columns: 1fr; }
     }
 
     @media (max-width: 480px) {
-      .tcb-cards {
-        grid-template-columns: 1fr;
-      }
-      .header-right .nav-button:nth-child(n+3) {
-        display: none;
-      }
+      .tcb-cards { grid-template-columns: 1fr; }
+      .header-right .nav-button:nth-child(n+3) { display: none; }
     }
 
     [x-cloak] {
@@ -2250,7 +2145,6 @@
     
     import { supabase } from './services/supabaseClient.js';
     
-    // ========== UTILIDADES GLOBALES ==========
     window.formatBs = function(monto) {
       try {
         const valor = Math.round((monto || 0) * 100) / 100;
@@ -2287,7 +2181,6 @@
     
     console.log('✅ Utilidades definidas');
     
-    // ========== DASHBOARD COMPONENT ==========
     window.dashboardComponent = function() {
       return {
         tasaBase: 400,
@@ -2427,7 +2320,6 @@
       };
     };
     
-    // ========== INVENTORY COMPONENT ==========
     window.inventoryComponent = function() {
       return {
         search: '',
@@ -2562,9 +2454,7 @@
           this.showForm = false;
         },
         
-        debouncedSearch() {
-          // Alpine reacciona automáticamente
-        },
+        debouncedSearch() {},
         
         formatBs: window.formatBs,
         formatUSD: window.formatUSD,
@@ -2572,7 +2462,6 @@
       };
     };
     
-    // ========== MENU COMPONENT ==========
     window.menuComponent = function() {
       return {
         search: '',
@@ -2714,7 +2603,6 @@
       };
     };
     
-    // ========== USUARIOS COMPONENT ==========
     window.usuariosComponent = function() {
       return {
         search: '',
@@ -2829,7 +2717,6 @@
       };
     };
     
-    // ========== DELIVERYS COMPONENT ==========
     window.deliverysComponent = function() {
       return {
         search: '',
@@ -2958,7 +2845,6 @@
       };
     };
     
-    // ========== MESONEROS COMPONENT ==========
     window.mesonerosComponent = function() {
       return {
         search: '',
@@ -3102,7 +2988,6 @@
       };
     };
     
-    // ========== CONFIG COMPONENT ==========
     window.configComponent = function() {
       return {
         currentPassword: '',
@@ -3170,7 +3055,6 @@
       };
     };
     
-    // ========== QR COMPONENT ==========
     window.qrComponent = function() {
       return {
         qrs: [],
@@ -3271,7 +3155,6 @@
       };
     };
     
-    // ========== REPORTES COMPONENT ==========
     window.reportesComponent = function() {
       return {
         desde: '',
@@ -3408,7 +3291,6 @@
       };
     };
     
-    // ========== APP PRINCIPAL ==========
     window.app = function() {
       return {
         loggedIn: false,
@@ -3448,32 +3330,30 @@
         },
         
         async login() {
-  console.log('🔑 Login con:', this.loginPassword);
-  try {
-    const response = await fetch('https://iqwwoihiiyrtypyqzhgy.supabase.co/functions/v1/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username: 'admin', password: this.loginPassword })
-    });
-    const data = await response.json();
-    console.log('📡 Respuesta login:', data);
-    
-    if (!response.ok) throw new Error(data.error || 'Error de red');
-    if (!data.success) throw new Error(data.error || 'Contraseña incorrecta');
-    if (data.user.rol !== 'admin') throw new Error('No eres administrador');
-    
-    sessionStorage.setItem('admin_jwt_token', data.token);
-    sessionStorage.setItem('admin_user', JSON.stringify(data.user));
-    this.loggedIn = true;
-    window.showToast('✅ Bienvenido Administrador', 'success');
-    console.log('✅ Login exitoso');
-    document.getElementById('loginContainer').style.display = 'none';
-    document.querySelector('.panel-container').style.display = 'flex';
-  } catch (error) {
-    console.error('❌ Login error:', error);
-    window.showToast('❌ Error: ' + error.message, 'error');
-  }
-}
+          console.log('🔑 Login con:', this.loginPassword);
+          try {
+            const response = await fetch('https://iqwwoihiiyrtypyqzhgy.supabase.co/functions/v1/login', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ username: 'admin', password: this.loginPassword })
+            });
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.error || 'Error');
+            if (!data.success) throw new Error(data.error || 'Contraseña incorrecta');
+            if (data.user.rol !== 'admin') throw new Error('No eres administrador');
+            
+            sessionStorage.setItem('admin_jwt_token', data.token);
+            sessionStorage.setItem('admin_user', JSON.stringify(data.user));
+            this.loggedIn = true;
+            window.showToast('✅ Bienvenido Administrador', 'success');
+            console.log('✅ Login exitoso');
+            document.getElementById('loginContainer').style.display = 'none';
+            document.querySelector('.panel-container').style.display = 'flex';
+          } catch (error) {
+            window.showToast('❌ Error: ' + error.message, 'error');
+            console.error('Login error:', error);
+          }
+        },
         
         logout() {
           sessionStorage.removeItem('admin_jwt_token');
