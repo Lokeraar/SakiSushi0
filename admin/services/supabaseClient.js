@@ -6,7 +6,7 @@ const SUPABASE_ANON_KEY = 'sb_publishable_m4WcF4gmkj1olAj95HMLlA_4yKqPFXm';
 // Cliente por defecto (sin token)
 let supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// Dentro de setSupabaseToken, si token es null, crea cliente sin token
+// Función para reinicializar el cliente con un token JWT
 export function setSupabaseToken(token) {
   if (token) {
     supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
