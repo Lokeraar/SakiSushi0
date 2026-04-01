@@ -28,8 +28,15 @@ export function inventoryComponent() {
     passwordError: '',
 
     async init() {
+      console.log('🔧 Inventory component iniciado');
       await this.loadInventory();
       subscribe('inventario', () => this.loadInventory());
+
+      // Escuchar evento de actualización de token para recargar datos
+      window.addEventListener('supabase-token-updated', () => {
+        console.log('Token actualizado, recargando inventario');
+        this.loadInventory();
+      });
     },
 
     async loadInventory() {
@@ -74,7 +81,6 @@ export function inventoryComponent() {
         showToast('Stock no puede ser negativo', 'error');
         return;
       }
-      // Optimistic update
       this.selectedIngredient.stock = newStock;
       try {
         const result = await updateStockAtomic(this.selectedIngredient.id, delta);
@@ -164,7 +170,6 @@ export function inventoryComponent() {
       }
       this.passwordModal = false;
       this.passwordError = '';
-      // Desbloquear input de stock (manualmente después de la verificación)
       const stockInput = document.querySelector('#ingredienteStock');
       if (stockInput) stockInput.disabled = false;
     },
