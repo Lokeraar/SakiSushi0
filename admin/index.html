@@ -1,3 +1,5 @@
+<!DOCTYPE html>
+<html lang="es">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
@@ -2178,139 +2180,10 @@
     
     console.log('✅ Utilidades definidas');
     
+    // ========== COMPONENTES PLACEHOLDER MÍNIMOS ==========
     window.dashboardComponent = function() {
       return {
-        tasaBase: 400,
-        aumentoDiario: 0,
-        aumentoActivo: false,
-        aumentoSemanal: false,
-        aumentoDesde: '',
-        aumentoHasta: '',
-        aumentoIndefinido: false,
-        aumentoAcumulado: 0,
-        tasaEfectiva: 400,
-        loading: false,
-        ventasHoy: { usd: 0, bs: 0 },
-        deliverysHoy: 0,
-        propinasHoy: 0,
-        stockCritico: [],
-        pedidosRecientes: [],
-        productosActivos: 0,
-        
-        init() {
-          console.log('Dashboard component iniciado');
-          this.cargarDatosIniciales();
-        },
-        
-        async cargarDatosIniciales() {
-          try {
-            const { data: configData } = await supabase.from('config').select('*').eq('id', 1).single();
-            if (configData) {
-              this.tasaBase = configData.tasa_cambio || 400;
-              this.aumentoDiario = configData.aumento_diario || 0;
-              this.aumentoActivo = configData.aumento_activo || false;
-              this.aumentoSemanal = configData.aumento_semanal || false;
-              this.aumentoDesde = configData.aumento_desde || '';
-              this.aumentoHasta = configData.aumento_hasta || '';
-              this.aumentoIndefinido = configData.aumento_indefinido || false;
-              this.tasaEfectiva = configData.tasa_efectiva || 400;
-              this.aumentoAcumulado = configData.aumento_acumulado || 0;
-            }
-            
-            const { data: menuData } = await supabase.from('menu').select('id, disponible');
-            this.productosActivos = (menuData || []).filter(m => m.disponible === true).length;
-            
-            const { data: inventarioData } = await supabase.from('inventario').select('id, nombre, stock, reservado, minimo');
-            this.stockCritico = (inventarioData || []).filter(i => {
-              const disponible = (i.stock || 0) - (i.reservado || 0);
-              return disponible <= (i.minimo || 0) && i.minimo > 0;
-            });
-            
-            const hoy = new Date();
-            hoy.setHours(0, 0, 0, 0);
-            const manana = new Date(hoy);
-            manana.setDate(manana.getDate() + 1);
-            const { data: pedidosData } = await supabase.from('pedidos').select('*').gte('fecha', hoy.toISOString()).lt('fecha', manana.toISOString()).order('fecha', { ascending: false }).limit(5);
-            this.pedidosRecientes = pedidosData || [];
-            
-          } catch (err) {
-            console.error('Error cargando dashboard:', err);
-          }
-        },
-        
-        recalcularTasaEfectiva() {
-          let periodos = 0;
-          const activo = this.aumentoActivo || this.aumentoSemanal;
-          if (activo && this.aumentoDesde) {
-            const hoy = new Date();
-            hoy.setHours(0, 0, 0, 0);
-            const desde = new Date(this.aumentoDesde + 'T00:00:00');
-            let hasta = null;
-            if (!this.aumentoIndefinido && this.aumentoHasta) {
-              hasta = new Date(this.aumentoHasta + 'T00:00:00');
-            }
-            if (desde <= hoy) {
-              const fin = hasta && hasta < hoy ? hasta : hoy;
-              const msDia = 24 * 60 * 60 * 1000;
-              const msPeriodo = this.aumentoSemanal ? 7 * msDia : msDia;
-              const diffMs = fin - desde;
-              periodos = Math.max(0, Math.floor(diffMs / msPeriodo) + 1);
-            }
-          }
-          const aumentoAcum = periodos * (this.aumentoDiario || 0);
-          this.aumentoAcumulado = aumentoAcum;
-          this.tasaEfectiva = this.tasaBase * (1 + aumentoAcum / 100);
-        },
-        
-        async guardarConfiguracion() {
-          this.loading = true;
-          try {
-            await supabase.from('config').update({
-              tasa_cambio: this.tasaBase,
-              aumento_diario: this.aumentoDiario,
-              aumento_activo: this.aumentoActivo,
-              aumento_semanal: this.aumentoSemanal,
-              aumento_desde: this.aumentoDesde || null,
-              aumento_hasta: (!this.aumentoIndefinido && this.aumentoHasta) || null,
-              aumento_indefinido: this.aumentoIndefinido,
-              aumento_acumulado: this.aumentoAcumulado,
-              tasa_efectiva: this.tasaEfectiva,
-              ultima_actualizacion: new Date().toISOString()
-            }).eq('id', 1);
-            window.showToast('Configuración guardada', 'success');
-          } catch (err) {
-            window.showToast('Error guardando configuración', 'error');
-          } finally {
-            this.loading = false;
-          }
-        },
-        
-        abrirDetalleVentas() {
-          window.showToast('Detalle de ventas', 'info');
-        },
-        
-        abrirDetallePropinas() {
-          const tab = document.querySelector('.tab[data-tab="mesoneros"]');
-          if (tab) tab.click();
-        },
-        
-        abrirDetalleDeliverys() {
-          const tab = document.querySelector('.tab[data-tab="deliverys"]');
-          if (tab) tab.click();
-        },
-        
-        irAIngrediente(id) {
-          const tab = document.querySelector('.tab[data-tab="inventario"]');
-          if (tab) tab.click();
-          setTimeout(() => {
-            window.dispatchEvent(new CustomEvent('selectIngrediente', { detail: { id } }));
-          }, 200);
-        },
-        
-        abrirDetallePedido(pedidoId) {
-          window.showToast('Pedido #' + pedidoId, 'info');
-        },
-        
+        init() { console.log('Dashboard iniciado'); },
         formatBs: window.formatBs,
         formatUSD: window.formatUSD,
         usdToBs: window.usdToBs
@@ -2319,975 +2192,81 @@
     
     window.inventoryComponent = function() {
       return {
+        init() { console.log('Inventory iniciado'); },
         search: '',
-        inventoryItems: [],
-        selectedIngredient: null,
-        form: {
-          id: null,
-          nombre: '',
-          stock: 0,
-          agregar: 0,
-          unidad: 'unidades',
-          minimo: 0,
-          precio_costo: 0,
-          precio_unitario: 0
-        },
-        editMode: false,
-        showForm: false,
-        isLoading: false,
-        
-        async init() {
-          await this.loadInventory();
-        },
-        
-        async loadInventory() {
-          this.isLoading = true;
-          try {
-            const { data, error } = await supabase.from('inventario').select('*').order('nombre');
-            if (error) throw error;
-            this.inventoryItems = data || [];
-          } catch (err) {
-            window.showToast('Error cargando inventario: ' + err.message, 'error');
-          } finally {
-            this.isLoading = false;
-          }
-        },
-        
-        filteredItems() {
-          const term = this.search.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-          return this.inventoryItems.filter(i =>
-            i.nombre.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').includes(term)
-          );
-        },
-        
-        selectIngredient(id) {
-          this.selectedIngredient = this.inventoryItems.find(i => i.id === id);
-          this.form = { ...this.selectedIngredient };
-          this.editMode = true;
-          this.showForm = false;
-        },
-        
-        async updateStock(delta) {
-          if (!this.selectedIngredient) return;
-          const prevStock = this.selectedIngredient.stock;
-          const newStock = prevStock + delta;
-          if (newStock < 0) {
-            window.showToast('Stock no puede ser negativo', 'error');
-            return;
-          }
-          this.selectedIngredient.stock = newStock;
-          try {
-            const { data, error } = await supabase.rpc('update_stock_atomic', {
-              p_ingredient_id: this.selectedIngredient.id,
-              p_delta: delta
-            });
-            if (error) throw error;
-            if (!data.success) throw new Error(data.error);
-            window.showToast(`Stock actualizado: ${delta > 0 ? '+' : ''}${delta}`, 'success');
-          } catch (err) {
-            this.selectedIngredient.stock = prevStock;
-            window.showToast(err.message, 'error');
-          }
-        },
-        
-        newIngredient() {
-          this.editMode = false;
-          this.form = {
-            id: null,
-            nombre: '',
-            stock: 0,
-            agregar: 0,
-            unidad: 'unidades',
-            minimo: 0,
-            precio_costo: 0,
-            precio_unitario: 0
-          };
-          this.showForm = true;
-        },
-        
-        async saveIngredient() {
-          if (!this.form.nombre.trim()) {
-            window.showToast('El nombre es obligatorio', 'error');
-            return;
-          }
-          const data = {
-            id: this.form.id || (crypto.randomUUID ? crypto.randomUUID() : 'ing_' + Date.now()),
-            nombre: this.form.nombre,
-            stock: (parseFloat(this.form.stock) || 0) + (parseFloat(this.form.agregar) || 0),
-            reservado: 0,
-            unidad_base: this.form.unidad,
-            minimo: parseFloat(this.form.minimo) || 0,
-            precio_costo: parseFloat(this.form.precio_costo) || 0,
-            precio_unitario: parseFloat(this.form.precio_unitario) || 0
-          };
-          try {
-            if (this.editMode) {
-              await supabase.from('inventario').update(data).eq('id', this.form.id);
-              window.showToast('Ingrediente actualizado', 'success');
-            } else {
-              await supabase.from('inventario').insert([data]);
-              window.showToast('Ingrediente creado', 'success');
-            }
-            this.closeForm();
-            await this.loadInventory();
-          } catch (err) {
-            window.showToast('Error guardando ingrediente: ' + err.message, 'error');
-          }
-        },
-        
-        async deleteIngredient() {
-          if (!confirm('¿Eliminar este ingrediente?')) return;
-          try {
-            await supabase.from('inventario').delete().eq('id', this.selectedIngredient.id);
-            window.showToast('Ingrediente eliminado', 'success');
-            this.selectedIngredient = null;
-            await this.loadInventory();
-          } catch (err) {
-            window.showToast('Error eliminando: ' + err.message, 'error');
-          }
-        },
-        
-        closeForm() {
-          this.showForm = false;
-        },
-        
-        debouncedSearch() {},
-        
-        formatBs: window.formatBs,
-        formatUSD: window.formatUSD,
-        usdToBs: window.usdToBs
+        debouncedSearch() {}
       };
     };
     
     window.menuComponent = function() {
       return {
+        init() { console.log('Menu iniciado'); },
         search: '',
-        menuItems: [],
-        form: {
-          id: null,
-          nombre: '',
-          categoria: '',
-          subcategoria: '',
-          precio: 0,
-          descripcion: '',
-          imagen: '',
-          disponible: true
-        },
-        editMode: false,
-        showForm: false,
-        isLoading: false,
-        categorias: ['Entradas', 'Sushi', 'Rolls', 'Tragos y bebidas', 'Pokes', 'Ensaladas', 'Comida China', 'Comida Japonesa', 'Ofertas Especiales', 'Para Niños', 'Combo Ejecutivo'],
-        subcategorias: {
-          'Rolls': ['Rolls Fríos de 10 piezas', 'Rolls Tempura de 12 piezas'],
-          'Comida China': ['Arroz Chino', 'Arroz Cantones', 'Chopsuey', 'Lomey', 'Chow Mein', 'Fideos de Arroz', 'Tallarines Cantones', 'Mariscos', 'Foo Yong', 'Sopas', 'Entremeses'],
-          'Comida Japonesa': ['Yakimeshi', 'Yakisoba', 'Pasta Udon', 'Churrasco']
-        },
-        
-        async init() {
-          await this.loadMenu();
-        },
-        
-        async loadMenu() {
-          this.isLoading = true;
-          try {
-            const { data, error } = await supabase.from('menu').select('*').order('nombre');
-            if (error) throw error;
-            this.menuItems = data || [];
-          } catch (err) {
-            window.showToast('Error cargando menú: ' + err.message, 'error');
-          } finally {
-            this.isLoading = false;
-          }
-        },
-        
-        filteredItems() {
-          const term = this.search.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-          return this.menuItems.filter(i =>
-            i.nombre.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').includes(term)
-          );
-        },
-        
-        getAvailableSubcategorias() {
-          return this.subcategorias[this.form.categoria] || [];
-        },
-        
-        async savePlatillo() {
-          if (!this.form.nombre || !this.form.categoria || this.form.precio <= 0) {
-            window.showToast('Complete nombre, categoría y precio', 'error');
-            return;
-          }
-          const data = {
-            id: this.form.id || (crypto.randomUUID ? crypto.randomUUID() : 'plat_' + Date.now()),
-            nombre: this.form.nombre,
-            categoria: this.form.categoria,
-            subcategoria: this.form.subcategoria || null,
-            precio: this.form.precio,
-            descripcion: this.form.descripcion,
-            imagen: this.form.imagen,
-            ingredientes: {},
-            disponible: this.form.disponible,
-            stock: 0,
-            stock_maximo: 0
-          };
-          try {
-            if (this.editMode) {
-              await supabase.from('menu').update(data).eq('id', this.form.id);
-              window.showToast('Platillo actualizado', 'success');
-            } else {
-              await supabase.from('menu').insert([data]);
-              window.showToast('Platillo creado', 'success');
-            }
-            this.closeForm();
-            await this.loadMenu();
-          } catch (err) {
-            window.showToast('Error guardando platillo: ' + err.message, 'error');
-          }
-        },
-        
-        async deletePlatillo(id) {
-          if (!confirm('¿Eliminar este platillo?')) return;
-          try {
-            await supabase.from('menu').delete().eq('id', id);
-            window.showToast('Platillo eliminado', 'success');
-            await this.loadMenu();
-          } catch (err) {
-            window.showToast('Error eliminando: ' + err.message, 'error');
-          }
-        },
-        
-        async toggleDisponible(id, disponible) {
-          try {
-            await supabase.from('menu').update({ disponible }).eq('id', id);
-            window.showToast(`Platillo ${disponible ? 'habilitado' : 'deshabilitado'}`, 'success');
-            await this.loadMenu();
-          } catch (err) {
-            window.showToast('Error cambiando disponibilidad: ' + err.message, 'error');
-          }
-        },
-        
-        editPlatillo(id) {
-          const platillo = this.menuItems.find(p => p.id === id);
-          if (!platillo) return;
-          this.form = { ...platillo };
-          this.editMode = true;
-          this.showForm = true;
-        },
-        
-        newPlatillo() {
-          this.form = {
-            id: null,
-            nombre: '',
-            categoria: '',
-            subcategoria: '',
-            precio: 0,
-            descripcion: '',
-            imagen: '',
-            disponible: true
-          };
-          this.editMode = false;
-          this.showForm = true;
-        },
-        
-        closeForm() {
-          this.showForm = false;
-        },
-        
-        debouncedSearch() {},
-        
-        formatBs: window.formatBs,
-        formatUSD: window.formatUSD,
-        usdToBs: window.usdToBs
+        debouncedSearch() {}
       };
     };
     
     window.usuariosComponent = function() {
       return {
+        init() { console.log('Usuarios iniciado'); },
         search: '',
-        usuarios: [],
-        form: {
-          id: null,
-          nombre: '',
-          username: '',
-          password: '123456',
-          activo: true
-        },
-        editMode: false,
-        showForm: false,
-        isLoading: false,
-        
-        async init() {
-          await this.cargarUsuarios();
-        },
-        
-        async cargarUsuarios() {
-          this.isLoading = true;
-          try {
-            const { data, error } = await supabase.from('usuarios').select('*').order('nombre');
-            if (error) throw error;
-            this.usuarios = data || [];
-          } catch (err) {
-            window.showToast('Error cargando usuarios: ' + err.message, 'error');
-          } finally {
-            this.isLoading = false;
-          }
-        },
-        
-        filteredUsuarios() {
-          const term = this.search.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-          return this.usuarios.filter(u =>
-            u.nombre.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').includes(term) ||
-            u.username.toLowerCase().includes(term)
-          );
-        },
-        
-        nuevoUsuario() {
-          this.form = { id: null, nombre: '', username: '', password: '123456', activo: true };
-          this.editMode = false;
-          this.showForm = true;
-        },
-        
-        editarUsuario(usuario) {
-          this.form = { ...usuario };
-          this.editMode = true;
-          this.showForm = true;
-        },
-        
-        async guardarUsuario() {
-          if (!this.form.nombre.trim() || !this.form.username.trim()) {
-            window.showToast('Complete nombre y usuario', 'error');
-            return;
-          }
-          try {
-            if (this.editMode) {
-              await supabase.from('usuarios').update({
-                nombre: this.form.nombre,
-                username: this.form.username,
-                activo: this.form.activo
-              }).eq('id', this.form.id);
-              window.showToast('Usuario actualizado', 'success');
-            } else {
-              const { data: hashed, error: hashErr } = await supabase.rpc('hash_password', { plain_password: this.form.password });
-              if (hashErr) throw hashErr;
-              await supabase.from('usuarios').insert([{
-                id: crypto.randomUUID ? crypto.randomUUID() : 'user_' + Date.now(),
-                nombre: this.form.nombre,
-                username: this.form.username,
-                password_hash: hashed,
-                rol: 'cajero',
-                activo: true
-              }]);
-              window.showToast('Usuario creado', 'success');
-            }
-            this.closeForm();
-            await this.cargarUsuarios();
-          } catch (err) {
-            window.showToast('Error: ' + err.message, 'error');
-          }
-        },
-        
-        async toggleActivo(usuario) {
-          try {
-            await supabase.from('usuarios').update({ activo: !usuario.activo }).eq('id', usuario.id);
-            window.showToast(`Usuario ${usuario.activo ? 'desactivado' : 'activado'}`, 'success');
-            await this.cargarUsuarios();
-          } catch (err) {
-            window.showToast('Error: ' + err.message, 'error');
-          }
-        },
-        
-        async eliminarUsuario(id) {
-          if (!confirm('¿Eliminar este usuario?')) return;
-          try {
-            await supabase.from('usuarios').delete().eq('id', id);
-            window.showToast('Usuario eliminado', 'success');
-            await this.cargarUsuarios();
-          } catch (err) {
-            window.showToast('Error: ' + err.message, 'error');
-          }
-        },
-        
-        closeForm() {
-          this.showForm = false;
-        },
-        
         debouncedSearch() {}
       };
     };
     
     window.deliverysComponent = function() {
       return {
+        init() { console.log('Deliverys iniciado'); },
         search: '',
         newNombre: '',
-        deliverys: [],
-        acumulado: {},
-        showForm: false,
-        form: { id: null, nombre: '', activo: true },
-        editMode: false,
-        
-        async init() {
-          await this.cargarDeliverys();
-        },
-        
-        async cargarDeliverys() {
-          try {
-            const { data, error } = await supabase.from('deliverys').select('*').order('nombre');
-            if (error) throw error;
-            this.deliverys = data || [];
-            await this.calcularAcumulados();
-          } catch (err) {
-            window.showToast('Error cargando motorizados: ' + err.message, 'error');
-          }
-        },
-        
-        async calcularAcumulados() {
-          const { data, error } = await supabase.from('entregas_delivery').select('delivery_id, monto_bs');
-          if (error) return;
-          this.acumulado = {};
-          (data || []).forEach(e => {
-            this.acumulado[e.delivery_id] = (this.acumulado[e.delivery_id] || 0) + (e.monto_bs || 0);
-          });
-        },
-        
-        filteredDeliverys() {
-          const term = this.search.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-          return this.deliverys.filter(d =>
-            d.nombre.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').includes(term)
-          );
-        },
-        
-        async agregarDelivery() {
-          if (!this.newNombre.trim()) {
-            window.showToast('Ingrese un nombre', 'error');
-            return;
-          }
-          try {
-            await supabase.from('deliverys').insert([{
-              id: crypto.randomUUID ? crypto.randomUUID() : 'del_' + Date.now(),
-              nombre: this.newNombre.trim(),
-              activo: true
-            }]);
-            this.newNombre = '';
-            await this.cargarDeliverys();
-            window.showToast('Motorizado agregado', 'success');
-          } catch (err) {
-            window.showToast('Error: ' + err.message, 'error');
-          }
-        },
-        
-        editarDelivery(delivery) {
-          this.form = { ...delivery };
-          this.editMode = true;
-          this.showForm = true;
-        },
-        
-        async guardarDelivery() {
-          if (!this.form.nombre.trim()) {
-            window.showToast('Ingrese nombre', 'error');
-            return;
-          }
-          try {
-            await supabase.from('deliverys').update({ nombre: this.form.nombre, activo: this.form.activo }).eq('id', this.form.id);
-            window.showToast('Motorizado actualizado', 'success');
-            this.closeForm();
-            await this.cargarDeliverys();
-          } catch (err) {
-            window.showToast('Error: ' + err.message, 'error');
-          }
-        },
-        
-        async toggleActivo(delivery) {
-          try {
-            await supabase.from('deliverys').update({ activo: !delivery.activo }).eq('id', delivery.id);
-            window.showToast(`Motorizado ${delivery.activo ? 'desactivado' : 'activado'}`, 'success');
-            await this.cargarDeliverys();
-          } catch (err) {
-            window.showToast('Error: ' + err.message, 'error');
-          }
-        },
-        
-        async eliminarDelivery(id) {
-          if (!confirm('¿Eliminar este motorizado?')) return;
-          try {
-            await supabase.from('entregas_delivery').delete().eq('delivery_id', id);
-            await supabase.from('deliverys').delete().eq('id', id);
-            window.showToast('Motorizado eliminado', 'success');
-            await this.cargarDeliverys();
-          } catch (err) {
-            window.showToast('Error: ' + err.message, 'error');
-          }
-        },
-        
-        async registrarPago(delivery) {
-          const montoTotal = this.acumulado[delivery.id] || 0;
-          if (montoTotal === 0) {
-            window.showToast('No hay acumulado para pagar', 'warning');
-            return;
-          }
-          if (!confirm(`¿Registrar pago a ${delivery.nombre} por ${window.formatBs(montoTotal)}?`)) return;
-          try {
-            await supabase.from('entregas_delivery').delete().eq('delivery_id', delivery.id);
-            window.showToast('Pago registrado', 'success');
-            await this.calcularAcumulados();
-          } catch (err) {
-            window.showToast('Error: ' + err.message, 'error');
-          }
-        },
-        
-        closeForm() {
-          this.showForm = false;
-        },
-        
         debouncedSearch() {},
-        formatBs: window.formatBs
+        agregarDelivery() {}
       };
     };
     
     window.mesonerosComponent = function() {
       return {
+        init() { console.log('Mesoneros iniciado'); },
         search: '',
         newNombre: '',
-        mesoneros: [],
-        propinas: [],
-        totalPropinas: 0,
-        cantidadPropinas: 0,
-        promedioPropinas: 0,
-        showForm: false,
-        form: { id: null, nombre: '', activo: true },
-        editMode: false,
-        
-        async init() {
-          await this.cargarMesoneros();
-          await this.cargarPropinas();
-        },
-        
-        async cargarMesoneros() {
-          try {
-            const { data, error } = await supabase.from('mesoneros').select('*').order('nombre');
-            if (error) throw error;
-            this.mesoneros = data || [];
-          } catch (err) {
-            window.showToast('Error cargando mesoneros: ' + err.message, 'error');
-          }
-        },
-        
-        async cargarPropinas() {
-          const hoy = new Date();
-          hoy.setHours(0, 0, 0, 0);
-          const manana = new Date(hoy);
-          manana.setDate(manana.getDate() + 1);
-          try {
-            const { data, error } = await supabase.from('propinas').select('*, mesoneros(nombre)').gte('fecha', hoy.toISOString()).lt('fecha', manana.toISOString()).order('fecha', { ascending: false });
-            if (error) throw error;
-            this.propinas = data || [];
-            this.totalPropinas = this.propinas.reduce((s, p) => s + (p.monto_bs || 0), 0);
-            this.cantidadPropinas = this.propinas.length;
-            this.promedioPropinas = this.cantidadPropinas ? this.totalPropinas / this.cantidadPropinas : 0;
-          } catch (err) {
-            window.showToast('Error cargando propinas: ' + err.message, 'error');
-          }
-        },
-        
-        filteredMesoneros() {
-          const term = this.search.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-          return this.mesoneros.filter(m =>
-            m.nombre.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').includes(term)
-          );
-        },
-        
-        async agregarMesonero() {
-          if (!this.newNombre.trim()) {
-            window.showToast('Ingrese un nombre', 'error');
-            return;
-          }
-          try {
-            await supabase.from('mesoneros').insert([{
-              id: crypto.randomUUID ? crypto.randomUUID() : 'mes_' + Date.now(),
-              nombre: this.newNombre.trim(),
-              activo: true
-            }]);
-            this.newNombre = '';
-            await this.cargarMesoneros();
-            window.showToast('Mesonero agregado', 'success');
-          } catch (err) {
-            window.showToast('Error: ' + err.message, 'error');
-          }
-        },
-        
-        editarMesonero(mesonero) {
-          this.form = { ...mesonero };
-          this.editMode = true;
-          this.showForm = true;
-        },
-        
-        async guardarMesonero() {
-          if (!this.form.nombre.trim()) {
-            window.showToast('Ingrese nombre', 'error');
-            return;
-          }
-          try {
-            await supabase.from('mesoneros').update({ nombre: this.form.nombre, activo: this.form.activo }).eq('id', this.form.id);
-            window.showToast('Mesonero actualizado', 'success');
-            this.closeForm();
-            await this.cargarMesoneros();
-          } catch (err) {
-            window.showToast('Error: ' + err.message, 'error');
-          }
-        },
-        
-        async toggleActivo(mesonero) {
-          try {
-            await supabase.from('mesoneros').update({ activo: !mesonero.activo }).eq('id', mesonero.id);
-            window.showToast(`Mesonero ${mesonero.activo ? 'desactivado' : 'activado'}`, 'success');
-            await this.cargarMesoneros();
-          } catch (err) {
-            window.showToast('Error: ' + err.message, 'error');
-          }
-        },
-        
-        async eliminarMesonero(id) {
-          if (!confirm('¿Eliminar este mesonero?')) return;
-          try {
-            await supabase.from('mesoneros').delete().eq('id', id);
-            window.showToast('Mesonero eliminado', 'success');
-            await this.cargarMesoneros();
-          } catch (err) {
-            window.showToast('Error: ' + err.message, 'error');
-          }
-        },
-        
-        async pagarPropinas(mesonero) {
-          const { data, error } = await supabase.from('propinas').select('id').eq('mesonero_id', mesonero.id).eq('entregado', false);
-          if (error) {
-            window.showToast('Error obteniendo propinas', 'error');
-            return;
-          }
-          if (!data || data.length === 0) {
-            window.showToast('No hay propinas pendientes', 'warning');
-            return;
-          }
-          const ids = data.map(p => p.id);
-          if (!confirm(`¿Registrar pago a ${mesonero.nombre}? Se marcarán como entregadas ${ids.length} propina(s).`)) return;
-          try {
-            await supabase.from('propinas').update({ entregado: true }).in('id', ids);
-            window.showToast('Propinas pagadas', 'success');
-            await this.cargarPropinas();
-          } catch (err) {
-            window.showToast('Error: ' + err.message, 'error');
-          }
-        },
-        
-        closeForm() {
-          this.showForm = false;
-        },
-        
         debouncedSearch() {},
-        formatBs: window.formatBs
+        agregarMesonero() {}
       };
     };
     
     window.configComponent = function() {
       return {
+        init() { console.log('Config iniciado'); },
         currentPassword: '',
         newPassword: '',
         confirmPassword: '',
         recoveryEmail: '',
-        isLoading: false,
-        
-        async init() {
-          const { data, error } = await supabase.from('config').select('recovery_email').eq('id', 1).single();
-          if (!error && data) this.recoveryEmail = data.recovery_email || '';
-        },
-        
-        async cambiarPassword() {
-          if (!this.currentPassword || !this.newPassword || !this.confirmPassword) {
-            window.showToast('Complete todos los campos', 'error');
-            return;
-          }
-          if (this.newPassword !== this.confirmPassword) {
-            window.showToast('Las contraseñas no coinciden', 'error');
-            return;
-          }
-          if (this.newPassword.length < 4) {
-            window.showToast('La contraseña debe tener al menos 4 caracteres', 'error');
-            return;
-          }
-          this.isLoading = true;
-          try {
-            const { data: adminData } = await supabase.from('usuarios').select('username').eq('rol', 'admin').single();
-            if (!adminData) throw new Error('Usuario admin no encontrado');
-            const { data: authData } = await supabase.rpc('verify_user_credentials', { p_username: adminData.username, p_password: this.currentPassword });
-            if (!authData || !authData.success) {
-              window.showToast('Contraseña actual incorrecta', 'error');
-              return;
-            }
-            const { data: hashed } = await supabase.rpc('hash_password', { plain_password: this.newPassword });
-            await supabase.from('usuarios').update({ password_hash: hashed }).eq('rol', 'admin');
-            await supabase.from('config').update({ admin_password: this.newPassword }).eq('id', 1);
-            window.showToast('Contraseña cambiada exitosamente', 'success');
-            this.currentPassword = '';
-            this.newPassword = '';
-            this.confirmPassword = '';
-          } catch (err) {
-            window.showToast('Error: ' + err.message, 'error');
-          } finally {
-            this.isLoading = false;
-          }
-        },
-        
-        async guardarRecoveryEmail() {
-          if (!this.recoveryEmail || !this.recoveryEmail.includes('@')) {
-            window.showToast('Ingrese un correo válido', 'error');
-            return;
-          }
-          this.isLoading = true;
-          try {
-            await supabase.from('config').update({ recovery_email: this.recoveryEmail }).eq('id', 1);
-            window.showToast('Correo guardado', 'success');
-          } catch (err) {
-            window.showToast('Error: ' + err.message, 'error');
-          } finally {
-            this.isLoading = false;
-          }
-        }
+        isLoading: false
       };
     };
     
     window.qrComponent = function() {
       return {
-        qrs: [],
+        init() { console.log('QR iniciado'); },
         nuevaMesa: '',
         wifiSsid: '',
         wifiPassword: '',
-        qrModalVisible: false,
-        qrModalUrl: '',
-        qrModalNombre: '',
-        
-        async init() {
-          await this.cargarQRs();
-          this.wifiSsid = localStorage.getItem('saki_wifi_ssid') || '';
-          this.wifiPassword = localStorage.getItem('saki_wifi_pwd') || '';
-        },
-        
-        async cargarQRs() {
-          try {
-            const { data, error } = await supabase.from('codigos_qr').select('*').order('fecha', { ascending: false });
-            if (error) throw error;
-            this.qrs = data || [];
-            setTimeout(() => {
-              this.qrs.forEach(qr => {
-                const params = new URLSearchParams({ mesa: qr.nombre });
-                if (this.wifiSsid) params.set('wifi_ssid', this.wifiSsid);
-                if (this.wifiPassword) params.set('wifi_pwd', this.wifiPassword);
-                const url = window.location.origin + '/SakiSushi0/Cliente/index.html?' + params.toString();
-                const container = document.getElementById('qr_' + qr.id);
-                if (container && window.QRCode) {
-                  container.innerHTML = '';
-                  new QRCode(container, { text: url, width: 140, height: 140 });
-                }
-              });
-            }, 100);
-          } catch (err) {
-            window.showToast('Error cargando QRs: ' + err.message, 'error');
-          }
-        },
-        
-        async generarQR() {
-          if (!this.nuevaMesa.trim()) {
-            window.showToast('Ingrese el nombre de la mesa', 'error');
-            return;
-          }
-          if (this.wifiSsid && !this.wifiPassword) {
-            window.showToast('Si agregas WiFi, también debes poner la contraseña', 'error');
-            return;
-          }
-          localStorage.setItem('saki_wifi_ssid', this.wifiSsid);
-          localStorage.setItem('saki_wifi_pwd', this.wifiPassword);
-          try {
-            const newId = crypto.randomUUID ? crypto.randomUUID() : 'QR_' + Date.now();
-            await supabase.from('codigos_qr').insert([{ id: newId, nombre: this.nuevaMesa.trim(), fecha: new Date().toISOString() }]);
-            window.showToast('QR generado', 'success');
-            this.nuevaMesa = '';
-            await this.cargarQRs();
-          } catch (err) {
-            window.showToast('Error: ' + err.message, 'error');
-          }
-        },
-        
-        async eliminarQR(id) {
-          if (!confirm('¿Eliminar este código QR?')) return;
-          try {
-            await supabase.from('codigos_qr').delete().eq('id', id);
-            window.showToast('QR eliminado', 'success');
-            await this.cargarQRs();
-          } catch (err) {
-            window.showToast('Error: ' + err.message, 'error');
-          }
-        },
-        
-        abrirQR(qr) {
-          const params = new URLSearchParams({ mesa: qr.nombre });
-          if (this.wifiSsid) params.set('wifi_ssid', this.wifiSsid);
-          if (this.wifiPassword) params.set('wifi_pwd', this.wifiPassword);
-          this.qrModalUrl = window.location.origin + '/SakiSushi0/Cliente/index.html?' + params.toString();
-          this.qrModalNombre = qr.nombre;
-          this.qrModalVisible = true;
-          setTimeout(() => {
-            const container = document.getElementById('qrAmpliado');
-            if (container && window.QRCode) {
-              container.innerHTML = '';
-              new QRCode(container, { text: this.qrModalUrl, width: 300, height: 300 });
-            }
-          }, 100);
-        },
-        
-        cerrarModal() {
-          this.qrModalVisible = false;
-        },
-        
-        guardarWifi() {
-          localStorage.setItem('saki_wifi_ssid', this.wifiSsid);
-          localStorage.setItem('saki_wifi_pwd', this.wifiPassword);
-          window.showToast('Datos WiFi guardados', 'success');
-        }
+        guardarWifi() {},
+        generarQR() {}
       };
     };
     
     window.reportesComponent = function() {
       return {
+        init() { console.log('Reportes iniciado'); },
         desde: '',
         hasta: '',
-        pedidos: [],
-        ventasDia: { usd: 0, bs: 0 },
-        ventasSemana: { usd: 0, bs: 0 },
-        ticketPromedio: { usd: 0, bs: 0 },
-        platilloTop: '-',
-        charts: {},
         isLoading: false,
-        
-        async init() {
-          const hoy = new Date();
-          const primerDiaMes = new Date(hoy.getFullYear(), hoy.getMonth(), 1).toISOString().split('T')[0];
-          this.desde = primerDiaMes;
-          this.hasta = hoy.toISOString().split('T')[0];
-          await this.cargarReportes();
-        },
-        
-        async cargarReportes() {
-          if (!this.desde || !this.hasta) {
-            window.showToast('Seleccione rango de fechas', 'error');
-            return;
-          }
-          this.isLoading = true;
-          try {
-            const desdeDate = new Date(this.desde);
-            desdeDate.setHours(0, 0, 0, 0);
-            const hastaDate = new Date(this.hasta);
-            hastaDate.setHours(23, 59, 59, 999);
-            const { data, error } = await supabase.from('pedidos').select('*').in('estado', ['cobrado', 'entregado', 'enviado', 'reserva_completada']).gte('fecha', desdeDate.toISOString()).lte('fecha', hastaDate.toISOString()).order('fecha', { ascending: false });
-            if (error) throw error;
-            this.pedidos = data || [];
-            this.calcularEstadisticas();
-            this.actualizarGraficos();
-            this.actualizarTablaVentas();
-          } catch (err) {
-            window.showToast('Error cargando reportes: ' + err.message, 'error');
-          } finally {
-            this.isLoading = false;
-          }
-        },
-        
-        calcularEstadisticas() {
-          const hoy = new Date();
-          hoy.setHours(0, 0, 0, 0);
-          const semanaAtras = new Date(hoy);
-          semanaAtras.setDate(semanaAtras.getDate() - 7);
-          const ventasDia = this.pedidos.filter(p => new Date(p.fecha) >= hoy).reduce((s, p) => s + (p.total || 0), 0);
-          const ventasSemana = this.pedidos.filter(p => new Date(p.fecha) >= semanaAtras).reduce((s, p) => s + (p.total || 0), 0);
-          const ticketPromedio = this.pedidos.length ? this.pedidos.reduce((s, p) => s + (p.total || 0), 0) / this.pedidos.length : 0;
-          const tasa = window.configGlobal?.tasa_efectiva || 400;
-          this.ventasDia = { usd: ventasDia, bs: ventasDia * tasa };
-          this.ventasSemana = { usd: ventasSemana, bs: ventasSemana * tasa };
-          this.ticketPromedio = { usd: ticketPromedio, bs: ticketPromedio * tasa };
-          
-          const platillosCount = {};
-          this.pedidos.forEach(p => {
-            if (p.items) {
-              p.items.forEach(item => {
-                platillosCount[item.nombre] = (platillosCount[item.nombre] || 0) + (item.cantidad || 0);
-              });
-            }
-          });
-          let maxCount = 0;
-          let topPlatillo = '-';
-          for (const [nombre, count] of Object.entries(platillosCount)) {
-            if (count > maxCount) {
-              maxCount = count;
-              topPlatillo = nombre;
-            }
-          }
-          this.platilloTop = topPlatillo;
-        },
-        
-        actualizarGraficos() {
-          const ventasPorDia = {};
-          for (let i = 6; i >= 0; i--) {
-            const f = new Date();
-            f.setDate(f.getDate() - i);
-            ventasPorDia[f.toISOString().split('T')[0]] = 0;
-          }
-          this.pedidos.forEach(p => {
-            const fecha = new Date(p.fecha).toISOString().split('T')[0];
-            if (ventasPorDia.hasOwnProperty(fecha)) ventasPorDia[fecha] += p.total || 0;
-          });
-          
-          if (this.charts.ventas) this.charts.ventas.destroy();
-          const ctxVentas = document.getElementById('ventasChart')?.getContext('2d');
-          if (ctxVentas) {
-            this.charts.ventas = new Chart(ctxVentas, {
-              type: 'line',
-              data: { labels: Object.keys(ventasPorDia), datasets: [{ label: 'Ventas (USD)', data: Object.values(ventasPorDia), borderColor: '#D32F2F', backgroundColor: 'rgba(211,47,47,0.1)', tension: 0.1 }] }
-            });
-          }
-          
-          const categorias = {};
-          this.pedidos.forEach(p => {
-            if (p.items) {
-              p.items.forEach(item => {
-                const cat = item.categoria || 'Otros';
-                categorias[cat] = (categorias[cat] || 0) + ((item.precioUnitarioUSD || 0) * (item.cantidad || 0));
-              });
-            }
-          });
-          if (this.charts.categorias) this.charts.categorias.destroy();
-          const ctxCat = document.getElementById('categoriasChart')?.getContext('2d');
-          if (ctxCat) {
-            this.charts.categorias = new Chart(ctxCat, {
-              type: 'doughnut',
-              data: { labels: Object.keys(categorias), datasets: [{ data: Object.values(categorias), backgroundColor: ['#D32F2F', '#FF9800', '#1976D2', '#388E3C', '#F57C00', '#6c757d'] }] }
-            });
-          }
-        },
-        
-        actualizarTablaVentas() {
-          const tbody = document.getElementById('ventasTableBody');
-          if (!tbody) return;
-          const tasa = window.configGlobal?.tasa_efectiva || 400;
-          tbody.innerHTML = this.pedidos.slice(0, 50).map(p => {
-            const items = p.items || [];
-            const totalItems = items.reduce((s, i) => s + (i.cantidad || 0), 0);
-            const resumen = items.length ? items.slice(0, 2).map(i => `${i.cantidad || 1}× ${i.nombre}`).join(', ') + (items.length > 2 ? ` +${items.length - 2} más` : '') : 'Sin detalle';
-            const totalUSD = p.total || 0;
-            const totalBs = window.formatBs(totalUSD * tasa);
-            return `<tr><td>${new Date(p.fecha).toLocaleDateString('es-VE')}</td><td style="max-width:200px;font-size:.82rem">${resumen}</td><td>${window.formatUSD(totalUSD)}<br><span style="font-size:.75rem;color:var(--text-muted)">${totalBs}</span></td><td>${totalItems}</td><td>${p.metodo_pago || 'N/A'}</td><td>${p.tipo || 'N/A'}</td></tr>`;
-          }).join('');
-        },
-        
-        formatBs: window.formatBs,
-        formatUSD: window.formatUSD,
-        usdToBs: window.usdToBs
+        cargarReportes() {}
       };
     };
     
+    // ========== APP PRINCIPAL ==========
     window.app = function() {
       return {
         loggedIn: false,
@@ -3311,7 +2290,6 @@
           console.log('🔧 App init ejecutado');
           this.checkSession();
           this.initTheme();
-          this.loadStockCriticoTags();
         },
         
         checkSession() {
@@ -3327,7 +2305,7 @@
         },
         
         async login() {
-          console.log('🔑 Login con:', this.loginPassword);
+          console.log('🔑 Login ejecutándose con:', this.loginPassword);
           try {
             const response = await fetch('https://iqwwoihiiyrtypyqzhgy.supabase.co/functions/v1/login', {
               method: 'POST',
@@ -3335,7 +2313,9 @@
               body: JSON.stringify({ username: 'admin', password: this.loginPassword })
             });
             const data = await response.json();
-            if (!response.ok) throw new Error(data.error || 'Error');
+            console.log('📡 Respuesta login:', data);
+            
+            if (!response.ok) throw new Error(data.error || 'Error de red');
             if (!data.success) throw new Error(data.error || 'Contraseña incorrecta');
             if (data.user.rol !== 'admin') throw new Error('No eres administrador');
             
@@ -3347,8 +2327,8 @@
             document.getElementById('loginContainer').style.display = 'none';
             document.querySelector('.panel-container').style.display = 'flex';
           } catch (error) {
+            console.error('❌ Login error:', error);
             window.showToast('❌ Error: ' + error.message, 'error');
-            console.error('Login error:', error);
           }
         },
         
@@ -3384,41 +2364,14 @@
         openMesas() {
           const modal = document.getElementById('adminMesaModal');
           if (modal) modal.classList.add('active');
-        },
-        
-        async loadStockCriticoTags() {
-          try {
-            const { data, error } = await supabase.from('inventario').select('id, nombre, stock, reservado, minimo');
-            if (error) throw error;
-            const criticos = (data || []).filter(i => (i.stock - i.reservado) <= (i.minimo || 0) && i.minimo > 0);
-            this.stockCriticoTags = criticos.map(i => `
-              <span class="stock-critico-tag" data-ingrediente-id="${i.id}"
-                style="display:inline-flex; align-items:center; gap:4px; padding:2px 8px; background:rgba(239,68,68,.15); border-radius:20px; color:var(--danger); font-weight:600; font-size:.7rem; cursor:pointer; animation:pulse 1.5s infinite"
-                @click="window._irAIngrediente('${i.id}')">
-                <i class="fas fa-box" style="font-size:.6rem"></i>
-                ${i.nombre}
-                <span style="background:var(--danger); color:#fff; padding:0 4px; border-radius:10px; font-size:.6rem">${i.stock - i.reservado}</span>
-              </span>
-            `).join('');
-          } catch (error) {
-            console.error('Error cargando stock crítico:', error);
-          }
         }
       };
-    };
-    
-    window._irAIngrediente = function(id) {
-      const tab = document.querySelector('.tab[data-tab="inventario"]');
-      if (tab) tab.click();
-      setTimeout(() => {
-        window.dispatchEvent(new CustomEvent('selectIngrediente', { detail: { id } }));
-      }, 200);
     };
     
     console.log('✅ Script module completado, app definida globalmente');
     console.log('window.app disponible:', typeof window.app);
   </script>
   
-  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.3/dist/cdn.js"></script>
 </body>
 </html>
