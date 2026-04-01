@@ -6,20 +6,16 @@ import { debounce } from '../utils/debounce.js';
 
 export function mesonerosComponent() {
   return {
+    search: '',
+    newNombre: '',
     mesoneros: [],
     propinas: [],
     totalPropinas: 0,
     cantidadPropinas: 0,
     promedioPropinas: 0,
-    search: '',
     showForm: false,
-    form: {
-      id: null,
-      nombre: '',
-      activo: true
-    },
+    form: { id: null, nombre: '', activo: true },
     editMode: false,
-    isLoading: false,
 
     async init() {
       await this.cargarMesoneros();
@@ -29,7 +25,6 @@ export function mesonerosComponent() {
     },
 
     async cargarMesoneros() {
-      this.isLoading = true;
       try {
         const { data, error } = await supabase
           .from('mesoneros')
@@ -39,8 +34,6 @@ export function mesonerosComponent() {
         this.mesoneros = data || [];
       } catch (err) {
         showToast('Error cargando mesoneros: ' + err.message, 'error');
-      } finally {
-        this.isLoading = false;
       }
     },
 
@@ -73,10 +66,23 @@ export function mesonerosComponent() {
       );
     },
 
-    nuevoMesonero() {
-      this.form = { id: null, nombre: '', activo: true };
-      this.editMode = false;
-      this.showForm = true;
+    async agregarMesonero() {
+      if (!this.newNombre.trim()) {
+        showToast('Ingrese un nombre', 'error');
+        return;
+      }
+      try {
+        await supabase.from('mesoneros').insert([{
+          id: crypto.randomUUID ? crypto.randomUUID() : 'mes_' + Date.now(),
+          nombre: this.newNombre.trim(),
+          activo: true
+        }]);
+        this.newNombre = '';
+        await this.cargarMesoneros();
+        showToast('Mesonero agregado', 'success');
+      } catch (err) {
+        showToast('Error: ' + err.message, 'error');
+      }
     },
 
     editarMesonero(mesonero) {
@@ -91,24 +97,11 @@ export function mesonerosComponent() {
         return;
       }
       try {
-        if (this.editMode) {
-          const { error } = await supabase
-            .from('mesoneros')
-            .update({ nombre: this.form.nombre, activo: this.form.activo })
-            .eq('id', this.form.id);
-          if (error) throw error;
-          showToast('Mesonero actualizado', 'success');
-        } else {
-          const { error } = await supabase
-            .from('mesoneros')
-            .insert([{
-              id: crypto.randomUUID ? crypto.randomUUID() : 'mes_' + Date.now(),
-              nombre: this.form.nombre,
-              activo: true
-            }]);
-          if (error) throw error;
-          showToast('Mesonero creado', 'success');
-        }
+        await supabase.from('mesoneros').update({
+          nombre: this.form.nombre,
+          activo: this.form.activo
+        }).eq('id', this.form.id);
+        showToast('Mesonero actualizado', 'success');
         this.closeForm();
         await this.cargarMesoneros();
       } catch (err) {
@@ -118,10 +111,7 @@ export function mesonerosComponent() {
 
     async toggleActivo(mesonero) {
       try {
-        await supabase
-          .from('mesoneros')
-          .update({ activo: !mesonero.activo })
-          .eq('id', mesonero.id);
+        await supabase.from('mesoneros').update({ activo: !mesonero.activo }).eq('id', mesonero.id);
         showToast(`Mesonero ${mesonero.activo ? 'desactivado' : 'activado'}`, 'success');
         await this.cargarMesoneros();
       } catch (err) {
@@ -141,7 +131,6 @@ export function mesonerosComponent() {
     },
 
     async pagarPropinas(mesonero) {
-      // Obtener propinas pendientes (entregado = false) para este mesonero
       const { data, error } = await supabase
         .from('propinas')
         .select('id')
@@ -156,13 +145,9 @@ export function mesonerosComponent() {
         return;
       }
       const ids = data.map(p => p.id);
-      const confirmar = confirm(`¿Registrar pago a ${mesonero.nombre}? Se marcarán como entregadas ${ids.length} propina(s).`);
-      if (!confirmar) return;
+      if (!confirm(`¿Registrar pago a ${mesonero.nombre}? Se marcarán como entregadas ${ids.length} propina(s).`)) return;
       try {
-        await supabase
-          .from('propinas')
-          .update({ entregado: true })
-          .in('id', ids);
+        await supabase.from('propinas').update({ entregado: true }).in('id', ids);
         showToast('Propinas pagadas', 'success');
         await this.cargarPropinas();
       } catch (err) {
@@ -173,6 +158,8 @@ export function mesonerosComponent() {
     closeForm() {
       this.showForm = false;
     },
+
+    debouncedSearch: debounce(function() {}, 300),
 
     formatBs
   };
