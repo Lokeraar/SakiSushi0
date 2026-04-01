@@ -44,6 +44,7 @@ export function reportesComponent() {
         this.pedidos = data || [];
         this.calcularEstadisticas();
         this.actualizarGraficos();
+        this.actualizarTablaVentas();
       } catch (err) {
         showToast('Error cargando reportes: ' + err.message, 'error');
       } finally {
@@ -65,7 +66,7 @@ export function reportesComponent() {
       this.ventasDia = { usd: ventasDia, bs: ventasDia * tasa };
       this.ventasSemana = { usd: ventasSemana, bs: ventasSemana * tasa };
       this.ticketPromedio = { usd: ticketPromedio, bs: ticketPromedio * tasa };
-      // Platillo top
+
       const platillosCount = {};
       this.pedidos.forEach(p => {
         if (p.items) {
@@ -99,7 +100,8 @@ export function reportesComponent() {
           ventasPorDia[fecha] += p.total || 0;
         }
       });
-      this.destroyChart('ventasChart');
+
+      if (this.charts.ventas) this.charts.ventas.destroy();
       const ctxVentas = document.getElementById('ventasChart')?.getContext('2d');
       if (ctxVentas) {
         this.charts.ventas = new Chart(ctxVentas, {
@@ -122,7 +124,7 @@ export function reportesComponent() {
           });
         }
       });
-      this.destroyChart('categoriasChart');
+      if (this.charts.categorias) this.charts.categorias.destroy();
       const ctxCat = document.getElementById('categoriasChart')?.getContext('2d');
       if (ctxCat) {
         this.charts.categorias = new Chart(ctxCat, {
@@ -150,7 +152,7 @@ export function reportesComponent() {
         return n[m] || m;
       });
       const dataMetodos = Object.values(metodos).map(v => v / (window.configGlobal?.tasa_efectiva || 400));
-      this.destroyChart('pagosChart');
+      if (this.charts.pagos) this.charts.pagos.destroy();
       const ctxPagos = document.getElementById('pagosChart')?.getContext('2d');
       if (ctxPagos) {
         this.charts.pagos = new Chart(ctxPagos, {
@@ -166,7 +168,7 @@ export function reportesComponent() {
         const h = new Date(p.fecha).getHours();
         horas[h] += p.total || 0;
       });
-      this.destroyChart('horaChart');
+      if (this.charts.hora) this.charts.hora.destroy();
       const ctxHora = document.getElementById('horaChart')?.getContext('2d');
       if (ctxHora) {
         this.charts.hora = new Chart(ctxHora, {
@@ -181,6 +183,34 @@ export function reportesComponent() {
         this.charts[id].destroy();
         delete this.charts[id];
       }
+    },
+
+    actualizarTablaVentas() {
+      const tbody = document.getElementById('ventasTableBody');
+      if (!tbody) return;
+      const tasa = window.configGlobal?.tasa_efectiva || 400;
+      tbody.innerHTML = this.pedidos.slice(0, 50).map(p => {
+        const items = p.items || [];
+        const totalItems = items.reduce((s, i) => s + (i.cantidad || 0), 0);
+        const resumen = items.length ? items.slice(0, 2).map(i => `${i.cantidad || 1}× ${i.nombre}`).join(', ') + (items.length > 2 ? ` +${items.length - 2} más` : '') : 'Sin detalle';
+        const totalUSD = p.total || 0;
+        const totalBs = formatBs(totalUSD * tasa);
+        return `<tr>
+          <td>${new Date(p.fecha).toLocaleDateString('es-VE')}</td>
+          <td style="max-width:200px;font-size:.82rem">${resumen}</td>
+          <td>${formatUSD(totalUSD)}<br><span style="font-size:.75rem;color:var(--text-muted)">${totalBs}</span></td>
+          <td>${totalItems}</td>
+          <td style="font-size:.78rem">${(function(){
+            if (p.pagos_mixtos && p.pagos_mixtos.length > 1) {
+              const labels = { efectivo_bs:'Ef.Bs', efectivo_usd:'Ef.USD', pago_movil:'P.Móvil', punto_venta:'Pto.Venta', invitacion:'Invitación' };
+              return p.pagos_mixtos.map(pg => labels[pg.metodo] || pg.metodo).join(' + ');
+            }
+            const labels2 = { efectivo_bs:'Ef. Bs', efectivo_usd:'Ef. USD', pago_movil:'Pago Móvil', punto_venta:'Punto Venta', invitacion:'Invitación' };
+            return labels2[p.metodo_pago] || p.metodo_pago || 'N/A';
+          })()}</td>
+          <td>${p.tipo || 'N/A'}</td>
+        </tr>`;
+      }).join('');
     },
 
     formatBs,
