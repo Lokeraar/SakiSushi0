@@ -15,9 +15,15 @@ export function deliverysComponent() {
     editMode: false,
 
     async init() {
+      console.log('🔧 Deliverys component iniciado');
       await this.cargarDeliverys();
       subscribe('deliverys', () => this.cargarDeliverys());
       subscribe('entregas_delivery', () => this.calcularAcumulados());
+
+      window.addEventListener('supabase-token-updated', () => {
+        console.log('Token actualizado, recargando deliverys');
+        this.cargarDeliverys();
+      });
     },
 
     async cargarDeliverys() {
