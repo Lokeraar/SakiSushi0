@@ -2137,6 +2137,14 @@
         </div>
       </div>
     </div>
+	<div class="login-box">
+  <h2><i class="fas fa-cog"></i> Admin Saki Sushi</h2>
+  <button @click="console.log('Alpine funciona!')" style="margin-bottom: 1rem; padding: 0.5rem; background: #444; color: white;">Probar Alpine</button>
+  <form class="login-form" @submit.prevent="login">
+    <input type="password" x-model="loginPassword" placeholder="Contraseña de Administrador" required>
+    <button type="submit">Ingresar</button>
+  </form>
+</div>
   </div>
 
   <script type="module" src="./admin.js"></script>
