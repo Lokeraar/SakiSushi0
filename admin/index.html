@@ -1378,7 +1378,7 @@
       <i class="fas fa-search inv-search-icon"></i>
       <input type="text" x-model="search" @input="debouncedSearch" placeholder="Buscar platillo por nombre...">
     </div>
-    <div class="menu-grid" id="menuGrid">
+    <div class="menu-grid">
       <template x-for="item in filteredItems()" :key="item.id">
         <div class="menu-card-v2" :class="{ 'no-disponible': !item.disponible }">
           <div class="mc2-header">
