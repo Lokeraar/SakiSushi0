@@ -1,6 +1,6 @@
 import { supabase } from '../services/supabaseClient.js';
-import { updateStockAtomic } from '../services/inventoryService.js';
 import { subscribe } from '../services/realtimeManager.js';
+import { updateStockAtomic } from '../services/inventoryService.js';
 import { showToast } from '../utils/toast.js';
 import { formatBs, formatUSD, usdToBs } from '../utils/formatters.js';
 import { debounce } from '../utils/debounce.js';
@@ -8,6 +8,7 @@ import { debounce } from '../utils/debounce.js';
 export function inventoryComponent() {
   return {
     search: '',
+    inventoryItems: [],
     selectedIngredient: null,
     form: {
       id: null,
@@ -28,15 +29,7 @@ export function inventoryComponent() {
 
     async init() {
       await this.loadInventory();
-      subscribe('inventario', (payload) => {
-        if (payload.eventType === 'INSERT') {
-          this.loadInventory();
-        } else if (payload.eventType === 'UPDATE') {
-          this.loadInventory();
-        } else if (payload.eventType === 'DELETE') {
-          this.loadInventory();
-        }
-      });
+      subscribe('inventario', () => this.loadInventory());
     },
 
     async loadInventory() {
@@ -52,7 +45,6 @@ export function inventoryComponent() {
           const updated = this.inventoryItems.find(i => i.id === this.selectedIngredient.id);
           if (updated) this.selectedIngredient = updated;
         }
-        this.$forceUpdate();
       } catch (err) {
         showToast('Error cargando inventario: ' + err.message, 'error');
       } finally {
@@ -62,7 +54,7 @@ export function inventoryComponent() {
 
     filteredItems() {
       const term = this.search.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-      return (this.inventoryItems || []).filter(i =>
+      return this.inventoryItems.filter(i =>
         i.nombre.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').includes(term)
       );
     },
@@ -71,7 +63,7 @@ export function inventoryComponent() {
       this.selectedIngredient = this.inventoryItems.find(i => i.id === id);
       this.form = { ...this.selectedIngredient };
       this.editMode = true;
-      this.showForm = false; // No abrir formulario, solo mostrar detalle
+      this.showForm = false;
     },
 
     async updateStock(delta) {
@@ -113,11 +105,6 @@ export function inventoryComponent() {
     async saveIngredient() {
       if (!this.form.nombre.trim()) {
         showToast('El nombre es obligatorio', 'error');
-        return;
-      }
-      const token = sessionStorage.getItem('admin_jwt_token');
-      if (!token) {
-        showToast('Sesión expirada, recarga la página', 'error');
         return;
       }
       const data = {
@@ -166,7 +153,6 @@ export function inventoryComponent() {
         this.passwordError = 'Ingresa la contraseña';
         return;
       }
-      // Verificar contra admin_password en config
       const { data, error } = await supabase
         .from('config')
         .select('admin_password')
@@ -178,9 +164,9 @@ export function inventoryComponent() {
       }
       this.passwordModal = false;
       this.passwordError = '';
-      // Desbloquear input de stock
-      this.$refs.stockInput.disabled = false;
-      this.$refs.stockInput.focus();
+      // Desbloquear input de stock (manualmente después de la verificación)
+      const stockInput = document.querySelector('#ingredienteStock');
+      if (stockInput) stockInput.disabled = false;
     },
 
     updatePreview() {
@@ -192,7 +178,7 @@ export function inventoryComponent() {
     },
 
     debouncedSearch: debounce(function() {
-      this.$forceUpdate();
+      // Alpine reacciona automáticamente
     }, 300),
 
     formatBs,
