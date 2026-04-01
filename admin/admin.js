@@ -45,8 +45,6 @@ window.showToast = function(message, type = 'success') {
   setTimeout(() => toast.remove(), 3000);
 };
 
-// No reasignamos window.supabaseClient aquí, la función setSupabaseToken ya lo hace
-
 // ============================================
 // EXPONER COMPONENTES GLOBALMENTE PARA ALPINE
 // ============================================
@@ -92,11 +90,11 @@ window.app = function() {
     checkSession() {
       const token = sessionStorage.getItem('admin_jwt_token');
       if (token && sessionStorage.getItem('admin_user')) {
+        setSupabaseToken(token);
+        window.dispatchEvent(new CustomEvent('supabase-token-updated'));
         this.loggedIn = true;
         console.log('✅ Sesión activa');
         document.getElementById('loginContainer').style.display = 'none';
-        // Actualizar cliente con token existente
-        setSupabaseToken(token);
       } else {
         console.log('⚠️ Sin sesión');
       }
@@ -126,6 +124,7 @@ window.app = function() {
 
         // ACTUALIZAR EL CLIENTE DE SUPABASE CON EL TOKEN
         setSupabaseToken(data.token);
+        window.dispatchEvent(new CustomEvent('supabase-token-updated'));
 
         this.loggedIn = true;
         window.showToast('✅ Bienvenido Administrador', 'success');
@@ -143,7 +142,8 @@ window.app = function() {
       window.showToast('Sesión cerrada', 'info');
       document.getElementById('loginContainer').style.display = 'flex';
       // Opcional: reiniciar cliente con anon key
-      setSupabaseToken(null); // null restablece a anon (deberíamos implementar en supabaseClient.js)
+      setSupabaseToken(null);
+      window.dispatchEvent(new CustomEvent('supabase-token-cleared'));
     },
 
     initTheme() {
