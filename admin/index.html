@@ -2495,7 +2495,6 @@ window.reportesComponent = function() {
         async login() {
   console.log('🔑 1. Login iniciado con password:', this.loginPassword);
   
-  // Validar que haya contraseña
   if (!this.loginPassword) {
     console.log('❌ 2. Contraseña vacía');
     window.showToast('Ingrese la contraseña', 'error');
@@ -2563,7 +2562,7 @@ window.reportesComponent = function() {
     console.error('❌ Mensaje de error:', error.message);
     window.showToast('❌ Error: ' + error.message, 'error');
   }
-}
+},
         
         logout() {
           sessionStorage.removeItem('admin_jwt_token');
