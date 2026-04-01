@@ -6,17 +6,13 @@ import { debounce } from '../utils/debounce.js';
 
 export function deliverysComponent() {
   return {
-    deliverys: [],
     search: '',
-    showForm: false,
-    form: {
-      id: null,
-      nombre: '',
-      activo: true
-    },
-    editMode: false,
+    newNombre: '',
+    deliverys: [],
     acumulado: {},
-    isLoading: false,
+    showForm: false,
+    form: { id: null, nombre: '', activo: true },
+    editMode: false,
 
     async init() {
       await this.cargarDeliverys();
@@ -25,7 +21,6 @@ export function deliverysComponent() {
     },
 
     async cargarDeliverys() {
-      this.isLoading = true;
       try {
         const { data, error } = await supabase
           .from('deliverys')
@@ -36,8 +31,6 @@ export function deliverysComponent() {
         await this.calcularAcumulados();
       } catch (err) {
         showToast('Error cargando motorizados: ' + err.message, 'error');
-      } finally {
-        this.isLoading = false;
       }
     },
 
@@ -59,10 +52,23 @@ export function deliverysComponent() {
       );
     },
 
-    nuevoDelivery() {
-      this.form = { id: null, nombre: '', activo: true };
-      this.editMode = false;
-      this.showForm = true;
+    async agregarDelivery() {
+      if (!this.newNombre.trim()) {
+        showToast('Ingrese un nombre', 'error');
+        return;
+      }
+      try {
+        await supabase.from('deliverys').insert([{
+          id: crypto.randomUUID ? crypto.randomUUID() : 'del_' + Date.now(),
+          nombre: this.newNombre.trim(),
+          activo: true
+        }]);
+        this.newNombre = '';
+        await this.cargarDeliverys();
+        showToast('Motorizado agregado', 'success');
+      } catch (err) {
+        showToast('Error: ' + err.message, 'error');
+      }
     },
 
     editarDelivery(delivery) {
@@ -77,24 +83,11 @@ export function deliverysComponent() {
         return;
       }
       try {
-        if (this.editMode) {
-          const { error } = await supabase
-            .from('deliverys')
-            .update({ nombre: this.form.nombre, activo: this.form.activo })
-            .eq('id', this.form.id);
-          if (error) throw error;
-          showToast('Motorizado actualizado', 'success');
-        } else {
-          const { error } = await supabase
-            .from('deliverys')
-            .insert([{
-              id: crypto.randomUUID ? crypto.randomUUID() : 'del_' + Date.now(),
-              nombre: this.form.nombre,
-              activo: true
-            }]);
-          if (error) throw error;
-          showToast('Motorizado creado', 'success');
-        }
+        await supabase.from('deliverys').update({
+          nombre: this.form.nombre,
+          activo: this.form.activo
+        }).eq('id', this.form.id);
+        showToast('Motorizado actualizado', 'success');
         this.closeForm();
         await this.cargarDeliverys();
       } catch (err) {
@@ -104,10 +97,7 @@ export function deliverysComponent() {
 
     async toggleActivo(delivery) {
       try {
-        await supabase
-          .from('deliverys')
-          .update({ activo: !delivery.activo })
-          .eq('id', delivery.id);
+        await supabase.from('deliverys').update({ activo: !delivery.activo }).eq('id', delivery.id);
         showToast(`Motorizado ${delivery.activo ? 'desactivado' : 'activado'}`, 'success');
         await this.cargarDeliverys();
       } catch (err) {
@@ -133,10 +123,8 @@ export function deliverysComponent() {
         showToast('No hay acumulado para pagar', 'warning');
         return;
       }
-      const confirmar = confirm(`¿Registrar pago a ${delivery.nombre} por ${formatBs(montoTotal)}?\nEsto reiniciará su acumulado.`);
-      if (!confirmar) return;
+      if (!confirm(`¿Registrar pago a ${delivery.nombre} por ${formatBs(montoTotal)}?\nEsto reiniciará su acumulado.`)) return;
       try {
-        // Eliminar todas las entregas para reiniciar acumulado
         await supabase.from('entregas_delivery').delete().eq('delivery_id', delivery.id);
         showToast('Pago registrado', 'success');
         await this.calcularAcumulados();
@@ -148,6 +136,8 @@ export function deliverysComponent() {
     closeForm() {
       this.showForm = false;
     },
+
+    debouncedSearch: debounce(function() {}, 300),
 
     formatBs
   };
