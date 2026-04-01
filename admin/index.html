@@ -1368,105 +1368,111 @@
       </div>
 
       <!-- Menú -->
-      <div x-show="activeTab === 'menu'" x-cloak>
-        <div x-data="menuComponent()" x-init="init()">
-          <div class="pane-header">
-            <h2 class="section-title"><i class="fas fa-utensils"></i> Menú y Precios</h2>
-            <button class="btn-primary" @click="newPlatillo"><i class="fas fa-plus"></i> Nuevo Platillo</button>
-          </div>
-          <div class="inv-search-wrap">
-            <i class="fas fa-search inv-search-icon"></i>
-            <input type="text" x-model="search" @input="debouncedSearch" placeholder="Buscar platillo por nombre...">
-          </div>
-          <div class="menu-grid" x-html="filteredItems().map(item => `
-            <div class="menu-card-v2 ${!item.disponible ? 'no-disponible' : ''}">
-              <div class="mc2-header">
-                <div class="mc2-info">
-                  <div class="mc2-nombre">${escapeHtml(item.nombre)}</div>
-                  <div class="mc2-cat">${item.categoria || ''}${item.subcategoria ? ' · ' + item.subcategoria : ''}</div>
-                  <div class="mc2-precio">${formatUSD(item.precio)} <span class="mc2-precio-bs">/ ${formatBs(usdToBs(item.precio))}</span></div>
-                  <div class="mc2-stock-line">
-                    Stock: <span class="mc2-stock-val">${item.stock || 0}</span>
-                    <span class="mc2-badge ${item.disponible ? 'mc2-badge-ok' : 'mc2-badge-off'}">${item.disponible ? 'Disponible' : 'No disponible'}</span>
-                  </div>
-                </div>
-                ${item.imagen ? `<div class="mc2-img-wrap"><img src="${item.imagen}" class="mc2-img" onerror="this.parentElement.style.display='none'"></div>` : ''}
+<div x-show="activeTab === 'menu'" x-cloak>
+  <div x-data="menuComponent()" x-init="init()">
+    <div class="pane-header">
+      <h2 class="section-title"><i class="fas fa-utensils"></i> Menú y Precios</h2>
+      <button class="btn-primary" @click="newPlatillo"><i class="fas fa-plus"></i> Nuevo Platillo</button>
+    </div>
+    <div class="inv-search-wrap">
+      <i class="fas fa-search inv-search-icon"></i>
+      <input type="text" x-model="search" @input="debouncedSearch" placeholder="Buscar platillo por nombre...">
+    </div>
+    <div class="menu-grid" id="menuGrid">
+      <template x-for="item in filteredItems()" :key="item.id">
+        <div class="menu-card-v2" :class="{ 'no-disponible': !item.disponible }">
+          <div class="mc2-header">
+            <div class="mc2-info">
+              <div class="mc2-nombre" x-text="item.nombre"></div>
+              <div class="mc2-cat" x-text="(item.categoria || '') + (item.subcategoria ? ' · ' + item.subcategoria : '')"></div>
+              <div class="mc2-precio">
+                <span x-text="formatUSD(item.precio)"></span>
+                <span class="mc2-precio-bs" x-text="'/ ' + formatBs(usdToBs(item.precio))"></span>
               </div>
-              ${item.descripcion ? `<div class="mc2-desc">${escapeHtml(item.descripcion)}</div>` : ''}
-              <div class="mc2-actions">
-                <label style="display:flex;align-items:center;gap:.35rem;cursor:pointer">
-                  <span style="font-size:.72rem;color:${item.disponible ? 'var(--success)' : 'var(--text-muted)'};font-weight:600">
-                    ${item.disponible ? 'Disponible' : 'No disponible'}
-                  </span>
-                  <input type="checkbox" ${item.disponible ? 'checked' : ''} @change="toggleDisponible('${item.id}', $event.target.checked)">
-                </label>
-                <button class="btn-icon edit" @click="editPlatillo('${item.id}')"><i class="fas fa-pen"></i></button>
-                <button class="btn-icon delete" @click="deletePlatillo('${item.id}')"><i class="fas fa-trash"></i></button>
+              <div class="mc2-stock-line">
+                Stock: <span class="mc2-stock-val" x-text="item.stock || 0"></span>
+                <span class="mc2-badge" :class="item.disponible ? 'mc2-badge-ok' : 'mc2-badge-off'" x-text="item.disponible ? 'Disponible' : 'No disponible'"></span>
               </div>
             </div>
-          `).join('')"></div>
-
-          <div class="modal" :class="{ active: showForm }" @click.self="closeForm">
-            <div class="modal-content">
-              <div class="modal-header">
-                <h3 x-text="editMode ? 'Editar Platillo' : 'Nuevo Platillo'"></h3>
-                <button class="modal-close" @click="closeForm">&times;</button>
-              </div>
-              <div class="modal-body">
-                <div class="form-group">
-                  <label>Nombre</label>
-                  <input type="text" x-model="form.nombre" required>
-                </div>
-                <div class="form-row">
-                  <div class="form-group">
-                    <label>Categoría</label>
-                    <select x-model="form.categoria" @change="form.subcategoria = ''">
-                      <option value="">Seleccionar</option>
-                      <template x-for="cat in categorias" :key="cat">
-                        <option :value="cat" x-text="cat"></option>
-                      </template>
-                    </select>
-                  </div>
-                  <div class="form-group" x-show="getAvailableSubcategorias().length">
-                    <label>Subcategoría</label>
-                    <select x-model="form.subcategoria">
-                      <option value="">Ninguna</option>
-                      <template x-for="sub in getAvailableSubcategorias()" :key="sub">
-                        <option :value="sub" x-text="sub"></option>
-                      </template>
-                    </select>
-                  </div>
-                </div>
-                <div class="form-group">
-                  <label>Precio (USD)</label>
-                  <input type="number" step="0.01" x-model="form.precio" required>
-                  <div x-text="form.precio ? formatBs(usdToBs(form.precio)) : ''" style="font-size:.75rem;color:var(--text-muted)"></div>
-                </div>
-                <div class="form-group">
-                  <label>Descripción</label>
-                  <textarea x-model="form.descripcion" rows="2"></textarea>
-                </div>
-                <div class="form-group">
-                  <label>Imagen URL</label>
-                  <input type="url" x-model="form.imagen" placeholder="https://...">
-                </div>
-                <div class="form-group">
-                  <label>Disponible</label>
-                  <label style="display:flex; align-items:center; gap:.5rem; margin-top:.5rem">
-                    <input type="checkbox" x-model="form.disponible">
-                    <span x-text="form.disponible ? 'Sí' : 'No'"></span>
-                  </label>
-                </div>
-              </div>
-              <div class="modal-footer">
-                <button class="btn-secondary" @click="closeForm">Cancelar</button>
-                <button class="btn-primary" @click="savePlatillo">Guardar</button>
-              </div>
+            <div class="mc2-img-wrap" x-show="item.imagen">
+              <img :src="item.imagen" class="mc2-img" @error="$event.target.parentElement.style.display='none'">
             </div>
+          </div>
+          <div class="mc2-desc" x-text="item.descripcion" x-show="item.descripcion"></div>
+          <div class="mc2-actions">
+            <label style="display:flex;align-items:center;gap:.35rem;cursor:pointer">
+              <span style="font-size:.72rem;font-weight:600" :style="{ color: item.disponible ? 'var(--success)' : 'var(--text-muted)' }" x-text="item.disponible ? 'Disponible' : 'No disponible'"></span>
+              <input type="checkbox" :checked="item.disponible" @change="toggleDisponible(item.id, $event.target.checked)">
+            </label>
+            <button class="btn-icon edit" @click="editPlatillo(item.id)"><i class="fas fa-pen"></i></button>
+            <button class="btn-icon delete" @click="deletePlatillo(item.id)"><i class="fas fa-trash"></i></button>
           </div>
         </div>
-      </div>
+      </template>
+    </div>
 
+    <!-- Modal Platillo -->
+    <div class="modal" :class="{ active: showForm }" @click.self="closeForm">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 x-text="editMode ? 'Editar Platillo' : 'Nuevo Platillo'"></h3>
+          <button class="modal-close" @click="closeForm">&times;</button>
+        </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label>Nombre</label>
+            <input type="text" x-model="form.nombre" required>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Categoría</label>
+              <select x-model="form.categoria" @change="form.subcategoria = ''">
+                <option value="">Seleccionar</option>
+                <template x-for="cat in categorias" :key="cat">
+                  <option :value="cat" x-text="cat"></option>
+                </template>
+              </select>
+            </div>
+            <div class="form-group" x-show="getAvailableSubcategorias().length">
+              <label>Subcategoría</label>
+              <select x-model="form.subcategoria">
+                <option value="">Ninguna</option>
+                <template x-for="sub in getAvailableSubcategorias()" :key="sub">
+                  <option :value="sub" x-text="sub"></option>
+                </template>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Precio (USD)</label>
+            <input type="number" step="0.01" x-model="form.precio" required>
+            <div x-show="form.precio" x-text="formatBs(usdToBs(form.precio))" style="font-size:.75rem;color:var(--text-muted)"></div>
+          </div>
+          <div class="form-group">
+            <label>Descripción</label>
+            <textarea x-model="form.descripcion" rows="2"></textarea>
+          </div>
+          <div class="form-group">
+            <label>Imagen URL</label>
+            <input type="url" x-model="form.imagen" placeholder="https://...">
+          </div>
+          <div class="form-group">
+            <label>Disponible</label>
+            <label style="display:flex; align-items:center; gap:.5rem; margin-top:.5rem">
+              <input type="checkbox" x-model="form.disponible">
+              <span x-text="form.disponible ? 'Sí' : 'No'"></span>
+            </label>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn-secondary" @click="closeForm">Cancelar</button>
+          <button class="btn-primary" @click="savePlatillo">Guardar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
       <!-- Usuarios -->
       <div x-show="activeTab === 'usuarios'" x-cloak>
         <div x-data="usuariosComponent()" x-init="init()">
