@@ -1785,17 +1785,17 @@
     }
   </style>
 </head>
-<body>
-
-  <div id="loginContainer" class="login-container" style="display: flex;">
-    <div class="login-box">
-      <h2><i class="fas fa-cog"></i> Admin Saki Sushi</h2>
-      <form class="login-form" @submit.prevent="login">
-        <input type="password" x-model="loginPassword" placeholder="Contraseña de Administrador" required>
-        <button type="submit">Ingresar</button>
-      </form>
-    </div>
-  </div>
+	<body x-data="app()" x-init="init()">
+	  <div id="loginContainer" class="login-container" style="display: flex;">
+	  <div class="login-box">
+		<h2><i class="fas fa-cog"></i> Admin Saki Sushi</h2>
+		<button @click="console.log('Alpine funciona!')" style="margin-bottom: 1rem; padding: 0.5rem; background: #444; color: white; border: none; border-radius: 8px; cursor: pointer; width: 100%;">Probar Alpine</button>
+		<form class="login-form" @submit.prevent="login">
+		  <input type="password" x-model="loginPassword" placeholder="Contraseña de Administrador" required>
+		  <button type="submit">Ingresar</button>
+		</form>
+	  </div>
+	</div>
 
   <div x-show="loggedIn" class="panel-container" style="display: none;" x-cloak>
     <header class="header">
@@ -2137,14 +2137,6 @@
         </div>
       </div>
     </div>
-	<div class="login-box">
-  <h2><i class="fas fa-cog"></i> Admin Saki Sushi</h2>
-  <button @click="console.log('Alpine funciona!')" style="margin-bottom: 1rem; padding: 0.5rem; background: #444; color: white;">Probar Alpine</button>
-  <form class="login-form" @submit.prevent="login">
-    <input type="password" x-model="loginPassword" placeholder="Contraseña de Administrador" required>
-    <button type="submit">Ingresar</button>
-  </form>
-</div>
   </div>
 
   <script type="module" src="./admin.js"></script>
