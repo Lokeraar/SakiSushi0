@@ -5,9 +5,8 @@ import { debounce } from '../utils/debounce.js';
 
 export function usuariosComponent() {
   return {
-    usuarios: [],
     search: '',
-    showForm: false,
+    usuarios: [],
     form: {
       id: null,
       nombre: '',
@@ -16,6 +15,7 @@ export function usuariosComponent() {
       activo: true
     },
     editMode: false,
+    showForm: false,
     isLoading: false,
 
     async init() {
@@ -129,8 +129,6 @@ export function usuariosComponent() {
       this.showForm = false;
     },
 
-    debouncedSearch: debounce(function() {
-      // Alpine reacciona automáticamente al cambio de search
-    }, 300)
+    debouncedSearch: debounce(function() {}, 300)
   };
 }
