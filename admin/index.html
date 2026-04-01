@@ -3448,30 +3448,32 @@
         },
         
         async login() {
-          console.log('🔑 Login con:', this.loginPassword);
-          try {
-            const response = await fetch('https://iqwwoihiiyrtypyqzhgy.supabase.co/functions/v1/login', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ username: 'admin', password: this.loginPassword })
-            });
-            const data = await response.json();
-            if (!response.ok) throw new Error(data.error || 'Error');
-            if (!data.success) throw new Error(data.error || 'Contraseña incorrecta');
-            if (data.user.rol !== 'admin') throw new Error('No eres administrador');
-            
-            sessionStorage.setItem('admin_jwt_token', data.token);
-            sessionStorage.setItem('admin_user', JSON.stringify(data.user));
-            this.loggedIn = true;
-            window.showToast('✅ Bienvenido Administrador', 'success');
-            console.log('✅ Login exitoso');
-            document.getElementById('loginContainer').style.display = 'none';
-            document.querySelector('.panel-container').style.display = 'flex';
-          } catch (error) {
-            window.showToast('❌ Error: ' + error.message, 'error');
-            console.error('Login error:', error);
-          }
-        },
+  console.log('🔑 Login con:', this.loginPassword);
+  try {
+    const response = await fetch('https://iqwwoihiiyrtypyqzhgy.supabase.co/functions/v1/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: 'admin', password: this.loginPassword })
+    });
+    const data = await response.json();
+    console.log('📡 Respuesta login:', data);
+    
+    if (!response.ok) throw new Error(data.error || 'Error de red');
+    if (!data.success) throw new Error(data.error || 'Contraseña incorrecta');
+    if (data.user.rol !== 'admin') throw new Error('No eres administrador');
+    
+    sessionStorage.setItem('admin_jwt_token', data.token);
+    sessionStorage.setItem('admin_user', JSON.stringify(data.user));
+    this.loggedIn = true;
+    window.showToast('✅ Bienvenido Administrador', 'success');
+    console.log('✅ Login exitoso');
+    document.getElementById('loginContainer').style.display = 'none';
+    document.querySelector('.panel-container').style.display = 'flex';
+  } catch (error) {
+    console.error('❌ Login error:', error);
+    window.showToast('❌ Error: ' + error.message, 'error');
+  }
+}
         
         logout() {
           sessionStorage.removeItem('admin_jwt_token');
