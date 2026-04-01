@@ -1,4 +1,4 @@
-// admin.js - Versión simplificada para probar login
+// admin.js - Versión con carga dinámica de Alpine
 import { supabase } from './services/supabaseClient.js';
 
 window.formatBs = function(monto) {
@@ -308,3 +308,10 @@ window._irAIngrediente = function(id) {
 
 console.log('✅ admin.js cargado correctamente');
 console.log('window.app disponible:', typeof window.app);
+
+// Cargar Alpine.js DINÁMICAMENTE después de que todo está definido
+const alpineScript = document.createElement('script');
+alpineScript.src = 'https://cdn.jsdelivr.net/npm/alpinejs@3.14.3/dist/cdn.js';
+alpineScript.defer = true;
+document.head.appendChild(alpineScript);
+console.log('📦 Alpine.js cargando dinámicamente...');
