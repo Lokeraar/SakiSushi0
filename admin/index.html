@@ -12,10 +12,1884 @@
   <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
   
   <style>
-    /* ====== ESTILOS COMPLETOS DEL ADMIN ORIGINAL ====== */
-    /* (Incluye todos los estilos del archivo original) */
-    /* Por razones de longitud se mantienen los mismos estilos que en la versión anterior */
-    /* Asegúrate de tener todos los estilos del archivo original aquí */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --primary: #D32F2F;
+      --primary-dark: #B71C1C;
+      --accent: #FF9800;
+      --accent-dark: #E65100;
+      --gold: #FFB300;
+      --secondary: #f8f9fa;
+      --header-bg: linear-gradient(135deg, #1a1a2e 0%, #2d2d4e 100%);
+      --header-text: #ffffff;
+      --body-bg: #f4f4f8;
+      --card-bg: #ffffff;
+      --text-dark: #1a1a2e;
+      --text-muted: #5f6368;
+      --border: #e0e0e0;
+      --tabs-bg: #ffffff;
+      --tab-text: #1a1a2e;
+      --tab-active: #D32F2F;
+      --tab-active-bg: #1a1a2e;
+      --table-header: #f1f3f4;
+      --table-header-text: #1a1a2e;
+      --input-bg: #ffffff;
+      --input-border: #dadce0;
+      --modal-header-bg: linear-gradient(135deg, #1a1a2e, #2d2d4e);
+      --modal-header-text: #ffffff;
+      --toast-bg: #1a1a2e;
+      --toast-text: #ffffff;
+      --card-title-color: #5f6368;
+      --card-value-color: #1a1a2e;
+      --section-title-color: #1a1a2e;
+      --tag-bg: #f0f0f0;
+      --tag-text: #1a1a2e;
+      --tag-border: #d0d0d0;
+      --list-item-hover: #f0f0f8;
+      --badge-ok-bg: #e8f5e9;
+      --badge-ok-text: #2e7d32;
+      --badge-bajo-bg: #fff8e1;
+      --badge-bajo-text: #f57f17;
+      --badge-critico-bg: #ffebee;
+      --badge-critico-text: #c62828;
+      --success: #388E3C;
+      --info: #1976D2;
+      --warning: #F57C00;
+      --danger: #ef4444;
+      --delivery: #00ACC1;
+      --propina: #9C27B0;
+      --favordecaja: #FF9800;
+      --condonar: #E91E63;
+      --light-bg: var(--body-bg);
+      --shadow-sm: 0 2px 8px rgba(0,0,0,.08);
+      --shadow-md: 0 4px 16px rgba(0,0,0,.12);
+      --shadow-lg: 0 8px 32px rgba(0,0,0,.18);
+      --radius: 10px;
+      --transition: all .2s ease;
+    }
+
+    html.dark-theme {
+      --secondary: #1a1a2e;
+      --header-bg: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      --header-text: #ffffff;
+      --body-bg: #0f0f1a;
+      --card-bg: #1e1e32;
+      --text-dark: #f0f0f8;
+      --text-muted: #a0a0c0;
+      --border: rgba(255,255,255,.12);
+      --tabs-bg: #1a1a2e;
+      --tab-text: rgba(255,255,255,.75);
+      --tab-active: #FF9800;
+      --tab-active-bg: #1a1a2e;
+      --table-header: #1a1a2e;
+      --table-header-text: #f0f0f8;
+      --input-bg: #252545;
+      --input-border: rgba(255,255,255,.18);
+      --modal-header-bg: linear-gradient(135deg, #1a1a2e, #16213e);
+      --modal-header-text: #ffffff;
+      --toast-bg: #252545;
+      --toast-text: #ffffff;
+      --card-title-color: #a0a0c0;
+      --card-value-color: #f0f0f8;
+      --section-title-color: #f0f0f8;
+      --tag-bg: rgba(255,255,255,.08);
+      --tag-text: #e0e0f0;
+      --tag-border: rgba(255,255,255,.15);
+      --list-item-hover: rgba(255,255,255,.07);
+      --badge-ok-bg: rgba(46,125,50,.35);
+      --badge-ok-text: #69f0ae;
+      --badge-bajo-bg: rgba(245,127,23,.25);
+      --badge-bajo-text: #ffcc02;
+      --badge-critico-bg: rgba(198,40,40,.3);
+      --badge-critico-text: #ff6b6b;
+    }
+
+    body {
+      font-family: 'Montserrat', sans-serif;
+      background: var(--body-bg);
+      color: var(--text-dark);
+      min-height: 100vh;
+      overflow-x: hidden;
+      width: 100%;
+      transition: background .3s ease, color .3s ease;
+    }
+
+    .login-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      background: url('https://iqwwoihiiyrtypyqzhgy.supabase.co/storage/v1/object/public/imagenes-platillos/Fondo%20de%20pantalla.png') center/cover no-repeat fixed;
+      position: relative;
+    }
+
+    .login-container::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: rgba(10, 10, 20, .55);
+      backdrop-filter: blur(2px);
+    }
+
+    .login-box {
+      position: relative;
+      z-index: 1;
+      background: rgba(255,255,255,.05);
+      border: 1px solid rgba(255,255,255,.1);
+      backdrop-filter: blur(20px);
+      border-radius: 16px;
+      padding: 3rem 2.5rem;
+      width: 100%;
+      max-width: 400px;
+      box-shadow: var(--shadow-lg);
+      text-align: center;
+    }
+
+    .login-box h2 {
+      color: #fff;
+      font-family: 'Playfair Display', serif;
+      font-size: 1.8rem;
+      margin-bottom: 2rem;
+    }
+
+    .login-box h2 i {
+      color: var(--accent);
+      margin-right: .5rem;
+    }
+
+    .login-form input {
+      width: 100%;
+      padding: .9rem 1.2rem;
+      margin-bottom: 1rem;
+      border: 1px solid rgba(255,255,255,.2);
+      border-radius: var(--radius);
+      background: rgba(255,255,255,.1);
+      color: #fff;
+      font-size: .95rem;
+      font-family: 'Montserrat', sans-serif;
+      outline: none;
+      transition: var(--transition);
+    }
+
+    .login-form input::placeholder {
+      color: rgba(255,255,255,.5);
+    }
+
+    .login-form input:focus {
+      border-color: var(--accent);
+      background: rgba(255,255,255,.15);
+    }
+
+    .login-form button {
+      width: 100%;
+      padding: .9rem;
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: #fff;
+      border: none;
+      border-radius: var(--radius);
+      font-size: 1rem;
+      font-weight: 700;
+      font-family: 'Montserrat', sans-serif;
+      cursor: pointer;
+      transition: var(--transition);
+      letter-spacing: .5px;
+    }
+
+    .login-form button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 16px rgba(211,47,47,.4);
+    }
+
+    .panel-container {
+      display: none;
+      flex-direction: column;
+      min-height: 100vh;
+      width: 100%;
+      overflow-x: hidden;
+      background: var(--body-bg);
+    }
+
+    .panel-container.active {
+      display: flex;
+    }
+
+    .header {
+      background: var(--header-bg);
+      color: var(--header-text);
+      padding: 0 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      min-height: 56px;
+      box-shadow: 0 2px 12px rgba(0,0,0,.1);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      flex-shrink: 0;
+      flex-wrap: wrap;
+      gap: .5rem;
+      border-bottom: 1px solid var(--border);
+      transition: background .3s ease, color .3s ease;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      min-width: 0;
+      flex: 1;
+    }
+
+    .header-left h2 {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.3rem;
+      color: var(--header-text);
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+    }
+
+    .header-left h2 i {
+      color: var(--accent);
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+      flex-wrap: wrap;
+    }
+
+    .nav-button {
+      display: inline-flex;
+      align-items: center;
+      gap: .4rem;
+      padding: .5rem 1rem;
+      background: var(--secondary);
+      color: var(--text-dark);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: .82rem;
+      font-weight: 600;
+      font-family: 'Montserrat', sans-serif;
+      text-decoration: none;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .nav-button:hover {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+    }
+
+    .logout-button {
+      display: inline-flex;
+      align-items: center;
+      gap: .4rem;
+      padding: .5rem 1rem;
+      background: transparent;
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: .82rem;
+      font-family: 'Montserrat', sans-serif;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .logout-button:hover {
+      background: var(--danger);
+      color: #fff;
+      border-color: var(--danger);
+    }
+
+    .theme-toggle {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 38px;
+      height: 38px;
+      background: var(--secondary);
+      color: var(--text-dark);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .theme-toggle:hover {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+    }
+
+    .tasa-cards-bar {
+      background: var(--card-bg);
+      padding: 1rem 1.25rem;
+      border-radius: 14px;
+      margin-bottom: 1.25rem;
+      box-shadow: var(--shadow-md);
+      border: 1px solid var(--border);
+    }
+
+    .tcb-cards {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: .6rem;
+      margin-bottom: .6rem;
+    }
+
+    .tcb-card {
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: .6rem .85rem;
+      border: 1px solid var(--border);
+      border-top: 3px solid rgba(128,128,128,.2);
+      transition: background .2s;
+    }
+
+    .tcb-card-base {
+      border-top-color: var(--primary);
+    }
+
+    .tcb-card-pct {
+      border-top-color: var(--accent);
+    }
+
+    .tcb-card-efectiva {
+      border-top-color: #4ade80;
+    }
+
+    .tcb-card-acum {
+      border-top-color: var(--warning);
+    }
+
+    .tcb-label {
+      font-size: .65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .6px;
+      color: var(--text-muted);
+      margin-bottom: .3rem;
+    }
+
+    .tcb-input {
+      width: 100%;
+      background: var(--input-bg);
+      border: 1px solid var(--input-border);
+      border-radius: 7px;
+      color: var(--text-dark);
+      font-family: 'Montserrat', sans-serif;
+      font-size: .95rem;
+      font-weight: 700;
+      padding: .3rem .55rem;
+      outline: none;
+      transition: border-color .2s;
+    }
+
+    .tcb-input:focus {
+      border-color: var(--accent);
+    }
+
+    .tcb-value-big {
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: var(--text-dark);
+      line-height: 1.2;
+    }
+
+    .tcb-card-efectiva .tcb-value-big {
+      color: #4ade80;
+    }
+
+    .tcb-acum-val {
+      color: var(--accent) !important;
+    }
+
+    .tcb-sublabel {
+      font-size: .6rem;
+      color: var(--text-muted);
+      margin-top: .2rem;
+    }
+
+    .tcb-controls {
+      display: flex;
+      gap: .6rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .tcb-toggle-card {
+      background: var(--card-bg);
+      border-radius: 10px;
+      padding: .45rem .85rem;
+      border: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .tcb-toggle-top {
+      display: flex;
+      align-items: center;
+      gap: .6rem;
+    }
+
+    .tcb-toggle-label {
+      font-size: .72rem;
+      color: var(--text-muted);
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .toggle-switch {
+      position: relative;
+      display: inline-block;
+      width: 40px;
+      height: 22px;
+      flex-shrink: 0;
+    }
+
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: var(--border);
+      transition: .3s;
+      border-radius: 22px;
+    }
+
+    .toggle-slider:before {
+      position: absolute;
+      content: "";
+      height: 16px;
+      width: 16px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .3s;
+      border-radius: 50%;
+      box-shadow: 0 2px 4px rgba(0,0,0,.2);
+    }
+
+    .toggle-switch input:checked+.toggle-slider {
+      background-color: var(--success);
+    }
+
+    .toggle-switch input:checked+.toggle-slider:before {
+      transform: translateX(18px);
+    }
+
+    .tcb-fechas-card {
+      background: var(--card-bg);
+      border-radius: 10px;
+      padding: .45rem .85rem;
+      border: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      gap: .3rem;
+    }
+
+    .tcb-fecha-row {
+      display: flex;
+      align-items: center;
+      gap: .4rem;
+      font-size: .72rem;
+      color: var(--text-muted);
+    }
+
+    .tcb-fecha-label {
+      font-size: .7rem;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    .tcb-fecha-input {
+      padding: .2rem .4rem;
+      border-radius: 6px;
+      border: 1px solid var(--input-border);
+      background: var(--input-bg);
+      color: var(--text-dark);
+      font-size: .72rem;
+      font-family: 'Montserrat', sans-serif;
+    }
+
+    .tcb-save-wrap {
+      margin-left: auto;
+      flex-shrink: 0;
+    }
+
+    .tcb-save-btn {
+      font-size: .82rem;
+      padding: .55rem 1.1rem;
+      white-space: nowrap;
+    }
+
+    .tabs-wrapper {
+      display: flex;
+      align-items: stretch;
+      background: var(--tabs-bg);
+      border-bottom: 1px solid var(--border);
+      position: relative;
+    }
+
+    .tabs-chevron {
+      flex-shrink: 0;
+      width: 36px;
+      background: rgba(0,0,0,.03);
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: .6rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: var(--transition);
+      padding: 0 4px;
+    }
+
+    .tabs-chevron:hover {
+      background: rgba(0,0,0,.08);
+      color: var(--accent);
+    }
+
+    .tabs-chevron-left {
+      border-right: 1px solid var(--border);
+    }
+
+    .tabs-chevron-right {
+      border-left: 1px solid var(--border);
+    }
+
+    .tabs {
+      flex: 1;
+      display: flex;
+      padding: 0 1.5rem;
+      gap: 0;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+
+    .tabs::-webkit-scrollbar {
+      display: none;
+    }
+
+    .tab {
+      padding: .9rem 1.4rem;
+      cursor: pointer;
+      font-weight: 500;
+      font-size: .85rem;
+      color: var(--tab-text);
+      border: none;
+      border-bottom: 3px solid transparent;
+      white-space: nowrap;
+      transition: var(--transition);
+      font-family: 'Montserrat', sans-serif;
+      background: transparent;
+      letter-spacing: .3px;
+    }
+
+    .tab:hover {
+      color: var(--text-dark);
+      background: rgba(0,0,0,.03);
+    }
+
+    .tab.active {
+      color: var(--tab-active);
+      border-bottom-color: var(--tab-active);
+      font-weight: 700;
+    }
+
+    .content {
+      padding: 2rem;
+      flex: 1;
+      background: var(--body-bg);
+    }
+
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .dashboard-card {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      padding: 1.4rem;
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--primary);
+      transition: var(--transition);
+      cursor: pointer;
+    }
+
+    .dashboard-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .card-title {
+      font-size: .78rem;
+      color: var(--text-muted);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: .5px;
+      margin-bottom: .4rem;
+    }
+
+    .card-value {
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: var(--text-dark);
+    }
+
+    .btn-primary {
+      display: inline-flex;
+      align-items: center;
+      gap: .4rem;
+      padding: .6rem 1.3rem;
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: .875rem;
+      font-weight: 600;
+      font-family: 'Montserrat', sans-serif;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(211,47,47,.35);
+    }
+
+    .btn-secondary {
+      display: inline-flex;
+      align-items: center;
+      gap: .4rem;
+      padding: .6rem 1.3rem;
+      background: #f5f5f5;
+      color: var(--text-dark);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: .875rem;
+      font-weight: 600;
+      font-family: 'Montserrat', sans-serif;
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .btn-secondary:hover {
+      background: #ebebeb;
+    }
+
+    .btn-delivery {
+      display: inline-flex;
+      align-items: center;
+      gap: .4rem;
+      padding: .6rem 1.3rem;
+      background: linear-gradient(135deg, var(--delivery), #00838F);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-family: 'Montserrat', sans-serif;
+      font-size: .85rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: var(--transition);
+      white-space: nowrap;
+    }
+
+    .btn-delivery:hover {
+      opacity: .88;
+      transform: translateY(-1px);
+    }
+
+    .btn-sm {
+      display: inline-flex;
+      align-items: center;
+      gap: .3rem;
+      padding: .4rem .8rem;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-family: 'Montserrat', sans-serif;
+      font-size: .75rem;
+      font-weight: 700;
+      transition: var(--transition);
+    }
+
+    .form-group {
+      margin-bottom: 1rem;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: .82rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: .35rem;
+    }
+
+    .form-group input:not([type=checkbox]):not([type=radio]),
+    .form-group select,
+    .form-group textarea {
+      width: 100%;
+      padding: .65rem .9rem;
+      border: 1px solid var(--input-border);
+      border-radius: 8px;
+      font-size: .875rem;
+      font-family: 'Montserrat', sans-serif;
+      color: var(--text-dark);
+      background: var(--input-bg);
+      outline: none;
+      transition: var(--transition);
+    }
+
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(211,47,47,.1);
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    .inv-panel {
+      display: flex;
+      gap: 1rem;
+      align-items: flex-start;
+    }
+
+    .inv-list-col {
+      flex: 0 0 260px;
+      background: var(--card-bg);
+      border-radius: 14px;
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--border);
+      overflow: hidden;
+    }
+
+    .inv-list-search {
+      padding: .6rem .75rem;
+      border-bottom: 1px solid var(--border);
+      background: #fafafa;
+    }
+
+    .inv-list-search input {
+      width: 100%;
+      padding: .4rem .7rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-family: 'Montserrat', sans-serif;
+      font-size: .82rem;
+      outline: none;
+    }
+
+    .inv-list-items {
+      max-height: calc(100vh - 280px);
+      overflow-y: auto;
+    }
+
+    .inv-list-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: .6rem .9rem;
+      cursor: pointer;
+      font-size: .85rem;
+      font-weight: 600;
+      color: var(--text-dark);
+      border-bottom: 1px solid var(--border);
+      transition: background .15s;
+      gap: .5rem;
+    }
+
+    .inv-list-item:hover {
+      background: var(--list-item-hover);
+    }
+
+    .inv-list-item.active {
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      color: #fff;
+    }
+
+    .inv-list-item.active .inv-item-badge {
+      background: rgba(255,255,255,.25);
+      color: #fff;
+    }
+
+    .inv-item-badge {
+      font-size: .65rem;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 10px;
+      flex-shrink: 0;
+      background: #f0f0f0;
+      color: var(--text-muted);
+    }
+
+    .inv-detail-col {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .inv-detail-card {
+      background: var(--card-bg);
+      border-radius: 14px;
+      padding: 1.4rem;
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--border);
+      border-top: 3px solid var(--info);
+      position: relative;
+      animation: inv-detail-in .18s ease;
+    }
+
+    @keyframes inv-detail-in {
+      from {
+        opacity: 0;
+        transform: translateY(6px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .inv-detail-title {
+      font-size: 1.1rem;
+      font-weight: 800;
+      color: var(--text-dark);
+      margin-bottom: 1rem;
+      padding-bottom: .6rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: .5rem;
+    }
+
+    .inv-detail-empty {
+      padding: 3rem 1rem;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: .88rem;
+    }
+
+    .inv-detail-close {
+      background: #f5f5f5;
+      border: none;
+      border-radius: 8px;
+      width: 28px;
+      height: 28px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: .8rem;
+      color: var(--text-muted);
+      flex-shrink: 0;
+      transition: background .15s;
+    }
+
+    .inv-detail-close:hover {
+      background: var(--danger);
+      color: #fff;
+    }
+
+    .inv-stock-row {
+      display: flex;
+      align-items: baseline;
+      gap: .3rem;
+      margin-bottom: .5rem;
+    }
+
+    .inv-stock-num {
+      font-size: 2rem;
+      font-weight: 800;
+    }
+
+    .inv-stock-num.ok {
+      color: var(--success);
+    }
+
+    .inv-stock-num.bajo {
+      color: var(--warning);
+    }
+
+    .inv-stock-num.critico {
+      color: var(--danger);
+    }
+
+    .inv-stock-unit {
+      font-size: .9rem;
+      color: var(--text-muted);
+    }
+
+    .inv-bar {
+      height: 5px;
+      background: #f0f0f0;
+      border-radius: 3px;
+      overflow: hidden;
+      margin-bottom: .85rem;
+    }
+
+    .inv-bar-fill {
+      height: 100%;
+      border-radius: 3px;
+      transition: width .4s;
+    }
+
+    .inv-bar-fill.ok {
+      background: var(--success);
+    }
+
+    .inv-bar-fill.bajo {
+      background: var(--warning);
+    }
+
+    .inv-bar-fill.critico {
+      background: var(--danger);
+    }
+
+    .inv-meta-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: .75rem;
+      margin-bottom: .85rem;
+    }
+
+    .inv-meta-item {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .inv-meta-label {
+      font-size: .62rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .3px;
+      color: var(--text-muted);
+    }
+
+    .inv-meta-val {
+      font-size: .78rem;
+      font-weight: 700;
+      color: var(--text-dark);
+    }
+
+    .inv-meta-bs {
+      font-size: .65rem;
+      color: var(--text-muted);
+    }
+
+    .inv-search-wrap {
+      position: relative;
+      max-width: 380px;
+      margin-bottom: 1rem;
+    }
+
+    .inv-search-icon {
+      position: absolute;
+      left: .85rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      font-size: .85rem;
+      pointer-events: none;
+    }
+
+    .inv-search-input {
+      width: 100%;
+      padding: .6rem .9rem .6rem 2.2rem;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-family: 'Montserrat', sans-serif;
+      font-size: .88rem;
+      color: var(--text-dark);
+      outline: none;
+      transition: var(--transition);
+    }
+
+    .inv-search-input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(211,47,47,.1);
+    }
+
+    .menu-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+    }
+
+    .menu-card-v2 {
+      background: var(--card-bg);
+      border-radius: 14px;
+      padding: 1.1rem;
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--border);
+      border-top: 3px solid var(--primary);
+      transition: var(--transition);
+      display: flex;
+      flex-direction: column;
+      gap: .6rem;
+    }
+
+    .menu-card-v2:hover {
+      box-shadow: var(--shadow-md);
+      transform: translateY(-2px);
+    }
+
+    .mc2-header {
+      display: flex;
+      gap: .75rem;
+      align-items: flex-start;
+    }
+
+    .mc2-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .mc2-nombre {
+      font-weight: 800;
+      font-size: .95rem;
+      color: var(--text-dark);
+      line-height: 1.25;
+    }
+
+    .mc2-cat {
+      font-size: .68rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: .4px;
+      margin-top: 2px;
+    }
+
+    .mc2-precio {
+      font-size: 1rem;
+      font-weight: 800;
+      color: var(--primary);
+      margin-top: .3rem;
+    }
+
+    .mc2-precio-bs {
+      font-size: .75rem;
+      font-weight: 600;
+      color: var(--text-muted);
+    }
+
+    .mc2-stock-line {
+      font-size: .75rem;
+      color: var(--text-muted);
+      margin-top: .2rem;
+      display: flex;
+      align-items: center;
+      gap: .4rem;
+      flex-wrap: wrap;
+    }
+
+    .mc2-stock-val {
+      font-weight: 700;
+      color: var(--success);
+    }
+
+    .mc2-badge {
+      font-size: .6rem;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 20px;
+      text-transform: uppercase;
+      letter-spacing: .3px;
+    }
+
+    .mc2-badge-ok {
+      background: #e8f5e9;
+      color: var(--success);
+    }
+
+    .mc2-badge-off {
+      background: #ffebee;
+      color: var(--danger);
+    }
+
+    .mc2-img-wrap {
+      width: 68px;
+      height: 68px;
+      border-radius: 10px;
+      overflow: hidden;
+      flex-shrink: 0;
+      border: 1px solid var(--border);
+    }
+
+    .mc2-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .mc2-desc {
+      font-size: .75rem;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+
+    .mc2-actions {
+      display: flex;
+      gap: .4rem;
+      justify-content: flex-end;
+      padding-top: .4rem;
+      border-top: 1px solid var(--border);
+    }
+
+    .usuarios-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 1rem;
+    }
+
+    .usuario-card {
+      background: var(--card-bg);
+      border-radius: 14px;
+      padding: 1rem 1.2rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--info);
+      transition: var(--transition);
+    }
+
+    .usuario-card:hover {
+      box-shadow: var(--shadow-md);
+      transform: translateY(-1px);
+    }
+
+    .usuario-avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--secondary), #16213e);
+      color: var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 1rem;
+      flex-shrink: 0;
+    }
+
+    .usuario-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .usuario-nombre {
+      font-weight: 700;
+      font-size: .9rem;
+      color: var(--text-dark);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .usuario-username {
+      font-size: .75rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .usuario-actions {
+      display: flex;
+      gap: .35rem;
+      flex-shrink: 0;
+    }
+
+    .delivery-list {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: .85rem;
+    }
+
+    .delivery-card {
+      background: var(--card-bg);
+      border-radius: 14px;
+      padding: 1rem 1.2rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--delivery);
+      transition: var(--transition);
+    }
+
+    .delivery-card:hover {
+      box-shadow: var(--shadow-md);
+    }
+
+    .delivery-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--delivery), #00838F);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      flex-shrink: 0;
+    }
+
+    .delivery-nombre {
+      font-weight: 700;
+      font-size: .9rem;
+      color: var(--text-dark);
+      flex: 1;
+    }
+
+    .delivery-actions {
+      display: flex;
+      gap: .35rem;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .mesoneros-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1rem;
+    }
+
+    .mesonero-card {
+      background: var(--card-bg);
+      border-radius: 14px;
+      padding: 1rem 1.2rem;
+      display: flex;
+      align-items: center;
+      gap: .85rem;
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--propina);
+      transition: var(--transition);
+    }
+
+    .mesonero-card:hover {
+      box-shadow: var(--shadow-md);
+      transform: translateY(-1px);
+    }
+
+    .mesonero-avatar {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--propina), #7B1FA2);
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: .85rem;
+      flex-shrink: 0;
+    }
+
+    .mesonero-nombre {
+      font-weight: 700;
+      font-size: .88rem;
+      color: var(--text-dark);
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .mesonero-actions {
+      display: flex;
+      gap: .35rem;
+    }
+
+    .propinas-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .propina-card {
+      background: var(--card-bg);
+      border-radius: 14px;
+      padding: 1.2rem 1.4rem;
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--border);
+      border-top: 3px solid var(--propina);
+      text-align: center;
+      transition: var(--transition);
+    }
+
+    .propina-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .propina-card .stat-value {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: var(--propina);
+    }
+
+    .propina-card .stat-label {
+      font-size: .72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .8px;
+      color: var(--text-muted);
+      margin-top: .3rem;
+    }
+
+    .qr-generator-card {
+      background: var(--card-bg);
+      border-radius: 14px;
+      padding: 1.4rem;
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--border);
+      border-top: 3px solid var(--accent);
+      margin-bottom: 1.5rem;
+    }
+
+    .qr-generator-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: .85rem;
+      align-items: flex-end;
+      margin-bottom: 1rem;
+    }
+
+    .qr-wifi-hint {
+      display: flex;
+      align-items: flex-start;
+      gap: .5rem;
+      font-size: .78rem;
+      color: var(--text-muted);
+      padding: .6rem .8rem;
+      background: #fffde7;
+      border-radius: 8px;
+      border: 1px solid #fff9c4;
+      line-height: 1.45;
+    }
+
+    .qr-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+    }
+
+    .qr-card-v2 {
+      background: var(--card-bg);
+      border-radius: 14px;
+      padding: 1rem;
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--border);
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: .5rem;
+      transition: var(--transition);
+      position: relative;
+    }
+
+    .qr-card-v2:hover {
+      box-shadow: var(--shadow-md);
+      border-color: var(--primary);
+    }
+
+    .qr-img-box {
+      line-height: 0;
+    }
+
+    .qr-nombre-v2 {
+      font-weight: 700;
+      font-size: .88rem;
+      color: var(--text-dark);
+    }
+
+    .qr-del-btn {
+      position: absolute;
+      top: .6rem;
+      right: .6rem;
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      background: #ffebee;
+      color: var(--danger);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: .75rem;
+      transition: var(--transition);
+    }
+
+    .qr-del-btn:hover {
+      background: var(--danger);
+      color: #fff;
+    }
+
+    .config-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1.25rem;
+    }
+
+    .config-section {
+      background: var(--card-bg);
+      border-radius: 14px;
+      padding: 1.5rem;
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--border);
+      border-top: 3px solid var(--secondary);
+    }
+
+    .config-section h3 {
+      font-family: 'Montserrat', sans-serif;
+      font-size: .78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-muted);
+      margin-bottom: 1rem;
+      padding-bottom: .6rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .reportes-filters {
+      display: flex;
+      gap: .75rem;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      background: var(--card-bg);
+      border-radius: 14px;
+      padding: 1.2rem;
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--border);
+      margin-bottom: 1.5rem;
+    }
+
+    .chart-container {
+      background: var(--card-bg);
+      border-radius: 14px;
+      padding: 1.3rem;
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--border);
+    }
+
+    .chart-container h3 {
+      font-family: 'Montserrat', sans-serif;
+      font-size: .78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .8px;
+      color: var(--text-muted);
+      margin-bottom: 1rem;
+    }
+
+    .chart-wrapper {
+      position: relative;
+      height: 220px;
+    }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .data-table th {
+      background: var(--table-header);
+      color: var(--table-header-text);
+      padding: .75rem 1rem;
+      text-align: left;
+      font-size: .82rem;
+      font-weight: 600;
+    }
+
+    .data-table td {
+      padding: .75rem 1rem;
+      border-bottom: 1px solid #f0f0f0;
+      font-size: .85rem;
+    }
+
+    .table-responsive {
+      overflow-x: auto;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, .6);
+      z-index: 2000;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(4px);
+    }
+
+    .modal.active {
+      display: flex;
+    }
+
+    .modal-content {
+      background: var(--card-bg);
+      border-radius: 12px;
+      width: 90%;
+      max-width: 580px;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: var(--shadow-lg);
+    }
+
+    .modal-header {
+      background: var(--modal-header-bg);
+      color: var(--modal-header-text);
+      padding: 1.2rem 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-radius: 12px 12px 0 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .modal-header h3 {
+      font-size: 1.05rem;
+      font-weight: 700;
+    }
+
+    .modal-close {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 1.4rem;
+      cursor: pointer;
+      line-height: 1;
+      padding: 0 .3rem;
+    }
+
+    .modal-close:hover {
+      color: var(--text-dark);
+    }
+
+    .modal-body {
+      padding: 1.5rem;
+    }
+
+    .modal-footer {
+      padding: 1rem 1.5rem;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: flex-end;
+      gap: .75rem;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      padding: .9rem 1.5rem;
+      border-radius: 10px;
+      background: var(--toast-bg);
+      color: var(--toast-text);
+      font-size: .875rem;
+      font-weight: 600;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all .3s ease;
+      z-index: 9999;
+      max-width: 360px;
+      box-shadow: var(--shadow-lg);
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .toast.success {
+      background: var(--success);
+    }
+
+    .toast.error {
+      background: var(--danger);
+    }
+
+    .toast.warning {
+      background: var(--warning);
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 2rem 1rem;
+      color: var(--text-muted);
+    }
+
+    .empty-state i {
+      font-size: 2rem;
+      margin-bottom: .5rem;
+      display: block;
+      opacity: .5;
+    }
+
+    .status-activo {
+      background: rgba(76, 175, 80, 0.15);
+      color: #4CAF50;
+      padding: 2px 8px;
+      border-radius: 20px;
+      font-size: .7rem;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .status-inactivo {
+      background: rgba(158, 158, 158, 0.15);
+      color: #9e9e9e;
+      padding: 2px 8px;
+      border-radius: 20px;
+      font-size: .7rem;
+      font-weight: 600;
+    }
+
+    .stock-critico-tag {
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+      }
+      50% {
+        opacity: 0.85;
+        transform: scale(1.02);
+        box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
+      }
+    }
+
+    .pane-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: .75rem;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 2px solid var(--border);
+    }
+
+    .section-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.6rem;
+      color: var(--text-dark);
+      margin-bottom: 1.5rem;
+      padding-bottom: .75rem;
+      border-bottom: 2px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: .6rem;
+    }
+
+    .section-title i {
+      color: var(--primary);
+    }
+
+    .dashboard-lower-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      margin-top: 1.5rem;
+    }
+
+    .alert-list {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      padding: 1.2rem;
+      box-shadow: var(--shadow-sm);
+      border: 1px solid var(--border);
+    }
+
+    .alert-list h3 {
+      font-size: .95rem;
+      font-weight: 700;
+      color: var(--text-dark);
+      margin-bottom: 1rem;
+      padding-bottom: .5rem;
+      border-bottom: 2px solid var(--border);
+    }
+
+    .alert-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: .75rem 1rem;
+      border-radius: 8px;
+      background: #ffebee;
+      border-left: 4px solid var(--danger);
+      margin-bottom: .5rem;
+    }
+
+    .alert-item.critical {
+      background: #ffebee;
+      border-left: 4px solid var(--danger);
+    }
+
+    .pedido-item-modern {
+      background: var(--card-bg);
+      border-radius: 12px;
+      padding: .8rem 1rem;
+      border: 1px solid var(--border);
+      transition: all .2s;
+      cursor: pointer;
+      margin-bottom: .5rem;
+    }
+
+    .pedido-item-modern:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .mesa-admin-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: .4rem;
+      padding: 1rem .5rem;
+      background: #fff;
+      border: 2px solid var(--border);
+      border-radius: var(--radius);
+      cursor: pointer;
+      font-family: 'Montserrat', sans-serif;
+      font-size: .85rem;
+      font-weight: 700;
+      color: var(--text-dark);
+      transition: var(--transition);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .mesa-admin-btn i {
+      font-size: 1.4rem;
+      color: var(--primary);
+    }
+
+    .mesa-admin-btn:hover {
+      border-color: var(--primary);
+      background: #fff5f5;
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .pane-input {
+      flex: 1;
+      min-width: 160px;
+      max-width: 280px;
+      padding: .55rem .9rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-family: 'Montserrat', sans-serif;
+      font-size: .88rem;
+      color: var(--text-dark);
+      background: #fff;
+      outline: none;
+      transition: var(--transition);
+    }
+
+    .pane-input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(211,47,47,.1);
+    }
+
+    @media (max-width: 768px) {
+      .content {
+        padding: .75rem;
+      }
+      .dashboard-grid {
+        grid-template-columns: 1fr 1fr !important;
+      }
+      .tcb-cards {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .tcb-controls {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .tcb-save-wrap {
+        margin-left: 0;
+      }
+      .tcb-save-btn {
+        width: 100%;
+      }
+      .inv-panel {
+        flex-direction: column;
+      }
+      .inv-list-col {
+        flex: none;
+        width: 100%;
+      }
+      .menu-grid {
+        grid-template-columns: 1fr;
+      }
+      .qr-grid {
+        grid-template-columns: 1fr;
+      }
+      .config-grid {
+        grid-template-columns: 1fr;
+      }
+      .dashboard-lower-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .tcb-cards {
+        grid-template-columns: 1fr;
+      }
+      .header-right .nav-button:nth-child(n+3) {
+        display: none;
+      }
+    }
+
+    [x-cloak] {
+      display: none !important;
+    }
   </style>
 </head>
 <body>
@@ -30,7 +1904,7 @@
     </div>
   </div>
 
-  <div x-show="loggedIn" class="panel-container" style="display: none;">
+  <div x-show="loggedIn" class="panel-container" style="display: none;" x-cloak>
     <header class="header">
       <div class="header-left"><h2><i class="fas fa-crown"></i> Administración Saki Sushi</h2></div>
       <div class="header-right">
@@ -146,7 +2020,7 @@
               <template x-for="item in stockCritico" :key="item.id">
                 <div class="alert-item critical">
                   <span><strong x-text="item.nombre"></strong><br>Stock: <span x-text="(item.stock - item.reservado) + ' / ' + item.minimo"></span></span>
-                  <button class="btn-small" @click="irAIngrediente(item.id)" style="background:var(--primary);color:#fff;border:none;padding:.3rem .7rem;border-radius:4px;cursor:pointer">
+                  <button class="btn-sm" @click="irAIngrediente(item.id)" style="background:var(--primary);color:#fff;border:none;padding:.3rem .7rem;border-radius:4px;cursor:pointer">
                     <i class="fas fa-plus"></i> Agregar
                   </button>
                 </div>
@@ -159,7 +2033,7 @@
                 <span x-text="pedidosRecientes.length" style="background:var(--primary); color:#fff; padding:.15rem .6rem; border-radius:20px; font-size:.7rem; margin-left:auto"></span>
               </h3>
               <template x-for="p in pedidosRecientes" :key="p.id">
-                <div class="pedido-item-modern" style="background:var(--card-bg); border-radius:12px; padding:.8rem 1rem; border:1px solid var(--border); transition:all .2s; cursor:pointer" @click="abrirDetallePedido(p.id)">
+                <div class="pedido-item-modern" @click="abrirDetallePedido(p.id)">
                   <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:.5rem; margin-bottom:.5rem">
                     <div style="display:flex; align-items:center; gap:.6rem; flex-wrap:wrap">
                       <span style="font-size:1.1rem" x-text="p.tipo === 'delivery' ? '🛵' : (p.tipo === 'reserva' ? '📅' : '🍽️')"></span>
@@ -195,7 +2069,7 @@
                 <input type="text" x-model="search" @input="debouncedSearch" placeholder="Buscar ingrediente...">
               </div>
               <div class="inv-list-items">
-                <div class="empty-state">Cargando inventario...</div>
+                <div class="empty-state"><i class="fas fa-boxes"></i> Cargando inventario...</div>
               </div>
             </div>
             <div class="inv-detail-col">
@@ -219,7 +2093,7 @@
             <input type="text" x-model="search" @input="debouncedSearch" placeholder="Buscar platillo por nombre...">
           </div>
           <div class="menu-grid">
-            <div class="empty-state">Cargando menú...</div>
+            <div class="empty-state"><i class="fas fa-utensils"></i> Cargando menú...</div>
           </div>
         </div>
       </div>
@@ -235,7 +2109,7 @@
             <input type="text" x-model="search" @input="debouncedSearch" placeholder="Buscar usuario...">
           </div>
           <div class="usuarios-grid">
-            <div class="empty-state">Cargando usuarios...</div>
+            <div class="empty-state"><i class="fas fa-users"></i> Cargando usuarios...</div>
           </div>
         </div>
       </div>
@@ -254,7 +2128,7 @@
             <input type="text" x-model="search" @input="debouncedSearch" placeholder="Buscar motorizado...">
           </div>
           <div class="delivery-list">
-            <div class="empty-state">Cargando motorizados...</div>
+            <div class="empty-state"><i class="fas fa-motorcycle"></i> Cargando motorizados...</div>
           </div>
         </div>
       </div>
@@ -269,16 +2143,16 @@
             </div>
           </div>
           <div class="propinas-stats">
-            <div class="propina-card"><div class="stat-value" x-text="formatBs(0)"></div><div class="stat-label">Total del Día</div></div>
-            <div class="propina-card"><div class="stat-value" x-text="0"></div><div class="stat-label">Propinas Hoy</div></div>
-            <div class="propina-card"><div class="stat-value" x-text="formatBs(0)"></div><div class="stat-label">Promedio</div></div>
+            <div class="propina-card"><div class="stat-value" x-text="formatBs(totalPropinas)"></div><div class="stat-label">Total del Día</div></div>
+            <div class="propina-card"><div class="stat-value" x-text="cantidadPropinas"></div><div class="stat-label">Propinas Hoy</div></div>
+            <div class="propina-card"><div class="stat-value" x-text="formatBs(promedioPropinas)"></div><div class="stat-label">Promedio</div></div>
           </div>
           <div class="inv-search-wrap">
             <i class="fas fa-search inv-search-icon"></i>
             <input type="text" x-model="search" @input="debouncedSearch" placeholder="Buscar mesonero...">
           </div>
           <div class="mesoneros-grid">
-            <div class="empty-state">Cargando mesoneros...</div>
+            <div class="empty-state"><i class="fas fa-user-tie"></i> Cargando mesoneros...</div>
           </div>
         </div>
       </div>
@@ -320,7 +2194,7 @@
             <div class="qr-wifi-hint"><i class="fas fa-info-circle" style="color:var(--accent)"></i><span>El QR lleva al cliente directo al menú de esa mesa. Si agregas los datos de WiFi, el QR también conecta automáticamente al escanear.</span></div>
           </div>
           <div class="qr-grid">
-            <div class="empty-state">Cargando códigos QR...</div>
+            <div class="empty-state"><i class="fas fa-qrcode"></i> Cargando códigos QR...</div>
           </div>
         </div>
       </div>
@@ -336,10 +2210,10 @@
             <button class="btn-primary" @click="cargarReportes" :disabled="isLoading"><i class="fas fa-search"></i> Buscar</button>
           </div>
           <div class="dashboard-grid">
-            <div class="dashboard-card"><div class="card-title">Ventas Día</div><div class="card-value" x-text="formatUSD(0) + ' / ' + formatBs(0)"></div></div>
-            <div class="dashboard-card"><div class="card-title">Ventas Semana</div><div class="card-value" x-text="formatUSD(0) + ' / ' + formatBs(0)"></div></div>
-            <div class="dashboard-card"><div class="card-title">Ticket Promedio</div><div class="card-value" x-text="formatUSD(0) + ' / ' + formatBs(0)"></div></div>
-            <div class="dashboard-card"><div class="card-title">Platillo Top</div><div class="card-value" x-text="'-'"></div></div>
+            <div class="dashboard-card"><div class="card-title">Ventas Día</div><div class="card-value" x-text="formatUSD(ventasDia.usd) + ' / ' + formatBs(ventasDia.bs)"></div></div>
+            <div class="dashboard-card"><div class="card-title">Ventas Semana</div><div class="card-value" x-text="formatUSD(ventasSemana.usd) + ' / ' + formatBs(ventasSemana.bs)"></div></div>
+            <div class="dashboard-card"><div class="card-title">Ticket Promedio</div><div class="card-value" x-text="formatUSD(ticketPromedio.usd) + ' / ' + formatBs(ticketPromedio.bs)"></div></div>
+            <div class="dashboard-card"><div class="card-title">Platillo Top</div><div class="card-value" x-text="platilloTop"></div></div>
           </div>
           <div class="charts-grid">
             <div class="chart-container"><h3>Ventas Últimos 7 Días</h3><div class="chart-wrapper"><canvas id="ventasChart"></canvas></div></div>
@@ -349,7 +2223,7 @@
           </div>
           <div class="table-responsive" style="margin-top:2rem">
             <h3 style="margin-bottom:1rem;font-weight:700">Detalle de Ventas</h3>
-            <table class="data-table"><thead>麝香<th>Fecha</th><th>Pedido</th><th>Total</th><th>Items</th><th>Método</th><th>Tipo</th></tr></thead><tbody id="ventasTableBody"><tr><td colspan="6" class="empty-state">No hay datos</td></tr></tbody></table>
+            <table class="data-table"><thead><tr><th>Fecha</th><th>Pedido</th><th>Total</th><th>Items</th><th>Método</th><th>Tipo</th></tr></thead><tbody id="ventasTableBody"><tr><td colspan="6" class="empty-state">No hay datos</td></tr></tbody></table>
           </div>
         </div>
       </div>
@@ -371,7 +2245,6 @@
     </div>
   </div>
 
-  <!-- SCRIPT MODULE - SE EJECUTA PRIMERO -->
   <script type="module">
     console.log('🚀 Iniciando script module...');
     
@@ -414,7 +2287,7 @@
     
     console.log('✅ Utilidades definidas');
     
-    // ========== COMPONENTES PLACEHOLDER ==========
+    // ========== DASHBOARD COMPONENT ==========
     window.dashboardComponent = function() {
       return {
         tasaBase: 400,
@@ -436,15 +2309,117 @@
         
         init() {
           console.log('Dashboard component iniciado');
+          this.cargarDatosIniciales();
         },
         
-        recalcularTasaEfectiva() {},
-        guardarConfiguracion() {},
-        abrirDetalleVentas() {},
-        abrirDetallePropinas() {},
-        abrirDetalleDeliverys() {},
-        irAIngrediente() {},
-        abrirDetallePedido() {},
+        async cargarDatosIniciales() {
+          try {
+            const { data: configData } = await supabase.from('config').select('*').eq('id', 1).single();
+            if (configData) {
+              this.tasaBase = configData.tasa_cambio || 400;
+              this.aumentoDiario = configData.aumento_diario || 0;
+              this.aumentoActivo = configData.aumento_activo || false;
+              this.aumentoSemanal = configData.aumento_semanal || false;
+              this.aumentoDesde = configData.aumento_desde || '';
+              this.aumentoHasta = configData.aumento_hasta || '';
+              this.aumentoIndefinido = configData.aumento_indefinido || false;
+              this.tasaEfectiva = configData.tasa_efectiva || 400;
+              this.aumentoAcumulado = configData.aumento_acumulado || 0;
+            }
+            
+            const { data: menuData } = await supabase.from('menu').select('id, disponible');
+            this.productosActivos = (menuData || []).filter(m => m.disponible === true).length;
+            
+            const { data: inventarioData } = await supabase.from('inventario').select('id, nombre, stock, reservado, minimo');
+            this.stockCritico = (inventarioData || []).filter(i => {
+              const disponible = (i.stock || 0) - (i.reservado || 0);
+              return disponible <= (i.minimo || 0) && i.minimo > 0;
+            });
+            
+            const hoy = new Date();
+            hoy.setHours(0, 0, 0, 0);
+            const manana = new Date(hoy);
+            manana.setDate(manana.getDate() + 1);
+            const { data: pedidosData } = await supabase.from('pedidos').select('*').gte('fecha', hoy.toISOString()).lt('fecha', manana.toISOString()).order('fecha', { ascending: false }).limit(5);
+            this.pedidosRecientes = pedidosData || [];
+            
+          } catch (err) {
+            console.error('Error cargando dashboard:', err);
+          }
+        },
+        
+        recalcularTasaEfectiva() {
+          let periodos = 0;
+          const activo = this.aumentoActivo || this.aumentoSemanal;
+          if (activo && this.aumentoDesde) {
+            const hoy = new Date();
+            hoy.setHours(0, 0, 0, 0);
+            const desde = new Date(this.aumentoDesde + 'T00:00:00');
+            let hasta = null;
+            if (!this.aumentoIndefinido && this.aumentoHasta) {
+              hasta = new Date(this.aumentoHasta + 'T00:00:00');
+            }
+            if (desde <= hoy) {
+              const fin = hasta && hasta < hoy ? hasta : hoy;
+              const msDia = 24 * 60 * 60 * 1000;
+              const msPeriodo = this.aumentoSemanal ? 7 * msDia : msDia;
+              const diffMs = fin - desde;
+              periodos = Math.max(0, Math.floor(diffMs / msPeriodo) + 1);
+            }
+          }
+          const aumentoAcum = periodos * (this.aumentoDiario || 0);
+          this.aumentoAcumulado = aumentoAcum;
+          this.tasaEfectiva = this.tasaBase * (1 + aumentoAcum / 100);
+        },
+        
+        async guardarConfiguracion() {
+          this.loading = true;
+          try {
+            await supabase.from('config').update({
+              tasa_cambio: this.tasaBase,
+              aumento_diario: this.aumentoDiario,
+              aumento_activo: this.aumentoActivo,
+              aumento_semanal: this.aumentoSemanal,
+              aumento_desde: this.aumentoDesde || null,
+              aumento_hasta: (!this.aumentoIndefinido && this.aumentoHasta) || null,
+              aumento_indefinido: this.aumentoIndefinido,
+              aumento_acumulado: this.aumentoAcumulado,
+              tasa_efectiva: this.tasaEfectiva,
+              ultima_actualizacion: new Date().toISOString()
+            }).eq('id', 1);
+            window.showToast('Configuración guardada', 'success');
+          } catch (err) {
+            window.showToast('Error guardando configuración', 'error');
+          } finally {
+            this.loading = false;
+          }
+        },
+        
+        abrirDetalleVentas() {
+          window.showToast('Detalle de ventas', 'info');
+        },
+        
+        abrirDetallePropinas() {
+          const tab = document.querySelector('.tab[data-tab="mesoneros"]');
+          if (tab) tab.click();
+        },
+        
+        abrirDetalleDeliverys() {
+          const tab = document.querySelector('.tab[data-tab="deliverys"]');
+          if (tab) tab.click();
+        },
+        
+        irAIngrediente(id) {
+          const tab = document.querySelector('.tab[data-tab="inventario"]');
+          if (tab) tab.click();
+          setTimeout(() => {
+            window.dispatchEvent(new CustomEvent('selectIngrediente', { detail: { id } }));
+          }, 200);
+        },
+        
+        abrirDetallePedido(pedidoId) {
+          window.showToast('Pedido #' + pedidoId, 'info');
+        },
         
         formatBs: window.formatBs,
         formatUSD: window.formatUSD,
@@ -452,53 +2427,682 @@
       };
     };
     
+    // ========== INVENTORY COMPONENT ==========
     window.inventoryComponent = function() {
       return {
         search: '',
-        init() { console.log('Inventory placeholder'); },
-        debouncedSearch() {},
-        newIngredient() {}
+        inventoryItems: [],
+        selectedIngredient: null,
+        form: {
+          id: null,
+          nombre: '',
+          stock: 0,
+          agregar: 0,
+          unidad: 'unidades',
+          minimo: 0,
+          precio_costo: 0,
+          precio_unitario: 0
+        },
+        editMode: false,
+        showForm: false,
+        isLoading: false,
+        
+        async init() {
+          await this.loadInventory();
+        },
+        
+        async loadInventory() {
+          this.isLoading = true;
+          try {
+            const { data, error } = await supabase.from('inventario').select('*').order('nombre');
+            if (error) throw error;
+            this.inventoryItems = data || [];
+          } catch (err) {
+            window.showToast('Error cargando inventario: ' + err.message, 'error');
+          } finally {
+            this.isLoading = false;
+          }
+        },
+        
+        filteredItems() {
+          const term = this.search.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+          return this.inventoryItems.filter(i =>
+            i.nombre.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').includes(term)
+          );
+        },
+        
+        selectIngredient(id) {
+          this.selectedIngredient = this.inventoryItems.find(i => i.id === id);
+          this.form = { ...this.selectedIngredient };
+          this.editMode = true;
+          this.showForm = false;
+        },
+        
+        async updateStock(delta) {
+          if (!this.selectedIngredient) return;
+          const prevStock = this.selectedIngredient.stock;
+          const newStock = prevStock + delta;
+          if (newStock < 0) {
+            window.showToast('Stock no puede ser negativo', 'error');
+            return;
+          }
+          this.selectedIngredient.stock = newStock;
+          try {
+            const { data, error } = await supabase.rpc('update_stock_atomic', {
+              p_ingredient_id: this.selectedIngredient.id,
+              p_delta: delta
+            });
+            if (error) throw error;
+            if (!data.success) throw new Error(data.error);
+            window.showToast(`Stock actualizado: ${delta > 0 ? '+' : ''}${delta}`, 'success');
+          } catch (err) {
+            this.selectedIngredient.stock = prevStock;
+            window.showToast(err.message, 'error');
+          }
+        },
+        
+        newIngredient() {
+          this.editMode = false;
+          this.form = {
+            id: null,
+            nombre: '',
+            stock: 0,
+            agregar: 0,
+            unidad: 'unidades',
+            minimo: 0,
+            precio_costo: 0,
+            precio_unitario: 0
+          };
+          this.showForm = true;
+        },
+        
+        async saveIngredient() {
+          if (!this.form.nombre.trim()) {
+            window.showToast('El nombre es obligatorio', 'error');
+            return;
+          }
+          const data = {
+            id: this.form.id || (crypto.randomUUID ? crypto.randomUUID() : 'ing_' + Date.now()),
+            nombre: this.form.nombre,
+            stock: (parseFloat(this.form.stock) || 0) + (parseFloat(this.form.agregar) || 0),
+            reservado: 0,
+            unidad_base: this.form.unidad,
+            minimo: parseFloat(this.form.minimo) || 0,
+            precio_costo: parseFloat(this.form.precio_costo) || 0,
+            precio_unitario: parseFloat(this.form.precio_unitario) || 0
+          };
+          try {
+            if (this.editMode) {
+              await supabase.from('inventario').update(data).eq('id', this.form.id);
+              window.showToast('Ingrediente actualizado', 'success');
+            } else {
+              await supabase.from('inventario').insert([data]);
+              window.showToast('Ingrediente creado', 'success');
+            }
+            this.closeForm();
+            await this.loadInventory();
+          } catch (err) {
+            window.showToast('Error guardando ingrediente: ' + err.message, 'error');
+          }
+        },
+        
+        async deleteIngredient() {
+          if (!confirm('¿Eliminar este ingrediente?')) return;
+          try {
+            await supabase.from('inventario').delete().eq('id', this.selectedIngredient.id);
+            window.showToast('Ingrediente eliminado', 'success');
+            this.selectedIngredient = null;
+            await this.loadInventory();
+          } catch (err) {
+            window.showToast('Error eliminando: ' + err.message, 'error');
+          }
+        },
+        
+        closeForm() {
+          this.showForm = false;
+        },
+        
+        debouncedSearch() {
+          // Alpine reacciona automáticamente
+        },
+        
+        formatBs: window.formatBs,
+        formatUSD: window.formatUSD,
+        usdToBs: window.usdToBs
       };
     };
     
+    // ========== MENU COMPONENT ==========
     window.menuComponent = function() {
       return {
         search: '',
-        init() { console.log('Menu placeholder'); },
+        menuItems: [],
+        form: {
+          id: null,
+          nombre: '',
+          categoria: '',
+          subcategoria: '',
+          precio: 0,
+          descripcion: '',
+          imagen: '',
+          disponible: true
+        },
+        editMode: false,
+        showForm: false,
+        isLoading: false,
+        categorias: ['Entradas', 'Sushi', 'Rolls', 'Tragos y bebidas', 'Pokes', 'Ensaladas', 'Comida China', 'Comida Japonesa', 'Ofertas Especiales', 'Para Niños', 'Combo Ejecutivo'],
+        subcategorias: {
+          'Rolls': ['Rolls Fríos de 10 piezas', 'Rolls Tempura de 12 piezas'],
+          'Comida China': ['Arroz Chino', 'Arroz Cantones', 'Chopsuey', 'Lomey', 'Chow Mein', 'Fideos de Arroz', 'Tallarines Cantones', 'Mariscos', 'Foo Yong', 'Sopas', 'Entremeses'],
+          'Comida Japonesa': ['Yakimeshi', 'Yakisoba', 'Pasta Udon', 'Churrasco']
+        },
+        
+        async init() {
+          await this.loadMenu();
+        },
+        
+        async loadMenu() {
+          this.isLoading = true;
+          try {
+            const { data, error } = await supabase.from('menu').select('*').order('nombre');
+            if (error) throw error;
+            this.menuItems = data || [];
+          } catch (err) {
+            window.showToast('Error cargando menú: ' + err.message, 'error');
+          } finally {
+            this.isLoading = false;
+          }
+        },
+        
+        filteredItems() {
+          const term = this.search.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+          return this.menuItems.filter(i =>
+            i.nombre.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').includes(term)
+          );
+        },
+        
+        getAvailableSubcategorias() {
+          return this.subcategorias[this.form.categoria] || [];
+        },
+        
+        async savePlatillo() {
+          if (!this.form.nombre || !this.form.categoria || this.form.precio <= 0) {
+            window.showToast('Complete nombre, categoría y precio', 'error');
+            return;
+          }
+          const data = {
+            id: this.form.id || (crypto.randomUUID ? crypto.randomUUID() : 'plat_' + Date.now()),
+            nombre: this.form.nombre,
+            categoria: this.form.categoria,
+            subcategoria: this.form.subcategoria || null,
+            precio: this.form.precio,
+            descripcion: this.form.descripcion,
+            imagen: this.form.imagen,
+            ingredientes: {},
+            disponible: this.form.disponible,
+            stock: 0,
+            stock_maximo: 0
+          };
+          try {
+            if (this.editMode) {
+              await supabase.from('menu').update(data).eq('id', this.form.id);
+              window.showToast('Platillo actualizado', 'success');
+            } else {
+              await supabase.from('menu').insert([data]);
+              window.showToast('Platillo creado', 'success');
+            }
+            this.closeForm();
+            await this.loadMenu();
+          } catch (err) {
+            window.showToast('Error guardando platillo: ' + err.message, 'error');
+          }
+        },
+        
+        async deletePlatillo(id) {
+          if (!confirm('¿Eliminar este platillo?')) return;
+          try {
+            await supabase.from('menu').delete().eq('id', id);
+            window.showToast('Platillo eliminado', 'success');
+            await this.loadMenu();
+          } catch (err) {
+            window.showToast('Error eliminando: ' + err.message, 'error');
+          }
+        },
+        
+        async toggleDisponible(id, disponible) {
+          try {
+            await supabase.from('menu').update({ disponible }).eq('id', id);
+            window.showToast(`Platillo ${disponible ? 'habilitado' : 'deshabilitado'}`, 'success');
+            await this.loadMenu();
+          } catch (err) {
+            window.showToast('Error cambiando disponibilidad: ' + err.message, 'error');
+          }
+        },
+        
+        editPlatillo(id) {
+          const platillo = this.menuItems.find(p => p.id === id);
+          if (!platillo) return;
+          this.form = { ...platillo };
+          this.editMode = true;
+          this.showForm = true;
+        },
+        
+        newPlatillo() {
+          this.form = {
+            id: null,
+            nombre: '',
+            categoria: '',
+            subcategoria: '',
+            precio: 0,
+            descripcion: '',
+            imagen: '',
+            disponible: true
+          };
+          this.editMode = false;
+          this.showForm = true;
+        },
+        
+        closeForm() {
+          this.showForm = false;
+        },
+        
         debouncedSearch() {},
-        newPlatillo() {}
+        
+        formatBs: window.formatBs,
+        formatUSD: window.formatUSD,
+        usdToBs: window.usdToBs
       };
     };
     
+    // ========== USUARIOS COMPONENT ==========
     window.usuariosComponent = function() {
       return {
         search: '',
-        init() { console.log('Usuarios placeholder'); },
-        debouncedSearch() {},
-        nuevoUsuario() {}
+        usuarios: [],
+        form: {
+          id: null,
+          nombre: '',
+          username: '',
+          password: '123456',
+          activo: true
+        },
+        editMode: false,
+        showForm: false,
+        isLoading: false,
+        
+        async init() {
+          await this.cargarUsuarios();
+        },
+        
+        async cargarUsuarios() {
+          this.isLoading = true;
+          try {
+            const { data, error } = await supabase.from('usuarios').select('*').order('nombre');
+            if (error) throw error;
+            this.usuarios = data || [];
+          } catch (err) {
+            window.showToast('Error cargando usuarios: ' + err.message, 'error');
+          } finally {
+            this.isLoading = false;
+          }
+        },
+        
+        filteredUsuarios() {
+          const term = this.search.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+          return this.usuarios.filter(u =>
+            u.nombre.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').includes(term) ||
+            u.username.toLowerCase().includes(term)
+          );
+        },
+        
+        nuevoUsuario() {
+          this.form = { id: null, nombre: '', username: '', password: '123456', activo: true };
+          this.editMode = false;
+          this.showForm = true;
+        },
+        
+        editarUsuario(usuario) {
+          this.form = { ...usuario };
+          this.editMode = true;
+          this.showForm = true;
+        },
+        
+        async guardarUsuario() {
+          if (!this.form.nombre.trim() || !this.form.username.trim()) {
+            window.showToast('Complete nombre y usuario', 'error');
+            return;
+          }
+          try {
+            if (this.editMode) {
+              await supabase.from('usuarios').update({
+                nombre: this.form.nombre,
+                username: this.form.username,
+                activo: this.form.activo
+              }).eq('id', this.form.id);
+              window.showToast('Usuario actualizado', 'success');
+            } else {
+              const { data: hashed, error: hashErr } = await supabase.rpc('hash_password', { plain_password: this.form.password });
+              if (hashErr) throw hashErr;
+              await supabase.from('usuarios').insert([{
+                id: crypto.randomUUID ? crypto.randomUUID() : 'user_' + Date.now(),
+                nombre: this.form.nombre,
+                username: this.form.username,
+                password_hash: hashed,
+                rol: 'cajero',
+                activo: true
+              }]);
+              window.showToast('Usuario creado', 'success');
+            }
+            this.closeForm();
+            await this.cargarUsuarios();
+          } catch (err) {
+            window.showToast('Error: ' + err.message, 'error');
+          }
+        },
+        
+        async toggleActivo(usuario) {
+          try {
+            await supabase.from('usuarios').update({ activo: !usuario.activo }).eq('id', usuario.id);
+            window.showToast(`Usuario ${usuario.activo ? 'desactivado' : 'activado'}`, 'success');
+            await this.cargarUsuarios();
+          } catch (err) {
+            window.showToast('Error: ' + err.message, 'error');
+          }
+        },
+        
+        async eliminarUsuario(id) {
+          if (!confirm('¿Eliminar este usuario?')) return;
+          try {
+            await supabase.from('usuarios').delete().eq('id', id);
+            window.showToast('Usuario eliminado', 'success');
+            await this.cargarUsuarios();
+          } catch (err) {
+            window.showToast('Error: ' + err.message, 'error');
+          }
+        },
+        
+        closeForm() {
+          this.showForm = false;
+        },
+        
+        debouncedSearch() {}
       };
     };
     
+    // ========== DELIVERYS COMPONENT ==========
     window.deliverysComponent = function() {
       return {
         search: '',
         newNombre: '',
-        init() { console.log('Deliverys placeholder'); },
+        deliverys: [],
+        acumulado: {},
+        showForm: false,
+        form: { id: null, nombre: '', activo: true },
+        editMode: false,
+        
+        async init() {
+          await this.cargarDeliverys();
+        },
+        
+        async cargarDeliverys() {
+          try {
+            const { data, error } = await supabase.from('deliverys').select('*').order('nombre');
+            if (error) throw error;
+            this.deliverys = data || [];
+            await this.calcularAcumulados();
+          } catch (err) {
+            window.showToast('Error cargando motorizados: ' + err.message, 'error');
+          }
+        },
+        
+        async calcularAcumulados() {
+          const { data, error } = await supabase.from('entregas_delivery').select('delivery_id, monto_bs');
+          if (error) return;
+          this.acumulado = {};
+          (data || []).forEach(e => {
+            this.acumulado[e.delivery_id] = (this.acumulado[e.delivery_id] || 0) + (e.monto_bs || 0);
+          });
+        },
+        
+        filteredDeliverys() {
+          const term = this.search.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+          return this.deliverys.filter(d =>
+            d.nombre.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').includes(term)
+          );
+        },
+        
+        async agregarDelivery() {
+          if (!this.newNombre.trim()) {
+            window.showToast('Ingrese un nombre', 'error');
+            return;
+          }
+          try {
+            await supabase.from('deliverys').insert([{
+              id: crypto.randomUUID ? crypto.randomUUID() : 'del_' + Date.now(),
+              nombre: this.newNombre.trim(),
+              activo: true
+            }]);
+            this.newNombre = '';
+            await this.cargarDeliverys();
+            window.showToast('Motorizado agregado', 'success');
+          } catch (err) {
+            window.showToast('Error: ' + err.message, 'error');
+          }
+        },
+        
+        editarDelivery(delivery) {
+          this.form = { ...delivery };
+          this.editMode = true;
+          this.showForm = true;
+        },
+        
+        async guardarDelivery() {
+          if (!this.form.nombre.trim()) {
+            window.showToast('Ingrese nombre', 'error');
+            return;
+          }
+          try {
+            await supabase.from('deliverys').update({ nombre: this.form.nombre, activo: this.form.activo }).eq('id', this.form.id);
+            window.showToast('Motorizado actualizado', 'success');
+            this.closeForm();
+            await this.cargarDeliverys();
+          } catch (err) {
+            window.showToast('Error: ' + err.message, 'error');
+          }
+        },
+        
+        async toggleActivo(delivery) {
+          try {
+            await supabase.from('deliverys').update({ activo: !delivery.activo }).eq('id', delivery.id);
+            window.showToast(`Motorizado ${delivery.activo ? 'desactivado' : 'activado'}`, 'success');
+            await this.cargarDeliverys();
+          } catch (err) {
+            window.showToast('Error: ' + err.message, 'error');
+          }
+        },
+        
+        async eliminarDelivery(id) {
+          if (!confirm('¿Eliminar este motorizado?')) return;
+          try {
+            await supabase.from('entregas_delivery').delete().eq('delivery_id', id);
+            await supabase.from('deliverys').delete().eq('id', id);
+            window.showToast('Motorizado eliminado', 'success');
+            await this.cargarDeliverys();
+          } catch (err) {
+            window.showToast('Error: ' + err.message, 'error');
+          }
+        },
+        
+        async registrarPago(delivery) {
+          const montoTotal = this.acumulado[delivery.id] || 0;
+          if (montoTotal === 0) {
+            window.showToast('No hay acumulado para pagar', 'warning');
+            return;
+          }
+          if (!confirm(`¿Registrar pago a ${delivery.nombre} por ${window.formatBs(montoTotal)}?`)) return;
+          try {
+            await supabase.from('entregas_delivery').delete().eq('delivery_id', delivery.id);
+            window.showToast('Pago registrado', 'success');
+            await this.calcularAcumulados();
+          } catch (err) {
+            window.showToast('Error: ' + err.message, 'error');
+          }
+        },
+        
+        closeForm() {
+          this.showForm = false;
+        },
+        
         debouncedSearch() {},
-        agregarDelivery() {}
+        formatBs: window.formatBs
       };
     };
     
+    // ========== MESONEROS COMPONENT ==========
     window.mesonerosComponent = function() {
       return {
         search: '',
         newNombre: '',
-        init() { console.log('Mesoneros placeholder'); },
+        mesoneros: [],
+        propinas: [],
+        totalPropinas: 0,
+        cantidadPropinas: 0,
+        promedioPropinas: 0,
+        showForm: false,
+        form: { id: null, nombre: '', activo: true },
+        editMode: false,
+        
+        async init() {
+          await this.cargarMesoneros();
+          await this.cargarPropinas();
+        },
+        
+        async cargarMesoneros() {
+          try {
+            const { data, error } = await supabase.from('mesoneros').select('*').order('nombre');
+            if (error) throw error;
+            this.mesoneros = data || [];
+          } catch (err) {
+            window.showToast('Error cargando mesoneros: ' + err.message, 'error');
+          }
+        },
+        
+        async cargarPropinas() {
+          const hoy = new Date();
+          hoy.setHours(0, 0, 0, 0);
+          const manana = new Date(hoy);
+          manana.setDate(manana.getDate() + 1);
+          try {
+            const { data, error } = await supabase.from('propinas').select('*, mesoneros(nombre)').gte('fecha', hoy.toISOString()).lt('fecha', manana.toISOString()).order('fecha', { ascending: false });
+            if (error) throw error;
+            this.propinas = data || [];
+            this.totalPropinas = this.propinas.reduce((s, p) => s + (p.monto_bs || 0), 0);
+            this.cantidadPropinas = this.propinas.length;
+            this.promedioPropinas = this.cantidadPropinas ? this.totalPropinas / this.cantidadPropinas : 0;
+          } catch (err) {
+            window.showToast('Error cargando propinas: ' + err.message, 'error');
+          }
+        },
+        
+        filteredMesoneros() {
+          const term = this.search.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+          return this.mesoneros.filter(m =>
+            m.nombre.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').includes(term)
+          );
+        },
+        
+        async agregarMesonero() {
+          if (!this.newNombre.trim()) {
+            window.showToast('Ingrese un nombre', 'error');
+            return;
+          }
+          try {
+            await supabase.from('mesoneros').insert([{
+              id: crypto.randomUUID ? crypto.randomUUID() : 'mes_' + Date.now(),
+              nombre: this.newNombre.trim(),
+              activo: true
+            }]);
+            this.newNombre = '';
+            await this.cargarMesoneros();
+            window.showToast('Mesonero agregado', 'success');
+          } catch (err) {
+            window.showToast('Error: ' + err.message, 'error');
+          }
+        },
+        
+        editarMesonero(mesonero) {
+          this.form = { ...mesonero };
+          this.editMode = true;
+          this.showForm = true;
+        },
+        
+        async guardarMesonero() {
+          if (!this.form.nombre.trim()) {
+            window.showToast('Ingrese nombre', 'error');
+            return;
+          }
+          try {
+            await supabase.from('mesoneros').update({ nombre: this.form.nombre, activo: this.form.activo }).eq('id', this.form.id);
+            window.showToast('Mesonero actualizado', 'success');
+            this.closeForm();
+            await this.cargarMesoneros();
+          } catch (err) {
+            window.showToast('Error: ' + err.message, 'error');
+          }
+        },
+        
+        async toggleActivo(mesonero) {
+          try {
+            await supabase.from('mesoneros').update({ activo: !mesonero.activo }).eq('id', mesonero.id);
+            window.showToast(`Mesonero ${mesonero.activo ? 'desactivado' : 'activado'}`, 'success');
+            await this.cargarMesoneros();
+          } catch (err) {
+            window.showToast('Error: ' + err.message, 'error');
+          }
+        },
+        
+        async eliminarMesonero(id) {
+          if (!confirm('¿Eliminar este mesonero?')) return;
+          try {
+            await supabase.from('mesoneros').delete().eq('id', id);
+            window.showToast('Mesonero eliminado', 'success');
+            await this.cargarMesoneros();
+          } catch (err) {
+            window.showToast('Error: ' + err.message, 'error');
+          }
+        },
+        
+        async pagarPropinas(mesonero) {
+          const { data, error } = await supabase.from('propinas').select('id').eq('mesonero_id', mesonero.id).eq('entregado', false);
+          if (error) {
+            window.showToast('Error obteniendo propinas', 'error');
+            return;
+          }
+          if (!data || data.length === 0) {
+            window.showToast('No hay propinas pendientes', 'warning');
+            return;
+          }
+          const ids = data.map(p => p.id);
+          if (!confirm(`¿Registrar pago a ${mesonero.nombre}? Se marcarán como entregadas ${ids.length} propina(s).`)) return;
+          try {
+            await supabase.from('propinas').update({ entregado: true }).in('id', ids);
+            window.showToast('Propinas pagadas', 'success');
+            await this.cargarPropinas();
+          } catch (err) {
+            window.showToast('Error: ' + err.message, 'error');
+          }
+        },
+        
+        closeForm() {
+          this.showForm = false;
+        },
+        
         debouncedSearch() {},
-        agregarMesonero() {}
+        formatBs: window.formatBs
       };
     };
     
+    // ========== CONFIG COMPONENT ==========
     window.configComponent = function() {
       return {
         currentPassword: '',
@@ -506,34 +3110,303 @@
         confirmPassword: '',
         recoveryEmail: '',
         isLoading: false,
-        init() { console.log('Config placeholder'); },
-        cambiarPassword() {},
-        guardarRecoveryEmail() {}
+        
+        async init() {
+          const { data, error } = await supabase.from('config').select('recovery_email').eq('id', 1).single();
+          if (!error && data) this.recoveryEmail = data.recovery_email || '';
+        },
+        
+        async cambiarPassword() {
+          if (!this.currentPassword || !this.newPassword || !this.confirmPassword) {
+            window.showToast('Complete todos los campos', 'error');
+            return;
+          }
+          if (this.newPassword !== this.confirmPassword) {
+            window.showToast('Las contraseñas no coinciden', 'error');
+            return;
+          }
+          if (this.newPassword.length < 4) {
+            window.showToast('La contraseña debe tener al menos 4 caracteres', 'error');
+            return;
+          }
+          this.isLoading = true;
+          try {
+            const { data: adminData } = await supabase.from('usuarios').select('username').eq('rol', 'admin').single();
+            if (!adminData) throw new Error('Usuario admin no encontrado');
+            const { data: authData } = await supabase.rpc('verify_user_credentials', { p_username: adminData.username, p_password: this.currentPassword });
+            if (!authData || !authData.success) {
+              window.showToast('Contraseña actual incorrecta', 'error');
+              return;
+            }
+            const { data: hashed } = await supabase.rpc('hash_password', { plain_password: this.newPassword });
+            await supabase.from('usuarios').update({ password_hash: hashed }).eq('rol', 'admin');
+            await supabase.from('config').update({ admin_password: this.newPassword }).eq('id', 1);
+            window.showToast('Contraseña cambiada exitosamente', 'success');
+            this.currentPassword = '';
+            this.newPassword = '';
+            this.confirmPassword = '';
+          } catch (err) {
+            window.showToast('Error: ' + err.message, 'error');
+          } finally {
+            this.isLoading = false;
+          }
+        },
+        
+        async guardarRecoveryEmail() {
+          if (!this.recoveryEmail || !this.recoveryEmail.includes('@')) {
+            window.showToast('Ingrese un correo válido', 'error');
+            return;
+          }
+          this.isLoading = true;
+          try {
+            await supabase.from('config').update({ recovery_email: this.recoveryEmail }).eq('id', 1);
+            window.showToast('Correo guardado', 'success');
+          } catch (err) {
+            window.showToast('Error: ' + err.message, 'error');
+          } finally {
+            this.isLoading = false;
+          }
+        }
       };
     };
     
+    // ========== QR COMPONENT ==========
     window.qrComponent = function() {
       return {
+        qrs: [],
         nuevaMesa: '',
         wifiSsid: '',
         wifiPassword: '',
-        init() { console.log('QR placeholder'); },
-        guardarWifi() {},
-        generarQR() {}
+        qrModalVisible: false,
+        qrModalUrl: '',
+        qrModalNombre: '',
+        
+        async init() {
+          await this.cargarQRs();
+          this.wifiSsid = localStorage.getItem('saki_wifi_ssid') || '';
+          this.wifiPassword = localStorage.getItem('saki_wifi_pwd') || '';
+        },
+        
+        async cargarQRs() {
+          try {
+            const { data, error } = await supabase.from('codigos_qr').select('*').order('fecha', { ascending: false });
+            if (error) throw error;
+            this.qrs = data || [];
+            setTimeout(() => {
+              this.qrs.forEach(qr => {
+                const params = new URLSearchParams({ mesa: qr.nombre });
+                if (this.wifiSsid) params.set('wifi_ssid', this.wifiSsid);
+                if (this.wifiPassword) params.set('wifi_pwd', this.wifiPassword);
+                const url = window.location.origin + '/SakiSushi0/Cliente/index.html?' + params.toString();
+                const container = document.getElementById('qr_' + qr.id);
+                if (container && window.QRCode) {
+                  container.innerHTML = '';
+                  new QRCode(container, { text: url, width: 140, height: 140 });
+                }
+              });
+            }, 100);
+          } catch (err) {
+            window.showToast('Error cargando QRs: ' + err.message, 'error');
+          }
+        },
+        
+        async generarQR() {
+          if (!this.nuevaMesa.trim()) {
+            window.showToast('Ingrese el nombre de la mesa', 'error');
+            return;
+          }
+          if (this.wifiSsid && !this.wifiPassword) {
+            window.showToast('Si agregas WiFi, también debes poner la contraseña', 'error');
+            return;
+          }
+          localStorage.setItem('saki_wifi_ssid', this.wifiSsid);
+          localStorage.setItem('saki_wifi_pwd', this.wifiPassword);
+          try {
+            const newId = crypto.randomUUID ? crypto.randomUUID() : 'QR_' + Date.now();
+            await supabase.from('codigos_qr').insert([{ id: newId, nombre: this.nuevaMesa.trim(), fecha: new Date().toISOString() }]);
+            window.showToast('QR generado', 'success');
+            this.nuevaMesa = '';
+            await this.cargarQRs();
+          } catch (err) {
+            window.showToast('Error: ' + err.message, 'error');
+          }
+        },
+        
+        async eliminarQR(id) {
+          if (!confirm('¿Eliminar este código QR?')) return;
+          try {
+            await supabase.from('codigos_qr').delete().eq('id', id);
+            window.showToast('QR eliminado', 'success');
+            await this.cargarQRs();
+          } catch (err) {
+            window.showToast('Error: ' + err.message, 'error');
+          }
+        },
+        
+        abrirQR(qr) {
+          const params = new URLSearchParams({ mesa: qr.nombre });
+          if (this.wifiSsid) params.set('wifi_ssid', this.wifiSsid);
+          if (this.wifiPassword) params.set('wifi_pwd', this.wifiPassword);
+          this.qrModalUrl = window.location.origin + '/SakiSushi0/Cliente/index.html?' + params.toString();
+          this.qrModalNombre = qr.nombre;
+          this.qrModalVisible = true;
+          setTimeout(() => {
+            const container = document.getElementById('qrAmpliado');
+            if (container && window.QRCode) {
+              container.innerHTML = '';
+              new QRCode(container, { text: this.qrModalUrl, width: 300, height: 300 });
+            }
+          }, 100);
+        },
+        
+        cerrarModal() {
+          this.qrModalVisible = false;
+        },
+        
+        guardarWifi() {
+          localStorage.setItem('saki_wifi_ssid', this.wifiSsid);
+          localStorage.setItem('saki_wifi_pwd', this.wifiPassword);
+          window.showToast('Datos WiFi guardados', 'success');
+        }
       };
     };
     
+    // ========== REPORTES COMPONENT ==========
     window.reportesComponent = function() {
       return {
         desde: '',
         hasta: '',
+        pedidos: [],
+        ventasDia: { usd: 0, bs: 0 },
+        ventasSemana: { usd: 0, bs: 0 },
+        ticketPromedio: { usd: 0, bs: 0 },
+        platilloTop: '-',
+        charts: {},
         isLoading: false,
-        init() { console.log('Reportes placeholder'); },
-        cargarReportes() {}
+        
+        async init() {
+          const hoy = new Date();
+          const primerDiaMes = new Date(hoy.getFullYear(), hoy.getMonth(), 1).toISOString().split('T')[0];
+          this.desde = primerDiaMes;
+          this.hasta = hoy.toISOString().split('T')[0];
+          await this.cargarReportes();
+        },
+        
+        async cargarReportes() {
+          if (!this.desde || !this.hasta) {
+            window.showToast('Seleccione rango de fechas', 'error');
+            return;
+          }
+          this.isLoading = true;
+          try {
+            const desdeDate = new Date(this.desde);
+            desdeDate.setHours(0, 0, 0, 0);
+            const hastaDate = new Date(this.hasta);
+            hastaDate.setHours(23, 59, 59, 999);
+            const { data, error } = await supabase.from('pedidos').select('*').in('estado', ['cobrado', 'entregado', 'enviado', 'reserva_completada']).gte('fecha', desdeDate.toISOString()).lte('fecha', hastaDate.toISOString()).order('fecha', { ascending: false });
+            if (error) throw error;
+            this.pedidos = data || [];
+            this.calcularEstadisticas();
+            this.actualizarGraficos();
+            this.actualizarTablaVentas();
+          } catch (err) {
+            window.showToast('Error cargando reportes: ' + err.message, 'error');
+          } finally {
+            this.isLoading = false;
+          }
+        },
+        
+        calcularEstadisticas() {
+          const hoy = new Date();
+          hoy.setHours(0, 0, 0, 0);
+          const semanaAtras = new Date(hoy);
+          semanaAtras.setDate(semanaAtras.getDate() - 7);
+          const ventasDia = this.pedidos.filter(p => new Date(p.fecha) >= hoy).reduce((s, p) => s + (p.total || 0), 0);
+          const ventasSemana = this.pedidos.filter(p => new Date(p.fecha) >= semanaAtras).reduce((s, p) => s + (p.total || 0), 0);
+          const ticketPromedio = this.pedidos.length ? this.pedidos.reduce((s, p) => s + (p.total || 0), 0) / this.pedidos.length : 0;
+          const tasa = window.configGlobal?.tasa_efectiva || 400;
+          this.ventasDia = { usd: ventasDia, bs: ventasDia * tasa };
+          this.ventasSemana = { usd: ventasSemana, bs: ventasSemana * tasa };
+          this.ticketPromedio = { usd: ticketPromedio, bs: ticketPromedio * tasa };
+          
+          const platillosCount = {};
+          this.pedidos.forEach(p => {
+            if (p.items) {
+              p.items.forEach(item => {
+                platillosCount[item.nombre] = (platillosCount[item.nombre] || 0) + (item.cantidad || 0);
+              });
+            }
+          });
+          let maxCount = 0;
+          let topPlatillo = '-';
+          for (const [nombre, count] of Object.entries(platillosCount)) {
+            if (count > maxCount) {
+              maxCount = count;
+              topPlatillo = nombre;
+            }
+          }
+          this.platilloTop = topPlatillo;
+        },
+        
+        actualizarGraficos() {
+          const ventasPorDia = {};
+          for (let i = 6; i >= 0; i--) {
+            const f = new Date();
+            f.setDate(f.getDate() - i);
+            ventasPorDia[f.toISOString().split('T')[0]] = 0;
+          }
+          this.pedidos.forEach(p => {
+            const fecha = new Date(p.fecha).toISOString().split('T')[0];
+            if (ventasPorDia.hasOwnProperty(fecha)) ventasPorDia[fecha] += p.total || 0;
+          });
+          
+          if (this.charts.ventas) this.charts.ventas.destroy();
+          const ctxVentas = document.getElementById('ventasChart')?.getContext('2d');
+          if (ctxVentas) {
+            this.charts.ventas = new Chart(ctxVentas, {
+              type: 'line',
+              data: { labels: Object.keys(ventasPorDia), datasets: [{ label: 'Ventas (USD)', data: Object.values(ventasPorDia), borderColor: '#D32F2F', backgroundColor: 'rgba(211,47,47,0.1)', tension: 0.1 }] }
+            });
+          }
+          
+          const categorias = {};
+          this.pedidos.forEach(p => {
+            if (p.items) {
+              p.items.forEach(item => {
+                const cat = item.categoria || 'Otros';
+                categorias[cat] = (categorias[cat] || 0) + ((item.precioUnitarioUSD || 0) * (item.cantidad || 0));
+              });
+            }
+          });
+          if (this.charts.categorias) this.charts.categorias.destroy();
+          const ctxCat = document.getElementById('categoriasChart')?.getContext('2d');
+          if (ctxCat) {
+            this.charts.categorias = new Chart(ctxCat, {
+              type: 'doughnut',
+              data: { labels: Object.keys(categorias), datasets: [{ data: Object.values(categorias), backgroundColor: ['#D32F2F', '#FF9800', '#1976D2', '#388E3C', '#F57C00', '#6c757d'] }] }
+            });
+          }
+        },
+        
+        actualizarTablaVentas() {
+          const tbody = document.getElementById('ventasTableBody');
+          if (!tbody) return;
+          const tasa = window.configGlobal?.tasa_efectiva || 400;
+          tbody.innerHTML = this.pedidos.slice(0, 50).map(p => {
+            const items = p.items || [];
+            const totalItems = items.reduce((s, i) => s + (i.cantidad || 0), 0);
+            const resumen = items.length ? items.slice(0, 2).map(i => `${i.cantidad || 1}× ${i.nombre}`).join(', ') + (items.length > 2 ? ` +${items.length - 2} más` : '') : 'Sin detalle';
+            const totalUSD = p.total || 0;
+            const totalBs = window.formatBs(totalUSD * tasa);
+            return `<tr><td>${new Date(p.fecha).toLocaleDateString('es-VE')}</td><td style="max-width:200px;font-size:.82rem">${resumen}</td><td>${window.formatUSD(totalUSD)}<br><span style="font-size:.75rem;color:var(--text-muted)">${totalBs}</span></td><td>${totalItems}</td><td>${p.metodo_pago || 'N/A'}</td><td>${p.tipo || 'N/A'}</td></tr>`;
+          }).join('');
+        },
+        
+        formatBs: window.formatBs,
+        formatUSD: window.formatUSD,
+        usdToBs: window.usdToBs
       };
     };
-    
-    console.log('✅ Componentes placeholder definidos');
     
     // ========== APP PRINCIPAL ==========
     window.app = function() {
@@ -559,6 +3432,7 @@
           console.log('🔧 App init ejecutado');
           this.checkSession();
           this.initTheme();
+          this.loadStockCriticoTags();
         },
         
         checkSession() {
@@ -631,15 +3505,41 @@
         openMesas() {
           const modal = document.getElementById('adminMesaModal');
           if (modal) modal.classList.add('active');
+        },
+        
+        async loadStockCriticoTags() {
+          try {
+            const { data, error } = await supabase.from('inventario').select('id, nombre, stock, reservado, minimo');
+            if (error) throw error;
+            const criticos = (data || []).filter(i => (i.stock - i.reservado) <= (i.minimo || 0) && i.minimo > 0);
+            this.stockCriticoTags = criticos.map(i => `
+              <span class="stock-critico-tag" data-ingrediente-id="${i.id}"
+                style="display:inline-flex; align-items:center; gap:4px; padding:2px 8px; background:rgba(239,68,68,.15); border-radius:20px; color:var(--danger); font-weight:600; font-size:.7rem; cursor:pointer; animation:pulse 1.5s infinite"
+                @click="window._irAIngrediente('${i.id}')">
+                <i class="fas fa-box" style="font-size:.6rem"></i>
+                ${i.nombre}
+                <span style="background:var(--danger); color:#fff; padding:0 4px; border-radius:10px; font-size:.6rem">${i.stock - i.reservado}</span>
+              </span>
+            `).join('');
+          } catch (error) {
+            console.error('Error cargando stock crítico:', error);
+          }
         }
       };
+    };
+    
+    window._irAIngrediente = function(id) {
+      const tab = document.querySelector('.tab[data-tab="inventario"]');
+      if (tab) tab.click();
+      setTimeout(() => {
+        window.dispatchEvent(new CustomEvent('selectIngrediente', { detail: { id } }));
+      }, 200);
     };
     
     console.log('✅ Script module completado, app definida globalmente');
     console.log('window.app disponible:', typeof window.app);
   </script>
   
-  <!-- ALPINE.JS SE CARGA DESPUÉS DE QUE TODO ESTÉ DEFINIDO -->
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </body>
 </html>
