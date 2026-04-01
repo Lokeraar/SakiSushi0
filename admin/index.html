@@ -1787,151 +1787,113 @@
   </div>
 
   <script type="module">
-    import { supabase } from './services/supabaseClient.js';
-    import { inventoryComponent } from './modules/inventory.js';
-    import { menuComponent } from './modules/menu.js';
-    import { usuariosComponent } from './modules/usuarios.js';
-    import { deliverysComponent } from './modules/deliverys.js';
-    import { mesonerosComponent } from './modules/mesoneros.js';
-    import { configComponent } from './modules/config.js';
-    import { qrComponent } from './modules/qr.js';
-    import { reportesComponent } from './modules/reportes.js';
-    import { dashboardComponent } from './modules/dashboard.js';
-    import { loginAdmin, logout, getJwtToken } from './services/authService.js';
-    import { showToast } from './utils/toast.js';
-    import { formatBs, formatUSD, usdToBs } from './utils/formatters.js';
-    import { subscribe, unsubscribe } from './services/realtimeManager.js';
-
-    window.supabaseClient = supabase;
-
-    function app() {
-      return {
-        loggedIn: false,
-        loginPassword: '',
-        activeTab: 'dashboard',
-        tabs: [
-          { id: 'dashboard', label: 'Dashboard' },
-          { id: 'inventario', label: 'Inventario' },
-          { id: 'menu', label: 'Menú y Precios' },
-          { id: 'usuarios', label: 'Usuarios' },
-          { id: 'deliverys', label: 'Deliverys' },
-          { id: 'mesoneros', label: 'Mesoneros' },
-          { id: 'configuracion', label: 'Configuración' },
-          { id: 'qr', label: 'Códigos QR' },
-          { id: 'reportes', label: 'Reportes' }
-        ],
-        themeIcon: '<i class="fas fa-sun"></i>',
-        stockCriticoTags: '',
-
-        async init() {
-          this.checkSession();
-          this.initTheme();
-          this.loadMesas();
-          subscribe('inventario', () => this.loadStockCriticoTags());
-          await this.loadStockCriticoTags();
-        },
-
-        checkSession() {
-          const token = sessionStorage.getItem('admin_jwt_token');
-          if (token && sessionStorage.getItem('admin_user')) this.loggedIn = true;
-        },
-
-        async login() {
-          const ok = await loginAdmin(this.loginPassword);
-          if (ok) {
-            this.loggedIn = true;
-            window.location.reload();
-          }
-        },
-
-        async loadStockCriticoTags() {
-          const { data, error } = await supabase
-            .from('inventario')
-            .select('id, nombre, stock, reservado, minimo');
-          if (error) return;
-          const criticos = (data || []).filter(i => (i.stock - i.reservado) <= (i.minimo || 0) && i.minimo > 0);
-          this.stockCriticoTags = criticos.map(i => `
-            <span class="stock-critico-tag" data-ingrediente-id="${i.id}"
-              style="display:inline-flex; align-items:center; gap:4px; padding:2px 8px; background:rgba(239,68,68,.15); border-radius:20px; color:var(--danger); font-weight:600; font-size:.7rem; cursor:pointer; animation:pulse 1.5s infinite"
-              @click="window._irAIngrediente('${i.id}')">
-              <i class="fas fa-box" style="font-size:.6rem"></i>
-              ${i.nombre}
-              <span style="background:var(--danger); color:#fff; padding:0 4px; border-radius:10px; font-size:.6rem">${i.stock - i.reservado}</span>
-            </span>
-          `).join('');
-        },
-
-        _irAIngrediente(id) {
-          this.activeTab = 'inventario';
-          setTimeout(() => {
-            const event = new CustomEvent('selectIngrediente', { detail: { id } });
-            window.dispatchEvent(event);
-          }, 200);
-        },
-
-        async loadMesas() {
-          const { data, error } = await supabase.from('codigos_qr').select('*').order('nombre');
-          if (error) return;
-          const container = document.getElementById('adminMesaList');
-          if (container) {
-            container.innerHTML = (data || []).map(m => `
-              <button class="mesa-admin-btn" onclick="window.open('/SakiSushi0/Cliente/index.html?mesa=${encodeURIComponent(m.nombre)}', '_blank')">
-                <i class="fas fa-chair"></i><span>${m.nombre}</span>
-              </button>
-            `).join('');
-          }
-        },
-
-        openMesas() {
-          document.getElementById('adminMesaModal').classList.add('active');
-        },
-
-        initTheme() {
-          const saved = localStorage.getItem('saki_admin_theme');
-          if (saved === 'dark') {
-            document.documentElement.classList.add('dark-theme');
-            this.themeIcon = '<i class="fas fa-moon"></i>';
-          }
-        },
-
-        toggleTheme() {
-          document.documentElement.classList.toggle('dark-theme');
-          const isDark = document.documentElement.classList.contains('dark-theme');
-          this.themeIcon = isDark ? '<i class="fas fa-moon"></i>' : '<i class="fas fa-sun"></i>';
-          localStorage.setItem('saki_admin_theme', isDark ? 'dark' : 'light');
-        },
-
-        logout() {
-          logout();
-          this.loggedIn = false;
-          window.location.reload();
-        },
-
-        scrollTabs(dir) {
-          const container = this.$refs.tabsContainer;
-          if (container) container.scrollBy({ left: dir * 180, behavior: 'smooth' });
+  console.log('🚀 Iniciando script module...');
+  
+  import { supabase } from './services/supabaseClient.js';
+  import { formatBs, formatUSD, usdToBs } from './utils/formatters.js';
+  import { showToast } from './utils/toast.js';
+  
+  console.log('✅ Módulos importados correctamente');
+  
+  // Definir app globalmente
+  window.app = function() {
+    return {
+      loggedIn: false,
+      loginPassword: '',
+      activeTab: 'dashboard',
+      tabs: [
+        { id: 'dashboard', label: 'Dashboard' },
+        { id: 'inventario', label: 'Inventario' },
+        { id: 'menu', label: 'Menú y Precios' },
+        { id: 'usuarios', label: 'Usuarios' },
+        { id: 'deliverys', label: 'Deliverys' },
+        { id: 'mesoneros', label: 'Mesoneros' },
+        { id: 'configuracion', label: 'Configuración' },
+        { id: 'qr', label: 'Códigos QR' },
+        { id: 'reportes', label: 'Reportes' }
+      ],
+      themeIcon: '<i class="fas fa-sun"></i>',
+      stockCriticoTags: '',
+      
+      init() {
+        console.log('🔧 App init ejecutado');
+        this.checkSession();
+        this.initTheme();
+      },
+      
+      checkSession() {
+        const token = sessionStorage.getItem('admin_jwt_token');
+        if (token && sessionStorage.getItem('admin_user')) {
+          this.loggedIn = true;
+          console.log('✅ Sesión activa');
+        } else {
+          console.log('⚠️ Sin sesión');
         }
-      };
-    }
-
-    window.app = app;
-    window.inventoryComponent = inventoryComponent;
-    window.menuComponent = menuComponent;
-    window.usuariosComponent = usuariosComponent;
-    window.deliverysComponent = deliverysComponent;
-    window.mesonerosComponent = mesonerosComponent;
-    window.configComponent = configComponent;
-    window.qrComponent = qrComponent;
-    window.reportesComponent = reportesComponent;
-    window.dashboardComponent = dashboardComponent;
-    window.formatBs = formatBs;
-    window.formatUSD = formatUSD;
-    window.usdToBs = usdToBs;
-    window.showToast = showToast;
-
-    window.addEventListener('closeMesaModal', () => {
-      document.getElementById('adminMesaModal').classList.remove('active');
-    });
-  </script>
+      },
+      
+      async login() {
+        console.log('🔑 Login intentado con:', this.loginPassword);
+        // Simulación temporal - reemplazar con login real después
+        if (this.loginPassword === 'admin123') {
+          this.loggedIn = true;
+          showToast('Login exitoso', 'success');
+        } else {
+          showToast('Contraseña incorrecta', 'error');
+        }
+      },
+      
+      initTheme() {
+        const saved = localStorage.getItem('saki_admin_theme');
+        if (saved === 'dark') {
+          document.documentElement.classList.add('dark-theme');
+          this.themeIcon = '<i class="fas fa-moon"></i>';
+        }
+      },
+      
+      toggleTheme() {
+        document.documentElement.classList.toggle('dark-theme');
+        const isDark = document.documentElement.classList.contains('dark-theme');
+        this.themeIcon = isDark ? '<i class="fas fa-moon"></i>' : '<i class="fas fa-sun"></i>';
+        localStorage.setItem('saki_admin_theme', isDark ? 'dark' : 'light');
+      },
+      
+      logout() {
+        sessionStorage.removeItem('admin_jwt_token');
+        sessionStorage.removeItem('admin_user');
+        this.loggedIn = false;
+        location.reload();
+      },
+      
+      scrollTabs(dir) {
+        const container = this.$refs.tabsContainer;
+        if (container) container.scrollBy({ left: dir * 180, behavior: 'smooth' });
+      },
+      
+      openMesas() {
+        const modal = document.getElementById('adminMesaModal');
+        if (modal) modal.classList.add('active');
+      }
+    };
+  };
+  
+  // Exponer componentes vacíos temporalmente para evitar errores
+  window.dashboardComponent = () => ({});
+  window.inventoryComponent = () => ({});
+  window.menuComponent = () => ({});
+  window.usuariosComponent = () => ({});
+  window.deliverysComponent = () => ({});
+  window.mesonerosComponent = () => ({});
+  window.configComponent = () => ({});
+  window.qrComponent = () => ({});
+  window.reportesComponent = () => ({});
+  
+  window.formatBs = formatBs;
+  window.formatUSD = formatUSD;
+  window.usdToBs = usdToBs;
+  window.showToast = showToast;
+  window.supabaseClient = supabase;
+  
+  console.log('✅ Script module completado, app expuesta globalmente');
+</script>
 </body>
 </html>
