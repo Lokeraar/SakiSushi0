@@ -5,7 +5,7 @@ import { formatBs, formatUSD, usdToBs } from '../utils/formatters.js';
 
 export function dashboardComponent() {
   return {
-    // Datos del dashboard
+    // Datos
     ventasHoy: { usd: 0, bs: 0 },
     deliverysHoy: 0,
     propinasHoy: 0,
@@ -21,10 +21,8 @@ export function dashboardComponent() {
     aumentoIndefinido: false,
     aumentoAcumulado: 0,
     tasaEfectiva: 400,
-    // Loading
     loading: false,
-    // Timeout para guardar
-    saveTimeout: null,
+    productosActivos: 0,
 
     async init() {
       await this.cargarConfiguracion();
@@ -33,20 +31,19 @@ export function dashboardComponent() {
       await this.actualizarPropinasHoy();
       await this.actualizarStockCritico();
       await this.actualizarPedidosRecientes();
+      await this.actualizarProductosActivos();
 
-      // Suscripciones en tiempo real
       subscribe('config', (payload) => {
         if (payload.eventType === 'UPDATE') {
-          this.configGlobal = { ...this.configGlobal, ...payload.new };
-          this.tasaBase = this.configGlobal.tasa_cambio || 400;
-          this.aumentoDiario = this.configGlobal.aumento_diario || 0;
-          this.aumentoActivo = this.configGlobal.aumento_activo || false;
-          this.aumentoSemanal = this.configGlobal.aumento_semanal || false;
-          this.aumentoDesde = this.configGlobal.aumento_desde || '';
-          this.aumentoHasta = this.configGlobal.aumento_hasta || '';
-          this.aumentoIndefinido = this.configGlobal.aumento_indefinido || false;
+          this.tasaBase = payload.new.tasa_cambio || 400;
+          this.aumentoDiario = payload.new.aumento_diario || 0;
+          this.aumentoActivo = payload.new.aumento_activo || false;
+          this.aumentoSemanal = payload.new.aumento_semanal || false;
+          this.aumentoDesde = payload.new.aumento_desde || '';
+          this.aumentoHasta = payload.new.aumento_hasta || '';
+          this.aumentoIndefinido = payload.new.aumento_indefinido || false;
           this.recalcularTasaEfectiva();
-          this.tasaEfectiva = this.configGlobal.tasa_efectiva || 400;
+          this.tasaEfectiva = payload.new.tasa_efectiva || 400;
         }
       });
       subscribe('ventas', () => this.actualizarVentasHoy());
@@ -57,6 +54,7 @@ export function dashboardComponent() {
       });
       subscribe('propinas', () => this.actualizarPropinasHoy());
       subscribe('inventario', () => this.actualizarStockCritico());
+      subscribe('menu', () => this.actualizarProductosActivos());
     },
 
     async cargarConfiguracion() {
@@ -66,7 +64,6 @@ export function dashboardComponent() {
         .eq('id', 1)
         .single();
       if (error) return;
-      this.configGlobal = data || {};
       this.tasaBase = data.tasa_cambio || 400;
       this.aumentoDiario = data.aumento_diario || 0;
       this.aumentoActivo = data.aumento_activo || false;
@@ -206,6 +203,14 @@ export function dashboardComponent() {
       this.pedidosRecientes = data || [];
     },
 
+    async actualizarProductosActivos() {
+      const { data, error } = await supabase
+        .from('menu')
+        .select('id, disponible');
+      if (error) return;
+      this.productosActivos = (data || []).filter(m => m.disponible === true).length;
+    },
+
     _netoCobradoPedido(pedido) {
       if (!pedido) return 0;
       if (pedido.metodo_pago === 'invitacion') return 0;
@@ -223,6 +228,32 @@ export function dashboardComponent() {
         recibido = pedido.subtotal_bs || 0;
       }
       return Math.max(0, recibido - (pedido.vuelto_entregado || 0));
+    },
+
+    abrirDetalleVentas() {
+      showToast('Detalle de ventas', 'info');
+    },
+
+    abrirDetallePropinas() {
+      const tab = document.querySelector('.tab[data-tab="mesoneros"]');
+      if (tab) tab.click();
+    },
+
+    abrirDetalleDeliverys() {
+      const tab = document.querySelector('.tab[data-tab="deliverys"]');
+      if (tab) tab.click();
+    },
+
+    irAIngrediente(id) {
+      const tab = document.querySelector('.tab[data-tab="inventario"]');
+      if (tab) tab.click();
+      setTimeout(() => {
+        window.dispatchEvent(new CustomEvent('selectIngrediente', { detail: { id } }));
+      }, 200);
+    },
+
+    abrirDetallePedido(pedidoId) {
+      showToast('Pedido #' + pedidoId, 'info');
     },
 
     formatBs,
