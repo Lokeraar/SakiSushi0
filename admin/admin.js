@@ -35,17 +35,53 @@ window.showToast = function(message, type = 'success') {
 
 window.supabaseClient = supabase;
 
-// Componentes placeholder (todos con las propiedades necesarias)
+// DATOS DE PRUEBA TEMPORALES - ELIMINAR DESPUÉS
 window.dashboardComponent = function() {
   return {
-    tasaBase: 400, aumentoDiario: 0, aumentoActivo: false, aumentoSemanal: false,
-    aumentoDesde: '', aumentoHasta: '', aumentoIndefinido: false, aumentoAcumulado: 0,
-    tasaEfectiva: 400, loading: false, ventasHoy: { usd: 0, bs: 0 },
-    deliverysHoy: 0, propinasHoy: 0, stockCritico: [], pedidosRecientes: [], productosActivos: 0,
-    init() { console.log('Dashboard iniciado'); },
-    recalcularTasaEfectiva() {}, guardarConfiguracion() {}, abrirDetalleVentas() {},
-    abrirDetallePropinas() {}, abrirDetalleDeliverys() {}, irAIngrediente() {}, abrirDetallePedido() {},
-    formatBs: window.formatBs, formatUSD: window.formatUSD, usdToBs: window.usdToBs
+    tasaBase: 400,
+    aumentoDiario: 0,
+    aumentoActivo: false,
+    aumentoSemanal: false,
+    aumentoDesde: '',
+    aumentoHasta: '',
+    aumentoIndefinido: false,
+    aumentoAcumulado: 0,
+    tasaEfectiva: 400,
+    loading: false,
+    ventasHoy: { usd: 1250.50, bs: 500200 },
+    deliverysHoy: 75000,
+    propinasHoy: 25000,
+    stockCritico: [
+      { id: '1', nombre: 'Arroz para sushi', stock: 8, reservado: 2, minimo: 10 },
+      { id: '2', nombre: 'Salmón fresco', stock: 3, reservado: 1, minimo: 5 }
+    ],
+    pedidosRecientes: [
+      { id: 'PED-001', tipo: 'mesa', estado: 'pendiente', mesa: 'Mesa 1', fecha: new Date().toISOString(), total: 45.50, items: [{ nombre: 'California Roll', cantidad: 2 }] },
+      { id: 'PED-002', tipo: 'delivery', estado: 'pendiente', parroquia: 'San Bernardino', fecha: new Date().toISOString(), total: 32.00, items: [{ nombre: 'Philadelphia Roll', cantidad: 1 }] }
+    ],
+    productosActivos: 12,
+    
+    init() { console.log('Dashboard iniciado con datos de prueba'); },
+    recalcularTasaEfectiva() { console.log('Recalcular tasa'); },
+    guardarConfiguracion() { console.log('Guardar configuración'); },
+    abrirDetalleVentas() { window.showToast('Detalle de ventas (demo)', 'info'); },
+    abrirDetallePropinas() { 
+      const tab = document.querySelector('.tab[data-tab="mesoneros"]');
+      if (tab) tab.click();
+    },
+    abrirDetalleDeliverys() {
+      const tab = document.querySelector('.tab[data-tab="deliverys"]');
+      if (tab) tab.click();
+    },
+    irAIngrediente(id) {
+      const tab = document.querySelector('.tab[data-tab="inventario"]');
+      if (tab) tab.click();
+    },
+    abrirDetallePedido(pedidoId) { window.showToast('Pedido #' + pedidoId, 'info'); },
+    
+    formatBs: window.formatBs,
+    formatUSD: window.formatUSD,
+    usdToBs: window.usdToBs
   };
 };
 
