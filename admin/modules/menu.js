@@ -34,8 +34,14 @@ export function menuComponent() {
     },
 
     async init() {
+      console.log('🔧 Menu component iniciado');
       await this.loadMenu();
       subscribe('menu', () => this.loadMenu());
+
+      window.addEventListener('supabase-token-updated', () => {
+        console.log('Token actualizado, recargando menú');
+        this.loadMenu();
+      });
     },
 
     async loadMenu() {
@@ -147,9 +153,7 @@ export function menuComponent() {
       this.showForm = false;
     },
 
-    debouncedSearch: debounce(function() {
-      // Alpine reacciona automáticamente
-    }, 300),
+    debouncedSearch: debounce(function() {}, 300),
 
     formatBs,
     formatUSD,
