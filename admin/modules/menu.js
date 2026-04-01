@@ -7,7 +7,7 @@ import { debounce } from '../utils/debounce.js';
 export function menuComponent() {
   return {
     search: '',
-    filteredItemsList: [],
+    menuItems: [],
     form: {
       id: null,
       nombre: '',
@@ -32,7 +32,6 @@ export function menuComponent() {
       'Comida China': ['Arroz Chino', 'Arroz Cantones', 'Chopsuey', 'Lomey', 'Chow Mein', 'Fideos de Arroz', 'Tallarines Cantones', 'Mariscos', 'Foo Yong', 'Sopas', 'Entremeses'],
       'Comida Japonesa': ['Yakimeshi', 'Yakisoba', 'Pasta Udon', 'Churrasco']
     },
-    menuItems: [],
 
     async init() {
       await this.loadMenu();
@@ -48,7 +47,6 @@ export function menuComponent() {
           .order('nombre');
         if (error) throw error;
         this.menuItems = data || [];
-        this.updateFilteredItems();
       } catch (err) {
         showToast('Error cargando menú: ' + err.message, 'error');
       } finally {
@@ -56,15 +54,11 @@ export function menuComponent() {
       }
     },
 
-    updateFilteredItems() {
+    filteredItems() {
       const term = this.search.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-      this.filteredItemsList = this.menuItems.filter(i =>
+      return this.menuItems.filter(i =>
         i.nombre.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').includes(term)
       );
-    },
-
-    filteredItems() {
-      return this.filteredItemsList;
     },
 
     getAvailableSubcategorias() {
@@ -154,7 +148,7 @@ export function menuComponent() {
     },
 
     debouncedSearch: debounce(function() {
-      this.updateFilteredItems();
+      // Alpine reacciona automáticamente
     }, 300),
 
     formatBs,
