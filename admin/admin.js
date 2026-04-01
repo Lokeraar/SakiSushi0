@@ -1,5 +1,5 @@
 // admin.js - Archivo principal (ahora importa módulos reales)
-import { supabase } from './services/supabaseClient.js';
+import { supabase, setSupabaseToken } from './services/supabaseClient.js';
 import { dashboardComponent } from './modules/dashboard.js';
 import { inventoryComponent } from './modules/inventory.js';
 import { menuComponent } from './modules/menu.js';
@@ -45,7 +45,7 @@ window.showToast = function(message, type = 'success') {
   setTimeout(() => toast.remove(), 3000);
 };
 
-window.supabaseClient = supabase;
+// No reasignamos window.supabaseClient aquí, la función setSupabaseToken ya lo hace
 
 // ============================================
 // EXPONER COMPONENTES GLOBALMENTE PARA ALPINE
@@ -95,6 +95,8 @@ window.app = function() {
         this.loggedIn = true;
         console.log('✅ Sesión activa');
         document.getElementById('loginContainer').style.display = 'none';
+        // Actualizar cliente con token existente
+        setSupabaseToken(token);
       } else {
         console.log('⚠️ Sin sesión');
       }
@@ -121,6 +123,10 @@ window.app = function() {
 
         sessionStorage.setItem('admin_jwt_token', data.token);
         sessionStorage.setItem('admin_user', JSON.stringify(data.user));
+
+        // ACTUALIZAR EL CLIENTE DE SUPABASE CON EL TOKEN
+        setSupabaseToken(data.token);
+
         this.loggedIn = true;
         window.showToast('✅ Bienvenido Administrador', 'success');
         document.getElementById('loginContainer').style.display = 'none';
@@ -136,6 +142,8 @@ window.app = function() {
       this.loggedIn = false;
       window.showToast('Sesión cerrada', 'info');
       document.getElementById('loginContainer').style.display = 'flex';
+      // Opcional: reiniciar cliente con anon key
+      setSupabaseToken(null); // null restablece a anon (deberíamos implementar en supabaseClient.js)
     },
 
     initTheme() {
