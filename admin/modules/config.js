@@ -1,7 +1,6 @@
 import { supabase } from '../services/supabaseClient.js';
 import { subscribe } from '../services/realtimeManager.js';
 import { showToast } from '../utils/toast.js';
-import { debounce } from '../utils/debounce.js';
 
 export function configComponent() {
   return {
@@ -12,8 +11,14 @@ export function configComponent() {
     isLoading: false,
 
     async init() {
+      console.log('🔧 Config component iniciado');
       await this.cargarRecoveryEmail();
       subscribe('config', () => this.cargarRecoveryEmail());
+
+      window.addEventListener('supabase-token-updated', () => {
+        console.log('Token actualizado, recargando configuración');
+        this.cargarRecoveryEmail();
+      });
     },
 
     async cargarRecoveryEmail() {
@@ -41,32 +46,27 @@ export function configComponent() {
       }
       this.isLoading = true;
       try {
-        // Verificar contraseña actual usando verify_user_credentials
         const { data: adminData } = await supabase
           .from('usuarios')
           .select('username')
           .eq('rol', 'admin')
           .single();
         if (!adminData) throw new Error('Usuario admin no encontrado');
-        const { data: authData, error: authErr } = await supabase
+        const { data: authData } = await supabase
           .rpc('verify_user_credentials', {
             p_username: adminData.username,
             p_password: this.currentPassword
           });
-        if (authErr || !authData || !authData.success) {
+        if (!authData || !authData.success) {
           showToast('Contraseña actual incorrecta', 'error');
           return;
         }
-        // Generar hash de la nueva
-        const { data: hashed, error: hashErr } = await supabase
+        const { data: hashed } = await supabase
           .rpc('hash_password', { plain_password: this.newPassword });
-        if (hashErr) throw hashErr;
-        // Actualizar en usuarios
         await supabase
           .from('usuarios')
           .update({ password_hash: hashed })
           .eq('rol', 'admin');
-        // Actualizar en config
         await supabase
           .from('config')
           .update({ admin_password: this.newPassword })
