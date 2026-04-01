@@ -172,76 +172,78 @@ window.app = function() {
     },
     
     async login() {
-      console.log('🔑 1. Login iniciado con password:', this.loginPassword);
-      
-      if (!this.loginPassword) {
-        console.log('❌ 2. Contraseña vacía');
-        window.showToast('Ingrese la contraseña', 'error');
-        return;
-      }
-      
-      try {
-        console.log('📡 3. Haciendo fetch a la función login...');
-        const response = await fetch('https://iqwwoihiiyrtypyqzhgy.supabase.co/functions/v1/login', {
-          method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json',
-            'Accept': 'application/json'
-          },
-          body: JSON.stringify({ username: 'admin', password: this.loginPassword })
-        });
-        
-        console.log('📡 4. Response status:', response.status);
-        console.log('📡 5. Response ok:', response.ok);
-        
-        const data = await response.json();
-        console.log('📡 6. Datos recibidos:', data);
-        
-        if (!response.ok) {
-          console.log('❌ 7. Response no ok:', response.status);
-          throw new Error(data.error || `Error HTTP ${response.status}`);
-        }
-        
-        if (!data.success) {
-          console.log('❌ 8. data.success es false:', data.error);
-          throw new Error(data.error || 'Contraseña incorrecta');
-        }
-        
-        if (!data.user) {
-          console.log('❌ 9. No hay data.user');
-          throw new Error('No se recibieron datos del usuario');
-        }
-        
-        if (data.user.rol !== 'admin') {
-          console.log('❌ 10. Rol incorrecto:', data.user.rol);
-          throw new Error('No eres administrador. Rol: ' + data.user.rol);
-        }
-        
-        console.log('✅ 11. Guardando token en sessionStorage...');
-        sessionStorage.setItem('admin_jwt_token', data.token);
-        sessionStorage.setItem('admin_user', JSON.stringify(data.user));
-        
-        console.log('✅ 12. Actualizando estado loggedIn...');
-        this.loggedIn = true;
-        
-        console.log('✅ 13. Mostrando toast...');
-        window.showToast('✅ Bienvenido Administrador', 'success');
-        
-        console.log('✅ 14. Ocultando login y mostrando panel...');
-        const loginContainer = document.getElementById('loginContainer');
-        const panelContainer = document.querySelector('.panel-container');
-        
-        if (loginContainer) loginContainer.style.display = 'none';
-        if (panelContainer) panelContainer.style.display = 'flex';
-        
-        console.log('✅ 15. Login completado exitosamente');
-        
-      } catch (error) {
-        console.error('❌ ERROR EN LOGIN:', error);
-        console.error('❌ Mensaje de error:', error.message);
-        window.showToast('❌ Error: ' + error.message, 'error');
-      }
-    },
+  console.log('🔑 1. Login iniciado con password:', this.loginPassword);
+  console.log('🔑 2. this.loggedIn antes:', this.loggedIn);
+  
+  if (!this.loginPassword) {
+    console.log('❌ 2. Contraseña vacía');
+    window.showToast('Ingrese la contraseña', 'error');
+    return;
+  }
+  
+  try {
+    console.log('📡 3. Haciendo fetch a la función login...');
+    const response = await fetch('https://iqwwoihiiyrtypyqzhgy.supabase.co/functions/v1/login', {
+      method: 'POST',
+      headers: { 
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({ username: 'admin', password: this.loginPassword })
+    });
+    
+    console.log('📡 4. Response status:', response.status);
+    console.log('📡 5. Response ok:', response.ok);
+    
+    const data = await response.json();
+    console.log('📡 6. Datos recibidos:', data);
+    
+    if (!response.ok) {
+      console.log('❌ 7. Response no ok:', response.status);
+      throw new Error(data.error || `Error HTTP ${response.status}`);
+    }
+    
+    if (!data.success) {
+      console.log('❌ 8. data.success es false:', data.error);
+      throw new Error(data.error || 'Contraseña incorrecta');
+    }
+    
+    if (!data.user) {
+      console.log('❌ 9. No hay data.user');
+      throw new Error('No se recibieron datos del usuario');
+    }
+    
+    if (data.user.rol !== 'admin') {
+      console.log('❌ 10. Rol incorrecto:', data.user.rol);
+      throw new Error('No eres administrador. Rol: ' + data.user.rol);
+    }
+    
+    console.log('✅ 11. Guardando token en sessionStorage...');
+    sessionStorage.setItem('admin_jwt_token', data.token);
+    sessionStorage.setItem('admin_user', JSON.stringify(data.user));
+    
+    console.log('✅ 12. Actualizando estado loggedIn...');
+    this.loggedIn = true;
+    console.log('✅ 12b. this.loggedIn ahora es:', this.loggedIn);
+    
+    console.log('✅ 13. Mostrando toast...');
+    window.showToast('✅ Bienvenido Administrador', 'success');
+    
+    console.log('✅ 14. Ocultando login y mostrando panel...');
+    const loginContainer = document.getElementById('loginContainer');
+    const panelContainer = document.querySelector('.panel-container');
+    
+    if (loginContainer) loginContainer.style.display = 'none';
+    if (panelContainer) panelContainer.style.display = 'flex';
+    
+    console.log('✅ 15. Login completado exitosamente');
+    
+  } catch (error) {
+    console.error('❌ ERROR EN LOGIN:', error);
+    console.error('❌ Mensaje de error:', error.message);
+    window.showToast('❌ Error: ' + error.message, 'error');
+  }
+},
     
     logout() {
       sessionStorage.removeItem('admin_jwt_token');
