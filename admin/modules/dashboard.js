@@ -25,14 +25,10 @@ export function dashboardComponent() {
     productosActivos: 0,
 
     async init() {
-      await this.cargarConfiguracion();
-      await this.actualizarVentasHoy();
-      await this.actualizarDeliverysHoy();
-      await this.actualizarPropinasHoy();
-      await this.actualizarStockCritico();
-      await this.actualizarPedidosRecientes();
-      await this.actualizarProductosActivos();
+      console.log('🔧 Dashboard component iniciado');
+      await this.cargarTodosLosDatos();
 
+      // Suscripciones en tiempo real
       subscribe('config', (payload) => {
         if (payload.eventType === 'UPDATE') {
           this.tasaBase = payload.new.tasa_cambio || 400;
@@ -55,6 +51,22 @@ export function dashboardComponent() {
       subscribe('propinas', () => this.actualizarPropinasHoy());
       subscribe('inventario', () => this.actualizarStockCritico());
       subscribe('menu', () => this.actualizarProductosActivos());
+
+      // Escuchar evento de actualización de token para recargar datos
+      window.addEventListener('supabase-token-updated', () => {
+        console.log('Token actualizado, recargando dashboard');
+        this.cargarTodosLosDatos();
+      });
+    },
+
+    async cargarTodosLosDatos() {
+      await this.cargarConfiguracion();
+      await this.actualizarVentasHoy();
+      await this.actualizarDeliverysHoy();
+      await this.actualizarPropinasHoy();
+      await this.actualizarStockCritico();
+      await this.actualizarPedidosRecientes();
+      await this.actualizarProductosActivos();
     },
 
     async cargarConfiguracion() {
