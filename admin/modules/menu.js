@@ -1,15 +1,13 @@
-import { menuStore } from '../stores/menuStore.js';
-import { fetchMenu } from '../services/menuService.js';
+import { supabase } from '../services/supabaseClient.js';
 import { subscribe } from '../services/realtimeManager.js';
-import { debounce } from '../utils/debounce.js';
 import { showToast } from '../utils/toast.js';
 import { formatBs, formatUSD, usdToBs } from '../utils/formatters.js';
+import { debounce } from '../utils/debounce.js';
 
 export function menuComponent() {
   return {
     search: '',
-    selectedPlatillo: null,
-    showForm: false,
+    filteredItemsList: [],
     form: {
       id: null,
       nombre: '',
@@ -22,6 +20,7 @@ export function menuComponent() {
       disponible: true
     },
     editMode: false,
+    showForm: false,
     isLoading: false,
     categorias: [
       'Entradas', 'Sushi', 'Rolls', 'Tragos y bebidas', 'Pokes',
@@ -33,19 +32,23 @@ export function menuComponent() {
       'Comida China': ['Arroz Chino', 'Arroz Cantones', 'Chopsuey', 'Lomey', 'Chow Mein', 'Fideos de Arroz', 'Tallarines Cantones', 'Mariscos', 'Foo Yong', 'Sopas', 'Entremeses'],
       'Comida Japonesa': ['Yakimeshi', 'Yakisoba', 'Pasta Udon', 'Churrasco']
     },
+    menuItems: [],
 
     async init() {
       await this.loadMenu();
-      subscribe('menu', async () => {
-        await this.loadMenu();
-      });
+      subscribe('menu', () => this.loadMenu());
     },
 
     async loadMenu() {
       this.isLoading = true;
       try {
-        const items = await fetchMenu();
-        menuStore.set(items);
+        const { data, error } = await supabase
+          .from('menu')
+          .select('*')
+          .order('nombre');
+        if (error) throw error;
+        this.menuItems = data || [];
+        this.updateFilteredItems();
       } catch (err) {
         showToast('Error cargando menú: ' + err.message, 'error');
       } finally {
@@ -53,11 +56,15 @@ export function menuComponent() {
       }
     },
 
-    filteredItems() {
+    updateFilteredItems() {
       const term = this.search.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
-      return menuStore.items.filter(i =>
+      this.filteredItemsList = this.menuItems.filter(i =>
         i.nombre.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').includes(term)
       );
+    },
+
+    filteredItems() {
+      return this.filteredItemsList;
     },
 
     getAvailableSubcategorias() {
@@ -69,21 +76,15 @@ export function menuComponent() {
         showToast('Complete nombre, categoría y precio', 'error');
         return;
       }
-      const token = sessionStorage.getItem('admin_jwt_token');
-      if (!token) {
-        showToast('Sesión expirada', 'error');
-        return;
-      }
-      const supabase = (await import('../services/supabaseClient.js')).supabase;
       const data = {
-        id: this.form.id || window.crypto.randomUUID ? crypto.randomUUID() : 'plat_' + Date.now(),
+        id: this.form.id || (crypto.randomUUID ? crypto.randomUUID() : 'plat_' + Date.now()),
         nombre: this.form.nombre,
         categoria: this.form.categoria,
         subcategoria: this.form.subcategoria || null,
         precio: this.form.precio,
         descripcion: this.form.descripcion,
         imagen: this.form.imagen,
-        ingredientes: this.form.ingredientes,
+        ingredientes: this.form.ingredientes || {},
         disponible: this.form.disponible,
         stock: 0,
         stock_maximo: 0
@@ -106,7 +107,6 @@ export function menuComponent() {
     async deletePlatillo(id) {
       if (!confirm('¿Eliminar este platillo?')) return;
       try {
-        const supabase = (await import('../services/supabaseClient.js')).supabase;
         await supabase.from('menu').delete().eq('id', id);
         showToast('Platillo eliminado', 'success');
         await this.loadMenu();
@@ -117,7 +117,6 @@ export function menuComponent() {
 
     async toggleDisponible(id, disponible) {
       try {
-        const supabase = (await import('../services/supabaseClient.js')).supabase;
         await supabase.from('menu').update({ disponible }).eq('id', id);
         showToast(`Platillo ${disponible ? 'habilitado' : 'deshabilitado'}`, 'success');
         await this.loadMenu();
@@ -127,7 +126,7 @@ export function menuComponent() {
     },
 
     editPlatillo(id) {
-      const platillo = menuStore.items.find(p => p.id === id);
+      const platillo = this.menuItems.find(p => p.id === id);
       if (!platillo) return;
       this.form = { ...platillo };
       this.editMode = true;
@@ -155,7 +154,7 @@ export function menuComponent() {
     },
 
     debouncedSearch: debounce(function() {
-      this.render();
+      this.updateFilteredItems();
     }, 300),
 
     formatBs,
