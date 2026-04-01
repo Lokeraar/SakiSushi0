@@ -18,10 +18,17 @@ export function mesonerosComponent() {
     editMode: false,
 
     async init() {
+      console.log('🔧 Mesoneros component iniciado');
       await this.cargarMesoneros();
       await this.cargarPropinas();
       subscribe('mesoneros', () => this.cargarMesoneros());
       subscribe('propinas', () => this.cargarPropinas());
+
+      window.addEventListener('supabase-token-updated', () => {
+        console.log('Token actualizado, recargando mesoneros');
+        this.cargarMesoneros();
+        this.cargarPropinas();
+      });
     },
 
     async cargarMesoneros() {
