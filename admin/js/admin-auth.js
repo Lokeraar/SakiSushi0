@@ -1,56 +1,75 @@
-// admin-auth.js - Autenticación con selección de administrador
+// admin-auth.js - Autenticación con selección de administrador (corregido)
 (function() {
     let selectedAdmin = null;
 
     window.cargarListaAdminsRecientes = async function() {
         const container = document.getElementById('loginAdminsList');
         if (!container) return;
-        const recent = window.obtenerAdminsRecientes();
-        if (!recent.length) {
-            // Si no hay recientes, mostrar todos los admins activos de la BD
-            const { data: admins } = await window.supabaseClient.from('usuarios').select('*').eq('rol', 'admin').eq('activo', true);
-            if (admins && admins.length) {
-                container.innerHTML = admins.map(admin => `
+        
+        // Mostrar spinner de carga
+        container.innerHTML = '<div class="loading-spinner" style="margin:0 auto;"></div>';
+        
+        try {
+            // Esperar a que supabaseClient esté listo (puede tardar un momento)
+            let intentos = 0;
+            while (!window.supabaseClient && intentos < 20) {
+                await new Promise(r => setTimeout(r, 100));
+                intentos++;
+            }
+            
+            const recent = window.obtenerAdminsRecientes();
+            let admins = [];
+            
+            if (recent.length) {
+                // Usar los recientes (ya tienen foto o null)
+                admins = recent;
+            } else {
+                // Obtener todos los admins activos de la BD
+                const { data, error } = await window.supabaseClient.from('usuarios').select('*').eq('rol', 'admin').eq('activo', true);
+                if (error) throw error;
+                admins = data || [];
+            }
+            
+            if (!admins.length) {
+                container.innerHTML = '<p style="color:var(--text-muted);text-align:center">No hay administradores registrados</p>';
+                return;
+            }
+            
+            container.innerHTML = admins.map(admin => {
+                const fotoUrl = admin.foto || window.getPlaceholderImage(admin.nombre);
+                return `
                     <div class="admin-card" data-id="${admin.id}" data-username="${admin.username}" data-nombre="${admin.nombre}" data-foto="${admin.foto || ''}">
-                        <img class="admin-foto" src="${admin.foto || 'https://via.placeholder.com/48?text=Admin'}" onerror="this.src='https://via.placeholder.com/48?text=Admin'">
+                        <img class="admin-foto" src="${fotoUrl}" onerror="this.src='${window.getPlaceholderImage(admin.nombre)}'">
                         <div class="admin-info">
                             <div class="admin-nombre">${admin.nombre}</div>
                             <div class="admin-username">@${admin.username}</div>
                         </div>
                     </div>
-                `).join('');
-            } else {
-                container.innerHTML = '<p style="color:var(--text-muted);text-align:center">No hay administradores registrados</p>';
-            }
-        } else {
-            container.innerHTML = recent.map(admin => `
-                <div class="admin-card" data-id="${admin.id}" data-username="${admin.username}" data-nombre="${admin.nombre}" data-foto="${admin.foto || ''}">
-                    <img class="admin-foto" src="${admin.foto || 'https://via.placeholder.com/48?text=Admin'}" onerror="this.src='https://via.placeholder.com/48?text=Admin'">
-                    <div class="admin-info">
-                        <div class="admin-nombre">${admin.nombre}</div>
-                        <div class="admin-username">@${admin.username}</div>
-                    </div>
-                </div>
-            `).join('');
-        }
-        // Agregar evento click a cada tarjeta
-        document.querySelectorAll('.admin-card').forEach(card => {
-            card.addEventListener('click', async (e) => {
-                const id = card.dataset.id;
-                const username = card.dataset.username;
-                const nombre = card.dataset.nombre;
-                const foto = card.dataset.foto;
-                selectedAdmin = { id, username, nombre, foto };
-                // Mostrar panel de contraseña
-                document.getElementById('loginSelectorPanel').classList.add('hide');
-                document.getElementById('loginPasswordPanel').classList.add('show');
-                document.getElementById('selectedAdminFoto').src = foto || 'https://via.placeholder.com/48?text=Admin';
-                document.getElementById('selectedAdminNombre').textContent = nombre;
-                // Limpiar campo contraseña
-                document.getElementById('adminPassword').value = '';
-                document.getElementById('adminPassword').focus();
+                `;
+            }).join('');
+            
+            // Agregar evento click a cada tarjeta
+            document.querySelectorAll('.admin-card').forEach(card => {
+                card.addEventListener('click', async (e) => {
+                    const id = card.dataset.id;
+                    const username = card.dataset.username;
+                    const nombre = card.dataset.nombre;
+                    const foto = card.dataset.foto;
+                    selectedAdmin = { id, username, nombre, foto };
+                    // Mostrar panel de contraseña
+                    document.getElementById('loginSelectorPanel').classList.add('hide');
+                    document.getElementById('loginPasswordPanel').classList.add('show');
+                    document.getElementById('selectedAdminFoto').src = foto || window.getPlaceholderImage(nombre);
+                    document.getElementById('selectedAdminNombre').textContent = nombre;
+                    // Limpiar campo contraseña
+                    document.getElementById('adminPassword').value = '';
+                    document.getElementById('adminPassword').focus();
+                });
             });
-        });
+        } catch (error) {
+            console.error('Error cargando administradores:', error);
+            container.innerHTML = '<p style="color:var(--danger);text-align:center">Error al cargar administradores. Recarga la página.</p>';
+        }
     };
 
     window.hacerLogin = async function() {
@@ -157,6 +176,7 @@
         try {
             const user = JSON.parse(userData);
             if (user.rol !== 'admin') return false;
+            // Verificar token con Supabase
             const { error } = await window.supabaseClient.from('config').select('id').limit(1).maybeSingle();
             if (error && error.message.includes('JWT')) {
                 window.cerrarSesion();
@@ -179,38 +199,55 @@
         sessionStorage.removeItem('admin_user');
         window.isAdminAuthenticated = false;
         window.jwtToken = null;
-        // Limpiar selección de admin
         selectedAdmin = null;
-        document.getElementById('adminPassword').value = '';
-        // Mostrar de nuevo el selector de admins
-        document.getElementById('loginSelectorPanel').classList.remove('hide');
-        document.getElementById('loginPasswordPanel').classList.remove('show');
-        document.getElementById('loginPasswordPanel').style.display = 'none';
-        document.getElementById('loginSelectorPanel').style.display = 'block';
+        // Limpiar campo contraseña
+        const pwdInput = document.getElementById('adminPassword');
+        if (pwdInput) pwdInput.value = '';
+        // Volver al selector de admins
+        const selectorPanel = document.getElementById('loginSelectorPanel');
+        const passwordPanel = document.getElementById('loginPasswordPanel');
+        if (selectorPanel) {
+            selectorPanel.classList.remove('hide');
+            selectorPanel.style.display = 'block';
+        }
+        if (passwordPanel) {
+            passwordPanel.classList.remove('show');
+            passwordPanel.style.display = 'none';
+        }
         window.mostrarLogin();
         window.mostrarToast('🔓 Sesión cerrada', 'info');
         window.supabaseClient = window.inicializarSupabaseCliente();
+        // Recargar la lista de admins (por si cambió)
+        setTimeout(() => window.cargarListaAdminsRecientes(), 500);
     };
 
     // Botón volver
-    document.getElementById('backToSelectorBtn')?.addEventListener('click', () => {
-        document.getElementById('loginSelectorPanel').classList.remove('hide');
-        document.getElementById('loginPasswordPanel').classList.remove('show');
-        document.getElementById('loginPasswordPanel').style.display = 'none';
-        document.getElementById('loginSelectorPanel').style.display = 'block';
-        selectedAdmin = null;
-    });
+    const backBtn = document.getElementById('backToSelectorBtn');
+    if (backBtn) {
+        backBtn.addEventListener('click', () => {
+            document.getElementById('loginSelectorPanel').classList.remove('hide');
+            document.getElementById('loginPasswordPanel').classList.remove('show');
+            document.getElementById('loginPasswordPanel').style.display = 'none';
+            document.getElementById('loginSelectorPanel').style.display = 'block';
+            selectedAdmin = null;
+        });
+    }
 
     // Botón limpiar historial
-    document.getElementById('clearRecentAdminsBtn')?.addEventListener('click', () => {
-        if (confirm('¿Borrar el historial de administradores recientes?')) {
-            window.limpiarAdminsRecientes();
-            window.cargarListaAdminsRecientes();
-        }
-    });
+    const clearBtn = document.getElementById('clearRecentAdminsBtn');
+    if (clearBtn) {
+        clearBtn.addEventListener('click', () => {
+            if (confirm('¿Borrar el historial de administradores recientes?')) {
+                window.limpiarAdminsRecientes();
+                window.cargarListaAdminsRecientes();
+            }
+        });
+    }
 
     // Inicializar la lista al cargar la página (se llama desde DOMContentLoaded)
     window.iniciarLoginUI = async function() {
+        // Esperar un poco para que supabaseClient se inicialice
+        await new Promise(r => setTimeout(r, 300));
         await window.cargarListaAdminsRecientes();
     };
 })();
