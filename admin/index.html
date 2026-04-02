@@ -10,14 +10,10 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
-  
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
+    /* ============================================
+       ESTILOS COMPLETOS (tomados de Admin 2.0.html)
+       ============================================ */
     :root {
       --primary: #D32F2F;
       --primary-dark: #B71C1C;
@@ -109,6 +105,7 @@
       --badge-critico-text: #ff6b6b;
     }
 
+    * { margin:0; padding:0; box-sizing:border-box; }
     body {
       font-family: 'Montserrat', sans-serif;
       background: var(--body-bg);
@@ -119,6 +116,7 @@
       transition: background .3s ease, color .3s ease;
     }
 
+    /* Login */
     .login-container {
       display: flex;
       align-items: center;
@@ -127,7 +125,6 @@
       background: url('https://iqwwoihiiyrtypyqzhgy.supabase.co/storage/v1/object/public/imagenes-platillos/Fondo%20de%20pantalla.png') center/cover no-repeat fixed;
       position: relative;
     }
-
     .login-container::before {
       content: '';
       position: absolute;
@@ -135,7 +132,6 @@
       background: rgba(10, 10, 20, .55);
       backdrop-filter: blur(2px);
     }
-
     .login-box {
       position: relative;
       z-index: 1;
@@ -149,19 +145,13 @@
       box-shadow: var(--shadow-lg);
       text-align: center;
     }
-
     .login-box h2 {
       color: #fff;
       font-family: 'Playfair Display', serif;
       font-size: 1.8rem;
       margin-bottom: 2rem;
     }
-
-    .login-box h2 i {
-      color: var(--accent);
-      margin-right: .5rem;
-    }
-
+    .login-box h2 i { color: var(--accent); margin-right: .5rem; }
     .login-form input {
       width: 100%;
       padding: .9rem 1.2rem;
@@ -175,16 +165,8 @@
       outline: none;
       transition: var(--transition);
     }
-
-    .login-form input::placeholder {
-      color: rgba(255,255,255,.5);
-    }
-
-    .login-form input:focus {
-      border-color: var(--accent);
-      background: rgba(255,255,255,.15);
-    }
-
+    .login-form input::placeholder { color: rgba(255,255,255,.5); }
+    .login-form input:focus { border-color: var(--accent); background: rgba(255,255,255,.15); }
     .login-form button {
       width: 100%;
       padding: .9rem;
@@ -199,24 +181,13 @@
       transition: var(--transition);
       letter-spacing: .5px;
     }
+    .login-form button:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(211,47,47,.4); }
 
-    .login-form button:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 4px 16px rgba(211,47,47,.4);
-    }
+    /* Panel */
+    .panel-container { display: none; flex-direction: column; min-height: 100vh; width: 100%; overflow-x: hidden; background: var(--body-bg); }
+    .panel-container.active { display: flex; }
 
-    .panel-container {
-	  flex-direction: column;
-	  min-height: 100vh;
-	  width: 100%;
-	  overflow-x: hidden;
-	  background: var(--body-bg);
-	}
-
-    .panel-container.active {
-      display: flex;
-    }
-
+    /* Header */
     .header {
       background: var(--header-bg);
       color: var(--header-text);
@@ -235,15 +206,7 @@
       border-bottom: 1px solid var(--border);
       transition: background .3s ease, color .3s ease;
     }
-
-    .header-left {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      min-width: 0;
-      flex: 1;
-    }
-
+    .header-left { display: flex; align-items: center; gap: 1rem; min-width: 0; flex: 1; }
     .header-left h2 {
       font-family: 'Playfair Display', serif;
       font-size: 1.3rem;
@@ -252,18 +215,8 @@
       align-items: center;
       gap: .5rem;
     }
-
-    .header-left h2 i {
-      color: var(--accent);
-    }
-
-    .header-right {
-      display: flex;
-      align-items: center;
-      gap: .5rem;
-      flex-wrap: wrap;
-    }
-
+    .header-left h2 i { color: var(--accent); }
+    .header-right { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
     .nav-button {
       display: inline-flex;
       align-items: center;
@@ -280,13 +233,7 @@
       cursor: pointer;
       transition: var(--transition);
     }
-
-    .nav-button:hover {
-      background: var(--primary);
-      color: #fff;
-      border-color: var(--primary);
-    }
-
+    .nav-button:hover { background: var(--primary); color: #fff; border-color: var(--primary); }
     .logout-button {
       display: inline-flex;
       align-items: center;
@@ -301,13 +248,7 @@
       cursor: pointer;
       transition: var(--transition);
     }
-
-    .logout-button:hover {
-      background: var(--danger);
-      color: #fff;
-      border-color: var(--danger);
-    }
-
+    .logout-button:hover { background: var(--danger); color: #fff; border-color: var(--danger); }
     .theme-toggle {
       display: inline-flex;
       align-items: center;
@@ -322,13 +263,9 @@
       cursor: pointer;
       transition: var(--transition);
     }
+    .theme-toggle:hover { background: var(--primary); color: #fff; border-color: var(--primary); }
 
-    .theme-toggle:hover {
-      background: var(--primary);
-      color: #fff;
-      border-color: var(--primary);
-    }
-
+    /* Tasa Cards Bar (dashboard) */
     .tasa-cards-bar {
       background: var(--card-bg);
       padding: 1rem 1.25rem;
@@ -337,14 +274,12 @@
       box-shadow: var(--shadow-md);
       border: 1px solid var(--border);
     }
-
     .tcb-cards {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
       gap: .6rem;
       margin-bottom: .6rem;
     }
-
     .tcb-card {
       background: var(--card-bg);
       border-radius: 12px;
@@ -353,12 +288,10 @@
       border-top: 3px solid rgba(128,128,128,.2);
       transition: background .2s;
     }
-
-    .tcb-card-base { border-top-color: var(--primary); }
-    .tcb-card-pct { border-top-color: var(--accent); }
+    .tcb-card-base     { border-top-color: var(--primary); }
+    .tcb-card-pct      { border-top-color: var(--accent); }
     .tcb-card-efectiva { border-top-color: #4ade80; }
-    .tcb-card-acum { border-top-color: var(--warning); }
-
+    .tcb-card-acum     { border-top-color: var(--warning); }
     .tcb-label {
       font-size: .65rem;
       font-weight: 700;
@@ -367,7 +300,6 @@
       color: var(--text-muted);
       margin-bottom: .3rem;
     }
-
     .tcb-input {
       width: 100%;
       background: var(--input-bg);
@@ -379,34 +311,27 @@
       font-weight: 700;
       padding: .3rem .55rem;
       outline: none;
-      transition: border-color .2s;
     }
-
     .tcb-input:focus { border-color: var(--accent); }
-
     .tcb-value-big {
       font-size: 1.1rem;
       font-weight: 800;
       color: var(--text-dark);
       line-height: 1.2;
     }
-
     .tcb-card-efectiva .tcb-value-big { color: #4ade80; }
     .tcb-acum-val { color: var(--accent) !important; }
-
     .tcb-sublabel {
       font-size: .6rem;
       color: var(--text-muted);
       margin-top: .2rem;
     }
-
     .tcb-controls {
       display: flex;
       gap: .6rem;
       align-items: center;
       flex-wrap: wrap;
     }
-
     .tcb-toggle-card {
       background: var(--card-bg);
       border-radius: 10px;
@@ -414,20 +339,17 @@
       border: 1px solid var(--border);
       flex-shrink: 0;
     }
-
     .tcb-toggle-top {
       display: flex;
       align-items: center;
       gap: .6rem;
     }
-
     .tcb-toggle-label {
       font-size: .72rem;
       color: var(--text-muted);
       font-weight: 600;
       white-space: nowrap;
     }
-
     .toggle-switch {
       position: relative;
       display: inline-block;
@@ -435,13 +357,7 @@
       height: 22px;
       flex-shrink: 0;
     }
-
-    .toggle-switch input {
-      opacity: 0;
-      width: 0;
-      height: 0;
-    }
-
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
     .toggle-slider {
       position: absolute;
       cursor: pointer;
@@ -453,7 +369,6 @@
       transition: .3s;
       border-radius: 22px;
     }
-
     .toggle-slider:before {
       position: absolute;
       content: "";
@@ -466,15 +381,8 @@
       border-radius: 50%;
       box-shadow: 0 2px 4px rgba(0,0,0,.2);
     }
-
-    .toggle-switch input:checked + .toggle-slider {
-      background-color: var(--success);
-    }
-
-    .toggle-switch input:checked + .toggle-slider:before {
-      transform: translateX(18px);
-    }
-
+    .toggle-switch input:checked + .toggle-slider { background-color: var(--success); }
+    .toggle-switch input:checked + .toggle-slider:before { transform: translateX(18px); }
     .tcb-fechas-card {
       background: var(--card-bg);
       border-radius: 10px;
@@ -484,7 +392,6 @@
       flex-direction: column;
       gap: .3rem;
     }
-
     .tcb-fecha-row {
       display: flex;
       align-items: center;
@@ -492,7 +399,6 @@
       font-size: .72rem;
       color: var(--text-muted);
     }
-
     .tcb-fecha-label { font-size: .7rem; color: var(--text-muted); white-space: nowrap; }
     .tcb-fecha-input {
       padding: .2rem .4rem;
@@ -503,7 +409,6 @@
       font-size: .72rem;
       font-family: 'Montserrat', sans-serif;
     }
-
     .tcb-save-wrap { margin-left: auto; flex-shrink: 0; }
     .tcb-save-btn {
       font-size: .82rem;
@@ -511,6 +416,7 @@
       white-space: nowrap;
     }
 
+    /* Tabs */
     .tabs-wrapper {
       display: flex;
       align-items: stretch;
@@ -518,7 +424,6 @@
       border-bottom: 1px solid var(--border);
       position: relative;
     }
-
     .tabs-chevron {
       flex-shrink: 0;
       width: 36px;
@@ -533,15 +438,9 @@
       transition: var(--transition);
       padding: 0 4px;
     }
-
-    .tabs-chevron:hover {
-      background: rgba(0,0,0,.08);
-      color: var(--accent);
-    }
-
+    .tabs-chevron:hover { background: rgba(0,0,0,.08); color: var(--accent); }
     .tabs-chevron-left { border-right: 1px solid var(--border); }
     .tabs-chevron-right { border-left: 1px solid var(--border); }
-
     .tabs {
       flex: 1;
       display: flex;
@@ -550,9 +449,7 @@
       overflow-x: auto;
       scrollbar-width: none;
     }
-
     .tabs::-webkit-scrollbar { display: none; }
-
     .tab {
       padding: .9rem 1.4rem;
       cursor: pointer;
@@ -567,31 +464,19 @@
       background: transparent;
       letter-spacing: .3px;
     }
+    .tab:hover { color: var(--text-dark); background: rgba(0,0,0,.03); }
+    .tab.active { color: var(--tab-active); border-bottom-color: var(--tab-active); font-weight: 700; }
 
-    .tab:hover {
-      color: var(--text-dark);
-      background: rgba(0,0,0,.03);
-    }
+    /* Content */
+    .content { padding: 2rem; flex: 1; background: var(--body-bg); }
 
-    .tab.active {
-      color: var(--tab-active);
-      border-bottom-color: var(--tab-active);
-      font-weight: 700;
-    }
-
-    .content {
-      padding: 2rem;
-      flex: 1;
-      background: var(--body-bg);
-    }
-
+    /* Dashboard Cards */
     .dashboard-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
       gap: 1rem;
       margin-bottom: 2rem;
     }
-
     .dashboard-card {
       background: var(--card-bg);
       border-radius: var(--radius);
@@ -602,12 +487,10 @@
       transition: var(--transition);
       cursor: pointer;
     }
-
     .dashboard-card:hover {
       transform: translateY(-2px);
       box-shadow: var(--shadow-md);
     }
-
     .card-title {
       font-size: .78rem;
       color: var(--text-muted);
@@ -616,13 +499,13 @@
       letter-spacing: .5px;
       margin-bottom: .4rem;
     }
-
     .card-value {
       font-size: 1.6rem;
       font-weight: 700;
       color: var(--text-dark);
     }
 
+    /* Botones */
     .btn-primary {
       display: inline-flex;
       align-items: center;
@@ -638,12 +521,10 @@
       cursor: pointer;
       transition: var(--transition);
     }
-
     .btn-primary:hover {
       transform: translateY(-1px);
       box-shadow: 0 4px 12px rgba(211,47,47,.35);
     }
-
     .btn-secondary {
       display: inline-flex;
       align-items: center;
@@ -659,11 +540,7 @@
       cursor: pointer;
       transition: var(--transition);
     }
-
-    .btn-secondary:hover {
-      background: #ebebeb;
-    }
-
+    .btn-secondary:hover { background: #ebebeb; }
     .btn-delivery {
       display: inline-flex;
       align-items: center;
@@ -680,12 +557,10 @@
       transition: var(--transition);
       white-space: nowrap;
     }
-
     .btn-delivery:hover {
       opacity: .88;
       transform: translateY(-1px);
     }
-
     .btn-sm {
       display: inline-flex;
       align-items: center;
@@ -700,10 +575,8 @@
       transition: var(--transition);
     }
 
-    .form-group {
-      margin-bottom: 1rem;
-    }
-
+    /* Formularios */
+    .form-group { margin-bottom: 1rem; }
     .form-group label {
       display: block;
       font-size: .82rem;
@@ -711,7 +584,6 @@
       color: var(--text-muted);
       margin-bottom: .35rem;
     }
-
     .form-group input:not([type=checkbox]):not([type=radio]),
     .form-group select,
     .form-group textarea {
@@ -726,26 +598,24 @@
       outline: none;
       transition: var(--transition);
     }
-
     .form-group input:focus,
     .form-group select:focus,
     .form-group textarea:focus {
       border-color: var(--primary);
       box-shadow: 0 0 0 3px rgba(211,47,47,.1);
     }
-
     .form-row {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 1rem;
     }
 
+    /* Inventario Panel */
     .inv-panel {
       display: flex;
       gap: 1rem;
       align-items: flex-start;
     }
-
     .inv-list-col {
       flex: 0 0 260px;
       background: var(--card-bg);
@@ -754,13 +624,11 @@
       border: 1px solid var(--border);
       overflow: hidden;
     }
-
     .inv-list-search {
       padding: .6rem .75rem;
       border-bottom: 1px solid var(--border);
       background: #fafafa;
     }
-
     .inv-list-search input {
       width: 100%;
       padding: .4rem .7rem;
@@ -770,12 +638,10 @@
       font-size: .82rem;
       outline: none;
     }
-
     .inv-list-items {
       max-height: calc(100vh - 280px);
       overflow-y: auto;
     }
-
     .inv-list-item {
       display: flex;
       align-items: center;
@@ -789,21 +655,15 @@
       transition: background .15s;
       gap: .5rem;
     }
-
-    .inv-list-item:hover {
-      background: var(--list-item-hover);
-    }
-
+    .inv-list-item:hover { background: var(--list-item-hover); }
     .inv-list-item.active {
       background: linear-gradient(135deg, var(--primary), var(--primary-dark));
       color: #fff;
     }
-
     .inv-list-item.active .inv-item-badge {
       background: rgba(255,255,255,.25);
       color: #fff;
     }
-
     .inv-item-badge {
       font-size: .65rem;
       font-weight: 700;
@@ -813,12 +673,10 @@
       background: #f0f0f0;
       color: var(--text-muted);
     }
-
     .inv-detail-col {
       flex: 1;
       min-width: 0;
     }
-
     .inv-detail-card {
       background: var(--card-bg);
       border-radius: 14px;
@@ -829,12 +687,10 @@
       position: relative;
       animation: inv-detail-in .18s ease;
     }
-
     @keyframes inv-detail-in {
       from { opacity: 0; transform: translateY(6px); }
       to { opacity: 1; transform: translateY(0); }
     }
-
     .inv-detail-title {
       font-size: 1.1rem;
       font-weight: 800;
@@ -847,14 +703,12 @@
       justify-content: space-between;
       gap: .5rem;
     }
-
     .inv-detail-empty {
       padding: 3rem 1rem;
       text-align: center;
       color: var(--text-muted);
       font-size: .88rem;
     }
-
     .inv-detail-close {
       background: #f5f5f5;
       border: none;
@@ -870,33 +724,21 @@
       flex-shrink: 0;
       transition: background .15s;
     }
-
-    .inv-detail-close:hover {
-      background: var(--danger);
-      color: #fff;
-    }
-
+    .inv-detail-close:hover { background: var(--danger); color: #fff; }
     .inv-stock-row {
       display: flex;
       align-items: baseline;
       gap: .3rem;
       margin-bottom: .5rem;
     }
-
     .inv-stock-num {
       font-size: 2rem;
       font-weight: 800;
     }
-
     .inv-stock-num.ok { color: var(--success); }
     .inv-stock-num.bajo { color: var(--warning); }
     .inv-stock-num.critico { color: var(--danger); }
-
-    .inv-stock-unit {
-      font-size: .9rem;
-      color: var(--text-muted);
-    }
-
+    .inv-stock-unit { font-size: .9rem; color: var(--text-muted); }
     .inv-bar {
       height: 5px;
       background: #f0f0f0;
@@ -904,29 +746,24 @@
       overflow: hidden;
       margin-bottom: .85rem;
     }
-
     .inv-bar-fill {
       height: 100%;
       border-radius: 3px;
       transition: width .4s;
     }
-
     .inv-bar-fill.ok { background: var(--success); }
     .inv-bar-fill.bajo { background: var(--warning); }
     .inv-bar-fill.critico { background: var(--danger); }
-
     .inv-meta-grid {
       display: grid;
       grid-template-columns: 1fr 1fr 1fr;
       gap: .75rem;
       margin-bottom: .85rem;
     }
-
     .inv-meta-item {
       display: flex;
       flex-direction: column;
     }
-
     .inv-meta-label {
       font-size: .62rem;
       font-weight: 700;
@@ -934,57 +771,19 @@
       letter-spacing: .3px;
       color: var(--text-muted);
     }
-
     .inv-meta-val {
       font-size: .78rem;
       font-weight: 700;
       color: var(--text-dark);
     }
+    .inv-meta-bs { font-size: .65rem; color: var(--text-muted); }
 
-    .inv-meta-bs {
-      font-size: .65rem;
-      color: var(--text-muted);
-    }
-
-    .inv-search-wrap {
-      position: relative;
-      max-width: 380px;
-      margin-bottom: 1rem;
-    }
-
-    .inv-search-icon {
-      position: absolute;
-      left: .85rem;
-      top: 50%;
-      transform: translateY(-50%);
-      color: var(--text-muted);
-      font-size: .85rem;
-      pointer-events: none;
-    }
-
-    .inv-search-input {
-      width: 100%;
-      padding: .6rem .9rem .6rem 2.2rem;
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      font-family: 'Montserrat', sans-serif;
-      font-size: .88rem;
-      color: var(--text-dark);
-      outline: none;
-      transition: var(--transition);
-    }
-
-    .inv-search-input:focus {
-      border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(211,47,47,.1);
-    }
-
+    /* Menú */
     .menu-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
       gap: 1rem;
     }
-
     .menu-card-v2 {
       background: var(--card-bg);
       border-radius: 14px;
@@ -997,30 +796,25 @@
       flex-direction: column;
       gap: .6rem;
     }
-
     .menu-card-v2:hover {
       box-shadow: var(--shadow-md);
       transform: translateY(-2px);
     }
-
     .mc2-header {
       display: flex;
       gap: .75rem;
       align-items: flex-start;
     }
-
     .mc2-info {
       flex: 1;
       min-width: 0;
     }
-
     .mc2-nombre {
       font-weight: 800;
       font-size: .95rem;
       color: var(--text-dark);
       line-height: 1.25;
     }
-
     .mc2-cat {
       font-size: .68rem;
       color: var(--text-muted);
@@ -1028,20 +822,17 @@
       letter-spacing: .4px;
       margin-top: 2px;
     }
-
     .mc2-precio {
       font-size: 1rem;
       font-weight: 800;
       color: var(--primary);
       margin-top: .3rem;
     }
-
     .mc2-precio-bs {
       font-size: .75rem;
       font-weight: 600;
       color: var(--text-muted);
     }
-
     .mc2-stock-line {
       font-size: .75rem;
       color: var(--text-muted);
@@ -1051,12 +842,10 @@
       gap: .4rem;
       flex-wrap: wrap;
     }
-
     .mc2-stock-val {
       font-weight: 700;
       color: var(--success);
     }
-
     .mc2-badge {
       font-size: .6rem;
       font-weight: 700;
@@ -1065,17 +854,8 @@
       text-transform: uppercase;
       letter-spacing: .3px;
     }
-
-    .mc2-badge-ok {
-      background: #e8f5e9;
-      color: var(--success);
-    }
-
-    .mc2-badge-off {
-      background: #ffebee;
-      color: var(--danger);
-    }
-
+    .mc2-badge-ok { background: #e8f5e9; color: var(--success); }
+    .mc2-badge-off { background: #ffebee; color: var(--danger); }
     .mc2-img-wrap {
       width: 68px;
       height: 68px;
@@ -1084,19 +864,12 @@
       flex-shrink: 0;
       border: 1px solid var(--border);
     }
-
-    .mc2-img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
+    .mc2-img { width: 100%; height: 100%; object-fit: cover; }
     .mc2-desc {
       font-size: .75rem;
       color: var(--text-muted);
       line-height: 1.4;
     }
-
     .mc2-actions {
       display: flex;
       gap: .4rem;
@@ -1105,12 +878,12 @@
       border-top: 1px solid var(--border);
     }
 
+    /* Usuarios */
     .usuarios-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
       gap: 1rem;
     }
-
     .usuario-card {
       background: var(--card-bg);
       border-radius: 14px;
@@ -1123,12 +896,10 @@
       border-left: 4px solid var(--info);
       transition: var(--transition);
     }
-
     .usuario-card:hover {
       box-shadow: var(--shadow-md);
       transform: translateY(-1px);
     }
-
     .usuario-avatar {
       width: 44px;
       height: 44px;
@@ -1142,12 +913,10 @@
       font-size: 1rem;
       flex-shrink: 0;
     }
-
     .usuario-info {
       flex: 1;
       min-width: 0;
     }
-
     .usuario-nombre {
       font-weight: 700;
       font-size: .9rem;
@@ -1156,25 +925,23 @@
       overflow: hidden;
       text-overflow: ellipsis;
     }
-
     .usuario-username {
       font-size: .75rem;
       color: var(--text-muted);
       margin-top: 2px;
     }
-
     .usuario-actions {
       display: flex;
       gap: .35rem;
       flex-shrink: 0;
     }
 
+    /* Deliverys */
     .delivery-list {
       display: grid;
       grid-template-columns: 1fr;
       gap: .85rem;
     }
-
     .delivery-card {
       background: var(--card-bg);
       border-radius: 14px;
@@ -1187,11 +954,7 @@
       border-left: 4px solid var(--delivery);
       transition: var(--transition);
     }
-
-    .delivery-card:hover {
-      box-shadow: var(--shadow-md);
-    }
-
+    .delivery-card:hover { box-shadow: var(--shadow-md); }
     .delivery-icon {
       width: 40px;
       height: 40px;
@@ -1204,14 +967,12 @@
       font-size: 1.1rem;
       flex-shrink: 0;
     }
-
     .delivery-nombre {
       font-weight: 700;
       font-size: .9rem;
       color: var(--text-dark);
       flex: 1;
     }
-
     .delivery-actions {
       display: flex;
       gap: .35rem;
@@ -1219,12 +980,12 @@
       align-items: center;
     }
 
+    /* Mesoneros */
     .mesoneros-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
       gap: 1rem;
     }
-
     .mesonero-card {
       background: var(--card-bg);
       border-radius: 14px;
@@ -1237,12 +998,10 @@
       border-left: 4px solid var(--propina);
       transition: var(--transition);
     }
-
     .mesonero-card:hover {
       box-shadow: var(--shadow-md);
       transform: translateY(-1px);
     }
-
     .mesonero-avatar {
       width: 38px;
       height: 38px;
@@ -1256,7 +1015,6 @@
       font-size: .85rem;
       flex-shrink: 0;
     }
-
     .mesonero-nombre {
       font-weight: 700;
       font-size: .88rem;
@@ -1266,19 +1024,16 @@
       overflow: hidden;
       text-overflow: ellipsis;
     }
-
     .mesonero-actions {
       display: flex;
       gap: .35rem;
     }
-
     .propinas-stats {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
       gap: 1rem;
       margin-bottom: 1.5rem;
     }
-
     .propina-card {
       background: var(--card-bg);
       border-radius: 14px;
@@ -1289,18 +1044,15 @@
       text-align: center;
       transition: var(--transition);
     }
-
     .propina-card:hover {
       transform: translateY(-2px);
       box-shadow: var(--shadow-md);
     }
-
     .propina-card .stat-value {
       font-size: 1.5rem;
       font-weight: 800;
       color: var(--propina);
     }
-
     .propina-card .stat-label {
       font-size: .72rem;
       font-weight: 700;
@@ -1310,6 +1062,7 @@
       margin-top: .3rem;
     }
 
+    /* QR */
     .qr-generator-card {
       background: var(--card-bg);
       border-radius: 14px;
@@ -1319,7 +1072,6 @@
       border-top: 3px solid var(--accent);
       margin-bottom: 1.5rem;
     }
-
     .qr-generator-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
@@ -1327,7 +1079,6 @@
       align-items: flex-end;
       margin-bottom: 1rem;
     }
-
     .qr-wifi-hint {
       display: flex;
       align-items: flex-start;
@@ -1340,13 +1091,11 @@
       border: 1px solid #fff9c4;
       line-height: 1.45;
     }
-
     .qr-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
       gap: 1rem;
     }
-
     .qr-card-v2 {
       background: var(--card-bg);
       border-radius: 14px;
@@ -1361,22 +1110,16 @@
       transition: var(--transition);
       position: relative;
     }
-
     .qr-card-v2:hover {
       box-shadow: var(--shadow-md);
       border-color: var(--primary);
     }
-
-    .qr-img-box {
-      line-height: 0;
-    }
-
+    .qr-img-box { line-height: 0; }
     .qr-nombre-v2 {
       font-weight: 700;
       font-size: .88rem;
       color: var(--text-dark);
     }
-
     .qr-del-btn {
       position: absolute;
       top: .6rem;
@@ -1394,18 +1137,17 @@
       font-size: .75rem;
       transition: var(--transition);
     }
-
     .qr-del-btn:hover {
       background: var(--danger);
       color: #fff;
     }
 
+    /* Configuración */
     .config-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
       gap: 1.25rem;
     }
-
     .config-section {
       background: var(--card-bg);
       border-radius: 14px;
@@ -1414,7 +1156,6 @@
       border: 1px solid var(--border);
       border-top: 3px solid var(--secondary);
     }
-
     .config-section h3 {
       font-family: 'Montserrat', sans-serif;
       font-size: .78rem;
@@ -1427,6 +1168,7 @@
       border-bottom: 1px solid var(--border);
     }
 
+    /* Reportes */
     .reportes-filters {
       display: flex;
       gap: .75rem;
@@ -1439,7 +1181,6 @@
       border: 1px solid var(--border);
       margin-bottom: 1.5rem;
     }
-
     .chart-container {
       background: var(--card-bg);
       border-radius: 14px;
@@ -1447,7 +1188,6 @@
       box-shadow: var(--shadow-sm);
       border: 1px solid var(--border);
     }
-
     .chart-container h3 {
       font-family: 'Montserrat', sans-serif;
       font-size: .78rem;
@@ -1457,12 +1197,10 @@
       color: var(--text-muted);
       margin-bottom: 1rem;
     }
-
     .chart-wrapper {
       position: relative;
       height: 220px;
     }
-
     .data-table {
       width: 100%;
       border-collapse: collapse;
@@ -1471,7 +1209,6 @@
       overflow: hidden;
       box-shadow: var(--shadow-sm);
     }
-
     .data-table th {
       background: var(--table-header);
       color: var(--table-header-text);
@@ -1480,17 +1217,14 @@
       font-size: .82rem;
       font-weight: 600;
     }
-
     .data-table td {
       padding: .75rem 1rem;
       border-bottom: 1px solid #f0f0f0;
       font-size: .85rem;
     }
+    .table-responsive { overflow-x: auto; }
 
-    .table-responsive {
-      overflow-x: auto;
-    }
-
+    /* Modales */
     .modal {
       display: none;
       position: fixed;
@@ -1504,11 +1238,7 @@
       justify-content: center;
       backdrop-filter: blur(4px);
     }
-
-    .modal.active {
-      display: flex;
-    }
-
+    .modal.active { display: flex; }
     .modal-content {
       background: var(--card-bg);
       border-radius: 12px;
@@ -1518,7 +1248,6 @@
       overflow-y: auto;
       box-shadow: var(--shadow-lg);
     }
-
     .modal-header {
       background: var(--modal-header-bg);
       color: var(--modal-header-text);
@@ -1529,12 +1258,10 @@
       border-radius: 12px 12px 0 0;
       border-bottom: 1px solid var(--border);
     }
-
     .modal-header h3 {
       font-size: 1.05rem;
       font-weight: 700;
     }
-
     .modal-close {
       background: transparent;
       border: none;
@@ -1544,15 +1271,8 @@
       line-height: 1;
       padding: 0 .3rem;
     }
-
-    .modal-close:hover {
-      color: var(--text-dark);
-    }
-
-    .modal-body {
-      padding: 1.5rem;
-    }
-
+    .modal-close:hover { color: var(--text-dark); }
+    .modal-body { padding: 1.5rem; }
     .modal-footer {
       padding: 1rem 1.5rem;
       border-top: 1px solid var(--border);
@@ -1561,6 +1281,7 @@
       gap: .75rem;
     }
 
+    /* Toast */
     .toast {
       position: fixed;
       bottom: 1.5rem;
@@ -1578,22 +1299,17 @@
       max-width: 360px;
       box-shadow: var(--shadow-lg);
     }
-
-    .toast.show {
-      opacity: 1;
-      transform: translateY(0);
-    }
-
+    .toast.show { opacity: 1; transform: translateY(0); }
     .toast.success { background: var(--success); }
     .toast.error { background: var(--danger); }
     .toast.warning { background: var(--warning); }
 
+    /* Empty state */
     .empty-state {
       text-align: center;
       padding: 2rem 1rem;
       color: var(--text-muted);
     }
-
     .empty-state i {
       font-size: 2rem;
       margin-bottom: .5rem;
@@ -1601,6 +1317,7 @@
       opacity: .5;
     }
 
+    /* Otros */
     .status-activo {
       background: rgba(76, 175, 80, 0.15);
       color: #4CAF50;
@@ -1612,7 +1329,6 @@
       align-items: center;
       gap: 4px;
     }
-
     .status-inactivo {
       background: rgba(158, 158, 158, 0.15);
       color: #9e9e9e;
@@ -1621,16 +1337,13 @@
       font-size: .7rem;
       font-weight: 600;
     }
-
     .stock-critico-tag {
       animation: pulse 1.5s infinite;
     }
-
     @keyframes pulse {
       0%, 100% { opacity: 1; transform: scale(1); box-shadow: 0 0 0 0 rgba(239,68,68,0.4); }
       50% { opacity: 0.85; transform: scale(1.02); box-shadow: 0 0 0 3px rgba(239,68,68,0.2); }
     }
-
     .pane-header {
       display: flex;
       align-items: center;
@@ -1641,7 +1354,6 @@
       padding-bottom: 1rem;
       border-bottom: 2px solid var(--border);
     }
-
     .section-title {
       font-family: 'Playfair Display', serif;
       font-size: 1.6rem;
@@ -1653,18 +1365,13 @@
       align-items: center;
       gap: .6rem;
     }
-
-    .section-title i {
-      color: var(--primary);
-    }
-
+    .section-title i { color: var(--primary); }
     .dashboard-lower-grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 1.5rem;
       margin-top: 1.5rem;
     }
-
     .alert-list {
       background: var(--card-bg);
       border-radius: var(--radius);
@@ -1672,7 +1379,6 @@
       box-shadow: var(--shadow-sm);
       border: 1px solid var(--border);
     }
-
     .alert-list h3 {
       font-size: .95rem;
       font-weight: 700;
@@ -1681,7 +1387,6 @@
       padding-bottom: .5rem;
       border-bottom: 2px solid var(--border);
     }
-
     .alert-item {
       display: flex;
       justify-content: space-between;
@@ -1692,7 +1397,6 @@
       border-left: 4px solid var(--danger);
       margin-bottom: .5rem;
     }
-
     .pedido-item-modern {
       background: var(--card-bg);
       border-radius: 12px;
@@ -1702,12 +1406,10 @@
       cursor: pointer;
       margin-bottom: .5rem;
     }
-
     .pedido-item-modern:hover {
       transform: translateY(-2px);
       box-shadow: var(--shadow-sm);
     }
-
     .mesa-admin-btn {
       display: flex;
       flex-direction: column;
@@ -1726,19 +1428,16 @@
       transition: var(--transition);
       box-shadow: var(--shadow-sm);
     }
-
     .mesa-admin-btn i {
       font-size: 1.4rem;
       color: var(--primary);
     }
-
     .mesa-admin-btn:hover {
       border-color: var(--primary);
       background: #fff5f5;
       transform: translateY(-2px);
       box-shadow: var(--shadow-md);
     }
-
     .pane-input {
       flex: 1;
       min-width: 160px;
@@ -1753,12 +1452,12 @@
       outline: none;
       transition: var(--transition);
     }
-
     .pane-input:focus {
       border-color: var(--primary);
       box-shadow: 0 0 0 3px rgba(211,47,47,.1);
     }
 
+    /* Responsive */
     @media (max-width: 768px) {
       .content { padding: .75rem; }
       .dashboard-grid { grid-template-columns: 1fr 1fr !important; }
@@ -1773,28 +1472,25 @@
       .config-grid { grid-template-columns: 1fr; }
       .dashboard-lower-grid { grid-template-columns: 1fr; }
     }
-
     @media (max-width: 480px) {
       .tcb-cards { grid-template-columns: 1fr; }
       .header-right .nav-button:nth-child(n+3) { display: none; }
     }
 
-    [x-cloak] {
-      display: none !important;
-    }
+    [x-cloak] { display: none !important; }
   </style>
 </head>
-	<body x-data="app()" x-init="init()">
-	  <div id="loginContainer" class="login-container" style="display: flex;">
-	  <div class="login-box">
-		<h2><i class="fas fa-cog"></i> Admin Saki Sushi</h2>
-		<button @click="console.log('Alpine funciona!')" style="margin-bottom: 1rem; padding: 0.5rem; background: #444; color: white; border: none; border-radius: 8px; cursor: pointer; width: 100%;">Probar Alpine</button>
-		<form class="login-form" @submit.prevent="login">
-		  <input type="password" x-model="loginPassword" placeholder="Contraseña de Administrador" required>
-		  <button type="submit">Ingresar</button>
-		</form>
-	  </div>
-	</div>
+<body x-data="app()" x-init="init()">
+  <div id="loginContainer" class="login-container" style="display: flex;">
+    <div class="login-box">
+      <h2><i class="fas fa-cog"></i> Admin Saki Sushi</h2>
+      <button @click="console.log('Alpine funciona!')" style="margin-bottom: 1rem; padding: 0.5rem; background: #444; color: white; border: none; border-radius: 8px; cursor: pointer; width: 100%;">Probar Alpine</button>
+      <form class="login-form" @submit.prevent="login">
+        <input type="password" x-model="loginPassword" placeholder="Contraseña de Administrador" required>
+        <button type="submit">Ingresar</button>
+      </form>
+    </div>
+  </div>
 
   <div x-show="loggedIn" class="panel-container" x-cloak>
     <header class="header">
@@ -1824,6 +1520,7 @@
     <div class="content">
       <div x-show="activeTab === 'dashboard'">
         <div x-data="dashboardComponent()" x-init="init()">
+          <!-- Contenido del Dashboard (incluyendo tasa-cards, estadísticas, etc.) -->
           <div class="tasa-cards-bar">
             <div class="tcb-cards">
               <div class="tcb-card tcb-card-base">
@@ -1882,7 +1579,7 @@
             </div>
           </div>
           <div class="dashboard-grid">
-            <div class="dashboard-card" @click="abrirDetalleVentas()" style="cursor:pointer">
+            <div class="dashboard-card" @click="abrirDetalleVentas()">
               <div class="card-title">Ventas Hoy (Neto Cobrado) <i class="fas fa-external-link-alt" style="font-size:.6rem;opacity:.5;margin-left:.3rem"></i></div>
               <div class="card-value" x-text="formatUSD(ventasHoy.usd) + ' / ' + formatBs(ventasHoy.bs)"></div>
               <div style="font-size:.72rem;color:var(--text-muted);margin-top:.25rem">Toca para ver desglose</div>
@@ -1895,12 +1592,12 @@
               <div class="card-title">Alertas Stock</div>
               <div class="card-value" x-text="stockCritico.length"></div>
             </div>
-            <div class="dashboard-card" @click="abrirDetallePropinas()" style="cursor:pointer">
+            <div class="dashboard-card" @click="abrirDetallePropinas()">
               <div class="card-title">Propinas Hoy <i class="fas fa-external-link-alt" style="font-size:.6rem;opacity:.5;margin-left:.3rem"></i></div>
               <div class="card-value" x-text="formatBs(propinasHoy)"></div>
               <div style="font-size:.72rem;color:var(--text-muted);margin-top:.25rem">Toca para gestionar propinas</div>
             </div>
-            <div class="dashboard-card" @click="abrirDetalleDeliverys()" style="cursor:pointer">
+            <div class="dashboard-card" @click="abrirDetalleDeliverys()">
               <div class="card-title">Deliverys Hoy <i class="fas fa-external-link-alt" style="font-size:.6rem;opacity:.5;margin-left:.3rem"></i></div>
               <div class="card-value" x-text="formatBs(deliverysHoy)"></div>
               <div style="font-size:.72rem;color:var(--text-muted);margin-top:.25rem">Toca para ver desglose</div>
@@ -1961,13 +1658,56 @@
                 <input type="text" x-model="search" @input="debouncedSearch" placeholder="Buscar ingrediente...">
               </div>
               <div class="inv-list-items">
-                <div class="empty-state"><i class="fas fa-boxes"></i> Cargando inventario...</div>
+                <!-- La lista se genera dinámicamente por el componente -->
+                <div class="empty-state" x-show="filteredItems().length === 0">No hay ingredientes</div>
+                <template x-for="item in filteredItems()" :key="item.id">
+                  <div class="inv-list-item" :class="{ active: selectedIngredient && selectedIngredient.id === item.id }" @click="selectIngredient(item.id)">
+                    <span x-text="item.nombre"></span>
+                    <span class="inv-item-badge" :class="{ ok: (item.stock - item.reservado) > item.minimo, bajo: (item.stock - item.reservado) <= item.minimo && (item.stock - item.reservado) > 0, critico: (item.stock - item.reservado) <= 0 }" x-text="(item.stock - item.reservado) + ' ' + item.unidad_base"></span>
+                  </div>
+                </template>
               </div>
             </div>
             <div class="inv-detail-col">
-              <div class="inv-detail-empty">
+              <div class="inv-detail-empty" x-show="!selectedIngredient">
                 <i class="fas fa-hand-point-left" style="font-size:2rem;margin-bottom:.75rem;display:block;opacity:.3"></i>
                 Selecciona un ingrediente de la lista para ver su detalle
+              </div>
+              <div x-show="selectedIngredient" class="inv-detail-card">
+                <div class="inv-detail-title">
+                  <span x-text="selectedIngredient.nombre"></span>
+                  <button class="inv-detail-close" @click="selectedIngredient = null" title="Cerrar"><i class="fas fa-times"></i></button>
+                </div>
+                <div class="inv-stock-row">
+                  <span class="inv-stock-num" :class="{ ok: (selectedIngredient.stock - selectedIngredient.reservado) > selectedIngredient.minimo, bajo: (selectedIngredient.stock - selectedIngredient.reservado) <= selectedIngredient.minimo && (selectedIngredient.stock - selectedIngredient.reservado) > 0, critico: (selectedIngredient.stock - selectedIngredient.reservado) <= 0 }" x-text="selectedIngredient.stock - selectedIngredient.reservado"></span>
+                  <span class="inv-stock-unit" x-text="selectedIngredient.unidad_base"></span>
+                  <span style="font-size:.75rem;color:var(--text-muted);margin-left:auto">Reservado: <span x-text="selectedIngredient.reservado || 0"></span></span>
+                </div>
+                <div class="inv-bar">
+                  <div class="inv-bar-fill" :class="{ ok: (selectedIngredient.stock - selectedIngredient.reservado) > selectedIngredient.minimo, bajo: (selectedIngredient.stock - selectedIngredient.reservado) <= selectedIngredient.minimo && (selectedIngredient.stock - selectedIngredient.reservado) > 0, critico: (selectedIngredient.stock - selectedIngredient.reservado) <= 0 }" :style="{ width: ((selectedIngredient.stock - selectedIngredient.reservado) / (selectedIngredient.minimo || 1) * 100) + '%' }"></div>
+                </div>
+                <div class="inv-meta-grid">
+                  <div class="inv-meta-item">
+                    <span class="inv-meta-label">Mínimo</span>
+                    <span class="inv-meta-val" x-text="selectedIngredient.minimo + ' ' + selectedIngredient.unidad_base"></span>
+                  </div>
+                  <div class="inv-meta-item">
+                    <span class="inv-meta-label">Costo</span>
+                    <span class="inv-meta-val" x-text="formatUSD(selectedIngredient.precio_costo || 0)"></span>
+                    <span class="inv-meta-bs" x-text="formatBs(usdToBs(selectedIngredient.precio_costo || 0))"></span>
+                  </div>
+                  <div class="inv-meta-item">
+                    <span class="inv-meta-label">Venta</span>
+                    <span class="inv-meta-val" x-text="formatUSD(selectedIngredient.precio_unitario || 0)"></span>
+                    <span class="inv-meta-bs" x-text="formatBs(usdToBs(selectedIngredient.precio_unitario || 0))"></span>
+                  </div>
+                </div>
+                <div style="display:flex; gap:.5rem; margin-top:1rem">
+                  <button class="btn-primary" @click="updateStock(-1)"><i class="fas fa-minus"></i> -1</button>
+                  <button class="btn-primary" @click="updateStock(1)"><i class="fas fa-plus"></i> +1</button>
+                  <button class="btn-secondary" @click="editIngredient(selectedIngredient.id)"><i class="fas fa-edit"></i> Editar</button>
+                  <button class="btn-danger" @click="deleteIngredient"><i class="fas fa-trash"></i> Eliminar</button>
+                </div>
               </div>
             </div>
           </div>
@@ -1985,7 +1725,35 @@
             <input type="text" x-model="search" @input="debouncedSearch" placeholder="Buscar platillo por nombre...">
           </div>
           <div class="menu-grid">
-            <div class="empty-state"><i class="fas fa-utensils"></i> Cargando menú...</div>
+            <template x-for="item in filteredItems()" :key="item.id">
+              <div class="menu-card-v2">
+                <div class="mc2-header">
+                  <div class="mc2-info">
+                    <div class="mc2-nombre" x-text="item.nombre"></div>
+                    <div class="mc2-cat" x-text="item.categoria + (item.subcategoria ? ' · ' + item.subcategoria : '')"></div>
+                    <div class="mc2-precio" x-text="formatUSD(item.precio || 0)"></div>
+                    <div class="mc2-precio-bs" x-text="'/ ' + formatBs(usdToBs(item.precio || 0))"></div>
+                    <div class="mc2-stock-line">
+                      Stock: <span class="mc2-stock-val" x-text="item.stock || 0"></span>
+                      <span class="mc2-badge" :class="item.disponible ? 'mc2-badge-ok' : 'mc2-badge-off'" x-text="item.disponible ? 'Disponible' : 'No disponible'"></span>
+                    </div>
+                  </div>
+                  <div class="mc2-img-wrap" x-show="item.imagen">
+                    <img class="mc2-img" :src="item.imagen" :alt="item.nombre" onerror="this.parentElement.style.display='none'">
+                  </div>
+                </div>
+                <div class="mc2-desc" x-text="item.descripcion"></div>
+                <div class="mc2-actions">
+                  <label style="display:flex;align-items:center;gap:.35rem;cursor:pointer;margin-right:.25rem">
+                    <span style="font-size:.72rem;font-weight:600" :style="{ color: item.disponible ? 'var(--success)' : 'var(--text-muted)' }" x-text="item.disponible ? 'Disponible' : 'No disponible'"></span>
+                    <input type="checkbox" :checked="item.disponible" style="accent-color:var(--success);cursor:pointer" @change="toggleDisponible(item.id, $event.target.checked)">
+                  </label>
+                  <button class="btn-icon edit" @click="editPlatillo(item.id)" title="Editar platillo"><i class="fas fa-pen"></i></button>
+                  <button class="btn-icon delete" @click="deletePlatillo(item.id)" title="Eliminar platillo"><i class="fas fa-trash"></i></button>
+                </div>
+              </div>
+            </template>
+            <div x-show="filteredItems().length === 0" class="empty-state">No hay platillos registrados</div>
           </div>
         </div>
       </div>
@@ -2001,7 +1769,24 @@
             <input type="text" x-model="search" @input="debouncedSearch" placeholder="Buscar usuario...">
           </div>
           <div class="usuarios-grid">
-            <div class="empty-state"><i class="fas fa-users"></i> Cargando usuarios...</div>
+            <template x-for="user in filteredUsuarios()" :key="user.id">
+              <div class="usuario-card">
+                <div class="usuario-avatar" x-text="user.nombre.charAt(0).toUpperCase()"></div>
+                <div class="usuario-info">
+                  <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
+                    <span class="usuario-nombre" x-text="user.nombre"></span>
+                    <span class="status-activo" x-show="user.activo"><i class="fas fa-check-circle"></i> Activo</span>
+                    <span class="status-inactivo" x-show="!user.activo"><i class="fas fa-circle"></i> Inactivo</span>
+                  </div>
+                  <div class="usuario-username" x-text="'@' + user.username + ' · ' + (user.rol || 'cajero')"></div>
+                </div>
+                <div class="usuario-actions">
+                  <button class="btn-toggle" :class="user.activo ? 'btn-toggle-on' : 'btn-toggle-off'" @click="toggleActivo(user.id, !user.activo)" x-text="user.activo ? 'Inhabilitar' : 'Activar'"></button>
+                  <button class="btn-icon delete" @click="eliminarUsuario(user.id)" title="Eliminar"><i class="fas fa-trash"></i></button>
+                </div>
+              </div>
+            </template>
+            <div x-show="filteredUsuarios().length === 0" class="empty-state">No hay usuarios registrados</div>
           </div>
         </div>
       </div>
@@ -2020,7 +1805,21 @@
             <input type="text" x-model="search" @input="debouncedSearch" placeholder="Buscar motorizado...">
           </div>
           <div class="delivery-list">
-            <div class="empty-state"><i class="fas fa-motorcycle"></i> Cargando motorizados...</div>
+            <template x-for="delivery in filteredDeliverys()" :key="delivery.id">
+              <div class="delivery-card">
+                <div class="delivery-icon"><i class="fas fa-motorcycle"></i></div>
+                <div class="delivery-nombre" x-text="delivery.nombre"></div>
+                <div class="delivery-actions">
+                  <button class="btn-icon edit" @click="editarDelivery(delivery)" title="Editar"><i class="fas fa-edit"></i></button>
+                  <button class="btn-toggle" :class="delivery.activo ? 'btn-toggle-on' : 'btn-toggle-off'" @click="toggleActivo(delivery)" x-text="delivery.activo ? 'Inhabilitar' : 'Activar'"></button>
+                  <button class="btn-sm" style="background:linear-gradient(135deg,var(--success),#2E7D32);color:#fff" @click="registrarPago(delivery)">
+                    <i class="fas fa-hand-holding-usd"></i> Pagado
+                  </button>
+                  <button class="btn-icon delete" @click="eliminarDelivery(delivery.id)" title="Eliminar"><i class="fas fa-trash"></i></button>
+                </div>
+              </div>
+            </template>
+            <div x-show="filteredDeliverys().length === 0" class="empty-state">No hay motorizados registrados</div>
           </div>
         </div>
       </div>
@@ -2044,7 +1843,17 @@
             <input type="text" x-model="search" @input="debouncedSearch" placeholder="Buscar mesonero...">
           </div>
           <div class="mesoneros-grid">
-            <div class="empty-state"><i class="fas fa-user-tie"></i> Cargando mesoneros...</div>
+            <template x-for="mesonero in filteredMesoneros()" :key="mesonero.id">
+              <div class="mesonero-card">
+                <div class="mesonero-avatar" x-text="mesonero.nombre.charAt(0).toUpperCase()"></div>
+                <div class="mesonero-nombre" x-text="mesonero.nombre"></div>
+                <div class="mesonero-actions">
+                  <button class="btn-toggle" :class="mesonero.activo ? 'btn-toggle-on' : 'btn-toggle-off'" @click="toggleActivo(mesonero)" x-text="mesonero.activo ? 'Inhabilitar' : 'Activar'"></button>
+                  <button class="btn-icon delete" @click="eliminarMesonero(mesonero.id)" title="Eliminar"><i class="fas fa-trash"></i></button>
+                </div>
+              </div>
+            </template>
+            <div x-show="filteredMesoneros().length === 0" class="empty-state">No hay mesoneros registrados</div>
           </div>
         </div>
       </div>
@@ -2086,7 +1895,14 @@
             <div class="qr-wifi-hint"><i class="fas fa-info-circle" style="color:var(--accent)"></i><span>El QR lleva al cliente directo al menú de esa mesa. Si agregas los datos de WiFi, el QR también conecta automáticamente al escanear.</span></div>
           </div>
           <div class="qr-grid">
-            <div class="empty-state"><i class="fas fa-qrcode"></i> Cargando códigos QR...</div>
+            <template x-for="qr in qrs" :key="qr.id">
+              <div class="qr-card-v2" @click="abrirQR(qr)">
+                <div class="qr-img-box" :id="'qr-' + qr.id"></div>
+                <div class="qr-nombre-v2" x-text="qr.nombre"></div>
+                <button class="qr-del-btn" @click.stop="eliminarQR(qr.id)"><i class="fas fa-trash"></i></button>
+              </div>
+            </template>
+            <div x-show="qrs.length === 0" class="empty-state">No hay códigos QR generados</div>
           </div>
         </div>
       </div>
@@ -2115,8 +1931,7 @@
           </div>
           <div class="table-responsive" style="margin-top:2rem">
             <h3 style="margin-bottom:1rem;font-weight:700">Detalle de Ventas</h3>
-            <table class="data-table"><thead>麝香<th>Fecha</th><th>Pedido</th><th>Total</th><th>Items</th><th>Método</th><th>Tipo</th></thead><tbody id="ventasTableBody">发展<td colspan="6" class="empty-state">No hay datos</td></tr></tbody>
-            </table>
+            <table class="data-table"><thead>发展<th>Fecha</th><th>Pedido</th><th>Total</th><th>Items</th><th>Método</th><th>Tipo</th></thead><tbody id="ventasTableBody"></tbody></table>
           </div>
         </div>
       </div>
