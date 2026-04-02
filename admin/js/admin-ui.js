@@ -197,6 +197,8 @@
     // ==================== INICIALIZACIÓN AL CARGAR LA PÁGINA ====================
     document.addEventListener('DOMContentLoaded', async () => {
         window.initTheme();
+		// Inicializar UI de login (cargar lista de administradores)
+		window.iniciarLoginUI();
         if (await window.restaurarSesionAdmin()) {
             window.mostrarPanel();
             // Actualizar header con nombre de usuario
