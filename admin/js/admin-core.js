@@ -127,4 +127,10 @@
         // Recargar la lista en la UI si está visible
         if (window.cargarListaAdminsRecientes) window.cargarListaAdminsRecientes();
     };
+	    // Placeholder para imágenes (SVG Data URI) - evita errores de red
+    window.getPlaceholderImage = function(text = 'Admin') {
+        // SVG simple con las iniciales
+        const initial = text.charAt(0).toUpperCase();
+        return `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' fill='%23D32F2F'/%3E%3Ctext x='24' y='32' font-size='20' text-anchor='middle' fill='white' font-family='Arial'%3E${initial}%3C/text%3E%3C/svg%3E`;
+    };
 })();
