@@ -39,15 +39,40 @@
     </div>
 
     <div class="login-container" id="loginContainer">
-        <div class="login-box">
-            <h2><i class="fas fa-cog"></i> Admin Saki Sushi</h2>
-            <form class="login-form" id="loginForm" onsubmit="event.preventDefault(); window.hacerLogin()">
-                <input type="password" id="adminPassword" placeholder="Contraseña de Administrador" required autocomplete="current-password">
-                <button type="submit">Ingresar</button>
-            </form>
-            <div class="recovery-link"><a href="#" id="recoveryLink">¿Olvidaste la contraseña?</a></div>
-        </div>
-    </div>
+		<div class="login-wrapper" id="loginWrapper">
+			<!-- Panel de selección de administradores recientes -->
+			<div class="login-selector-panel" id="loginSelectorPanel">
+				<div class="login-selector-header">
+					<img src="https://lh3.googleusercontent.com/pw/AP1GczPrZAoWxmsOGRD9xl1hO5Q65JXuwUZzoR6gUk-cw5lVmarxQe_-lwqpA60tTKLlXfpvIjAJlKC6jFls-xETJOPkebLIIPhbGlUkknmhrRbdhMUll2UViGSUj3WmHKg2YEsZlAfxBPPTjIHhScjD0jfe=w1439-h1439-s-no-gm" alt="Saki Sushi" class="login-logo">
+					<h2>Administración</h2>
+					<p>Selecciona un administrador</p>
+				</div>
+				<div class="login-admins-list" id="loginAdminsList">
+					<!-- Se llena dinámicamente con los últimos administradores que iniciaron sesión -->
+					<div class="loading-spinner"></div>
+				</div>
+				<button class="btn-link" id="clearRecentAdminsBtn" style="margin-top:1rem; background:none; border:none; color:var(--accent); cursor:pointer; font-size:.8rem">
+					<i class="fas fa-trash-alt"></i> Limpiar historial
+				</button>
+			</div>
+
+			<!-- Panel de login con contraseña (oculto inicialmente) -->
+			<div class="login-password-panel" id="loginPasswordPanel" style="display:none">
+				<button class="btn-back" id="backToSelectorBtn"><i class="fas fa-arrow-left"></i> Volver</button>
+				<div class="login-box">
+					<div class="selected-admin-info" id="selectedAdminInfo">
+						<img id="selectedAdminFoto" src="" alt="Foto">
+						<span id="selectedAdminNombre"></span>
+					</div>
+					<form class="login-form" id="loginForm" onsubmit="event.preventDefault(); window.hacerLogin()">
+						<input type="password" id="adminPassword" placeholder="Contraseña de Administrador" required autocomplete="current-password">
+						<button type="submit">Ingresar</button>
+					</form>
+					<div class="recovery-link"><a href="#" id="recoveryLink">¿Olvidaste la contraseña?</a></div>
+				</div>
+			</div>
+		</div>
+	</div>
     
     <div class="panel-container" id="panelContainer">
         <header class="header">
@@ -362,6 +387,5 @@
     <div class="modal" id="passwordStockModal"><div class="modal-content" style="max-width:400px"><div class="modal-header" style="background:linear-gradient(135deg,var(--info),#1565C0)"><h3><i class="fas fa-lock"></i> Desbloquear Stock</h3><button class="modal-close" onclick="window.cerrarModal('passwordStockModal')">&times;</button></div><div class="modal-body"><p style="margin-bottom:1rem;color:var(--text-muted)">Ingresa la contraseña de administrador para poder editar el stock actual:</p><div class="form-group"><label>Contraseña de Administrador</label><input type="password" id="stockPasswordModalInput" placeholder="Contraseña" style="width:100%; padding:.8rem; border:1px solid var(--border); border-radius:8px; background:var(--input-bg); color:var(--text-dark); font-size:.95rem" onkeydown="if(event.key === 'Enter') window.verificarContraseñaStock()"></div><div id="passwordStockError" style="display:none; color:var(--danger); font-size:.8rem; margin-top:.5rem; text-align:center"><i class="fas fa-exclamation-circle"></i> Contraseña incorrecta</div></div><div class="modal-footer"><button class="btn-secondary" onclick="window.cerrarModal('passwordStockModal')">Cancelar</button><button class="btn-primary" id="confirmPasswordStockBtn" onclick="window.verificarContraseñaStock()">Confirmar</button></div></div></div>
 
     <div class="toast" id="toast"></div>
-
 </body>
 </html>
