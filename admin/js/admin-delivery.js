@@ -63,29 +63,6 @@
         }).join('');
     };
 
-    window.editarMesonero = function(id) {
-        const mesonero = window.mesoneros.find(m => m.id === id);
-        if (!mesonero) return;
-        window.mesoneroEditandoId = id;
-        document.getElementById('mesoneroModalTitle').textContent = 'Editar Mesonero';
-        document.getElementById('mesoneroNombre').value = mesonero.nombre || '';
-        document.getElementById('mesoneroActivo').value = mesonero.activo ? 'true' : 'false';
-        // Foto
-        if (mesonero.foto) {
-            document.getElementById('mesoneroFotoUrl').value = mesonero.foto;
-            const previewImg = document.getElementById('mesoneroPreviewImg');
-            if (previewImg) previewImg.src = mesonero.foto;
-            const previewDiv = document.getElementById('mesoneroFotoPreview');
-            if (previewDiv) previewDiv.style.display = 'flex';
-            currentMesoneroFotoUrl = mesonero.foto;
-        } else {
-            document.getElementById('mesoneroFotoUrl').value = '';
-            const previewDiv = document.getElementById('mesoneroFotoPreview');
-            if (previewDiv) previewDiv.style.display = 'none';
-        }
-        document.getElementById('mesoneroModal').classList.add('active');
-    };
-
     function handleMesoneroFotoFile() {
         const fileInput = document.getElementById('mesoneroFoto');
         const urlInput = document.getElementById('mesoneroFotoUrl');
@@ -346,28 +323,59 @@
         finally { if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-plus"></i> Agregar'; } }
     };
 
-    window.editarDelivery = function(id) {
-        const delivery = window.deliverys.find(d => d.id === id);
-        if (!delivery) return;
-        window.deliveryEditandoId = id;
-        document.getElementById('deliveryNombre').value = delivery.nombre;
-        document.getElementById('deliveryEstado').value = delivery.activo ? 'true' : 'false';
-        if (delivery.foto) {
-            const urlInput = document.getElementById('deliveryFotoUrl');
-            if (urlInput) urlInput.value = delivery.foto;
-            const previewImg = document.getElementById('deliveryPreviewImg');
-            if (previewImg) previewImg.src = delivery.foto;
-            const previewDiv = document.getElementById('deliveryFotoPreview');
-            if (previewDiv) previewDiv.style.display = 'flex';
-            currentDeliveryFotoUrl = delivery.foto;
-        } else {
-            const urlInput = document.getElementById('deliveryFotoUrl');
-            if (urlInput) urlInput.value = '';
-            const previewDiv = document.getElementById('deliveryFotoPreview');
-            if (previewDiv) previewDiv.style.display = 'none';
-        }
-        document.getElementById('deliveryModal').classList.add('active');
-    };
+    window.editarMesonero = function(id) {
+    const mesonero = window.mesoneros.find(m => m.id === id);
+    if (!mesonero) return;
+    window.mesoneroEditandoId = id;
+    const modalTitle = document.getElementById('mesoneroModalTitle');
+    if (modalTitle) modalTitle.textContent = 'Editar Mesonero';
+    const nombreInput = document.getElementById('mesoneroNombre');
+    if (nombreInput) nombreInput.value = mesonero.nombre || '';
+    const activoSelect = document.getElementById('mesoneroActivo');
+    if (activoSelect) activoSelect.value = mesonero.activo ? 'true' : 'false';
+    if (mesonero.foto) {
+        const urlInput = document.getElementById('mesoneroFotoUrl');
+        if (urlInput) urlInput.value = mesonero.foto;
+        const previewImg = document.getElementById('mesoneroPreviewImg');
+        if (previewImg) previewImg.src = mesonero.foto;
+        const previewDiv = document.getElementById('mesoneroFotoPreview');
+        if (previewDiv) previewDiv.style.display = 'flex';
+        currentMesoneroFotoUrl = mesonero.foto;
+    } else {
+        const urlInput = document.getElementById('mesoneroFotoUrl');
+        if (urlInput) urlInput.value = '';
+        const previewDiv = document.getElementById('mesoneroFotoPreview');
+        if (previewDiv) previewDiv.style.display = 'none';
+    }
+    const modal = document.getElementById('mesoneroModal');
+    if (modal) modal.classList.add('active');
+};
+
+window.editarDelivery = function(id) {
+    const delivery = window.deliverys.find(d => d.id === id);
+    if (!delivery) return;
+    window.deliveryEditandoId = id;
+    const nombreInput = document.getElementById('deliveryNombre');
+    if (nombreInput) nombreInput.value = delivery.nombre;
+    const estadoSelect = document.getElementById('deliveryEstado');
+    if (estadoSelect) estadoSelect.value = delivery.activo ? 'true' : 'false';
+    if (delivery.foto) {
+        const urlInput = document.getElementById('deliveryFotoUrl');
+        if (urlInput) urlInput.value = delivery.foto;
+        const previewImg = document.getElementById('deliveryPreviewImg');
+        if (previewImg) previewImg.src = delivery.foto;
+        const previewDiv = document.getElementById('deliveryFotoPreview');
+        if (previewDiv) previewDiv.style.display = 'flex';
+        currentDeliveryFotoUrl = delivery.foto;
+    } else {
+        const urlInput = document.getElementById('deliveryFotoUrl');
+        if (urlInput) urlInput.value = '';
+        const previewDiv = document.getElementById('deliveryFotoPreview');
+        if (previewDiv) previewDiv.style.display = 'none';
+    }
+    const modal = document.getElementById('deliveryModal');
+    if (modal) modal.classList.add('active');
+};
 
     function handleDeliveryFotoFile() {
         const fileInput = document.getElementById('deliveryFoto');
