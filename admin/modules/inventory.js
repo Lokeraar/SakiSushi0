@@ -67,6 +67,16 @@ export function inventoryComponent() {
             this.showForm = false;
         },
 
+        editIngredient(id) {
+            const ingredient = this.inventoryItems.find(i => i.id === id);
+            if (ingredient) {
+                this.form = { ...ingredient };
+                this.editMode = true;
+                this.showForm = true;
+                this.selectedIngredient = ingredient; // opcional, para que el detalle se actualice
+            }
+        },
+
         async updateStock(delta) {
             if (!this.selectedIngredient) return;
             const prevStock = this.selectedIngredient.stock;
