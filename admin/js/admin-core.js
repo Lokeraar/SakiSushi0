@@ -20,25 +20,22 @@
     window.platillosNotificados = JSON.parse(localStorage.getItem('saki_platillos_notificados') || '{}');
     window.stockUpdateChannel = null;
     
-    window.mostrarToast = function(mensaje, tipo = 'info') {
-        const toast = document.getElementById('toast');
-        if (toast) {
-            toast.textContent = mensaje;
-            toast.className = `toast show ${tipo}`;
-            setTimeout(() => toast.classList.remove('show'), 3000);
-        } else alert(mensaje);
-    };
-    
+    // Formato de moneda personalizado: Bs X.XXX,XX
     window.formatBs = function(m) {
-        try {
-            return new Intl.NumberFormat('es-VE', { style: 'currency', currency: 'VES', minimumFractionDigits: 2 }).format(m).replace('VES', 'Bs.');
-        } catch(e) { return 'Bs. ' + (m || 0).toFixed(2); }
+        if (m === undefined || m === null) m = 0;
+        const valor = typeof m === 'number' ? m : parseFloat(m);
+        if (isNaN(valor)) return 'Bs 0,00';
+        const entero = Math.floor(Math.abs(valor)).toLocaleString('es-VE');
+        const decimal = Math.round((Math.abs(valor) % 1) * 100).toString().padStart(2, '0');
+        return (valor < 0 ? '-Bs ' : 'Bs ') + entero + ',' + decimal;
     };
     
     window.formatUSD = function(m) {
         try {
             return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 }).format(m);
-        } catch(e) { return '$ ' + (m || 0).toFixed(2); }
+        } catch(e) {
+            return '$ ' + (m || 0).toFixed(2);
+        }
     };
     
     window.usdToBs = function(u) {
@@ -52,10 +49,13 @@
     window.cerrarModal = function(modalId) {
         const modal = document.getElementById(modalId);
         if (modal) modal.classList.remove('active');
+        // Al cerrar modales de ingrediente, resetear bloqueo de stock
+        if (modalId === 'ingredienteModal') {
+            window.resetearBloqueoStock();
+        }
     };
     
     window.mostrarLogin = function() {
-        // Limpiar campo contraseña al mostrar login
         const pwdInput = document.getElementById('adminPassword');
         if (pwdInput) pwdInput.value = '';
         document.getElementById('loginContainer').style.display = 'flex';
@@ -76,4 +76,21 @@
     };
     
     window.configGlobal = window.configGlobal || {};
+    
+    // Nueva función: calcular diferencia acumulada entre tasa base y efectiva
+    window.calcularDiferenciaTasa = function() {
+        if (!window.pedidos || !window.pedidos.length) return 0;
+        const tasaBase = window.configGlobal?.tasa_cambio || 400;
+        const tasaEfectiva = window.configGlobal?.tasa_efectiva || 400;
+        if (tasaEfectiva <= tasaBase) return 0;
+        
+        // Sumar todos los totales en USD de pedidos cobrados (entregados o en estado final)
+        const pedidosCerrados = window.pedidos.filter(p => 
+            p.estado === 'entregado' || p.estado === 'enviado' || p.estado === 'reserva_completada'
+        );
+        const totalUSD = pedidosCerrados.reduce((sum, p) => sum + (p.total || 0), 0);
+        // La diferencia por cada dólar es (tasaEfectiva - tasaBase)
+        const diferencia = totalUSD * (tasaEfectiva - tasaBase);
+        return diferencia;
+    };
 })();
