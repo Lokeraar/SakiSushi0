@@ -18,14 +18,16 @@
             if (!response.ok) throw new Error(data.error || `Error ${response.status}`);
             if (!data.success) { window.mostrarToast('❌ ' + (data.error || 'Contraseña incorrecta'), 'error'); return; }
             if (data.user.rol !== 'admin') { window.mostrarToast('Acceso denegado. Se requiere rol de administrador.', 'error'); return; }
-            if (sessionStorage.getItem('admin_authenticated') === 'true') { window.mostrarToast('⚠️ Ya hay una sesión de administrador activa', 'warning'); return; }
 
+            // Si ya hay una sesión en memoria, la reemplazamos (no bloquear)
             window.isAdminAuthenticated = true;
             window.jwtToken = data.token;
             sessionStorage.setItem('admin_authenticated', 'true');
             sessionStorage.setItem('admin_jwt_token', window.jwtToken);
             sessionStorage.setItem('admin_user', JSON.stringify(data.user));
             window.supabaseClient = window.inicializarSupabaseCliente(window.jwtToken);
+            
+            // Mostrar panel y ocultar login
             document.getElementById('loginContainer').style.display = 'none';
             document.getElementById('panelContainer').classList.add('active');
             window.mostrarToast('✅ Bienvenido Administrador', 'success');
@@ -56,38 +58,82 @@
         }
     };
 
-    window.restaurarSesionAdmin = function() {
+    window.restaurarSesionAdmin = async function() {
         const token = sessionStorage.getItem('admin_jwt_token');
         const userData = sessionStorage.getItem('admin_user');
         if (token && userData) {
             try {
-                window.jwtToken = token;
                 const user = JSON.parse(userData);
                 if (user.rol === 'admin') {
+                    window.jwtToken = token;
                     window.isAdminAuthenticated = true;
+                    window.currentUser = user;
                     window.supabaseClient = window.inicializarSupabaseCliente(window.jwtToken);
+                    
+                    // Verificar que el token no haya expirado (opcional: hacer una petición ligera)
+                    // Si falla, se limpia la sesión y se muestra login
+                    const { error: testError } = await window.supabaseClient.from('config').select('id').limit(1);
+                    if (testError && testError.message.includes('JWT')) {
+                        console.warn('Token expirado, cerrando sesión');
+                        window.cerrarSesion();
+                        return false;
+                    }
+                    
+                    // Mostrar panel directamente
+                    document.getElementById('loginContainer').style.display = 'none';
+                    document.getElementById('panelContainer').classList.add('active');
+                    
+                    // Cargar datos en segundo plano (sin bloquear)
+                    setTimeout(async () => {
+                        try {
+                            await window.cargarConfiguracionInicial();
+                            await window.cargarMenu();
+                            await window.cargarInventario();
+                            await window.cargarUsuarios();
+                            await window.cargarQRs();
+                            await window.cargarReportes();
+                            await window.cargarPedidosRecientes();
+                            await window.cargarMesoneros();
+                            await window.cargarDeliverys();
+                            await window.cargarPropinas();
+                            window.setupEventListeners();
+                            window.setupRealtimeSubscriptions();
+                            window.setupStockRealtime();
+                            window.restaurarWifiPersistente();
+                        } catch (e) { console.error('Error cargando datos tras restauración:', e); }
+                    }, 100);
                     return true;
                 }
             } catch (e) {
                 console.error('Error restaurando sesión admin:', e);
+                window.cerrarSesion();
             }
         }
         return false;
     };
 
     window.cerrarSesion = function() {
+        // Limpiar sessionStorage
         sessionStorage.removeItem('admin_authenticated');
         sessionStorage.removeItem('admin_jwt_token');
         sessionStorage.removeItem('admin_user');
+        // Limpiar variables globales
         window.isAdminAuthenticated = false;
         window.jwtToken = null;
-        window.mostrarLogin();
-        window.mostrarToast('🔓 Sesión cerrada', 'info');
+        window.currentUser = null;
+        // Limpiar el campo de contraseña del login
+        const pwdInput = document.getElementById('adminPassword');
+        if (pwdInput) pwdInput.value = '';
+        // Resetear cliente de Supabase (sin token)
         window.supabaseClient = window.inicializarSupabaseCliente();
+        // Mostrar login y ocultar panel
+        document.getElementById('loginContainer').style.display = 'flex';
+        document.getElementById('panelContainer').classList.remove('active');
+        window.mostrarToast('🔓 Sesión cerrada', 'info');
     };
 
     window.forzarCierreSesionAnterior = async function() {
-        // Si se requiere, se puede implementar, pero no es necesario en admin
+        // No necesario para admin, pero se deja por compatibilidad
     };
 
     window.setupLogoutListener = function() {
