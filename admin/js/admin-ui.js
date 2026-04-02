@@ -115,6 +115,7 @@
             window.mostrarToast('🔓 Sesión cerrada', 'info');
             window.supabaseClient = window.inicializarSupabaseCliente();
         });
+		
     };
 
     window.toggleTheme = function() {
@@ -186,4 +187,48 @@
             mesonerosPane?.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }, 100);
     };
+	    // ==================== INICIALIZACIÓN AL CARGAR LA PÁGINA ====================
+    document.addEventListener('DOMContentLoaded', async () => {
+        window.initTheme();
+        if (await window.restaurarSesionAdmin()) {
+            window.mostrarPanel();
+            setTimeout(async () => {
+                try {
+                    await window.cargarConfiguracionInicial();
+                    await window.cargarMenu();
+                    await window.cargarInventario();
+                    await window.cargarUsuarios();
+                    await window.cargarQRs();
+                    await window.cargarReportes();
+                    await window.cargarPedidosRecientes();
+                    await window.cargarMesoneros();
+                    await window.cargarDeliverys();
+                    await window.cargarPropinas();
+                    window.setupEventListeners();
+                    window.setupRealtimeSubscriptions();
+                    window.setupStockRealtime();
+                    window.restaurarWifiPersistente();
+                    window._registrarPushAdmin();
+                    window._verificarTasaDeHoy((tasa) => {
+                        const tasaInput = document.getElementById('tasaBaseInput');
+                        if (tasaInput) tasaInput.value = tasa;
+                        window.configGlobal.tasa_cambio = tasa;
+                        window.recalcularTasaEfectiva();
+                        window._verificarAvisoLunes();
+                    });
+                    await window._actualizarVentasHoyNeto();
+                    await window._actualizarDeliverysHoy();
+                    setInterval(async () => { 
+                        await window._actualizarVentasHoyNeto();
+                        await window._actualizarDeliverysHoy();
+                    }, 60000);
+                } catch (e) { 
+                    console.error('Error cargando datos:', e); 
+                    window.mostrarToast('Error cargando datos: ' + e.message, 'error'); 
+                }
+            }, 100);
+        } else {
+            window.mostrarLogin();
+        }
+    });
 })();
