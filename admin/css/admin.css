@@ -2038,3 +2038,89 @@ a { color: var(--primary); }
         height: 40px;
     }
 }
+
+/* ==================== MEJORAS HEADER Y STOCK CRÍTICO ==================== */
+.header-left h2 i.fa-crown {
+    display: none;
+}
+.header-left h2 img {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    margin-right: 8px;
+    vertical-align: middle;
+}
+/* Theme switcher estilo toggle */
+.theme-switcher {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255,255,255,.15);
+    border-radius: 30px;
+    padding: 4px 10px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+.theme-switcher i {
+    font-size: 1rem;
+    color: #fff;
+    transition: 0.2s;
+}
+.theme-switcher.active {
+    background: var(--accent);
+}
+.theme-switcher.active i {
+    color: #1a1a2e;
+}
+/* Stock crítico en header */
+.stock-critico-tag {
+    background: rgba(255,193,7,0.25) !important;
+    border: 1px solid #FFC107 !important;
+    animation: pulse-yellow 0.8s infinite !important;
+}
+.stock-critico-tag i {
+    color: #FFC107 !important;
+}
+.stock-critico-tag span {
+    background: #D32F2F !important;
+    color: #fff !important;
+}
+@keyframes pulse-yellow {
+    0%, 100% { border-color: #FFC107; box-shadow: 0 0 0 0 rgba(255,193,7,0.4); }
+    50% { border-color: #FFC107; box-shadow: 0 0 0 4px rgba(255,193,7,0.6); }
+}
+/* Botón logout en tema oscuro */
+.dark-theme .logout-button {
+    color: #fff !important;
+}
+.dark-theme .logout-button:hover {
+    background: var(--danger) !important;
+    color: #fff !important;
+}
+/* Redimensionar tarjetas dashboard */
+.dashboard-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+}
+@media (min-width: 768px) {
+    .dashboard-grid {
+        grid-template-columns: repeat(2, 1fr) !important;
+    }
+}
+/* Reordenar tarjetas: Ventas Hoy, Deliverys Hoy, Productos+Alertas (fila doble), Propinas Hoy */
+.dashboard-card:nth-child(1) { order: 1; }
+.dashboard-card:nth-child(4) { order: 2; } /* Deliverys Hoy */
+.dashboard-card:nth-child(2) { order: 3; } /* Productos Activos */
+.dashboard-card:nth-child(3) { order: 4; } /* Alertas Stock */
+.dashboard-card:nth-child(5) { order: 5; } /* Propinas Hoy */
+/* Tarjeta diferencia de tasa */
+.dashboard-card:nth-child(6) { order: 6; }
+
+/* Animación palpitante para stock crítico al hacer clic desde alertas */
+@keyframes pulse-critico {
+    0% { background-color: rgba(255,193,7,0.1); border-color: #FFC107; }
+    50% { background-color: rgba(255,193,7,0.4); border-color: #FFC107; box-shadow: 0 0 0 3px rgba(255,193,7,0.5); }
+    100% { background-color: rgba(255,193,7,0.1); border-color: #FFC107; }
+}
+.alert-item.critical {
+    animation: pulse-critico 0.8s ease-in-out;
+}
