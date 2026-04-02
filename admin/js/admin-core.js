@@ -1,6 +1,5 @@
 // admin-core.js - Variables globales y utilidades básicas
 (function() {
-    // Variables globales (se mantienen en window)
     window.isAdminAuthenticated = false;
     window.jwtToken = null;
     window.menuItems = [];
@@ -18,37 +17,28 @@
     
     window.wifiSsidPersistente = localStorage.getItem('saki_wifi_ssid') || '';
     window.wifiPasswordPersistente = localStorage.getItem('saki_wifi_pwd') || '';
-    
     window.platillosNotificados = JSON.parse(localStorage.getItem('saki_platillos_notificados') || '{}');
-    
     window.stockUpdateChannel = null;
     
-    // Funciones de utilidad
     window.mostrarToast = function(mensaje, tipo = 'info') {
         const toast = document.getElementById('toast');
         if (toast) {
             toast.textContent = mensaje;
             toast.className = `toast show ${tipo}`;
             setTimeout(() => toast.classList.remove('show'), 3000);
-        } else {
-            alert(mensaje);
-        }
+        } else alert(mensaje);
     };
     
     window.formatBs = function(m) {
         try {
             return new Intl.NumberFormat('es-VE', { style: 'currency', currency: 'VES', minimumFractionDigits: 2 }).format(m).replace('VES', 'Bs.');
-        } catch(e) {
-            return 'Bs. ' + (m || 0).toFixed(2);
-        }
+        } catch(e) { return 'Bs. ' + (m || 0).toFixed(2); }
     };
     
     window.formatUSD = function(m) {
         try {
             return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 }).format(m);
-        } catch(e) {
-            return '$ ' + (m || 0).toFixed(2);
-        }
+        } catch(e) { return '$ ' + (m || 0).toFixed(2); }
     };
     
     window.usdToBs = function(u) {
@@ -65,6 +55,9 @@
     };
     
     window.mostrarLogin = function() {
+        // Limpiar campo contraseña al mostrar login
+        const pwdInput = document.getElementById('adminPassword');
+        if (pwdInput) pwdInput.value = '';
         document.getElementById('loginContainer').style.display = 'flex';
         document.getElementById('panelContainer').classList.remove('active');
         window.detenerAlarma();
@@ -72,14 +65,10 @@
     
     window.detenerAlarma = function() {
         if (window.alarmaAudio && window.alarmaActiva) {
-            try {
-                window.alarmaAudio.pause();
-                window.alarmaAudio.currentTime = 0;
-            } catch(e) {}
+            try { window.alarmaAudio.pause(); window.alarmaAudio.currentTime = 0; } catch(e) {}
             window.alarmaActiva = false;
         }
     };
     
-    // Para que otros módulos puedan acceder a configGlobal
     window.configGlobal = window.configGlobal || {};
 })();
