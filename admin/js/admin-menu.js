@@ -14,88 +14,6 @@
         } catch (e) { console.error('Error cargando menú:', e); window.mostrarToast('Error cargando menú', 'error'); }
     };
 
-    window.renderizarMenu = function(filtro) {
-        const grid = document.getElementById('menuGrid');
-        grid.innerHTML = '';
-        const _norm = t => (t || '').normalize('NFD').replace(/[áéíóú]/g, '').toLowerCase();
-        const _base = [...window.menuItems].sort((a,b) => a.nombre.localeCompare(b.nombre));
-        const items = filtro
-            ? _base.filter(item => _norm(item.nombre).includes(_norm(filtro)))
-            : _base;
-        if (!items.length) {
-            grid.innerHTML = '<p style="color:var(--text-muted);font-size:.88rem;padding:.5rem">' +
-                (filtro ? 'Sin resultados para "' + filtro + '"' : 'No hay platillos registrados.') + '</p>';
-            return;
-        }
-        items.forEach(item => {
-            const ingredientesEstado = [];
-            let todosDisponibles = true;
-            if (item.ingredientes) {
-                for (const [ingId, ingInfo] of Object.entries(item.ingredientes)) {
-                    const ing = window.inventarioItems.find(i => i.id === ingId);
-                    const disponible = ing && (ing.stock - ing.reservado) >= (ingInfo.cantidad || 0);
-                    if (!disponible) todosDisponibles = false;
-                    ingredientesEstado.push({ id: ingId, nombre: ingInfo.nombre || ingId, disponible });
-                }
-            }
-            const disponibleFinal = item.disponible && todosDisponibles;
-            const imgSrc = item.imagen || '';
-            const card = document.createElement('div');
-            card.className = 'menu-card-v2' + (item.disponible ? '' : ' no-disponible');
-            card.innerHTML = `
-                <div class="mc2-header">
-                    <div class="mc2-info">
-                        <div class="mc2-nombre">${item.nombre}</div>
-                        <div class="mc2-cat">${item.categoria || ''}${item.subcategoria ? ' · ' + item.subcategoria : ''}</div>
-                        <div class="mc2-precio">${window.formatUSD(item.precio || 0)}
-                            <span class="mc2-precio-bs">/ ${window.formatBs(window.usdToBs(item.precio || 0))}</span>
-                        </div>
-                        <div class="mc2-stock-line">
-                            Stock: <span class="mc2-stock-val">${item.stock || 0}</span>
-                            <span class="mc2-badge ${disponibleFinal ? 'mc2-badge-ok' : 'mc2-badge-off'}">
-                                ${disponibleFinal ? 'Disponible' : 'No disponible'}
-                            </span>
-                        </div>
-                    </div>
-                    ${imgSrc ? `<div class="mc2-img-wrap"><img src="${imgSrc}" class="mc2-img" alt="${item.nombre}" onerror="this.parentElement.style.display='none'" loading="lazy"></div>` : ''}
-                </div>
-                ${item.descripcion ? `<div class="mc2-desc">${item.descripcion}</div>` : ''}
-                <div class="mc2-tags">${ingredientesEstado.map(ing => `
-                    <span class="ing-tag ${ing.disponible ? '' : 'ing-tag-sin-stock'}" data-ingrediente-id="${ing.id}" 
-                          title="${ing.disponible ? 'En stock' : 'Sin stock suficiente'}" style="cursor:pointer">
-                        ${ing.nombre} <i class="fas fa-${ing.disponible ? 'check' : 'times'}" style="font-size:.55rem;margin-left:2px"></i>
-                    </span>
-                `).join('') || '<span class="ing-tag" style="opacity:.5">Sin ingredientes</span>'}</div>
-                <div class="mc2-actions">
-                    <label style="display:flex;align-items:center;gap:.35rem;cursor:pointer;margin-right:.25rem"
-                        title="${disponibleFinal ? 'Marcar como no disponible' : 'Marcar como disponible'}">
-                        <span style="font-size:.72rem;color:${disponibleFinal ? 'var(--success)' : 'var(--text-muted)'};font-weight:600">
-                            ${disponibleFinal ? 'Disponible' : 'No disponible'}
-                        </span>
-                        <input type="checkbox" ${item.disponible ? 'checked' : ''}
-                            style="accent-color:var(--success);cursor:pointer"
-                            onchange="window.toggleDisponiblePlatillo('${item.id}', this.checked)">
-                    </label>
-                    <button class="btn-icon edit" onclick="window.editarPlatillo('${item.id}')" title="Editar platillo">
-                        <i class="fas fa-pen"></i>
-                    </button>
-                    <button class="btn-icon delete" onclick="window.eliminarPlatillo('${item.id}')" title="Eliminar platillo">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </div>`;
-            
-            // Event listener para las etiquetas de ingredientes (redirigir a inventario)
-            card.querySelectorAll('.ing-tag[data-ingrediente-id]').forEach(tag => {
-                tag.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    const ingId = tag.dataset.ingredienteId;
-                    window._irAIngrediente(ingId);
-                });
-            });
-            
-            grid.appendChild(card);
-        });
-    };
 
     // Función para alternar disponible (corregida para evitar error de permisos)
     window.toggleDisponiblePlatillo = async function(id, disponible) {
@@ -351,58 +269,257 @@
         document.getElementById('platilloModal').classList.add('active');
     };
 
-    // Configurar eventos del modal de platillo (se ejecuta una sola vez)
-    function setupPlatilloModalEvents() {
-        const fileInput = document.getElementById('platilloImagen');
-        const urlInput = document.getElementById('platilloImagenUrl');
-        const previewDiv = document.getElementById('imagenPreview');
-        const removeBtn = document.createElement('button');
-        removeBtn.innerHTML = '<i class="fas fa-times-circle"></i>';
-        removeBtn.style.cssText = 'position:absolute;top:-8px;right:-8px;background:var(--danger);color:#fff;border:none;border-radius:50%;width:24px;height:24px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.8rem;z-index:10';
-        removeBtn.title = 'Eliminar imagen';
-        removeBtn.onclick = removePreviewImage;
-        
-        if (fileInput) fileInput.addEventListener('change', handleImagenFile);
-        if (urlInput) urlInput.addEventListener('input', handleImagenUrl);
-        
-        // Agregar tooltip al lado de "Ingredientes del platillo"
-        const ingredientesLabel = document.querySelector('#platilloForm .form-group:nth-child(7) label');
-        if (ingredientesLabel) {
-            ingredientesLabel.innerHTML += `
-                <span class="tooltip-wrap" style="position:relative; display:inline-flex; align-items:center; cursor:help; margin-left:.3rem">
-                    <span style="display:inline-flex; align-items:center; justify-content:center; width:16px; height:16px; background:var(--text-muted); color:#fff; border-radius:50%; font-size:.65rem; font-weight:700">?</span>
-                    <span class="tooltip-text" style="display:none; position:absolute; bottom:calc(100% + 6px); left:50%; transform:translateX(-50%); background:var(--toast-bg); color:var(--toast-text); padding:.5rem .75rem; border-radius:8px; font-size:.75rem; white-space:normal; width:260px; text-align:center; box-shadow:0 4px 12px rgba(0,0,0,.3); z-index:100; line-height:1.4">
-                        ⚠️ La unidad de medida del ingrediente es crítica: "1 aguacate" no equivale a 500 gramos. Asegúrate de seleccionar la unidad correcta (unidades, kilogramos, litros, etc.) según corresponda.
-                    </span>
-                </span>
-            `;
-        }
-        
-        // Observer para añadir botón de eliminar en preview cuando se muestra
-        const observer = new MutationObserver(function(mutations) {
-            mutations.forEach(function(mutation) {
-                if (mutation.attributeName === 'style' && previewDiv.style.display === 'flex') {
-                    if (!previewDiv.querySelector('.preview-remove-btn')) {
-                        removeBtn.classList.add('preview-remove-btn');
-                        previewDiv.style.position = 'relative';
-                        previewDiv.appendChild(removeBtn);
-                    }
-                } else if (previewDiv.style.display === 'none' && previewDiv.querySelector('.preview-remove-btn')) {
-                    previewDiv.querySelector('.preview-remove-btn')?.remove();
-                }
-            });
-        });
-        observer.observe(previewDiv, { attributes: true });
-        
-        // Expansión de imagen al hacer clic en preview
-        const previewImg = document.getElementById('previewImg');
-        if (previewImg) {
-            previewImg.addEventListener('click', (e) => {
-                e.stopPropagation();
-                if (previewImg.src) expandImage(previewImg.src);
-            });
-        }
-    }
+    // admin-menu.js - Gestión de platillos (menú) - VERSIÓN CORREGIDA
+	(function() {
+		let currentImagenUrl = '';
+		let currentImagenFile = null;
+
+		window.cargarMenu = async function() {
+			try {
+				const { data, error } = await window.supabaseClient.from('menu').select('*');
+				if (error) throw error;
+				window.menuItems = data || [];
+				window.renderizarMenu();
+				window.actualizarProductosActivos();
+			} catch (e) { console.error('Error cargando menú:', e); window.mostrarToast('Error cargando menú', 'error'); }
+		};
+
+		window.renderizarMenu = function(filtro) {
+			const grid = document.getElementById('menuGrid');
+			if (!grid) return;
+			grid.innerHTML = '';
+			const _norm = t => (t || '').normalize('NFD').replace(/[áéíóú]/g, '').toLowerCase();
+			const _base = [...window.menuItems].sort((a,b) => a.nombre.localeCompare(b.nombre));
+			const items = filtro ? _base.filter(item => _norm(item.nombre).includes(_norm(filtro))) : _base;
+			if (!items.length) {
+				grid.innerHTML = '<p style="color:var(--text-muted);font-size:.88rem;padding:.5rem">' +
+					(filtro ? 'Sin resultados para "' + filtro + '"' : 'No hay platillos registrados.') + '</p>';
+				return;
+			}
+			items.forEach(item => {
+				const ingredientesEstado = [];
+				let todosDisponibles = true;
+				if (item.ingredientes) {
+					for (const [ingId, ingInfo] of Object.entries(item.ingredientes)) {
+						const ing = window.inventarioItems.find(i => i.id === ingId);
+						const disponible = ing && (ing.stock - ing.reservado) >= (ingInfo.cantidad || 0);
+						if (!disponible) todosDisponibles = false;
+						ingredientesEstado.push({ id: ingId, nombre: ingInfo.nombre || ingId, disponible });
+					}
+				}
+				const disponibleFinal = item.disponible && todosDisponibles;
+				const imgSrc = item.imagen || '';
+				const card = document.createElement('div');
+				card.className = 'menu-card-v2' + (item.disponible ? '' : ' no-disponible');
+				card.innerHTML = `
+					<div class="mc2-header">
+						<div class="mc2-info">
+							<div class="mc2-nombre">${item.nombre}</div>
+							<div class="mc2-cat">${item.categoria || ''}${item.subcategoria ? ' · ' + item.subcategoria : ''}</div>
+							<div class="mc2-precio">${window.formatUSD(item.precio || 0)}
+								<span class="mc2-precio-bs">/ ${window.formatBs(window.usdToBs(item.precio || 0))}</span>
+							</div>
+							<div class="mc2-stock-line">
+								Stock: <span class="mc2-stock-val">${item.stock || 0}</span>
+								<span class="mc2-badge ${disponibleFinal ? 'mc2-badge-ok' : 'mc2-badge-off'}">
+									${disponibleFinal ? 'Disponible' : 'No disponible'}
+								</span>
+							</div>
+						</div>
+						${imgSrc ? `<div class="mc2-img-wrap"><img src="${imgSrc}" class="mc2-img" alt="${item.nombre}" loading="lazy"></div>` : ''}
+					</div>
+					${item.descripcion ? `<div class="mc2-desc">${item.descripcion}</div>` : ''}
+					<div class="mc2-tags">${ingredientesEstado.map(ing => `
+						<span class="ing-tag ${ing.disponible ? '' : 'ing-tag-sin-stock'}" data-ingrediente-id="${ing.id}" 
+							  title="${ing.disponible ? 'En stock' : 'Sin stock suficiente'}" style="cursor:pointer">
+							${ing.nombre} <i class="fas fa-${ing.disponible ? 'check' : 'times'}" style="font-size:.55rem;margin-left:2px"></i>
+						</span>
+					`).join('') || '<span class="ing-tag" style="opacity:.5">Sin ingredientes</span>'}</div>
+					<div class="mc2-actions">
+						<label style="display:flex;align-items:center;gap:.35rem;cursor:pointer;margin-right:.25rem"
+							title="${disponibleFinal ? 'Marcar como no disponible' : 'Marcar como disponible'}">
+							<span style="font-size:.72rem;color:${disponibleFinal ? 'var(--success)' : 'var(--text-muted)'};font-weight:600">
+								${disponibleFinal ? 'Disponible' : 'No disponible'}
+							</span>
+							<input type="checkbox" ${item.disponible ? 'checked' : ''}
+								style="accent-color:var(--success);cursor:pointer"
+								onchange="window.toggleDisponiblePlatillo('${item.id}', this.checked)">
+						</label>
+						<button class="btn-icon edit" onclick="window.editarPlatillo('${item.id}')" title="Editar platillo">
+							<i class="fas fa-pen"></i>
+						</button>
+						<button class="btn-icon delete" onclick="window.eliminarPlatillo('${item.id}')" title="Eliminar platillo">
+							<i class="fas fa-trash"></i>
+						</button>
+					</div>`;
+				
+				// Evento para expandir imagen al hacer clic
+				const imgElement = card.querySelector('.mc2-img');
+				if (imgElement) {
+					imgElement.style.cursor = 'pointer';
+					imgElement.addEventListener('click', (e) => {
+						e.stopPropagation();
+						window.expandirImagen(imgSrc);
+					});
+				}
+				// Evento para ingredientes
+				card.querySelectorAll('.ing-tag[data-ingrediente-id]').forEach(tag => {
+					tag.addEventListener('click', (e) => {
+						e.stopPropagation();
+						const ingId = tag.dataset.ingredienteId;
+						window._irAIngrediente(ingId);
+					});
+				});
+				grid.appendChild(card);
+			});
+		};
+
+		// Función para expandir imagen
+		window.expandirImagen = function(src) {
+			if (!src) return;
+			const modal = document.createElement('div');
+			modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.9);z-index:10000;display:flex;align-items:center;justify-content:center;cursor:pointer';
+			modal.innerHTML = `<img src="${src}" style="max-width:90%;max-height:90%;object-fit:contain;border-radius:8px">`;
+			modal.addEventListener('click', () => modal.remove());
+			document.body.appendChild(modal);
+		};
+
+		// Confirmación premium para eliminar platillo
+		window.eliminarPlatillo = async function(id) {
+			const platillo = window.menuItems.find(p => p.id === id);
+			if (!platillo) return;
+			window.mostrarConfirmacionPremium(
+				'Eliminar Platillo',
+				`¿Estás seguro de eliminar "${platillo.nombre}"? Esta acción no se puede deshacer.`,
+				async () => {
+					try {
+						if (platillo.imagen && platillo.imagen.includes('imagenes-platillos')) {
+							await window.eliminarImagenPlatillo(platillo.imagen);
+						}
+						await window.supabaseClient.from('menu').delete().eq('id', id);
+						await window.cargarMenu();
+						window.mostrarToast('🗑️ Platillo eliminado', 'success');
+					} catch (e) {
+						console.error('Error eliminando platillo:', e);
+						window.mostrarToast('❌ Error al eliminar el platillo', 'error');
+					}
+				}
+			);
+		};
+
+		// Configurar eventos del modal de platillo (unificar botón de eliminar imagen dentro de la preview)
+		function setupPlatilloModalEvents() {
+			const fileInput = document.getElementById('platilloImagen');
+			const urlInput = document.getElementById('platilloImagenUrl');
+			const previewDiv = document.getElementById('imagenPreview');
+			const previewImg = document.getElementById('previewImg');
+			
+			// Botón de eliminar imagen dentro de la preview (X flotante)
+			let removePreviewBtn = null;
+			function updateRemoveButton() {
+				if (removePreviewBtn) removePreviewBtn.remove();
+				if (previewDiv && previewDiv.style.display === 'flex') {
+					removePreviewBtn = document.createElement('button');
+					removePreviewBtn.innerHTML = '<i class="fas fa-times-circle"></i>';
+					removePreviewBtn.style.cssText = 'position:absolute;top:-8px;right:-8px;background:rgba(0,0,0,.6);color:#fff;border:none;border-radius:50%;width:24px;height:24px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.8rem;z-index:10;backdrop-filter:blur(2px)';
+					removePreviewBtn.title = 'Eliminar imagen';
+					removePreviewBtn.onclick = (e) => {
+						e.stopPropagation();
+						window.limpiarImagenPreview();
+					};
+					previewDiv.style.position = 'relative';
+					previewDiv.appendChild(removePreviewBtn);
+				}
+			}
+			
+			if (fileInput) fileInput.addEventListener('change', function() {
+				if (fileInput.files && fileInput.files[0]) {
+					const file = fileInput.files[0];
+					currentImagenFile = file;
+					currentImagenUrl = '';
+					if (urlInput) {
+						urlInput.value = '';
+						urlInput.disabled = true;
+					}
+					const reader = new FileReader();
+					reader.onload = function(e) {
+						if (previewImg) previewImg.src = e.target.result;
+						if (previewDiv) previewDiv.style.display = 'flex';
+						updateRemoveButton();
+					};
+					reader.readAsDataURL(file);
+				} else {
+					if (urlInput) urlInput.disabled = false;
+					if (urlInput && urlInput.value.trim()) {
+						if (previewImg) previewImg.src = urlInput.value;
+						if (previewDiv) previewDiv.style.display = 'flex';
+						updateRemoveButton();
+						currentImagenUrl = urlInput.value;
+						currentImagenFile = null;
+					} else {
+						if (previewDiv) previewDiv.style.display = 'none';
+						if (previewImg) previewImg.src = '';
+					}
+				}
+			});
+			
+			if (urlInput) urlInput.addEventListener('input', function() {
+				if (fileInput && fileInput.files && fileInput.files[0]) return;
+				const url = urlInput.value.trim();
+				if (url) {
+					if (previewImg) previewImg.src = url;
+					if (previewDiv) previewDiv.style.display = 'flex';
+					updateRemoveButton();
+					currentImagenUrl = url;
+					currentImagenFile = null;
+				} else {
+					if (previewDiv) previewDiv.style.display = 'none';
+					if (previewImg) previewImg.src = '';
+				}
+			});
+			
+			// Expandir imagen al hacer clic en preview
+			if (previewImg) {
+				previewImg.style.cursor = 'pointer';
+				previewImg.addEventListener('click', (e) => {
+					e.stopPropagation();
+					if (previewImg.src) window.expandirImagen(previewImg.src);
+				});
+			}
+			
+			// Tooltip para ingredientes
+			const ingredientesLabel = document.querySelector('#platilloForm .form-group:nth-child(7) label');
+			if (ingredientesLabel) {
+				ingredientesLabel.innerHTML += `
+					<span class="tooltip-wrap" style="position:relative; display:inline-flex; align-items:center; cursor:help; margin-left:.3rem">
+						<span style="display:inline-flex; align-items:center; justify-content:center; width:16px; height:16px; background:var(--text-muted); color:#fff; border-radius:50%; font-size:.65rem; font-weight:700">?</span>
+						<span class="tooltip-text" style="display:none; position:absolute; bottom:calc(100% + 6px); left:50%; transform:translateX(-50%); background:var(--toast-bg); color:var(--toast-text); padding:.5rem .75rem; border-radius:8px; font-size:.75rem; white-space:normal; width:260px; text-align:center; box-shadow:0 4px 12px rgba(0,0,0,.3); z-index:100; line-height:1.4">
+							⚠️ La unidad de medida del ingrediente es crítica: "1 aguacate" no equivale a 500 gramos. Asegúrate de seleccionar la unidad correcta (unidades, kilogramos, litros, etc.) según corresponda.
+						</span>
+					</span>
+				`;
+			}
+		}
+		
+		window.limpiarImagenPreview = function() {
+			currentImagenFile = null;
+			currentImagenUrl = '';
+			const fileInput = document.getElementById('platilloImagen');
+			const urlInput = document.getElementById('platilloImagenUrl');
+			const previewDiv = document.getElementById('imagenPreview');
+			const previewImg = document.getElementById('previewImg');
+			if (fileInput) fileInput.value = '';
+			if (urlInput) {
+				urlInput.value = '';
+				urlInput.disabled = false;
+			}
+			if (previewDiv) previewDiv.style.display = 'none';
+			if (previewImg) previewImg.src = '';
+		};
+		
+		setupPlatilloModalEvents();
+		// ... resto de funciones (agregarIngredienteRow, editarPlatillo, etc.) se mantienen igual
+	})();
 
     // Guardar platillo
     document.getElementById('savePlatillo').addEventListener('click', async () => {
