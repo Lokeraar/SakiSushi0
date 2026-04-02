@@ -1,235 +1,140 @@
-// admin-auth.js - Autenticación con selección de administrador (corregido)
+// admin-core.js - Variables globales y utilidades básicas
 (function() {
-    let selectedAdmin = null;
-
-    window.cargarListaAdminsRecientes = async function() {
-        const container = document.getElementById('loginAdminsList');
-        if (!container) return;
-        
-        container.innerHTML = '<div class="loading-spinner" style="margin:0 auto;"></div>';
-        
+    window.isAdminAuthenticated = false;
+    window.jwtToken = null;
+    window.menuItems = [];
+    window.inventarioItems = [];
+    window.usuarios = [];
+    window.qrCodes = [];
+    window.charts = {};
+    window.platilloEditandoId = null;
+    window.mesoneros = [];
+    window.deliverys = [];
+    window.deliveryEditandoId = null;
+    window.deliveryParaPago = null;
+    window.propinas = [];
+    window.pedidos = [];
+    
+    window.wifiSsidPersistente = localStorage.getItem('saki_wifi_ssid') || '';
+    window.wifiPasswordPersistente = localStorage.getItem('saki_wifi_pwd') || '';
+    window.platillosNotificados = JSON.parse(localStorage.getItem('saki_platillos_notificados') || '{}');
+    window.stockUpdateChannel = null;
+    
+    // ==================== FUNCIONES DE FORMATO Y UTILIDAD ====================
+    window.formatBs = function(m) {
+        if (m === undefined || m === null) m = 0;
+        const valor = typeof m === 'number' ? m : parseFloat(m);
+        if (isNaN(valor)) return 'Bs 0,00';
+        const entero = Math.floor(Math.abs(valor)).toLocaleString('es-VE');
+        const decimal = Math.round((Math.abs(valor) % 1) * 100).toString().padStart(2, '0');
+        return (valor < 0 ? '-Bs ' : 'Bs ') + entero + ',' + decimal;
+    };
+    
+    window.formatUSD = function(m) {
         try {
-            let intentos = 0;
-            while (!window.supabaseClient && intentos < 20) {
-                await new Promise(r => setTimeout(r, 100));
-                intentos++;
-            }
-            
-            const recent = window.obtenerAdminsRecientes();
-            let admins = [];
-            
-            if (recent.length) {
-                admins = recent;
-            } else {
-                const { data, error } = await window.supabaseClient.from('usuarios').select('*').eq('rol', 'admin').eq('activo', true);
-                if (error) throw error;
-                admins = data || [];
-            }
-            
-            if (!admins.length) {
-                container.innerHTML = '<p style="color:var(--text-muted);text-align:center">No hay administradores registrados</p>';
-                return;
-            }
-            
-            container.innerHTML = admins.map(admin => {
-                const fotoUrl = admin.foto || window.getPlaceholderImage(admin.nombre);
-                return `
-                    <div class="admin-card" data-id="${admin.id}" data-username="${admin.username}" data-nombre="${admin.nombre}" data-foto="${admin.foto || ''}">
-                        <img class="admin-foto" src="${fotoUrl}" onerror="this.src='${window.getPlaceholderImage(admin.nombre)}'">
-                        <div class="admin-info">
-                            <div class="admin-nombre">${admin.nombre}</div>
-                            <div class="admin-username">@${admin.username}</div>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-            
-            document.querySelectorAll('.admin-card').forEach(card => {
-                card.addEventListener('click', async (e) => {
-                    const id = card.dataset.id;
-                    const username = card.dataset.username;
-                    const nombre = card.dataset.nombre;
-                    const foto = card.dataset.foto;
-                    selectedAdmin = { id, username, nombre, foto };
-                    document.getElementById('loginSelectorPanel').classList.add('hide');
-                    document.getElementById('loginPasswordPanel').classList.add('show');
-                    document.getElementById('selectedAdminFoto').src = foto || window.getPlaceholderImage(nombre);
-                    document.getElementById('selectedAdminNombre').textContent = nombre;
-                    document.getElementById('adminPassword').value = '';
-                    document.getElementById('adminPassword').focus();
-                });
-            });
-        } catch (error) {
-            console.error('Error cargando administradores:', error);
-            container.innerHTML = '<p style="color:var(--danger);text-align:center">Error al cargar administradores. Recarga la página.</p>';
+            return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 }).format(m);
+        } catch(e) {
+            return '$ ' + (m || 0).toFixed(2);
         }
     };
-
-    window.hacerLogin = async function() {
-        if (!selectedAdmin) {
-            window.mostrarToast('Selecciona un administrador primero', 'error');
-            return;
-        }
-        const password = document.getElementById('adminPassword').value;
-        if (!password) { window.mostrarToast('Ingresa la contraseña', 'error'); return; }
-        
-        const loginBtn = document.querySelector('#loginForm button[type="submit"]');
-        if (loginBtn) { loginBtn.disabled = true; loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Conectando...'; }
-        
-        try {
-            const response = await fetch('https://iqwwoihiiyrtypyqzhgy.supabase.co/functions/v1/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username: selectedAdmin.username, password: password })
-            });
-            const data = await response.json();
-            if (!response.ok) throw new Error(data.error || `Error ${response.status}`);
-            if (!data.success) { window.mostrarToast('❌ Contraseña incorrecta', 'error'); return; }
-            if (data.user.rol !== 'admin') { window.mostrarToast('Acceso denegado. Se requiere rol de administrador.', 'error'); return; }
-            
-            const existingToken = sessionStorage.getItem('admin_jwt_token');
-            if (existingToken && existingToken !== data.token) {
-                const confirmForce = confirm('Ya hay una sesión de administrador activa en otro dispositivo. ¿Deseas cerrarla y continuar con esta?');
-                if (!confirmForce) return;
-                sessionStorage.removeItem('admin_authenticated');
-                sessionStorage.removeItem('admin_jwt_token');
-                sessionStorage.removeItem('admin_user');
-            }
-            
-            window.isAdminAuthenticated = true;
-            window.jwtToken = data.token;
-            sessionStorage.setItem('admin_authenticated', 'true');
-            sessionStorage.setItem('admin_jwt_token', window.jwtToken);
-            sessionStorage.setItem('admin_user', JSON.stringify(data.user));
-            
-            const adminUser = data.user;
-            if (adminUser.foto === undefined && selectedAdmin.foto) adminUser.foto = selectedAdmin.foto;
-            window.guardarAdminReciente(adminUser);
-            
-            window.supabaseClient = window.inicializarSupabaseCliente(window.jwtToken);
-            
-            document.getElementById('loginContainer').style.display = 'none';
-            document.getElementById('panelContainer').classList.add('active');
-            window.mostrarToast('✅ Bienvenido Administrador', 'success');
-            
-            const headerTitle = document.querySelector('.header-left h2');
-            if (headerTitle && adminUser.nombre) {
-                headerTitle.innerHTML = `<i class="fas fa-crown"></i> Administración Saki Sushi - ${adminUser.nombre}`;
-            }
-            
-            setTimeout(async () => {
-                try {
-                    await window.cargarConfiguracionInicial();
-                    await window.cargarMenu();
-                    await window.cargarInventario();
-                    await window.cargarUsuarios();
-                    await window.cargarQRs();
-                    await window.cargarReportes();
-                    await window.cargarPedidosRecientes();
-                    await window.cargarMesoneros();
-                    await window.cargarDeliverys();
-                    await window.cargarPropinas();
-                    window.setupEventListeners();
-                    window.setupRealtimeSubscriptions();
-                    window.setupStockRealtime();
-                    window.restaurarWifiPersistente();
-                    window._registrarPushAdmin();
-                    window.agregarTarjetaDiferenciaTasa();
-                    window._verificarTasaDeHoy((tasa) => {
-                        const tasaInput = document.getElementById('tasaBaseInput');
-                        if (tasaInput) tasaInput.value = tasa;
-                        window.configGlobal.tasa_cambio = tasa;
-                        window.recalcularTasaEfectiva();
-                        window._verificarAvisoLunes();
-                    });
-                    await window._actualizarVentasHoyNeto();
-                    await window._actualizarDeliverysHoy();
-                    setInterval(async () => { 
-                        await window._actualizarVentasHoyNeto();
-                        await window._actualizarDeliverysHoy();
-                        window.actualizarTarjetaDiferenciaTasa();
-                    }, 60000);
-                } catch (e) { console.error('Error cargando datos:', e); window.mostrarToast('Error cargando datos: ' + e.message, 'error'); }
-            }, 100);
-        } catch (error) {
-            console.error('❌ Error:', error);
-            window.mostrarToast('❌ Error: ' + error.message, 'error');
-        } finally {
-            if (loginBtn) { loginBtn.disabled = false; loginBtn.innerHTML = 'Ingresar'; }
+    
+    window.usdToBs = function(u) {
+        return u * (window.configGlobal?.tasa_efectiva || 400);
+    };
+    
+    window.generarId = function(prefix = '') {
+        return `${prefix}${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+    };
+    
+    window.cerrarModal = function(modalId) {
+        const modal = document.getElementById(modalId);
+        if (modal) modal.classList.remove('active');
+        if (modalId === 'ingredienteModal') {
+            window.resetearBloqueoStock();
         }
     };
-
-    window.restaurarSesionAdmin = async function() {
-        const token = sessionStorage.getItem('admin_jwt_token');
-        const userData = sessionStorage.getItem('admin_user');
-        if (!token || !userData) return false;
-        try {
-            const user = JSON.parse(userData);
-            if (user.rol !== 'admin') return false;
-            const { error } = await window.supabaseClient.from('config').select('id').limit(1).maybeSingle();
-            if (error && error.message.includes('JWT')) {
-                window.cerrarSesion();
-                return false;
-            }
-            window.jwtToken = token;
-            window.isAdminAuthenticated = true;
-            window.supabaseClient = window.inicializarSupabaseCliente(window.jwtToken);
-            return true;
-        } catch (e) {
-            console.error('Error restaurando sesión:', e);
-            window.cerrarSesion();
-            return false;
+    
+    // ==================== TOAST (MENSAJES FLOTANTES) ====================
+    window.mostrarToast = function(mensaje, tipo = 'info') {
+        const toast = document.getElementById('toast');
+        if (toast) {
+            toast.textContent = mensaje;
+            toast.className = `toast show ${tipo}`;
+            setTimeout(() => toast.classList.remove('show'), 3000);
+        } else {
+            console.warn('Toast no encontrado en DOM:', mensaje);
+            alert(mensaje);
         }
     };
-
-    window.cerrarSesion = function() {
-        sessionStorage.removeItem('admin_authenticated');
-        sessionStorage.removeItem('admin_jwt_token');
-        sessionStorage.removeItem('admin_user');
-        window.isAdminAuthenticated = false;
-        window.jwtToken = null;
-        selectedAdmin = null;
+    
+    // ==================== CONTROL DE PANTALLAS ====================
+    window.mostrarLogin = function() {
         const pwdInput = document.getElementById('adminPassword');
         if (pwdInput) pwdInput.value = '';
-        const selectorPanel = document.getElementById('loginSelectorPanel');
-        const passwordPanel = document.getElementById('loginPasswordPanel');
-        if (selectorPanel) {
-            selectorPanel.classList.remove('hide');
-            selectorPanel.style.display = 'block';
-        }
-        if (passwordPanel) {
-            passwordPanel.classList.remove('show');
-            passwordPanel.style.display = 'none';
-        }
-        window.mostrarLogin();
-        window.mostrarToast('🔓 Sesión cerrada', 'info');
-        window.supabaseClient = window.inicializarSupabaseCliente();
-        setTimeout(() => window.cargarListaAdminsRecientes(), 500);
+        document.getElementById('loginContainer').style.display = 'flex';
+        document.getElementById('panelContainer').classList.remove('active');
+        window.detenerAlarma();
     };
-
-    const backBtn = document.getElementById('backToSelectorBtn');
-    if (backBtn) {
-        backBtn.addEventListener('click', () => {
-            document.getElementById('loginSelectorPanel').classList.remove('hide');
-            document.getElementById('loginPasswordPanel').classList.remove('show');
-            document.getElementById('loginPasswordPanel').style.display = 'none';
-            document.getElementById('loginSelectorPanel').style.display = 'block';
-            selectedAdmin = null;
+    
+    window.mostrarPanel = function() {
+        document.getElementById('loginContainer').style.display = 'none';
+        document.getElementById('panelContainer').classList.add('active');
+    };
+    
+    window.detenerAlarma = function() {
+        if (window.alarmaAudio && window.alarmaActiva) {
+            try { window.alarmaAudio.pause(); window.alarmaAudio.currentTime = 0; } catch(e) {}
+            window.alarmaActiva = false;
+        }
+    };
+    
+    window.configGlobal = window.configGlobal || {};
+    
+    // ==================== DIFERENCIA DE TASA ====================
+    window.calcularDiferenciaTasa = function() {
+        if (!window.pedidos || !window.pedidos.length) return 0;
+        const tasaBase = window.configGlobal?.tasa_cambio || 400;
+        const tasaEfectiva = window.configGlobal?.tasa_efectiva || 400;
+        if (tasaEfectiva <= tasaBase) return 0;
+        const pedidosCerrados = window.pedidos.filter(p => 
+            p.estado === 'entregado' || p.estado === 'enviado' || p.estado === 'reserva_completada'
+        );
+        const totalUSD = pedidosCerrados.reduce((sum, p) => sum + (p.total || 0), 0);
+        return totalUSD * (tasaEfectiva - tasaBase);
+    };
+    
+    // ==================== GESTIÓN DE ADMINISTRADORES RECIENTES ====================
+    window.obtenerAdminsRecientes = function() {
+        const stored = localStorage.getItem('saki_recent_admins');
+        if (!stored) return [];
+        try {
+            const admins = JSON.parse(stored);
+            return admins.slice(0, 5);
+        } catch(e) { return []; }
+    };
+    
+    window.guardarAdminReciente = function(adminUser) {
+        if (!adminUser || adminUser.rol !== 'admin') return;
+        let recent = window.obtenerAdminsRecientes();
+        recent = recent.filter(a => a.id !== adminUser.id);
+        recent.unshift({
+            id: adminUser.id,
+            nombre: adminUser.nombre,
+            username: adminUser.username,
+            foto: adminUser.foto || null,
+            lastLogin: new Date().toISOString()
         });
-    }
-
-    const clearBtn = document.getElementById('clearRecentAdminsBtn');
-    if (clearBtn) {
-        clearBtn.addEventListener('click', () => {
-            if (confirm('¿Borrar el historial de administradores recientes?')) {
-                window.limpiarAdminsRecientes();
-                window.cargarListaAdminsRecientes();
-            }
-        });
-    }
-
-    window.iniciarLoginUI = async function() {
-        await new Promise(r => setTimeout(r, 300));
-        await window.cargarListaAdminsRecientes();
+        recent = recent.slice(0, 5);
+        localStorage.setItem('saki_recent_admins', JSON.stringify(recent));
+    };
+    
+    window.limpiarAdminsRecientes = function() {
+        localStorage.removeItem('saki_recent_admins');
+    };
+    
+    // Placeholder para imágenes (SVG Data URI)
+    window.getPlaceholderImage = function(text = 'Admin') {
+        const initial = text.charAt(0).toUpperCase();
+        return `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' fill='%23D32F2F'/%3E%3Ctext x='24' y='32' font-size='20' text-anchor='middle' fill='white' font-family='Arial'%3E${initial}%3C/text%3E%3C/svg%3E`;
     };
 })();
