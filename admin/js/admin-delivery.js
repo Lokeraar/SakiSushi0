@@ -92,6 +92,7 @@
         const previewDiv = document.getElementById('mesoneroFotoPreview');
         const previewImg = document.getElementById('mesoneroPreviewImg');
         const removeBtn = document.getElementById('mesoneroFotoRemoveBtn');
+        if (!fileInput || !urlInput || !previewDiv) return;
         if (fileInput.files && fileInput.files[0]) {
             const file = fileInput.files[0];
             currentMesoneroFotoFile = file;
@@ -127,7 +128,8 @@
         const previewDiv = document.getElementById('mesoneroFotoPreview');
         const previewImg = document.getElementById('mesoneroPreviewImg');
         const removeBtn = document.getElementById('mesoneroFotoRemoveBtn');
-        if (fileInput.files && fileInput.files[0]) return;
+        if (!urlInput || !previewDiv) return;
+        if (fileInput && fileInput.files && fileInput.files[0]) return;
         const url = urlInput.value.trim();
         if (url) {
             currentMesoneroFotoUrl = url;
@@ -149,33 +151,33 @@
         const previewDiv = document.getElementById('mesoneroFotoPreview');
         const previewImg = document.getElementById('mesoneroPreviewImg');
         const removeBtn = document.getElementById('mesoneroFotoRemoveBtn');
-        fileInput.value = '';
-        urlInput.value = '';
-        urlInput.disabled = false;
-        previewDiv.style.display = 'none';
+        if (fileInput) fileInput.value = '';
+        if (urlInput) {
+            urlInput.value = '';
+            urlInput.disabled = false;
+        }
+        if (previewDiv) previewDiv.style.display = 'none';
         if (removeBtn) removeBtn.style.display = 'none';
-        previewImg.src = '';
+        if (previewImg) previewImg.src = '';
         currentMesoneroFotoFile = null;
         currentMesoneroFotoUrl = '';
     }
 
-    document.getElementById('saveMesonero').addEventListener('click', async () => {
+    document.getElementById('saveMesonero')?.addEventListener('click', async () => {
         const btn = document.getElementById('saveMesonero');
         if (btn.disabled) return;
         const id = window.mesoneroEditandoId;
-        const nombre = document.getElementById('mesoneroNombre').value.trim();
-        const activo = document.getElementById('mesoneroActivo').value === 'true';
+        const nombre = document.getElementById('mesoneroNombre')?.value.trim();
+        const activo = document.getElementById('mesoneroActivo')?.value === 'true';
         if (!nombre) { window.mostrarToast('Ingresa un nombre', 'error'); return; }
-        // Subir foto
         let fotoUrl = '';
-        const archivoFoto = document.getElementById('mesoneroFoto').files[0];
-        const fotoUrlInput = document.getElementById('mesoneroFotoUrl').value;
+        const archivoFoto = document.getElementById('mesoneroFoto')?.files[0];
+        const fotoUrlInput = document.getElementById('mesoneroFotoUrl')?.value;
         if (archivoFoto) {
             const resultado = await window.subirImagenPlatillo(archivoFoto, 'mesoneros');
             if (resultado.success) fotoUrl = resultado.url;
             else { window.mostrarToast('Error al subir la foto: ' + resultado.error, 'error'); return; }
         } else if (fotoUrlInput) fotoUrl = fotoUrlInput;
-        
         try {
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
@@ -270,7 +272,6 @@
         }
     };
 
-    // Deliverys con foto
     window.cargarDeliverys = async function() {
         try {
             const { data, error } = await window.supabaseClient.from('deliverys').select('*').order('nombre');
@@ -351,16 +352,17 @@
         window.deliveryEditandoId = id;
         document.getElementById('deliveryNombre').value = delivery.nombre;
         document.getElementById('deliveryEstado').value = delivery.activo ? 'true' : 'false';
-        // Foto
         if (delivery.foto) {
-            document.getElementById('deliveryFotoUrl').value = delivery.foto;
+            const urlInput = document.getElementById('deliveryFotoUrl');
+            if (urlInput) urlInput.value = delivery.foto;
             const previewImg = document.getElementById('deliveryPreviewImg');
             if (previewImg) previewImg.src = delivery.foto;
             const previewDiv = document.getElementById('deliveryFotoPreview');
             if (previewDiv) previewDiv.style.display = 'flex';
             currentDeliveryFotoUrl = delivery.foto;
         } else {
-            document.getElementById('deliveryFotoUrl').value = '';
+            const urlInput = document.getElementById('deliveryFotoUrl');
+            if (urlInput) urlInput.value = '';
             const previewDiv = document.getElementById('deliveryFotoPreview');
             if (previewDiv) previewDiv.style.display = 'none';
         }
@@ -373,6 +375,7 @@
         const previewDiv = document.getElementById('deliveryFotoPreview');
         const previewImg = document.getElementById('deliveryPreviewImg');
         const removeBtn = document.getElementById('deliveryFotoRemoveBtn');
+        if (!fileInput || !urlInput || !previewDiv) return;
         if (fileInput.files && fileInput.files[0]) {
             const file = fileInput.files[0];
             currentDeliveryFotoFile = file;
@@ -408,7 +411,8 @@
         const previewDiv = document.getElementById('deliveryFotoPreview');
         const previewImg = document.getElementById('deliveryPreviewImg');
         const removeBtn = document.getElementById('deliveryFotoRemoveBtn');
-        if (fileInput.files && fileInput.files[0]) return;
+        if (!urlInput || !previewDiv) return;
+        if (fileInput && fileInput.files && fileInput.files[0]) return;
         const url = urlInput.value.trim();
         if (url) {
             currentDeliveryFotoUrl = url;
@@ -430,31 +434,31 @@
         const previewDiv = document.getElementById('deliveryFotoPreview');
         const previewImg = document.getElementById('deliveryPreviewImg');
         const removeBtn = document.getElementById('deliveryFotoRemoveBtn');
-        fileInput.value = '';
-        urlInput.value = '';
-        urlInput.disabled = false;
-        previewDiv.style.display = 'none';
+        if (fileInput) fileInput.value = '';
+        if (urlInput) {
+            urlInput.value = '';
+            urlInput.disabled = false;
+        }
+        if (previewDiv) previewDiv.style.display = 'none';
         if (removeBtn) removeBtn.style.display = 'none';
-        previewImg.src = '';
+        if (previewImg) previewImg.src = '';
         currentDeliveryFotoFile = null;
         currentDeliveryFotoUrl = '';
     }
 
-    document.getElementById('saveDelivery').addEventListener('click', async () => {
+    document.getElementById('saveDelivery')?.addEventListener('click', async () => {
         if (!window.deliveryEditandoId) return;
         const nombre = document.getElementById('deliveryNombre').value.trim();
         const activo = document.getElementById('deliveryEstado').value === 'true';
         if (!nombre) { window.mostrarToast('Ingresa un nombre', 'error'); return; }
-        // Subir foto
         let fotoUrl = '';
-        const archivoFoto = document.getElementById('deliveryFoto').files[0];
-        const fotoUrlInput = document.getElementById('deliveryFotoUrl').value;
+        const archivoFoto = document.getElementById('deliveryFoto')?.files[0];
+        const fotoUrlInput = document.getElementById('deliveryFotoUrl')?.value;
         if (archivoFoto) {
             const resultado = await window.subirImagenPlatillo(archivoFoto, 'deliverys');
             if (resultado.success) fotoUrl = resultado.url;
             else { window.mostrarToast('Error al subir la foto: ' + resultado.error, 'error'); return; }
         } else if (fotoUrlInput) fotoUrl = fotoUrlInput;
-        
         try {
             await window.supabaseClient.from('deliverys').update({ nombre, activo, foto: fotoUrl || null }).eq('id', window.deliveryEditandoId);
             document.getElementById('deliveryModal').classList.remove('active');
@@ -463,7 +467,7 @@
         } catch (e) { console.error('Error:', e); window.mostrarToast('❌ Error al actualizar', 'error'); }
     });
 
-    // Configurar eventos de foto en modales
+    // Configurar eventos de foto en modales (solo si los elementos existen)
     function setupFotoEvents() {
         const deliveryFile = document.getElementById('deliveryFoto');
         const deliveryUrl = document.getElementById('deliveryFotoUrl');
@@ -481,7 +485,6 @@
     }
     setupFotoEvents();
 
-    // Eliminar delivery
     window.eliminarDelivery = async function(id) {
         const delivery = window.deliverys.find(d => d.id === id);
         if (!delivery) return;
