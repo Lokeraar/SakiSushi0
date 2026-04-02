@@ -93,4 +93,38 @@
         const diferencia = totalUSD * (tasaEfectiva - tasaBase);
         return diferencia;
     };
+	    // ==================== GESTIÓN DE ADMINISTRADORES RECIENTES ====================
+    window.obtenerAdminsRecientes = function() {
+        const stored = localStorage.getItem('saki_recent_admins');
+        if (!stored) return [];
+        try {
+            const admins = JSON.parse(stored);
+            // Filtrar solo los que aún existen en la tabla usuarios (opcional, se valida al cargar)
+            return admins.slice(0, 5);
+        } catch(e) { return []; }
+    };
+
+    window.guardarAdminReciente = function(adminUser) {
+        if (!adminUser || adminUser.rol !== 'admin') return;
+        let recent = window.obtenerAdminsRecientes();
+        // Eliminar si ya existe
+        recent = recent.filter(a => a.id !== adminUser.id);
+        // Agregar al inicio
+        recent.unshift({
+            id: adminUser.id,
+            nombre: adminUser.nombre,
+            username: adminUser.username,
+            foto: adminUser.foto || null,
+            lastLogin: new Date().toISOString()
+        });
+        // Mantener solo 5
+        recent = recent.slice(0, 5);
+        localStorage.setItem('saki_recent_admins', JSON.stringify(recent));
+    };
+
+    window.limpiarAdminsRecientes = function() {
+        localStorage.removeItem('saki_recent_admins');
+        // Recargar la lista en la UI si está visible
+        if (window.cargarListaAdminsRecientes) window.cargarListaAdminsRecientes();
+    };
 })();
