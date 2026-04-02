@@ -63,6 +63,11 @@
         window.detenerAlarma();
     };
     
+    window.mostrarPanel = function() {
+        document.getElementById('loginContainer').style.display = 'none';
+        document.getElementById('panelContainer').classList.add('active');
+    };
+    
     window.detenerAlarma = function() {
         if (window.alarmaAudio && window.alarmaActiva) {
             try { window.alarmaAudio.pause(); window.alarmaAudio.currentTime = 0; } catch(e) {}
