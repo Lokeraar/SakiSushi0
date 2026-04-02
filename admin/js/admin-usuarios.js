@@ -22,14 +22,16 @@
             const fotoHtml = user.foto ? `<img src="${user.foto}" style="width:44px;height:44px;border-radius:50%;object-fit:cover;margin-right:.5rem">` : '';
             const inicial = (user.nombre || '?').charAt(0).toUpperCase();
             const avatarHtml = fotoHtml || `<div class="usuario-avatar">${inicial}</div>`;
+            const rolBadge = user.rol === 'admin' ? '<span class="usuario-rol admin">Admin</span>' : '<span class="usuario-rol cajero">Cajero</span>';
             return `<div class="usuario-card">
                 ${avatarHtml}
                 <div class="usuario-info">
                     <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
                         <span class="usuario-nombre">${user.nombre}</span>
+                        ${rolBadge}
                         ${user.activo ? '<span class="status-activo"><i class="fas fa-check-circle"></i> Activo</span>' : '<span class="status-inactivo"><i class="fas fa-circle"></i> Inactivo</span>'}
                     </div>
-                    <div class="usuario-username">@${user.username} · ${user.rol || 'cajero'}</div>
+                    <div class="usuario-username">@${user.username}</div>
                 </div>
                 <div class="usuario-actions">
                     <button class="btn-icon edit" onclick="window.editarUsuario('${user.id}')" title="Editar usuario">
@@ -167,7 +169,6 @@
     }
 
     window.toggleUsuarioActivo = async function(userId, activo) {
-        // Si es admin y es el único admin, no permitir desactivar
         const user = window.usuarios.find(u => u.id === userId);
         if (user && user.rol === 'admin') {
             const adminsActivos = window.usuarios.filter(u => u.rol === 'admin' && u.activo === true);
@@ -258,6 +259,18 @@
             }
             if (error) throw error;
             
+            // Si es un administrador activo, guardarlo en el historial de recientes para el login
+            if (rol === 'admin' && activo) {
+                const adminData = {
+                    id: userData.id,
+                    nombre: userData.nombre,
+                    username: userData.username,
+                    foto: userData.foto,
+                    rol: 'admin'
+                };
+                window.guardarAdminReciente(adminData);
+            }
+            
             document.getElementById('usuarioModal').classList.remove('active');
             window.usuarioEditandoId = null;
             await window.cargarUsuarios();
@@ -270,6 +283,7 @@
         }
     });
 
+    // Cerrar modal
     document.getElementById('cancelUsuario').addEventListener('click', () => document.getElementById('usuarioModal').classList.remove('active'));
     document.getElementById('closeUsuarioModal').addEventListener('click', () => document.getElementById('usuarioModal').classList.remove('active'));
     
