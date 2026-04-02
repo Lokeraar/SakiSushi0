@@ -1,5 +1,9 @@
 // admin-menu.js - Gestión de platillos (menú)
 (function() {
+    // Variables para preview de imagen
+    let currentImagenUrl = '';
+    let currentImagenFile = null;
+
     window.cargarMenu = async function() {
         try {
             const { data, error } = await window.supabaseClient.from('menu').select('*');
@@ -31,7 +35,7 @@
                     const ing = window.inventarioItems.find(i => i.id === ingId);
                     const disponible = ing && (ing.stock - ing.reservado) >= (ingInfo.cantidad || 0);
                     if (!disponible) todosDisponibles = false;
-                    ingredientesEstado.push({ nombre: ingInfo.nombre || ingId, disponible });
+                    ingredientesEstado.push({ id: ingId, nombre: ingInfo.nombre || ingId, disponible });
                 }
             }
             const disponibleFinal = item.disponible && todosDisponibles;
@@ -53,14 +57,15 @@
                             </span>
                         </div>
                     </div>
-                    ${imgSrc ? `<div class="mc2-img-wrap"><img src="${imgSrc}" class="mc2-img" alt="${item.nombre}" onerror="this.parentElement.style.display='none'"></div>` : ''}
+                    ${imgSrc ? `<div class="mc2-img-wrap"><img src="${imgSrc}" class="mc2-img" alt="${item.nombre}" onerror="this.parentElement.style.display='none'" loading="lazy"></div>` : ''}
                 </div>
                 ${item.descripcion ? `<div class="mc2-desc">${item.descripcion}</div>` : ''}
-                <div class="mc2-tags">${ingredientesEstado.map(ing =>
-                    `<span class="ing-tag ${ing.disponible ? '' : 'ing-tag-sin-stock'}" title="${ing.disponible ? 'En stock' : 'Sin stock suficiente'}">
+                <div class="mc2-tags">${ingredientesEstado.map(ing => `
+                    <span class="ing-tag ${ing.disponible ? '' : 'ing-tag-sin-stock'}" data-ingrediente-id="${ing.id}" 
+                          title="${ing.disponible ? 'En stock' : 'Sin stock suficiente'}" style="cursor:pointer">
                         ${ing.nombre} <i class="fas fa-${ing.disponible ? 'check' : 'times'}" style="font-size:.55rem;margin-left:2px"></i>
-                     </span>`
-                ).join('') || '<span class="ing-tag" style="opacity:.5">Sin ingredientes</span>'}</div>
+                    </span>
+                `).join('') || '<span class="ing-tag" style="opacity:.5">Sin ingredientes</span>'}</div>
                 <div class="mc2-actions">
                     <label style="display:flex;align-items:center;gap:.35rem;cursor:pointer;margin-right:.25rem"
                         title="${disponibleFinal ? 'Marcar como no disponible' : 'Marcar como disponible'}">
@@ -78,16 +83,29 @@
                         <i class="fas fa-trash"></i>
                     </button>
                 </div>`;
+            
+            // Event listener para las etiquetas de ingredientes (redirigir a inventario)
+            card.querySelectorAll('.ing-tag[data-ingrediente-id]').forEach(tag => {
+                tag.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const ingId = tag.dataset.ingredienteId;
+                    window._irAIngrediente(ingId);
+                });
+            });
+            
             grid.appendChild(card);
         });
     };
 
+    // Función para alternar disponible (corregida para evitar error de permisos)
     window.toggleDisponiblePlatillo = async function(id, disponible) {
         try {
+            // Solo actualizar el campo 'disponible', nada más
             const { error } = await window.supabaseClient.from('menu')
-                .update({ disponible }).eq('id', id);
+                .update({ disponible: disponible })
+                .eq('id', id);
             if (error) throw error;
-            const item = (window.menuItems || []).find(p => p.id === id);
+            const item = window.menuItems.find(p => p.id === id);
             if (item) item.disponible = disponible;
             window.renderizarMenu(document.getElementById('menuBuscador')?.value || '');
             if (disponible) {
@@ -97,9 +115,110 @@
             }
         } catch(e) {
             console.error('Error toggle disponible:', e);
-            window.mostrarToast('❌ Error: ' + (e.message || e), 'error');
+            // Si el error es de permisos, mostrar mensaje amigable
+            if (e.message && e.message.includes('permission denied')) {
+                window.mostrarToast('⚠️ No se pudo cambiar el estado. Contacta al administrador del sistema.', 'error');
+            } else {
+                window.mostrarToast('❌ Error: ' + (e.message || e), 'error');
+            }
         }
     };
+
+    // Limpiar preview de imagen
+    window.limpiarImagenPreview = function() {
+        currentImagenFile = null;
+        currentImagenUrl = '';
+        const fileInput = document.getElementById('platilloImagen');
+        const urlInput = document.getElementById('platilloImagenUrl');
+        if (fileInput) fileInput.value = '';
+        if (urlInput) urlInput.value = '';
+        const previewDiv = document.getElementById('imagenPreview');
+        if (previewDiv) previewDiv.style.display = 'none';
+        const previewImg = document.getElementById('previewImg');
+        if (previewImg) previewImg.src = '';
+        // Habilitar campo URL si estaba bloqueado
+        if (urlInput) urlInput.disabled = false;
+    };
+
+    // Manejar selección de archivo de imagen (prioridad sobre URL)
+    function handleImagenFile() {
+        const fileInput = document.getElementById('platilloImagen');
+        const urlInput = document.getElementById('platilloImagenUrl');
+        const previewDiv = document.getElementById('imagenPreview');
+        const previewImg = document.getElementById('previewImg');
+        
+        if (fileInput.files && fileInput.files[0]) {
+            const file = fileInput.files[0];
+            currentImagenFile = file;
+            currentImagenUrl = '';
+            urlInput.value = '';
+            urlInput.disabled = true;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                previewImg.src = e.target.result;
+                previewDiv.style.display = 'flex';
+            };
+            reader.readAsDataURL(file);
+        } else {
+            // Si no hay archivo, habilitar URL
+            urlInput.disabled = false;
+            if (urlInput.value.trim()) {
+                previewImg.src = urlInput.value;
+                previewDiv.style.display = 'flex';
+                currentImagenUrl = urlInput.value;
+                currentImagenFile = null;
+            } else {
+                previewDiv.style.display = 'none';
+                previewImg.src = '';
+            }
+        }
+    }
+
+    function handleImagenUrl() {
+        const urlInput = document.getElementById('platilloImagenUrl');
+        const fileInput = document.getElementById('platilloImagen');
+        const previewDiv = document.getElementById('imagenPreview');
+        const previewImg = document.getElementById('previewImg');
+        
+        // Si hay archivo seleccionado, ignorar cambios en URL
+        if (fileInput.files && fileInput.files[0]) return;
+        
+        const url = urlInput.value.trim();
+        if (url) {
+            currentImagenUrl = url;
+            currentImagenFile = null;
+            previewImg.src = url;
+            previewDiv.style.display = 'flex';
+        } else {
+            previewDiv.style.display = 'none';
+            previewImg.src = '';
+            currentImagenUrl = '';
+        }
+    }
+
+    function removePreviewImage() {
+        const fileInput = document.getElementById('platilloImagen');
+        const urlInput = document.getElementById('platilloImagenUrl');
+        const previewDiv = document.getElementById('imagenPreview');
+        const previewImg = document.getElementById('previewImg');
+        
+        fileInput.value = '';
+        urlInput.value = '';
+        urlInput.disabled = false;
+        previewDiv.style.display = 'none';
+        previewImg.src = '';
+        currentImagenFile = null;
+        currentImagenUrl = '';
+    }
+
+    // Expandir imagen en modal
+    function expandImage(imgSrc) {
+        const modal = document.createElement('div');
+        modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.9);z-index:10000;display:flex;align-items:center;justify-content:center;cursor:pointer';
+        modal.innerHTML = `<img src="${imgSrc}" style="max-width:90%;max-height:90%;object-fit:contain;border-radius:8px">`;
+        modal.addEventListener('click', () => modal.remove());
+        document.body.appendChild(modal);
+    }
 
     window.abrirModalNuevoPlatillo = function() {
         document.getElementById('platilloModalTitle').textContent = 'Nuevo Platillo';
@@ -114,7 +233,12 @@
     window.cargarCategoriasSelect = function() {
         const select = document.getElementById('platilloCategoria');
         select.innerHTML = '<option value="">Seleccionar</option>';
-        Object.keys(window.categoriasMenu || {}).forEach(cat => { const opt = document.createElement('option'); opt.value = cat; opt.textContent = cat; select.appendChild(opt); });
+        Object.keys(window.categoriasMenu || {}).forEach(cat => {
+            const opt = document.createElement('option');
+            opt.value = cat;
+            opt.textContent = cat;
+            select.appendChild(opt);
+        });
         select.addEventListener('change', (e) => { window.cargarSubcategoriasSelect(e.target.value); });
     };
 
@@ -122,7 +246,12 @@
         const select = document.getElementById('platilloSubcategoria');
         select.innerHTML = '<option value="">Ninguna</option>';
         if (categoria && window.categoriasMenu && window.categoriasMenu[categoria]) {
-            window.categoriasMenu[categoria].forEach(sub => { const opt = document.createElement('option'); opt.value = sub; opt.textContent = sub; select.appendChild(opt); });
+            window.categoriasMenu[categoria].forEach(sub => {
+                const opt = document.createElement('option');
+                opt.value = sub;
+                opt.textContent = sub;
+                select.appendChild(opt);
+            });
         }
     };
 
@@ -190,13 +319,6 @@
         window._recalcularStockPlatillo();
     };
 
-    window.limpiarImagenPreview = function() {
-        document.getElementById('platilloImagen').value = '';
-        document.getElementById('platilloImagenUrl').value = '';
-        document.getElementById('imagenPreview').style.display = 'none';
-        document.getElementById('previewImg').src = '';
-    };
-
     window.editarPlatillo = function(id) {
         const platillo = window.menuItems.find(p => p.id === id);
         if (!platillo) return;
@@ -217,13 +339,72 @@
             document.getElementById('previewImg').src = platillo.imagen;
             document.getElementById('imagenPreview').style.display = 'flex';
             document.getElementById('platilloImagenUrl').value = platillo.imagen;
+            currentImagenUrl = platillo.imagen;
         }
         window.cargarSubcategoriasSelect(platillo.categoria);
         document.getElementById('ingredientesContainer').innerHTML = '';
-        if (platillo.ingredientes) Object.entries(platillo.ingredientes).forEach(([ingId, ingInfo]) => { window.agregarIngredienteRow(ingId, ingInfo.cantidad, ingInfo.unidad); });
+        if (platillo.ingredientes) {
+            Object.entries(platillo.ingredientes).forEach(([ingId, ingInfo]) => {
+                window.agregarIngredienteRow(ingId, ingInfo.cantidad, ingInfo.unidad);
+            });
+        }
         document.getElementById('platilloModal').classList.add('active');
     };
 
+    // Configurar eventos del modal de platillo (se ejecuta una sola vez)
+    function setupPlatilloModalEvents() {
+        const fileInput = document.getElementById('platilloImagen');
+        const urlInput = document.getElementById('platilloImagenUrl');
+        const previewDiv = document.getElementById('imagenPreview');
+        const removeBtn = document.createElement('button');
+        removeBtn.innerHTML = '<i class="fas fa-times-circle"></i>';
+        removeBtn.style.cssText = 'position:absolute;top:-8px;right:-8px;background:var(--danger);color:#fff;border:none;border-radius:50%;width:24px;height:24px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.8rem;z-index:10';
+        removeBtn.title = 'Eliminar imagen';
+        removeBtn.onclick = removePreviewImage;
+        
+        if (fileInput) fileInput.addEventListener('change', handleImagenFile);
+        if (urlInput) urlInput.addEventListener('input', handleImagenUrl);
+        
+        // Agregar tooltip al lado de "Ingredientes del platillo"
+        const ingredientesLabel = document.querySelector('#platilloForm .form-group:nth-child(7) label');
+        if (ingredientesLabel) {
+            ingredientesLabel.innerHTML += `
+                <span class="tooltip-wrap" style="position:relative; display:inline-flex; align-items:center; cursor:help; margin-left:.3rem">
+                    <span style="display:inline-flex; align-items:center; justify-content:center; width:16px; height:16px; background:var(--text-muted); color:#fff; border-radius:50%; font-size:.65rem; font-weight:700">?</span>
+                    <span class="tooltip-text" style="display:none; position:absolute; bottom:calc(100% + 6px); left:50%; transform:translateX(-50%); background:var(--toast-bg); color:var(--toast-text); padding:.5rem .75rem; border-radius:8px; font-size:.75rem; white-space:normal; width:260px; text-align:center; box-shadow:0 4px 12px rgba(0,0,0,.3); z-index:100; line-height:1.4">
+                        ⚠️ La unidad de medida del ingrediente es crítica: "1 aguacate" no equivale a 500 gramos. Asegúrate de seleccionar la unidad correcta (unidades, kilogramos, litros, etc.) según corresponda.
+                    </span>
+                </span>
+            `;
+        }
+        
+        // Observer para añadir botón de eliminar en preview cuando se muestra
+        const observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                if (mutation.attributeName === 'style' && previewDiv.style.display === 'flex') {
+                    if (!previewDiv.querySelector('.preview-remove-btn')) {
+                        removeBtn.classList.add('preview-remove-btn');
+                        previewDiv.style.position = 'relative';
+                        previewDiv.appendChild(removeBtn);
+                    }
+                } else if (previewDiv.style.display === 'none' && previewDiv.querySelector('.preview-remove-btn')) {
+                    previewDiv.querySelector('.preview-remove-btn')?.remove();
+                }
+            });
+        });
+        observer.observe(previewDiv, { attributes: true });
+        
+        // Expansión de imagen al hacer clic en preview
+        const previewImg = document.getElementById('previewImg');
+        if (previewImg) {
+            previewImg.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (previewImg.src) expandImage(previewImg.src);
+            });
+        }
+    }
+
+    // Guardar platillo
     document.getElementById('savePlatillo').addEventListener('click', async () => {
         const saveBtn = document.getElementById('savePlatillo');
         if (saveBtn && saveBtn.disabled) return;
@@ -236,7 +417,6 @@
             const subcategoria = document.getElementById('platilloSubcategoria').value;
             const precio = parseFloat(document.getElementById('platilloPrecio').value);
             const descripcion = document.getElementById('platilloDescripcion').value;
-            const disponible = document.getElementById('platilloDisponible').value === 'true';
             
             if (!nombre || !categoria || !precio) { window.mostrarToast('Completa los campos obligatorios', 'error'); return; }
             
@@ -285,7 +465,7 @@
             }
 
             const chkDisp = document.getElementById('platilloDisponibleCheck');
-            const disponibleFinal = chkDisp ? chkDisp.checked : disponible;
+            const disponibleFinal = chkDisp ? chkDisp.checked : true;
 
             const platillo = {
                 id: window.platilloEditandoId || window.generarId('plat_'),
@@ -295,9 +475,11 @@
             };
             
             let error;
-            if (window.platilloEditandoId) ({ error } = await window.supabaseClient.from('menu').update(platillo).eq('id', window.platilloEditandoId));
-            else ({ error } = await window.supabaseClient.from('menu').insert([platillo]));
-            
+            if (window.platilloEditandoId) {
+                ({ error } = await window.supabaseClient.from('menu').update(platillo).eq('id', window.platilloEditandoId));
+            } else {
+                ({ error } = await window.supabaseClient.from('menu').insert([platillo]));
+            }
             if (error) throw error;
             
             document.getElementById('platilloModal').classList.remove('active');
@@ -305,32 +487,55 @@
             window.limpiarImagenPreview();
             await window.cargarMenu();
             window.mostrarToast('✅ Platillo guardado', 'success');
-        } catch (e) { console.error('Error guardando platillo:', e); window.mostrarToast('❌ Error al guardar el platillo: ' + e.message, 'error'); }
-        finally { const saveBtn = document.getElementById('savePlatillo'); saveBtn.innerHTML = 'Guardar'; saveBtn.disabled = false; }
+        } catch (e) {
+            console.error('Error guardando platillo:', e);
+            window.mostrarToast('❌ Error al guardar el platillo: ' + e.message, 'error');
+        } finally {
+            const saveBtn = document.getElementById('savePlatillo');
+            saveBtn.innerHTML = 'Guardar';
+            saveBtn.disabled = false;
+        }
     });
 
     document.getElementById('cancelPlatillo').addEventListener('click', () => {
         document.getElementById('platilloModal').classList.remove('active');
         window.platilloEditandoId = null;
+        window.limpiarImagenPreview();
     });
     document.getElementById('closePlatilloModal').addEventListener('click', () => {
         document.getElementById('platilloModal').classList.remove('active');
         window.platilloEditandoId = null;
+        window.limpiarImagenPreview();
     });
 
     window.eliminarPlatillo = async function(id) {
         if (!confirm('¿Estás seguro de eliminar este platillo?')) return;
         try {
             const platillo = window.menuItems.find(p => p.id === id);
-            if (platillo && platillo.imagen && platillo.imagen.includes('imagenes-platillos')) await window.eliminarImagenPlatillo(platillo.imagen);
+            if (platillo && platillo.imagen && platillo.imagen.includes('imagenes-platillos')) {
+                await window.eliminarImagenPlatillo(platillo.imagen);
+            }
             await window.supabaseClient.from('menu').delete().eq('id', id);
             await window.cargarMenu();
             window.mostrarToast('🗑️ Platillo eliminado', 'success');
-        } catch (e) { console.error('Error eliminando platillo:', e); window.mostrarToast('❌ Error al eliminar el platillo', 'error'); }
+        } catch (e) {
+            console.error('Error eliminando platillo:', e);
+            window.mostrarToast('❌ Error al eliminar el platillo', 'error');
+        }
     };
 
     window.actualizarProductosActivos = function() {
         document.getElementById('productosActivos').textContent = window.menuItems.filter(m => m.disponible).length;
+        // Hacer clic en la tarjeta redirige al menú
+        const prodCard = document.querySelector('.dashboard-card:nth-child(2)');
+        if (prodCard && !prodCard.hasAttribute('data-listener')) {
+            prodCard.setAttribute('data-listener', 'true');
+            prodCard.style.cursor = 'pointer';
+            prodCard.addEventListener('click', () => {
+                const menuTab = document.querySelector('.tab[data-tab="menu"]');
+                if (menuTab) menuTab.click();
+            });
+        }
     };
 
     window._onCategoriaChange = function() {
@@ -410,4 +615,7 @@
             ? `Con el stock actual se pueden preparar ${maxPlatillos} porcion${maxPlatillos !== 1 ? 'es' : ''}`
             : '⚠️ Stock insuficiente para preparar este platillo';
     };
+
+    // Inicializar eventos del modal
+    setupPlatilloModalEvents();
 })();
