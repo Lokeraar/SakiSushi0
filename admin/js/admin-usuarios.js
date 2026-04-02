@@ -49,47 +49,6 @@
         }).join('');
     };
 
-    window.abrirModalNuevoUsuario = function() {
-        document.getElementById('usuarioForm').reset();
-        document.getElementById('usuarioRol').value = 'cajero';
-        document.getElementById('usuarioActivo').value = 'true';
-        // Limpiar foto
-        currentUserFotoFile = null;
-        currentUserFotoUrl = '';
-        document.getElementById('usuarioFoto').value = '';
-        document.getElementById('usuarioFotoUrl').value = '';
-        const previewDiv = document.getElementById('usuarioFotoPreview');
-        if (previewDiv) previewDiv.style.display = 'none';
-        document.getElementById('usuarioModalTitle').textContent = 'Nuevo Cajero/Admin';
-        window.usuarioEditandoId = null;
-        document.getElementById('usuarioModal').classList.add('active');
-    };
-
-    window.editarUsuario = function(id) {
-        const user = window.usuarios.find(u => u.id === id);
-        if (!user) return;
-        window.usuarioEditandoId = id;
-        document.getElementById('usuarioModalTitle').textContent = 'Editar Usuario';
-        document.getElementById('usuarioNombre').value = user.nombre || '';
-        document.getElementById('usuarioUsername').value = user.username || '';
-        document.getElementById('usuarioRol').value = user.rol || 'cajero';
-        document.getElementById('usuarioActivo').value = user.activo ? 'true' : 'false';
-        document.getElementById('usuarioPassword').value = ''; // no mostrar contraseña
-        // Foto
-        if (user.foto) {
-            document.getElementById('usuarioFotoUrl').value = user.foto;
-            const previewImg = document.getElementById('usuarioPreviewImg');
-            if (previewImg) previewImg.src = user.foto;
-            const previewDiv = document.getElementById('usuarioFotoPreview');
-            if (previewDiv) previewDiv.style.display = 'flex';
-            currentUserFotoUrl = user.foto;
-        } else {
-            document.getElementById('usuarioFotoUrl').value = '';
-            const previewDiv = document.getElementById('usuarioFotoPreview');
-            if (previewDiv) previewDiv.style.display = 'none';
-        }
-        document.getElementById('usuarioModal').classList.add('active');
-    };
 
     function handleUsuarioFotoFile() {
         const fileInput = document.getElementById('usuarioFoto');
@@ -184,23 +143,88 @@
         } catch (e) { console.error('Error actualizando usuario:', e); window.mostrarToast('❌ Error al actualizar usuario', 'error'); }
     };
 
-    window.eliminarUsuario = async function(userId) {
-        const user = window.usuarios.find(u => u.id === userId);
-        if (!user) return;
-        if (user.rol === 'admin') {
-            const adminsActivos = window.usuarios.filter(u => u.rol === 'admin' && u.activo === true);
-            if (adminsActivos.length === 1) {
-                window.mostrarToast('⚠️ No se puede eliminar el único administrador. El sistema quedaría inoperativo.', 'error');
-                return;
-            }
-        }
-        if (!confirm(`¿Estás seguro de eliminar al usuario "${user.nombre}"?`)) return;
-        try {
-            await window.supabaseClient.from('usuarios').delete().eq('id', userId);
-            await window.cargarUsuarios();
-            window.mostrarToast('🗑️ Usuario eliminado', 'success');
-        } catch (e) { console.error('Error eliminando usuario:', e); window.mostrarToast('❌ Error al eliminar usuario', 'error'); }
-    };
+    window.abrirModalNuevoUsuario = function() {
+		const form = document.getElementById('usuarioForm');
+		if (form) form.reset();
+		const rolSelect = document.getElementById('usuarioRol');
+		if (rolSelect) rolSelect.value = 'cajero';
+		const activoSelect = document.getElementById('usuarioActivo');
+		if (activoSelect) activoSelect.value = 'true';
+		// Limpiar foto
+		currentUserFotoFile = null;
+		currentUserFotoUrl = '';
+		const fotoInput = document.getElementById('usuarioFoto');
+		if (fotoInput) fotoInput.value = '';
+		const urlInput = document.getElementById('usuarioFotoUrl');
+		if (urlInput) urlInput.value = '';
+		const previewDiv = document.getElementById('usuarioFotoPreview');
+		if (previewDiv) previewDiv.style.display = 'none';
+		const modalTitle = document.getElementById('usuarioModalTitle');
+		if (modalTitle) modalTitle.textContent = 'Nuevo Cajero/Admin';
+		window.usuarioEditandoId = null;
+		const modal = document.getElementById('usuarioModal');
+		if (modal) modal.classList.add('active');
+	};
+
+	window.editarUsuario = function(id) {
+		const user = window.usuarios.find(u => u.id === id);
+		if (!user) return;
+		window.usuarioEditandoId = id;
+		const modalTitle = document.getElementById('usuarioModalTitle');
+		if (modalTitle) modalTitle.textContent = 'Editar Usuario';
+		const nombreInput = document.getElementById('usuarioNombre');
+		if (nombreInput) nombreInput.value = user.nombre || '';
+		const usernameInput = document.getElementById('usuarioUsername');
+		if (usernameInput) usernameInput.value = user.username || '';
+		const rolSelect = document.getElementById('usuarioRol');
+		if (rolSelect) rolSelect.value = user.rol || 'cajero';
+		const activoSelect = document.getElementById('usuarioActivo');
+		if (activoSelect) activoSelect.value = user.activo ? 'true' : 'false';
+		const passwordInput = document.getElementById('usuarioPassword');
+		if (passwordInput) passwordInput.value = '';
+		if (user.foto) {
+			const urlInput = document.getElementById('usuarioFotoUrl');
+			if (urlInput) urlInput.value = user.foto;
+			const previewImg = document.getElementById('usuarioPreviewImg');
+			if (previewImg) previewImg.src = user.foto;
+			const previewDiv = document.getElementById('usuarioFotoPreview');
+			if (previewDiv) previewDiv.style.display = 'flex';
+			currentUserFotoUrl = user.foto;
+		} else {
+			const urlInput = document.getElementById('usuarioFotoUrl');
+			if (urlInput) urlInput.value = '';
+			const previewDiv = document.getElementById('usuarioFotoPreview');
+			if (previewDiv) previewDiv.style.display = 'none';
+		}
+		const modal = document.getElementById('usuarioModal');
+		if (modal) modal.classList.add('active');
+	};
+
+	window.eliminarUsuario = async function(userId) {
+		const user = window.usuarios.find(u => u.id === userId);
+		if (!user) return;
+		if (user.rol === 'admin') {
+			const adminsActivos = window.usuarios.filter(u => u.rol === 'admin' && u.activo === true);
+			if (adminsActivos.length === 1) {
+				window.mostrarToast('⚠️ No se puede eliminar el único administrador. El sistema quedaría inoperativo.', 'error');
+				return;
+			}
+		}
+		window.mostrarConfirmacionPremium(
+			'Eliminar Usuario',
+			`¿Estás seguro de eliminar al usuario "${user.nombre}"? Esta acción no se puede deshacer.`,
+			async () => {
+				try {
+					await window.supabaseClient.from('usuarios').delete().eq('id', userId);
+					await window.cargarUsuarios();
+					window.mostrarToast('🗑️ Usuario eliminado', 'success');
+				} catch (e) {
+					console.error('Error eliminando usuario:', e);
+					window.mostrarToast('❌ Error al eliminar usuario', 'error');
+				}
+			}
+		);
+	};
 
     // Guardar usuario (nuevo o edición)
     document.getElementById('saveUsuario').addEventListener('click', async () => {
