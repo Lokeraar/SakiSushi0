@@ -1647,72 +1647,77 @@
       </div>
 
       <div x-show="activeTab === 'inventario'">
-        <div x-data="inventoryComponent()" x-init="init()">
-          <div class="pane-header">
-            <h2 class="section-title"><i class="fas fa-boxes"></i> Inventario</h2>
-            <button class="btn-primary" @click="newIngredient"><i class="fas fa-plus"></i> Nuevo Ingrediente</button>
-          </div>
-          <div class="inv-panel">
-            <div class="inv-list-col">
-              <div class="inv-list-search">
-                <input type="text" x-model="search" @input="debouncedSearch" placeholder="Buscar ingrediente...">
-              </div>
-              <div class="inv-list-items">
-                <!-- La lista se genera dinámicamente por el componente -->
-                <div class="empty-state" x-show="filteredItems().length === 0">No hay ingredientes</div>
-                <template x-for="item in filteredItems()" :key="item.id">
-                  <div class="inv-list-item" :class="{ active: selectedIngredient && selectedIngredient.id === item.id }" @click="selectIngredient(item.id)">
-                    <span x-text="item.nombre"></span>
-                    <span class="inv-item-badge" :class="{ ok: (item.stock - item.reservado) > item.minimo, bajo: (item.stock - item.reservado) <= item.minimo && (item.stock - item.reservado) > 0, critico: (item.stock - item.reservado) <= 0 }" x-text="(item.stock - item.reservado) + ' ' + item.unidad_base"></span>
-                  </div>
-                </template>
-              </div>
+  <div x-data="inventoryComponent()" x-init="init()">
+    <div class="pane-header">
+      <h2 class="section-title"><i class="fas fa-boxes"></i> Inventario</h2>
+      <button class="btn-primary" @click="newIngredient"><i class="fas fa-plus"></i> Nuevo Ingrediente</button>
+    </div>
+    <div class="inv-panel">
+      <div class="inv-list-col">
+        <div class="inv-list-search">
+          <input type="text" x-model="search" @input="debouncedSearch" placeholder="Buscar ingrediente...">
+        </div>
+        <div class="inv-list-items">
+          <template x-for="item in filteredItems()" :key="item.id">
+            <div class="inv-list-item" :class="{ active: selectedIngredient && selectedIngredient.id === item.id }" @click="selectIngredient(item.id)">
+              <span x-text="item.nombre"></span>
+              <span class="inv-item-badge" :class="{ ok: (item.stock - item.reservado) > item.minimo, bajo: (item.stock - item.reservado) <= item.minimo && (item.stock - item.reservado) > 0, critico: (item.stock - item.reservado) <= 0 }" x-text="(item.stock - item.reservado) + ' ' + item.unidad_base"></span>
             </div>
-            <div class="inv-detail-col">
-              <div class="inv-detail-empty" x-show="!selectedIngredient">
-                <i class="fas fa-hand-point-left" style="font-size:2rem;margin-bottom:.75rem;display:block;opacity:.3"></i>
-                Selecciona un ingrediente de la lista para ver su detalle
-              </div>
-              <div x-show="selectedIngredient" class="inv-detail-card">
-                <div class="inv-detail-title">
-                  <span x-text="selectedIngredient.nombre"></span>
-                  <button class="inv-detail-close" @click="selectedIngredient = null" title="Cerrar"><i class="fas fa-times"></i></button>
-                </div>
-                <div class="inv-stock-row">
-                  <span class="inv-stock-num" :class="{ ok: (selectedIngredient.stock - selectedIngredient.reservado) > selectedIngredient.minimo, bajo: (selectedIngredient.stock - selectedIngredient.reservado) <= selectedIngredient.minimo && (selectedIngredient.stock - selectedIngredient.reservado) > 0, critico: (selectedIngredient.stock - selectedIngredient.reservado) <= 0 }" x-text="selectedIngredient.stock - selectedIngredient.reservado"></span>
-                  <span class="inv-stock-unit" x-text="selectedIngredient.unidad_base"></span>
-                  <span style="font-size:.75rem;color:var(--text-muted);margin-left:auto">Reservado: <span x-text="selectedIngredient.reservado || 0"></span></span>
-                </div>
-                <div class="inv-bar">
-                  <div class="inv-bar-fill" :class="{ ok: (selectedIngredient.stock - selectedIngredient.reservado) > selectedIngredient.minimo, bajo: (selectedIngredient.stock - selectedIngredient.reservado) <= selectedIngredient.minimo && (selectedIngredient.stock - selectedIngredient.reservado) > 0, critico: (selectedIngredient.stock - selectedIngredient.reservado) <= 0 }" :style="{ width: ((selectedIngredient.stock - selectedIngredient.reservado) / (selectedIngredient.minimo || 1) * 100) + '%' }"></div>
-                </div>
-                <div class="inv-meta-grid">
-                  <div class="inv-meta-item">
-                    <span class="inv-meta-label">Mínimo</span>
-                    <span class="inv-meta-val" x-text="selectedIngredient.minimo + ' ' + selectedIngredient.unidad_base"></span>
-                  </div>
-                  <div class="inv-meta-item">
-                    <span class="inv-meta-label">Costo</span>
-                    <span class="inv-meta-val" x-text="formatUSD(selectedIngredient.precio_costo || 0)"></span>
-                    <span class="inv-meta-bs" x-text="formatBs(usdToBs(selectedIngredient.precio_costo || 0))"></span>
-                  </div>
-                  <div class="inv-meta-item">
-                    <span class="inv-meta-label">Venta</span>
-                    <span class="inv-meta-val" x-text="formatUSD(selectedIngredient.precio_unitario || 0)"></span>
-                    <span class="inv-meta-bs" x-text="formatBs(usdToBs(selectedIngredient.precio_unitario || 0))"></span>
-                  </div>
-                </div>
-                <div style="display:flex; gap:.5rem; margin-top:1rem">
-                  <button class="btn-primary" @click="updateStock(-1)"><i class="fas fa-minus"></i> -1</button>
-                  <button class="btn-primary" @click="updateStock(1)"><i class="fas fa-plus"></i> +1</button>
-                  <button class="btn-secondary" @click="editIngredient(selectedIngredient.id)"><i class="fas fa-edit"></i> Editar</button>
-                  <button class="btn-danger" @click="deleteIngredient"><i class="fas fa-trash"></i> Eliminar</button>
-                </div>
-              </div>
-            </div>
-          </div>
+          </template>
+          <template x-if="filteredItems().length === 0">
+            <div class="empty-state">No hay ingredientes</div>
+          </template>
         </div>
       </div>
+      <div class="inv-detail-col">
+        <template x-if="!selectedIngredient">
+          <div class="inv-detail-empty">
+            <i class="fas fa-hand-point-left" style="font-size:2rem;margin-bottom:.75rem;display:block;opacity:.3"></i>
+            Selecciona un ingrediente de la lista para ver su detalle
+          </div>
+        </template>
+        <template x-if="selectedIngredient">
+          <div class="inv-detail-card">
+            <div class="inv-detail-title">
+              <span x-text="selectedIngredient.nombre"></span>
+              <button class="inv-detail-close" @click="selectedIngredient = null" title="Cerrar"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="inv-stock-row">
+              <span class="inv-stock-num" :class="{ ok: (selectedIngredient.stock - selectedIngredient.reservado) > selectedIngredient.minimo, bajo: (selectedIngredient.stock - selectedIngredient.reservado) <= selectedIngredient.minimo && (selectedIngredient.stock - selectedIngredient.reservado) > 0, critico: (selectedIngredient.stock - selectedIngredient.reservado) <= 0 }" x-text="selectedIngredient.stock - selectedIngredient.reservado"></span>
+              <span class="inv-stock-unit" x-text="selectedIngredient.unidad_base"></span>
+              <span style="font-size:.75rem;color:var(--text-muted);margin-left:auto">Reservado: <span x-text="selectedIngredient.reservado || 0"></span></span>
+            </div>
+            <div class="inv-bar">
+              <div class="inv-bar-fill" :class="{ ok: (selectedIngredient.stock - selectedIngredient.reservado) > selectedIngredient.minimo, bajo: (selectedIngredient.stock - selectedIngredient.reservado) <= selectedIngredient.minimo && (selectedIngredient.stock - selectedIngredient.reservado) > 0, critico: (selectedIngredient.stock - selectedIngredient.reservado) <= 0 }" :style="{ width: ((selectedIngredient.stock - selectedIngredient.reservado) / (selectedIngredient.minimo || 1) * 100) + '%' }"></div>
+            </div>
+            <div class="inv-meta-grid">
+              <div class="inv-meta-item">
+                <span class="inv-meta-label">Mínimo</span>
+                <span class="inv-meta-val" x-text="selectedIngredient.minimo + ' ' + selectedIngredient.unidad_base"></span>
+              </div>
+              <div class="inv-meta-item">
+                <span class="inv-meta-label">Costo</span>
+                <span class="inv-meta-val" x-text="formatUSD(selectedIngredient.precio_costo || 0)"></span>
+                <span class="inv-meta-bs" x-text="formatBs(usdToBs(selectedIngredient.precio_costo || 0))"></span>
+              </div>
+              <div class="inv-meta-item">
+                <span class="inv-meta-label">Venta</span>
+                <span class="inv-meta-val" x-text="formatUSD(selectedIngredient.precio_unitario || 0)"></span>
+                <span class="inv-meta-bs" x-text="formatBs(usdToBs(selectedIngredient.precio_unitario || 0))"></span>
+              </div>
+            </div>
+            <div style="display:flex; gap:.5rem; margin-top:1rem">
+              <button class="btn-primary" @click="updateStock(-1)"><i class="fas fa-minus"></i> -1</button>
+              <button class="btn-primary" @click="updateStock(1)"><i class="fas fa-plus"></i> +1</button>
+              <button class="btn-secondary" @click="editIngredient(selectedIngredient.id)"><i class="fas fa-edit"></i> Editar</button>
+              <button class="btn-danger" @click="deleteIngredient"><i class="fas fa-trash"></i> Eliminar</button>
+            </div>
+          </div>
+        </template>
+      </div>
+    </div>
+  </div>
+</div>
 
       <div x-show="activeTab === 'menu'">
         <div x-data="menuComponent()" x-init="init()">
