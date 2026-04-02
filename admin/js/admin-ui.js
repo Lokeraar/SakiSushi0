@@ -1,6 +1,7 @@
 // admin-ui.js - UI genérica: tabs, modales, eventos, helpers visuales
 (function() {
     window.setupEventListeners = function() {
+        // Funciones de scroll para tabs con doble chevron
         window._scrollTabs = function(dir) {
             const c = document.getElementById('tabsContainer');
             if (!c) return;
@@ -21,6 +22,7 @@
         document.getElementById('tabsContainer')?.addEventListener('scroll', window._updateTabChevrons);
         window._updateTabChevrons();
 
+        // Checkbox de disponible en modal platillo
         document.getElementById('platilloDisponibleCheck')?.addEventListener('change', function() {
             const lbl = document.getElementById('platilloDisponibleLabel');
             const sel = document.getElementById('platilloDisponible');
@@ -28,6 +30,7 @@
             if (sel) sel.value = this.checked ? 'true' : 'false';
         });
 
+        // Navegación por tabs
         document.querySelectorAll('.tab').forEach(tab => {
             tab.addEventListener('click', () => {
                 const target = tab.dataset.tab;
@@ -43,19 +46,17 @@
             });
         });
 
+        // Cerrar modales al hacer clic fuera
         document.querySelectorAll('.modal').forEach(modal => {
             modal.addEventListener('click', function(e) {
                 if (e.target === this) {
                     window.cerrarModal(this.id);
-                    if (this.id === 'ingredienteModal') {
-                        window.resetearBloqueoStock();
-                    }
                 }
             });
         });
 
+        // Guardar configuración de tasa
         document.getElementById('saveAllButton').addEventListener('click', async () => { await window.guardarConfiguracion(); });
-
         document.getElementById('tasaBaseInput').addEventListener('change', window.recalcularTasaEfectiva);
         document.getElementById('aumentoDiarioInput').addEventListener('change', window.recalcularTasaEfectiva);
         
@@ -96,6 +97,7 @@
             if (this.checked) document.getElementById('aumentoHasta').value = '';
         });
 
+        // Modales QR
         const _closeQrBtn  = document.getElementById('closeQrAmpliado');
         const _closeQrX    = document.getElementById('closeQrAmpliadoModal');
         const _qrModal     = document.getElementById('qrAmpliadoModal');
@@ -105,26 +107,17 @@
             if (e.target === this) window.cerrarModal('qrAmpliadoModal');
         });
 
+        // Botón logout
         document.getElementById('logoutButton').addEventListener('click', () => {
-            sessionStorage.removeItem('admin_authenticated');
-            sessionStorage.removeItem('admin_jwt_token');
-            sessionStorage.removeItem('admin_user');
-            window.isAdminAuthenticated = false;
-            window.jwtToken = null;
-            window.mostrarLogin();
-            window.mostrarToast('🔓 Sesión cerrada', 'info');
-            window.supabaseClient = window.inicializarSupabaseCliente();
+            window.cerrarSesion();
         });
-		
     };
 
     window.toggleTheme = function() {
         const html = document.documentElement;
         const icon = document.getElementById('themeIcon');
         const isDark = html.classList.toggle('dark-theme');
-        if (icon) {
-            icon.className = isDark ? 'fas fa-moon' : 'fas fa-sun';
-        }
+        if (icon) icon.className = isDark ? 'fas fa-moon' : 'fas fa-sun';
         localStorage.setItem('saki_admin_theme', isDark ? 'dark' : 'light');
     };
 
@@ -145,8 +138,7 @@
         list.innerHTML = '<p style="color:var(--text-muted)">Cargando mesas...</p>';
         document.getElementById('adminMesaModal').classList.add('active');
         try {
-            const { data, error } = await window.supabaseClient
-                .from('codigos_qr').select('*').order('nombre');
+            const { data, error } = await window.supabaseClient.from('codigos_qr').select('*').order('nombre');
             if (error) throw error;
             const mesas = data || [];
             if (!mesas.length) {
@@ -173,25 +165,46 @@
     window._irAMesoneros = function() {
         const tabs = document.querySelectorAll('.tab');
         const panes = document.querySelectorAll('.tab-pane');
-        
         tabs.forEach(tab => tab.classList.remove('active'));
         panes.forEach(pane => pane.classList.remove('active'));
-        
         const mesonerosTab = document.querySelector('.tab[data-tab="mesoneros"]');
         const mesonerosPane = document.getElementById('mesonerosPane');
-        
         if (mesonerosTab) mesonerosTab.classList.add('active');
         if (mesonerosPane) mesonerosPane.classList.add('active');
-        
         setTimeout(() => {
             mesonerosPane?.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }, 100);
     };
-	    // ==================== INICIALIZACIÓN AL CARGAR LA PÁGINA ====================
+
+    // Animación para resaltar elemento (stock crítico)
+    window.resaltarElemento = function(elementoId, tipo = 'border') {
+        const el = document.getElementById(elementoId);
+        if (!el) return;
+        if (tipo === 'border') {
+            el.style.transition = 'box-shadow 0.3s, border-color 0.3s';
+            el.style.boxShadow = '0 0 0 3px var(--danger)';
+            el.style.borderColor = 'var(--danger)';
+            setTimeout(() => {
+                el.style.boxShadow = '';
+                el.style.borderColor = '';
+            }, 1500);
+        } else if (tipo === 'pulse') {
+            el.style.animation = 'pulse 0.6s ease-in-out 2';
+            setTimeout(() => { el.style.animation = ''; }, 1200);
+        }
+    };
+
+    // ==================== INICIALIZACIÓN AL CARGAR LA PÁGINA ====================
     document.addEventListener('DOMContentLoaded', async () => {
         window.initTheme();
         if (await window.restaurarSesionAdmin()) {
             window.mostrarPanel();
+            // Actualizar header con nombre de usuario
+            const user = JSON.parse(sessionStorage.getItem('admin_user') || '{}');
+            const headerTitle = document.querySelector('.header-left h2');
+            if (headerTitle && user.nombre) {
+                headerTitle.innerHTML = `<i class="fas fa-crown"></i> Administración Saki Sushi - ${user.nombre}`;
+            }
             setTimeout(async () => {
                 try {
                     await window.cargarConfiguracionInicial();
@@ -209,6 +222,10 @@
                     window.setupStockRealtime();
                     window.restaurarWifiPersistente();
                     window._registrarPushAdmin();
+                    
+                    // Agregar tarjeta de diferencia de tasa al dashboard
+                    window.agregarTarjetaDiferenciaTasa();
+                    
                     window._verificarTasaDeHoy((tasa) => {
                         const tasaInput = document.getElementById('tasaBaseInput');
                         if (tasaInput) tasaInput.value = tasa;
@@ -221,6 +238,7 @@
                     setInterval(async () => { 
                         await window._actualizarVentasHoyNeto();
                         await window._actualizarDeliverysHoy();
+                        window.actualizarTarjetaDiferenciaTasa();
                     }, 60000);
                 } catch (e) { 
                     console.error('Error cargando datos:', e); 
@@ -231,4 +249,43 @@
             window.mostrarLogin();
         }
     });
+
+    // Función para agregar tarjeta de diferencia de tasa al dashboard
+    window.agregarTarjetaDiferenciaTasa = function() {
+        const dashboardGrid = document.querySelector('.dashboard-grid');
+        if (!dashboardGrid) return;
+        // Verificar si ya existe
+        if (document.getElementById('diferenciaTasaCard')) return;
+        const card = document.createElement('div');
+        card.className = 'dashboard-card';
+        card.id = 'diferenciaTasaCard';
+        card.style.cursor = 'pointer';
+        card.onclick = () => window.mostrarToast('Diferencia acumulada a favor del restaurante por aumento de tasa', 'info');
+        card.innerHTML = `
+            <div class="card-title">
+                Acumulado Dif. Tasa Base y Efectiva 
+                <span class="tooltip-wrap" style="position:relative; display:inline-flex; cursor:help; margin-left:.3rem">
+                    <span style="display:inline-flex; align-items:center; justify-content:center; width:16px; height:16px; background:#aaa; color:#fff; border-radius:50%; font-size:.65rem; font-weight:700">?</span>
+                    <span class="tooltip-text" style="display:none; position:absolute; bottom:calc(100% + 6px); left:50%; transform:translateX(-50%); background:var(--toast-bg); color:var(--toast-text); padding:.5rem .75rem; border-radius:8px; font-size:.75rem; white-space:normal; width:250px; text-align:center; box-shadow:0 4px 12px rgba(0,0,0,.3); z-index:100; line-height:1.4">
+                        Es la ganancia extra generada por la diferencia entre la tasa base y la tasa efectiva aplicada a los pedidos cobrados. Esta diferencia queda a favor del restaurante.
+                    </span>
+                </span>
+            </div>
+            <div class="card-value" id="diferenciaTasaValor">Bs 0,00</div>
+        `;
+        // Insertar como cuarta tarjeta (después de Deliverys Hoy)
+        const deliverysCard = document.getElementById('deliverysHoyCard');
+        if (deliverysCard && deliverysCard.parentNode) {
+            deliverysCard.parentNode.insertBefore(card, deliverysCard.nextSibling);
+        } else {
+            dashboardGrid.appendChild(card);
+        }
+        window.actualizarTarjetaDiferenciaTasa();
+    };
+
+    window.actualizarTarjetaDiferenciaTasa = function() {
+        const diff = window.calcularDiferenciaTasa();
+        const valorEl = document.getElementById('diferenciaTasaValor');
+        if (valorEl) valorEl.textContent = window.formatBs(diff);
+    };
 })();
