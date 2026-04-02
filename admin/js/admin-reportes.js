@@ -30,16 +30,16 @@
         const semana = new Date(); semana.setDate(semana.getDate() - 7);
         const ventasSemana = pedidos.filter(p => new Date(p.fecha) >= semana).reduce((s, p) => s + (p.total || 0), 0);
         const ticketPromedio = pedidos.length > 0 ? pedidos.reduce((s, p) => s + (p.total || 0), 0) / pedidos.length : 0;
+        
         const platillosCount = {};
         pedidos.forEach(p => { if (p.items) p.items.forEach(item => { platillosCount[item.nombre] = (platillosCount[item.nombre] || 0) + (item.cantidad || 0); }); });
         let platilloTop = '-', maxCount = 0;
         for (const [n, c] of Object.entries(platillosCount)) { if (c > maxCount) { maxCount = c; platilloTop = n; } }
-        const _vdBs = window.formatBs((ventasHoy||0) * ((window.configGlobal?.tasa_efectiva)||400));
-        document.getElementById('ventasDia').textContent = window.formatUSD(ventasHoy) + ' / ' + _vdBs;
-        const _vsBs = window.formatBs((ventasSemana||0) * ((window.configGlobal?.tasa_efectiva)||400));
-        document.getElementById('ventasSemana').textContent = window.formatUSD(ventasSemana) + ' / ' + _vsBs;
-        const _tpBs = window.formatBs((ticketPromedio||0) * ((window.configGlobal?.tasa_efectiva)||400));
-        document.getElementById('ticketPromedio').textContent = window.formatUSD(ticketPromedio) + ' / ' + _tpBs;
+        
+        const tasa = window.configGlobal?.tasa_efectiva || 400;
+        document.getElementById('ventasDia').textContent = `${window.formatUSD(ventasHoy)} / ${window.formatBs(ventasHoy * tasa)}`;
+        document.getElementById('ventasSemana').textContent = `${window.formatUSD(ventasSemana)} / ${window.formatBs(ventasSemana * tasa)}`;
+        document.getElementById('ticketPromedio').textContent = `${window.formatUSD(ticketPromedio)} / ${window.formatBs(ticketPromedio * tasa)}`;
         document.getElementById('platilloTop').textContent = platilloTop;
     };
 
@@ -53,6 +53,7 @@
             type: 'line',
             data: { labels: Object.keys(ventasPorDia), datasets: [{ label: 'Ventas (USD)', data: Object.values(ventasPorDia), borderColor: 'var(--primary)', backgroundColor: 'rgba(211,47,47,0.1)', tension: 0.1 }] }
         });
+        
         const categorias = {};
         pedidos.forEach(p => { if (p.items) p.items.forEach(item => { const platillo = window.menuItems.find(m => m.nombre === item.nombre); const cat = platillo?.categoria || 'Otros'; categorias[cat] = (categorias[cat] || 0) + ((item.precioUnitarioUSD || 0) * (item.cantidad || 0)); }); });
         if (window.charts.categorias) window.charts.categorias.destroy();
@@ -60,6 +61,7 @@
             type: 'doughnut',
             data: { labels: Object.keys(categorias), datasets: [{ data: Object.values(categorias), backgroundColor: ['#D32F2F', '#FF9800', '#1976D2', '#388E3C', '#F57C00', '#6c757d'] }] }
         });
+        
         const metodos = {};
         pedidos.forEach(p => {
             if (p.pagos_mixtos) p.pagos_mixtos.forEach(pago => { metodos[pago.metodo] = (metodos[pago.metodo] || 0) + (pago.monto || 0); });
@@ -70,6 +72,7 @@
             type: 'bar',
             data: { labels: Object.keys(metodos).map(m => { const n = { efectivo_bs: 'Efectivo Bs', efectivo_usd: 'Efectivo USD', pago_movil: 'Pago Móvil', punto_venta: 'Punto de Venta', mixto: 'Mixto', invitacion: 'Invitación' }; return n[m] || m; }), datasets: [{ label: 'Monto (USD)', data: Object.values(metodos).map(v => v / (window.configGlobal?.tasa_efectiva || 400)), backgroundColor: 'var(--info)' }] }
         });
+        
         const horas = {}; for (let i = 0; i < 24; i++) horas[i] = 0;
         pedidos.forEach(p => { const h = new Date(p.fecha).getHours(); horas[h] += p.total || 0; });
         if (window.charts.hora) window.charts.hora.destroy();
@@ -87,7 +90,7 @@
             const totalItems = items.reduce((s, i) => s + (i.cantidad || 0), 0);
             const resumen = items.length ? items.slice(0, 2).map(i => `${i.cantidad || 1}× ${i.nombre}`).join(', ') + (items.length > 2 ? ` +${items.length - 2} más` : '') : 'Sin detalle';
             const totalUSD = p.total || 0;
-            const totalBs  = window.formatBs(totalUSD * tasa);
+            const totalBs = window.formatBs(totalUSD * tasa);
             return `<tr>
                 <td>${new Date(p.fecha).toLocaleDateString('es-VE', { timeZone: 'America/Caracas'})}</td>
                 <td style="max-width:200px;font-size:.82rem">${resumen}</td>
