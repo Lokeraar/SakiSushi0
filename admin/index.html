@@ -387,5 +387,51 @@
     <div class="modal" id="passwordStockModal"><div class="modal-content" style="max-width:400px"><div class="modal-header" style="background:linear-gradient(135deg,var(--info),#1565C0)"><h3><i class="fas fa-lock"></i> Desbloquear Stock</h3><button class="modal-close" onclick="window.cerrarModal('passwordStockModal')">&times;</button></div><div class="modal-body"><p style="margin-bottom:1rem;color:var(--text-muted)">Ingresa la contraseña de administrador para poder editar el stock actual:</p><div class="form-group"><label>Contraseña de Administrador</label><input type="password" id="stockPasswordModalInput" placeholder="Contraseña" style="width:100%; padding:.8rem; border:1px solid var(--border); border-radius:8px; background:var(--input-bg); color:var(--text-dark); font-size:.95rem" onkeydown="if(event.key === 'Enter') window.verificarContraseñaStock()"></div><div id="passwordStockError" style="display:none; color:var(--danger); font-size:.8rem; margin-top:.5rem; text-align:center"><i class="fas fa-exclamation-circle"></i> Contraseña incorrecta</div></div><div class="modal-footer"><button class="btn-secondary" onclick="window.cerrarModal('passwordStockModal')">Cancelar</button><button class="btn-primary" id="confirmPasswordStockBtn" onclick="window.verificarContraseñaStock()">Confirmar</button></div></div></div>
 
     <div class="toast" id="toast"></div>
+	<!-- Modal de Mesoneros -->
+	<div class="modal" id="mesoneroModal">
+		<div class="modal-content" style="max-width: 500px;">
+			<div class="modal-header" style="background:linear-gradient(135deg, var(--propina), #7B1FA2);">
+				<h3 id="mesoneroModalTitle"><i class="fas fa-user-tie"></i> Editar Mesonero</h3>
+				<button class="modal-close" id="closeMesoneroModal">&times;</button>
+			</div>
+			<div class="modal-body">
+				<form id="mesoneroForm">
+					<!-- Nombre -->
+					<div class="form-group">
+						<label>Nombre completo *</label>
+						<input type="text" id="mesoneroNombre" required placeholder="Ej: Carlos Méndez">
+					</div>
+
+					<!-- Estado Activo/Inactivo -->
+					<div class="form-group">
+						<label>Estado</label>
+						<select id="mesoneroActivo">
+							<option value="true">Activo</option>
+							<option value="false">Inactivo</option>
+						</select>
+					</div>
+
+					<!-- Foto (opcional) -->
+					<div class="form-group">
+						<label>Foto de perfil (opcional)</label>
+						<div style="display: flex; gap: 0.75rem; align-items: flex-start;">
+							<div style="flex: 1;">
+								<input type="file" id="mesoneroFoto" accept="image/*" style="margin-bottom: 0.3rem;">
+								<input type="url" id="mesoneroFotoUrl" placeholder="O pega la URL de la imagen" style="width: 100%;">
+							</div>
+							<div id="mesoneroFotoPreview" class="image-preview" style="display: none; width: 70px; height: 70px; flex-shrink: 0; position: relative;">
+								<img id="mesoneroPreviewImg" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px;">
+								<button type="button" id="mesoneroFotoRemoveBtn" style="position: absolute; top: -8px; right: -8px; background: var(--danger); color: white; border: none; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 0.7rem;">✕</button>
+							</div>
+						</div>
+					</div>
+				</form>
+			</div>
+			<div class="modal-footer">
+				<button class="btn-secondary" id="cancelMesoneroEdit">Cancelar</button>
+				<button class="btn-primary" id="saveMesonero" style="background:linear-gradient(135deg, var(--propina), #7B1FA2);">Guardar</button>
+			</div>
+		</div>
+	</div>
 </body>
 </html>
