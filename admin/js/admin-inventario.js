@@ -230,22 +230,6 @@
         }
     }
 
-    function removeIngredienteImage() {
-        const fileInput = document.getElementById('ingredienteImagen');
-        const urlInput = document.getElementById('ingredienteImagenUrl');
-        const previewDiv = document.getElementById('ingredienteImagenPreview');
-        const previewImg = document.getElementById('ingredientePreviewImg');
-        const removeBtn = document.getElementById('ingredienteImgRemoveBtn');
-        
-        fileInput.value = '';
-        urlInput.value = '';
-        urlInput.disabled = false;
-        previewDiv.style.display = 'none';
-        if (removeBtn) removeBtn.style.display = 'none';
-        previewImg.src = '';
-        currentIngredienteImagenFile = null;
-        currentIngredienteImagenUrl = '';
-    }
 
     // Sincronizar Mercancía Nueva con Cantidad Comprada
     function syncAgregarToCantidadComprada() {
@@ -257,113 +241,7 @@
         window._syncIngredientePreview();
     }
 
-    window.abrirModalNuevoIngrediente = function() {
-        window.ingredienteEditandoId = null;
-        document.getElementById('ingredienteModalTitle').textContent = 'Nuevo Ingrediente';
-        document.getElementById('ingredienteNombre').value = '';
-        document.getElementById('ingredienteMinimo').value = '';
-        document.getElementById('ingredienteCosto').value = '';
-        document.getElementById('ingredienteVenta').value = '';
-        document.getElementById('ingredienteAgregar').value = '';
-        document.getElementById('cantidadComprada').value = '';
-        document.getElementById('costoTotal').value = '';
-        
-        // Limpiar imagen
-        removeIngredienteImage();
-        
-        const _si = document.getElementById('ingredienteStock');
-        const _li = document.getElementById('stockLockIcon');
-        const _divClickArea = document.getElementById('stockClickArea');
-        
-        if (_si) { 
-            _si.disabled = false; 
-            _si.readOnly = false;
-            _si.value = '0'; 
-            _si.style.cursor = 'text';
-            _si.onclick = null;
-        }
-        if (_li) { 
-            _li.innerHTML = '<i class="fas fa-lock-open" style="font-size:.8rem; color:var(--success)"></i>';
-            _li.style.cursor = 'default';
-        }
-        if (_divClickArea) {
-            _divClickArea.onclick = null;
-            _divClickArea.style.cursor = 'default';
-            _divClickArea.style.borderColor = '';
-            _divClickArea.style.backgroundColor = '';
-        }
-        
-        const _delBtn = document.getElementById('deleteIngredienteBtn');
-        if (_delBtn) _delBtn.style.display = 'none';
-        
-        document.getElementById('ingredienteModal').classList.add('active');
-    };
-
-    window.editarIngrediente = function(id) {
-        const ingrediente = window.inventarioItems.find(i => i.id === id);
-        if (!ingrediente) return;
-        
-        window.ingredienteEditandoId = id;
-        document.getElementById('ingredienteModalTitle').textContent = 'Editar Ingrediente';
-        document.getElementById('ingredienteNombre').value = ingrediente.nombre || '';
-        document.getElementById('ingredienteStock').value = ingrediente.stock || 0;
-        document.getElementById('ingredienteUnidad').value = ingrediente.unidad_base || 'unidades';
-        document.getElementById('ingredienteMinimo').value = ingrediente.minimo || 0;
-        document.getElementById('ingredienteCosto').value = ingrediente.precio_costo || 0;
-        document.getElementById('ingredienteVenta').value = ingrediente.precio_unitario || 0;
-        document.getElementById('ingredienteAgregar').value = '';
-        document.getElementById('cantidadComprada').value = '';
-        document.getElementById('costoTotal').value = '';
-        
-        // Restaurar imagen si existe
-        if (ingrediente.imagen) {
-            const previewDiv = document.getElementById('ingredienteImagenPreview');
-            const previewImg = document.getElementById('ingredientePreviewImg');
-            previewImg.src = ingrediente.imagen;
-            previewDiv.style.display = 'flex';
-            document.getElementById('ingredienteImagenUrl').value = ingrediente.imagen;
-            currentIngredienteImagenUrl = ingrediente.imagen;
-            const removeBtn = document.getElementById('ingredienteImgRemoveBtn');
-            if (removeBtn) removeBtn.style.display = 'flex';
-        } else {
-            removeIngredienteImage();
-        }
-        
-        const _si = document.getElementById('ingredienteStock');
-        const _li = document.getElementById('stockLockIcon');
-        const _divClickArea = document.getElementById('stockClickArea');
-        
-        if (_si) {
-            _si.disabled = true;
-            _si.readOnly = true;
-            _si.style.cursor = 'pointer';
-            _si.value = ingrediente.stock || 0;
-            _si.onclick = null;
-        }
-        if (_li) {
-            _li.innerHTML = '<i class="fas fa-lock" style="font-size:.8rem"></i>';
-            _li.style.cursor = 'default';
-        }
-        if (_divClickArea) {
-            _divClickArea.onclick = function(e) {
-                e.stopPropagation();
-                window.mostrarModalContraseñaStock();
-            };
-            _divClickArea.style.cursor = 'pointer';
-            _divClickArea.style.borderColor = '';
-            _divClickArea.style.backgroundColor = '';
-        } else if (_si) {
-            _si.onclick = function(e) {
-                e.stopPropagation();
-                window.mostrarModalContraseñaStock();
-            };
-        }
-        
-        const _delBtn = document.getElementById('deleteIngredienteBtn');
-        if (_delBtn) _delBtn.style.display = 'inline-flex';
-        
-        document.getElementById('ingredienteModal').classList.add('active');
-    };
+	
 
     window.mostrarModalContraseñaStock = function() {
         const input = document.getElementById('stockPasswordModalInput');
@@ -605,14 +483,162 @@
         }
     };
 
-    window.eliminarIngrediente = async function(id) {
-        if (!confirm('¿Estás seguro de eliminar este ingrediente?')) return;
-        try {
-            await window.supabaseClient.from('inventario').delete().eq('id', id);
-            await window.cargarInventario();
-            window.mostrarToast('🗑️ Ingrediente eliminado', 'success');
-        } catch (e) { console.error('Error eliminando ingrediente:', e); window.mostrarToast('❌ Error al eliminar ingrediente', 'error'); }
-    };
+    function removeIngredienteImage() {
+		const fileInput = document.getElementById('ingredienteImagen');
+		const urlInput = document.getElementById('ingredienteImagenUrl');
+		const previewDiv = document.getElementById('ingredienteImagenPreview');
+		const previewImg = document.getElementById('ingredientePreviewImg');
+		const removeBtn = document.getElementById('ingredienteImgRemoveBtn');
+		if (fileInput) fileInput.value = '';
+		if (urlInput) {
+			urlInput.value = '';
+			urlInput.disabled = false;
+		}
+		if (previewDiv) previewDiv.style.display = 'none';
+		if (removeBtn) removeBtn.style.display = 'none';
+		if (previewImg) previewImg.src = '';
+		currentIngredienteImagenFile = null;
+		currentIngredienteImagenUrl = '';
+	}
+
+	window.abrirModalNuevoIngrediente = function() {
+		window.ingredienteEditandoId = null;
+		const modalTitle = document.getElementById('ingredienteModalTitle');
+		if (modalTitle) modalTitle.textContent = 'Nuevo Ingrediente';
+		const nombreInput = document.getElementById('ingredienteNombre');
+		if (nombreInput) nombreInput.value = '';
+		const minimoInput = document.getElementById('ingredienteMinimo');
+		if (minimoInput) minimoInput.value = '';
+		const costoInput = document.getElementById('ingredienteCosto');
+		if (costoInput) costoInput.value = '';
+		const ventaInput = document.getElementById('ingredienteVenta');
+		if (ventaInput) ventaInput.value = '';
+		const agregarInput = document.getElementById('ingredienteAgregar');
+		if (agregarInput) agregarInput.value = '';
+		const cantidadComprada = document.getElementById('cantidadComprada');
+		if (cantidadComprada) cantidadComprada.value = '';
+		const costoTotal = document.getElementById('costoTotal');
+		if (costoTotal) costoTotal.value = '';
+		
+		removeIngredienteImage();
+		
+		const stockInput = document.getElementById('ingredienteStock');
+		const lockIcon = document.getElementById('stockLockIcon');
+		const clickArea = document.getElementById('stockClickArea');
+		if (stockInput) {
+			stockInput.disabled = false;
+			stockInput.readOnly = false;
+			stockInput.value = '0';
+			stockInput.style.cursor = 'text';
+			stockInput.onclick = null;
+		}
+		if (lockIcon) {
+			lockIcon.innerHTML = '<i class="fas fa-lock-open" style="font-size:.8rem; color:var(--success)"></i>';
+			lockIcon.style.cursor = 'default';
+		}
+		if (clickArea) {
+			clickArea.onclick = null;
+			clickArea.style.cursor = 'default';
+			clickArea.style.borderColor = '';
+			clickArea.style.backgroundColor = '';
+		}
+		const deleteBtn = document.getElementById('deleteIngredienteBtn');
+		if (deleteBtn) deleteBtn.style.display = 'none';
+		const modal = document.getElementById('ingredienteModal');
+		if (modal) modal.classList.add('active');
+	};
+
+	window.editarIngrediente = function(id) {
+		const ingrediente = window.inventarioItems.find(i => i.id === id);
+		if (!ingrediente) return;
+		window.ingredienteEditandoId = id;
+		const modalTitle = document.getElementById('ingredienteModalTitle');
+		if (modalTitle) modalTitle.textContent = 'Editar Ingrediente';
+		const nombreInput = document.getElementById('ingredienteNombre');
+		if (nombreInput) nombreInput.value = ingrediente.nombre || '';
+		const stockInput = document.getElementById('ingredienteStock');
+		if (stockInput) stockInput.value = ingrediente.stock || 0;
+		const unidadSelect = document.getElementById('ingredienteUnidad');
+		if (unidadSelect) unidadSelect.value = ingrediente.unidad_base || 'unidades';
+		const minimoInput = document.getElementById('ingredienteMinimo');
+		if (minimoInput) minimoInput.value = ingrediente.minimo || 0;
+		const costoInput = document.getElementById('ingredienteCosto');
+		if (costoInput) costoInput.value = ingrediente.precio_costo || 0;
+		const ventaInput = document.getElementById('ingredienteVenta');
+		if (ventaInput) ventaInput.value = ingrediente.precio_unitario || 0;
+		const agregarInput = document.getElementById('ingredienteAgregar');
+		if (agregarInput) agregarInput.value = '';
+		const cantidadComprada = document.getElementById('cantidadComprada');
+		if (cantidadComprada) cantidadComprada.value = '';
+		const costoTotal = document.getElementById('costoTotal');
+		if (costoTotal) costoTotal.value = '';
+		
+		if (ingrediente.imagen) {
+			const previewDiv = document.getElementById('ingredienteImagenPreview');
+			const previewImg = document.getElementById('ingredientePreviewImg');
+			if (previewImg) previewImg.src = ingrediente.imagen;
+			if (previewDiv) previewDiv.style.display = 'flex';
+			const urlInput = document.getElementById('ingredienteImagenUrl');
+			if (urlInput) urlInput.value = ingrediente.imagen;
+			currentIngredienteImagenUrl = ingrediente.imagen;
+			const removeBtn = document.getElementById('ingredienteImgRemoveBtn');
+			if (removeBtn) removeBtn.style.display = 'flex';
+		} else {
+			removeIngredienteImage();
+		}
+		
+		if (stockInput) {
+			stockInput.disabled = true;
+			stockInput.readOnly = true;
+			stockInput.style.cursor = 'pointer';
+			stockInput.value = ingrediente.stock || 0;
+			stockInput.onclick = null;
+		}
+		const lockIcon = document.getElementById('stockLockIcon');
+		if (lockIcon) {
+			lockIcon.innerHTML = '<i class="fas fa-lock" style="font-size:.8rem"></i>';
+			lockIcon.style.cursor = 'default';
+		}
+		const clickArea = document.getElementById('stockClickArea');
+		if (clickArea) {
+			clickArea.onclick = function(e) {
+				e.stopPropagation();
+				window.mostrarModalContraseñaStock();
+			};
+			clickArea.style.cursor = 'pointer';
+			clickArea.style.borderColor = '';
+			clickArea.style.backgroundColor = '';
+		} else if (stockInput) {
+			stockInput.onclick = function(e) {
+				e.stopPropagation();
+				window.mostrarModalContraseñaStock();
+			};
+		}
+		const deleteBtn = document.getElementById('deleteIngredienteBtn');
+		if (deleteBtn) deleteBtn.style.display = 'inline-flex';
+		const modal = document.getElementById('ingredienteModal');
+		if (modal) modal.classList.add('active');
+	};
+
+	// Reemplazar eliminarIngrediente para usar confirmación premium
+	window.eliminarIngrediente = async function(id) {
+		const ingrediente = window.inventarioItems.find(i => i.id === id);
+		if (!ingrediente) return;
+		window.mostrarConfirmacionPremium(
+			'Eliminar Ingrediente',
+			`¿Estás seguro de eliminar "${ingrediente.nombre}"? Esta acción no se puede deshacer.`,
+			async () => {
+				try {
+					await window.supabaseClient.from('inventario').delete().eq('id', id);
+					await window.cargarInventario();
+					window.mostrarToast('🗑️ Ingrediente eliminado', 'success');
+				} catch (e) {
+					console.error('Error eliminando ingrediente:', e);
+					window.mostrarToast('❌ Error al eliminar ingrediente', 'error');
+				}
+			}
+		);
+	};
 
     window.actualizarAlertasStock = function() {
         document.getElementById('alertasStock').textContent = window.inventarioItems.filter(i => i.stock <= i.minimo).length;
