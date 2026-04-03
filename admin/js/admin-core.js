@@ -138,24 +138,32 @@
         return `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' fill='%23D32F2F'/%3E%3Ctext x='24' y='32' font-size='20' text-anchor='middle' fill='white' font-family='Arial'%3E${initial}%3C/text%3E%3C/svg%3E`;
     };
 	// Alerta moderna y premium para confirmar eliminaciones
-	window.mostrarConfirmacionPremium = function(titulo, mensaje, onConfirm, onCancel) {
-		// Crear overlay
-		const overlay = document.createElement('div');
-		overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.75);z-index:10000;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(4px)';
-		overlay.innerHTML = `
-			<div style="background:var(--card-bg);border-radius:20px;max-width:400px;width:90%;padding:1.8rem 1.5rem;text-align:center;box-shadow:0 20px 40px rgba(0,0,0,.4);border:1px solid var(--border)">
-				<div style="font-size:2.5rem;margin-bottom:1rem">🗑️</div>
-				<h3 style="font-size:1.2rem;font-weight:700;color:var(--text-dark);margin-bottom:.5rem">${titulo}</h3>
-				<p style="font-size:.9rem;color:var(--text-muted);margin-bottom:1.5rem">${mensaje}</p>
-				<div style="display:flex;gap:.8rem;justify-content:center">
-					<button class="btn-secondary" id="confirmCancelBtn" style="padding:.6rem 1.2rem">Cancelar</button>
-					<button class="btn-danger" id="confirmOkBtn" style="padding:.6rem 1.2rem;background:var(--danger);color:#fff;border:none;border-radius:8px;cursor:pointer">Eliminar</button>
-				</div>
-			</div>
-		`;
-		document.body.appendChild(overlay);
-		const close = () => overlay.remove();
-		document.getElementById('confirmCancelBtn').onclick = () => { close(); if (onCancel) onCancel(); };
-		document.getElementById('confirmOkBtn').onclick = () => { close(); if (onConfirm) onConfirm(); };
-	};
+	    window.mostrarConfirmacionPremium = function(titulo, mensaje, onConfirm) {
+        // Crear overlay
+        const overlay = document.createElement('div');
+        overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.75);z-index:10001;display:flex;align-items:center;justify-content:center;padding:1rem;backdrop-filter:blur(3px)';
+        overlay.innerHTML = `
+            <div style="background:var(--card-bg);border-radius:16px;max-width:400px;width:100%;box-shadow:0 20px 40px rgba(0,0,0,.4);border:1px solid var(--border);overflow:hidden">
+                <div style="background:linear-gradient(135deg,var(--primary),var(--primary-dark));padding:1rem 1.5rem;color:#fff">
+                    <h3 style="margin:0;font-size:1.1rem"><i class="fas fa-exclamation-triangle"></i> ${titulo}</h3>
+                </div>
+                <div style="padding:1.5rem">
+                    <p style="color:var(--text-dark);margin-bottom:1.5rem">${mensaje}</p>
+                    <div style="display:flex;gap:.75rem;justify-content:flex-end">
+                        <button class="btn-secondary" id="confirmPremiumCancel">Cancelar</button>
+                        <button class="btn-primary" id="confirmPremiumOk">Confirmar</button>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(overlay);
+        const cancelBtn = overlay.querySelector('#confirmPremiumCancel');
+        const okBtn = overlay.querySelector('#confirmPremiumOk');
+        const cleanup = () => overlay.remove();
+        cancelBtn.addEventListener('click', cleanup);
+        okBtn.addEventListener('click', () => {
+            cleanup();
+            if (onConfirm) onConfirm();
+        });
+    };
 })();
