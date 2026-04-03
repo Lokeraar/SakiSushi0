@@ -81,7 +81,16 @@
             <div class="header-right">
                 <button class="nav-button" onclick="window.abrirSelectorMesaAdmin()"><i class="fas fa-utensils"></i> Mesas</button>
                 <a href="../Cajero/index.html" target="_blank" class="nav-button"><i class="fas fa-cash-register"></i> Cajero</a>
-                <button class="theme-toggle" id="themeToggle" onclick="window.toggleTheme()" title="Cambiar tema"><i class="fas fa-sun" id="themeIcon"></i></button>
+                <!-- Toggle de tema premium (sol/luna) -->
+                <div class="theme-toggle-wrap" onclick="window.toggleTheme()" title="Modo oscuro / claro" role="button" aria-label="Cambiar tema">
+                    <i class="fas fa-sun theme-toggle-icon-sun"></i>
+                    <div class="theme-toggle-track" id="themeToggle">
+                        <div class="theme-toggle-thumb" id="themeIcon">
+                            <i class="fas fa-sun"></i>
+                        </div>
+                    </div>
+                    <i class="fas fa-moon theme-toggle-icon-moon"></i>
+                </div>
                 <button class="logout-button" id="logoutButton"><i class="fas fa-sign-out-alt"></i> Salir</button>
             </div>
             <div id="stockCriticoHeader" style="width:100%; margin-top:.5rem; padding:.4rem .8rem; background:rgba(0,0,0,.2); border-radius:8px; display:flex; align-items:center; gap:.8rem; flex-wrap:wrap; font-size:.75rem">
@@ -182,8 +191,17 @@
                         <div style="font-size:.72rem;color:var(--text-muted);margin-top:.25rem">Toca para ver desglose</div>
                     </div>
                     <div class="dashboard-card"><div class="card-title">Deliverys Hoy</div><div class="card-value" id="deliverysHoyDashboard">Bs 0,00</div></div>
-                    <div class="dashboard-card" style="cursor:pointer" onclick="window.irAMenu()"><div class="card-title">Productos Activos</div><div class="card-value" id="productosActivos">0</div></div>
-                    <div class="dashboard-card" style="cursor:pointer" onclick="window.irAStockCritico()"><div class="card-title">Alertas Stock</div><div class="card-value" id="alertasStock">0</div></div>
+                    <!-- Columna doble: Alertas Stock + Productos Activos (compactos, comparten 1 columna) -->
+                    <div class="dashboard-col-mini">
+                        <div class="dashboard-card dashboard-card-sm" style="cursor:pointer" onclick="window.irAStockCritico()">
+                            <div class="card-title">Alertas Stock</div>
+                            <div class="card-value" id="alertasStock">0</div>
+                        </div>
+                        <div class="dashboard-card dashboard-card-sm" style="cursor:pointer" onclick="window.irAMenu()">
+                            <div class="card-title">Productos Activos</div>
+                            <div class="card-value" id="productosActivos">0</div>
+                        </div>
+                    </div>
                     <div class="dashboard-card" id="propinasHoyCard" style="cursor:pointer" onclick="window._irAMesoneros()" title="Ir a gestión de mesoneros y propinas">
                         <div class="card-title">Propinas Hoy <i class="fas fa-external-link-alt" style="font-size:.6rem;opacity:.5;margin-left:.3rem"></i></div>
                         <div class="card-value" id="propinasHoyDashboard">Bs 0,00</div>
@@ -484,7 +502,8 @@
         <div class="modal-content" style="max-width:400px">
             <div class="modal-header"><h3>Código QR</h3><button class="modal-close" id="closeQrAmpliadoModal">&times;</button></div>
             <div class="modal-body" style="text-align:center"><div id="qrAmpliado" style="width:300px;height:300px;margin:0 auto"></div><div id="qrAmpliadoInfo" style="margin-top:1rem"></div></div>
-            <div class="modal-footer"><button class="btn-primary" id="closeQrAmpliado">Cerrar</button></div>
+            <!-- footer vacío: el botón Cerrar lo genera dinámicamente admin-qr.js en qrAmpliadoInfo -->
+            <div class="modal-footer" style="display:none"></div>
         </div>
     </div>
 
