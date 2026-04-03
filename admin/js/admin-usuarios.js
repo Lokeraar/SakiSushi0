@@ -1,4 +1,4 @@
-// admin-usuarios.js - Gestión de usuarios (cajeros y admins) con foto y rol
+// admin-usuarios.js - Gestión de usuarios (cajeros y admins)
 (function() {
     let currentUserFotoFile = null;
     let currentUserFotoUrl = '';
@@ -14,25 +14,30 @@
 
     window.renderizarUsuarios = function() {
         const grid = document.getElementById('usuariosGrid');
-        if (!grid) return;
         if (!window.usuarios || !window.usuarios.length) {
-            grid.innerHTML = '<p style="color:var(--text-muted);font-size:.88rem">No hay usuarios registrados.</p>';
+            grid.innerHTML = '<p style="color:var(--text-muted);font-size:.88rem">No hay cajeros registrados.</p>';
             return;
         }
         grid.innerHTML = window.usuarios.map(user => {
-            const fotoHtml = user.foto ? `<img src="${user.foto}" style="width:44px;height:44px;border-radius:50%;object-fit:cover;margin-right:.5rem">` : '';
+            const fotoHtml = user.foto
+                ? `<img src="${user.foto}" 
+                    style="width:88px;height:88px;border-radius:50%;object-fit:cover;margin-right:.75rem;flex-shrink:0;cursor:pointer;border:2px solid var(--border);transition:transform .2s"
+                    onclick="window.expandirImagen('${user.foto.replace(/'/g, "\\'")}')"
+                    title="Ver foto de ${(user.nombre || '').replace(/'/g, "\\'")}"
+                    onmouseover="this.style.transform='scale(1.08)'" onmouseout="this.style.transform=''">`
+                : '';
             const inicial = (user.nombre || '?').charAt(0).toUpperCase();
             const avatarHtml = fotoHtml || `<div class="usuario-avatar">${inicial}</div>`;
-            const rolLabel = user.rol === 'admin' ? 'Administrador' : 'Cajero';
-            const rolClass = user.rol === 'admin' ? 'admin' : 'cajero';
+            const rolBadge = user.rol === 'admin' ? '<span class="usuario-rol admin">Admin</span>' : '<span class="usuario-rol cajero">Cajero</span>';
             return `<div class="usuario-card">
                 ${avatarHtml}
                 <div class="usuario-info">
                     <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
                         <span class="usuario-nombre">${user.nombre}</span>
+                        ${rolBadge}
                         ${user.activo ? '<span class="status-activo"><i class="fas fa-check-circle"></i> Activo</span>' : '<span class="status-inactivo"><i class="fas fa-circle"></i> Inactivo</span>'}
                     </div>
-                    <div class="usuario-username">@${user.username} · <span class="usuario-rol ${rolClass}">${rolLabel}</span></div>
+                    <div class="usuario-username">@${user.username}</div>
                 </div>
                 <div class="usuario-actions">
                     <button class="btn-icon edit" onclick="window.editarUsuario('${user.id}')" title="Editar usuario">
@@ -50,62 +55,14 @@
         }).join('');
     };
 
-    window.abrirModalNuevoUsuario = function() {
-        // Resetear formulario
-        const form = document.getElementById('usuarioForm');
-        if (form) form.reset();
-        document.getElementById('usuarioRol').value = 'cajero';
-        document.getElementById('usuarioActivo').value = 'true';
-        // Limpiar foto
-        currentUserFotoFile = null;
-        currentUserFotoUrl = '';
-        const fotoInput = document.getElementById('usuarioFoto');
-        if (fotoInput) fotoInput.value = '';
-        const urlInput = document.getElementById('usuarioFotoUrl');
-        if (urlInput) urlInput.value = '';
-        const previewDiv = document.getElementById('usuarioFotoPreview');
-        if (previewDiv) previewDiv.style.display = 'none';
-        document.getElementById('usuarioModalTitle').textContent = 'Nuevo Cajero/Admin';
-        window.usuarioEditandoId = null;
-        document.getElementById('usuarioModal').classList.add('active');
-    };
 
-    window.editarUsuario = function(id) {
-        const user = window.usuarios.find(u => u.id === id);
-        if (!user) return;
-        window.usuarioEditandoId = id;
-        document.getElementById('usuarioModalTitle').textContent = 'Editar Usuario';
-        document.getElementById('usuarioNombre').value = user.nombre || '';
-        document.getElementById('usuarioUsername').value = user.username || '';
-        document.getElementById('usuarioRol').value = user.rol || 'cajero';
-        document.getElementById('usuarioActivo').value = user.activo ? 'true' : 'false';
-        document.getElementById('usuarioPassword').value = ''; // no mostrar contraseña
-        // Foto
-        if (user.foto) {
-            const urlInput = document.getElementById('usuarioFotoUrl');
-            if (urlInput) urlInput.value = user.foto;
-            const previewImg = document.getElementById('usuarioPreviewImg');
-            if (previewImg) previewImg.src = user.foto;
-            const previewDiv = document.getElementById('usuarioFotoPreview');
-            if (previewDiv) previewDiv.style.display = 'flex';
-            currentUserFotoUrl = user.foto;
-        } else {
-            const urlInput = document.getElementById('usuarioFotoUrl');
-            if (urlInput) urlInput.value = '';
-            const previewDiv = document.getElementById('usuarioFotoPreview');
-            if (previewDiv) previewDiv.style.display = 'none';
-        }
-        document.getElementById('usuarioModal').classList.add('active');
-    };
-
-    // Funciones de manejo de foto
     function handleUsuarioFotoFile() {
         const fileInput = document.getElementById('usuarioFoto');
         const urlInput = document.getElementById('usuarioFotoUrl');
         const previewDiv = document.getElementById('usuarioFotoPreview');
         const previewImg = document.getElementById('usuarioPreviewImg');
         const removeBtn = document.getElementById('usuarioFotoRemoveBtn');
-        if (!fileInput || !urlInput || !previewDiv) return;
+        
         if (fileInput.files && fileInput.files[0]) {
             const file = fileInput.files[0];
             currentUserFotoFile = file;
@@ -141,8 +98,9 @@
         const previewDiv = document.getElementById('usuarioFotoPreview');
         const previewImg = document.getElementById('usuarioPreviewImg');
         const removeBtn = document.getElementById('usuarioFotoRemoveBtn');
-        if (!urlInput || !previewDiv) return;
-        if (fileInput && fileInput.files && fileInput.files[0]) return;
+        
+        if (fileInput.files && fileInput.files[0]) return;
+        
         const url = urlInput.value.trim();
         if (url) {
             currentUserFotoUrl = url;
@@ -164,14 +122,13 @@
         const previewDiv = document.getElementById('usuarioFotoPreview');
         const previewImg = document.getElementById('usuarioPreviewImg');
         const removeBtn = document.getElementById('usuarioFotoRemoveBtn');
-        if (fileInput) fileInput.value = '';
-        if (urlInput) {
-            urlInput.value = '';
-            urlInput.disabled = false;
-        }
-        if (previewDiv) previewDiv.style.display = 'none';
+        
+        fileInput.value = '';
+        urlInput.value = '';
+        urlInput.disabled = false;
+        previewDiv.style.display = 'none';
         if (removeBtn) removeBtn.style.display = 'none';
-        if (previewImg) previewImg.src = '';
+        previewImg.src = '';
         currentUserFotoFile = null;
         currentUserFotoUrl = '';
     }
@@ -192,28 +149,88 @@
         } catch (e) { console.error('Error actualizando usuario:', e); window.mostrarToast('❌ Error al actualizar usuario', 'error'); }
     };
 
-    window.eliminarUsuario = async function(userId) {
-        const user = window.usuarios.find(u => u.id === userId);
-        if (!user) return;
-        if (user.rol === 'admin') {
-            const adminsActivos = window.usuarios.filter(u => u.rol === 'admin' && u.activo === true);
-            if (adminsActivos.length === 1) {
-                window.mostrarToast('⚠️ No se puede eliminar el único administrador. El sistema quedaría inoperativo.', 'error');
-                return;
-            }
-        }
-        window.mostrarConfirmacionPremium(
-            'Eliminar Usuario',
-            `¿Estás seguro de eliminar al usuario "${user.nombre}"? Esta acción no se puede deshacer.`,
-            async () => {
-                try {
-                    await window.supabaseClient.from('usuarios').delete().eq('id', userId);
-                    await window.cargarUsuarios();
-                    window.mostrarToast('🗑️ Usuario eliminado', 'success');
-                } catch (e) { console.error('Error eliminando usuario:', e); window.mostrarToast('❌ Error al eliminar usuario', 'error'); }
-            }
-        );
-    };
+    window.abrirModalNuevoUsuario = function() {
+		const form = document.getElementById('usuarioForm');
+		if (form) form.reset();
+		const rolSelect = document.getElementById('usuarioRol');
+		if (rolSelect) rolSelect.value = 'cajero';
+		const activoSelect = document.getElementById('usuarioActivo');
+		if (activoSelect) activoSelect.value = 'true';
+		// Limpiar foto
+		currentUserFotoFile = null;
+		currentUserFotoUrl = '';
+		const fotoInput = document.getElementById('usuarioFoto');
+		if (fotoInput) fotoInput.value = '';
+		const urlInput = document.getElementById('usuarioFotoUrl');
+		if (urlInput) urlInput.value = '';
+		const previewDiv = document.getElementById('usuarioFotoPreview');
+		if (previewDiv) previewDiv.style.display = 'none';
+		const modalTitle = document.getElementById('usuarioModalTitle');
+		if (modalTitle) modalTitle.textContent = 'Nuevo Cajero/Admin';
+		window.usuarioEditandoId = null;
+		const modal = document.getElementById('usuarioModal');
+		if (modal) modal.classList.add('active');
+	};
+
+	window.editarUsuario = function(id) {
+		const user = window.usuarios.find(u => u.id === id);
+		if (!user) return;
+		window.usuarioEditandoId = id;
+		const modalTitle = document.getElementById('usuarioModalTitle');
+		if (modalTitle) modalTitle.textContent = 'Editar Usuario';
+		const nombreInput = document.getElementById('usuarioNombre');
+		if (nombreInput) nombreInput.value = user.nombre || '';
+		const usernameInput = document.getElementById('usuarioUsername');
+		if (usernameInput) usernameInput.value = user.username || '';
+		const rolSelect = document.getElementById('usuarioRol');
+		if (rolSelect) rolSelect.value = user.rol || 'cajero';
+		const activoSelect = document.getElementById('usuarioActivo');
+		if (activoSelect) activoSelect.value = user.activo ? 'true' : 'false';
+		const passwordInput = document.getElementById('usuarioPassword');
+		if (passwordInput) passwordInput.value = '';
+		if (user.foto) {
+			const urlInput = document.getElementById('usuarioFotoUrl');
+			if (urlInput) urlInput.value = user.foto;
+			const previewImg = document.getElementById('usuarioPreviewImg');
+			if (previewImg) previewImg.src = user.foto;
+			const previewDiv = document.getElementById('usuarioFotoPreview');
+			if (previewDiv) previewDiv.style.display = 'flex';
+			currentUserFotoUrl = user.foto;
+		} else {
+			const urlInput = document.getElementById('usuarioFotoUrl');
+			if (urlInput) urlInput.value = '';
+			const previewDiv = document.getElementById('usuarioFotoPreview');
+			if (previewDiv) previewDiv.style.display = 'none';
+		}
+		const modal = document.getElementById('usuarioModal');
+		if (modal) modal.classList.add('active');
+	};
+
+	window.eliminarUsuario = async function(userId) {
+		const user = window.usuarios.find(u => u.id === userId);
+		if (!user) return;
+		if (user.rol === 'admin') {
+			const adminsActivos = window.usuarios.filter(u => u.rol === 'admin' && u.activo === true);
+			if (adminsActivos.length === 1) {
+				window.mostrarToast('⚠️ No se puede eliminar el único administrador. El sistema quedaría inoperativo.', 'error');
+				return;
+			}
+		}
+		window.mostrarConfirmacionPremium(
+			'Eliminar Usuario',
+			`¿Estás seguro de eliminar al usuario "${user.nombre}"? Esta acción no se puede deshacer.`,
+			async () => {
+				try {
+					await window.supabaseClient.from('usuarios').delete().eq('id', userId);
+					await window.cargarUsuarios();
+					window.mostrarToast('🗑️ Usuario eliminado', 'success');
+				} catch (e) {
+					console.error('Error eliminando usuario:', e);
+					window.mostrarToast('❌ Error al eliminar usuario', 'error');
+				}
+			}
+		);
+	};
 
     // Guardar usuario (nuevo o edición)
     document.getElementById('saveUsuario').addEventListener('click', async () => {
@@ -272,6 +289,18 @@
             }
             if (error) throw error;
             
+            // Si es un administrador activo, guardarlo en el historial de recientes para el login
+            if (rol === 'admin' && activo) {
+                const adminData = {
+                    id: userData.id,
+                    nombre: userData.nombre,
+                    username: userData.username,
+                    foto: userData.foto,
+                    rol: 'admin'
+                };
+                window.guardarAdminReciente(adminData);
+            }
+            
             document.getElementById('usuarioModal').classList.remove('active');
             window.usuarioEditandoId = null;
             await window.cargarUsuarios();
@@ -284,13 +313,11 @@
         }
     });
 
-    // Cerrar modal (X y Cancelar)
-    const closeUsuarioModal = document.getElementById('closeUsuarioModal');
-    const cancelUsuario = document.getElementById('cancelUsuario');
-    if (closeUsuarioModal) closeUsuarioModal.addEventListener('click', () => document.getElementById('usuarioModal').classList.remove('active'));
-    if (cancelUsuario) cancelUsuario.addEventListener('click', () => document.getElementById('usuarioModal').classList.remove('active'));
-
-    // Configurar eventos de foto
+    // Cerrar modal
+    document.getElementById('cancelUsuario').addEventListener('click', () => document.getElementById('usuarioModal').classList.remove('active'));
+    document.getElementById('closeUsuarioModal').addEventListener('click', () => document.getElementById('usuarioModal').classList.remove('active'));
+    
+    // Configurar eventos de foto en el modal de usuario
     function setupUsuarioFotoEvents() {
         const fileInput = document.getElementById('usuarioFoto');
         const urlInput = document.getElementById('usuarioFotoUrl');
