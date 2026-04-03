@@ -242,9 +242,19 @@ CREATE TABLE inventario (
     minimo NUMERIC(10,2) DEFAULT 0,
     precio_costo NUMERIC(10,2) DEFAULT 0,
     precio_unitario NUMERIC(10,2) DEFAULT 0,
+    imagen TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
+-- Migración segura: agregar columna imagen si no existe (para bases de datos ya creadas)
+DO $$ BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name='inventario' AND column_name='imagen'
+    ) THEN
+        ALTER TABLE inventario ADD COLUMN imagen TEXT;
+    END IF;
+END $$;
 
 ALTER TABLE inventario ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Permitir todo inventario" ON inventario FOR ALL USING (true) WITH CHECK (true);
@@ -440,6 +450,15 @@ CREATE TRIGGER sync_recipe_ingredients_trigger
     AFTER INSERT OR UPDATE OR DELETE ON menu
     FOR EACH ROW
     EXECUTE FUNCTION sync_recipe_ingredients();
+
+-- Permisos para recipe_ingredients y su secuencia serial.
+-- Sin estos GRANTs el trigger falla con permission denied for sequence recipe_ingredients_id_seq
+ALTER TABLE recipe_ingredients ENABLE ROW LEVEL SECURITY;
+CREATE POLICY IF NOT EXISTS "Permitir todo recipe_ingredients" ON recipe_ingredients FOR ALL USING (true) WITH CHECK (true);
+GRANT ALL ON recipe_ingredients TO anon, authenticated;
+GRANT ALL ON recipe_ingredients TO PUBLIC;
+GRANT USAGE, SELECT ON SEQUENCE recipe_ingredients_id_seq TO anon, authenticated;
+GRANT USAGE, SELECT ON SEQUENCE recipe_ingredients_id_seq TO PUBLIC;
 
 -- ============================================
 -- TABLA: pedidos
