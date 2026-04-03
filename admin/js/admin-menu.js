@@ -1,4 +1,4 @@
-// admin-menu.js - Gestión de platillos (menú) - VERSIÓN CORREGIDA (sin botón Quitar)
+// admin-menu.js - Gestión de platillos (menú)
 (function() {
     let currentImagenUrl = '';
     let currentImagenFile = null;
@@ -82,7 +82,7 @@
                     </button>
                 </div>`;
             
-            // Evento para expandir imagen
+            // Evento para expandir imagen al hacer clic
             const imgElement = card.querySelector('.mc2-img');
             if (imgElement) {
                 imgElement.style.cursor = 'pointer';
@@ -112,26 +112,28 @@
         document.body.appendChild(modal);
     };
 
-    window.eliminarPlatillo = async function(id) {
-        const platillo = window.menuItems.find(p => p.id === id);
-        if (!platillo) return;
-        window.mostrarConfirmacionPremium(
-            'Eliminar Platillo',
-            `¿Estás seguro de eliminar "${platillo.nombre}"? Esta acción no se puede deshacer.`,
-            async () => {
-                try {
-                    if (platillo.imagen && platillo.imagen.includes('imagenes-platillos')) {
-                        await window.eliminarImagenPlatillo(platillo.imagen);
-                    }
-                    await window.supabaseClient.from('menu').delete().eq('id', id);
-                    await window.cargarMenu();
-                    window.mostrarToast('🗑️ Platillo eliminado', 'success');
-                } catch (e) {
-                    console.error('Error eliminando platillo:', e);
-                    window.mostrarToast('❌ Error al eliminar el platillo', 'error');
-                }
+    window.toggleDisponiblePlatillo = async function(id, disponible) {
+        try {
+            const { error } = await window.supabaseClient.from('menu')
+                .update({ disponible: disponible })
+                .eq('id', id);
+            if (error) throw error;
+            const item = window.menuItems.find(p => p.id === id);
+            if (item) item.disponible = disponible;
+            window.renderizarMenu(document.getElementById('menuBuscador')?.value || '');
+            if (disponible) {
+                window.mostrarToast(`✅ Platillo "${item?.nombre}" ahora está DISPONIBLE en el menú del cliente`, 'success');
+            } else {
+                window.mostrarToast(`⚠️ Platillo "${item?.nombre}" ahora está NO DISPONIBLE (se mostrará como AGOTADO en el menú del cliente)`, 'warning');
             }
-        );
+        } catch(e) {
+            console.error('Error toggle disponible:', e);
+            if (e.message && e.message.includes('permission denied')) {
+                window.mostrarToast('⚠️ No se pudo cambiar el estado. Contacta al administrador del sistema.', 'error');
+            } else {
+                window.mostrarToast('❌ Error: ' + (e.message || e), 'error');
+            }
+        }
     };
 
     window.limpiarImagenPreview = function() {
@@ -148,23 +150,22 @@
         }
         if (previewDiv) previewDiv.style.display = 'none';
         if (previewImg) previewImg.src = '';
-        // Eliminar cualquier botón "Quitar" que pudiera quedar (por si acaso)
-        const oldRemoveBtn = document.getElementById('removePreviewTextBtn');
-        if (oldRemoveBtn) oldRemoveBtn.remove();
+        // Eliminar cualquier botón "Quitar" que pudiera quedar
+        const oldQuitar = document.querySelector('#imagenPreview .btn-small, #imagenPreview button:not(.preview-remove-btn)');
+        if (oldQuitar) oldQuitar.remove();
     };
 
-    // Configurar eventos del modal de platillo (sin botón Quitar)
+    // Configurar eventos del modal de platillo
     function setupPlatilloModalEvents() {
         const fileInput = document.getElementById('platilloImagen');
         const urlInput = document.getElementById('platilloImagenUrl');
         const previewDiv = document.getElementById('imagenPreview');
         const previewImg = document.getElementById('previewImg');
         
-        // Eliminar cualquier botón "Quitar" que exista en el DOM
+        // Eliminar cualquier botón "Quitar" existente
         const existingQuitar = document.querySelector('#imagenPreview .btn-small, #imagenPreview button:not(.preview-remove-btn)');
         if (existingQuitar) existingQuitar.remove();
         
-        // Botón de eliminar imagen dentro de la preview (X flotante)
         let removePreviewBtn = null;
         function updateRemoveButton() {
             if (removePreviewBtn) removePreviewBtn.remove();
@@ -182,51 +183,55 @@
             }
         }
         
-        if (fileInput) fileInput.addEventListener('change', function() {
-            if (fileInput.files && fileInput.files[0]) {
-                const file = fileInput.files[0];
-                currentImagenFile = file;
-                currentImagenUrl = '';
-                if (urlInput) {
-                    urlInput.value = '';
-                    urlInput.disabled = true;
+        if (fileInput) {
+            fileInput.addEventListener('change', function() {
+                if (fileInput.files && fileInput.files[0]) {
+                    const file = fileInput.files[0];
+                    currentImagenFile = file;
+                    currentImagenUrl = '';
+                    if (urlInput) {
+                        urlInput.value = '';
+                        urlInput.disabled = true;
+                    }
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        if (previewImg) previewImg.src = e.target.result;
+                        if (previewDiv) previewDiv.style.display = 'flex';
+                        updateRemoveButton();
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    if (urlInput) urlInput.disabled = false;
+                    if (urlInput && urlInput.value.trim()) {
+                        if (previewImg) previewImg.src = urlInput.value;
+                        if (previewDiv) previewDiv.style.display = 'flex';
+                        updateRemoveButton();
+                        currentImagenUrl = urlInput.value;
+                        currentImagenFile = null;
+                    } else {
+                        if (previewDiv) previewDiv.style.display = 'none';
+                        if (previewImg) previewImg.src = '';
+                    }
                 }
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    if (previewImg) previewImg.src = e.target.result;
+            });
+        }
+        
+        if (urlInput) {
+            urlInput.addEventListener('input', function() {
+                if (fileInput && fileInput.files && fileInput.files[0]) return;
+                const url = urlInput.value.trim();
+                if (url) {
+                    if (previewImg) previewImg.src = url;
                     if (previewDiv) previewDiv.style.display = 'flex';
                     updateRemoveButton();
-                };
-                reader.readAsDataURL(file);
-            } else {
-                if (urlInput) urlInput.disabled = false;
-                if (urlInput && urlInput.value.trim()) {
-                    if (previewImg) previewImg.src = urlInput.value;
-                    if (previewDiv) previewDiv.style.display = 'flex';
-                    updateRemoveButton();
-                    currentImagenUrl = urlInput.value;
+                    currentImagenUrl = url;
                     currentImagenFile = null;
                 } else {
                     if (previewDiv) previewDiv.style.display = 'none';
                     if (previewImg) previewImg.src = '';
                 }
-            }
-        });
-        
-        if (urlInput) urlInput.addEventListener('input', function() {
-            if (fileInput && fileInput.files && fileInput.files[0]) return;
-            const url = urlInput.value.trim();
-            if (url) {
-                if (previewImg) previewImg.src = url;
-                if (previewDiv) previewDiv.style.display = 'flex';
-                updateRemoveButton();
-                currentImagenUrl = url;
-                currentImagenFile = null;
-            } else {
-                if (previewDiv) previewDiv.style.display = 'none';
-                if (previewImg) previewImg.src = '';
-            }
-        });
+            });
+        }
         
         // Expandir imagen al hacer clic en preview
         if (previewImg) {
@@ -250,11 +255,244 @@
             `;
         }
     }
-    
-    setupPlatilloModalEvents();    
-})();
 
-    // Guardar platillo
+    window.abrirModalNuevoPlatillo = function() {
+        document.getElementById('platilloModalTitle').textContent = 'Nuevo Platillo';
+        document.getElementById('platilloForm').reset();
+        document.getElementById('ingredientesContainer').innerHTML = '';
+        window.limpiarImagenPreview();
+        window.cargarCategoriasSelect();
+        window.platilloEditandoId = null;
+        document.getElementById('platilloModal').classList.add('active');
+    };
+
+    window.cargarCategoriasSelect = function() {
+        const select = document.getElementById('platilloCategoria');
+        select.innerHTML = '<option value="">Seleccionar</option>';
+        Object.keys(window.categoriasMenu || {}).forEach(cat => {
+            const opt = document.createElement('option');
+            opt.value = cat;
+            opt.textContent = cat;
+            select.appendChild(opt);
+        });
+        select.addEventListener('change', (e) => { window.cargarSubcategoriasSelect(e.target.value); });
+    };
+
+    window.cargarSubcategoriasSelect = function(categoria) {
+        const select = document.getElementById('platilloSubcategoria');
+        select.innerHTML = '<option value="">Ninguna</option>';
+        if (categoria && window.categoriasMenu && window.categoriasMenu[categoria]) {
+            window.categoriasMenu[categoria].forEach(sub => {
+                const opt = document.createElement('option');
+                opt.value = sub;
+                opt.textContent = sub;
+                select.appendChild(opt);
+            });
+        }
+    };
+
+    window.agregarIngredienteRow = function(ingredienteId, cantidad, unidad) {
+        ingredienteId = ingredienteId || '';
+        cantidad = cantidad || '';
+        if (!unidad && ingredienteId) {
+            const _invItem = (window.inventarioItems || []).find(i => i.id === ingredienteId);
+            unidad = _invItem?.unidad_base || 'unidades';
+        }
+        unidad = unidad || 'unidades';
+        const container = document.getElementById('ingredientesContainer');
+        const row = document.createElement('div');
+        row.className = 'ingrediente-row';
+        row.style.cssText = 'display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:.4rem;align-items:center;margin-bottom:.4rem';
+
+        const select = document.createElement('select');
+        select.style.cssText = 'font-family:Montserrat,sans-serif;font-size:.82rem';
+        select.innerHTML = '<option value="">Seleccionar ingrediente</option>';
+        const sorted = [...(window.inventarioItems || [])].sort((a,b) => a.nombre.localeCompare(b.nombre));
+        sorted.forEach(ing => {
+            const opt = document.createElement('option');
+            opt.value = ing.id;
+            opt.textContent = ing.nombre;
+            if (ing.id === ingredienteId) opt.selected = true;
+            select.appendChild(opt);
+        });
+        select.addEventListener('change', function() {
+            const ing = (window.inventarioItems || []).find(i => i.id === this.value);
+            if (ing && ing.unidad_base) {
+                const unitSel = this.parentElement.querySelector('.ing-row-unidad');
+                if (unitSel) unitSel.value = ing.unidad_base;
+            }
+            window._recalcularStockPlatillo();
+        });
+
+        const inputCantidad = document.createElement('input');
+        inputCantidad.type = 'number'; inputCantidad.step = '0.001';
+        inputCantidad.placeholder = 'Cant.'; inputCantidad.value = cantidad;
+        inputCantidad.style.cssText = 'font-family:Montserrat,sans-serif;font-size:.82rem';
+        inputCantidad.addEventListener('input', window._recalcularStockPlatillo);
+
+        const selUnidad = document.createElement('select');
+        selUnidad.className = 'ing-row-unidad';
+        selUnidad.style.cssText = 'font-family:Montserrat,sans-serif;font-size:.78rem';
+        ['unidades','gramos','mililitros','kilogramos','litros'].forEach(u => {
+            const o = document.createElement('option');
+            o.value = u; o.textContent = u.charAt(0).toUpperCase() + u.slice(1);
+            if (u === unidad) o.selected = true;
+            selUnidad.appendChild(o);
+        });
+        selUnidad.addEventListener('change', window._recalcularStockPlatillo);
+
+        const removeBtn = document.createElement('button');
+        removeBtn.type = 'button';
+        removeBtn.innerHTML = '<i class="fas fa-times"></i>';
+        removeBtn.style.cssText = 'background:#ffebee;color:var(--danger);border:none;border-radius:6px;width:28px;height:28px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0';
+        removeBtn.onclick = () => { row.remove(); window._recalcularStockPlatillo(); };
+
+        row.appendChild(select);
+        row.appendChild(inputCantidad);
+        row.appendChild(selUnidad);
+        row.appendChild(removeBtn);
+        container.appendChild(row);
+        window._recalcularStockPlatillo();
+    };
+
+    window.editarPlatillo = function(id) {
+        const platillo = window.menuItems.find(p => p.id === id);
+        if (!platillo) return;
+        window.platilloEditandoId = id;
+        document.getElementById('platilloModalTitle').textContent = 'Editar Platillo';
+        window.limpiarImagenPreview();
+        document.getElementById('platilloNombre').value = platillo.nombre || '';
+        document.getElementById('platilloCategoria').value = platillo.categoria || '';
+        document.getElementById('platilloSubcategoria').value = platillo.subcategoria || '';
+        document.getElementById('platilloPrecio').value = platillo.precio || '';
+        document.getElementById('platilloDescripcion').value = platillo.descripcion || '';
+        document.getElementById('platilloDisponible').value = platillo.disponible ? 'true' : 'false';
+        const _chkD = document.getElementById('platilloDisponibleCheck');
+        const _lblD = document.getElementById('platilloDisponibleLabel');
+        if (_chkD) { _chkD.checked = !!platillo.disponible; }
+        if (_lblD) { _lblD.textContent = platillo.disponible ? 'Sí' : 'No'; _lblD.style.color = platillo.disponible ? 'var(--success)' : 'var(--text-muted)'; }
+        if (platillo.imagen) {
+            document.getElementById('previewImg').src = platillo.imagen;
+            document.getElementById('imagenPreview').style.display = 'flex';
+            document.getElementById('platilloImagenUrl').value = platillo.imagen;
+            currentImagenUrl = platillo.imagen;
+        }
+        window.cargarSubcategoriasSelect(platillo.categoria);
+        document.getElementById('ingredientesContainer').innerHTML = '';
+        if (platillo.ingredientes) {
+            Object.entries(platillo.ingredientes).forEach(([ingId, ingInfo]) => {
+                window.agregarIngredienteRow(ingId, ingInfo.cantidad, ingInfo.unidad);
+            });
+        }
+        document.getElementById('platilloModal').classList.add('active');
+    };
+
+    window.eliminarPlatillo = async function(id) {
+        const platillo = window.menuItems.find(p => p.id === id);
+        if (!platillo) return;
+        window.mostrarConfirmacionPremium(
+            'Eliminar Platillo',
+            `¿Estás seguro de eliminar "${platillo.nombre}"? Esta acción no se puede deshacer.`,
+            async () => {
+                try {
+                    if (platillo.imagen && platillo.imagen.includes('imagenes-platillos')) {
+                        await window.eliminarImagenPlatillo(platillo.imagen);
+                    }
+                    await window.supabaseClient.from('menu').delete().eq('id', id);
+                    await window.cargarMenu();
+                    window.mostrarToast('🗑️ Platillo eliminado', 'success');
+                } catch (e) {
+                    console.error('Error eliminando platillo:', e);
+                    window.mostrarToast('❌ Error al eliminar el platillo', 'error');
+                }
+            }
+        );
+    };
+
+    window.actualizarProductosActivos = function() {
+        const prodCard = document.querySelector('.dashboard-card:nth-child(3)');
+        if (prodCard) prodCard.textContent = window.menuItems.filter(m => m.disponible).length;
+    };
+
+    window._onCategoriaChange = function() {
+        const cat = document.getElementById('platilloCategoria')?.value;
+        const wrap = document.getElementById('subcategoriaContainer');
+        const sel  = document.getElementById('platilloSubcategoria');
+        if (!wrap || !sel) return;
+        const SUBCATEGORIAS = {
+            'rolls': [{ id: 'rolls-frios', name: 'Rolls Fríos (10 pzas)' }, { id: 'rolls-tempura', name: 'Rolls Tempura (12 pzas)' }],
+            'china': [
+                { id: 'arroz-chino', name: 'Arroz Chino' }, { id: 'arroz-cantones', name: 'Arroz Cantones' },
+                { id: 'chopsuey', name: 'Chopsuey' }, { id: 'lomey', name: 'Lomey' }, { id: 'chow-mein', name: 'Chow Mein' },
+                { id: 'fideos-arroz', name: 'Fideos de Arroz' }, { id: 'tallarines-cantones', name: 'Tallarines Cantones' },
+                { id: 'mariscos', name: 'Mariscos' }, { id: 'foo-yung', name: 'Foo Yong' }, { id: 'sopas', name: 'Sopas' },
+                { id: 'entremeses', name: 'Entremeses' }
+            ],
+            'japonesa': [
+                { id: 'yakimeshi', name: 'Yakimeshi' }, { id: 'yakisoba', name: 'Yakisoba' },
+                { id: 'pasta-udon', name: 'Pasta Udon' }, { id: 'churrasco', name: 'Churrasco' }
+            ]
+        };
+        const subs = SUBCATEGORIAS[cat];
+        if (subs && subs.length) {
+            wrap.style.display = 'block';
+            sel.innerHTML = '<option value="">Sin subcategoría</option>' +
+                subs.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+        } else {
+            wrap.style.display = 'none';
+            sel.innerHTML = '<option value="">Ninguna</option>';
+        }
+        window._recalcularStockPlatillo();
+    };
+
+    window._previewPrecioBs = function() {
+        const precio = parseFloat(document.getElementById('platilloPrecio')?.value) || 0;
+        const tasa   = (window.configGlobal?.tasa_efectiva) || (window.configGlobal?.tasa_cambio) || 0;
+        const el = document.getElementById('platilloPrecioBsPreview');
+        if (el) el.textContent = tasa > 0 && precio > 0 ? '💰 ' + window.formatBs(precio * tasa) : '';
+    };
+
+    window._previewPlatilloUrl = function(url) {
+        if (!url) return;
+        const prev = document.getElementById('imagenPreview');
+        const img  = document.getElementById('previewImg');
+        if (prev && img) { img.src = url; prev.style.display = 'flex'; }
+    };
+
+    window._recalcularStockPlatillo = function() {
+        const wrap = document.getElementById('stockCalculadoWrap');
+        const txt  = document.getElementById('stockCalculadoText');
+        if (!wrap || !txt) return;
+        const rows = document.querySelectorAll('#ingredientesContainer .ingrediente-row');
+        if (!rows.length) { wrap.style.display = 'none'; return; }
+        let maxPlatillos = Infinity;
+        let hayIngredientes = false;
+        rows.forEach(row => {
+            const selIng = row.querySelector('select:not(.ing-row-unidad)');
+            const selUni = row.querySelector('select.ing-row-unidad');
+            const cant   = parseFloat(row.querySelector('input[type="number"]')?.value) || 0;
+            if (!selIng?.value || !cant) return;
+            hayIngredientes = true;
+            const inv = (window.inventarioItems || []).find(i => i.id === selIng.value);
+            if (inv) {
+                const disponible = (inv.stock || 0) - (inv.reservado || 0);
+                const unidadIng  = selUni?.value || 'unidades';
+                const necesario  = window._convertirUnidad(cant, unidadIng, inv.unidad_base || 'unidades');
+                if (necesario > 0) maxPlatillos = Math.min(maxPlatillos, Math.floor(disponible / necesario));
+            } else { maxPlatillos = 0; }
+        });
+        if (!hayIngredientes) { wrap.style.display = 'none'; return; }
+        if (!isFinite(maxPlatillos) || maxPlatillos < 0) maxPlatillos = 0;
+        wrap.style.display = 'block';
+        wrap.style.background = maxPlatillos > 5 ? '#f0fdf4' : maxPlatillos > 0 ? '#fffbeb' : '#fef2f2';
+        wrap.style.borderColor = maxPlatillos > 5 ? '#bbf7d0' : maxPlatillos > 0 ? '#fde68a' : '#fecaca';
+        txt.style.color = maxPlatillos > 5 ? '#166534' : maxPlatillos > 0 ? '#92400e' : '#991b1b';
+        txt.textContent = maxPlatillos > 0
+            ? `Con el stock actual se pueden preparar ${maxPlatillos} porcion${maxPlatillos !== 1 ? 'es' : ''}`
+            : '⚠️ Stock insuficiente para preparar este platillo';
+    };
+
+    // Guardar platillo (evento)
     document.getElementById('savePlatillo').addEventListener('click', async () => {
         const saveBtn = document.getElementById('savePlatillo');
         if (saveBtn && saveBtn.disabled) return;
@@ -358,114 +596,6 @@
         window.limpiarImagenPreview();
     });
 
-    window.eliminarPlatillo = async function(id) {
-        if (!confirm('¿Estás seguro de eliminar este platillo?')) return;
-        try {
-            const platillo = window.menuItems.find(p => p.id === id);
-            if (platillo && platillo.imagen && platillo.imagen.includes('imagenes-platillos')) {
-                await window.eliminarImagenPlatillo(platillo.imagen);
-            }
-            await window.supabaseClient.from('menu').delete().eq('id', id);
-            await window.cargarMenu();
-            window.mostrarToast('🗑️ Platillo eliminado', 'success');
-        } catch (e) {
-            console.error('Error eliminando platillo:', e);
-            window.mostrarToast('❌ Error al eliminar el platillo', 'error');
-        }
-    };
-
-    window.actualizarProductosActivos = function() {
-        document.getElementById('productosActivos').textContent = window.menuItems.filter(m => m.disponible).length;
-        // Hacer clic en la tarjeta redirige al menú
-        const prodCard = document.querySelector('.dashboard-card:nth-child(2)');
-        if (prodCard && !prodCard.hasAttribute('data-listener')) {
-            prodCard.setAttribute('data-listener', 'true');
-            prodCard.style.cursor = 'pointer';
-            prodCard.addEventListener('click', () => {
-                const menuTab = document.querySelector('.tab[data-tab="menu"]');
-                if (menuTab) menuTab.click();
-            });
-        }
-    };
-
-    window._onCategoriaChange = function() {
-        const cat = document.getElementById('platilloCategoria')?.value;
-        const wrap = document.getElementById('subcategoriaContainer');
-        const sel  = document.getElementById('platilloSubcategoria');
-        if (!wrap || !sel) return;
-        const SUBCATEGORIAS = {
-            'rolls': [{ id: 'rolls-frios', name: 'Rolls Fríos (10 pzas)' }, { id: 'rolls-tempura', name: 'Rolls Tempura (12 pzas)' }],
-            'china': [
-                { id: 'arroz-chino', name: 'Arroz Chino' }, { id: 'arroz-cantones', name: 'Arroz Cantones' },
-                { id: 'chopsuey', name: 'Chopsuey' }, { id: 'lomey', name: 'Lomey' }, { id: 'chow-mein', name: 'Chow Mein' },
-                { id: 'fideos-arroz', name: 'Fideos de Arroz' }, { id: 'tallarines-cantones', name: 'Tallarines Cantones' },
-                { id: 'mariscos', name: 'Mariscos' }, { id: 'foo-yung', name: 'Foo Yong' }, { id: 'sopas', name: 'Sopas' },
-                { id: 'entremeses', name: 'Entremeses' }
-            ],
-            'japonesa': [
-                { id: 'yakimeshi', name: 'Yakimeshi' }, { id: 'yakisoba', name: 'Yakisoba' },
-                { id: 'pasta-udon', name: 'Pasta Udon' }, { id: 'churrasco', name: 'Churrasco' }
-            ]
-        };
-        const subs = SUBCATEGORIAS[cat];
-        if (subs && subs.length) {
-            wrap.style.display = 'block';
-            sel.innerHTML = '<option value="">Sin subcategoría</option>' +
-                subs.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
-        } else {
-            wrap.style.display = 'none';
-            sel.innerHTML = '<option value="">Ninguna</option>';
-        }
-        window._recalcularStockPlatillo();
-    };
-
-    window._previewPrecioBs = function() {
-        const precio = parseFloat(document.getElementById('platilloPrecio')?.value) || 0;
-        const tasa   = (window.configGlobal?.tasa_efectiva) || (window.configGlobal?.tasa_cambio) || 0;
-        const el = document.getElementById('platilloPrecioBsPreview');
-        if (el) el.textContent = tasa > 0 && precio > 0 ? '💰 ' + window.formatBs(precio * tasa) : '';
-    };
-
-    window._previewPlatilloUrl = function(url) {
-        if (!url) return;
-        const prev = document.getElementById('imagenPreview');
-        const img  = document.getElementById('previewImg');
-        if (prev && img) { img.src = url; prev.style.display = 'flex'; }
-    };
-
-    window._recalcularStockPlatillo = function() {
-        const wrap = document.getElementById('stockCalculadoWrap');
-        const txt  = document.getElementById('stockCalculadoText');
-        if (!wrap || !txt) return;
-        const rows = document.querySelectorAll('#ingredientesContainer .ingrediente-row');
-        if (!rows.length) { wrap.style.display = 'none'; return; }
-        let maxPlatillos = Infinity;
-        let hayIngredientes = false;
-        rows.forEach(row => {
-            const selIng = row.querySelector('select:not(.ing-row-unidad)');
-            const selUni = row.querySelector('select.ing-row-unidad');
-            const cant   = parseFloat(row.querySelector('input[type="number"]')?.value) || 0;
-            if (!selIng?.value || !cant) return;
-            hayIngredientes = true;
-            const inv = (window.inventarioItems || []).find(i => i.id === selIng.value);
-            if (inv) {
-                const disponible = (inv.stock || 0) - (inv.reservado || 0);
-                const unidadIng  = selUni?.value || 'unidades';
-                const necesario  = window._convertirUnidad(cant, unidadIng, inv.unidad_base || 'unidades');
-                if (necesario > 0) maxPlatillos = Math.min(maxPlatillos, Math.floor(disponible / necesario));
-            } else { maxPlatillos = 0; }
-        });
-        if (!hayIngredientes) { wrap.style.display = 'none'; return; }
-        if (!isFinite(maxPlatillos) || maxPlatillos < 0) maxPlatillos = 0;
-        wrap.style.display = 'block';
-        wrap.style.background = maxPlatillos > 5 ? '#f0fdf4' : maxPlatillos > 0 ? '#fffbeb' : '#fef2f2';
-        wrap.style.borderColor = maxPlatillos > 5 ? '#bbf7d0' : maxPlatillos > 0 ? '#fde68a' : '#fecaca';
-        txt.style.color = maxPlatillos > 5 ? '#166534' : maxPlatillos > 0 ? '#92400e' : '#991b1b';
-        txt.textContent = maxPlatillos > 0
-            ? `Con el stock actual se pueden preparar ${maxPlatillos} porcion${maxPlatillos !== 1 ? 'es' : ''}`
-            : '⚠️ Stock insuficiente para preparar este platillo';
-    };
-
-    // Inicializar eventos del modal
+    // Inicializar eventos del modal de platillo
     setupPlatilloModalEvents();
 })();
