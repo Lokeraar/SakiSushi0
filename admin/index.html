@@ -81,16 +81,7 @@
             <div class="header-right">
                 <button class="nav-button" onclick="window.abrirSelectorMesaAdmin()"><i class="fas fa-utensils"></i> Mesas</button>
                 <a href="../Cajero/index.html" target="_blank" class="nav-button"><i class="fas fa-cash-register"></i> Cajero</a>
-                <!-- Toggle de tema premium (sol/luna) -->
-                <div class="theme-toggle-wrap" onclick="window.toggleTheme()" title="Modo oscuro / claro" role="button" aria-label="Cambiar tema">
-                    <i class="fas fa-sun theme-toggle-icon-sun"></i>
-                    <div class="theme-toggle-track" id="themeToggle">
-                        <div class="theme-toggle-thumb" id="themeIcon">
-                            <i class="fas fa-sun"></i>
-                        </div>
-                    </div>
-                    <i class="fas fa-moon theme-toggle-icon-moon"></i>
-                </div>
+                <button class="theme-toggle" id="themeToggle" onclick="window.toggleTheme()" title="Cambiar tema"><i class="fas fa-sun" id="themeIcon"></i></button>
                 <button class="logout-button" id="logoutButton"><i class="fas fa-sign-out-alt"></i> Salir</button>
             </div>
             <div id="stockCriticoHeader" style="width:100%; margin-top:.5rem; padding:.4rem .8rem; background:rgba(0,0,0,.2); border-radius:8px; display:flex; align-items:center; gap:.8rem; flex-wrap:wrap; font-size:.75rem">
@@ -191,7 +182,7 @@
                         <div style="font-size:.72rem;color:var(--text-muted);margin-top:.25rem">Toca para ver desglose</div>
                     </div>
                     <div class="dashboard-card"><div class="card-title">Deliverys Hoy</div><div class="card-value" id="deliverysHoyDashboard">Bs 0,00</div></div>
-                    <!-- Columna doble: Alertas Stock + Productos Activos (compactos, comparten 1 columna) -->
+                    <!-- Columna mini: Alertas Stock + Productos Activos apilados verticalmente -->
                     <div class="dashboard-col-mini">
                         <div class="dashboard-card dashboard-card-sm" style="cursor:pointer" onclick="window.irAStockCritico()">
                             <div class="card-title">Alertas Stock</div>
@@ -421,6 +412,19 @@
             <div class="modal-header"><h3 id="ingredienteModalTitle">Nuevo Ingrediente</h3><button class="modal-close" id="closeIngredienteModal">&times;</button></div>
             <div class="modal-body">
                 <form id="ingredienteForm">
+                    <!-- Imagen va PRIMERO — mayor prioridad archivo sobre URL -->
+                    <div class="form-group"><label>Imagen del Ingrediente (opcional)</label>
+                        <div style="display:flex; gap:.75rem; align-items:flex-start">
+                            <div style="flex:1">
+                                <input type="file" id="ingredienteImagen" accept="image/*" style="margin-bottom:.3rem">
+                                <input type="url" id="ingredienteImagenUrl" placeholder="O pega la URL de la imagen (solo si no hay archivo)" style="width:100%">
+                            </div>
+                            <div id="ingredienteImagenPreview" class="image-preview" style="display:none; width:70px; height:70px; flex-shrink:0; position:relative">
+                                <img id="ingredientePreviewImg" style="width:100%;height:100%;object-fit:cover;border-radius:8px">
+                                <button type="button" id="ingredienteImgRemoveBtn" style="position:absolute; top:-8px; right:-8px; background:var(--danger); color:#fff; border:none; border-radius:50%; width:22px; height:22px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:.7rem">✕</button>
+                            </div>
+                        </div>
+                    </div>
                     <div class="form-group"><label>Nombre del Ingrediente</label><input type="text" id="ingredienteNombre" required placeholder="Ej: Salmón fresco"></div>
                     <!-- Campo Stock Actual (deshabilitado, se desbloquea con contraseña) -->
                     <div class="form-group" id="stockOverlay">
@@ -433,8 +437,6 @@
                     <div class="form-group"><label style="display:flex; align-items:center; gap:.4rem">Stock Mínimo<span class="tooltip-wrap" style="position:relative; display:inline-flex; cursor:help"><span style="display:inline-flex; align-items:center; justify-content:center; width:15px; height:15px; background:#aaa; color:#fff; border-radius:50%; font-size:.65rem; font-weight:700">?</span><span class="tooltip-text" style="display:none; position:absolute; bottom:calc(100% + 6px); left:50%; transform:translateX(-50%); background:var(--toast-bg); color:var(--toast-text); padding:.5rem .75rem; border-radius:8px; font-size:.75rem; white-space:normal; width:230px; text-align:center; box-shadow:0 4px 12px rgba(0,0,0,.3); z-index:100; line-height:1.4">Cuando el stock disponible baje de este valor, aparecerá una alerta en el Dashboard (Stock Crítico) y se enviará una notificación push.</span></span></label><input type="number" step="0.001" id="ingredienteMinimo" placeholder="Ej: 5"></div>
                     <div class="form-group" style="background:var(--card-bg); border-radius:10px; padding:.85rem; border:1px solid var(--border)"><label style="font-weight:700; font-size:.8rem; text-transform:uppercase; letter-spacing:.5px; color:var(--text-muted); margin-bottom:.5rem; display:block"><i class="fas fa-calculator" style="margin-right:.3rem; color:var(--accent)"></i>Calculadora de Costo Unitario</label><div style="display:flex; gap:.75rem; align-items:flex-end"><div style="flex:1"><label style="font-size:.78rem">Costo Total Compra (USD)</label><input type="number" step="0.01" id="costoTotal" placeholder="0.00" oninput="window.calcularCostoUnitario()"></div><div style="flex:1"><label style="font-size:.78rem">Cantidad Comprada</label><input type="number" step="0.001" id="cantidadComprada" placeholder="0" oninput="window.calcularCostoUnitario()"></div></div><div id="calcResultado" style="display:none; margin-top:.5rem; padding:.4rem .6rem; background:rgba(0,0,0,.2); border-radius:6px; border:1px solid var(--border); font-size:.82rem">Costo unitario: <strong id="calcPrecioUnitario">0.00</strong> USD<span id="calcUnidadResult" style="color:var(--text-muted)"></span></div></div>
                     <div class="form-row"><div class="form-group"><label>Precio de Costo (USD/Bs)</label><input type="number" step="0.01" id="ingredienteCosto" placeholder="0.00"></div><div class="form-group"><label>Precio de Venta (USD/Bs)</label><input type="number" step="0.01" id="ingredienteVenta" placeholder="0.00"></div></div>
-                    <!-- Imagen del ingrediente -->
-                    <div class="form-group"><label>Imagen del Ingrediente (opcional)</label><div style="display:flex; gap:.75rem; align-items:flex-start"><div style="flex:1"><input type="file" id="ingredienteImagen" accept="image/*" style="margin-bottom:.3rem"><input type="url" id="ingredienteImagenUrl" placeholder="O pega la URL de la imagen" style="width:100%"></div><div id="ingredienteImagenPreview" class="image-preview" style="display:none; width:70px; height:70px; flex-shrink:0; position:relative"><img id="ingredientePreviewImg" style="width:100%;height:100%;object-fit:cover;border-radius:8px"><button type="button" id="ingredienteImgRemoveBtn" style="position:absolute; top:-8px; right:-8px; background:var(--danger); color:#fff; border:none; border-radius:50%; width:22px; height:22px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:.7rem">✕</button></div></div></div>
                 </form>
             </div>
             <div class="modal-footer" style="display:flex; justify-content:space-between; align-items:center"><button class="btn-primary" id="deleteIngredienteBtn" type="button" style="display:none; padding:.6rem 1.2rem; border-radius:8px; background:var(--danger); color:#fff; border:none; cursor:pointer; font-size:.85rem; font-weight:600" onclick="window._eliminarIngredienteDesdeModal()"><i class="fas fa-trash"></i> Eliminar</button><div style="display:flex; gap:.75rem"><button class="btn-secondary" id="cancelIngrediente" type="button">Cancelar</button><button class="btn-primary" id="saveIngrediente" type="button">Guardar</button></div></div>
@@ -447,6 +449,18 @@
             <div class="modal-header"><h3 id="usuarioModalTitle">Nuevo Cajero/Admin</h3><button class="modal-close" id="closeUsuarioModal">&times;</button></div>
             <div class="modal-body">
                 <form id="usuarioForm">
+                    <div class="form-group"><label>Foto de perfil (opcional)</label>
+                        <div style="display:flex; gap:.75rem; align-items:flex-start">
+                            <div style="flex:1">
+                                <input type="file" id="usuarioFoto" accept="image/*" style="margin-bottom:.3rem">
+                                <input type="url" id="usuarioFotoUrl" placeholder="O pega la URL (solo si no hay archivo)" style="width:100%">
+                            </div>
+                            <div id="usuarioFotoPreview" class="image-preview" style="display:none; width:70px; height:70px; flex-shrink:0; position:relative">
+                                <img id="usuarioPreviewImg" style="width:100%;height:100%;object-fit:cover;border-radius:8px">
+                                <button type="button" id="usuarioFotoRemoveBtn" style="position:absolute; top:-8px; right:-8px; background:var(--danger); color:#fff; border:none; border-radius:50%; width:22px; height:22px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:.7rem">✕</button>
+                            </div>
+                        </div>
+                    </div>
                     <div class="form-group"><label>Nombre completo *</label><input type="text" id="usuarioNombre" required placeholder="Ej: María González"></div>
                     <div style="display:flex;gap:.75rem"><div class="form-group" style="flex:1"><label>Nombre de usuario *</label><input type="text" id="usuarioUsername" required placeholder="Ej: cajero3"></div><div class="form-group" style="flex:1"><label>Rol</label><select id="usuarioRol"><option value="cajero">Cajero</option><option value="admin">Administrador</option></select></div></div>
                     <div class="form-group"><label>Contraseña</label><input type="text" id="usuarioPassword" placeholder="Déjalo vacío para no cambiar" autocomplete="off"></div>
@@ -464,9 +478,20 @@
             <div class="modal-header" style="background:linear-gradient(135deg,var(--delivery),#00838F)"><h3><i class="fas fa-motorcycle"></i> Editar Motorizado</h3><button class="modal-close" id="closeDeliveryModal">&times;</button></div>
             <div class="modal-body">
                 <form id="deliveryForm">
+                    <div class="form-group"><label>Foto de perfil (opcional)</label>
+                        <div style="display:flex; gap:.75rem; align-items:flex-start">
+                            <div style="flex:1">
+                                <input type="file" id="deliveryFoto" accept="image/*" style="margin-bottom:.3rem">
+                                <input type="url" id="deliveryFotoUrl" placeholder="O pega la URL (solo si no hay archivo)" style="width:100%">
+                            </div>
+                            <div id="deliveryFotoPreview" class="image-preview" style="display:none; width:70px; height:70px; flex-shrink:0; position:relative">
+                                <img id="deliveryPreviewImg" style="width:100%;height:100%;object-fit:cover;border-radius:8px">
+                                <button type="button" id="deliveryFotoRemoveBtn" style="position:absolute; top:-8px; right:-8px; background:var(--danger); color:#fff; border:none; border-radius:50%; width:22px; height:22px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:.7rem">✕</button>
+                            </div>
+                        </div>
+                    </div>
                     <div class="form-group"><label>Nombre</label><input type="text" id="deliveryNombre" required></div>
                     <div class="form-group"><label>Estado</label><select id="deliveryEstado"><option value="true">Activo</option><option value="false">Inactivo</option></select></div>
-                    <div class="form-group"><label>Foto de perfil (opcional)</label><div style="display:flex; gap:.75rem; align-items:flex-start"><div style="flex:1"><input type="file" id="deliveryFoto" accept="image/*" style="margin-bottom:.3rem"><input type="url" id="deliveryFotoUrl" placeholder="O pega la URL de la imagen" style="width:100%"></div><div id="deliveryFotoPreview" class="image-preview" style="display:none; width:70px; height:70px; flex-shrink:0; position:relative"><img id="deliveryPreviewImg" style="width:100%;height:100%;object-fit:cover;border-radius:8px"><button type="button" id="deliveryFotoRemoveBtn" style="position:absolute; top:-8px; right:-8px; background:var(--danger); color:#fff; border:none; border-radius:50%; width:22px; height:22px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:.7rem">✕</button></div></div></div>
                 </form>
             </div>
             <div class="modal-footer"><button class="btn-secondary" id="cancelDeliveryEdit">Cancelar</button><button class="btn-primary" id="saveDelivery" style="background:linear-gradient(135deg,var(--delivery),#00838F)">Guardar</button></div>
@@ -479,9 +504,20 @@
             <div class="modal-header" style="background:linear-gradient(135deg,var(--propina),#7B1FA2)"><h3 id="mesoneroModalTitle"><i class="fas fa-user-tie"></i> Editar Mesonero</h3><button class="modal-close" id="closeMesoneroModal">&times;</button></div>
             <div class="modal-body">
                 <form id="mesoneroForm">
+                    <div class="form-group"><label>Foto de perfil (opcional)</label>
+                        <div style="display:flex; gap:.75rem; align-items:flex-start">
+                            <div style="flex:1">
+                                <input type="file" id="mesoneroFoto" accept="image/*" style="margin-bottom:.3rem">
+                                <input type="url" id="mesoneroFotoUrl" placeholder="O pega la URL (solo si no hay archivo)" style="width:100%">
+                            </div>
+                            <div id="mesoneroFotoPreview" class="image-preview" style="display:none; width:70px; height:70px; flex-shrink:0; position:relative">
+                                <img id="mesoneroPreviewImg" style="width:100%;height:100%;object-fit:cover;border-radius:8px">
+                                <button type="button" id="mesoneroFotoRemoveBtn" style="position:absolute; top:-8px; right:-8px; background:var(--danger); color:#fff; border:none; border-radius:50%; width:22px; height:22px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:.7rem">✕</button>
+                            </div>
+                        </div>
+                    </div>
                     <div class="form-group"><label>Nombre completo *</label><input type="text" id="mesoneroNombre" required placeholder="Ej: Carlos Méndez"></div>
                     <div class="form-group"><label>Estado</label><select id="mesoneroActivo"><option value="true">Activo</option><option value="false">Inactivo</option></select></div>
-                    <div class="form-group"><label>Foto de perfil (opcional)</label><div style="display:flex; gap:.75rem; align-items:flex-start"><div style="flex:1"><input type="file" id="mesoneroFoto" accept="image/*" style="margin-bottom:.3rem"><input type="url" id="mesoneroFotoUrl" placeholder="O pega la URL de la imagen" style="width:100%"></div><div id="mesoneroFotoPreview" class="image-preview" style="display:none; width:70px; height:70px; flex-shrink:0; position:relative"><img id="mesoneroPreviewImg" style="width:100%;height:100%;object-fit:cover;border-radius:8px"><button type="button" id="mesoneroFotoRemoveBtn" style="position:absolute; top:-8px; right:-8px; background:var(--danger); color:#fff; border:none; border-radius:50%; width:22px; height:22px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:.7rem">✕</button></div></div></div>
                 </form>
             </div>
             <div class="modal-footer"><button class="btn-secondary" id="cancelMesoneroEdit">Cancelar</button><button class="btn-primary" id="saveMesonero" style="background:linear-gradient(135deg,var(--propina),#7B1FA2)">Guardar</button></div>
@@ -502,8 +538,7 @@
         <div class="modal-content" style="max-width:400px">
             <div class="modal-header"><h3>Código QR</h3><button class="modal-close" id="closeQrAmpliadoModal">&times;</button></div>
             <div class="modal-body" style="text-align:center"><div id="qrAmpliado" style="width:300px;height:300px;margin:0 auto"></div><div id="qrAmpliadoInfo" style="margin-top:1rem"></div></div>
-            <!-- footer vacío: el botón Cerrar lo genera dinámicamente admin-qr.js en qrAmpliadoInfo -->
-            <div class="modal-footer" style="display:none"></div>
+            <div class="modal-footer"><button class="btn-primary" id="closeQrAmpliado">Cerrar</button></div>
         </div>
     </div>
 
