@@ -394,8 +394,23 @@
                 imagen: imagenUrl || null
             };
             let error;
-            if (esNuevo) ({ error } = await window.supabaseClient.from('inventario').insert([ingrediente]));
-            else ({ error } = await window.supabaseClient.from('inventario').update(ingrediente).eq('id', id));
+            if (esNuevo) {
+                ({ error } = await window.supabaseClient.from('inventario').insert([ingrediente]));
+            } else {
+                // Construir el objeto de actualización dinámicamente.
+                // Si el servidor responde con PGRST204 (columna no encontrada en schema cache),
+                // reintentamos sin el campo 'imagen' para compatibilidad con BDs no migradas.
+                const updateData = { ...ingrediente };
+                delete updateData.id; // id no se actualiza, va en el .eq()
+                let result = await window.supabaseClient.from('inventario').update(updateData).eq('id', id);
+                if (result.error && result.error.code === 'PGRST204' && result.error.message.includes('imagen')) {
+                    // La columna imagen aún no existe en la BD. Reintentar sin ella.
+                    console.warn('⚠️ Columna "imagen" no encontrada. Actualiza la BD ejecutando: ALTER TABLE inventario ADD COLUMN IF NOT EXISTS imagen TEXT;');
+                    const { imagen: _img, ...updateDataSinImagen } = updateData;
+                    result = await window.supabaseClient.from('inventario').update(updateDataSinImagen).eq('id', id);
+                }
+                error = result.error;
+            }
             if (error) throw error;
             window.ingredienteEditandoId = null;
             window.cerrarModal('ingredienteModal');
