@@ -37,10 +37,11 @@
         for (const [n, c] of Object.entries(platillosCount)) { if (c > maxCount) { maxCount = c; platilloTop = n; } }
         
         const tasa = window.configGlobal?.tasa_efectiva || 400;
-        document.getElementById('ventasDia').textContent = `${window.formatUSD(ventasHoy)} / ${window.formatBs(ventasHoy * tasa)}`;
-        document.getElementById('ventasSemana').textContent = `${window.formatUSD(ventasSemana)} / ${window.formatBs(ventasSemana * tasa)}`;
-        document.getElementById('ticketPromedio').textContent = `${window.formatUSD(ticketPromedio)} / ${window.formatBs(ticketPromedio * tasa)}`;
-        document.getElementById('platilloTop').textContent = platilloTop;
+        const _set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
+        _set('ventasDia', `${window.formatUSD(ventasHoy)} / ${window.formatBs(ventasHoy * tasa)}`);
+        _set('ventasSemana', `${window.formatUSD(ventasSemana)} / ${window.formatBs(ventasSemana * tasa)}`);
+        _set('ticketPromedio', `${window.formatUSD(ticketPromedio)} / ${window.formatBs(ticketPromedio * tasa)}`);
+        _set('platilloTop', platilloTop);
     };
 
     window.actualizarGraficos = function(pedidos) {
