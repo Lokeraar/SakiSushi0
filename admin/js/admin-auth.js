@@ -10,21 +10,24 @@
         container.innerHTML = '<div class="loading-spinner" style="margin:0 auto;"></div>';
         
         try {
-            // Esperar a que supabaseClient esté listo (puede tardar un momento)
-            let intentos = 0;
-            while (!window.supabaseClient && intentos < 20) {
-                await new Promise(r => setTimeout(r, 100));
-                intentos++;
-            }
-            
+            // Usar admins del historial local primero (evita Failed to fetch en carga inicial)
             const recent = window.obtenerAdminsRecientes();
             let admins = [];
-            
+
             if (recent.length) {
-                // Usar los recientes (ya tienen foto o null)
+                // Caché local disponible: sin necesidad de red
                 admins = recent;
             } else {
-                // Obtener todos los admins activos de la BD
+                // Sin caché: esperar a que supabaseClient esté inicializado
+                let intentos = 0;
+                while (!window.supabaseClient && intentos < 30) {
+                    await new Promise(r => setTimeout(r, 100));
+                    intentos++;
+                }
+                if (!window.supabaseClient) {
+                    container.innerHTML = '<p style="color:var(--text-muted);text-align:center;font-size:.85rem">⏳ Conectando con el servidor...<br><small>Si persiste, verifica tu conexión a internet.</small></p>';
+                    return;
+                }
                 const { data, error } = await window.supabaseClient.from('usuarios').select('*').eq('rol', 'admin').eq('activo', true);
                 if (error) throw error;
                 admins = data || [];
