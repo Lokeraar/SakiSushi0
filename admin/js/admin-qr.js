@@ -1,4 +1,4 @@
-// admin-qr.js - Gestión de códigos QR
+// admin-qr.js - Gestión de códigos QR (versión limpia)
 (function() {
     window.cargarQRs = async function() {
         try {
@@ -69,50 +69,55 @@
     };
 
     window.eliminarQR = async function(id) {
-        if (!confirm('¿Estás seguro de eliminar este código QR?')) return;
-        try {
-            await window.supabaseClient.from('codigos_qr').delete().eq('id', id);
-            await window.cargarQRs();
-            window.mostrarToast('🗑️ QR eliminado', 'success');
-        } catch (e) { console.error('Error eliminando QR:', e); window.mostrarToast('❌ Error al eliminar QR', 'error'); }
+        window.mostrarConfirmacionPremium(
+            'Eliminar QR',
+            '¿Estás seguro de eliminar este código QR?',
+            async () => {
+                try {
+                    await window.supabaseClient.from('codigos_qr').delete().eq('id', id);
+                    await window.cargarQRs();
+                    window.mostrarToast('🗑️ QR eliminado', 'success');
+                } catch (e) { console.error('Error eliminando QR:', e); window.mostrarToast('❌ Error al eliminar QR', 'error'); }
+            }
+        );
     };
 
     window.ampliarQR = function(id, nombre, url) {
-		const container = document.getElementById('qrAmpliado');
-		container.innerHTML = '';
-		new QRCode(container, { text: url, width: 300, height: 300 });
-		const urlDisplay = url.replace(/wifi_pwd=([^&]+)/, 'wifi_pwd=***');
-		document.getElementById('qrAmpliadoInfo').innerHTML = `
-			<div style="margin-top:.75rem">
-				<div style="font-weight:800;font-size:1rem;color:var(--text-dark);margin-bottom:.4rem">${nombre}</div>
-				<div style="font-size:.7rem;color:var(--text-muted);word-break:break-all;background:#f5f5f5;padding:.5rem .7rem;border-radius:8px;border:1px solid var(--border);line-height:1.5;text-align:left">${urlDisplay}</div>
-			</div>
-			<div style="margin-top:1rem;display:flex;justify-content:space-between;align-items:center">
-				<button class="btn-danger" id="qrModalDeleteBtn" style="background:var(--danger);color:#fff;border:none;padding:.5rem 1rem;border-radius:8px;cursor:pointer">
-					<i class="fas fa-trash"></i> Eliminar
-				</button>
-				<button class="btn-primary" id="qrModalCloseBtn" style="background:var(--primary);color:#fff;border:none;padding:.5rem 1rem;border-radius:8px;cursor:pointer">
-					Cerrar
-				</button>
-			</div>
-		`;
-		const modal = document.getElementById('qrAmpliadoModal');
-		modal.classList.add('active');
-		
-		const deleteBtn = document.getElementById('qrModalDeleteBtn');
-		if (deleteBtn) {
-			deleteBtn.onclick = async () => {
-				window.mostrarConfirmacionPremium(
-					'Eliminar QR',
-					`¿Eliminar el QR de "${nombre}"?`,
-					async () => {
-						await window.eliminarQR(id);
-						window.cerrarModal('qrAmpliadoModal');
-					}
-				);
-			};
-		}
-		const closeBtn = document.getElementById('qrModalCloseBtn');
-		if (closeBtn) closeBtn.onclick = () => window.cerrarModal('qrAmpliadoModal');
-	};
+        const container = document.getElementById('qrAmpliado');
+        container.innerHTML = '';
+        new QRCode(container, { text: url, width: 300, height: 300 });
+        const urlDisplay = url.replace(/wifi_pwd=([^&]+)/, 'wifi_pwd=***');
+        document.getElementById('qrAmpliadoInfo').innerHTML = `
+            <div style="margin-top:.75rem">
+                <div style="font-weight:800;font-size:1rem;color:var(--text-dark);margin-bottom:.4rem">${nombre}</div>
+                <div style="font-size:.7rem;color:var(--text-muted);word-break:break-all;background:#f5f5f5;padding:.5rem .7rem;border-radius:8px;border:1px solid var(--border);line-height:1.5;text-align:left">${urlDisplay}</div>
+            </div>
+            <div style="margin-top:1rem;display:flex;justify-content:space-between;align-items:center">
+                <button class="btn-danger" id="qrModalDeleteBtn" style="background:var(--danger);color:#fff;border:none;padding:.5rem 1rem;border-radius:8px;cursor:pointer">
+                    <i class="fas fa-trash"></i> Eliminar
+                </button>
+                <button class="btn-primary" id="qrModalCloseBtn" style="background:var(--primary);color:#fff;border:none;padding:.5rem 1rem;border-radius:8px;cursor:pointer">
+                    Cerrar
+                </button>
+            </div>
+        `;
+        const modal = document.getElementById('qrAmpliadoModal');
+        modal.classList.add('active');
+        
+        const deleteBtn = document.getElementById('qrModalDeleteBtn');
+        if (deleteBtn) {
+            deleteBtn.onclick = async () => {
+                window.mostrarConfirmacionPremium(
+                    'Eliminar QR',
+                    `¿Eliminar el QR de "${nombre}"?`,
+                    async () => {
+                        await window.eliminarQR(id);
+                        window.cerrarModal('qrAmpliadoModal');
+                    }
+                );
+            };
+        }
+        const closeBtn = document.getElementById('qrModalCloseBtn');
+        if (closeBtn) closeBtn.onclick = () => window.cerrarModal('qrAmpliadoModal');
+    };
 })();
