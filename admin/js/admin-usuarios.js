@@ -19,13 +19,7 @@
             return;
         }
         grid.innerHTML = window.usuarios.map(user => {
-            const fotoHtml = user.foto
-                ? `<img src="${user.foto}" 
-                    style="width:88px;height:88px;border-radius:50%;object-fit:cover;margin-right:.75rem;flex-shrink:0;cursor:pointer;border:2px solid var(--border);transition:transform .2s"
-                    onclick="window.expandirImagen('${user.foto.replace(/'/g, "\\'")}')"
-                    title="Ver foto de ${(user.nombre || '').replace(/'/g, "\\'")}"
-                    onmouseover="this.style.transform='scale(1.08)'" onmouseout="this.style.transform=''">`
-                : '';
+            const fotoHtml = user.foto ? `<img src="${user.foto}" style="width:44px;height:44px;border-radius:50%;object-fit:cover;margin-right:.5rem">` : '';
             const inicial = (user.nombre || '?').charAt(0).toUpperCase();
             const avatarHtml = fotoHtml || `<div class="usuario-avatar">${inicial}</div>`;
             const rolBadge = user.rol === 'admin' ? '<span class="usuario-rol admin">Admin</span>' : '<span class="usuario-rol cajero">Cajero</span>';
@@ -66,9 +60,11 @@
         if (fileInput.files && fileInput.files[0]) {
             const file = fileInput.files[0];
             currentUserFotoFile = file;
+            // Archivo adjunto tiene prioridad: limpiar y bloquear campo URL
             currentUserFotoUrl = '';
             urlInput.value = '';
             urlInput.disabled = true;
+            urlInput.placeholder = 'URL deshabilitada — hay imagen adjunta';
             const reader = new FileReader();
             reader.onload = function(e) {
                 previewImg.src = e.target.result;
@@ -126,6 +122,7 @@
         fileInput.value = '';
         urlInput.value = '';
         urlInput.disabled = false;
+        urlInput.placeholder = 'O pega la URL (solo si no hay archivo)';
         previewDiv.style.display = 'none';
         if (removeBtn) removeBtn.style.display = 'none';
         previewImg.src = '';
