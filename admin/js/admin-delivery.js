@@ -34,7 +34,13 @@
             const inicial  = m.nombre.charAt(0).toUpperCase();
             const acum     = acumulados[m.id] || 0;
             const hayAcum  = acum > 0;
-            const fotoHtml = m.foto ? `<img src="${m.foto}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;margin-right:.5rem">` : `<div class="mesonero-avatar">${inicial}</div>`;
+            const fotoHtml = m.foto
+                ? `<img src="${m.foto}" 
+                    style="width:80px;height:80px;border-radius:50%;object-fit:cover;margin-right:.75rem;cursor:pointer;flex-shrink:0;border:2px solid var(--border);transition:transform .2s"
+                    onclick="window.expandirImagen('${m.foto.replace(/'/g, "\\'")}')"
+                    title="Ver foto de ${m.nombre.replace(/'/g, "\\'")}"
+                    onmouseover="this.style.transform='scale(1.08)'" onmouseout="this.style.transform=''">`
+                : `<div class="mesonero-avatar" style="width:80px;height:80px;font-size:1.6rem;flex-shrink:0;margin-right:.75rem">${inicial}</div>`;
             return `<div class="mesonero-card">
                 ${fotoHtml}
                 <div style="flex:1;min-width:0">
@@ -200,7 +206,13 @@
         try {
             for (const d of (window.deliverys || [])) {
                 const acumulado = await window.obtenerAcumuladoDelivery(d.id);
-                const fotoHtml = d.foto ? `<img src="${d.foto}" style="width:48px;height:48px;border-radius:50%;object-fit:cover;margin-left:auto">` : '<div style="width:48px;height:48px;border-radius:50%;background:var(--delivery);display:flex;align-items:center;justify-content:center;color:#fff"><i class="fas fa-motorcycle"></i></div>';
+                const fotoHtml = d.foto
+                    ? `<img src="${d.foto}" 
+                        style="width:88px;height:88px;border-radius:50%;object-fit:cover;cursor:pointer;border:2px solid var(--border);transition:transform .2s"
+                        onclick="window.expandirImagen('${d.foto.replace(/'/g, "\\'")}')"
+                        title="Ver foto de ${d.nombre.replace(/'/g, "\\'")}"
+                        onmouseover="this.style.transform='scale(1.08)'" onmouseout="this.style.transform=''">`
+                    : `<div style="width:88px;height:88px;border-radius:50%;background:var(--delivery);display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.8rem"><i class="fas fa-motorcycle"></i></div>`;
                 const card = document.createElement('div');
                 card.className = 'delivery-card';
                 card.innerHTML = `
