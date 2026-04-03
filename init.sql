@@ -45,7 +45,16 @@ DROP TABLE IF EXISTS deliverys CASCADE;
 DROP TABLE IF EXISTS mesoneros CASCADE;
 DROP TABLE IF EXISTS usuarios CASCADE;
 DROP TABLE IF EXISTS config CASCADE;
-DROP TABLE IF EXISTS recipe_ingredients CASCADE;  -- NUEVA
+DROP TABLE IF EXISTS recipe_ingredients CASCADE;
+
+-- Agregar columna foto a la tabla usuarios
+ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS foto TEXT;
+
+-- Agregar columna foto a la tabla mesoneros
+ALTER TABLE mesoneros ADD COLUMN IF NOT EXISTS foto TEXT;
+
+-- Agregar columna foto a la tabla deliverys
+ALTER TABLE deliverys ADD COLUMN IF NOT EXISTS foto TEXT;
 
 -- ============================================
 -- TABLA: config
