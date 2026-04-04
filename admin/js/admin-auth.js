@@ -10,19 +10,14 @@
         container.innerHTML = '<div class="loading-spinner" style="margin:0 auto;"></div>';
         
         try {
-            // Usar historial local primero (evita Failed to fetch en carga inicial)
             const recent = window.obtenerAdminsRecientes();
             let admins = [];
-
             if (recent.length) {
-                // Caché local disponible — sin necesidad de red
                 admins = recent;
             } else {
-                // Sin caché: esperar a que supabaseClient esté inicializado
                 let intentos = 0;
                 while (!window.supabaseClient && intentos < 30) {
-                    await new Promise(r => setTimeout(r, 100));
-                    intentos++;
+                    await new Promise(r => setTimeout(r, 100)); intentos++;
                 }
                 if (!window.supabaseClient) {
                     container.innerHTML = '<p style="color:var(--text-muted);text-align:center;font-size:.85rem">⏳ Conectando...<br><small>Verifica tu conexión a internet.</small></p>';
