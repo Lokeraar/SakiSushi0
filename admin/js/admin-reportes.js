@@ -37,10 +37,11 @@
         for (const [n, c] of Object.entries(platillosCount)) { if (c > maxCount) { maxCount = c; platilloTop = n; } }
         
         const tasa = window.configGlobal?.tasa_efectiva || 400;
-        document.getElementById('ventasDia').textContent = `${window.formatUSD(ventasHoy)} / ${window.formatBs(ventasHoy * tasa)}`;
-        document.getElementById('ventasSemana').textContent = `${window.formatUSD(ventasSemana)} / ${window.formatBs(ventasSemana * tasa)}`;
-        document.getElementById('ticketPromedio').textContent = `${window.formatUSD(ticketPromedio)} / ${window.formatBs(ticketPromedio * tasa)}`;
-        document.getElementById('platilloTop').textContent = platilloTop;
+        const _s = (id,v) => { const e=document.getElementById(id); if(e) e.textContent=v; };
+        _s('ventasDia',      `${window.formatUSD(ventasHoy)} / ${window.formatBs(ventasHoy * tasa)}`);
+        _s('ventasSemana',   `${window.formatUSD(ventasSemana)} / ${window.formatBs(ventasSemana * tasa)}`);
+        _s('ticketPromedio', `${window.formatUSD(ticketPromedio)} / ${window.formatBs(ticketPromedio * tasa)}`);
+        _s('platilloTop',    platilloTop);
     };
 
     window.actualizarGraficos = function(pedidos) {
@@ -147,7 +148,75 @@
     };
 
     window._abrirDetallePedidoAdmin = function(pedidoId) {
-        window.mostrarToast(`Pedido: ${pedidoId}`, 'info');
+        const pedido = (window.pedidos || []).find(p => p.id === pedidoId);
+        if (!pedido) { window.mostrarToast('Pedido no encontrado', 'error'); return; }
+        const tasa = window.configGlobal?.tasa_efectiva || window.configGlobal?.tasa_cambio || 400;
+
+        // Comprimir items duplicados: agrupar por nombre y sumar cantidades
+        const itemsMap = {};
+        (pedido.items || []).forEach(item => {
+            const key = item.nombre;
+            if (itemsMap[key]) {
+                itemsMap[key].cantidad = (itemsMap[key].cantidad || 1) + (item.cantidad || 1);
+            } else {
+                itemsMap[key] = { ...item, cantidad: item.cantidad || 1 };
+            }
+        });
+        const itemsComprimidos = Object.values(itemsMap);
+
+        const tipoIcon = pedido.tipo==='delivery' ? '🛵' : pedido.tipo==='reserva' ? '📅' : '🍽️';
+        const estadoColor = {
+            entregado:'var(--success)', cobrado:'var(--success)',
+            en_camino:'var(--delivery)', enviado:'var(--delivery)',
+            en_cocina:'var(--warning)', pendiente:'var(--text-muted)'
+        }[pedido.estado] || 'var(--text-muted)';
+        const totalBs = (pedido.total || 0) * tasa;
+
+        const itemsHtml = itemsComprimidos.length
+            ? itemsComprimidos.map(item => {
+                const precioUsd = item.precioUnitarioUSD || item.precio || 0;
+                const subtotalUsd = precioUsd * (item.cantidad || 1);
+                return `<div style="display:flex;justify-content:space-between;align-items:center;padding:.45rem 0;border-bottom:1px solid var(--border)">
+                    <span style="font-size:.85rem;color:var(--text-dark);font-weight:500">
+                        ${item.nombre}
+                        ${item.cantidad > 1 ? `<span style="background:var(--primary);color:#fff;border-radius:12px;padding:1px 7px;font-size:.7rem;font-weight:700;margin-left:.4rem">×${item.cantidad}</span>` : ''}
+                    </span>
+                    <span style="font-size:.82rem;font-weight:700;color:var(--accent);white-space:nowrap;margin-left:.5rem">
+                        ${window.formatUSD(subtotalUsd)} / ${window.formatBs(subtotalUsd * tasa)}
+                    </span>
+                </div>`;
+            }).join('')
+            : '<p style="color:var(--text-muted);font-size:.82rem;text-align:center;padding:.75rem">Sin items registrados</p>';
+
+        const overlay = document.createElement('div');
+        overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:10001;display:flex;align-items:center;justify-content:center;padding:1rem;backdrop-filter:blur(3px)';
+        overlay.innerHTML = `
+            <div style="background:var(--card-bg);border-radius:16px;max-width:480px;width:100%;max-height:85vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 20px 40px rgba(0,0,0,.4)">
+                <div style="background:linear-gradient(135deg,#1a1a2e,#2d2d4e);padding:1rem 1.5rem;color:#fff;display:flex;justify-content:space-between;align-items:center">
+                    <div>
+                        <div style="font-size:1rem;font-weight:700">${tipoIcon} ${pedido.tipo || 'mesa'}${pedido.mesa ? ' · Mesa ' + pedido.mesa : ''}</div>
+                        <div style="font-size:.72rem;opacity:.75;margin-top:2px">${new Date(pedido.fecha).toLocaleString('es-VE',{timeZone:'America/Caracas'})}</div>
+                    </div>
+                    <div style="display:flex;align-items:center;gap:.75rem">
+                        <span style="font-size:.72rem;background:${estadoColor}30;color:${estadoColor};padding:.2rem .7rem;border-radius:20px;font-weight:600">${(pedido.estado||'').replace(/_/g,' ')}</span>
+                        <button onclick="this.closest('[style*=position]').remove()" style="background:rgba(255,255,255,.15);border:none;color:#fff;border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:.9rem;display:flex;align-items:center;justify-content:center">✕</button>
+                    </div>
+                </div>
+                <div style="overflow-y:auto;flex:1;padding:1rem 1.5rem">
+                    <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);margin-bottom:.6rem">
+                        <i class="fas fa-receipt" style="margin-right:.3rem"></i>Items del pedido
+                    </div>
+                    ${itemsHtml}
+                </div>
+                <div style="padding:.85rem 1.5rem;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">
+                    <div style="font-size:.82rem;color:var(--text-muted)">Total</div>
+                    <div style="font-size:1rem;font-weight:800;color:var(--accent)">
+                        ${window.formatUSD(pedido.total||0)} / ${window.formatBs(totalBs)}
+                    </div>
+                </div>
+            </div>`;
+        overlay.addEventListener('click', e => { if (e.target === overlay) overlay.remove(); });
+        document.body.appendChild(overlay);
     };
 
     window._actualizarVentasHoyNeto = async function() {
