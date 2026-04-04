@@ -10,12 +10,12 @@
         container.innerHTML = '<div class="loading-spinner" style="margin:0 auto;"></div>';
         
         try {
-            // Usar admins del historial local primero (evita Failed to fetch en carga inicial)
+            // Usar historial local primero (evita Failed to fetch en carga inicial)
             const recent = window.obtenerAdminsRecientes();
             let admins = [];
 
             if (recent.length) {
-                // Caché local disponible: sin necesidad de red
+                // Caché local disponible — sin necesidad de red
                 admins = recent;
             } else {
                 // Sin caché: esperar a que supabaseClient esté inicializado
@@ -25,7 +25,7 @@
                     intentos++;
                 }
                 if (!window.supabaseClient) {
-                    container.innerHTML = '<p style="color:var(--text-muted);text-align:center;font-size:.85rem">⏳ Conectando con el servidor...<br><small>Si persiste, verifica tu conexión a internet.</small></p>';
+                    container.innerHTML = '<p style="color:var(--text-muted);text-align:center;font-size:.85rem">⏳ Conectando...<br><small>Verifica tu conexión a internet.</small></p>';
                     return;
                 }
                 const { data, error } = await window.supabaseClient.from('usuarios').select('*').eq('rol', 'admin').eq('activo', true);
