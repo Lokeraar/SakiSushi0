@@ -34,31 +34,42 @@
             const inicial  = m.nombre.charAt(0).toUpperCase();
             const acum     = acumulados[m.id] || 0;
             const hayAcum  = acum > 0;
-            const fotoHtml = m.foto ? `<img src="${m.foto}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;margin-right:.5rem">` : `<div class="mesonero-avatar">${inicial}</div>`;
-            return `<div class="mesonero-card">
-                ${fotoHtml}
-                <div style="flex:1;min-width:0">
-                    <span class="mesonero-nombre">${m.nombre}</span>
-                    <div style="font-size:.72rem;color:${hayAcum ? 'var(--propina)' : 'var(--text-muted)'};font-weight:${hayAcum ? '700' : '400'};margin-top:2px">
-                        Propinas pendientes: ${window.formatBs(acum)}
+            const fotoSrc  = m.foto || '';
+            const avatarHtml = fotoSrc
+                ? `<div class="ucard-avatar">
+                       <img src="${fotoSrc}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;cursor:pointer"
+                           onclick="window.expandirImagen('${fotoSrc.replace(/'/g,"\'")}')">
+                   </div>`
+                : `<div class="ucard-avatar"><div class="mesonero-avatar" style="width:100%;height:100%;font-size:1.4rem">${inicial}</div></div>`;
+            const statusBadge = m.activo
+                ? '<span class="status-activo"><i class="fas fa-check-circle"></i> Activo</span>'
+                : '<span class="status-inactivo"><i class="fas fa-circle"></i> Inactivo</span>';
+            return `<div class="usuario-card-v2">
+                ${avatarHtml}
+                <div class="ucard-body">
+                    <div class="ucard-top">
+                        <div class="ucard-names">
+                            <span class="mesonero-nombre">${m.nombre}</span>
+                            ${hayAcum ? `<span style="font-size:.72rem;color:var(--propina);font-weight:700">Propinas: ${window.formatBs(acum)}</span>` : ''}
+                        </div>
+                        <div class="ucard-status">${statusBadge}</div>
                     </div>
-                </div>
-                ${m.activo ? '<span class="status-activo"><i class="fas fa-check-circle"></i> Activo</span>' : '<span class="status-inactivo"><i class="fas fa-circle"></i> Inactivo</span>'}
-                <div class="mesonero-actions">
-                    ${hayAcum ? `<button class="btn-sm" style="background:linear-gradient(135deg,var(--propina),#7B1FA2);color:#fff;white-space:nowrap"
-                        onclick="window.pagarPropinaMesonero('${m.id}', '${m.nombre}', ${acum})">
-                        <i class="fas fa-hand-holding-heart"></i> Pagar
-                    </button>` : ''}
-                    <button class="btn-icon edit" onclick="window.editarMesonero('${m.id}')" title="Editar mesonero">
-                        <i class="fas fa-pen"></i>
-                    </button>
-                    <button class="btn-toggle ${m.activo ? 'btn-toggle-on' : 'btn-toggle-off'}"
-                        onclick="window.toggleMesoneroActivo('${m.id}', ${!m.activo})">
-                        ${m.activo ? 'Inhabilitar' : 'Activar'}
-                    </button>
-                    <button class="btn-icon delete" onclick="window.eliminarMesonero('${m.id}')" title="Eliminar">
-                        <i class="fas fa-trash"></i>
-                    </button>
+                    <div class="ucard-actions">
+                        ${hayAcum ? `<button class="btn-sm" style="background:linear-gradient(135deg,var(--propina),#7B1FA2);color:#fff;white-space:nowrap"
+                            onclick="window.pagarPropinaMesonero('${m.id}', '${m.nombre}', ${acum})">
+                            <i class="fas fa-hand-holding-heart"></i> Pagar
+                        </button>` : ''}
+                        <button class="btn-icon edit" onclick="window.editarMesonero('${m.id}')" title="Editar mesonero">
+                            <i class="fas fa-pen"></i>
+                        </button>
+                        <button class="btn-toggle ${m.activo ? 'btn-toggle-on' : 'btn-toggle-off'}"
+                            onclick="window.toggleMesoneroActivo('${m.id}', ${!m.activo})">
+                            ${m.activo ? 'Inhabilitar' : 'Activar'}
+                        </button>
+                        <button class="btn-icon delete" onclick="window.eliminarMesonero('${m.id}')" title="Eliminar">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
                 </div>
             </div>`;
         }).join('');
@@ -200,33 +211,47 @@
         try {
             for (const d of (window.deliverys || [])) {
                 const acumulado = await window.obtenerAcumuladoDelivery(d.id);
-                const fotoHtml = d.foto ? `<img src="${d.foto}" style="width:48px;height:48px;border-radius:50%;object-fit:cover;margin-left:auto">` : '<div style="width:48px;height:48px;border-radius:50%;background:var(--delivery);display:flex;align-items:center;justify-content:center;color:#fff"><i class="fas fa-motorcycle"></i></div>';
+                const fotoSrc = d.foto || '';
+                const tasa    = window.configGlobal?.tasa_efectiva || window.configGlobal?.tasa_cambio || 400;
+                const acumUsd = tasa > 0 ? acumulado / tasa : 0;
+                const avatarHtml = fotoSrc
+                    ? `<div class="ucard-avatar">
+                           <img src="${fotoSrc}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;cursor:pointer"
+                               onclick="window.expandirImagen('${fotoSrc.replace(/'/g,"\'")}')">
+                       </div>`
+                    : `<div class="ucard-avatar" style="background:linear-gradient(135deg,var(--delivery),#00838F);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.4rem">
+                           <i class="fas fa-motorcycle"></i>
+                       </div>`;
+                const statusBadge = d.activo
+                    ? '<span class="status-activo"><i class="fas fa-check-circle"></i> Activo</span>'
+                    : '<span class="status-inactivo"><i class="fas fa-circle"></i> Inactivo</span>';
                 const card = document.createElement('div');
-                card.className = 'delivery-card';
+                card.className = 'usuario-card-v2';
                 card.innerHTML = `
-                    <div style="display:flex;justify-content:space-between;align-items:center">
-                        <div>
-                            <div class="delivery-nombre">${d.nombre}</div>
-                            <div class="delivery-estado ${d.activo ? 'activo' : 'inactivo'}">${d.activo ? 'Activo' : 'Inactivo'}</div>
+                    ${avatarHtml}
+                    <div class="ucard-body">
+                        <div class="ucard-top">
+                            <div class="ucard-names">
+                                <span class="delivery-nombre">${d.nombre}</span>
+                                <span style="font-size:.72rem;color:var(--delivery);font-weight:600">
+                                    💰 ${window.formatUSD(acumUsd)} / ${window.formatBs(acumulado)}
+                                </span>
+                            </div>
+                            <div class="ucard-status">${statusBadge}</div>
                         </div>
-                        ${fotoHtml}
-                    </div>
-                    <div class="delivery-acumulado">
-                        <span>💰 Acumulado total:</span>
-                        <span class="delivery-monto">${window.formatBs(acumulado)}</span>
-                    </div>
-                    <div class="delivery-actions">
-                        <button class="btn-icon edit" onclick="window.editarDelivery('${d.id}')" title="Editar"><i class="fas fa-edit"></i></button>
-                        <button class="btn-toggle ${d.activo ? 'btn-toggle-on' : 'btn-toggle-off'}" onclick="window.toggleDeliveryActivo('${d.id}', ${!d.activo})">
-                            ${d.activo ? 'Inhabilitar' : 'Activar'}
-                        </button>
-                        <button class="btn-sm" style="background:linear-gradient(135deg,var(--success),#2E7D32);color:#fff"
-                            onclick="window.mostrarPagoDelivery('${d.id}')">
-                            <i class="fas fa-hand-holding-usd"></i> Pagado
-                        </button>
-                        <button class="btn-icon delete" onclick="window.eliminarDelivery('${d.id}')" title="Eliminar motorizado">
-                            <i class="fas fa-trash"></i>
-                        </button>
+                        <div class="ucard-actions">
+                            <button class="btn-icon edit" onclick="window.editarDelivery('${d.id}')" title="Editar"><i class="fas fa-edit"></i></button>
+                            <button class="btn-toggle ${d.activo ? 'btn-toggle-on' : 'btn-toggle-off'}" onclick="window.toggleDeliveryActivo('${d.id}', ${!d.activo})">
+                                ${d.activo ? 'Inhabilitar' : 'Activar'}
+                            </button>
+                            <button class="btn-sm" style="background:linear-gradient(135deg,var(--success),#2E7D32);color:#fff"
+                                onclick="window.mostrarPagoDelivery('${d.id}')">
+                                <i class="fas fa-hand-holding-usd"></i> Pagado
+                            </button>
+                            <button class="btn-icon delete" onclick="window.eliminarDelivery('${d.id}')" title="Eliminar motorizado">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
                     </div>`;
                 grid.appendChild(card);
             }
@@ -376,9 +401,6 @@
         if (fileInput.files && fileInput.files[0]) {
             const file = fileInput.files[0];
             currentMesoneroFotoFile = file;
-            // Archivo adjunto tiene prioridad: limpiar y bloquear campo URL
-            if (urlInput) { urlInput.value = ''; urlInput.disabled = true; urlInput.placeholder = 'URL deshabilitada — hay imagen adjunta'; }
-            currentMesoneroFotoUrl = '';
             currentMesoneroFotoUrl = '';
             urlInput.value = '';
             urlInput.disabled = true;
@@ -456,9 +478,6 @@
         if (fileInput.files && fileInput.files[0]) {
             const file = fileInput.files[0];
             currentDeliveryFotoFile = file;
-            // Archivo adjunto tiene prioridad: limpiar y bloquear campo URL
-            if (urlInput) { urlInput.value = ''; urlInput.disabled = true; urlInput.placeholder = 'URL deshabilitada — hay imagen adjunta'; }
-            currentDeliveryFotoUrl = '';
             currentDeliveryFotoUrl = '';
             urlInput.value = '';
             urlInput.disabled = true;
@@ -518,7 +537,6 @@
         if (urlInput) {
             urlInput.value = '';
             urlInput.disabled = false;
-            urlInput.placeholder = 'O pega la URL (solo si no hay archivo)';
         }
         if (previewDiv) previewDiv.style.display = 'none';
         if (removeBtn) removeBtn.style.display = 'none';
