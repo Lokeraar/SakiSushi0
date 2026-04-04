@@ -267,27 +267,38 @@
     };
 
     window.cargarCategoriasSelect = function() {
-        const select = document.getElementById('platilloCategoria');
-        select.innerHTML = '<option value="">Seleccionar</option>';
+        let select = document.getElementById('platilloCategoria');
+        if (!select) return;
+        select.innerHTML = '<option value="">Seleccionar categoría</option>';
         Object.keys(window.categoriasMenu || {}).forEach(cat => {
             const opt = document.createElement('option');
-            opt.value = cat;
-            opt.textContent = cat;
+            opt.value = cat; opt.textContent = cat;
             select.appendChild(opt);
         });
-        select.addEventListener('change', (e) => { window.cargarSubcategoriasSelect(e.target.value); });
+        // Clonar nodo para eliminar listeners anteriores y evitar duplicados
+        const nuevo = select.cloneNode(true);
+        select.parentNode.replaceChild(nuevo, select);
+        nuevo.addEventListener('change', e => {
+            window.cargarSubcategoriasSelect(e.target.value);
+            window._recalcularStockPlatillo();
+        });
     };
 
     window.cargarSubcategoriasSelect = function(categoria) {
         const select = document.getElementById('platilloSubcategoria');
-        select.innerHTML = '<option value="">Ninguna</option>';
-        if (categoria && window.categoriasMenu && window.categoriasMenu[categoria]) {
-            window.categoriasMenu[categoria].forEach(sub => {
+        const wrap   = document.getElementById('subcategoriaContainer');
+        if (!select) return;
+        select.innerHTML = '<option value="">Sin subcategoría</option>';
+        const subs = (categoria && window.categoriasMenu && window.categoriasMenu[categoria]) ? window.categoriasMenu[categoria] : [];
+        if (subs.length) {
+            subs.forEach(sub => {
                 const opt = document.createElement('option');
-                opt.value = sub;
-                opt.textContent = sub;
+                opt.value = sub; opt.textContent = sub;
                 select.appendChild(opt);
             });
+            if (wrap) wrap.style.display = 'block';
+        } else {
+            if (wrap) wrap.style.display = 'none';
         }
     };
 
@@ -361,8 +372,10 @@
         window.platilloEditandoId = id;
         document.getElementById('platilloModalTitle').textContent = 'Editar Platillo';
         window.limpiarImagenPreview();
+        window.cargarCategoriasSelect();                            // cargar opciones primero
         document.getElementById('platilloNombre').value = platillo.nombre || '';
         document.getElementById('platilloCategoria').value = platillo.categoria || '';
+        window.cargarSubcategoriasSelect(platillo.categoria || ''); // cargar subs antes de setear
         document.getElementById('platilloSubcategoria').value = platillo.subcategoria || '';
         document.getElementById('platilloPrecio').value = platillo.precio || '';
         document.getElementById('platilloDescripcion').value = platillo.descripcion || '';
@@ -411,37 +424,14 @@
 
     window.actualizarProductosActivos = function() {
         const el = document.getElementById('productosActivos');
-        if (el) el.textContent = (window.menuItems || []).filter(m => m.disponible).length;
+        if (el) el.textContent = (window.menuItems||[]).filter(m=>m.disponible).length;
     };
 
+    // _onCategoriaChange: llamado desde onchange del HTML; delega a cargarSubcategoriasSelect
+    // que usa window.categoriasMenu (mismo source que Cliente_2_0)
     window._onCategoriaChange = function() {
-        const cat = document.getElementById('platilloCategoria')?.value;
-        const wrap = document.getElementById('subcategoriaContainer');
-        const sel  = document.getElementById('platilloSubcategoria');
-        if (!wrap || !sel) return;
-        const SUBCATEGORIAS = {
-            'rolls': [{ id: 'rolls-frios', name: 'Rolls Fríos (10 pzas)' }, { id: 'rolls-tempura', name: 'Rolls Tempura (12 pzas)' }],
-            'china': [
-                { id: 'arroz-chino', name: 'Arroz Chino' }, { id: 'arroz-cantones', name: 'Arroz Cantones' },
-                { id: 'chopsuey', name: 'Chopsuey' }, { id: 'lomey', name: 'Lomey' }, { id: 'chow-mein', name: 'Chow Mein' },
-                { id: 'fideos-arroz', name: 'Fideos de Arroz' }, { id: 'tallarines-cantones', name: 'Tallarines Cantones' },
-                { id: 'mariscos', name: 'Mariscos' }, { id: 'foo-yung', name: 'Foo Yong' }, { id: 'sopas', name: 'Sopas' },
-                { id: 'entremeses', name: 'Entremeses' }
-            ],
-            'japonesa': [
-                { id: 'yakimeshi', name: 'Yakimeshi' }, { id: 'yakisoba', name: 'Yakisoba' },
-                { id: 'pasta-udon', name: 'Pasta Udon' }, { id: 'churrasco', name: 'Churrasco' }
-            ]
-        };
-        const subs = SUBCATEGORIAS[cat];
-        if (subs && subs.length) {
-            wrap.style.display = 'block';
-            sel.innerHTML = '<option value="">Sin subcategoría</option>' +
-                subs.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
-        } else {
-            wrap.style.display = 'none';
-            sel.innerHTML = '<option value="">Ninguna</option>';
-        }
+        const cat = document.getElementById('platilloCategoria')?.value || '';
+        window.cargarSubcategoriasSelect(cat);
         window._recalcularStockPlatillo();
     };
 
