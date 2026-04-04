@@ -39,8 +39,13 @@
                 ${fotoHtml}
                 <div style="flex:1;min-width:0">
                     <span class="mesonero-nombre">${m.nombre}</span>
-                    <div style="font-size:.72rem;color:${hayAcum ? 'var(--propina)' : 'var(--text-muted)'};font-weight:${hayAcum ? '700' : '400'};margin-top:2px">
-                        Propinas pendientes: ${window.formatBs(acum)}
+                    <div style="font-size:.72rem;margin-top:2px;font-weight:${hayAcum ? '700' : '400'}">
+                        <span style="color:var(--text-muted)">Propinas pendientes:</span>
+                        <span style="color:${hayAcum ? 'var(--propina)' : 'var(--text-muted)'}">
+                            ${hayAcum
+                                ? window.formatUSD((window.configGlobal?.tasa_efectiva||400) > 0 ? acum/(window.configGlobal?.tasa_efectiva||400) : 0) + ' / ' + window.formatBs(acum)
+                                : 'Bs 0,00'}
+                        </span>
                     </div>
                 </div>
                 ${m.activo ? '<span class="status-activo"><i class="fas fa-check-circle"></i> Activo</span>' : '<span class="status-inactivo"><i class="fas fa-circle"></i> Inactivo</span>'}
@@ -188,7 +193,6 @@
             if (error) throw error;
             window.deliverys = data || [];
             await window.renderizarDeliverys();
-            window.cargarUltimosViajes();   // refrescar tabla de últimos viajes
         } catch (e) { console.error('Error cargando deliverys:', e); }
     };
 
@@ -610,106 +614,4 @@
         if (mesoneroRemove) mesoneroRemove.addEventListener('click', removeMesoneroFoto);
     }
     setupFotoEvents();
-    // ── Tabla de últimos 5 viajes ─────────────────────────────────────────────
-    window.cargarUltimosViajes = async function() {
-        const wrap = document.getElementById('ultimosViajesSection');
-        if (!wrap) return;
-        try {
-            const tasa = window.configGlobal?.tasa_efectiva || window.configGlobal?.tasa_cambio || 400;
-            const { data: entregas, error } = await window.supabaseClient
-                .from('entregas_delivery')
-                .select('*, deliverys(nombre), pedidos(id, mesa, cliente_nombre, tipo)')
-                .order('fecha_entrega', { ascending: false })
-                .limit(5);
-            if (error) throw error;
-            const rows = (entregas || []).map(e => {
-                const motorizado = e.deliverys?.nombre || '—';
-                const pedidoRef  = e.pedidos ? (e.pedidos.mesa || e.pedidos.cliente_nombre || e.pedido_id?.slice(0,8) || '—') : (e.pedido_id?.slice(0,8) || '—');
-                const montoBs    = e.monto_bs || 0;
-                const montoUsd   = tasa > 0 ? montoBs / tasa : 0;
-                const fecha      = new Date(e.fecha_entrega).toLocaleString('es-VE', {timeZone:'America/Caracas', day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'});
-                return `<tr>
-                    <td style="padding:.65rem 1rem;border-bottom:1px solid var(--border);font-size:.82rem;color:var(--text-muted)">${fecha}</td>
-                    <td style="padding:.65rem 1rem;border-bottom:1px solid var(--border);font-size:.85rem;font-weight:600;color:var(--text-dark)">${motorizado}</td>
-                    <td style="padding:.65rem 1rem;border-bottom:1px solid var(--border);font-size:.82rem;color:var(--text-muted)">${pedidoRef}</td>
-                    <td style="padding:.65rem 1rem;border-bottom:1px solid var(--border);font-size:.85rem;font-weight:700;color:var(--delivery)">
-                        ${window.formatUSD(montoUsd)}<br>
-                        <span style="font-size:.75rem;font-weight:600;color:var(--text-muted)">${window.formatBs(montoBs)}</span>
-                    </td>
-                </tr>`;
-            }).join('');
-            const tbody = document.getElementById('ultimosViajesTbody');
-            if (tbody) tbody.innerHTML = rows || '<tr><td colspan="4" style="text-align:center;padding:1.5rem;color:var(--text-muted)">Sin viajes registrados</td></tr>';
-        } catch(e) {
-            console.error('Error cargando últimos viajes:', e);
-            const tbody = document.getElementById('ultimosViajesTbody');
-            if (tbody) tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--danger)">Error al cargar</td></tr>';
-        }
-    };
-
-    window.verHistorialEnviosHoy = async function() {
-        try {
-            const tasa = window.configGlobal?.tasa_efectiva || window.configGlobal?.tasa_cambio || 400;
-            const hoy = new Date(); hoy.setHours(0,0,0,0);
-            const manana = new Date(hoy); manana.setDate(manana.getDate()+1);
-            const { data: entregas, error } = await window.supabaseClient
-                .from('entregas_delivery')
-                .select('*, deliverys(nombre), pedidos(id, mesa, cliente_nombre, tipo)')
-                .gte('fecha_entrega', hoy.toISOString())
-                .lt('fecha_entrega', manana.toISOString())
-                .order('fecha_entrega', { ascending: false });
-            if (error) throw error;
-            const lista = entregas || [];
-            const totalBs = lista.reduce((s,e)=>s+(e.monto_bs||0),0);
-            const totalUsd = tasa > 0 ? totalBs / tasa : 0;
-            const rows = lista.map(e => {
-                const motorizado = e.deliverys?.nombre || '—';
-                const pedidoRef  = e.pedidos ? (e.pedidos.mesa || e.pedidos.cliente_nombre || e.pedido_id?.slice(0,8) || '—') : (e.pedido_id?.slice(0,8) || '—');
-                const montoBs    = e.monto_bs || 0;
-                const montoUsd   = tasa > 0 ? montoBs / tasa : 0;
-                const fecha      = new Date(e.fecha_entrega).toLocaleString('es-VE', {timeZone:'America/Caracas', day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'});
-                return `<tr>
-                    <td style="padding:.6rem .85rem;border-bottom:1px solid var(--border);font-size:.78rem;color:var(--text-muted)">${fecha}</td>
-                    <td style="padding:.6rem .85rem;border-bottom:1px solid var(--border);font-size:.82rem;font-weight:600">${motorizado}</td>
-                    <td style="padding:.6rem .85rem;border-bottom:1px solid var(--border);font-size:.78rem;color:var(--text-muted)">${pedidoRef}</td>
-                    <td style="padding:.6rem .85rem;border-bottom:1px solid var(--border);font-size:.82rem;font-weight:700;color:var(--delivery)">
-                        ${window.formatUSD(montoUsd)} / ${window.formatBs(montoBs)}
-                    </td>
-                </tr>`;
-            }).join('');
-            const overlay = document.createElement('div');
-            overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:10001;display:flex;align-items:center;justify-content:center;padding:1rem;backdrop-filter:blur(3px)';
-            overlay.innerHTML = `
-                <div style="background:var(--card-bg);border-radius:16px;max-width:680px;width:100%;max-height:85vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 20px 40px rgba(0,0,0,.4)">
-                    <div style="background:linear-gradient(135deg,var(--delivery),#00838F);padding:1rem 1.5rem;color:#fff;display:flex;justify-content:space-between;align-items:center">
-                        <h3 style="margin:0;font-size:1rem"><i class="fas fa-motorcycle"></i> Historial de Envíos Hoy</h3>
-                        <button onclick="this.closest('[style*=position]').remove()" style="background:rgba(255,255,255,.2);border:none;color:#fff;border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:.9rem">✕</button>
-                    </div>
-                    <div style="padding:1rem 1.5rem;border-bottom:1px solid var(--border)">
-                        <span style="font-size:.82rem;color:var(--text-muted)">${lista.length} envío${lista.length!==1?'s':''} · Total: <strong style="color:var(--delivery)">${window.formatUSD(totalUsd)} / ${window.formatBs(totalBs)}</strong></span>
-                    </div>
-                    <div style="overflow-y:auto;flex:1">
-                        <table style="width:100%;border-collapse:collapse">
-                            <thead>
-                                <tr style="background:var(--secondary)">
-                                    <th style="padding:.6rem .85rem;text-align:left;font-size:.72rem;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);font-weight:700">Hora</th>
-                                    <th style="padding:.6rem .85rem;text-align:left;font-size:.72rem;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);font-weight:700">Motorizado</th>
-                                    <th style="padding:.6rem .85rem;text-align:left;font-size:.72rem;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);font-weight:700">Referencia</th>
-                                    <th style="padding:.6rem .85rem;text-align:left;font-size:.72rem;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);font-weight:700">Monto</th>
-                                </tr>
-                            </thead>
-                            <tbody>${rows || '<tr><td colspan="4" style="text-align:center;padding:1.5rem;color:var(--text-muted)">Sin envíos hoy</td></tr>'}</tbody>
-                        </table>
-                    </div>
-                    <div style="padding:.85rem 1.5rem;border-top:1px solid var(--border);display:flex;justify-content:flex-end">
-                        <button onclick="this.closest('[style*=position]').remove()" style="background:var(--primary);color:#fff;border:none;padding:.55rem 1.25rem;border-radius:8px;cursor:pointer;font-family:Montserrat,sans-serif;font-weight:600;font-size:.85rem">Cerrar</button>
-                    </div>
-                </div>`;
-            document.body.appendChild(overlay);
-        } catch(e) {
-            console.error('Error historial envíos:', e);
-            window.mostrarToast('❌ Error al cargar historial', 'error');
-        }
-    };
-
 })();
