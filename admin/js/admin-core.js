@@ -92,15 +92,22 @@
     
     // ==================== DIFERENCIA DE TASA ====================
     window.calcularDiferenciaTasa = function() {
-        if (!window.pedidos || !window.pedidos.length) return 0;
-        const tasaBase = window.configGlobal?.tasa_cambio || 400;
+        // Calcula la ganancia extra en Bs por la diferencia entre tasa efectiva y tasa base.
+        // Ejemplo: vendiste $50. A tasa base 100 = Bs 5000. A tasa efectiva 120 = Bs 6000.
+        // Diferencia = ($50) × (120-100) = $50 × 20 = Bs 1000 extra a favor del restaurante.
+        const tasaBase     = window.configGlobal?.tasa_cambio   || 400;
         const tasaEfectiva = window.configGlobal?.tasa_efectiva || 400;
-        if (tasaEfectiva <= tasaBase) return 0;
-        const pedidosCerrados = window.pedidos.filter(p => 
-            p.estado === 'entregado' || p.estado === 'enviado' || p.estado === 'reserva_completada'
+        const diff = tasaEfectiva - tasaBase;
+        if (diff <= 0) return 0;
+        // Usar pedidos ya cobrados (incluye los de hoy desde window._ventasHoyNeto si existen)
+        const fuente = window._ventasHoyNeto?.pedidosData || window.pedidos || [];
+        const cobrados = fuente.filter(p =>
+            p.estado === 'cobrado' || p.estado === 'entregado' ||
+            p.estado === 'enviado' || p.estado === 'reserva_completada'
         );
-        const totalUSD = pedidosCerrados.reduce((sum, p) => sum + (p.total || 0), 0);
-        return totalUSD * (tasaEfectiva - tasaBase);
+        // total en USD de todas las ventas cobradas
+        const totalUSD = cobrados.reduce((sum, p) => sum + (p.total || 0), 0);
+        return totalUSD * diff;   // resultado en Bs
     };
     
     // ==================== GESTIÓN DE ADMINISTRADORES RECIENTES ====================
