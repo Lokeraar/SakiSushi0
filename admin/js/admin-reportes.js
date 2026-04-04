@@ -37,11 +37,11 @@
         for (const [n, c] of Object.entries(platillosCount)) { if (c > maxCount) { maxCount = c; platilloTop = n; } }
         
         const tasa = window.configGlobal?.tasa_efectiva || 400;
-        const _set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = val; };
-        _set('ventasDia', `${window.formatUSD(ventasHoy)} / ${window.formatBs(ventasHoy * tasa)}`);
-        _set('ventasSemana', `${window.formatUSD(ventasSemana)} / ${window.formatBs(ventasSemana * tasa)}`);
+        const _set = (id,val) => { const el=document.getElementById(id); if(el) el.textContent=val; };
+        _set('ventasDia',      `${window.formatUSD(ventasHoy)} / ${window.formatBs(ventasHoy * tasa)}`);
+        _set('ventasSemana',   `${window.formatUSD(ventasSemana)} / ${window.formatBs(ventasSemana * tasa)}`);
         _set('ticketPromedio', `${window.formatUSD(ticketPromedio)} / ${window.formatBs(ticketPromedio * tasa)}`);
-        _set('platilloTop', platilloTop);
+        _set('platilloTop',    platilloTop);
     };
 
     window.actualizarGraficos = function(pedidos) {
@@ -184,15 +184,34 @@
 
     window._actualizarDeliverysHoy = async function() {
         try {
-            const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
-            const manana = new Date(hoy); manana.setDate(manana.getDate() + 1);
-            const { data: pedidosDelivery } = await window.supabaseClient.from('pedidos').select('*').eq('tipo', 'delivery').eq('estado', 'enviado').gte('fecha', hoy.toISOString()).lt('fecha', manana.toISOString());
-            let totalDeliverys = 0;
-            (pedidosDelivery || []).forEach(p => { totalDeliverys += p.costo_delivery_bs || p.costoDelivery || 0; });
+            const hoy = new Date(); hoy.setHours(0,0,0,0);
+            const manana = new Date(hoy); manana.setDate(manana.getDate()+1);
+            // Usar entregas_delivery para obtener datos más precisos del módulo
+            const { data: entregas } = await window.supabaseClient
+                .from('entregas_delivery').select('*')
+                .gte('fecha_entrega', hoy.toISOString()).lt('fecha_entrega', manana.toISOString());
+            const lista = entregas || [];
+            const totalBs   = lista.reduce((s,e) => s + (e.monto_bs||0), 0);
+            const cantidad  = lista.length;
+            const promedio  = cantidad > 0 ? totalBs / cantidad : 0;
+            // Actualizar dashboard principal
+            const elD = document.getElementById('deliverysHoyDashboard');
+            if (elD) elD.textContent = window.formatBs(totalBs);
+            // Actualizar tarjetas del módulo deliverys (si existen)
+            const elT = document.getElementById('deliverysTotalCard');
+            const elC = document.getElementById('deliverysCountCard');
+            const elP = document.getElementById('deliverysPromedioCard');
+            const tasa = window.configGlobal?.tasa_efectiva || window.configGlobal?.tasa_cambio || 400;
+            const totalUsd = tasa > 0 ? totalBs / tasa : 0;
+            if (elT) elT.textContent = `${window.formatUSD(totalUsd)} / ${window.formatBs(totalBs)}`;
+            if (elC) elC.textContent = cantidad;
+            if (elP) elP.textContent = `${window.formatUSD(tasa>0?promedio/tasa:0)} / ${window.formatBs(promedio)}`;
+            window._deliverysHoyData = { totalBs, cantidad, promedio, entregas: lista };
+        } catch(e) {
+            console.error('Error calculando deliverys hoy:', e);
             const el = document.getElementById('deliverysHoyDashboard');
-            if (el) el.textContent = window.formatBs(totalDeliverys);
-            window._deliverysHoyData = { totalDeliverys, pedidosDelivery };
-        } catch (e) { console.error('Error calculando deliverys hoy:', e); const el = document.getElementById('deliverysHoyDashboard'); if (el) el.textContent = 'Bs 0.00'; }
+            if (el) el.textContent = 'Bs 0,00';
+        }
     };
 
     window._abrirDetalleDeliverysAdmin = async function() {
