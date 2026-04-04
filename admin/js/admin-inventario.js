@@ -90,33 +90,29 @@
         const isMobile = window.innerWidth <= 768;
         const disponible = (item.stock||0) - (item.reservado||0);
         const minimo = item.minimo || 0;
-        // stock_maximo guardado al crear/editar: sirve como 100% de referencia
         const stockMaximo = item.stock_maximo || item.stock || 1;
 
-        // ── 4 niveles de estado ──────────────────────────────────────────
+        // ── 4 niveles ──────────────────────────────────────────────────────
         // Agotado  : disponible === 0
         // Crítico  : 0 < disponible ≤ minimo
-        // Moderado : minimo < disponible ≤ 50% del stockMaximo
-        // Óptimo   : disponible > 50% del stockMaximo
+        // Moderado : minimo < disponible ≤ 50% stockMaximo
+        // Óptimo   : disponible > 50% stockMaximo
         let estado;
-        if (disponible <= 0) {
-            estado = 'agotado';
-        } else if (disponible <= minimo) {
-            estado = 'critico';
-        } else if (disponible <= stockMaximo * 0.5) {
-            estado = 'moderado';
-        } else {
-            estado = 'optimo';
-        }
+        if (disponible <= 0)              estado = 'agotado';
+        else if (disponible <= minimo)    estado = 'critico';
+        else if (disponible <= stockMaximo * 0.5) estado = 'moderado';
+        else                              estado = 'optimo';
 
-        // Porcentaje relativo al stock máximo registrado
         const porcentaje = stockMaximo > 0 ? Math.min(100, (disponible / stockMaximo) * 100) : 0;
+        const estadoLabel = { optimo:'✅ Óptimo', moderado:'🟡 Moderado', critico:'⚠️ Crítico', agotado:'🔴 Agotado' }[estado];
+        const estadoColor = { optimo:'#43a047', moderado:'#fb8c00', critico:'#e53935', agotado:'#546e7a' }[estado];
 
-        // Etiqueta legible y color de texto para badge
-        const estadoLabel = { optimo: '✅ Óptimo', moderado: '🟡 Moderado', critico: '⚠️ Crítico', agotado: '🔴 Agotado' }[estado];
-        const estadoColor = { optimo: '#43a047', moderado: '#fb8c00', critico: '#e53935', agotado: '#546e7a' }[estado];
+        const imgHtml = item.imagen
+            ? `<img src="${item.imagen}" style="width:60px;height:60px;object-fit:cover;border-radius:8px;margin-bottom:.5rem;cursor:pointer" onclick="window.expandirImagen('${item.imagen.replace(/'/g,"\'")}')">`
+            : '';
 
-        const imgHtml = item.imagen ? `<img src="${item.imagen}" style="width:60px;height:60px;object-fit:cover;border-radius:8px;margin-bottom:.5rem;cursor:pointer" onclick="window.expandirImagen('${item.imagen.replace(/'/g, "\\'")}')">` : '';
+        const barClass = estado === 'agotado' ? 'agotado' : estado;
+        const barW     = estado === 'agotado' ? 100 : porcentaje.toFixed(1);
 
         const detailHTML = `
             <div class="inv-detail-card" id="invDetailCard_${item.id}">
@@ -132,8 +128,8 @@
                     <span class="inv-stock-unit" style="font-size:.9rem">${item.unidad_base||'u'}</span>
                     <span style="font-size:.7rem;padding:2px 8px;border-radius:20px;background:${estadoColor}22;color:${estadoColor};font-weight:700;margin-left:auto">${estadoLabel}</span>
                 </div>
-                <div class="inv-bar" style="margin-bottom:.3rem">
-                    <div class="inv-bar-fill ${estado === 'agotado' ? 'agotado' : estado}" style="width:${estado === 'agotado' ? '100' : porcentaje.toFixed(1)}%"></div>
+                <div class="inv-bar" style="margin-bottom:.25rem">
+                    <div class="inv-bar-fill ${barClass}" style="width:${barW}%"></div>
                 </div>
                 <div class="inv-bar-legend" style="margin-bottom:.75rem">
                     <span><span class="dot" style="background:#43a047"></span>Óptimo &gt;50%</span>
@@ -142,12 +138,12 @@
                     <span><span class="dot" style="background:#546e7a"></span>Agotado</span>
                 </div>
                 <div style="font-size:.7rem;color:var(--text-muted);margin-bottom:.75rem">
-                    Reservado: ${item.reservado||0} · Stock máx.: ${stockMaximo} ${item.unidad_base||'u'}
+                    Reservado: ${item.reservado||0} · Stock máx. ref.: ${stockMaximo} ${item.unidad_base||'u'}
                 </div>
                 <div class="inv-meta-grid" style="grid-template-columns:1fr 1fr 1fr;gap:.75rem;margin-bottom:.85rem">
                     <div class="inv-meta-item">
                         <span class="inv-meta-label">Mínimo</span>
-                        <span class="inv-meta-val" style="color:${colorEstado}">${minimo} ${item.unidad_base||'u'}</span>
+                        <span class="inv-meta-val" style="color:${estadoColor}">${minimo} ${item.unidad_base||'u'}</span>
                     </div>
                     <div class="inv-meta-item">
                         <span class="inv-meta-label">Costo (USD/Bs)</span>
@@ -206,9 +202,7 @@
         if (fileInput.files && fileInput.files[0]) {
             const file = fileInput.files[0];
             currentIngredienteImagenFile = file;
-            // Archivo adjunto tiene prioridad: limpiar URL y bloquearla
             currentIngredienteImagenUrl = '';
-            if (urlInput) { urlInput.value = ''; urlInput.disabled = true; urlInput.placeholder = 'URL deshabilitada — hay una imagen adjunta'; }
             urlInput.value = '';
             urlInput.disabled = true;
             const reader = new FileReader();
@@ -412,21 +406,35 @@
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
             const stockTotal = stockActual + agregar;
-            const ingrediente = { 
-                id, nombre, 
-                stock: stockTotal, 
+            const prevItem = (window.inventarioItems||[]).find(i=>i.id===id);
+            const ingrediente = {
+                id, nombre,
+                stock: stockTotal,
                 reservado: 0,
-                unidad_base: unidad, 
-                minimo, 
-                precio_costo: costo, 
+                unidad_base: unidad,
+                minimo,
+                precio_costo: costo,
                 precio_unitario: venta,
                 imagen: imagenUrl || null,
-                // stock_maximo = el total guardado; sirve como referencia del 100% en la barra
-                stock_maximo: esNuevo ? stockTotal : Math.max(stockTotal, window.inventarioItems.find(i=>i.id===id)?.stock_maximo || stockTotal)
+                stock_maximo: esNuevo ? stockTotal : Math.max(stockTotal, prevItem?.stock_maximo || stockTotal)
             };
             let error;
-            if (esNuevo) ({ error } = await window.supabaseClient.from('inventario').insert([ingrediente]));
-            else ({ error } = await window.supabaseClient.from('inventario').update(ingrediente).eq('id', id));
+            if (esNuevo) {
+                ({ error } = await window.supabaseClient.from('inventario').insert([ingrediente]));
+            } else {
+                const updateData = { ...ingrediente }; delete updateData.id;
+                let res = await window.supabaseClient.from('inventario').update(updateData).eq('id', id);
+                if (res.error && res.error.code==='PGRST204' && res.error.message.includes('imagen')) {
+                    console.warn('⚠️ Columna imagen no existe. Ejecuta: ALTER TABLE inventario ADD COLUMN IF NOT EXISTS imagen TEXT;');
+                    const { imagen: _x, ...noImg } = updateData;
+                    res = await window.supabaseClient.from('inventario').update(noImg).eq('id', id);
+                }
+                if (res.error && res.error.code==='PGRST204' && res.error.message.includes('stock_maximo')) {
+                    const { stock_maximo: _s, ...noSm } = updateData;
+                    res = await window.supabaseClient.from('inventario').update(noSm).eq('id', id);
+                }
+                error = res.error;
+            }
             if (error) throw error;
             window.ingredienteEditandoId = null;
             window.cerrarModal('ingredienteModal');
@@ -515,17 +523,16 @@
     };
 
     function removeIngredienteImage() {
-        const fileInput = document.getElementById('ingredienteImagen');
-        const urlInput = document.getElementById('ingredienteImagenUrl');
-        const previewDiv = document.getElementById('ingredienteImagenPreview');
-        const previewImg = document.getElementById('ingredientePreviewImg');
-        const removeBtn = document.getElementById('ingredienteImgRemoveBtn');
-        if (fileInput) fileInput.value = '';
-        if (urlInput) {
-            urlInput.value = '';
-            urlInput.disabled = false;
-            urlInput.placeholder = 'O pega la URL de la imagen (solo si no hay archivo)';
-        }
+		const fileInput = document.getElementById('ingredienteImagen');
+		const urlInput = document.getElementById('ingredienteImagenUrl');
+		const previewDiv = document.getElementById('ingredienteImagenPreview');
+		const previewImg = document.getElementById('ingredientePreviewImg');
+		const removeBtn = document.getElementById('ingredienteImgRemoveBtn');
+		if (fileInput) fileInput.value = '';
+		if (urlInput) {
+			urlInput.value = '';
+			urlInput.disabled = false;
+		}
 		if (previewDiv) previewDiv.style.display = 'none';
 		if (removeBtn) removeBtn.style.display = 'none';
 		if (previewImg) previewImg.src = '';
@@ -750,61 +757,41 @@
         }).join('');
     };
 
-    // Navegar a stock crítico del dashboard y animar la tarjeta con pulso amarillo
     window.irAStockCritico = function() {
-        // Ir a la tab de Dashboard
-        const tabs = document.querySelectorAll('.tab');
-        const panes = document.querySelectorAll('.tab-pane');
-        tabs.forEach(t => t.classList.remove('active'));
-        panes.forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
         const dashTab = document.querySelector('.tab[data-tab="dashboard"]');
         const dashPane = document.getElementById('dashboardPane');
         if (dashTab) dashTab.classList.add('active');
         if (dashPane) dashPane.classList.add('active');
-        // Scroll suave al bloque stock crítico y animar con pulso amarillo
         setTimeout(() => {
-            const stockCriticoDiv = document.getElementById('stockCritico');
-            if (stockCriticoDiv) {
-                stockCriticoDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                // Animación de pulso con borde amarillo
-                const parent = stockCriticoDiv.closest('.lower-stock') || stockCriticoDiv.parentElement;
-                if (parent) {
-                    parent.style.transition = 'box-shadow .2s, border-color .2s';
-                    let count = 0;
-                    const interval = setInterval(() => {
-                        count++;
-                        parent.style.boxShadow = count % 2 === 0
-                            ? '0 0 0 3px #FFC107, 0 0 20px rgba(255,193,7,.4)'
-                            : 'none';
-                        parent.style.borderColor = count % 2 === 0 ? '#FFC107' : '';
-                        if (count >= 6) {
-                            clearInterval(interval);
-                            parent.style.boxShadow = '';
-                            parent.style.borderColor = '';
-                        }
-                    }, 300);
-                }
-                // Animar también cada alert-item crítico
-                document.querySelectorAll('#stockCritico .alert-item.critical').forEach(el => {
-                    el.style.animation = 'none';
-                    el.offsetHeight; // reflow
-                    el.style.animation = 'pulse-critico 0.8s ease-in-out 3';
-                });
+            const el = document.getElementById('stockCritico');
+            if (!el) return;
+            el.scrollIntoView({ behavior:'smooth', block:'center' });
+            const parent = el.closest('.lower-stock') || el.parentElement;
+            if (parent) {
+                let n = 0;
+                const iv = setInterval(() => {
+                    n++;
+                    parent.style.boxShadow = n%2===0 ? '0 0 0 3px #FFC107,0 0 20px rgba(255,193,7,.4)' : 'none';
+                    parent.style.borderColor = n%2===0 ? '#FFC107' : '';
+                    if (n >= 6) { clearInterval(iv); parent.style.boxShadow=''; parent.style.borderColor=''; }
+                }, 300);
             }
+            document.querySelectorAll('#stockCritico .alert-item.critical').forEach(el => {
+                el.style.animation = 'none'; el.offsetHeight;
+                el.style.animation = 'pulse-critico 0.8s ease-in-out 3';
+            });
         }, 150);
     };
 
-    // irAMenu: navegar al tab de Menú
     window.irAMenu = function() {
-        const tabs = document.querySelectorAll('.tab');
-        const panes = document.querySelectorAll('.tab-pane');
-        tabs.forEach(t => t.classList.remove('active'));
-        panes.forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
         const menuTab = document.querySelector('.tab[data-tab="menu"]');
         const menuPane = document.getElementById('menuPane');
         if (menuTab) menuTab.classList.add('active');
-        if (menuPane) menuPane.classList.add('active');
-        if (menuPane) menuPane.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        if (menuPane) { menuPane.classList.add('active'); menuPane.scrollIntoView({behavior:'smooth',block:'start'}); }
     };
 
     window._irAIngrediente = function(ingredienteId) {
