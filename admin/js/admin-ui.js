@@ -1,5 +1,11 @@
 // admin-ui.js - UI genérica: tabs, modales, eventos, helpers visuales
 (function() {
+    window.irADeliverys = function() {
+        document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+        document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
+        const t=document.querySelector('.tab[data-tab="deliverys"]'), p=document.getElementById('deliverysPane');
+        if(t) t.classList.add('active'); if(p){p.classList.add('active'); p.scrollIntoView({behavior:'smooth',block:'start'});}
+    };
     window.setupEventListeners = function() {
         // Funciones de scroll para tabs con doble chevron
         window._scrollTabs = function(dir) {
@@ -108,9 +114,9 @@
         });
 
         // Botones logout (desktop + mobile)
-        ['logoutButton','logoutButtonMobile'].forEach(id => {
-            const btn = document.getElementById(id);
-            if (btn) btn.addEventListener('click', () => window.cerrarSesion());
+        ['logoutButton','logoutButtonMobile'].forEach(id=>{
+            const btn=document.getElementById(id);
+            if(btn) btn.addEventListener('click', ()=>window.cerrarSesion());
         });
     };
 
@@ -119,44 +125,32 @@
     window.toggleTheme = function() {
         const isDark = document.documentElement.classList.toggle('dark-theme');
         const icon = isDark ? '<i class="fas fa-moon"></i>' : '<i class="fas fa-sun"></i>';
-        ['themeIcon','themeIconMobile'].forEach(id => {
-            const el = document.getElementById(id);
-            if (el) el.innerHTML = icon;
-        });
+        ['themeIcon','themeIconMobile'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=icon;});
         localStorage.setItem('saki_admin_theme', isDark ? 'dark' : 'light');
     };
-
     window.initTheme = function() {
-        const saved = localStorage.getItem('saki_admin_theme');
-        const isDark = saved === 'dark';
+        const isDark = localStorage.getItem('saki_admin_theme') === 'dark';
         if (isDark) document.documentElement.classList.add('dark-theme');
         else document.documentElement.classList.remove('dark-theme');
         const icon = isDark ? '<i class="fas fa-moon"></i>' : '<i class="fas fa-sun"></i>';
-        ['themeIcon','themeIconMobile'].forEach(id => {
-            const el = document.getElementById(id);
-            if (el) el.innerHTML = icon;
-        });
+        ['themeIcon','themeIconMobile'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=icon;});
     };
 
-    // setupHeader: reemplazar corona por logo
     window.setupHeader = function() {
-        const headerTitle = document.querySelector('.header-left h2');
-        if (headerTitle) {
-            headerTitle.innerHTML = `<img src="https://lh3.googleusercontent.com/pw/AP1GczPrZAoWxmsOGRD9xl1hO5Q65JXuwUZzoR6gUk-cw5lVmarxQe_-lwqpA60tTKLlXfpvIjAJlKC6jFls-xETJOPkebLIIPhbGlUkknmhrRbdhMUll2UViGSUj3WmHKg2YEsZlAfxBPPTjIHhScjD0jfe=w1439-h1439-s-no-gm" alt="Saki Sushi" style="width:32px;height:32px;border-radius:50%;margin-right:8px"> <span class="header-title-text">Administración Saki Sushi</span>`;
-        }
-        // initTheme ya configura los toggles correctamente
+        const ht = document.querySelector('.header-left h2');
+        if (ht) ht.innerHTML = `<img src="https://lh3.googleusercontent.com/pw/AP1GczPrZAoWxmsOGRD9xl1hO5Q65JXuwUZzoR6gUk-cw5lVmarxQe_-lwqpA60tTKLlXfpvIjAJlKC6jFls-xETJOPkebLIIPhbGlUkknmhrRbdhMUll2UViGSUj3WmHKg2YEsZlAfxBPPTjIHhScjD0jfe=w1439-h1439-s-no-gm" alt="Saki Sushi" style="width:32px;height:32px;border-radius:50%;margin-right:8px"> <span class="header-title-text">Administración Saki Sushi</span>`;
     };
 
     window.abrirSelectorMesaAdmin = async function() {
         const list = document.getElementById('adminMesaList');
-        list.innerHTML = '<p style="color:var(--text-muted)">Cargando mesas...</p>';
+        list.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:1.5rem;color:var(--text-muted)"><i class="fas fa-spinner fa-spin" style="font-size:1.4rem"></i><br><small style="display:block;margin-top:.5rem">Cargando mesas...</small></div>';
         document.getElementById('adminMesaModal').classList.add('active');
         try {
             const { data, error } = await window.supabaseClient.from('codigos_qr').select('*').order('nombre');
             if (error) throw error;
             const mesas = data || [];
             if (!mesas.length) {
-                list.innerHTML = '<p style="color:var(--text-muted);grid-column:1/-1">No hay mesas creadas. Genera QRs en la pestaña Códigos QR.</p>';
+                list.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:2rem"><i class="fas fa-chair" style="font-size:2.5rem;color:var(--text-muted);opacity:.4;display:block;margin-bottom:.75rem"></i><p style="color:var(--text-muted);font-size:.88rem">No hay mesas creadas.<br>Genera QRs en la pestaña <strong>Códigos QR</strong>.</p></div>';
                 return;
             }
             list.innerHTML = '';
@@ -172,7 +166,7 @@
                 list.appendChild(btn);
             });
         } catch(e) {
-            list.innerHTML = '<p style="color:var(--danger)">Error cargando mesas: ' + (e.message || e) + '</p>';
+            list.innerHTML = '<p style="color:var(--danger);grid-column:1/-1">Error cargando mesas: ' + (e.message || e) + '</p>';
         }
     };
 
