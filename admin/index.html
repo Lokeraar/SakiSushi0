@@ -77,21 +77,19 @@
     <!-- PANEL PRINCIPAL -->
     <div class="panel-container" id="panelContainer">
         <header class="header">
-            <!-- Fila 1: logo + nombre -->
+            <!-- Fila 1 escritorio: todo en una línea -->
             <div class="header-row header-row-title">
                 <div class="header-left">
                     <h2><i class="fas fa-crown"></i> <span class="header-title-text">Administración Saki Sushi</span></h2>
                 </div>
-                <!-- Fila 1 desktop también muestra Mesas + Cajero -->
-                <div class="header-right header-row-nav-desktop">
+                <div class="header-row-nav-desktop" style="display:none">
                     <button class="nav-button" onclick="window.abrirSelectorMesaAdmin()"><i class="fas fa-utensils"></i> Mesas</button>
                     <a href="../Cajero/index.html" target="_blank" class="nav-button"><i class="fas fa-cash-register"></i> Cajero</a>
                     <span class="header-sucursal-label">Seleccionar sucursal</span>
                     <button class="nav-button header-sucursal-btn" id="sucursalBtn" title="Cambiar sucursal (próximamente)">
                         <i class="fas fa-store"></i> <span id="sucursalNombre">Principal</span>
                     </button>
-                    <!-- Toggle tema + Salir en escritorio -->
-                    <div class="theme-toggle-wrap" onclick="window.toggleTheme()" title="Modo oscuro / claro" role="button" aria-label="Cambiar tema">
+                    <div class="theme-toggle-wrap" onclick="window.toggleTheme()" title="Cambiar tema" role="button">
                         <i class="fas fa-sun theme-toggle-icon-sun"></i>
                         <div class="theme-toggle-track" id="themeToggle">
                             <div class="theme-toggle-thumb" id="themeIcon"><i class="fas fa-sun"></i></div>
@@ -101,13 +99,11 @@
                     <button class="logout-button" id="logoutButton"><i class="fas fa-sign-out-alt"></i> Salir</button>
                 </div>
             </div>
-
-            <!-- Fila 2 móvil: Mesas + Cajero (alineados a la derecha) -->
+            <!-- Fila 2 móvil: Mesas + Cajero alineados a la derecha -->
             <div class="header-row header-row-nav-mobile">
                 <button class="nav-button" onclick="window.abrirSelectorMesaAdmin()"><i class="fas fa-utensils"></i> Mesas</button>
                 <a href="../Cajero/index.html" target="_blank" class="nav-button"><i class="fas fa-cash-register"></i> Cajero</a>
             </div>
-
             <!-- Fila 3 móvil: Seleccionar sucursal -->
             <div class="header-row header-row-sucursal-mobile">
                 <span class="header-sucursal-label">Seleccionar sucursal</span>
@@ -115,10 +111,9 @@
                     <i class="fas fa-store"></i> <span>Principal</span>
                 </button>
             </div>
-
-            <!-- Fila 4 móvil: Toggle tema + Salir -->
+            <!-- Fila 4 móvil: toggle tema + Salir -->
             <div class="header-row header-row-bottom-mobile">
-                <div class="theme-toggle-wrap" onclick="window.toggleTheme()" title="Modo oscuro / claro" role="button" aria-label="Cambiar tema">
+                <div class="theme-toggle-wrap" onclick="window.toggleTheme()" title="Cambiar tema" role="button">
                     <i class="fas fa-sun theme-toggle-icon-sun"></i>
                     <div class="theme-toggle-track" id="themeToggleMobile">
                         <div class="theme-toggle-thumb" id="themeIconMobile"><i class="fas fa-sun"></i></div>
@@ -224,8 +219,10 @@
                         <div class="card-value" id="ventasHoy">$0.00</div>
                         <div style="font-size:.72rem;color:var(--text-muted);margin-top:.25rem">Toca para ver desglose</div>
                     </div>
-                    <div class="dashboard-card"><div class="card-title">Deliverys Hoy</div><div class="card-value" id="deliverysHoyDashboard">Bs 0,00</div></div>
-                    <!-- Columna mini: Alertas + Productos apilados verticalmente -->
+                    <div class="dashboard-card" style="cursor:pointer" onclick="window.irADeliverys && window.irADeliverys()" title="Ver módulo de Deliverys">
+                        <div class="card-title">Deliverys Hoy</div>
+                        <div class="card-value" id="deliverysHoyDashboard">$0.00 / Bs 0,00</div>
+                    </div>
                     <div class="dashboard-col-mini">
                         <div class="dashboard-card dashboard-card-sm" style="cursor:pointer" onclick="window.irAStockCritico()">
                             <div class="card-title">Alertas Stock</div>
@@ -322,7 +319,7 @@
                         <button class="btn-delivery" onclick="window.agregarDelivery()"><i class="fas fa-plus"></i> Agregar</button>
                     </div>
                 </div>
-                <!-- Estadísticas globales de deliverys (hoy) -->
+                <!-- Stats globales deliverys -->
                 <div class="delivery-stats-grid" style="margin-bottom:1.25rem">
                     <div class="delivery-stat-card">
                         <div class="delivery-stat-label"><i class="fas fa-coins"></i> Total acumulado (todos)</div>
@@ -338,6 +335,33 @@
                     </div>
                 </div>
                 <div class="delivery-list" id="deliverysGrid" style="display:grid"></div>
+
+                <!-- Tabla últimos 5 viajes -->
+                <div id="ultimosViajesSection" style="margin-top:2rem">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.85rem">
+                        <h3 style="font-family:Montserrat,sans-serif;font-size:.88rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);margin:0">
+                            <i class="fas fa-history" style="margin-right:.4rem;color:var(--delivery)"></i>Últimos 5 Viajes
+                        </h3>
+                        <button class="btn-secondary" onclick="window.verHistorialEnviosHoy()" style="font-size:.78rem;padding:.4rem .9rem;display:flex;align-items:center;gap:.4rem">
+                            <i class="fas fa-list"></i> Historial de hoy
+                        </button>
+                    </div>
+                    <div style="background:var(--card-bg);border-radius:14px;overflow:hidden;box-shadow:var(--shadow-sm);border:1px solid var(--border)">
+                        <table style="width:100%;border-collapse:collapse">
+                            <thead>
+                                <tr style="background:var(--secondary)">
+                                    <th style="padding:.65rem 1rem;text-align:left;font-size:.72rem;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);font-weight:700">Fecha/Hora</th>
+                                    <th style="padding:.65rem 1rem;text-align:left;font-size:.72rem;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);font-weight:700">Motorizado</th>
+                                    <th style="padding:.65rem 1rem;text-align:left;font-size:.72rem;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);font-weight:700">Referencia</th>
+                                    <th style="padding:.65rem 1rem;text-align:left;font-size:.72rem;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);font-weight:700">Monto</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ultimosViajesTbody">
+                                <tr><td colspan="4" style="text-align:center;padding:1.5rem;color:var(--text-muted);font-size:.85rem">Cargando...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
 
             <!-- MESONEROS -->
@@ -557,16 +581,34 @@
         <div class="modal-content" style="max-width:400px">
             <div class="modal-header"><h3>Código QR</h3><button class="modal-close" id="closeQrAmpliadoModal">&times;</button></div>
             <div class="modal-body" style="text-align:center"><div id="qrAmpliado" style="width:300px;height:300px;margin:0 auto"></div><div id="qrAmpliadoInfo" style="margin-top:1rem"></div></div>
-            <div class="modal-footer"><button class="btn-primary" id="closeQrAmpliado">Cerrar</button></div>
+            <!-- footer vacío: botones generados dinámicamente por admin-qr.js -->
+            <div class="modal-footer" style="display:none"></div>
         </div>
     </div>
 
-    <!-- MODAL SELECTOR DE MESAS (ADMIN) -->
+    <!-- MODAL SELECTOR DE MESAS (ADMIN) — estilo premium -->
     <div class="modal" id="adminMesaModal">
-        <div class="modal-content" style="max-width:520px">
-            <div class="modal-header"><h3><i class="fas fa-utensils"></i> Mesas</h3><button class="modal-close" onclick="window.cerrarModal('adminMesaModal')">&times;</button></div>
-            <div class="modal-body"><p style="font-size:.85rem;color:var(--text-muted);margin-bottom:1rem">Selecciona una mesa para abrir el menú del cliente en esa mesa.</p><div id="adminMesaList" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:.75rem"><p style="color:var(--text-muted)">Cargando mesas...</p></div></div>
-            <div class="modal-footer"><button class="btn-secondary" onclick="window.cerrarModal('adminMesaModal')">Cerrar</button></div>
+        <div class="modal-content" style="max-width:560px">
+            <div class="modal-header" style="background:linear-gradient(135deg,#1a1a2e,#2d2d4e)">
+                <h3 style="color:#fff"><i class="fas fa-utensils" style="color:var(--accent)"></i> Seleccionar Mesa</h3>
+                <button class="modal-close" style="color:rgba(255,255,255,.7)" onclick="window.cerrarModal('adminMesaModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p style="font-size:.82rem;color:var(--text-muted);margin-bottom:1.2rem;display:flex;align-items:center;gap:.5rem">
+                    <i class="fas fa-info-circle" style="color:var(--accent)"></i>
+                    Selecciona una mesa para abrir el menú del cliente en esa mesa.
+                </p>
+                <div id="adminMesaList" class="mesa-admin-grid">
+                    <div style="grid-column:1/-1;text-align:center;padding:2rem;color:var(--text-muted)">
+                        <i class="fas fa-spinner fa-spin" style="font-size:1.5rem"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="window.cerrarModal('adminMesaModal')">
+                    <i class="fas fa-times"></i> Cerrar
+                </button>
+            </div>
         </div>
     </div>
 
