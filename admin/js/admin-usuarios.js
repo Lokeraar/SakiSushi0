@@ -19,31 +19,44 @@
             return;
         }
         grid.innerHTML = window.usuarios.map(user => {
-            const fotoHtml = user.foto ? `<img src="${user.foto}" style="width:44px;height:44px;border-radius:50%;object-fit:cover;margin-right:.5rem">` : '';
-            const inicial = (user.nombre || '?').charAt(0).toUpperCase();
-            const avatarHtml = fotoHtml || `<div class="usuario-avatar">${inicial}</div>`;
-            const rolBadge = user.rol === 'admin' ? '<span class="usuario-rol admin">Admin</span>' : '<span class="usuario-rol cajero">Cajero</span>';
-            return `<div class="usuario-card">
+            const inicial   = (user.nombre || '?').charAt(0).toUpperCase();
+            const fotoSrc   = user.foto || '';
+            const rolBadge  = user.rol === 'admin'
+                ? '<span class="usuario-rol admin">Admin</span>'
+                : '<span class="usuario-rol cajero">Cajero</span>';
+            const statusBadge = user.activo
+                ? '<span class="status-activo"><i class="fas fa-check-circle"></i> Activo</span>'
+                : '<span class="status-inactivo"><i class="fas fa-circle"></i> Inactivo</span>';
+            const avatarHtml = fotoSrc
+                ? `<div class="ucard-avatar">
+                       <img src="${fotoSrc}"
+                           style="width:100%;height:100%;object-fit:cover;border-radius:50%;cursor:pointer"
+                           onclick="window.expandirImagen('${fotoSrc.replace(/'/g,"\'")}')">
+                   </div>`
+                : `<div class="ucard-avatar"><div class="usuario-avatar" style="width:100%;height:100%;font-size:1.4rem">${inicial}</div></div>`;
+            return `<div class="usuario-card-v2">
                 ${avatarHtml}
-                <div class="usuario-info">
-                    <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
-                        <span class="usuario-nombre">${user.nombre}</span>
-                        ${rolBadge}
-                        ${user.activo ? '<span class="status-activo"><i class="fas fa-check-circle"></i> Activo</span>' : '<span class="status-inactivo"><i class="fas fa-circle"></i> Inactivo</span>'}
+                <div class="ucard-body">
+                    <div class="ucard-top">
+                        <div class="ucard-names">
+                            <span class="usuario-nombre">${user.nombre}</span>
+                            <span class="usuario-username">@${user.username}</span>
+                            ${rolBadge}
+                        </div>
+                        <div class="ucard-status">${statusBadge}</div>
                     </div>
-                    <div class="usuario-username">@${user.username}</div>
-                </div>
-                <div class="usuario-actions">
-                    <button class="btn-icon edit" onclick="window.editarUsuario('${user.id}')" title="Editar usuario">
-                        <i class="fas fa-pen"></i>
-                    </button>
-                    <button class="btn-toggle ${user.activo ? 'btn-toggle-on' : 'btn-toggle-off'}"
-                        onclick="window.toggleUsuarioActivo('${user.id}', ${!user.activo})">
-                        ${user.activo ? 'Inhabilitar' : 'Activar'}
-                    </button>
-                    <button class="btn-icon delete" onclick="window.eliminarUsuario('${user.id}')" title="Eliminar">
-                        <i class="fas fa-trash"></i>
-                    </button>
+                    <div class="ucard-actions">
+                        <button class="btn-icon edit" onclick="window.editarUsuario('${user.id}')" title="Editar usuario">
+                            <i class="fas fa-pen"></i>
+                        </button>
+                        <button class="btn-toggle ${user.activo ? 'btn-toggle-on' : 'btn-toggle-off'}"
+                            onclick="window.toggleUsuarioActivo('${user.id}', ${!user.activo})">
+                            ${user.activo ? 'Inhabilitar' : 'Activar'}
+                        </button>
+                        <button class="btn-icon delete" onclick="window.eliminarUsuario('${user.id}')" title="Eliminar">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
                 </div>
             </div>`;
         }).join('');
@@ -60,11 +73,9 @@
         if (fileInput.files && fileInput.files[0]) {
             const file = fileInput.files[0];
             currentUserFotoFile = file;
-            // Archivo adjunto tiene prioridad: limpiar y bloquear campo URL
             currentUserFotoUrl = '';
             urlInput.value = '';
             urlInput.disabled = true;
-            urlInput.placeholder = 'URL deshabilitada — hay imagen adjunta';
             const reader = new FileReader();
             reader.onload = function(e) {
                 previewImg.src = e.target.result;
@@ -122,7 +133,6 @@
         fileInput.value = '';
         urlInput.value = '';
         urlInput.disabled = false;
-        urlInput.placeholder = 'O pega la URL (solo si no hay archivo)';
         previewDiv.style.display = 'none';
         if (removeBtn) removeBtn.style.display = 'none';
         previewImg.src = '';
