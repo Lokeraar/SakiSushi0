@@ -92,27 +92,23 @@
         const minimo = item.minimo || 0;
         const stockMaximo = item.stock_maximo || item.stock || 1;
 
-        // ── 4 niveles ──────────────────────────────────────────────────────
-        // Agotado  : disponible === 0
-        // Crítico  : 0 < disponible ≤ minimo
-        // Moderado : minimo < disponible ≤ 50% stockMaximo
-        // Óptimo   : disponible > 50% stockMaximo
+        // 4 niveles: agotado / crítico / moderado / óptimo
         let estado;
-        if (disponible <= 0)              estado = 'agotado';
-        else if (disponible <= minimo)    estado = 'critico';
-        else if (disponible <= stockMaximo * 0.5) estado = 'moderado';
-        else                              estado = 'optimo';
+        if (disponible <= 0)                      estado = 'agotado';
+        else if (disponible <= minimo)             estado = 'critico';
+        else if (disponible <= stockMaximo * 0.5)  estado = 'moderado';
+        else                                       estado = 'optimo';
 
-        const porcentaje = stockMaximo > 0 ? Math.min(100, (disponible / stockMaximo) * 100) : 0;
-        const estadoLabel = { optimo:'✅ Óptimo', moderado:'🟡 Moderado', critico:'⚠️ Crítico', agotado:'🔴 Agotado' }[estado];
-        const estadoColor = { optimo:'#43a047', moderado:'#fb8c00', critico:'#e53935', agotado:'#546e7a' }[estado];
+        const pct = stockMaximo > 0 ? Math.min(100, (disponible / stockMaximo) * 100) : 0;
+        const estadoColor = {optimo:'#43a047',moderado:'#fb8c00',critico:'#e53935',agotado:'#546e7a'}[estado];
+        const estadoLabel = {optimo:'✅ Óptimo',moderado:'🟡 Moderado',critico:'⚠️ Crítico',agotado:'🔴 Agotado'}[estado];
+        const barW = estado === 'agotado' ? 100 : pct.toFixed(1);
+        const barClass = estado;
 
         const imgHtml = item.imagen
-            ? `<img src="${item.imagen}" style="width:60px;height:60px;object-fit:cover;border-radius:8px;margin-bottom:.5rem;cursor:pointer" onclick="window.expandirImagen('${item.imagen.replace(/'/g,"\'")}')">`
+            ? `<img src="${item.imagen}" style="width:60px;height:60px;object-fit:cover;border-radius:8px;margin-bottom:.5rem;cursor:pointer"
+                  onclick="window.expandirImagen('${item.imagen.replace(/'/g,"\'")}')">`
             : '';
-
-        const barClass = estado === 'agotado' ? 'agotado' : estado;
-        const barW     = estado === 'agotado' ? 100 : porcentaje.toFixed(1);
 
         const detailHTML = `
             <div class="inv-detail-card" id="invDetailCard_${item.id}">
@@ -128,17 +124,22 @@
                     <span class="inv-stock-unit" style="font-size:.9rem">${item.unidad_base||'u'}</span>
                     <span style="font-size:.7rem;padding:2px 8px;border-radius:20px;background:${estadoColor}22;color:${estadoColor};font-weight:700;margin-left:auto">${estadoLabel}</span>
                 </div>
-                <div class="inv-bar" style="margin-bottom:.25rem">
-                    <div class="inv-bar-fill ${barClass}" style="width:${barW}%"></div>
+                <!-- Barra invertida: Agotado─Crítico─Moderado─Óptimo (izq→der = lleno→vacío) -->
+                <div class="inv-bar-track" style="margin-bottom:.3rem">
+                    <div class="inv-bar-segment inv-seg-agotado"  title="Agotado"></div>
+                    <div class="inv-bar-segment inv-seg-critico"  title="Crítico"></div>
+                    <div class="inv-bar-segment inv-seg-moderado" title="Moderado"></div>
+                    <div class="inv-bar-segment inv-seg-optimo"   title="Óptimo"
+                         style="flex:${pct.toFixed(1)};background:linear-gradient(90deg,#43a047,#66bb6a);border-radius:0 6px 6px 0"></div>
                 </div>
-                <div class="inv-bar-legend" style="margin-bottom:.75rem">
-                    <span><span class="dot" style="background:#43a047"></span>Óptimo &gt;50%</span>
-                    <span><span class="dot" style="background:#fb8c00"></span>Moderado ≤50%</span>
-                    <span><span class="dot" style="background:#e53935"></span>Crítico ≤mín</span>
+                <div class="inv-bar-legend-rev" style="margin-bottom:.75rem">
                     <span><span class="dot" style="background:#546e7a"></span>Agotado</span>
+                    <span><span class="dot" style="background:#e53935"></span>Crítico ≤mín</span>
+                    <span><span class="dot" style="background:#fb8c00"></span>Moderado ≤50%</span>
+                    <span><span class="dot" style="background:#43a047"></span>Óptimo &gt;50%</span>
                 </div>
                 <div style="font-size:.7rem;color:var(--text-muted);margin-bottom:.75rem">
-                    Reservado: ${item.reservado||0} · Stock máx. ref.: ${stockMaximo} ${item.unidad_base||'u'}
+                    Reservado: ${item.reservado||0} · Máx. ref.: ${stockMaximo} ${item.unidad_base||'u'}
                 </div>
                 <div class="inv-meta-grid" style="grid-template-columns:1fr 1fr 1fr;gap:.75rem;margin-bottom:.85rem">
                     <div class="inv-meta-item">
@@ -422,15 +423,14 @@
             if (esNuevo) {
                 ({ error } = await window.supabaseClient.from('inventario').insert([ingrediente]));
             } else {
-                const updateData = { ...ingrediente }; delete updateData.id;
-                let res = await window.supabaseClient.from('inventario').update(updateData).eq('id', id);
+                const upd = {...ingrediente}; delete upd.id;
+                let res = await window.supabaseClient.from('inventario').update(upd).eq('id', id);
                 if (res.error && res.error.code==='PGRST204' && res.error.message.includes('imagen')) {
-                    console.warn('⚠️ Columna imagen no existe. Ejecuta: ALTER TABLE inventario ADD COLUMN IF NOT EXISTS imagen TEXT;');
-                    const { imagen: _x, ...noImg } = updateData;
+                    const {imagen:_i, ...noImg} = upd;
                     res = await window.supabaseClient.from('inventario').update(noImg).eq('id', id);
                 }
                 if (res.error && res.error.code==='PGRST204' && res.error.message.includes('stock_maximo')) {
-                    const { stock_maximo: _s, ...noSm } = updateData;
+                    const {stock_maximo:_s, ...noSm} = upd;
                     res = await window.supabaseClient.from('inventario').update(noSm).eq('id', id);
                 }
                 error = res.error;
@@ -659,25 +659,41 @@
 		if (modal) modal.classList.add('active');
 	};
 
-	// Reemplazar eliminarIngrediente para usar confirmación premium
-	window.eliminarIngrediente = async function(id) {
-		const ingrediente = window.inventarioItems.find(i => i.id === id);
-		if (!ingrediente) return;
-		window.mostrarConfirmacionPremium(
-			'Eliminar Ingrediente',
-			`¿Estás seguro de eliminar "${ingrediente.nombre}"? Esta acción no se puede deshacer.`,
-			async () => {
-				try {
-					await window.supabaseClient.from('inventario').delete().eq('id', id);
-					await window.cargarInventario();
-					window.mostrarToast('🗑️ Ingrediente eliminado', 'success');
-				} catch (e) {
-					console.error('Error eliminando ingrediente:', e);
-					window.mostrarToast('❌ Error al eliminar ingrediente', 'error');
-				}
-			}
-		);
-	};
+    // Eliminar ingrediente: si es principal en algún platillo, doble confirmación
+    window.eliminarIngrediente = async function(id) {
+        const ingrediente = window.inventarioItems.find(i => i.id === id);
+        if (!ingrediente) return;
+        const dependen = (window.menuItems||[]).filter(p => {
+            const info = p.ingredientes && p.ingredientes[id];
+            return info && info.principal === true;
+        });
+        const hacerEliminar = () => {
+            window.mostrarConfirmacionPremium(
+                'Confirmar eliminación',
+                `¿Eliminar definitivamente <strong>${ingrediente.nombre}</strong>? Esta acción no se puede deshacer.`,
+                async () => {
+                    try {
+                        await window.supabaseClient.from('inventario').delete().eq('id', id);
+                        await window.cargarInventario();
+                        window.mostrarToast('🗑️ Ingrediente eliminado', 'success');
+                    } catch(e) { console.error('Error eliminando ingrediente:', e); window.mostrarToast('❌ Error al eliminar ingrediente', 'error'); }
+                }
+            );
+        };
+        if (dependen.length > 0) {
+            window.mostrarConfirmacionPremium(
+                '⚠️ Este ingrediente es esencial en varios platillos',
+                `<strong>${ingrediente.nombre}</strong> es ingrediente principal de:<br><br>
+                 <div style="background:rgba(211,47,47,.08);border-radius:8px;padding:.6rem .85rem;margin:.4rem 0;text-align:left;font-size:.85rem;line-height:1.8">
+                 ${dependen.map(p=>'🍱 ' + p.nombre).join('<br>')}
+                 </div>
+                 Si lo eliminas, esos platillos lo perderán permanentemente. ¿Continuar de todas formas?`,
+                () => hacerEliminar()
+            );
+        } else {
+            hacerEliminar();
+        }
+    };
 
     window.actualizarAlertasStock = function() {
         document.getElementById('alertasStock').textContent = window.inventarioItems.filter(i => i.stock <= i.minimo).length;
@@ -758,42 +774,40 @@
     };
 
     window.irAStockCritico = function() {
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
-        const dashTab = document.querySelector('.tab[data-tab="dashboard"]');
-        const dashPane = document.getElementById('dashboardPane');
-        if (dashTab) dashTab.classList.add('active');
-        if (dashPane) dashPane.classList.add('active');
-        setTimeout(() => {
-            const el = document.getElementById('stockCritico');
-            if (!el) return;
-            el.scrollIntoView({ behavior:'smooth', block:'center' });
-            const parent = el.closest('.lower-stock') || el.parentElement;
-            if (parent) {
-                let n = 0;
-                const iv = setInterval(() => {
-                    n++;
-                    parent.style.boxShadow = n%2===0 ? '0 0 0 3px #FFC107,0 0 20px rgba(255,193,7,.4)' : 'none';
-                    parent.style.borderColor = n%2===0 ? '#FFC107' : '';
-                    if (n >= 6) { clearInterval(iv); parent.style.boxShadow=''; parent.style.borderColor=''; }
-                }, 300);
-            }
-            document.querySelectorAll('#stockCritico .alert-item.critical').forEach(el => {
-                el.style.animation = 'none'; el.offsetHeight;
-                el.style.animation = 'pulse-critico 0.8s ease-in-out 3';
+        document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+        document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
+        const t=document.querySelector('.tab[data-tab="dashboard"]'), p=document.getElementById('dashboardPane');
+        if(t) t.classList.add('active'); if(p) p.classList.add('active');
+        setTimeout(()=>{
+            const el=document.getElementById('stockCritico'); if(!el) return;
+            el.scrollIntoView({behavior:'smooth',block:'center'});
+            const par=el.closest('.lower-stock')||el.parentElement;
+            if(par){ let n=0; const iv=setInterval(()=>{ n++;
+                par.style.boxShadow=n%2===0?'0 0 0 3px #FFC107,0 0 20px rgba(255,193,7,.4)':'none';
+                par.style.borderColor=n%2===0?'#FFC107':'';
+                if(n>=6){clearInterval(iv);par.style.boxShadow='';par.style.borderColor='';}
+            },300); }
+            document.querySelectorAll('#stockCritico .alert-item.critical').forEach(el=>{
+                el.style.animation='none'; el.offsetHeight; el.style.animation='pulse-critico 0.8s ease-in-out 3';
             });
-        }, 150);
+        },150);
     };
-
     window.irAMenu = function() {
-        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
-        const menuTab = document.querySelector('.tab[data-tab="menu"]');
-        const menuPane = document.getElementById('menuPane');
-        if (menuTab) menuTab.classList.add('active');
-        if (menuPane) { menuPane.classList.add('active'); menuPane.scrollIntoView({behavior:'smooth',block:'start'}); }
+        document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+        document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
+        const t=document.querySelector('.tab[data-tab="menu"]'), p=document.getElementById('menuPane');
+        if(t) t.classList.add('active'); if(p){p.classList.add('active'); p.scrollIntoView({behavior:'smooth',block:'start'});}
     };
-
+    window.irADeliverys = function() {
+        document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+        document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
+        const t=document.querySelector('.tab[data-tab="deliverys"]'), p=document.getElementById('deliverysPane');
+        if(t) t.classList.add('active'); if(p){p.classList.add('active'); p.scrollIntoView({behavior:'smooth',block:'start'});}
+    };
+    window.actualizarProductosActivos = function() {
+        const el = document.getElementById('productosActivos');
+        if (el) el.textContent = (window.menuItems||[]).filter(m=>m.disponible).length;
+    };
     window._irAIngrediente = function(ingredienteId) {
         const tabs = document.querySelectorAll('.tab');
         const panes = document.querySelectorAll('.tab-pane');
