@@ -44,7 +44,7 @@
                 <div class="mc2-header">
                     <div class="mc2-info">
                         <div class="mc2-nombre">${item.nombre}</div>
-                        <div class="mc2-cat">${item.categoria || ''}${item.subcategoria ? ' · ' + item.subcategoria : ''}</div>
+                        <div class="mc2-cat">${(window.categoriasMenuLabels && window.categoriasMenuLabels[item.categoria]) ? window.categoriasMenuLabels[item.categoria] : (item.categoria||'')}${item.subcategoria ? ' · ' + item.subcategoria : ''}</div>
                         <div class="mc2-precio">${window.formatUSD(item.precio || 0)}
                             <span class="mc2-precio-bs">/ ${window.formatBs(window.usdToBs(item.precio || 0))}</span>
                         </div>
@@ -107,17 +107,8 @@
         if (!src) return;
         const modal = document.createElement('div');
         modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.92);z-index:10000;display:flex;align-items:center;justify-content:center';
-        modal.innerHTML = `
-            <div style="position:relative;display:inline-block;max-width:92vw;max-height:92vh">
-                <img src="${src}" style="max-width:100%;max-height:90vh;object-fit:contain;border-radius:10px;display:block">
-                <button style="position:absolute;top:-18px;right:-18px;width:42px;height:42px;border-radius:50%;
-                               background:#D32F2F;color:#fff;border:2.5px solid #fff;font-size:1.15rem;cursor:pointer;
-                               display:flex;align-items:center;justify-content:center;
-                               box-shadow:0 3px 12px rgba(0,0,0,.5);font-weight:900;z-index:1;
-                               font-family:Montserrat,sans-serif"
-                        onclick="event.stopPropagation(); this.closest('div').parentElement.remove()">✕</button>
-            </div>`;
-        modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+        modal.innerHTML = '<div style="position:relative;display:inline-block;max-width:92vw;max-height:92vh"><img src="'+src+'" style="max-width:100%;max-height:90vh;object-fit:contain;border-radius:10px;display:block"><button style="position:absolute;top:-18px;right:-18px;width:42px;height:42px;border-radius:50%;background:#D32F2F;color:#fff;border:2.5px solid #fff;font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 12px rgba(0,0,0,.5);font-weight:900;z-index:1;line-height:1" onclick="event.stopPropagation();this.closest(\"div\").parentElement.remove()">✕</button></div>';
+        modal.addEventListener('click', function(e){ if(e.target===modal) modal.remove(); });
         document.body.appendChild(modal);
     };
 
@@ -276,44 +267,40 @@
     };
 
     window.cargarCategoriasSelect = function() {
-        let select = document.getElementById('platilloCategoria');
-        if (!select) return;
-        const labels = window.categoriasMenuLabels || {};
-        select.innerHTML = '<option value="">Seleccionar categoría</option>';
-        Object.keys(window.categoriasMenu || {}).forEach(catId => {
-            const opt = document.createElement('option');
-            opt.value = catId;
-            opt.textContent = labels[catId] || catId;
-            select.appendChild(opt);
+        var sel = document.getElementById('platilloCategoria');
+        if (!sel) return;
+        var labels = window.categoriasMenuLabels || {};
+        sel.innerHTML = '<option value="">Seleccionar categoría</option>';
+        Object.keys(window.categoriasMenu || {}).forEach(function(id) {
+            var opt = document.createElement('option');
+            opt.value = id; opt.textContent = labels[id] || id;
+            sel.appendChild(opt);
         });
-        // Clonar para eliminar listeners previos
-        const nuevo = select.cloneNode(true);
-        select.parentNode.replaceChild(nuevo, select);
-        nuevo.addEventListener('change', e => {
+        var nuevo = sel.cloneNode(true);
+        sel.parentNode.replaceChild(nuevo, sel);
+        nuevo.addEventListener('change', function(e) {
             window.cargarSubcategoriasSelect(e.target.value);
             window._recalcularStockPlatillo();
         });
     };
 
     window.cargarSubcategoriasSelect = function(catId) {
-        const select = document.getElementById('platilloSubcategoria');
-        const wrap   = document.getElementById('subcategoriaContainer');
-        if (!select) return;
-        select.innerHTML = '<option value="">Sin subcategoría</option>';
-        const subs = (catId && window.categoriasMenu && window.categoriasMenu[catId]) ? window.categoriasMenu[catId] : [];
+        var sel  = document.getElementById('platilloSubcategoria');
+        var wrap = document.getElementById('subcategoriaContainer');
+        if (!sel) return;
+        sel.innerHTML = '<option value="">Sin subcategoría</option>';
+        var subs = (catId && window.categoriasMenu && window.categoriasMenu[catId]) ? window.categoriasMenu[catId] : [];
         if (subs.length) {
-            subs.forEach(sub => {
-                const opt = document.createElement('option');
-                opt.value = sub; opt.textContent = sub;
-                select.appendChild(opt);
+            subs.forEach(function(s){
+                var o = document.createElement('option'); o.value=s; o.textContent=s; sel.appendChild(o);
             });
-            if (wrap) wrap.style.display = 'block';
+            if (wrap) wrap.style.display='block';
         } else {
-            if (wrap) wrap.style.display = 'none';
+            if (wrap) wrap.style.display='none';
         }
     };
 
-    window.agregarIngredienteRow = function(ingredienteId, cantidad, unidad) {
+    window.agregarIngredienteRow = function(ingredienteId, cantidad, unidad, esPrincipal) {
         ingredienteId = ingredienteId || '';
         cantidad = cantidad || '';
         if (!unidad && ingredienteId) {
@@ -324,7 +311,7 @@
         const container = document.getElementById('ingredientesContainer');
         const row = document.createElement('div');
         row.className = 'ingrediente-row';
-        row.style.cssText = 'display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:.4rem;align-items:center;margin-bottom:.4rem';
+        row.style.cssText = 'display:grid;grid-template-columns:2fr 1fr 1fr auto auto;gap:.4rem;align-items:center;margin-bottom:.4rem;background:var(--card-bg);padding:.3rem .4rem;border-radius:6px;border:1px solid var(--border)';
 
         const select = document.createElement('select');
         select.style.cssText = 'font-family:Montserrat,sans-serif;font-size:.82rem';
@@ -369,9 +356,26 @@
         removeBtn.style.cssText = 'background:#ffebee;color:var(--danger);border:none;border-radius:6px;width:28px;height:28px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0';
         removeBtn.onclick = () => { row.remove(); window._recalcularStockPlatillo(); };
 
+        // Checkbox ingrediente principal con tooltip
+        var principalWrap = document.createElement('div');
+        principalWrap.style.cssText = 'position:relative;display:flex;align-items:center;justify-content:center;flex-shrink:0';
+        var chkEl = document.createElement('input');
+        chkEl.type = 'checkbox'; chkEl.className = 'ing-principal-chk';
+        chkEl.style.cssText = 'width:16px;height:16px;accent-color:var(--primary);cursor:pointer';
+        if (esPrincipal) chkEl.checked = true;
+        var tipEl = document.createElement('span');
+        tipEl.style.cssText = 'display:none;position:absolute;bottom:calc(100%+8px);left:50%;transform:translateX(-50%);background:var(--toast-bg);color:var(--toast-text);padding:.5rem .75rem;border-radius:8px;font-size:.72rem;white-space:normal;width:220px;text-align:center;box-shadow:0 4px 12px rgba(0,0,0,.35);z-index:200;line-height:1.4;pointer-events:none';
+        tipEl.innerHTML = '<strong>¿Ingrediente principal?</strong><br>Si está activo, el cliente no puede deseleccionarlo al personalizar el platillo.';
+        principalWrap.appendChild(chkEl);
+        principalWrap.appendChild(tipEl);
+        principalWrap.addEventListener('mouseenter', function(){ tipEl.style.display='block'; });
+        principalWrap.addEventListener('mouseleave', function(){ tipEl.style.display='none'; });
+        chkEl.addEventListener('touchstart', function(e){ e.stopPropagation(); tipEl.style.display=tipEl.style.display==='block'?'none':'block'; }, {passive:true});
+
         row.appendChild(select);
         row.appendChild(inputCantidad);
         row.appendChild(selUnidad);
+        row.appendChild(principalWrap);
         row.appendChild(removeBtn);
         container.appendChild(row);
         window._recalcularStockPlatillo();
@@ -383,10 +387,10 @@
         window.platilloEditandoId = id;
         document.getElementById('platilloModalTitle').textContent = 'Editar Platillo';
         window.limpiarImagenPreview();
-        window.cargarCategoriasSelect();                              // poblar opciones PRIMERO
+        window.cargarCategoriasSelect();
         document.getElementById('platilloNombre').value = platillo.nombre || '';
         document.getElementById('platilloCategoria').value = platillo.categoria || '';
-        window.cargarSubcategoriasSelect(platillo.categoria || '');   // poblar subs antes de setear
+        window.cargarSubcategoriasSelect(platillo.categoria || '');
         document.getElementById('platilloSubcategoria').value = platillo.subcategoria || '';
         document.getElementById('platilloPrecio').value = platillo.precio || '';
         document.getElementById('platilloDescripcion').value = platillo.descripcion || '';
@@ -405,7 +409,7 @@
         document.getElementById('ingredientesContainer').innerHTML = '';
         if (platillo.ingredientes) {
             Object.entries(platillo.ingredientes).forEach(([ingId, ingInfo]) => {
-                window.agregarIngredienteRow(ingId, ingInfo.cantidad, ingInfo.unidad);
+                window.agregarIngredienteRow(ingId, ingInfo.cantidad, ingInfo.unidad, ingInfo.principal || false);
             });
         }
         document.getElementById('platilloModal').classList.add('active');
@@ -434,12 +438,12 @@
     };
 
     window.actualizarProductosActivos = function() {
-        const el = document.getElementById('productosActivos');
-        if (el) el.textContent = (window.menuItems||[]).filter(m=>m.disponible).length;
+        var el = document.getElementById('productosActivos');
+        if(el) el.textContent = (window.menuItems||[]).filter(function(m){return m.disponible;}).length;
     };
 
     window._onCategoriaChange = function() {
-        const catId = document.getElementById('platilloCategoria')?.value || '';
+        var catId = (document.getElementById('platilloCategoria') || {}).value || '';
         window.cargarSubcategoriasSelect(catId);
         window._recalcularStockPlatillo();
     };
@@ -522,11 +526,13 @@
                 const selIng    = row.querySelector('select:not(.ing-row-unidad)');
                 const selUnidad = row.querySelector('select.ing-row-unidad');
                 const cantInput = row.querySelector('input[type="number"]');
+                var chkP = row.querySelector('.ing-principal-chk');
                 if (selIng && selIng.value && cantInput && cantInput.value) {
                     ingredientes[selIng.value] = {
-                        cantidad: parseFloat(cantInput.value),
-                        nombre: selIng.options[selIng.selectedIndex]?.text || selIng.value,
-                        unidad: selUnidad ? selUnidad.value : 'unidades'
+                        cantidad:  parseFloat(cantInput.value),
+                        nombre:    selIng.options[selIng.selectedIndex]?.text || selIng.value,
+                        unidad:    selUnidad ? selUnidad.value : 'unidades',
+                        principal: chkP ? chkP.checked : false
                     };
                 }
             });
