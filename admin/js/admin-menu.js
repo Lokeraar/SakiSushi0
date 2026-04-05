@@ -44,7 +44,7 @@
                 <div class="mc2-header">
                     <div class="mc2-info">
                         <div class="mc2-nombre">${item.nombre}</div>
-                        <div class="mc2-cat">${(window.categoriasMenuLabels && window.categoriasMenuLabels[item.categoria]) ? window.categoriasMenuLabels[item.categoria] : (item.categoria||'')}${item.subcategoria ? ' · ' + item.subcategoria : ''}</div>
+                        <div class="mc2-cat">${item.categoria || ''}${item.subcategoria ? ' · ' + item.subcategoria : ''}</div>
                         <div class="mc2-precio">${window.formatUSD(item.precio || 0)}
                             <span class="mc2-precio-bs">/ ${window.formatBs(window.usdToBs(item.precio || 0))}</span>
                         </div>
@@ -105,10 +105,24 @@
 
     window.expandirImagen = function(src) {
         if (!src) return;
+        const prev = document.getElementById('_expandImgOverlay');
+        if (prev) prev.remove();
         const modal = document.createElement('div');
+        modal.id = '_expandImgOverlay';
         modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.92);z-index:10000;display:flex;align-items:center;justify-content:center';
-        modal.innerHTML = '<div style="position:relative;display:inline-block;max-width:92vw;max-height:92vh"><img src="'+src+'" style="max-width:100%;max-height:90vh;object-fit:contain;border-radius:10px;display:block"><button style="position:absolute;top:-18px;right:-18px;width:42px;height:42px;border-radius:50%;background:#D32F2F;color:#fff;border:2.5px solid #fff;font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 12px rgba(0,0,0,.5);font-weight:900;z-index:1;line-height:1" onclick="event.stopPropagation();this.closest(\"div\").parentElement.remove()">✕</button></div>';
-        modal.addEventListener('click', function(e){ if(e.target===modal) modal.remove(); });
+        const wrap = document.createElement('div');
+        wrap.style.cssText = 'position:relative;display:inline-block;max-width:92vw;max-height:92vh';
+        const img = document.createElement('img');
+        img.src = src;
+        img.style.cssText = 'max-width:100%;max-height:90vh;object-fit:contain;border-radius:10px;display:block';
+        const btn = document.createElement('button');
+        btn.textContent = '✕';
+        btn.style.cssText = 'position:absolute;top:-18px;right:-18px;width:42px;height:42px;border-radius:50%;background:#D32F2F;color:#fff;border:2.5px solid #fff;font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 12px rgba(0,0,0,.5);font-weight:900;z-index:1;line-height:1';
+        btn.addEventListener('click', function(e) { e.stopPropagation(); modal.remove(); });
+        wrap.appendChild(img);
+        wrap.appendChild(btn);
+        modal.appendChild(wrap);
+        modal.addEventListener('click', function(e) { if (e.target === modal) modal.remove(); });
         document.body.appendChild(modal);
     };
 
@@ -267,40 +281,31 @@
     };
 
     window.cargarCategoriasSelect = function() {
-        var sel = document.getElementById('platilloCategoria');
-        if (!sel) return;
-        var labels = window.categoriasMenuLabels || {};
-        sel.innerHTML = '<option value="">Seleccionar categoría</option>';
-        Object.keys(window.categoriasMenu || {}).forEach(function(id) {
-            var opt = document.createElement('option');
-            opt.value = id; opt.textContent = labels[id] || id;
-            sel.appendChild(opt);
+        const select = document.getElementById('platilloCategoria');
+        select.innerHTML = '<option value="">Seleccionar</option>';
+        Object.keys(window.categoriasMenu || {}).forEach(cat => {
+            const opt = document.createElement('option');
+            opt.value = cat;
+            opt.textContent = cat;
+            select.appendChild(opt);
         });
-        var nuevo = sel.cloneNode(true);
-        sel.parentNode.replaceChild(nuevo, sel);
-        nuevo.addEventListener('change', function(e) {
-            window.cargarSubcategoriasSelect(e.target.value);
-            window._recalcularStockPlatillo();
-        });
+        select.addEventListener('change', (e) => { window.cargarSubcategoriasSelect(e.target.value); });
     };
 
-    window.cargarSubcategoriasSelect = function(catId) {
-        var sel  = document.getElementById('platilloSubcategoria');
-        var wrap = document.getElementById('subcategoriaContainer');
-        if (!sel) return;
-        sel.innerHTML = '<option value="">Sin subcategoría</option>';
-        var subs = (catId && window.categoriasMenu && window.categoriasMenu[catId]) ? window.categoriasMenu[catId] : [];
-        if (subs.length) {
-            subs.forEach(function(s){
-                var o = document.createElement('option'); o.value=s; o.textContent=s; sel.appendChild(o);
+    window.cargarSubcategoriasSelect = function(categoria) {
+        const select = document.getElementById('platilloSubcategoria');
+        select.innerHTML = '<option value="">Ninguna</option>';
+        if (categoria && window.categoriasMenu && window.categoriasMenu[categoria]) {
+            window.categoriasMenu[categoria].forEach(sub => {
+                const opt = document.createElement('option');
+                opt.value = sub;
+                opt.textContent = sub;
+                select.appendChild(opt);
             });
-            if (wrap) wrap.style.display='block';
-        } else {
-            if (wrap) wrap.style.display='none';
         }
     };
 
-    window.agregarIngredienteRow = function(ingredienteId, cantidad, unidad, esPrincipal) {
+    window.agregarIngredienteRow = function(ingredienteId, cantidad, unidad) {
         ingredienteId = ingredienteId || '';
         cantidad = cantidad || '';
         if (!unidad && ingredienteId) {
@@ -311,7 +316,7 @@
         const container = document.getElementById('ingredientesContainer');
         const row = document.createElement('div');
         row.className = 'ingrediente-row';
-        row.style.cssText = 'display:grid;grid-template-columns:2fr 1fr 1fr auto auto;gap:.4rem;align-items:center;margin-bottom:.4rem;background:var(--card-bg);padding:.3rem .4rem;border-radius:6px;border:1px solid var(--border)';
+        row.style.cssText = 'display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:.4rem;align-items:center;margin-bottom:.4rem';
 
         const select = document.createElement('select');
         select.style.cssText = 'font-family:Montserrat,sans-serif;font-size:.82rem';
@@ -356,26 +361,9 @@
         removeBtn.style.cssText = 'background:#ffebee;color:var(--danger);border:none;border-radius:6px;width:28px;height:28px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0';
         removeBtn.onclick = () => { row.remove(); window._recalcularStockPlatillo(); };
 
-        // Checkbox ingrediente principal con tooltip
-        var principalWrap = document.createElement('div');
-        principalWrap.style.cssText = 'position:relative;display:flex;align-items:center;justify-content:center;flex-shrink:0';
-        var chkEl = document.createElement('input');
-        chkEl.type = 'checkbox'; chkEl.className = 'ing-principal-chk';
-        chkEl.style.cssText = 'width:16px;height:16px;accent-color:var(--primary);cursor:pointer';
-        if (esPrincipal) chkEl.checked = true;
-        var tipEl = document.createElement('span');
-        tipEl.style.cssText = 'display:none;position:absolute;bottom:calc(100%+8px);left:50%;transform:translateX(-50%);background:var(--toast-bg);color:var(--toast-text);padding:.5rem .75rem;border-radius:8px;font-size:.72rem;white-space:normal;width:220px;text-align:center;box-shadow:0 4px 12px rgba(0,0,0,.35);z-index:200;line-height:1.4;pointer-events:none';
-        tipEl.innerHTML = '<strong>¿Ingrediente principal?</strong><br>Si está activo, el cliente no puede deseleccionarlo al personalizar el platillo.';
-        principalWrap.appendChild(chkEl);
-        principalWrap.appendChild(tipEl);
-        principalWrap.addEventListener('mouseenter', function(){ tipEl.style.display='block'; });
-        principalWrap.addEventListener('mouseleave', function(){ tipEl.style.display='none'; });
-        chkEl.addEventListener('touchstart', function(e){ e.stopPropagation(); tipEl.style.display=tipEl.style.display==='block'?'none':'block'; }, {passive:true});
-
         row.appendChild(select);
         row.appendChild(inputCantidad);
         row.appendChild(selUnidad);
-        row.appendChild(principalWrap);
         row.appendChild(removeBtn);
         container.appendChild(row);
         window._recalcularStockPlatillo();
@@ -387,10 +375,8 @@
         window.platilloEditandoId = id;
         document.getElementById('platilloModalTitle').textContent = 'Editar Platillo';
         window.limpiarImagenPreview();
-        window.cargarCategoriasSelect();
         document.getElementById('platilloNombre').value = platillo.nombre || '';
         document.getElementById('platilloCategoria').value = platillo.categoria || '';
-        window.cargarSubcategoriasSelect(platillo.categoria || '');
         document.getElementById('platilloSubcategoria').value = platillo.subcategoria || '';
         document.getElementById('platilloPrecio').value = platillo.precio || '';
         document.getElementById('platilloDescripcion').value = platillo.descripcion || '';
@@ -409,7 +395,7 @@
         document.getElementById('ingredientesContainer').innerHTML = '';
         if (platillo.ingredientes) {
             Object.entries(platillo.ingredientes).forEach(([ingId, ingInfo]) => {
-                window.agregarIngredienteRow(ingId, ingInfo.cantidad, ingInfo.unidad, ingInfo.principal || false);
+                window.agregarIngredienteRow(ingId, ingInfo.cantidad, ingInfo.unidad);
             });
         }
         document.getElementById('platilloModal').classList.add('active');
@@ -438,13 +424,38 @@
     };
 
     window.actualizarProductosActivos = function() {
-        var el = document.getElementById('productosActivos');
-        if(el) el.textContent = (window.menuItems||[]).filter(function(m){return m.disponible;}).length;
+        const prodCard = document.querySelector('.dashboard-card:nth-child(3)');
+        if (prodCard) prodCard.textContent = window.menuItems.filter(m => m.disponible).length;
     };
 
     window._onCategoriaChange = function() {
-        var catId = (document.getElementById('platilloCategoria') || {}).value || '';
-        window.cargarSubcategoriasSelect(catId);
+        const cat = document.getElementById('platilloCategoria')?.value;
+        const wrap = document.getElementById('subcategoriaContainer');
+        const sel  = document.getElementById('platilloSubcategoria');
+        if (!wrap || !sel) return;
+        const SUBCATEGORIAS = {
+            'rolls': [{ id: 'rolls-frios', name: 'Rolls Fríos (10 pzas)' }, { id: 'rolls-tempura', name: 'Rolls Tempura (12 pzas)' }],
+            'china': [
+                { id: 'arroz-chino', name: 'Arroz Chino' }, { id: 'arroz-cantones', name: 'Arroz Cantones' },
+                { id: 'chopsuey', name: 'Chopsuey' }, { id: 'lomey', name: 'Lomey' }, { id: 'chow-mein', name: 'Chow Mein' },
+                { id: 'fideos-arroz', name: 'Fideos de Arroz' }, { id: 'tallarines-cantones', name: 'Tallarines Cantones' },
+                { id: 'mariscos', name: 'Mariscos' }, { id: 'foo-yung', name: 'Foo Yong' }, { id: 'sopas', name: 'Sopas' },
+                { id: 'entremeses', name: 'Entremeses' }
+            ],
+            'japonesa': [
+                { id: 'yakimeshi', name: 'Yakimeshi' }, { id: 'yakisoba', name: 'Yakisoba' },
+                { id: 'pasta-udon', name: 'Pasta Udon' }, { id: 'churrasco', name: 'Churrasco' }
+            ]
+        };
+        const subs = SUBCATEGORIAS[cat];
+        if (subs && subs.length) {
+            wrap.style.display = 'block';
+            sel.innerHTML = '<option value="">Sin subcategoría</option>' +
+                subs.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+        } else {
+            wrap.style.display = 'none';
+            sel.innerHTML = '<option value="">Ninguna</option>';
+        }
         window._recalcularStockPlatillo();
     };
 
@@ -526,13 +537,11 @@
                 const selIng    = row.querySelector('select:not(.ing-row-unidad)');
                 const selUnidad = row.querySelector('select.ing-row-unidad');
                 const cantInput = row.querySelector('input[type="number"]');
-                var chkP = row.querySelector('.ing-principal-chk');
                 if (selIng && selIng.value && cantInput && cantInput.value) {
                     ingredientes[selIng.value] = {
-                        cantidad:  parseFloat(cantInput.value),
-                        nombre:    selIng.options[selIng.selectedIndex]?.text || selIng.value,
-                        unidad:    selUnidad ? selUnidad.value : 'unidades',
-                        principal: chkP ? chkP.checked : false
+                        cantidad: parseFloat(cantInput.value),
+                        nombre: selIng.options[selIng.selectedIndex]?.text || selIng.value,
+                        unidad: selUnidad ? selUnidad.value : 'unidades'
                     };
                 }
             });
