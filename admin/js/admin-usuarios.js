@@ -18,34 +18,43 @@
             grid.innerHTML = '<p style="color:var(--text-muted);font-size:.88rem">No hay cajeros registrados.</p>';
             return;
         }
-        grid.innerHTML = window.usuarios.map(function(user) {
-            var inicial = (user.nombre||'?').charAt(0).toUpperCase();
-            var fSrc = user.foto||'';
-            var rol = user.rol==='admin' ? '<span class="usuario-rol admin">Admin</span>' : '<span class="usuario-rol cajero">Cajero</span>';
-            var badge = user.activo
+        grid.innerHTML = window.usuarios.map(user => {
+            const inicial    = (user.nombre || '?').charAt(0).toUpperCase();
+            const rolBadge   = user.rol === 'admin'
+                ? '<span class="usuario-rol admin">Admin</span>'
+                : '<span class="usuario-rol cajero">Cajero</span>';
+            const statusBadge = user.activo
                 ? '<span class="status-activo"><i class="fas fa-check-circle"></i> Activo</span>'
                 : '<span class="status-inactivo"><i class="fas fa-circle"></i> Inactivo</span>';
-            var avatar = fSrc
-                ? '<div class="ucard-avatar"><img src="'+fSrc+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;cursor:pointer" onclick="window.expandirImagen(this.src)"' +'</div>'
-                : '<div class="ucard-avatar"><div class="usuario-avatar" style="width:100%;height:100%;font-size:1.4rem;border-radius:50%">'+inicial+'</div></div>';
-            return '<div class="usuario-card-v2">'
-                + avatar
-                + '<div class="ucard-body">'
-                +   '<div class="ucard-top">'
-                +     '<div class="ucard-names">'
-                +       '<span class="usuario-nombre">'+user.nombre+'</span>'
-                +       '<span class="usuario-username">@'+user.username+'</span>'
-                +       rol
-                +     '</div>'
-                +     '<div class="ucard-status">'+badge+'</div>'
-                +   '</div>'
-                +   '<div class="ucard-actions">'
-                +     '<button class="btn-icon edit" onclick="window.editarUsuario(\''+user.id+'\')" title="Editar"><i class="fas fa-pen"></i></button>'
-                +     '<button class="btn-toggle '+(user.activo?'btn-toggle-on':'btn-toggle-off')+'" onclick="window.toggleUsuarioActivo(\''+user.id+'\','+(!user.activo)+')">'+( user.activo?'Inhabilitar':'Activar')+'</button>'
-                +     '<button class="btn-icon delete" onclick="window.eliminarUsuario(\''+user.id+'\')" title="Eliminar"><i class="fas fa-trash"></i></button>'
-                +   '</div>'
-                + '</div>'
-                + '</div>';
+            // Avatar: solo imagen O inicial, nunca los dos
+            const avatarInner = user.foto
+                ? `<img src="${user.foto}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;cursor:pointer" onclick="window.expandirImagen(this.src)">`
+                : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:1.5rem;font-weight:700;color:#fff;border-radius:50%;background:linear-gradient(135deg,var(--primary),var(--primary-dark))">${inicial}</div>`;
+            return `<div class="usuario-card-v2">
+                <div class="ucard-avatar">${avatarInner}</div>
+                <div class="ucard-body">
+                    <div class="ucard-top">
+                        <div class="ucard-names">
+                            <span class="usuario-nombre">${user.nombre}</span>
+                            <span class="usuario-username">@${user.username}</span>
+                            ${rolBadge}
+                        </div>
+                        <div class="ucard-status">${statusBadge}</div>
+                    </div>
+                    <div class="ucard-actions">
+                        <button class="btn-icon edit" onclick="window.editarUsuario('${user.id}')" title="Editar usuario">
+                            <i class="fas fa-pen"></i>
+                        </button>
+                        <button class="btn-toggle ${user.activo ? 'btn-toggle-on' : 'btn-toggle-off'}"
+                            onclick="window.toggleUsuarioActivo('${user.id}', ${!user.activo})">
+                            ${user.activo ? 'Inhabilitar' : 'Activar'}
+                        </button>
+                        <button class="btn-icon delete" onclick="window.eliminarUsuario('${user.id}')" title="Eliminar">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>`;
         }).join('');
     };
 
