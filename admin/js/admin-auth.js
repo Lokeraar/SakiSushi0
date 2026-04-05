@@ -10,6 +10,7 @@
         container.innerHTML = '<div class="loading-spinner" style="margin:0 auto;"></div>';
         
         try {
+            // Caché local primero — evita 'Failed to fetch' en la carga inicial
             const recent = window.obtenerAdminsRecientes();
             let admins = [];
             if (recent.length) {
