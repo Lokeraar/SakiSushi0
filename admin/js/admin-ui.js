@@ -1,16 +1,16 @@
 // admin-ui.js - UI genérica: tabs, modales, eventos, helpers visuales
 (function() {
     window.irADeliverys = function() {
-        document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-        document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
-        const t=document.querySelector('.tab[data-tab="deliverys"]'), p=document.getElementById('deliverysPane');
-        if(t) t.classList.add('active'); if(p){p.classList.add('active'); p.scrollIntoView({behavior:'smooth',block:'start'});}
+        document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active');});
+        document.querySelectorAll('.tab-pane').forEach(function(p){p.classList.remove('active');});
+        var t=document.querySelector('.tab[data-tab="deliverys"]'), p=document.getElementById('deliverysPane');
+        if(t) t.classList.add('active'); if(p){p.classList.add('active');p.scrollIntoView({behavior:'smooth',block:'start'});}
     };
     window.irAMenu = function() {
-        document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-        document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
-        const t=document.querySelector('.tab[data-tab="menu"]'), p=document.getElementById('menuPane');
-        if(t) t.classList.add('active'); if(p){p.classList.add('active'); p.scrollIntoView({behavior:'smooth',block:'start'});}
+        document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active');});
+        document.querySelectorAll('.tab-pane').forEach(function(p){p.classList.remove('active');});
+        var t=document.querySelector('.tab[data-tab="menu"]'), p=document.getElementById('menuPane');
+        if(t) t.classList.add('active'); if(p){p.classList.add('active');p.scrollIntoView({behavior:'smooth',block:'start'});}
     };
     window.setupEventListeners = function() {
         // Funciones de scroll para tabs con doble chevron
@@ -120,60 +120,55 @@
         });
 
         // Botón logout
-        ['logoutButton','logoutButtonMobile'].forEach(id => {
-            const btn = document.getElementById(id);
-            if (btn) btn.addEventListener('click', () => window.cerrarSesion());
+        ['logoutButton','logoutButtonMobile'].forEach(function(id){
+            var btn=document.getElementById(id);
+            if(btn) btn.addEventListener('click', function(){ window.cerrarSesion(); });
         });
     };
 
     // Dentro de admin-ui.js, reemplazar las funciones de tema y añadir setup del header
 
     window.toggleTheme = function() {
-        const isDark = document.documentElement.classList.toggle('dark-theme');
-        const icon = isDark ? '<i class="fas fa-moon"></i>' : '<i class="fas fa-sun"></i>';
-        ['themeIcon','themeIconMobile'].forEach(id => { const el = document.getElementById(id); if (el) el.innerHTML = icon; });
+        var isDark = document.documentElement.classList.toggle('dark-theme');
+        var icon = isDark ? '<i class="fas fa-moon"></i>' : '<i class="fas fa-sun"></i>';
+        ['themeIcon','themeIconMobile'].forEach(function(id){ var el=document.getElementById(id); if(el) el.innerHTML=icon; });
         localStorage.setItem('saki_admin_theme', isDark ? 'dark' : 'light');
     };
     window.initTheme = function() {
-        const isDark = localStorage.getItem('saki_admin_theme') === 'dark';
-        if (isDark) document.documentElement.classList.add('dark-theme');
+        var isDark = localStorage.getItem('saki_admin_theme') === 'dark';
+        if(isDark) document.documentElement.classList.add('dark-theme');
         else document.documentElement.classList.remove('dark-theme');
-        const icon = isDark ? '<i class="fas fa-moon"></i>' : '<i class="fas fa-sun"></i>';
-        ['themeIcon','themeIconMobile'].forEach(id => { const el = document.getElementById(id); if (el) el.innerHTML = icon; });
+        var icon = isDark ? '<i class="fas fa-moon"></i>' : '<i class="fas fa-sun"></i>';
+        ['themeIcon','themeIconMobile'].forEach(function(id){ var el=document.getElementById(id); if(el) el.innerHTML=icon; });
     };
 
     window.setupHeader = function() {
-        const ht = document.querySelector('.header-left h2');
-        if (ht) ht.innerHTML = `<img src="https://lh3.googleusercontent.com/pw/AP1GczPrZAoWxmsOGRD9xl1hO5Q65JXuwUZzoR6gUk-cw5lVmarxQe_-lwqpA60tTKLlXfpvIjAJlKC6jFls-xETJOPkebLIIPhbGlUkknmhrRbdhMUll2UViGSUj3WmHKg2YEsZlAfxBPPTjIHhScjD0jfe=w1439-h1439-s-no-gm" alt="Saki Sushi" style="width:32px;height:32px;border-radius:50%;margin-right:8px"> <span class="header-title-text">Administración Saki Sushi</span>`;
+        var ht = document.querySelector('.header-left h2');
+        if(ht) ht.innerHTML = '<img src="https://lh3.googleusercontent.com/pw/AP1GczPrZAoWxmsOGRD9xl1hO5Q65JXuwUZzoR6gUk-cw5lVmarxQe_-lwqpA60tTKLlXfpvIjAJlKC6jFls-xETJOPkebLIIPhbGlUkknmhrRbdhMUll2UViGSUj3WmHKg2YEsZlAfxBPPTjIHhScjD0jfe=w1439-h1439-s-no-gm" alt="Saki Sushi" style="width:32px;height:32px;border-radius:50%;margin-right:8px"> <span class="header-title-text">Administración Saki Sushi</span>';
     };
 
     window.abrirSelectorMesaAdmin = async function() {
-        const list = document.getElementById('adminMesaList');
-        list.innerHTML = '<p style="color:var(--text-muted)">Cargando mesas...</p>';
+        var list = document.getElementById('adminMesaList');
+        list.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:2rem;color:var(--text-muted)"><i class="fas fa-spinner fa-spin" style="font-size:1.5rem"></i></div>';
         document.getElementById('adminMesaModal').classList.add('active');
         try {
-            const { data, error } = await window.supabaseClient.from('codigos_qr').select('*').order('nombre');
-            if (error) throw error;
-            const mesas = data || [];
-            if (!mesas.length) {
-                list.innerHTML = '<p style="color:var(--text-muted);grid-column:1/-1">No hay mesas creadas. Genera QRs en la pestaña Códigos QR.</p>';
+            var res = await window.supabaseClient.from('codigos_qr').select('*').order('nombre');
+            if(res.error) throw res.error;
+            var mesas = res.data||[];
+            if(!mesas.length){
+                list.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:2rem"><i class="fas fa-chair" style="font-size:2.5rem;color:var(--text-muted);opacity:.4;display:block;margin-bottom:.75rem"></i><p style="color:var(--text-muted);font-size:.88rem">No hay mesas. Genera QRs en <strong>Códigos QR</strong>.</p></div>';
                 return;
             }
-            list.innerHTML = '';
-            mesas.forEach(mesa => {
-                const url = window.location.origin + '/SakiSushi0/Cliente/index.html?mesa=' + encodeURIComponent(mesa.nombre);
-                const btn = document.createElement('button');
-                btn.className = 'mesa-admin-btn';
-                btn.innerHTML = '<i class="fas fa-chair"></i><span>' + mesa.nombre + '</span>';
-                btn.addEventListener('click', function() {
-                    window.open(url, '_blank');
-                    window.cerrarModal('adminMesaModal');
-                });
+            list.innerHTML='';
+            mesas.forEach(function(mesa){
+                var url=window.location.origin+'/SakiSushi0/Cliente/index.html?mesa='+encodeURIComponent(mesa.nombre);
+                var btn=document.createElement('button');
+                btn.className='mesa-admin-btn';
+                btn.innerHTML='<i class="fas fa-chair"></i><span>'+mesa.nombre+'</span>';
+                btn.addEventListener('click',function(){window.open(url,'_blank');window.cerrarModal('adminMesaModal');});
                 list.appendChild(btn);
             });
-        } catch(e) {
-            list.innerHTML = '<p style="color:var(--danger)">Error cargando mesas: ' + (e.message || e) + '</p>';
-        }
+        } catch(e){ list.innerHTML='<p style="color:var(--danger);grid-column:1/-1">Error: '+(e.message||e)+'</p>'; }
     };
 
     window._irAMesoneros = function() {
