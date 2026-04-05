@@ -1,197 +1,15 @@
-// admin-delivery.js - Motorizados (deliverys), mesoneros, propinas
+// admin-delivery.js — Motorizados (Deliverys)
 (function() {
-    // Variables para fotos
     let currentDeliveryFotoFile = null;
-    let currentDeliveryFotoUrl = '';
-    let currentMesoneroFotoFile = null;
-    let currentMesoneroFotoUrl = '';
+    let currentDeliveryFotoUrl  = '';
 
-    // ==================== MESONEROS ====================
-    window.cargarMesoneros = async function() {
-        try {
-            const { data, error } = await window.supabaseClient.from('mesoneros').select('*').order('nombre');
-            if (error) throw error;
-            window.mesoneros = data || [];
-            await window.renderizarMesoneros();
-            window.renderizarPropinas();
-        } catch (e) { console.error('Error cargando mesoneros:', e); }
-    };
-
-    window.renderizarMesoneros = async function() {
-        const container = document.getElementById('mesonerosList');
-        if (!container) return;
-        if (!window.mesoneros || !window.mesoneros.length) {
-            container.innerHTML = '<p style="color:var(--text-muted);font-size:.88rem">No hay mesoneros registrados.</p>';
-            return;
-        }
-        let acumulados = {};
-        try {
-            const { data: allProp } = await window.supabaseClient.from('propinas').select('mesonero_id, monto_bs, entregado').eq('entregado', false);
-            (allProp || []).forEach(p => { acumulados[p.mesonero_id] = (acumulados[p.mesonero_id] || 0) + (p.monto_bs || 0); });
-        } catch(e) { console.error('Error obteniendo acumulado propinas:', e); }
-        const sorted = [...window.mesoneros].sort((a, b) => a.nombre.localeCompare(b.nombre));
-        const tasa = window.configGlobal?.tasa_efectiva || window.configGlobal?.tasa_cambio || 400;
-        container.innerHTML = sorted.map(m => {
-            const inicial  = m.nombre.charAt(0).toUpperCase();
-            const acum     = acumulados[m.id] || 0;
-            const hayAcum  = acum > 0;
-            const acumUsd  = tasa > 0 ? acum / tasa : 0;
-            const avatar   = m.foto
-                ? `<div class="ucard-avatar"><img src="${m.foto}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;cursor:pointer" onclick="window.expandirImagen(this.src)"></div>`
-                : `<div class="ucard-avatar"><div class="mesonero-avatar" style="width:100%;height:100%;font-size:1.4rem;border-radius:50%">${inicial}</div></div>`;
-            const badge    = m.activo
-                ? '<span class="status-activo"><i class="fas fa-check-circle"></i> Activo</span>'
-                : '<span class="status-inactivo"><i class="fas fa-circle"></i> Inactivo</span>';
-            return `<div class="usuario-card-v2" style="border-left-color:var(--propina)">
-                ${avatar}
-                <div class="ucard-body">
-                    <div class="ucard-top">
-                        <div class="ucard-names">
-                            <span class="mesonero-nombre">${m.nombre}</span>
-                            <span style="font-size:.72rem;color:${hayAcum ? 'var(--propina)' : 'var(--text-muted)'};font-weight:${hayAcum ? '700' : '400'}">
-                                Propinas: ${hayAcum ? window.formatUSD(acumUsd) + ' / ' + window.formatBs(acum) : 'Bs 0,00'}
-                            </span>
-                        </div>
-                        <div class="ucard-status">${badge}</div>
-                    </div>
-                    <div class="ucard-actions">
-                        ${hayAcum ? `<button class="btn-sm" style="background:linear-gradient(135deg,var(--propina),#7B1FA2);color:#fff;white-space:nowrap"
-                            onclick="window.pagarPropinaMesonero('${m.id}', '${m.nombre}', ${acum})">
-                            <i class="fas fa-hand-holding-heart"></i> Pagar
-                        </button>` : ''}
-                        <button class="btn-icon edit" onclick="window.editarMesonero('${m.id}')" title="Editar mesonero"><i class="fas fa-pen"></i></button>
-                        <button class="btn-toggle ${m.activo ? 'btn-toggle-on' : 'btn-toggle-off'}"
-                            onclick="window.toggleMesoneroActivo('${m.id}', ${!m.activo})">
-                            ${m.activo ? 'Inhabilitar' : 'Activar'}
-                        </button>
-                        <button class="btn-icon delete" onclick="window.eliminarMesonero('${m.id}')" title="Eliminar"><i class="fas fa-trash"></i></button>
-                    </div>
-                </div>
-            </div>`;
-        }).join('');
-    };
-
-    window.editarMesonero = function(id) {
-        const mesonero = window.mesoneros.find(m => m.id === id);
-        if (!mesonero) return;
-        window.mesoneroEditandoId = id;
-        const modalTitle = document.getElementById('mesoneroModalTitle');
-        if (modalTitle) modalTitle.textContent = 'Editar Mesonero';
-        const nombreInput = document.getElementById('mesoneroNombre');
-        if (nombreInput) nombreInput.value = mesonero.nombre || '';
-        const activoSelect = document.getElementById('mesoneroActivo');
-        if (activoSelect) activoSelect.value = mesonero.activo ? 'true' : 'false';
-        // Foto
-        if (mesonero.foto) {
-            const urlInput = document.getElementById('mesoneroFotoUrl');
-            if (urlInput) urlInput.value = mesonero.foto;
-            const previewImg = document.getElementById('mesoneroPreviewImg');
-            if (previewImg) previewImg.src = mesonero.foto;
-            const previewDiv = document.getElementById('mesoneroFotoPreview');
-            if (previewDiv) previewDiv.style.display = 'flex';
-            currentMesoneroFotoUrl = mesonero.foto;
-        } else {
-            const urlInput = document.getElementById('mesoneroFotoUrl');
-            if (urlInput) urlInput.value = '';
-            const previewDiv = document.getElementById('mesoneroFotoPreview');
-            if (previewDiv) previewDiv.style.display = 'none';
-        }
-        const modal = document.getElementById('mesoneroModal');
-        if (modal) modal.classList.add('active');
-    };
-
-    window.toggleMesoneroActivo = async function(id, activo) {
-        try {
-            await window.supabaseClient.from('mesoneros').update({ activo }).eq('id', id);
-            await window.cargarMesoneros();
-        } catch (e) { console.error('Error:', e); }
-    };
-
-    window.pagarPropinaMesonero = async function(mesoneroId, nombre, acum) {
-        window.mostrarConfirmacionPremium(
-            'Pagar Propinas',
-            `¿Registrar pago de propinas a ${nombre}?\nMonto pendiente: ${window.formatBs(acum)}\n\nEsto marcará todas sus propinas pendientes como entregadas.`,
-            async () => {
-                try {
-                    const { error } = await window.supabaseClient.from('propinas').update({ entregado: true }).eq('mesonero_id', mesoneroId).eq('entregado', false);
-                    if (error) throw error;
-                    await window.renderizarMesoneros();
-                    window.mostrarToast(`💰 Propinas pagadas a ${nombre}`, 'success');
-                } catch(e) { console.error('Error pagando propinas:', e); window.mostrarToast('❌ Error: ' + (e.message || e), 'error'); }
-            }
-        );
-    };
-
-    window.eliminarMesonero = async function(id) {
-        const mesonero = window.mesoneros.find(m => m.id === id);
-        if (!mesonero) return;
-        window.mostrarConfirmacionPremium(
-            'Eliminar Mesonero',
-            `¿Eliminar al mesonero "${mesonero.nombre}"? Esta acción no se puede deshacer.`,
-            async () => {
-                try {
-                    await window.supabaseClient.from('mesoneros').delete().eq('id', id);
-                    await window.cargarMesoneros();
-                    window.mostrarToast('🗑️ Eliminado', 'success');
-                } catch (e) { console.error('Error:', e); }
-            }
-        );
-    };
-
-    window.agregarMesonero = async function() {
-        const nombre = document.getElementById('nuevoMesonero').value.trim();
-        if (!nombre) { window.mostrarToast('Ingresa un nombre', 'error'); return; }
-        const btn = document.querySelector('[onclick="window.agregarMesonero()"]');
-        if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>'; }
-        try {
-            const { error } = await window.supabaseClient.from('mesoneros').insert([{ id: window.generarId('mes_'), nombre, activo: true }]);
-            if (error) throw error;
-            document.getElementById('nuevoMesonero').value = '';
-            await window.cargarMesoneros();
-            window.mostrarToast('✅ Mesonero agregado', 'success');
-        } catch (e) { console.error('Error agregando mesonero:', e); window.mostrarToast('❌ Error: ' + (e.message || e), 'error'); }
-        finally { if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-plus"></i> Agregar'; } }
-    };
-
-    // ==================== PROPINAS ====================
-    window.cargarPropinas = async function() {
-        try {
-            const h = new Date(); h.setHours(0, 0, 0, 0);
-            const m = new Date(h); m.setDate(m.getDate() + 1);
-            const { data, error } = await window.supabaseClient.from('propinas').select('*, mesoneros(nombre)').gte('fecha', h.toISOString()).lt('fecha', m.toISOString()).order('fecha', { ascending: false });
-            if (error) throw error;
-            window.propinas = data || [];
-            window.renderizarPropinas();
-        } catch (e) { console.error('Error cargando propinas:', e); }
-    };
-
-    window.renderizarPropinas = function() {
-        const total = window.propinas.reduce((s, p) => s + (p.monto_bs || 0), 0);
-        const cantidad = window.propinas.length;
-        const promedio = cantidad > 0 ? total / cantidad : 0;
-        document.getElementById('propinasTotal').textContent = window.formatBs(total);
-        document.getElementById('propinasCantidad').textContent = cantidad;
-        document.getElementById('propinasPromedio').textContent = window.formatBs(promedio);
-        const propinasDashboard = document.getElementById('propinasHoyDashboard');
-        if (propinasDashboard) propinasDashboard.textContent = window.formatBs(total);
-        const tbody = document.getElementById('propinasTableBody');
-        if (tbody) {
-            tbody.innerHTML = window.propinas.map(p => `
-                <tr>
-                    <td>${new Date(p.fecha).toLocaleString('es-VE', { timeZone: 'America/Caracas'})}</td>
-                    <td>${p.mesoneros?.nombre || 'N/A'}</td>
-                    <td>${p.mesa || 'N/A'}</td>
-                    <td>${p.metodo}</td>
-                    <td>${window.formatBs(p.monto_bs)}</td>
-                    <td>${p.cajero || 'N/A'}</td>
-                </tr>`).join('');
-        }
-    };
-
-    // ==================== DELIVERYS ====================
+    // ══════════════════════════════════════════════════════════════
+    // CARGAR / RENDERIZAR DELIVERYS
+    // ══════════════════════════════════════════════════════════════
     window.cargarDeliverys = async function() {
         try {
-            const { data, error } = await window.supabaseClient.from('deliverys').select('*').order('nombre');
+            const { data, error } = await window.supabaseClient
+                .from('deliverys').select('*').order('nombre');
             if (error) throw error;
             window.deliverys = data || [];
             await window.renderizarDeliverys();
@@ -251,48 +69,57 @@
 
     window.obtenerAcumuladoDelivery = async function(deliveryId) {
         try {
-            const { data, error } = await window.supabaseClient.from('entregas_delivery').select('monto_bs').eq('delivery_id', deliveryId);
+            const { data, error } = await window.supabaseClient
+                .from('entregas_delivery').select('monto_bs').eq('delivery_id', deliveryId);
             if (error) throw error;
             return (data || []).reduce((sum, e) => sum + (e.monto_bs || 0), 0);
         } catch (e) { console.error('Error obteniendo acumulado:', e); return 0; }
     };
 
+    // ══════════════════════════════════════════════════════════════
+    // AGREGAR / EDITAR / TOGGLE / ELIMINAR
+    // ══════════════════════════════════════════════════════════════
     window.agregarDelivery = async function() {
         const nombre = document.getElementById('nuevoDelivery').value.trim();
         if (!nombre) { window.mostrarToast('Ingresa un nombre', 'error'); return; }
         const btn = document.querySelector('.btn-delivery');
         if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>'; }
         try {
-            const { error } = await window.supabaseClient.from('deliverys').insert([{ id: window.generarId('del_'), nombre, activo: true }]);
+            const { error } = await window.supabaseClient.from('deliverys')
+                .insert([{ id: window.generarId('del_'), nombre, activo: true }]);
             if (error) throw error;
             document.getElementById('nuevoDelivery').value = '';
             await window.cargarDeliverys();
             window.mostrarToast('✅ Motorizado agregado', 'success');
-        } catch (e) { console.error('Error agregando motorizado:', e); window.mostrarToast('❌ Error: ' + (e.message || e), 'error'); }
-        finally { if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-plus"></i> Agregar'; } }
+        } catch (e) {
+            console.error('Error agregando motorizado:', e);
+            window.mostrarToast('❌ Error: ' + (e.message || e), 'error');
+        } finally {
+            if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-plus"></i> Agregar'; }
+        }
     };
 
     window.editarDelivery = function(id) {
         const delivery = window.deliverys.find(d => d.id === id);
         if (!delivery) return;
         window.deliveryEditandoId = id;
-        const nombreInput = document.getElementById('deliveryNombre');
-        if (nombreInput) nombreInput.value = delivery.nombre;
-        const estadoSelect = document.getElementById('deliveryEstado');
-        if (estadoSelect) estadoSelect.value = delivery.activo ? 'true' : 'false';
+        const ni = document.getElementById('deliveryNombre');
+        if (ni) ni.value = delivery.nombre;
+        const es = document.getElementById('deliveryEstado');
+        if (es) es.value = delivery.activo ? 'true' : 'false';
         if (delivery.foto) {
-            const urlInput = document.getElementById('deliveryFotoUrl');
-            if (urlInput) urlInput.value = delivery.foto;
-            const previewImg = document.getElementById('deliveryPreviewImg');
-            if (previewImg) previewImg.src = delivery.foto;
-            const previewDiv = document.getElementById('deliveryFotoPreview');
-            if (previewDiv) previewDiv.style.display = 'flex';
+            const ui = document.getElementById('deliveryFotoUrl');
+            if (ui) ui.value = delivery.foto;
+            const pi = document.getElementById('deliveryPreviewImg');
+            if (pi) pi.src = delivery.foto;
+            const pd = document.getElementById('deliveryFotoPreview');
+            if (pd) pd.style.display = 'flex';
             currentDeliveryFotoUrl = delivery.foto;
         } else {
-            const urlInput = document.getElementById('deliveryFotoUrl');
-            if (urlInput) urlInput.value = '';
-            const previewDiv = document.getElementById('deliveryFotoPreview');
-            if (previewDiv) previewDiv.style.display = 'none';
+            const ui = document.getElementById('deliveryFotoUrl');
+            if (ui) ui.value = '';
+            const pd = document.getElementById('deliveryFotoPreview');
+            if (pd) pd.style.display = 'none';
         }
         const modal = document.getElementById('deliveryModal');
         if (modal) modal.classList.add('active');
@@ -317,11 +144,17 @@
                     await window.supabaseClient.from('deliverys').delete().eq('id', id);
                     await window.cargarDeliverys();
                     window.mostrarToast('🗑️ Motorizado eliminado', 'success');
-                } catch (e) { console.error('Error eliminando motorizado:', e); window.mostrarToast('❌ Error al eliminar: ' + (e.message || e), 'error'); }
+                } catch (e) {
+                    console.error('Error eliminando motorizado:', e);
+                    window.mostrarToast('❌ Error: ' + (e.message || e), 'error');
+                }
             }
         );
     };
 
+    // ══════════════════════════════════════════════════════════════
+    // PAGO DE MOTORIZADO: completo o parcial
+    // ══════════════════════════════════════════════════════════════
     window.mostrarPagoDelivery = async function(id) {
         const delivery = window.deliverys.find(d => d.id === id);
         if (!delivery) return;
@@ -333,7 +166,7 @@
                 <span style="color:var(--accent);font-weight:700;font-size:1.1rem"> ${window.formatBs(acumulado)}</span>
             </p>
             <div style="display:flex;flex-direction:column;gap:.75rem">
-                <label class="pago-tipo-option" style="display:flex;align-items:flex-start;gap:.75rem;padding:.85rem 1rem;border:2px solid var(--border);border-radius:10px;cursor:pointer;transition:.2s" id="opcionTotal">
+                <label style="display:flex;align-items:flex-start;gap:.75rem;padding:.85rem 1rem;border:2px solid var(--border);border-radius:10px;cursor:pointer;transition:.2s" id="opcionTotal">
                     <input type="radio" name="tipoPago" value="total" checked style="margin-top:3px;accent-color:var(--success)">
                     <div>
                         <div style="font-weight:700;font-size:.9rem;color:var(--text-dark)">Pago total</div>
@@ -341,7 +174,7 @@
                     </div>
                     <span style="margin-left:auto;font-weight:800;color:var(--success)">${window.formatBs(acumulado)}</span>
                 </label>
-                <label class="pago-tipo-option" style="display:flex;align-items:flex-start;gap:.75rem;padding:.85rem 1rem;border:2px solid var(--border);border-radius:10px;cursor:pointer;transition:.2s" id="opcionParcial">
+                <label style="display:flex;align-items:flex-start;gap:.75rem;padding:.85rem 1rem;border:2px solid var(--border);border-radius:10px;cursor:pointer;transition:.2s" id="opcionParcial">
                     <input type="radio" name="tipoPago" value="parcial" style="margin-top:3px;accent-color:var(--warning)">
                     <div style="flex:1">
                         <div style="font-weight:700;font-size:.9rem;color:var(--text-dark)">Pago parcial</div>
@@ -354,6 +187,9 @@
                     </div>
                 </label>
             </div>`;
+        // Asegurar que el botón llame a confirmarPagoDelivery
+        const confirmBtn = document.getElementById('confirmPagoDeliveryBtn');
+        if (confirmBtn) confirmBtn.onclick = window.confirmarPagoDelivery;
         document.getElementById('confirmPagoDeliveryModal').classList.add('active');
     };
 
@@ -366,267 +202,34 @@
             const tipoPago = document.querySelector('[name="tipoPago"]:checked')?.value || 'total';
             if (tipoPago === 'parcial') {
                 const monto = parseFloat(document.getElementById('montoPagoParcial')?.value);
-                if (!monto || monto <= 0) { window.mostrarToast('Ingresa un monto válido para el pago parcial', 'error'); return; }
-                const { error } = await window.supabaseClient.from('entregas_delivery').insert([{ delivery_id: window.deliveryParaPago, monto_bs: -monto, pedido_id: null, fecha_entrega: new Date().toISOString() }]);
+                if (!monto || monto <= 0) { window.mostrarToast('Ingresa un monto válido', 'error'); return; }
+                const { error } = await window.supabaseClient.from('entregas_delivery').insert([{
+                    delivery_id: window.deliveryParaPago,
+                    monto_bs: -monto,
+                    pedido_id: null,
+                    fecha_entrega: new Date().toISOString()
+                }]);
                 if (error) throw error;
                 window.mostrarToast('💰 Pago parcial registrado.', 'success');
             } else {
-                const { error } = await window.supabaseClient.from('entregas_delivery').delete().eq('delivery_id', window.deliveryParaPago);
+                const { error } = await window.supabaseClient.from('entregas_delivery')
+                    .delete().eq('delivery_id', window.deliveryParaPago);
                 if (error) throw error;
                 window.mostrarToast('💰 Pago total registrado. Acumulado reiniciado.', 'success');
             }
             window.cerrarModal('confirmPagoDeliveryModal');
             await window.cargarDeliverys();
-        } catch (e) { console.error('Error registrando pago:', e); window.mostrarToast('❌ Error al registrar pago: ' + (e.message || e), 'error'); }
-        finally { if (btn) { btn.disabled = false; btn.innerHTML = 'Confirmar'; } }
+        } catch (e) {
+            console.error('Error registrando pago:', e);
+            window.mostrarToast('❌ Error: ' + (e.message || e), 'error');
+        } finally {
+            if (btn) { btn.disabled = false; btn.innerHTML = 'Confirmar'; }
+        }
     };
 
-    // ==================== MANEJO DE FOTOS ====================
-    function handleMesoneroFotoFile() {
-        const fileInput = document.getElementById('mesoneroFoto');
-        const urlInput = document.getElementById('mesoneroFotoUrl');
-        const previewDiv = document.getElementById('mesoneroFotoPreview');
-        const previewImg = document.getElementById('mesoneroPreviewImg');
-        const removeBtn = document.getElementById('mesoneroFotoRemoveBtn');
-        if (!fileInput || !urlInput || !previewDiv) return;
-        if (fileInput.files && fileInput.files[0]) {
-            const file = fileInput.files[0];
-            currentMesoneroFotoFile = file;
-            currentMesoneroFotoUrl = '';
-            urlInput.value = '';
-            urlInput.disabled = true;
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                previewImg.src = e.target.result;
-                previewDiv.style.display = 'flex';
-                if (removeBtn) removeBtn.style.display = 'flex';
-            };
-            reader.readAsDataURL(file);
-        } else {
-            urlInput.disabled = false;
-            if (urlInput.value.trim()) {
-                previewImg.src = urlInput.value;
-                previewDiv.style.display = 'flex';
-                if (removeBtn) removeBtn.style.display = 'flex';
-                currentMesoneroFotoUrl = urlInput.value;
-                currentMesoneroFotoFile = null;
-            } else {
-                previewDiv.style.display = 'none';
-                if (removeBtn) removeBtn.style.display = 'none';
-                previewImg.src = '';
-            }
-        }
-    }
-
-    function handleMesoneroFotoUrl() {
-        const urlInput = document.getElementById('mesoneroFotoUrl');
-        const fileInput = document.getElementById('mesoneroFoto');
-        const previewDiv = document.getElementById('mesoneroFotoPreview');
-        const previewImg = document.getElementById('mesoneroPreviewImg');
-        const removeBtn = document.getElementById('mesoneroFotoRemoveBtn');
-        if (!urlInput || !previewDiv) return;
-        if (fileInput && fileInput.files && fileInput.files[0]) return;
-        const url = urlInput.value.trim();
-        if (url) {
-            currentMesoneroFotoUrl = url;
-            currentMesoneroFotoFile = null;
-            previewImg.src = url;
-            previewDiv.style.display = 'flex';
-            if (removeBtn) removeBtn.style.display = 'flex';
-        } else {
-            previewDiv.style.display = 'none';
-            if (removeBtn) removeBtn.style.display = 'none';
-            previewImg.src = '';
-            currentMesoneroFotoUrl = '';
-        }
-    }
-
-    function removeMesoneroFoto() {
-        const fileInput = document.getElementById('mesoneroFoto');
-        const urlInput = document.getElementById('mesoneroFotoUrl');
-        const previewDiv = document.getElementById('mesoneroFotoPreview');
-        const previewImg = document.getElementById('mesoneroPreviewImg');
-        const removeBtn = document.getElementById('mesoneroFotoRemoveBtn');
-        if (fileInput) fileInput.value = '';
-        if (urlInput) {
-            urlInput.value = '';
-            urlInput.disabled = false;
-        }
-        if (previewDiv) previewDiv.style.display = 'none';
-        if (removeBtn) removeBtn.style.display = 'none';
-        if (previewImg) previewImg.src = '';
-        currentMesoneroFotoFile = null;
-        currentMesoneroFotoUrl = '';
-    }
-
-    function handleDeliveryFotoFile() {
-        const fileInput = document.getElementById('deliveryFoto');
-        const urlInput = document.getElementById('deliveryFotoUrl');
-        const previewDiv = document.getElementById('deliveryFotoPreview');
-        const previewImg = document.getElementById('deliveryPreviewImg');
-        const removeBtn = document.getElementById('deliveryFotoRemoveBtn');
-        if (!fileInput || !urlInput || !previewDiv) return;
-        if (fileInput.files && fileInput.files[0]) {
-            const file = fileInput.files[0];
-            currentDeliveryFotoFile = file;
-            currentDeliveryFotoUrl = '';
-            urlInput.value = '';
-            urlInput.disabled = true;
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                previewImg.src = e.target.result;
-                previewDiv.style.display = 'flex';
-                if (removeBtn) removeBtn.style.display = 'flex';
-            };
-            reader.readAsDataURL(file);
-        } else {
-            urlInput.disabled = false;
-            if (urlInput.value.trim()) {
-                previewImg.src = urlInput.value;
-                previewDiv.style.display = 'flex';
-                if (removeBtn) removeBtn.style.display = 'flex';
-                currentDeliveryFotoUrl = urlInput.value;
-                currentDeliveryFotoFile = null;
-            } else {
-                previewDiv.style.display = 'none';
-                if (removeBtn) removeBtn.style.display = 'none';
-                previewImg.src = '';
-            }
-        }
-    }
-
-    function handleDeliveryFotoUrl() {
-        const urlInput = document.getElementById('deliveryFotoUrl');
-        const fileInput = document.getElementById('deliveryFoto');
-        const previewDiv = document.getElementById('deliveryFotoPreview');
-        const previewImg = document.getElementById('deliveryPreviewImg');
-        const removeBtn = document.getElementById('deliveryFotoRemoveBtn');
-        if (!urlInput || !previewDiv) return;
-        if (fileInput && fileInput.files && fileInput.files[0]) return;
-        const url = urlInput.value.trim();
-        if (url) {
-            currentDeliveryFotoUrl = url;
-            currentDeliveryFotoFile = null;
-            previewImg.src = url;
-            previewDiv.style.display = 'flex';
-            if (removeBtn) removeBtn.style.display = 'flex';
-        } else {
-            previewDiv.style.display = 'none';
-            if (removeBtn) removeBtn.style.display = 'none';
-            previewImg.src = '';
-            currentDeliveryFotoUrl = '';
-        }
-    }
-
-    function removeDeliveryFoto() {
-        const fileInput = document.getElementById('deliveryFoto');
-        const urlInput = document.getElementById('deliveryFotoUrl');
-        const previewDiv = document.getElementById('deliveryFotoPreview');
-        const previewImg = document.getElementById('deliveryPreviewImg');
-        const removeBtn = document.getElementById('deliveryFotoRemoveBtn');
-        if (fileInput) fileInput.value = '';
-        if (urlInput) {
-            urlInput.value = '';
-            urlInput.disabled = false;
-        }
-        if (previewDiv) previewDiv.style.display = 'none';
-        if (removeBtn) removeBtn.style.display = 'none';
-        if (previewImg) previewImg.src = '';
-        currentDeliveryFotoFile = null;
-        currentDeliveryFotoUrl = '';
-    }
-
-    // ==================== GUARDADO DE DATOS ====================
-    document.getElementById('saveMesonero')?.addEventListener('click', async () => {
-        const btn = document.getElementById('saveMesonero');
-        if (btn.disabled) return;
-        const id = window.mesoneroEditandoId;
-        const nombre = document.getElementById('mesoneroNombre')?.value.trim();
-        const activo = document.getElementById('mesoneroActivo')?.value === 'true';
-        if (!nombre) { window.mostrarToast('Ingresa un nombre', 'error'); return; }
-        let fotoUrl = '';
-        const archivoFoto = document.getElementById('mesoneroFoto')?.files[0];
-        const fotoUrlInput = document.getElementById('mesoneroFotoUrl')?.value;
-        if (archivoFoto) {
-            const resultado = await window.subirImagenPlatillo(archivoFoto, 'mesoneros');
-            if (resultado.success) fotoUrl = resultado.url;
-            else { window.mostrarToast('Error al subir la foto: ' + resultado.error, 'error'); return; }
-        } else if (fotoUrlInput) fotoUrl = fotoUrlInput;
-        try {
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-            const data = { nombre, activo, foto: fotoUrl || null };
-            let error;
-            if (id) {
-                ({ error } = await window.supabaseClient.from('mesoneros').update(data).eq('id', id));
-            } else {
-                data.id = window.generarId('mes_');
-                ({ error } = await window.supabaseClient.from('mesoneros').insert([data]));
-            }
-            if (error) throw error;
-            window.cerrarModal('mesoneroModal');
-            await window.cargarMesoneros();
-            window.mostrarToast('✅ Mesonero guardado', 'success');
-        } catch (e) { console.error(e); window.mostrarToast('❌ Error: ' + e.message, 'error'); }
-        finally { btn.disabled = false; btn.innerHTML = 'Guardar'; }
-    });
-
-    document.getElementById('saveDelivery')?.addEventListener('click', async () => {
-        if (!window.deliveryEditandoId) return;
-        const btn = document.getElementById('saveDelivery');
-        if (btn.disabled) return;
-        const nombre = document.getElementById('deliveryNombre').value.trim();
-        const activo = document.getElementById('deliveryEstado').value === 'true';
-        if (!nombre) { window.mostrarToast('Ingresa un nombre', 'error'); return; }
-        let fotoUrl = '';
-        const archivoFoto = document.getElementById('deliveryFoto')?.files[0];
-        const fotoUrlInput = document.getElementById('deliveryFotoUrl')?.value;
-        if (archivoFoto) {
-            const resultado = await window.subirImagenPlatillo(archivoFoto, 'deliverys');
-            if (resultado.success) fotoUrl = resultado.url;
-            else { window.mostrarToast('Error al subir la foto: ' + resultado.error, 'error'); return; }
-        } else if (fotoUrlInput) fotoUrl = fotoUrlInput;
-        try {
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-            await window.supabaseClient.from('deliverys').update({ nombre, activo, foto: fotoUrl || null }).eq('id', window.deliveryEditandoId);
-            window.cerrarModal('deliveryModal');
-            await window.cargarDeliverys();
-            window.mostrarToast('✅ Motorizado actualizado', 'success');
-        } catch (e) { console.error('Error:', e); window.mostrarToast('❌ Error al actualizar', 'error'); }
-        finally { btn.disabled = false; btn.innerHTML = 'Guardar'; }
-    });
-
-    // ==================== CERRAR MODALES (X y Cancelar) ====================
-    const closeMesoneroModal = document.getElementById('closeMesoneroModal');
-    const cancelMesoneroEdit = document.getElementById('cancelMesoneroEdit');
-    if (closeMesoneroModal) closeMesoneroModal.addEventListener('click', () => window.cerrarModal('mesoneroModal'));
-    if (cancelMesoneroEdit) cancelMesoneroEdit.addEventListener('click', () => window.cerrarModal('mesoneroModal'));
-
-    const closeDeliveryModal = document.getElementById('closeDeliveryModal');
-    const cancelDeliveryEdit = document.getElementById('cancelDeliveryEdit');
-    if (closeDeliveryModal) closeDeliveryModal.addEventListener('click', () => window.cerrarModal('deliveryModal'));
-    if (cancelDeliveryEdit) cancelDeliveryEdit.addEventListener('click', () => window.cerrarModal('deliveryModal'));
-
-    // ==================== CONFIGURAR EVENTOS DE FOTO ====================
-    function setupFotoEvents() {
-        const deliveryFile = document.getElementById('deliveryFoto');
-        const deliveryUrl = document.getElementById('deliveryFotoUrl');
-        const deliveryRemove = document.getElementById('deliveryFotoRemoveBtn');
-        if (deliveryFile) deliveryFile.addEventListener('change', handleDeliveryFotoFile);
-        if (deliveryUrl) deliveryUrl.addEventListener('input', handleDeliveryFotoUrl);
-        if (deliveryRemove) deliveryRemove.addEventListener('click', removeDeliveryFoto);
-        
-        const mesoneroFile = document.getElementById('mesoneroFoto');
-        const mesoneroUrl = document.getElementById('mesoneroFotoUrl');
-        const mesoneroRemove = document.getElementById('mesoneroFotoRemoveBtn');
-        if (mesoneroFile) mesoneroFile.addEventListener('change', handleMesoneroFotoFile);
-        if (mesoneroUrl) mesoneroUrl.addEventListener('input', handleMesoneroFotoUrl);
-        if (mesoneroRemove) mesoneroRemove.addEventListener('click', removeMesoneroFoto);
-    }
-    setupFotoEvents();
-
-    // ── Tabla últimos 5 viajes ────────────────────────────────────────────────
+    // ══════════════════════════════════════════════════════════════
+    // TABLA ÚLTIMOS 5 VIAJES + HISTORIAL DE HOY
+    // ══════════════════════════════════════════════════════════════
     window.cargarUltimosViajes = async function() {
         const tbody = document.getElementById('ultimosViajesTbody');
         if (!tbody) return;
@@ -641,8 +244,8 @@
             tbody.innerHTML = lista.length ? lista.map(e => {
                 const motor = e.deliverys?.nombre || '—';
                 const ref   = e.pedidos
-                    ? (e.pedidos.mesa || e.pedidos.cliente_nombre || (e.pedido_id || '').slice(0,8) || '—')
-                    : ((e.pedido_id || '').slice(0,8) || '—');
+                    ? (e.pedidos.mesa || e.pedidos.cliente_nombre || (e.pedido_id||'').slice(0,8) || '—')
+                    : ((e.pedido_id||'').slice(0,8) || '—');
                 const mBs  = e.monto_bs || 0;
                 const mUsd = tasa > 0 ? mBs / tasa : 0;
                 const fecha = new Date(e.fecha_entrega).toLocaleString('es-VE', {
@@ -759,5 +362,114 @@
             _s('deliverysPromedioCard', `${window.formatUSD(avgUsd)} / ${window.formatBs(avgBs)}`);
         } catch(e) { console.error('Error stats deliverys:', e); }
     };
+
+    // ══════════════════════════════════════════════════════════════
+    // MANEJO DE FOTO DE DELIVERY
+    // ══════════════════════════════════════════════════════════════
+    function handleDeliveryFotoFile() {
+        const fi = document.getElementById('deliveryFoto');
+        const ui = document.getElementById('deliveryFotoUrl');
+        const pd = document.getElementById('deliveryFotoPreview');
+        const pi = document.getElementById('deliveryPreviewImg');
+        const rb = document.getElementById('deliveryFotoRemoveBtn');
+        if (!fi || !pd) return;
+        if (fi.files && fi.files[0]) {
+            const reader = new FileReader();
+            currentDeliveryFotoFile = fi.files[0];
+            currentDeliveryFotoUrl  = '';
+            if (ui) { ui.value = ''; ui.disabled = true; }
+            reader.onload = e => {
+                if (pi) pi.src = e.target.result;
+                pd.style.display = 'flex';
+                if (rb) rb.style.display = 'flex';
+            };
+            reader.readAsDataURL(fi.files[0]);
+        } else {
+            if (ui) ui.disabled = false;
+        }
+    }
+
+    function handleDeliveryFotoUrl() {
+        const ui = document.getElementById('deliveryFotoUrl');
+        const fi = document.getElementById('deliveryFoto');
+        const pd = document.getElementById('deliveryFotoPreview');
+        const pi = document.getElementById('deliveryPreviewImg');
+        const rb = document.getElementById('deliveryFotoRemoveBtn');
+        if (!ui || !pd) return;
+        if (fi && fi.files && fi.files[0]) return;
+        const url = ui.value.trim();
+        if (url) {
+            currentDeliveryFotoUrl  = url;
+            currentDeliveryFotoFile = null;
+            if (pi) pi.src = url;
+            pd.style.display = 'flex';
+            if (rb) rb.style.display = 'flex';
+        } else {
+            pd.style.display = 'none';
+            if (rb) rb.style.display = 'none';
+            if (pi) pi.src = '';
+            currentDeliveryFotoUrl = '';
+        }
+    }
+
+    function removeDeliveryFoto() {
+        const fi = document.getElementById('deliveryFoto');
+        const ui = document.getElementById('deliveryFotoUrl');
+        const pd = document.getElementById('deliveryFotoPreview');
+        const pi = document.getElementById('deliveryPreviewImg');
+        const rb = document.getElementById('deliveryFotoRemoveBtn');
+        if (fi) fi.value = '';
+        if (ui) { ui.value = ''; ui.disabled = false; }
+        if (pd) pd.style.display = 'none';
+        if (rb) rb.style.display = 'none';
+        if (pi) pi.src = '';
+        currentDeliveryFotoFile = null;
+        currentDeliveryFotoUrl  = '';
+    }
+
+    // ══════════════════════════════════════════════════════════════
+    // GUARDAR DELIVERY (modal)
+    // ══════════════════════════════════════════════════════════════
+    document.getElementById('saveDelivery')?.addEventListener('click', async () => {
+        if (!window.deliveryEditandoId) return;
+        const btn = document.getElementById('saveDelivery');
+        if (btn.disabled) return;
+        const nombre = document.getElementById('deliveryNombre').value.trim();
+        const activo = document.getElementById('deliveryEstado').value === 'true';
+        if (!nombre) { window.mostrarToast('Ingresa un nombre', 'error'); return; }
+        let fotoUrl = '';
+        const archivoFoto  = document.getElementById('deliveryFoto')?.files[0];
+        const fotoUrlInput = document.getElementById('deliveryFotoUrl')?.value;
+        if (archivoFoto) {
+            const res = await window.subirImagenPlatillo(archivoFoto, 'deliverys');
+            if (res.success) fotoUrl = res.url;
+            else { window.mostrarToast('Error al subir la foto: ' + res.error, 'error'); return; }
+        } else if (fotoUrlInput) {
+            fotoUrl = fotoUrlInput;
+        }
+        try {
+            btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            await window.supabaseClient.from('deliverys')
+                .update({ nombre, activo, foto: fotoUrl || null })
+                .eq('id', window.deliveryEditandoId);
+            window.cerrarModal('deliveryModal');
+            await window.cargarDeliverys();
+            window.mostrarToast('✅ Motorizado actualizado', 'success');
+        } catch (e) {
+            console.error('Error:', e);
+            window.mostrarToast('❌ Error al actualizar', 'error');
+        } finally {
+            btn.disabled = false; btn.innerHTML = 'Guardar';
+        }
+    });
+
+    // Cerrar modal delivery
+    document.getElementById('closeDeliveryModal')?.addEventListener('click', () => window.cerrarModal('deliveryModal'));
+    document.getElementById('cancelDeliveryEdit')?.addEventListener('click', () => window.cerrarModal('deliveryModal'));
+
+    // Eventos de foto
+    document.getElementById('deliveryFoto')?.addEventListener('change', handleDeliveryFotoFile);
+    document.getElementById('deliveryFotoUrl')?.addEventListener('input', handleDeliveryFotoUrl);
+    document.getElementById('deliveryFotoRemoveBtn')?.addEventListener('click', removeDeliveryFoto);
 
 })();
