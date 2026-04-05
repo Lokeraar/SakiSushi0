@@ -50,11 +50,11 @@
             // Mostrar imagen pequeña si existe
             const imgHtml = item.imagen ? `<img src="${item.imagen}" style="width:24px;height:24px;object-fit:cover;border-radius:4px;margin-right:8px">` : '';
             el.innerHTML = `
-                <div style="display:flex;align-items:center;flex:1;min-width:0">
+                <div style="display:flex;align-items:center;flex:1;min-width:0;overflow:hidden">
                     ${imgHtml}
-                    <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${item.nombre}</span>
+                    <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">${item.nombre}</span>
                 </div>
-                <span class="inv-item-badge ${estado}">${disponible} ${item.unidad_base||'u'}</span>`;
+                <span class="inv-item-badge ${estado}" style="flex-shrink:0;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.72rem">${parseFloat(disponible.toPrecision(10))} ${item.unidad_base||'u'}</span>`;
             el.addEventListener('click', function() {
                 const wasActive = item.id === window._invActiveId;
                 document.querySelectorAll('.inv-list-item').forEach(e => e.classList.remove('active'));
@@ -112,10 +112,10 @@
                     </button>
                 </div>
                 ${imgHtml}
-                <div class="inv-stock-row" style="margin-bottom:.5rem">
-                    <span class="inv-stock-num ${estado}" style="font-size:2rem">${disponible}</span>
+                <div class="inv-stock-row" style="margin-bottom:.5rem;flex-wrap:wrap;gap:.35rem">
+                    <span class="inv-stock-num ${estado}" style="font-size:2rem">${parseFloat(disponible.toPrecision(10))}</span>
                     <span class="inv-stock-unit" style="font-size:.9rem">${item.unidad_base||'u'}</span>
-                    <span style="font-size:.75rem;color:var(--text-muted);margin-left:auto">Reservado: ${item.reservado||0}</span>
+                    <span style="font-size:.72rem;color:var(--text-muted);margin-left:auto;background:var(--secondary);padding:2px 8px;border-radius:20px;white-space:nowrap">Reservado: ${parseFloat((item.reservado||0).toPrecision(10))}</span>
                 </div>
                 <div class="inv-bar" style="margin-bottom:.85rem"><div class="inv-bar-fill ${estado}" style="width:${porcentaje}%;background:${colorEstado}"></div></div>
                 <div class="inv-meta-grid" style="grid-template-columns:1fr 1fr 1fr;gap:.75rem;margin-bottom:.85rem">
@@ -383,35 +383,19 @@
         try {
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
-            var stockTotal = stockActual + agregar;
-            var prevItem = (window.inventarioItems||[]).find(function(i){return i.id===id;});
-            const ingrediente = {
-                id, nombre,
-                stock: stockTotal,
+            const ingrediente = { 
+                id, nombre, 
+                stock: stockActual + agregar, 
                 reservado: 0,
-                unidad_base: unidad,
-                minimo,
-                precio_costo: costo,
+                unidad_base: unidad, 
+                minimo, 
+                precio_costo: costo, 
                 precio_unitario: venta,
-                imagen: imagenUrl || null,
-                stock_maximo: esNuevo ? stockTotal : Math.max(stockTotal, (prevItem&&prevItem.stock_maximo)||stockTotal)
+                imagen: imagenUrl || null
             };
             let error;
-            if (esNuevo) {
-                ({ error } = await window.supabaseClient.from('inventario').insert([ingrediente]));
-            } else {
-                var upd = Object.assign({},ingrediente); delete upd.id;
-                var res = await window.supabaseClient.from('inventario').update(upd).eq('id', id);
-                if (res.error && res.error.code==='PGRST204' && res.error.message.includes('imagen')) {
-                    var noImg = Object.assign({},upd); delete noImg.imagen;
-                    res = await window.supabaseClient.from('inventario').update(noImg).eq('id', id);
-                }
-                if (res.error && res.error.code==='PGRST204' && res.error.message.includes('stock_maximo')) {
-                    var noSm = Object.assign({},upd); delete noSm.stock_maximo;
-                    res = await window.supabaseClient.from('inventario').update(noSm).eq('id', id);
-                }
-                error = res.error;
-            }
+            if (esNuevo) ({ error } = await window.supabaseClient.from('inventario').insert([ingrediente]));
+            else ({ error } = await window.supabaseClient.from('inventario').update(ingrediente).eq('id', id));
             if (error) throw error;
             window.ingredienteEditandoId = null;
             window.cerrarModal('ingredienteModal');
@@ -734,55 +718,6 @@
         }).join('');
     };
 
-    window.irAStockCritico = function() {
-        var tabs = document.querySelectorAll('.tab');
-        var panes = document.querySelectorAll('.tab-pane');
-        tabs.forEach(function(t){t.classList.remove('active');});
-        panes.forEach(function(p){p.classList.remove('active');});
-        var t = document.querySelector('.tab[data-tab="dashboard"]');
-        var p = document.getElementById('dashboardPane');
-        if(t) t.classList.add('active');
-        if(p) p.classList.add('active');
-        setTimeout(function(){
-            var el = document.getElementById('stockCritico');
-            if(!el) return;
-            el.scrollIntoView({behavior:'smooth', block:'center'});
-            var par = el.closest('.lower-stock') || el.parentElement;
-            if(par){
-                var n = 0;
-                var iv = setInterval(function(){
-                    n++;
-                    par.style.boxShadow = n%2===0 ? '0 0 0 3px #FFC107, 0 0 20px rgba(255,193,7,.4)' : 'none';
-                    par.style.borderColor = n%2===0 ? '#FFC107' : '';
-                    if(n>=6){ clearInterval(iv); par.style.boxShadow=''; par.style.borderColor=''; }
-                }, 300);
-            }
-            document.querySelectorAll('#stockCritico .alert-item.critical').forEach(function(e){
-                e.style.animation='none'; e.offsetHeight;
-                e.style.animation='pulse-critico 0.8s ease-in-out 3';
-            });
-        }, 150);
-    };
-    window.irAMenu = function() {
-        document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active');});
-        document.querySelectorAll('.tab-pane').forEach(function(p){p.classList.remove('active');});
-        var t = document.querySelector('.tab[data-tab="menu"]');
-        var p = document.getElementById('menuPane');
-        if(t) t.classList.add('active');
-        if(p){ p.classList.add('active'); p.scrollIntoView({behavior:'smooth', block:'start'}); }
-    };
-    window.irADeliverys = function() {
-        document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active');});
-        document.querySelectorAll('.tab-pane').forEach(function(p){p.classList.remove('active');});
-        var t = document.querySelector('.tab[data-tab="deliverys"]');
-        var p = document.getElementById('deliverysPane');
-        if(t) t.classList.add('active');
-        if(p){ p.classList.add('active'); p.scrollIntoView({behavior:'smooth', block:'start'}); }
-    };
-    window.actualizarProductosActivos = function() {
-        var el = document.getElementById('productosActivos');
-        if(el) el.textContent = (window.menuItems||[]).filter(function(m){return m.disponible;}).length;
-    };
     window._irAIngrediente = function(ingredienteId) {
         const tabs = document.querySelectorAll('.tab');
         const panes = document.querySelectorAll('.tab-pane');
