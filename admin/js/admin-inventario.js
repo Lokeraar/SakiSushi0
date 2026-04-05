@@ -90,33 +90,18 @@
         const isMobile = window.innerWidth <= 768;
         const disponible = (item.stock||0) - (item.reservado||0);
         const minimo = item.minimo || 0;
-        const stockMaximo = item.stock_maximo || item.stock || 1;
-
-        // ── 4 niveles ────────────────────────────────────────────────────────
-        let estado;
-        if (disponible <= 0)                       estado = 'agotado';
-        else if (disponible <= minimo)              estado = 'critico';
-        else if (disponible <= stockMaximo * 0.5)   estado = 'moderado';
-        else                                        estado = 'optimo';
-
-        // Porcentaje: disminuye de derecha a izquierda (barra invertida)
-        const pct = stockMaximo > 0 ? Math.min(100, (disponible / stockMaximo) * 100) : 0;
-        // Colores y etiquetas por estado
-        const paleta = {
-            optimo:  { color:'#43a047', grad:'linear-gradient(270deg,#43a047,#66bb6a)', label:'✅ Óptimo   (>50%)', emoji:'✅' },
-            moderado:{ color:'#fb8c00', grad:'linear-gradient(270deg,#fb8c00,#ffa726)', label:'🟡 Moderado (≤50%)', emoji:'🟡' },
-            critico: { color:'#e53935', grad:'linear-gradient(270deg,#e53935,#ef5350)', label:'⚠️ Crítico  (≤mín)',  emoji:'⚠️' },
-            agotado: { color:'#546e7a', grad:'linear-gradient(270deg,#37474f,#546e7a)', label:'🔴 Agotado  (=0)',    emoji:'🔴' }
-        };
-        const p = paleta[estado];
-
-        const imgHtml = item.imagen
-            ? `<img src="${item.imagen}" style="width:60px;height:60px;object-fit:cover;border-radius:8px;margin-bottom:.5rem;cursor:pointer"
-                  onclick="window.expandirImagen('${item.imagen.replace(/'/g,"\'")}')">` : '';
-
-        // Barra invertida: fondo total, relleno desde la derecha decrece hacia la izquierda
-        // Usamos un wrapper con overflow hidden y el fill crece desde la derecha
-        const barW = estado === 'agotado' ? 0 : pct.toFixed(1);
+        let estado = 'ok';
+        if (disponible <= 0) estado = 'agotado';
+        else if (disponible <= minimo) estado = 'critico';
+        else if (disponible <= minimo * 1.5) estado = 'bajo';
+        else estado = 'ok';
+        
+        // Calcular porcentaje para barra: máximo entre stock y minimo*2 para referencia
+        const maxReferencia = Math.max(item.stock, minimo * 2, 10);
+        const porcentaje = Math.min(100, (disponible / maxReferencia) * 100);
+        const colorEstado = estado === 'critico' || estado === 'agotado' ? 'var(--danger)' : estado === 'bajo' ? 'var(--warning)' : 'var(--success)';
+        
+        const imgHtml = item.imagen ? `<img src="${item.imagen}" style="width:60px;height:60px;object-fit:cover;border-radius:8px;margin-bottom:.5rem">` : '';
 
         const detailHTML = `
             <div class="inv-detail-card" id="invDetailCard_${item.id}">
@@ -127,33 +112,16 @@
                     </button>
                 </div>
                 ${imgHtml}
-                <div class="inv-stock-row" style="margin-bottom:.4rem">
-                    <span style="font-size:2rem;font-weight:800;color:${p.color}">${disponible}</span>
-                    <span class="inv-stock-unit" style="font-size:.9rem;margin-left:.3rem">${item.unidad_base||'u'}</span>
-                    <span style="margin-left:auto;font-size:.7rem;padding:2px 9px;border-radius:20px;
-                                 background:${p.color}22;color:${p.color};font-weight:700">${p.emoji} ${estado.charAt(0).toUpperCase()+estado.slice(1)}</span>
+                <div class="inv-stock-row" style="margin-bottom:.5rem">
+                    <span class="inv-stock-num ${estado}" style="font-size:2rem">${disponible}</span>
+                    <span class="inv-stock-unit" style="font-size:.9rem">${item.unidad_base||'u'}</span>
+                    <span style="font-size:.75rem;color:var(--text-muted);margin-left:auto">Reservado: ${item.reservado||0}</span>
                 </div>
-                <!-- Barra invertida: se vacía de derecha a izquierda -->
-                <div style="height:10px;background:rgba(0,0,0,.08);border-radius:6px;overflow:hidden;margin-bottom:.3rem;position:relative">
-                    <div style="position:absolute;top:0;right:0;height:100%;width:${barW}%;
-                                background:${p.grad};border-radius:6px 0 0 6px;
-                                transition:width .6s cubic-bezier(.4,0,.2,1)"></div>
-                </div>
-                <!-- Leyenda: solo el estado actual -->
-                <div style="display:flex;align-items:center;gap:.4rem;margin-bottom:.75rem;font-size:.72rem;color:${p.color};font-weight:600">
-                    <span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:${p.color};flex-shrink:0"></span>
-                    ${p.label}
-                    <span style="color:var(--text-muted);font-weight:400;margin-left:auto">
-                        ${pct.toFixed(0)}% · Máx: ${stockMaximo} ${item.unidad_base||'u'}
-                    </span>
-                </div>
-                <div style="font-size:.7rem;color:var(--text-muted);margin-bottom:.75rem">
-                    Reservado: ${item.reservado||0}
-                </div>
+                <div class="inv-bar" style="margin-bottom:.85rem"><div class="inv-bar-fill ${estado}" style="width:${porcentaje}%;background:${colorEstado}"></div></div>
                 <div class="inv-meta-grid" style="grid-template-columns:1fr 1fr 1fr;gap:.75rem;margin-bottom:.85rem">
                     <div class="inv-meta-item">
                         <span class="inv-meta-label">Mínimo</span>
-                        <span class="inv-meta-val" style="color:${p.color}">${minimo} ${item.unidad_base||'u'}</span>
+                        <span class="inv-meta-val" style="color:${colorEstado}">${minimo} ${item.unidad_base||'u'}</span>
                     </div>
                     <div class="inv-meta-item">
                         <span class="inv-meta-label">Costo (USD/Bs)</span>
@@ -415,19 +383,35 @@
         try {
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
-            const ingrediente = { 
-                id, nombre, 
-                stock: stockActual + agregar, 
+            var stockTotal = stockActual + agregar;
+            var prevItem = (window.inventarioItems||[]).find(function(i){return i.id===id;});
+            const ingrediente = {
+                id, nombre,
+                stock: stockTotal,
                 reservado: 0,
-                unidad_base: unidad, 
-                minimo, 
-                precio_costo: costo, 
+                unidad_base: unidad,
+                minimo,
+                precio_costo: costo,
                 precio_unitario: venta,
-                imagen: imagenUrl || null
+                imagen: imagenUrl || null,
+                stock_maximo: esNuevo ? stockTotal : Math.max(stockTotal, (prevItem&&prevItem.stock_maximo)||stockTotal)
             };
             let error;
-            if (esNuevo) ({ error } = await window.supabaseClient.from('inventario').insert([ingrediente]));
-            else ({ error } = await window.supabaseClient.from('inventario').update(ingrediente).eq('id', id));
+            if (esNuevo) {
+                ({ error } = await window.supabaseClient.from('inventario').insert([ingrediente]));
+            } else {
+                var upd = Object.assign({},ingrediente); delete upd.id;
+                var res = await window.supabaseClient.from('inventario').update(upd).eq('id', id);
+                if (res.error && res.error.code==='PGRST204' && res.error.message.includes('imagen')) {
+                    var noImg = Object.assign({},upd); delete noImg.imagen;
+                    res = await window.supabaseClient.from('inventario').update(noImg).eq('id', id);
+                }
+                if (res.error && res.error.code==='PGRST204' && res.error.message.includes('stock_maximo')) {
+                    var noSm = Object.assign({},upd); delete noSm.stock_maximo;
+                    res = await window.supabaseClient.from('inventario').update(noSm).eq('id', id);
+                }
+                error = res.error;
+            }
             if (error) throw error;
             window.ingredienteEditandoId = null;
             window.cerrarModal('ingredienteModal');
@@ -751,39 +735,53 @@
     };
 
     window.irAStockCritico = function() {
-        document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-        document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
-        const t=document.querySelector('.tab[data-tab="dashboard"]'), p=document.getElementById('dashboardPane');
-        if(t) t.classList.add('active'); if(p) p.classList.add('active');
-        setTimeout(()=>{
-            const el=document.getElementById('stockCritico'); if(!el) return;
-            el.scrollIntoView({behavior:'smooth',block:'center'});
-            const par=el.closest('.lower-stock')||el.parentElement;
-            if(par){ let n=0; const iv=setInterval(()=>{ n++;
-                par.style.boxShadow=n%2===0?'0 0 0 3px #FFC107,0 0 20px rgba(255,193,7,.4)':'none';
-                par.style.borderColor=n%2===0?'#FFC107':'';
-                if(n>=6){clearInterval(iv);par.style.boxShadow='';par.style.borderColor='';}
-            },300); }
-            document.querySelectorAll('#stockCritico .alert-item.critical').forEach(e=>{
-                e.style.animation='none'; e.offsetHeight; e.style.animation='pulse-critico 0.8s ease-in-out 3';
+        var tabs = document.querySelectorAll('.tab');
+        var panes = document.querySelectorAll('.tab-pane');
+        tabs.forEach(function(t){t.classList.remove('active');});
+        panes.forEach(function(p){p.classList.remove('active');});
+        var t = document.querySelector('.tab[data-tab="dashboard"]');
+        var p = document.getElementById('dashboardPane');
+        if(t) t.classList.add('active');
+        if(p) p.classList.add('active');
+        setTimeout(function(){
+            var el = document.getElementById('stockCritico');
+            if(!el) return;
+            el.scrollIntoView({behavior:'smooth', block:'center'});
+            var par = el.closest('.lower-stock') || el.parentElement;
+            if(par){
+                var n = 0;
+                var iv = setInterval(function(){
+                    n++;
+                    par.style.boxShadow = n%2===0 ? '0 0 0 3px #FFC107, 0 0 20px rgba(255,193,7,.4)' : 'none';
+                    par.style.borderColor = n%2===0 ? '#FFC107' : '';
+                    if(n>=6){ clearInterval(iv); par.style.boxShadow=''; par.style.borderColor=''; }
+                }, 300);
+            }
+            document.querySelectorAll('#stockCritico .alert-item.critical').forEach(function(e){
+                e.style.animation='none'; e.offsetHeight;
+                e.style.animation='pulse-critico 0.8s ease-in-out 3';
             });
-        },150);
+        }, 150);
     };
     window.irAMenu = function() {
-        document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-        document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
-        const t=document.querySelector('.tab[data-tab="menu"]'), p=document.getElementById('menuPane');
-        if(t) t.classList.add('active'); if(p){p.classList.add('active'); p.scrollIntoView({behavior:'smooth',block:'start'});}
+        document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active');});
+        document.querySelectorAll('.tab-pane').forEach(function(p){p.classList.remove('active');});
+        var t = document.querySelector('.tab[data-tab="menu"]');
+        var p = document.getElementById('menuPane');
+        if(t) t.classList.add('active');
+        if(p){ p.classList.add('active'); p.scrollIntoView({behavior:'smooth', block:'start'}); }
     };
     window.irADeliverys = function() {
-        document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-        document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
-        const t=document.querySelector('.tab[data-tab="deliverys"]'), p=document.getElementById('deliverysPane');
-        if(t) t.classList.add('active'); if(p){p.classList.add('active'); p.scrollIntoView({behavior:'smooth',block:'start'});}
+        document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active');});
+        document.querySelectorAll('.tab-pane').forEach(function(p){p.classList.remove('active');});
+        var t = document.querySelector('.tab[data-tab="deliverys"]');
+        var p = document.getElementById('deliverysPane');
+        if(t) t.classList.add('active');
+        if(p){ p.classList.add('active'); p.scrollIntoView({behavior:'smooth', block:'start'}); }
     };
     window.actualizarProductosActivos = function() {
-        const el = document.getElementById('productosActivos');
-        if (el) el.textContent = (window.menuItems||[]).filter(m=>m.disponible).length;
+        var el = document.getElementById('productosActivos');
+        if(el) el.textContent = (window.menuItems||[]).filter(function(m){return m.disponible;}).length;
     };
     window._irAIngrediente = function(ingredienteId) {
         const tabs = document.querySelectorAll('.tab');
