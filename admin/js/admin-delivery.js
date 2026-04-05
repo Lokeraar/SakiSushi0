@@ -30,40 +30,42 @@
             (allProp || []).forEach(p => { acumulados[p.mesonero_id] = (acumulados[p.mesonero_id] || 0) + (p.monto_bs || 0); });
         } catch(e) { console.error('Error obteniendo acumulado propinas:', e); }
         const sorted = [...window.mesoneros].sort((a, b) => a.nombre.localeCompare(b.nombre));
+        const tasa = window.configGlobal?.tasa_efectiva || window.configGlobal?.tasa_cambio || 400;
         container.innerHTML = sorted.map(m => {
             const inicial  = m.nombre.charAt(0).toUpperCase();
             const acum     = acumulados[m.id] || 0;
             const hayAcum  = acum > 0;
-            const fotoHtml = m.foto ? `<img src="${m.foto}" style="width:40px;height:40px;border-radius:50%;object-fit:cover;margin-right:.5rem">` : `<div class="mesonero-avatar">${inicial}</div>`;
-            return `<div class="mesonero-card">
-                ${fotoHtml}
-                <div style="flex:1;min-width:0">
-                    <span class="mesonero-nombre">${m.nombre}</span>
-                    <div style="font-size:.72rem;margin-top:2px;font-weight:${hayAcum ? '700' : '400'}">
-                        <span style="color:var(--text-muted)">Propinas pendientes:</span>
-                        <span style="color:${hayAcum ? 'var(--propina)' : 'var(--text-muted)'}">
-                            ${hayAcum
-                                ? window.formatUSD((window.configGlobal?.tasa_efectiva||400) > 0 ? acum/(window.configGlobal?.tasa_efectiva||400) : 0) + ' / ' + window.formatBs(acum)
-                                : 'Bs 0,00'}
-                        </span>
+            const acumUsd  = tasa > 0 ? acum / tasa : 0;
+            const avatar   = m.foto
+                ? `<div class="ucard-avatar"><img src="${m.foto}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;cursor:pointer" onclick="window.expandirImagen(this.src)"></div>`
+                : `<div class="ucard-avatar"><div class="mesonero-avatar" style="width:100%;height:100%;font-size:1.4rem;border-radius:50%">${inicial}</div></div>`;
+            const badge    = m.activo
+                ? '<span class="status-activo"><i class="fas fa-check-circle"></i> Activo</span>'
+                : '<span class="status-inactivo"><i class="fas fa-circle"></i> Inactivo</span>';
+            return `<div class="usuario-card-v2" style="border-left-color:var(--propina)">
+                ${avatar}
+                <div class="ucard-body">
+                    <div class="ucard-top">
+                        <div class="ucard-names">
+                            <span class="mesonero-nombre">${m.nombre}</span>
+                            <span style="font-size:.72rem;color:${hayAcum ? 'var(--propina)' : 'var(--text-muted)'};font-weight:${hayAcum ? '700' : '400'}">
+                                Propinas: ${hayAcum ? window.formatUSD(acumUsd) + ' / ' + window.formatBs(acum) : 'Bs 0,00'}
+                            </span>
+                        </div>
+                        <div class="ucard-status">${badge}</div>
                     </div>
-                </div>
-                ${m.activo ? '<span class="status-activo"><i class="fas fa-check-circle"></i> Activo</span>' : '<span class="status-inactivo"><i class="fas fa-circle"></i> Inactivo</span>'}
-                <div class="mesonero-actions">
-                    ${hayAcum ? `<button class="btn-sm" style="background:linear-gradient(135deg,var(--propina),#7B1FA2);color:#fff;white-space:nowrap"
-                        onclick="window.pagarPropinaMesonero('${m.id}', '${m.nombre}', ${acum})">
-                        <i class="fas fa-hand-holding-heart"></i> Pagar
-                    </button>` : ''}
-                    <button class="btn-icon edit" onclick="window.editarMesonero('${m.id}')" title="Editar mesonero">
-                        <i class="fas fa-pen"></i>
-                    </button>
-                    <button class="btn-toggle ${m.activo ? 'btn-toggle-on' : 'btn-toggle-off'}"
-                        onclick="window.toggleMesoneroActivo('${m.id}', ${!m.activo})">
-                        ${m.activo ? 'Inhabilitar' : 'Activar'}
-                    </button>
-                    <button class="btn-icon delete" onclick="window.eliminarMesonero('${m.id}')" title="Eliminar">
-                        <i class="fas fa-trash"></i>
-                    </button>
+                    <div class="ucard-actions">
+                        ${hayAcum ? `<button class="btn-sm" style="background:linear-gradient(135deg,var(--propina),#7B1FA2);color:#fff;white-space:nowrap"
+                            onclick="window.pagarPropinaMesonero('${m.id}', '${m.nombre}', ${acum})">
+                            <i class="fas fa-hand-holding-heart"></i> Pagar
+                        </button>` : ''}
+                        <button class="btn-icon edit" onclick="window.editarMesonero('${m.id}')" title="Editar mesonero"><i class="fas fa-pen"></i></button>
+                        <button class="btn-toggle ${m.activo ? 'btn-toggle-on' : 'btn-toggle-off'}"
+                            onclick="window.toggleMesoneroActivo('${m.id}', ${!m.activo})">
+                            ${m.activo ? 'Inhabilitar' : 'Activar'}
+                        </button>
+                        <button class="btn-icon delete" onclick="window.eliminarMesonero('${m.id}')" title="Eliminar"><i class="fas fa-trash"></i></button>
+                    </div>
                 </div>
             </div>`;
         }).join('');
@@ -193,6 +195,7 @@
             if (error) throw error;
             window.deliverys = data || [];
             await window.renderizarDeliverys();
+            if (window.cargarUltimosViajes) window.cargarUltimosViajes();
         } catch (e) { console.error('Error cargando deliverys:', e); }
     };
 
@@ -203,35 +206,43 @@
         if (!grid) { window._renderizandoDeliverys = false; return; }
         grid.innerHTML = '';
         try {
+            const tasa = window.configGlobal?.tasa_efectiva || window.configGlobal?.tasa_cambio || 400;
             for (const d of (window.deliverys || [])) {
                 const acumulado = await window.obtenerAcumuladoDelivery(d.id);
-                const fotoHtml = d.foto ? `<img src="${d.foto}" style="width:48px;height:48px;border-radius:50%;object-fit:cover;margin-left:auto">` : '<div style="width:48px;height:48px;border-radius:50%;background:var(--delivery);display:flex;align-items:center;justify-content:center;color:#fff"><i class="fas fa-motorcycle"></i></div>';
+                const acumUsd   = tasa > 0 ? acumulado / tasa : 0;
+                const avatar    = d.foto
+                    ? `<div class="ucard-avatar"><img src="${d.foto}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;cursor:pointer" onclick="window.expandirImagen(this.src)"></div>`
+                    : `<div class="ucard-avatar" style="background:linear-gradient(135deg,var(--delivery),#00838F);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.4rem"><i class="fas fa-motorcycle"></i></div>`;
+                const dbadge    = d.activo
+                    ? '<span class="status-activo"><i class="fas fa-check-circle"></i> Activo</span>'
+                    : '<span class="status-inactivo"><i class="fas fa-circle"></i> Inactivo</span>';
                 const card = document.createElement('div');
-                card.className = 'delivery-card';
+                card.className = 'usuario-card-v2';
+                card.style.borderLeftColor = 'var(--delivery)';
                 card.innerHTML = `
-                    <div style="display:flex;justify-content:space-between;align-items:center">
-                        <div>
-                            <div class="delivery-nombre">${d.nombre}</div>
-                            <div class="delivery-estado ${d.activo ? 'activo' : 'inactivo'}">${d.activo ? 'Activo' : 'Inactivo'}</div>
+                    ${avatar}
+                    <div class="ucard-body">
+                        <div class="ucard-top">
+                            <div class="ucard-names">
+                                <span class="delivery-nombre">${d.nombre}</span>
+                                <span style="font-size:.72rem;color:var(--delivery);font-weight:600">
+                                    💰 ${window.formatUSD(acumUsd)} / ${window.formatBs(acumulado)}
+                                </span>
+                            </div>
+                            <div class="ucard-status">${dbadge}</div>
                         </div>
-                        ${fotoHtml}
-                    </div>
-                    <div class="delivery-acumulado">
-                        <span>💰 Acumulado total:</span>
-                        <span class="delivery-monto">${window.formatBs(acumulado)}</span>
-                    </div>
-                    <div class="delivery-actions">
-                        <button class="btn-icon edit" onclick="window.editarDelivery('${d.id}')" title="Editar"><i class="fas fa-edit"></i></button>
-                        <button class="btn-toggle ${d.activo ? 'btn-toggle-on' : 'btn-toggle-off'}" onclick="window.toggleDeliveryActivo('${d.id}', ${!d.activo})">
-                            ${d.activo ? 'Inhabilitar' : 'Activar'}
-                        </button>
-                        <button class="btn-sm" style="background:linear-gradient(135deg,var(--success),#2E7D32);color:#fff"
-                            onclick="window.mostrarPagoDelivery('${d.id}')">
-                            <i class="fas fa-hand-holding-usd"></i> Pagado
-                        </button>
-                        <button class="btn-icon delete" onclick="window.eliminarDelivery('${d.id}')" title="Eliminar motorizado">
-                            <i class="fas fa-trash"></i>
-                        </button>
+                        <div class="ucard-actions">
+                            <button class="btn-icon edit" onclick="window.editarDelivery('${d.id}')" title="Editar"><i class="fas fa-edit"></i></button>
+                            <button class="btn-toggle ${d.activo ? 'btn-toggle-on' : 'btn-toggle-off'}"
+                                onclick="window.toggleDeliveryActivo('${d.id}', ${!d.activo})">
+                                ${d.activo ? 'Inhabilitar' : 'Activar'}
+                            </button>
+                            <button class="btn-sm" style="background:linear-gradient(135deg,var(--success),#2E7D32);color:#fff"
+                                onclick="window.mostrarPagoDelivery('${d.id}')">
+                                <i class="fas fa-hand-holding-usd"></i> Pagado
+                            </button>
+                            <button class="btn-icon delete" onclick="window.eliminarDelivery('${d.id}')" title="Eliminar"><i class="fas fa-trash"></i></button>
+                        </div>
                     </div>`;
                 grid.appendChild(card);
             }
@@ -614,4 +625,139 @@
         if (mesoneroRemove) mesoneroRemove.addEventListener('click', removeMesoneroFoto);
     }
     setupFotoEvents();
+
+    // ── Tabla últimos 5 viajes ────────────────────────────────────────────────
+    window.cargarUltimosViajes = async function() {
+        const tbody = document.getElementById('ultimosViajesTbody');
+        if (!tbody) return;
+        try {
+            const tasa = window.configGlobal?.tasa_efectiva || window.configGlobal?.tasa_cambio || 400;
+            const { data, error } = await window.supabaseClient
+                .from('entregas_delivery')
+                .select('*, deliverys(nombre), pedidos(id, mesa, cliente_nombre)')
+                .order('fecha_entrega', { ascending: false }).limit(5);
+            if (error) throw error;
+            const lista = data || [];
+            tbody.innerHTML = lista.length ? lista.map(e => {
+                const motor = e.deliverys?.nombre || '—';
+                const ref   = e.pedidos
+                    ? (e.pedidos.mesa || e.pedidos.cliente_nombre || (e.pedido_id || '').slice(0,8) || '—')
+                    : ((e.pedido_id || '').slice(0,8) || '—');
+                const mBs  = e.monto_bs || 0;
+                const mUsd = tasa > 0 ? mBs / tasa : 0;
+                const fecha = new Date(e.fecha_entrega).toLocaleString('es-VE', {
+                    timeZone:'America/Caracas', day:'2-digit', month:'2-digit',
+                    hour:'2-digit', minute:'2-digit'
+                });
+                return `<tr>
+                    <td style="padding:.6rem 1rem;border-bottom:1px solid var(--border);font-size:.8rem;color:var(--text-muted)">${fecha}</td>
+                    <td style="padding:.6rem 1rem;border-bottom:1px solid var(--border);font-size:.85rem;font-weight:600">${motor}</td>
+                    <td style="padding:.6rem 1rem;border-bottom:1px solid var(--border);font-size:.8rem;color:var(--text-muted)">${ref}</td>
+                    <td style="padding:.6rem 1rem;border-bottom:1px solid var(--border);font-size:.85rem;font-weight:700;color:var(--delivery)">
+                        ${window.formatUSD(mUsd)}<br>
+                        <span style="font-size:.75rem;color:var(--text-muted);font-weight:600">${window.formatBs(mBs)}</span>
+                    </td>
+                </tr>`;
+            }).join('') : '<tr><td colspan="4" style="text-align:center;padding:1.5rem;color:var(--text-muted)">Sin viajes registrados</td></tr>';
+        } catch(e) {
+            const tb = document.getElementById('ultimosViajesTbody');
+            if (tb) tb.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--danger)">Error al cargar</td></tr>';
+        }
+    };
+
+    window.verHistorialEnviosHoy = async function() {
+        try {
+            const tasa = window.configGlobal?.tasa_efectiva || window.configGlobal?.tasa_cambio || 400;
+            const hoy  = new Date(); hoy.setHours(0,0,0,0);
+            const man  = new Date(hoy); man.setDate(man.getDate()+1);
+            const { data } = await window.supabaseClient
+                .from('entregas_delivery')
+                .select('*, deliverys(nombre), pedidos(id, mesa, cliente_nombre)')
+                .gte('fecha_entrega', hoy.toISOString())
+                .lt('fecha_entrega', man.toISOString())
+                .order('fecha_entrega', { ascending: false });
+            const lista  = data || [];
+            const totBs  = lista.reduce((s,e) => s+(e.monto_bs||0), 0);
+            const totUsd = tasa > 0 ? totBs / tasa : 0;
+            const rows   = lista.map(e => {
+                const motor = e.deliverys?.nombre || '—';
+                const ref   = e.pedidos
+                    ? (e.pedidos.mesa || e.pedidos.cliente_nombre || (e.pedido_id||'').slice(0,8) || '—')
+                    : ((e.pedido_id||'').slice(0,8) || '—');
+                const mBs  = e.monto_bs||0;
+                const mUsd = tasa > 0 ? mBs/tasa : 0;
+                const fecha = new Date(e.fecha_entrega).toLocaleString('es-VE', {
+                    timeZone:'America/Caracas', day:'2-digit', month:'2-digit',
+                    hour:'2-digit', minute:'2-digit'
+                });
+                return `<tr>
+                    <td style="padding:.55rem .85rem;border-bottom:1px solid var(--border);font-size:.78rem;color:var(--text-muted)">${fecha}</td>
+                    <td style="padding:.55rem .85rem;border-bottom:1px solid var(--border);font-size:.82rem;font-weight:600">${motor}</td>
+                    <td style="padding:.55rem .85rem;border-bottom:1px solid var(--border);font-size:.78rem;color:var(--text-muted)">${ref}</td>
+                    <td style="padding:.55rem .85rem;border-bottom:1px solid var(--border);font-size:.82rem;font-weight:700;color:var(--delivery)">
+                        ${window.formatUSD(mUsd)} / ${window.formatBs(mBs)}
+                    </td>
+                </tr>`;
+            }).join('');
+            const ov = document.createElement('div');
+            ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:10001;display:flex;align-items:center;justify-content:center;padding:1rem;backdrop-filter:blur(3px)';
+            ov.innerHTML = `
+                <div style="background:var(--card-bg);border-radius:16px;max-width:680px;width:100%;max-height:85vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 20px 40px rgba(0,0,0,.4)">
+                    <div style="background:linear-gradient(135deg,var(--delivery),#00838F);padding:1rem 1.5rem;color:#fff;display:flex;justify-content:space-between;align-items:center">
+                        <div>
+                            <div style="font-weight:700;font-size:1rem"><i class="fas fa-motorcycle"></i> Historial Envíos — Hoy</div>
+                            <div style="font-size:.75rem;opacity:.8;margin-top:2px">
+                                ${lista.length} envío${lista.length!==1?'s':''} · Total: ${window.formatUSD(totUsd)} / ${window.formatBs(totBs)}
+                            </div>
+                        </div>
+                        <button onclick="this.closest('[style*=position]').remove()"
+                            style="background:rgba(255,255,255,.2);border:none;color:#fff;border-radius:50%;width:30px;height:30px;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center;font-weight:700">✕</button>
+                    </div>
+                    <div style="overflow-y:auto;flex:1">
+                        <table style="width:100%;border-collapse:collapse">
+                            <thead><tr style="background:var(--secondary)">
+                                <th style="padding:.6rem .85rem;text-align:left;font-size:.72rem;text-transform:uppercase;color:var(--text-muted);font-weight:700">Hora</th>
+                                <th style="padding:.6rem .85rem;text-align:left;font-size:.72rem;text-transform:uppercase;color:var(--text-muted);font-weight:700">Motorizado</th>
+                                <th style="padding:.6rem .85rem;text-align:left;font-size:.72rem;text-transform:uppercase;color:var(--text-muted);font-weight:700">Referencia</th>
+                                <th style="padding:.6rem .85rem;text-align:left;font-size:.72rem;text-transform:uppercase;color:var(--text-muted);font-weight:700">Monto</th>
+                            </tr></thead>
+                            <tbody>${rows || '<tr><td colspan="4" style="text-align:center;padding:1.5rem;color:var(--text-muted)">Sin envíos hoy</td></tr>'}</tbody>
+                        </table>
+                    </div>
+                    <div style="padding:.85rem 1.5rem;border-top:1px solid var(--border);display:flex;justify-content:flex-end">
+                        <button onclick="this.closest('[style*=position]').remove()"
+                            style="background:var(--primary);color:#fff;border:none;padding:.55rem 1.25rem;border-radius:8px;cursor:pointer;font-family:Montserrat,sans-serif;font-weight:600;font-size:.85rem">Cerrar</button>
+                    </div>
+                </div>`;
+            ov.addEventListener('click', e => { if(e.target===ov) ov.remove(); });
+            document.body.appendChild(ov);
+        } catch(e) {
+            console.error('Error historial envíos:', e);
+            window.mostrarToast('❌ Error al cargar historial', 'error');
+        }
+    };
+
+    window._actualizarDeliverysHoyStats = async function() {
+        try {
+            const tasa = window.configGlobal?.tasa_efectiva || window.configGlobal?.tasa_cambio || 400;
+            const hoy  = new Date(); hoy.setHours(0,0,0,0);
+            const man  = new Date(hoy); man.setDate(man.getDate()+1);
+            const { data } = await window.supabaseClient
+                .from('entregas_delivery').select('monto_bs')
+                .gte('fecha_entrega', hoy.toISOString())
+                .lt('fecha_entrega', man.toISOString());
+            const lista  = data || [];
+            const totBs  = lista.reduce((s,e) => s+(e.monto_bs||0), 0);
+            const totUsd = tasa > 0 ? totBs/tasa : 0;
+            const cnt    = lista.length;
+            const avgBs  = cnt > 0 ? totBs/cnt : 0;
+            const avgUsd = tasa > 0 ? avgBs/tasa : 0;
+            const _s = (id,v) => { const el=document.getElementById(id); if(el) el.textContent=v; };
+            _s('deliverysHoyDashboard', `${window.formatUSD(totUsd)} / ${window.formatBs(totBs)}`);
+            _s('deliverysTotalCard',    `${window.formatUSD(totUsd)} / ${window.formatBs(totBs)}`);
+            _s('deliverysCountCard',    String(cnt));
+            _s('deliverysPromedioCard', `${window.formatUSD(avgUsd)} / ${window.formatBs(avgBs)}`);
+        } catch(e) { console.error('Error stats deliverys:', e); }
+    };
+
 })();
