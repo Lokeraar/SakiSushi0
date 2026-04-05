@@ -381,8 +381,6 @@ window.parroquiasDelivery = [
     { nombre: "El Junquito", precioUSD: 7 }
 ];
 
-// categoriasMenu: llaves = id del cliente (como filtra Cliente_2_0.html)
-// categoriasMenuLabels: texto legible para el admin UI
 window.categoriasMenu = {
     "entradas":  [],
     "sushi":     [],
@@ -390,25 +388,17 @@ window.categoriasMenu = {
     "tragos":    [],
     "pokes":     [],
     "ensaladas": [],
-    "china":     ["Arroz Chino", "Arroz Cantones", "Chopsuey", "Lomey", "Chow Mein",
-                  "Fideos de Arroz", "Tallarines Cantones", "Mariscos", "Foo Yong", "Sopas", "Entremeses"],
-    "japonesa":  ["Yakimeshi", "Yakisoba", "Pasta Udon", "Churrasco"],
+    "china":     ["Arroz Chino","Arroz Cantones","Chopsuey","Lomey","Chow Mein","Fideos de Arroz","Tallarines Cantones","Mariscos","Foo Yong","Sopas","Entremeses"],
+    "japonesa":  ["Yakimeshi","Yakisoba","Pasta Udon","Churrasco"],
     "ofertas":   [],
     "ninos":     [],
     "ejecutivo": []
 };
 window.categoriasMenuLabels = {
-    "entradas":  "Entradas",
-    "sushi":     "Sushi",
-    "rolls":     "Rolls",
-    "tragos":    "Tragos y bebidas",
-    "pokes":     "Pokes",
-    "ensaladas": "Ensaladas",
-    "china":     "Comida China",
-    "japonesa":  "Comida Japonesa",
-    "ofertas":   "Ofertas Especiales",
-    "ninos":     "Para Niños",
-    "ejecutivo": "Combo Ejecutivo"
+    "entradas":"Entradas","sushi":"Sushi","rolls":"Rolls",
+    "tragos":"Tragos y bebidas","pokes":"Pokes","ensaladas":"Ensaladas",
+    "china":"Comida China","japonesa":"Comida Japonesa",
+    "ofertas":"Ofertas Especiales","ninos":"Para Niños","ejecutivo":"Combo Ejecutivo"
 };
 
 // ============================================
