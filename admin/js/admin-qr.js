@@ -97,7 +97,7 @@
                     <i class="fas fa-trash"></i> Eliminar
                 </button>
                 <button class="btn-primary" id="qrModalCloseBtn" style="background:var(--primary);color:#fff;border:none;padding:.5rem 1rem;border-radius:8px;cursor:pointer">
-                    <i class="fas fa-times"></i> Cerrar
+                    Cerrar
                 </button>
             </div>
         `;
