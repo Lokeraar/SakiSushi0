@@ -13,36 +13,43 @@
     };
 
     window.renderizarUsuarios = function() {
-    const grid = document.getElementById('usuariosGrid');
-    if (!grid) return;
-    if (!window.usuarios || !window.usuarios.length) {
-        grid.innerHTML = '<p style="color:var(--text-muted);font-size:.88rem">No hay cajeros registrados.</p>';
-        return;
-    }
-    grid.innerHTML = window.usuarios.map(user => {
-        const fotoHtml = user.foto ? `<img src="${user.foto}" style="width:64px;height:64px;border-radius:50%;object-fit:cover;flex-shrink:0">` : '';
-        const inicial = (user.nombre || '?').charAt(0).toUpperCase();
-        const avatarHtml = fotoHtml || `<div class="usuario-avatar" style="width:64px;height:64px;font-size:1.8rem">${inicial}</div>`;
-        const rolBadge = user.rol === 'admin' ? '<span class="usuario-rol admin">Admin</span>' : '<span class="usuario-rol cajero">Cajero</span>';
-        return `<div class="usuario-card-v2">
-            <div class="ucard-avatar" style="width:64px; min-width:64px;">${avatarHtml}</div>
-            <div class="ucard-body">
-                <div class="ucard-top">
-                    <div class="ucard-names">
-                        <span class="usuario-nombre" style="font-size:1rem">${user.nombre}</span>
-                        <div class="usuario-username" style="font-size:.85rem">@${user.username}</div>
+        const grid = document.getElementById('usuariosGrid');
+        if (!window.usuarios || !window.usuarios.length) {
+            grid.innerHTML = '<p style="color:var(--text-muted);font-size:.88rem">No hay cajeros registrados.</p>';
+            return;
+        }
+        grid.innerHTML = window.usuarios.map(user => {
+            const inicial = (user.nombre||'?').charAt(0).toUpperCase();
+            const rolBadge = user.rol==='admin'?'<span class="usuario-rol admin">Admin</span>':'<span class="usuario-rol cajero">Cajero</span>';
+            const badge = user.activo
+                ? '<span class="status-activo"><i class="fas fa-check-circle"></i> Activo</span>'
+                : '<span class="status-inactivo"><i class="fas fa-circle"></i> Inactivo</span>';
+            const avatarInner = user.foto
+                ? `<img src="${user.foto}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;cursor:pointer" onclick="window.expandirImagen(this.src)">`
+                : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:1.5rem;font-weight:700;color:#fff;background:linear-gradient(135deg,var(--primary),var(--primary-dark));border-radius:50%">${inicial}</div>`;
+            return `<div class="usuario-card-v2">
+                <div class="ucard-avatar">${avatarInner}</div>
+                <div class="ucard-body">
+                    <div class="ucard-top">
+                        <div class="ucard-names">
+                            <span class="usuario-nombre">${user.nombre}</span>
+                            <span class="usuario-username">@${user.username}</span>
+                            ${rolBadge}
+                        </div>
+                        <div class="ucard-status">${badge}</div>
                     </div>
-                    <div class="ucard-status">${rolBadge}</div>
+                    <div class="ucard-actions">
+                        <button class="btn-icon edit" onclick="window.editarUsuario('${user.id}')" title="Editar usuario"><i class="fas fa-pen"></i></button>
+                        <button class="btn-toggle ${user.activo ? 'btn-toggle-on' : 'btn-toggle-off'}"
+                            onclick="window.toggleUsuarioActivo('${user.id}', ${!user.activo})">
+                            ${user.activo ? 'Inhabilitar' : 'Activar'}
+                        </button>
+                        <button class="btn-icon delete" onclick="window.eliminarUsuario('${user.id}')" title="Eliminar"><i class="fas fa-trash"></i></button>
+                    </div>
                 </div>
-                <div class="ucard-actions">
-                    <button class="btn-toggle ${user.activo ? 'btn-toggle-on' : 'btn-toggle-off'}" onclick="window.toggleUsuarioActivo('${user.id}', ${!user.activo})">${user.activo ? 'Inhabilitar' : 'Activar'}</button>
-                    <button class="btn-icon edit" onclick="window.editarUsuario('${user.id}')" title="Editar usuario"><i class="fas fa-pen"></i></button>
-                    <button class="btn-icon delete" onclick="window.eliminarUsuario('${user.id}')" title="Eliminar"><i class="fas fa-trash"></i></button>
-                </div>
-            </div>
-        </div>`;
-    }).join('');
-};
+            </div>`;
+        }).join('');
+    };
 
 
     function handleUsuarioFotoFile() {
