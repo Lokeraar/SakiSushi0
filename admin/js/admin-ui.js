@@ -107,9 +107,19 @@
             if (e.target === this) window.cerrarModal('qrAmpliadoModal');
         });
 
-        // Botón logout
-        document.getElementById('logoutButton').addEventListener('click', () => {
-            window.cerrarSesion();
+        // Botones logout (desktop + mobile)
+        const _logoutBtns = ['logoutButton', 'logoutButtonMobile'];
+        _logoutBtns.forEach(id => {
+            const btn = document.getElementById(id);
+            if (btn) btn.addEventListener('click', () => {
+                if (typeof window.cerrarSesion === 'function') {
+                    window.cerrarSesion();
+                } else {
+                    // Safety net: limpiar sesión y recargar
+                    sessionStorage.clear();
+                    window.location.reload();
+                }
+            });
         });
     };
 
