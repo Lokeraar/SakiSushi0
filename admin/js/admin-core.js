@@ -92,18 +92,18 @@
     
     // ==================== DIFERENCIA DE TASA ====================
     window.calcularDiferenciaTasa = function() {
-        // Ganancia extra en Bs = ventas_USD * (tasaEfectiva - tasaBase)
-        // Ej: $50 ventas, tasa base 100, efectiva 120 → $50*(120-100) = Bs 1000 extra
+        // Ganancia extra en Bs = totalVentasUSD × (tasaEfectiva - tasaBase)
+        // Ej: $50 vendidos, tasa base 100, efectiva 120 → $50×20 = Bs 1000 extra
         const tasaBase     = window.configGlobal?.tasa_cambio   || 400;
         const tasaEfectiva = window.configGlobal?.tasa_efectiva || 400;
         const diff = tasaEfectiva - tasaBase;
         if (diff <= 0) return 0;
-        const fuente   = (window._ventasHoyNeto && window._ventasHoyNeto.pedidosData) || window.pedidos || [];
-        const cobrados = fuente.filter(function(p) {
-            return p.estado==='cobrado' || p.estado==='entregado' ||
-                   p.estado==='enviado' || p.estado==='reserva_completada';
-        });
-        const totalUSD = cobrados.reduce(function(s,p){ return s+(p.total||0); }, 0);
+        const fuente   = (window._ventasHoyNeto?.pedidosData) || window.pedidos || [];
+        const cobrados = fuente.filter(p =>
+            p.estado === 'cobrado'   || p.estado === 'entregado' ||
+            p.estado === 'enviado'   || p.estado === 'reserva_completada'
+        );
+        const totalUSD = cobrados.reduce((s, p) => s + (p.total || 0), 0);
         return totalUSD * diff;
     };
     
