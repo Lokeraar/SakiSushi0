@@ -266,21 +266,28 @@
         document.getElementById('platilloModal').classList.add('active');
     };
 
+    // CORREGIDO: No clona el select, sino que lo rellena y reemplaza el listener
     window.cargarCategoriasSelect = function() {
         let select = document.getElementById('platilloCategoria');
         if (!select) return;
         const labels = window.categoriasMenuLabels || {};
+        // Limpiar opciones existentes
         select.innerHTML = '<option value="">Seleccionar categoría</option>';
         Object.keys(window.categoriasMenu || {}).forEach(function(cat) {
             const opt = document.createElement('option');
             opt.value = cat;
-            opt.textContent = labels[cat] || cat; // mostrar nombre bonito si existe
+            opt.textContent = labels[cat] || cat;
             select.appendChild(opt);
         });
-        // Clonar para eliminar listeners previos y evitar duplicados
-        const nuevo = select.cloneNode(true);
-        select.parentNode.replaceChild(nuevo, select);
-        nuevo.addEventListener('change', function(e) {
+        // Remover listeners anteriores y agregar nuevo
+        const newSelect = select.cloneNode(true);
+        select.parentNode.replaceChild(newSelect, select);
+        newSelect.addEventListener('change', function(e) {
+            window.cargarSubcategoriasSelect(e.target.value);
+            window._recalcularStockPlatillo && window._recalcularStockPlatillo();
+        });
+        // Actualizar referencia global
+        document.getElementById('platilloCategoria').addEventListener('change', function(e) {
             window.cargarSubcategoriasSelect(e.target.value);
             window._recalcularStockPlatillo && window._recalcularStockPlatillo();
         });
@@ -288,14 +295,19 @@
 
     window.cargarSubcategoriasSelect = function(categoria) {
         const select = document.getElementById('platilloSubcategoria');
+        const container = document.getElementById('subcategoriaContainer');
+        if (!select) return;
         select.innerHTML = '<option value="">Ninguna</option>';
         if (categoria && window.categoriasMenu && window.categoriasMenu[categoria]) {
+            container.style.display = 'block';
             window.categoriasMenu[categoria].forEach(sub => {
                 const opt = document.createElement('option');
                 opt.value = sub;
                 opt.textContent = sub;
                 select.appendChild(opt);
             });
+        } else {
+            container.style.display = 'none';
         }
     };
 
@@ -310,7 +322,7 @@
         const container = document.getElementById('ingredientesContainer');
         const row = document.createElement('div');
         row.className = 'ingrediente-row';
-        row.style.cssText = 'display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:.4rem;align-items:center;margin-bottom:.4rem';
+        row.style.cssText = 'display:grid;grid-template-columns:2fr 1fr 1fr auto auto;gap:.4rem;align-items:center;margin-bottom:.4rem';
 
         const select = document.createElement('select');
         select.style.cssText = 'font-family:Montserrat,sans-serif;font-size:.82rem';
@@ -375,8 +387,6 @@
             e.stopPropagation();
             tip.style.display = tip.style.display === 'block' ? 'none' : 'block';
         }, { passive: true });
-        // Actualizar grid para 5 columnas
-        row.style.gridTemplateColumns = '2fr 1fr 1fr auto auto';
 
         row.appendChild(select);
         row.appendChild(inputCantidad);
@@ -393,7 +403,7 @@
         window.platilloEditandoId = id;
         document.getElementById('platilloModalTitle').textContent = 'Editar Platillo';
         window.limpiarImagenPreview();
-        // Poblar el select de categorías ANTES de asignar el valor (4.1 fix)
+        // Poblar el select de categorías ANTES de asignar el valor
         window.cargarCategoriasSelect();
         document.getElementById('platilloNombre').value = platillo.nombre || '';
         document.getElementById('platilloCategoria').value = platillo.categoria || '';
@@ -413,7 +423,6 @@
             document.getElementById('platilloImagenUrl').value = platillo.imagen;
             currentImagenUrl = platillo.imagen;
         }
-        window.cargarSubcategoriasSelect(platillo.categoria);
         document.getElementById('ingredientesContainer').innerHTML = '';
         if (platillo.ingredientes) {
             Object.entries(platillo.ingredientes).forEach(([ingId, ingInfo]) => {
