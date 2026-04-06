@@ -3898,13 +3898,26 @@ window.addEventListener('beforeunload',function(e){if(!window._sakiReady){e.prev
             currentCustomizeItem = { ...platillo, cantidad: 1, ingredientesQuitados: [], selectionType: 'completo' };
             const modalBody = document.getElementById('customizeModalBody');
             
-            Promise.all(Object.entries(platillo.ingredientes || {}).map(async ([ingId, ingInfo]) => {
-                const ingrediente = inventario.find(i => i.id === ingId);
-                const stockDisp = await getStockDisponible(ingId);
-                const disponible = stockDisp >= (ingInfo.cantidad || 1);
-                const precio = ingrediente?.precio_unitario || 0;
-                return `<div style="margin-bottom:.8rem; padding:.7rem; background:var(--customize-row-bg); border-radius:var(--radius-sm); ${!disponible ? 'opacity:0.5;' : ''}"><label style="display:flex; align-items:center; gap:.8rem; cursor:${disponible ? 'pointer' : 'not-allowed'}; color:var(--customize-text)"><input type="checkbox" class="ingrediente-check" data-ingrediente="${ingId}" data-precio="${precio}" ${!disponible ? 'disabled' : ''}><div style="flex:1"><div style="font-weight:500">${ingInfo.nombre || ingId}</div><div style="font-size:.85rem; color:var(--customize-subtext)">Valor: ${formatBs(usdToBs(precio))}${!disponible ? '<span style="color:var(--danger); margin-left:.5rem">(Sin stock)</span>' : ''}</div></div></label></div>`;
-            })).then(ingredientesHtml => {
+            // Dentro de abrirPersonalizacion, después de obtener ingredientesHtml
+Promise.all(Object.entries(platillo.ingredientes || {}).map(async ([ingId, ingInfo]) => {
+    const ingrediente = inventario.find(i => i.id === ingId);
+    const stockDisp = await getStockDisponible(ingId);
+    const disponible = stockDisp >= (ingInfo.cantidad || 1);
+    const precio = ingrediente?.precio_unitario || 0;
+    const esPrincipal = ingInfo.principal === true;
+    // Si es principal, el checkbox debe estar marcado y deshabilitado
+    const checkedAttr = esPrincipal ? 'checked disabled' : '';
+    const disabledAttr = esPrincipal ? 'disabled' : (disponible ? '' : 'disabled');
+    return `<div style="margin-bottom:.8rem; padding:.7rem; background:var(--customize-row-bg); border-radius:var(--radius-sm); ${!disponible ? 'opacity:0.5;' : ''}">
+        <label style="display:flex; align-items:center; gap:.8rem; cursor:${disponible && !esPrincipal ? 'pointer' : 'not-allowed'}; color:var(--customize-text)">
+            <input type="checkbox" class="ingrediente-check" data-ingrediente="${ingId}" data-precio="${precio}" ${checkedAttr} ${disabledAttr}>
+            <div style="flex:1">
+                <div style="font-weight:500">${ingInfo.nombre || ingId} ${esPrincipal ? '<span style="color:var(--accent); font-size:.7rem;">(Principal - fijo)</span>' : ''}</div>
+                <div style="font-size:.85rem; color:var(--customize-subtext)">Valor: ${formatBs(usdToBs(precio))}${!disponible ? '<span style="color:var(--danger); margin-left:.5rem">(Sin stock)</span>' : ''}</div>
+            </div>
+        </label>
+    </div>`;
+})).then(ingredientesHtml => {
                 const completoOption = `<div id="completoOptionDiv" class="completo-option ${currentCustomizeItem.selectionType === 'completo' ? 'activo' : ''}" onclick="selectCompleto()"><div style="display:flex; align-items:center; gap:.8rem"><div id="completoCircle" class="completo-circle ${currentCustomizeItem.selectionType === 'completo' ? 'activo' : ''}">${currentCustomizeItem.selectionType === 'completo' ? '<i class="fas fa-check" style="font-size:.7rem"></i>' : ''}</div><div style="flex:1"><div style="font-weight:600; color:var(--customize-text)">Platillo completo</div><div style="font-size:.85rem; color:var(--customize-subtext)">Con todos los ingredientes</div></div></div></div>`;
                 modalBody.innerHTML = `<div style="display:flex; gap:1rem; margin-bottom:1.5rem; background:var(--customize-row-bg); padding:.8rem; border-radius:var(--radius-sm)"><img src="${platillo.imagen || 'https://via.placeholder.com/80'}" style="width:80px; height:80px; object-fit:cover; border-radius:var(--radius-sm)"><div><h4 style="font-size:1.2rem; margin-bottom:.3rem; color:var(--customize-text)">${platillo.nombre}</h4><p style="color:var(--customize-subtext); font-size:.9rem">${platillo.descripcion || ''}</p><p style="font-weight:600; color:var(--accent-text); font-size:1rem">Base: ${formatBs(usdToBs(platillo.precio))}</p></div></div><div style="margin-bottom:1.5rem"><label style="display:block; margin-bottom:.5rem; font-weight:600; color:var(--customize-text)">Cantidad:</label><div style="display:flex; align-items:center; gap:1rem"><button class="btn-icon" onclick="actualizarCantidadPersonalizacion(-1)" style="width:36px; height:36px; border:1px solid var(--customize-border); background:var(--customize-row-bg); border-radius:50%; cursor:pointer; color:var(--customize-text)"><i class="fas fa-minus"></i></button><input id="customizeCantidad" type="number" min="1" max="99" value="1" inputmode="numeric" style="font-size:1.2rem; font-weight:600; width:56px; text-align:center; color:var(--customize-text); background:var(--customize-row-bg); border:1px solid var(--customize-border); border-radius:8px; padding:.3rem; -moz-appearance:textfield;" oninput="this.value=this.value.replace(/[^0-9]/g,''); if(this.value<1||this.value==='')this.value=1; if(this.value>99)this.value=99; if(currentCustomizeItem){currentCustomizeItem.cantidad=parseInt(this.value)||1; calcularPrecioPersonalizado();}"><button class="btn-icon" onclick="actualizarCantidadPersonalizacion(1)" style="width:36px; height:36px; border:1px solid var(--customize-border); background:var(--customize-row-bg); border-radius:50%; cursor:pointer; color:var(--customize-text)"><i class="fas fa-plus"></i></button></div></div><div style="margin-bottom:1.5rem"><label style="display:block; margin-bottom:.5rem; font-weight:600; color:var(--customize-text)">Opciones:</label>${completoOption}<div id="ingredientesList" style="margin-top:.8rem"><div style="font-weight:500; margin-bottom:.5rem; color:var(--customize-text)">Quitar ingredientes:</div>${ingredientesHtml.join('') || '<p style="color:var(--customize-subtext)">Sin ingredientes para personalizar</p>'}</div></div><div style="background:var(--customize-row-bg); padding:.8rem; border-radius:var(--radius-sm)"><div style="display:flex; justify-content:space-between"><span style="font-weight:600; color:var(--customize-text)">Precio final:</span><span style="font-size:1.3rem; font-weight:700; color:var(--accent-text)" id="customizePrecio">${formatBs(usdToBs(platillo.precio * currentCustomizeItem.cantidad))}</span></div></div>`;
                 
