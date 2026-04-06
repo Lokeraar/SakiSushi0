@@ -384,7 +384,7 @@ window.parroquiasDelivery = [
 window.categoriasMenu = {
     "entradas":  [],
     "sushi":     [],
-    "rolls":     ["Rolls Fríos de 10 piezas", "Rolls Tempura de 12 piezas"],
+    "rolls":     ["Rolls Fríos de 10 piezas","Rolls Tempura de 12 piezas"],
     "tragos":    [],
     "pokes":     [],
     "ensaladas": [],
