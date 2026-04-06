@@ -25,34 +25,24 @@
     };
 
     window.actualizarEstadisticasReportes = function(pedidos) {
-    // Verificar que los elementos existan antes de usarlos
-    const ventasDiaEl = document.getElementById('ventasDia');
-    const ventasSemanaEl = document.getElementById('ventasSemana');
-    const ticketPromedioEl = document.getElementById('ticketPromedio');
-    const platilloTopEl = document.getElementById('platilloTop');
-    
-    if (!ventasDiaEl || !ventasSemanaEl || !ticketPromedioEl || !platilloTopEl) {
-        console.warn('Elementos de estadísticas no encontrados aún');
-        return;
-    }
-    
-    const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
-    const ventasHoy = pedidos.filter(p => new Date(p.fecha) >= hoy).reduce((s, p) => s + (p.total || 0), 0);
-    const semana = new Date(); semana.setDate(semana.getDate() - 7);
-    const ventasSemana = pedidos.filter(p => new Date(p.fecha) >= semana).reduce((s, p) => s + (p.total || 0), 0);
-    const ticketPromedio = pedidos.length > 0 ? pedidos.reduce((s, p) => s + (p.total || 0), 0) / pedidos.length : 0;
-    
-    const platillosCount = {};
-    pedidos.forEach(p => { if (p.items) p.items.forEach(item => { platillosCount[item.nombre] = (platillosCount[item.nombre] || 0) + (item.cantidad || 0); }); });
-    let platilloTop = '-', maxCount = 0;
-    for (const [n, c] of Object.entries(platillosCount)) { if (c > maxCount) { maxCount = c; platilloTop = n; } }
-    
-    const tasa = window.configGlobal?.tasa_efectiva || 400;
-    ventasDiaEl.textContent = `${window.formatUSD(ventasHoy)} / ${window.formatBs(ventasHoy * tasa)}`;
-    ventasSemanaEl.textContent = `${window.formatUSD(ventasSemana)} / ${window.formatBs(ventasSemana * tasa)}`;
-    ticketPromedioEl.textContent = `${window.formatUSD(ticketPromedio)} / ${window.formatBs(ticketPromedio * tasa)}`;
-    platilloTopEl.textContent = platilloTop;
-};
+        const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
+        const ventasHoy = pedidos.filter(p => new Date(p.fecha) >= hoy).reduce((s, p) => s + (p.total || 0), 0);
+        const semana = new Date(); semana.setDate(semana.getDate() - 7);
+        const ventasSemana = pedidos.filter(p => new Date(p.fecha) >= semana).reduce((s, p) => s + (p.total || 0), 0);
+        const ticketPromedio = pedidos.length > 0 ? pedidos.reduce((s, p) => s + (p.total || 0), 0) / pedidos.length : 0;
+        
+        const platillosCount = {};
+        pedidos.forEach(p => { if (p.items) p.items.forEach(item => { platillosCount[item.nombre] = (platillosCount[item.nombre] || 0) + (item.cantidad || 0); }); });
+        let platilloTop = '-', maxCount = 0;
+        for (const [n, c] of Object.entries(platillosCount)) { if (c > maxCount) { maxCount = c; platilloTop = n; } }
+        
+        const tasa = window.configGlobal?.tasa_efectiva || 400;
+        const _s=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
+        _s('ventasDia',      `${window.formatUSD(ventasHoy)} / ${window.formatBs(ventasHoy * tasa)}`);
+        _s('ventasSemana',   `${window.formatUSD(ventasSemana)} / ${window.formatBs(ventasSemana * tasa)}`);
+        _s('ticketPromedio', `${window.formatUSD(ticketPromedio)} / ${window.formatBs(ticketPromedio * tasa)}`);
+        _s('platilloTop',    platilloTop);
+    };
 
     window.actualizarGraficos = function(pedidos) {
         if (typeof Chart === 'undefined') return;
@@ -120,183 +110,98 @@
         }).join('');
     };
 
-    // PEDIDOS RECIENTES – VERSIÓN EXPANDIBLE CON DETALLE COMPLETO
     window.cargarPedidosRecientes = async function() {
-    try {
-        const { data, error } = await window.supabaseClient
-            .from('pedidos')
-            .select('*')
-            .order('fecha', { ascending: false })
-            .limit(5);
-        if (error) throw error;
-        const pedidos = data || [];
-        const container = document.getElementById('pedidosRecientes');
-        if (!container) return;
-        
-        if (pedidos.length === 0) {
-            container.innerHTML = '<div style="text-align:center; padding:1rem; color:var(--text-muted)"><i class="fas fa-inbox"></i><p>No hay pedidos recientes</p></div>';
-            return;
-        }
-        
-        container.innerHTML = pedidos.map(p => {
-            // Validar que el pedido tenga datos mínimos
-            if (!p || !p.id) return '';
-            const hora = new Date(p.fecha).toLocaleTimeString('es-VE', {hour:'2-digit',minute:'2-digit'});
-            const fecha = new Date(p.fecha).toLocaleDateString('es-VE', {day:'2-digit',month:'2-digit'});
-            // Agrupar items
-            const itemsMap = {};
-            (p.items || []).forEach(item => {
-                const nombre = item.nombre || 'Sin nombre';
-                if (itemsMap[nombre]) itemsMap[nombre].cantidad += (item.cantidad || 1);
-                else itemsMap[nombre] = { nombre, cantidad: item.cantidad || 1, precioUnitarioUSD: item.precioUnitarioUSD || 0 };
-            });
-            const itemsAgrupados = Object.values(itemsMap);
-            const itemsResumen = itemsAgrupados.slice(0, 2).map(i => `${i.cantidad}x ${i.nombre}`).join(', ');
-            const masItems = itemsAgrupados.length > 2 ? ` +${itemsAgrupados.length-2} más` : '';
-            const tipoIcon = p.tipo === 'delivery' ? '🛵' : p.tipo === 'reserva' ? '📅' : '🍽️';
-            const tipoColor = p.tipo === 'delivery' ? 'var(--delivery)' : p.tipo === 'reserva' ? 'var(--propina)' : 'var(--info)';
-            const totalBs = window.formatBs(window.usdToBs(p.total || 0));
-            const estadoText = p.estado ? p.estado.replace(/_/g,' ') : '';
-            const estadoColor = p.estado === 'entregado' ? 'var(--success)' : p.estado === 'en_camino' ? 'var(--delivery)' : p.estado === 'en_cocina' ? 'var(--warning)' : 'var(--text-muted)';
-            const metodoPago = p.metodo_pago || (p.pagos_mixtos && p.pagos_mixtos.length ? 'Mixto' : 'N/A');
-            
-            return `<div class="pedido-item-modern" style="background:var(--card-bg); border-radius:12px; padding:.8rem 1rem; border:1px solid var(--border); transition:all .2s; margin-bottom:.6rem">
-                <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:.5rem; margin-bottom:.5rem; cursor:pointer" onclick="window._togglePedidoDetalle('${p.id}')">
-                    <div style="display:flex; align-items:center; gap:.6rem; flex-wrap:wrap">
-                        <span style="font-size:1.1rem">${tipoIcon}</span>
-                        <span style="font-weight:700; color:${tipoColor}">${p.tipo || 'mesa'} ${p.mesa ? `· Mesa ${p.mesa}` : ''}</span>
-                        <span style="font-size:.7rem; background:${estadoColor}20; color:${estadoColor}; padding:.2rem .6rem; border-radius:20px; font-weight:600">${estadoText || 'pendiente'}</span>
+        try {
+            const { data, error } = await window.supabaseClient.from('pedidos').select('*').order('fecha', { ascending: false }).limit(5);
+            if (error) throw error;
+            const pedidosCount = document.getElementById('pedidosCountBadge');
+            if (pedidosCount) pedidosCount.textContent = (data || []).length;
+            document.getElementById('pedidosRecientes').innerHTML = (data || []).map(p => {
+                const hora = new Date(p.fecha).toLocaleTimeString('es-VE', {hour:'2-digit',minute:'2-digit'});
+                const fecha = new Date(p.fecha).toLocaleDateString('es-VE', {day:'2-digit',month:'2-digit'});
+                const items = (p.items || []).slice(0,2).map(i => `${i.cantidad||1}x ${i.nombre}`).join(', ');
+                const masItems = (p.items||[]).length > 2 ? ` +${(p.items||[]).length-2} más` : '';
+                const tipoIcon = p.tipo==='delivery' ? '🛵' : p.tipo==='reserva' ? '📅' : '🍽️';
+                const tipoColor = p.tipo==='delivery' ? 'var(--delivery)' : p.tipo==='reserva' ? 'var(--propina)' : 'var(--info)';
+                const totalBs = window.formatBs(window.usdToBs(p.total||0));
+                const estadoText = p.estado ? p.estado.replace(/_/g,' ') : '';
+                const estadoColor = p.estado === 'entregado' ? 'var(--success)' : p.estado === 'en_camino' ? 'var(--delivery)' : p.estado === 'en_cocina' ? 'var(--warning)' : 'var(--text-muted)';
+                return `<div class="pedido-item-modern" style="background:var(--card-bg); border-radius:12px; padding:.8rem 1rem; border:1px solid var(--border); transition:all .2s; cursor:pointer" onclick="window._abrirDetallePedidoAdmin('${p.id}')">
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:.5rem; margin-bottom:.5rem">
+                        <div style="display:flex; align-items:center; gap:.6rem; flex-wrap:wrap">
+                            <span style="font-size:1.1rem">${tipoIcon}</span>
+                            <span style="font-weight:700; color:${tipoColor}">${p.tipo || 'mesa'} ${p.mesa ? `· Mesa ${p.mesa}` : ''}</span>
+                            <span style="font-size:.7rem; background:${estadoColor}20; color:${estadoColor}; padding:.2rem .6rem; border-radius:20px; font-weight:600">${estadoText || 'pendiente'}</span>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:.5rem">
+                            <span style="font-size:.7rem; color:var(--text-muted)">${fecha} ${hora}</span>
+                            <span style="font-weight:800; color:var(--accent); font-size:.9rem">${totalBs}</span>
+                        </div>
                     </div>
-                    <div style="display:flex; align-items:center; gap:.5rem">
-                        <span style="font-size:.7rem; color:var(--text-muted)">${fecha} ${hora}</span>
-                        <span style="font-weight:800; color:var(--accent); font-size:.9rem">${totalBs}</span>
-                        <i class="fas fa-chevron-down" style="color:var(--text-muted); font-size:.7rem; transition:transform .2s" id="chevron_${p.id}"></i>
+                    <div style="font-size:.75rem; color:var(--text-muted); display:flex; flex-wrap:wrap; gap:.3rem">
+                        <span><i class="fas fa-receipt" style="width:14px; margin-right:.3rem"></i> ${items || 'Sin items'}</span>
+                        ${masItems ? `<span style="color:var(--accent)">${masItems}</span>` : ''}
                     </div>
-                </div>
-                <div style="font-size:.75rem; color:var(--text-muted); display:flex; flex-wrap:wrap; gap:.3rem; cursor:pointer" onclick="window._togglePedidoDetalle('${p.id}')">
-                    <span><i class="fas fa-receipt" style="width:14px; margin-right:.3rem"></i> ${itemsResumen || 'Sin items'}</span>
-                    ${masItems ? `<span style="color:var(--accent)">${masItems}</span>` : ''}
-                    <span style="margin-left:auto"><i class="fas fa-credit-card"></i> ${metodoPago}</span>
-                </div>
-                <div id="detalle_${p.id}" style="display:none; margin-top:.8rem; padding-top:.6rem; border-top:1px solid var(--border); font-size:.82rem">
-                    ${itemsAgrupados.map(item => `<div style="display:flex; justify-content:space-between; padding:.2rem 0"><span>${item.cantidad}x ${item.nombre}</span><span>${window.formatBs(window.usdToBs(item.precioUnitarioUSD * item.cantidad))}</span></div>`).join('')}
-                    <div style="display:flex; justify-content:space-between; margin-top:.5rem; padding-top:.3rem; border-top:1px dashed var(--border); font-weight:700"><span>Total</span><span>${totalBs}</span></div>
-                </div>
-            </div>`;
-        }).join('');
-        
-        document.getElementById('pedidosCountBadge').textContent = pedidos.length;
-    } catch (e) {
-        console.error('Error cargando pedidos recientes:', e);
-        const container = document.getElementById('pedidosRecientes');
-        if (container) container.innerHTML = '<div style="text-align:center; padding:1rem; color:var(--danger)">Error al cargar pedidos</div>';
-    }
-};
-
-    window._togglePedidoDetalle = function(pedidoId) {
-        const detalle = document.getElementById(`detalle_${pedidoId}`);
-        const chevron = document.getElementById(`chevron_${pedidoId}`);
-        if (detalle) {
-            if (detalle.style.display === 'none') {
-                detalle.style.display = 'block';
-                if (chevron) chevron.style.transform = 'rotate(180deg)';
-            } else {
-                detalle.style.display = 'none';
-                if (chevron) chevron.style.transform = 'rotate(0deg)';
-            }
-        }
+                </div>`;
+            }).join('') || '<div style="text-align:center; padding:1rem; color:var(--text-muted)"><i class="fas fa-inbox"></i><p style="margin-top:.5rem">No hay pedidos recientes</p></div>';
+        } catch (e) { console.error('Error cargando pedidos recientes:', e); }
     };
 
     window._abrirDetallePedidoAdmin = async function(pedidoId) {
-        // ... (código existente sin cambios)
-        let pedido = (window.pedidos || []).find(function(p){ return p.id === pedidoId; });
+        let pedido = (window.pedidos||[]).find(p=>p.id===pedidoId);
         if (!pedido) {
             try {
-                const { data, error } = await window.supabaseClient.from('pedidos').select('*').eq('id', pedidoId).maybeSingle();
-                if (error) throw error;
-                pedido = data;
-            } catch(e) {
-                console.error('Error cargando pedido:', e);
-                window.mostrarToast('❌ Error al cargar pedido', 'error');
-                return;
-            }
+                const {data,error}=await window.supabaseClient.from('pedidos').select('*').eq('id',pedidoId).maybeSingle();
+                if(error) throw error; pedido=data;
+            } catch(e){ window.mostrarToast('❌ Error al cargar pedido','error'); return; }
         }
-        if (!pedido) { window.mostrarToast('Pedido no encontrado', 'error'); return; }
-
-        const tasa      = window.configGlobal?.tasa_efectiva || window.configGlobal?.tasa_cambio || 400;
-        const tipoIcon  = pedido.tipo==='delivery' ? '🛵' : pedido.tipo==='reserva' ? '📅' : '🍽️';
-        const tipoLabel = pedido.tipo==='delivery' ? 'Delivery' : pedido.tipo==='reserva' ? 'Reserva' : ('Mesa ' + (pedido.mesa || ''));
-        const estadoCols = {
-            entregado:'var(--success)', cobrado:'var(--success)',
-            en_camino:'var(--delivery)', enviado:'var(--delivery)',
-            en_cocina:'var(--warning)', pendiente:'var(--text-muted)'
-        };
-        const sc    = estadoCols[pedido.estado] || 'var(--text-muted)';
-        const totBs = (pedido.total || 0) * tasa;
-
-        const map = {};
-        (pedido.items || []).forEach(function(it) {
-            if (map[it.nombre]) map[it.nombre].cantidad += (it.cantidad || 1);
-            else map[it.nombre] = Object.assign({}, it, { cantidad: it.cantidad || 1 });
-        });
-        const items = Object.values(map);
-
-        const iHtml = items.length ? items.map(function(it) {
-            const pu  = it.precioUnitarioUSD || it.precio || 0;
-            const su  = pu * (it.cantidad || 1);
-            const qty = it.cantidad > 1 ? '<span style="background:var(--primary);color:#fff;border-radius:12px;padding:1px 7px;font-size:.7rem;font-weight:700;margin-left:.4rem">×' + it.cantidad + '</span>' : '';
-            return '<div style="display:flex;justify-content:space-between;align-items:center;padding:.45rem 0;border-bottom:1px solid var(--border)">'
-                + '<span style="font-size:.85rem;font-weight:500;color:var(--text-dark)">' + it.nombre + qty + '</span>'
-                + '<span style="font-size:.82rem;font-weight:700;color:var(--accent);white-space:nowrap;margin-left:.5rem">'
-                + window.formatUSD(su) + ' / ' + window.formatBs(su * tasa)
-                + '</span></div>';
-        }).join('') : '<p style="color:var(--text-muted);font-size:.82rem;text-align:center;padding:.75rem">Sin items registrados</p>';
-
-        const metodosLabel = {
-            efectivo_bs:'Efectivo Bs', efectivo_usd:'Efectivo USD',
-            pago_movil:'Pago Móvil', punto_venta:'Punto de Venta', invitacion:'Invitación'
-        };
-        let metodoPago = 'N/A';
-        if (pedido.pagos_mixtos && pedido.pagos_mixtos.length > 0) {
-            metodoPago = pedido.pagos_mixtos.map(function(pg){ return metodosLabel[pg.metodo] || pg.metodo; }).join(' + ');
-        } else if (pedido.metodo_pago) {
-            metodoPago = metodosLabel[pedido.metodo_pago] || pedido.metodo_pago;
-        }
-
-        const ov = document.createElement('div');
-        ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:10001;display:flex;align-items:center;justify-content:center;padding:1rem;backdrop-filter:blur(3px)';
-        const fechaStr = new Date(pedido.fecha).toLocaleString('es-VE', {
-            timeZone:'America/Caracas', day:'2-digit', month:'2-digit',
-            year:'numeric', hour:'2-digit', minute:'2-digit'
-        });
-        const estadoStr = (pedido.estado || '').replace(/_/g, ' ');
-        ov.innerHTML = '<div style="background:var(--card-bg);border-radius:16px;max-width:480px;width:100%;max-height:88vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 20px 40px rgba(0,0,0,.4)">'
-            + '<div style="background:linear-gradient(135deg,#1a1a2e,#2d2d4e);padding:1rem 1.5rem;color:#fff;display:flex;justify-content:space-between;align-items:flex-start">'
-            +   '<div>'
-            +     '<div style="font-size:1rem;font-weight:700">' + tipoIcon + ' ' + tipoLabel + '</div>'
-            +     '<div style="font-size:.72rem;opacity:.75;margin-top:3px">' + fechaStr + '</div>'
-            +   '</div>'
-            +   '<div style="display:flex;align-items:center;gap:.75rem">'
-            +     '<span style="font-size:.7rem;background:' + sc + '30;color:' + sc + ';padding:.2rem .7rem;border-radius:20px;font-weight:600">' + estadoStr + '</span>'
-            +     '<button onclick="this.closest(\'[style*=position]\').remove()" style="background:rgba(255,255,255,.15);border:none;color:#fff;border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:.9rem;font-weight:700;display:flex;align-items:center;justify-content:center">✕</button>'
-            +   '</div>'
-            + '</div>'
-            + '<div style="overflow-y:auto;flex:1;padding:1rem 1.5rem">'
-            +   '<div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);margin-bottom:.6rem"><i class="fas fa-receipt" style="margin-right:.3rem"></i>Items del pedido</div>'
-            +   iHtml
-            + '</div>'
-            + '<div style="padding:.85rem 1.5rem;border-top:1px solid var(--border)">'
-            +   '<div style="display:flex;justify-content:space-between;margin-bottom:.4rem;font-size:.82rem">'
-            +     '<span style="color:var(--text-muted)">Método de pago</span>'
-            +     '<span style="font-weight:600">' + metodoPago + '</span>'
-            +   '</div>'
-            +   '<div style="display:flex;justify-content:space-between;align-items:center">'
-            +     '<span style="font-size:.82rem;color:var(--text-muted)">Total</span>'
-            +     '<span style="font-size:1rem;font-weight:800;color:var(--accent)">' + window.formatUSD(pedido.total||0) + ' / ' + window.formatBs(totBs) + '</span>'
-            +   '</div>'
-            + '</div>'
-            + '</div>';
-        ov.addEventListener('click', function(e) { if(e.target===ov) ov.remove(); });
+        if (!pedido){ window.mostrarToast('Pedido no encontrado','error'); return; }
+        const tasa=(window.configGlobal?.tasa_efectiva||window.configGlobal?.tasa_cambio||400);
+        const tipoIcon=pedido.tipo==='delivery'?'🛵':pedido.tipo==='reserva'?'📅':'🍽️';
+        const tipoLabel=pedido.tipo==='delivery'?'Delivery':pedido.tipo==='reserva'?'Reserva':('Mesa '+(pedido.mesa||''));
+        const ecols={entregado:'var(--success)',cobrado:'var(--success)',en_camino:'var(--delivery)',enviado:'var(--delivery)',en_cocina:'var(--warning)'};
+        const sc=ecols[pedido.estado]||'var(--text-muted)';
+        const map={};
+        (pedido.items||[]).forEach(it=>{if(map[it.nombre])map[it.nombre].cantidad+=(it.cantidad||1);else map[it.nombre]={...it,cantidad:it.cantidad||1};});
+        const items=Object.values(map);
+        const iHtml=items.length?items.map(it=>{
+            const pu=it.precioUnitarioUSD||it.precio||0; const su=pu*(it.cantidad||1);
+            const qty=it.cantidad>1?`<span style="background:var(--primary);color:#fff;border-radius:12px;padding:1px 7px;font-size:.7rem;font-weight:700;margin-left:.3rem">×${it.cantidad}</span>`:'';
+            return `<div style="display:flex;justify-content:space-between;align-items:center;padding:.45rem 0;border-bottom:1px solid var(--border)">
+                <span style="font-size:.85rem;font-weight:500;color:var(--text-dark)">${it.nombre}${qty}</span>
+                <span style="font-size:.82rem;font-weight:700;color:var(--accent);white-space:nowrap;margin-left:.5rem">${window.formatUSD(su)} / ${window.formatBs(su*tasa)}</span>
+            </div>`;
+        }).join(''):'<p style="color:var(--text-muted);font-size:.82rem;text-align:center;padding:.75rem">Sin items</p>';
+        const metLbl={efectivo_bs:'Efectivo Bs',efectivo_usd:'Efectivo USD',pago_movil:'Pago Móvil',punto_venta:'Punto de Venta',invitacion:'Invitación'};
+        let metodo='N/A';
+        if(pedido.pagos_mixtos?.length) metodo=pedido.pagos_mixtos.map(pg=>metLbl[pg.metodo]||pg.metodo).join(' + ');
+        else if(pedido.metodo_pago) metodo=metLbl[pedido.metodo_pago]||pedido.metodo_pago;
+        const ov=document.createElement('div');
+        ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:10001;display:flex;align-items:center;justify-content:center;padding:1rem;backdrop-filter:blur(3px)';
+        const fechaStr=new Date(pedido.fecha).toLocaleString('es-VE',{timeZone:'America/Caracas',day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+        ov.innerHTML=`<div style="background:var(--card-bg);border-radius:16px;max-width:480px;width:100%;max-height:88vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 20px 40px rgba(0,0,0,.4)">
+            <div style="background:linear-gradient(135deg,#1a1a2e,#2d2d4e);padding:1rem 1.5rem;color:#fff;display:flex;justify-content:space-between;align-items:flex-start">
+                <div><div style="font-size:1rem;font-weight:700">${tipoIcon} ${tipoLabel}</div><div style="font-size:.72rem;opacity:.75;margin-top:3px">${fechaStr}</div></div>
+                <div style="display:flex;align-items:center;gap:.75rem">
+                    <span style="font-size:.7rem;background:${sc}30;color:${sc};padding:.2rem .7rem;border-radius:20px;font-weight:600">${(pedido.estado||'').replace(/_/g,' ')}</span>
+                    <button onclick="this.closest('[style*=position]').remove()" style="background:rgba(255,255,255,.15);border:none;color:#fff;border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:.9rem;font-weight:700;display:flex;align-items:center;justify-content:center">✕</button>
+                </div>
+            </div>
+            <div style="overflow-y:auto;flex:1;padding:1rem 1.5rem">
+                <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);margin-bottom:.6rem"><i class="fas fa-receipt" style="margin-right:.3rem"></i>Items</div>
+                ${iHtml}
+            </div>
+            <div style="padding:.85rem 1.5rem;border-top:1px solid var(--border)">
+                <div style="display:flex;justify-content:space-between;margin-bottom:.4rem;font-size:.82rem">
+                    <span style="color:var(--text-muted)">Método de pago</span><span style="font-weight:600">${metodo}</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center">
+                    <span style="font-size:.82rem;color:var(--text-muted)">Total</span>
+                    <span style="font-size:1rem;font-weight:800;color:var(--accent)">${window.formatUSD(pedido.total||0)} / ${window.formatBs((pedido.total||0)*tasa)}</span>
+                </div>
+            </div>
+        </div>`;
+        ov.addEventListener('click',e=>{if(e.target===ov)ov.remove();});
         document.body.appendChild(ov);
     };
 
@@ -345,7 +250,6 @@
     };
 
     window._abrirDetalleDeliverysAdmin = async function() {
-        // ... (código existente sin cambios)
         try {
             const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
             const manana = new Date(hoy); manana.setDate(manana.getDate() + 1);
@@ -426,7 +330,6 @@
     };
 
     window._abrirDetalleVentasAdmin = async function() {
-        // ... (código existente sin cambios)
         try {
             const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
             const manana = new Date(hoy); manana.setDate(manana.getDate() + 1);
