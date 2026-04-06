@@ -10,20 +10,21 @@
         container.innerHTML = '<div class="loading-spinner" style="margin:0 auto;"></div>';
         
         try {
-            // Caché local primero — evita 'Failed to fetch' en la carga inicial
+            // Esperar a que supabaseClient esté listo (puede tardar un momento)
+            let intentos = 0;
+            while (!window.supabaseClient && intentos < 20) {
+                await new Promise(r => setTimeout(r, 100));
+                intentos++;
+            }
+            
             const recent = window.obtenerAdminsRecientes();
             let admins = [];
+            
             if (recent.length) {
+                // Usar los recientes (ya tienen foto o null)
                 admins = recent;
             } else {
-                let intentos = 0;
-                while (!window.supabaseClient && intentos < 30) {
-                    await new Promise(r => setTimeout(r, 100)); intentos++;
-                }
-                if (!window.supabaseClient) {
-                    container.innerHTML = '<p style="color:var(--text-muted);text-align:center;font-size:.85rem">⏳ Conectando...<br><small>Verifica tu conexión a internet.</small></p>';
-                    return;
-                }
+                // Obtener todos los admins activos de la BD
                 const { data, error } = await window.supabaseClient.from('usuarios').select('*').eq('rol', 'admin').eq('activo', true);
                 if (error) throw error;
                 admins = data || [];
@@ -193,6 +194,7 @@
     };
 
     window.cerrarSesion = function() {
+        // Limpiar TODOS los estados de sesión
         sessionStorage.removeItem('admin_authenticated');
         sessionStorage.removeItem('admin_jwt_token');
         sessionStorage.removeItem('admin_user');
@@ -202,6 +204,11 @@
         // Limpiar campo contraseña
         const pwdInput = document.getElementById('adminPassword');
         if (pwdInput) pwdInput.value = '';
+        // Ocultar panel principal y mostrar login
+        const mainPanel = document.getElementById('mainPanel');
+        const loginPanel = document.getElementById('loginPanel');
+        if (mainPanel) mainPanel.style.display = 'none';
+        if (loginPanel) loginPanel.style.display = '';
         // Volver al selector de admins
         const selectorPanel = document.getElementById('loginSelectorPanel');
         const passwordPanel = document.getElementById('loginPasswordPanel');
