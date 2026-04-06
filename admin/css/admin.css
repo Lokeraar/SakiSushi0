@@ -2244,23 +2244,79 @@ html.dark-theme .mesa-admin-btn {
 
 /* ── Tarjeta ucard-v2 (usuarios / mesoneros / deliverys) ─────────────────── */
 .usuario-card-v2 {
-    background: var(--card-bg); border-radius: 14px;
-    padding: 1rem 1.2rem; box-shadow: var(--shadow-sm);
-    border: 1px solid var(--border); border-left: 4px solid var(--info);
-    display: flex; gap: 1rem; transition: var(--transition); align-items: stretch;
+    display: flex;
+    gap: 1rem;
+    background: var(--card-bg);
+    border-radius: 14px;
+    padding: 1rem;
+    border: 1px solid var(--border);
+    border-left: 4px solid var(--info);
+    transition: var(--transition);
 }
-.usuario-card-v2:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
+.usuario-card-v2:hover {
+    box-shadow: var(--shadow-md);
+    transform: translateY(-2px);
+}
 .ucard-avatar {
-    width: 64px; min-width: 64px; border-radius: 50%; overflow: hidden;
-    flex-shrink: 0; align-self: stretch;
-    display: flex; align-items: center; justify-content: center;
+    width: 64px;
+    min-width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     background: var(--secondary);
 }
-.ucard-body   { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: .5rem; }
-.ucard-top    { display: flex; justify-content: space-between; align-items: flex-start; gap: .5rem; }
-.ucard-names  { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
-.ucard-status { flex-shrink: 0; }
-.ucard-actions{ display: flex; flex-wrap: wrap; gap: .4rem; justify-content: flex-start; }
+.ucard-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+.ucard-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 0.5rem;
+}
+.ucard-names {
+    flex: 1;
+}
+.usuario-nombre {
+    font-weight: 700;
+    color: var(--text-dark);
+}
+.usuario-username {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+.ucard-status {
+    flex-shrink: 0;
+}
+.ucard-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+/* Responsive móvil */
+@media (max-width: 768px) {
+    .usuario-card-v2 {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .ucard-avatar {
+        align-self: center;
+        margin-bottom: 0.5rem;
+    }
+    .ucard-top {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .ucard-status {
+        align-self: flex-end;
+    }
+}
 
 /* ── Dashboard 4 cols + col-mini apilado ─────────────────────────────────── */
 .dashboard-col-mini { display: flex; flex-direction: column; gap: .6rem; }
