@@ -25,29 +25,34 @@
     };
 
     window.actualizarEstadisticasReportes = function(pedidos) {
-        const ventasDiaEl = document.getElementById('ventasDia');
-        const ventasSemanaEl = document.getElementById('ventasSemana');
-        const ticketPromedioEl = document.getElementById('ticketPromedio');
-        const platilloTopEl = document.getElementById('platilloTop');
-        if (!ventasDiaEl || !ventasSemanaEl || !ticketPromedioEl || !platilloTopEl) return;
-        
-        const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
-        const ventasHoy = pedidos.filter(p => new Date(p.fecha) >= hoy).reduce((s, p) => s + (p.total || 0), 0);
-        const semana = new Date(); semana.setDate(semana.getDate() - 7);
-        const ventasSemana = pedidos.filter(p => new Date(p.fecha) >= semana).reduce((s, p) => s + (p.total || 0), 0);
-        const ticketPromedio = pedidos.length > 0 ? pedidos.reduce((s, p) => s + (p.total || 0), 0) / pedidos.length : 0;
-        
-        const platillosCount = {};
-        pedidos.forEach(p => { if (p.items) p.items.forEach(item => { platillosCount[item.nombre] = (platillosCount[item.nombre] || 0) + (item.cantidad || 0); }); });
-        let platilloTop = '-', maxCount = 0;
-        for (const [n, c] of Object.entries(platillosCount)) { if (c > maxCount) { maxCount = c; platilloTop = n; } }
-        
-        const tasa = window.configGlobal?.tasa_efectiva || 400;
-        ventasDiaEl.textContent = `${window.formatUSD(ventasHoy)} / ${window.formatBs(ventasHoy * tasa)}`;
-        ventasSemanaEl.textContent = `${window.formatUSD(ventasSemana)} / ${window.formatBs(ventasSemana * tasa)}`;
-        ticketPromedioEl.textContent = `${window.formatUSD(ticketPromedio)} / ${window.formatBs(ticketPromedio * tasa)}`;
-        platilloTopEl.textContent = platilloTop;
-    };
+    // Verificar que los elementos existan antes de usarlos
+    const ventasDiaEl = document.getElementById('ventasDia');
+    const ventasSemanaEl = document.getElementById('ventasSemana');
+    const ticketPromedioEl = document.getElementById('ticketPromedio');
+    const platilloTopEl = document.getElementById('platilloTop');
+    
+    if (!ventasDiaEl || !ventasSemanaEl || !ticketPromedioEl || !platilloTopEl) {
+        console.warn('Elementos de estadísticas no encontrados aún');
+        return;
+    }
+    
+    const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
+    const ventasHoy = pedidos.filter(p => new Date(p.fecha) >= hoy).reduce((s, p) => s + (p.total || 0), 0);
+    const semana = new Date(); semana.setDate(semana.getDate() - 7);
+    const ventasSemana = pedidos.filter(p => new Date(p.fecha) >= semana).reduce((s, p) => s + (p.total || 0), 0);
+    const ticketPromedio = pedidos.length > 0 ? pedidos.reduce((s, p) => s + (p.total || 0), 0) / pedidos.length : 0;
+    
+    const platillosCount = {};
+    pedidos.forEach(p => { if (p.items) p.items.forEach(item => { platillosCount[item.nombre] = (platillosCount[item.nombre] || 0) + (item.cantidad || 0); }); });
+    let platilloTop = '-', maxCount = 0;
+    for (const [n, c] of Object.entries(platillosCount)) { if (c > maxCount) { maxCount = c; platilloTop = n; } }
+    
+    const tasa = window.configGlobal?.tasa_efectiva || 400;
+    ventasDiaEl.textContent = `${window.formatUSD(ventasHoy)} / ${window.formatBs(ventasHoy * tasa)}`;
+    ventasSemanaEl.textContent = `${window.formatUSD(ventasSemana)} / ${window.formatBs(ventasSemana * tasa)}`;
+    ticketPromedioEl.textContent = `${window.formatUSD(ticketPromedio)} / ${window.formatBs(ticketPromedio * tasa)}`;
+    platilloTopEl.textContent = platilloTop;
+};
 
     window.actualizarGraficos = function(pedidos) {
         if (typeof Chart === 'undefined') return;
