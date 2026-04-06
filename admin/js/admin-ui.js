@@ -225,6 +225,40 @@
         }
     };
 
+    // ==================== NUEVAS FUNCIONES PARA NAVEGACIÓN ====================
+    window.irAMenu = function() {
+        const tabs = document.querySelectorAll('.tab');
+        const panes = document.querySelectorAll('.tab-pane');
+        tabs.forEach(tab => tab.classList.remove('active'));
+        panes.forEach(pane => pane.classList.remove('active'));
+        const menuTab = document.querySelector('.tab[data-tab="menu"]');
+        const menuPane = document.getElementById('menuPane');
+        if (menuTab) menuTab.classList.add('active');
+        if (menuPane) menuPane.classList.add('active');
+    };
+
+    window.irAStockCritico = function() {
+        const stockCriticoDiv = document.getElementById('stockCritico');
+        if (stockCriticoDiv) {
+            stockCriticoDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            window.resaltarElemento('stockCritico', 'border');
+            // También dar animación al contenedor padre
+            stockCriticoDiv.classList.add('pulse-critico');
+            setTimeout(() => stockCriticoDiv.classList.remove('pulse-critico'), 1000);
+        }
+    };
+
+    window.irADelivery = function() {
+        const tabs = document.querySelectorAll('.tab');
+        const panes = document.querySelectorAll('.tab-pane');
+        tabs.forEach(tab => tab.classList.remove('active'));
+        panes.forEach(pane => pane.classList.remove('active'));
+        const deliveryTab = document.querySelector('.tab[data-tab="deliverys"]');
+        const deliveryPane = document.getElementById('deliverysPane');
+        if (deliveryTab) deliveryTab.classList.add('active');
+        if (deliveryPane) deliveryPane.classList.add('active');
+    };
+
     // ==================== INICIALIZACIÓN AL CARGAR LA PÁGINA ====================
     document.addEventListener('DOMContentLoaded', async () => {
         window.initTheme();
