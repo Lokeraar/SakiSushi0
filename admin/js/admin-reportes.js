@@ -37,11 +37,10 @@
         for (const [n, c] of Object.entries(platillosCount)) { if (c > maxCount) { maxCount = c; platilloTop = n; } }
         
         const tasa = window.configGlobal?.tasa_efectiva || 400;
-        function _s(id,v){var e=document.getElementById(id);if(e)e.textContent=v;}
-        _s('ventasDia',      window.formatUSD(ventasHoy)+' / '+window.formatBs(ventasHoy*tasa));
-        _s('ventasSemana',   window.formatUSD(ventasSemana)+' / '+window.formatBs(ventasSemana*tasa));
-        _s('ticketPromedio', window.formatUSD(ticketPromedio)+' / '+window.formatBs(ticketPromedio*tasa));
-        _s('platilloTop',    platilloTop);
+        document.getElementById('ventasDia').textContent = `${window.formatUSD(ventasHoy)} / ${window.formatBs(ventasHoy * tasa)}`;
+        document.getElementById('ventasSemana').textContent = `${window.formatUSD(ventasSemana)} / ${window.formatBs(ventasSemana * tasa)}`;
+        document.getElementById('ticketPromedio').textContent = `${window.formatUSD(ticketPromedio)} / ${window.formatBs(ticketPromedio * tasa)}`;
+        document.getElementById('platilloTop').textContent = platilloTop;
     };
 
     window.actualizarGraficos = function(pedidos) {
@@ -147,48 +146,101 @@
         } catch (e) { console.error('Error cargando pedidos recientes:', e); }
     };
 
-    window._abrirDetallePedidoAdmin = function(pedidoId) {
-        var pedido = (window.pedidos||[]).find(function(p){return p.id===pedidoId;});
-        if(!pedido){ window.mostrarToast('Pedido no encontrado','error'); return; }
-        var tasa = (window.configGlobal&&window.configGlobal.tasa_efectiva)||(window.configGlobal&&window.configGlobal.tasa_cambio)||400;
-        var map = {};
-        (pedido.items||[]).forEach(function(item){
-            if(map[item.nombre]) map[item.nombre].cantidad += (item.cantidad||1);
-            else map[item.nombre] = Object.assign({},item,{cantidad:item.cantidad||1});
+    window._abrirDetallePedidoAdmin = async function(pedidoId) {
+        // Buscar en memoria primero; si no, cargar de Supabase
+        let pedido = (window.pedidos || []).find(function(p){ return p.id === pedidoId; });
+        if (!pedido) {
+            try {
+                const { data, error } = await window.supabaseClient
+                    .from('pedidos').select('*').eq('id', pedidoId).maybeSingle();
+                if (error) throw error;
+                pedido = data;
+            } catch(e) {
+                console.error('Error cargando pedido:', e);
+                window.mostrarToast('❌ Error al cargar pedido', 'error');
+                return;
+            }
+        }
+        if (!pedido) { window.mostrarToast('Pedido no encontrado', 'error'); return; }
+
+        const tasa      = window.configGlobal?.tasa_efectiva || window.configGlobal?.tasa_cambio || 400;
+        const tipoIcon  = pedido.tipo==='delivery' ? '🛵' : pedido.tipo==='reserva' ? '📅' : '🍽️';
+        const tipoLabel = pedido.tipo==='delivery' ? 'Delivery' : pedido.tipo==='reserva' ? 'Reserva' : ('Mesa ' + (pedido.mesa || ''));
+        const estadoCols = {
+            entregado:'var(--success)', cobrado:'var(--success)',
+            en_camino:'var(--delivery)', enviado:'var(--delivery)',
+            en_cocina:'var(--warning)', pendiente:'var(--text-muted)'
+        };
+        const sc    = estadoCols[pedido.estado] || 'var(--text-muted)';
+        const totBs = (pedido.total || 0) * tasa;
+
+        // Comprimir items duplicados por nombre
+        const map = {};
+        (pedido.items || []).forEach(function(it) {
+            if (map[it.nombre]) map[it.nombre].cantidad += (it.cantidad || 1);
+            else map[it.nombre] = Object.assign({}, it, { cantidad: it.cantidad || 1 });
         });
-        var items = Object.values(map);
-        var tipoIcon = pedido.tipo==='delivery'?'🛵':pedido.tipo==='reserva'?'📅':'🍽️';
-        var ecol = {entregado:'var(--success)',cobrado:'var(--success)',en_camino:'var(--delivery)',enviado:'var(--delivery)',en_cocina:'var(--warning)',pendiente:'var(--text-muted)'};
-        var sc = ecol[pedido.estado]||'var(--text-muted)';
-        var totBs = (pedido.total||0)*tasa;
-        var iHtml = items.length
-            ? items.map(function(it){
-                var pu=it.precioUnitarioUSD||it.precio||0; var su=pu*(it.cantidad||1);
-                return '<div style="display:flex;justify-content:space-between;align-items:center;padding:.45rem 0;border-bottom:1px solid var(--border)">'
-                    +'<span style="font-size:.85rem;font-weight:500;color:var(--text-dark)">'+it.nombre
-                    +(it.cantidad>1?' <span style="background:var(--primary);color:#fff;border-radius:12px;padding:1px 7px;font-size:.7rem;font-weight:700;margin-left:.4rem">×'+it.cantidad+'</span>':'')
-                    +'</span>'
-                    +'<span style="font-size:.82rem;font-weight:700;color:var(--accent);white-space:nowrap;margin-left:.5rem">'+window.formatUSD(su)+' / '+window.formatBs(su*tasa)+'</span>'
-                    +'</div>';
-              }).join('')
-            : '<p style="color:var(--text-muted);font-size:.82rem;text-align:center;padding:.75rem">Sin items</p>';
-        var ov=document.createElement('div');
-        ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:10001;display:flex;align-items:center;justify-content:center;padding:1rem;backdrop-filter:blur(3px)';
-        ov.innerHTML='<div style="background:var(--card-bg);border-radius:16px;max-width:480px;width:100%;max-height:85vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 20px 40px rgba(0,0,0,.4)">'
-            +'<div style="background:linear-gradient(135deg,#1a1a2e,#2d2d4e);padding:1rem 1.5rem;color:#fff;display:flex;justify-content:space-between;align-items:center">'
-            +'<div><div style="font-size:1rem;font-weight:700">'+tipoIcon+' '+(pedido.tipo||'mesa')+(pedido.mesa?' · Mesa '+pedido.mesa:'')+'</div>'
-            +'<div style="font-size:.72rem;opacity:.75;margin-top:2px">'+new Date(pedido.fecha).toLocaleString('es-VE',{timeZone:'America/Caracas'})+'</div></div>'
-            +'<div style="display:flex;align-items:center;gap:.75rem">'
-            +'<span style="font-size:.7rem;background:'+sc+'30;color:'+sc+';padding:.2rem .7rem;border-radius:20px;font-weight:600">'+((pedido.estado||'').replace(/_/g,' '))+'</span>'
-            +'<button onclick="this.closest(\'[style*=position]\').remove()" style="background:rgba(255,255,255,.15);border:none;color:#fff;border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:.9rem;display:flex;align-items:center;justify-content:center;font-weight:700">✕</button></div></div>'
-            +'<div style="overflow-y:auto;flex:1;padding:1rem 1.5rem">'
-            +'<div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);margin-bottom:.6rem"><i class="fas fa-receipt" style="margin-right:.3rem"></i>Items del pedido</div>'
-            +iHtml+'</div>'
-            +'<div style="padding:.85rem 1.5rem;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center">'
-            +'<span style="font-size:.82rem;color:var(--text-muted)">Total</span>'
-            +'<span style="font-size:1rem;font-weight:800;color:var(--accent)">'+window.formatUSD(pedido.total||0)+' / '+window.formatBs(totBs)+'</span>'
-            +'</div></div>';
-        ov.addEventListener('click',function(e){if(e.target===ov)ov.remove();});
+        const items = Object.values(map);
+
+        const iHtml = items.length ? items.map(function(it) {
+            const pu  = it.precioUnitarioUSD || it.precio || 0;
+            const su  = pu * (it.cantidad || 1);
+            const qty = it.cantidad > 1
+                ? '<span style="background:var(--primary);color:#fff;border-radius:12px;padding:1px 7px;font-size:.7rem;font-weight:700;margin-left:.4rem">×' + it.cantidad + '</span>'
+                : '';
+            return '<div style="display:flex;justify-content:space-between;align-items:center;padding:.45rem 0;border-bottom:1px solid var(--border)">'
+                + '<span style="font-size:.85rem;font-weight:500;color:var(--text-dark)">' + it.nombre + qty + '</span>'
+                + '<span style="font-size:.82rem;font-weight:700;color:var(--accent);white-space:nowrap;margin-left:.5rem">'
+                + window.formatUSD(su) + ' / ' + window.formatBs(su * tasa)
+                + '</span></div>';
+        }).join('') : '<p style="color:var(--text-muted);font-size:.82rem;text-align:center;padding:.75rem">Sin items registrados</p>';
+
+        // Método de pago legible
+        const metodosLabel = {
+            efectivo_bs:'Efectivo Bs', efectivo_usd:'Efectivo USD',
+            pago_movil:'Pago Móvil', punto_venta:'Punto de Venta', invitacion:'Invitación'
+        };
+        let metodoPago = 'N/A';
+        if (pedido.pagos_mixtos && pedido.pagos_mixtos.length > 0) {
+            metodoPago = pedido.pagos_mixtos.map(function(pg){ return metodosLabel[pg.metodo] || pg.metodo; }).join(' + ');
+        } else if (pedido.metodo_pago) {
+            metodoPago = metodosLabel[pedido.metodo_pago] || pedido.metodo_pago;
+        }
+
+        const ov = document.createElement('div');
+        ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:10001;display:flex;align-items:center;justify-content:center;padding:1rem;backdrop-filter:blur(3px)';
+        const fechaStr = new Date(pedido.fecha).toLocaleString('es-VE', {
+            timeZone:'America/Caracas', day:'2-digit', month:'2-digit',
+            year:'numeric', hour:'2-digit', minute:'2-digit'
+        });
+        const estadoStr = (pedido.estado || '').replace(/_/g, ' ');
+        ov.innerHTML = '<div style="background:var(--card-bg);border-radius:16px;max-width:480px;width:100%;max-height:88vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 20px 40px rgba(0,0,0,.4)">'
+            + '<div style="background:linear-gradient(135deg,#1a1a2e,#2d2d4e);padding:1rem 1.5rem;color:#fff;display:flex;justify-content:space-between;align-items:flex-start">'
+            +   '<div>'
+            +     '<div style="font-size:1rem;font-weight:700">' + tipoIcon + ' ' + tipoLabel + '</div>'
+            +     '<div style="font-size:.72rem;opacity:.75;margin-top:3px">' + fechaStr + '</div>'
+            +   '</div>'
+            +   '<div style="display:flex;align-items:center;gap:.75rem">'
+            +     '<span style="font-size:.7rem;background:' + sc + '30;color:' + sc + ';padding:.2rem .7rem;border-radius:20px;font-weight:600">' + estadoStr + '</span>'
+            +     '<button onclick="this.closest(\'[style*=position]\').remove()" style="background:rgba(255,255,255,.15);border:none;color:#fff;border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:.9rem;font-weight:700;display:flex;align-items:center;justify-content:center">✕</button>'
+            +   '</div>'
+            + '</div>'
+            + '<div style="overflow-y:auto;flex:1;padding:1rem 1.5rem">'
+            +   '<div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);margin-bottom:.6rem"><i class="fas fa-receipt" style="margin-right:.3rem"></i>Items del pedido</div>'
+            +   iHtml
+            + '</div>'
+            + '<div style="padding:.85rem 1.5rem;border-top:1px solid var(--border)">'
+            +   '<div style="display:flex;justify-content:space-between;margin-bottom:.4rem;font-size:.82rem">'
+            +     '<span style="color:var(--text-muted)">Método de pago</span>'
+            +     '<span style="font-weight:600">' + metodoPago + '</span>'
+            +   '</div>'
+            +   '<div style="display:flex;justify-content:space-between;align-items:center">'
+            +     '<span style="font-size:.82rem;color:var(--text-muted)">Total</span>'
+            +     '<span style="font-size:1rem;font-weight:800;color:var(--accent)">' + window.formatUSD(pedido.total||0) + ' / ' + window.formatBs(totBs) + '</span>'
+            +   '</div>'
+            + '</div>'
+            + '</div>';
+        ov.addEventListener('click', function(e) { if(e.target===ov) ov.remove(); });
         document.body.appendChild(ov);
     };
 
@@ -224,21 +276,16 @@
     };
 
     window._actualizarDeliverysHoy = async function() {
-        if (window._actualizarDeliverysHoyStats) {
-            await window._actualizarDeliverysHoyStats();
-        } else {
-            try {
-                var tasa=(window.configGlobal&&window.configGlobal.tasa_efectiva)||(window.configGlobal&&window.configGlobal.tasa_cambio)||400;
-                var hoy=new Date(); hoy.setHours(0,0,0,0);
-                var man=new Date(hoy); man.setDate(man.getDate()+1);
-                var res=await window.supabaseClient.from('entregas_delivery').select('monto_bs')
-                    .gte('fecha_entrega',hoy.toISOString()).lt('fecha_entrega',man.toISOString());
-                var tot=(res.data||[]).reduce(function(s,e){return s+(e.monto_bs||0);},0);
-                var totUsd=tasa>0?tot/tasa:0;
-                var el=document.getElementById('deliverysHoyDashboard');
-                if(el) el.textContent=window.formatUSD(totUsd)+' / '+window.formatBs(tot);
-            } catch(err){ console.error('Error deliverys hoy:',err); }
-        }
+        try {
+            const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
+            const manana = new Date(hoy); manana.setDate(manana.getDate() + 1);
+            const { data: pedidosDelivery } = await window.supabaseClient.from('pedidos').select('*').eq('tipo', 'delivery').eq('estado', 'enviado').gte('fecha', hoy.toISOString()).lt('fecha', manana.toISOString());
+            let totalDeliverys = 0;
+            (pedidosDelivery || []).forEach(p => { totalDeliverys += p.costo_delivery_bs || p.costoDelivery || 0; });
+            const el = document.getElementById('deliverysHoyDashboard');
+            if (el) el.textContent = window.formatBs(totalDeliverys);
+            window._deliverysHoyData = { totalDeliverys, pedidosDelivery };
+        } catch (e) { console.error('Error calculando deliverys hoy:', e); const el = document.getElementById('deliverysHoyDashboard'); if (el) el.textContent = 'Bs 0.00'; }
     };
 
     window._abrirDetalleDeliverysAdmin = async function() {
