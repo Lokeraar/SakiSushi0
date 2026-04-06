@@ -105,24 +105,10 @@
 
     window.expandirImagen = function(src) {
         if (!src) return;
-        const prev = document.getElementById('_expandImgOverlay');
-        if (prev) prev.remove();
         const modal = document.createElement('div');
-        modal.id = '_expandImgOverlay';
-        modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.92);z-index:10000;display:flex;align-items:center;justify-content:center';
-        const wrap = document.createElement('div');
-        wrap.style.cssText = 'position:relative;display:inline-block;max-width:92vw;max-height:92vh';
-        const img = document.createElement('img');
-        img.src = src;
-        img.style.cssText = 'max-width:100%;max-height:90vh;object-fit:contain;border-radius:10px;display:block';
-        const btn = document.createElement('button');
-        btn.textContent = '✕';
-        btn.style.cssText = 'position:absolute;top:-18px;right:-18px;width:42px;height:42px;border-radius:50%;background:#D32F2F;color:#fff;border:2.5px solid #fff;font-size:1.2rem;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 12px rgba(0,0,0,.5);font-weight:900;z-index:1;line-height:1';
-        btn.addEventListener('click', function(e) { e.stopPropagation(); modal.remove(); });
-        wrap.appendChild(img);
-        wrap.appendChild(btn);
-        modal.appendChild(wrap);
-        modal.addEventListener('click', function(e) { if (e.target === modal) modal.remove(); });
+        modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.9);z-index:10000;display:flex;align-items:center;justify-content:center;cursor:pointer';
+        modal.innerHTML = `<img src="${src}" style="max-width:90%;max-height:90%;object-fit:contain;border-radius:8px">`;
+        modal.addEventListener('click', () => modal.remove());
         document.body.appendChild(modal);
     };
 
@@ -281,15 +267,23 @@
     };
 
     window.cargarCategoriasSelect = function() {
-        const select = document.getElementById('platilloCategoria');
-        select.innerHTML = '<option value="">Seleccionar</option>';
-        Object.keys(window.categoriasMenu || {}).forEach(cat => {
+        let select = document.getElementById('platilloCategoria');
+        if (!select) return;
+        const labels = window.categoriasMenuLabels || {};
+        select.innerHTML = '<option value="">Seleccionar categoría</option>';
+        Object.keys(window.categoriasMenu || {}).forEach(function(cat) {
             const opt = document.createElement('option');
             opt.value = cat;
-            opt.textContent = cat;
+            opt.textContent = labels[cat] || cat; // mostrar nombre bonito si existe
             select.appendChild(opt);
         });
-        select.addEventListener('change', (e) => { window.cargarSubcategoriasSelect(e.target.value); });
+        // Clonar para eliminar listeners previos y evitar duplicados
+        const nuevo = select.cloneNode(true);
+        select.parentNode.replaceChild(nuevo, select);
+        nuevo.addEventListener('change', function(e) {
+            window.cargarSubcategoriasSelect(e.target.value);
+            window._recalcularStockPlatillo && window._recalcularStockPlatillo();
+        });
     };
 
     window.cargarSubcategoriasSelect = function(categoria) {
@@ -305,7 +299,7 @@
         }
     };
 
-    window.agregarIngredienteRow = function(ingredienteId, cantidad, unidad) {
+    window.agregarIngredienteRow = function(ingredienteId, cantidad, unidad, esPrincipal) {
         ingredienteId = ingredienteId || '';
         cantidad = cantidad || '';
         if (!unidad && ingredienteId) {
@@ -361,9 +355,33 @@
         removeBtn.style.cssText = 'background:#ffebee;color:var(--danger);border:none;border-radius:6px;width:28px;height:28px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0';
         removeBtn.onclick = () => { row.remove(); window._recalcularStockPlatillo(); };
 
+        // 4.2: Checkbox ingrediente principal (sin label, con tooltip)
+        const principalCell = document.createElement('div');
+        principalCell.style.cssText = 'position:relative;display:flex;align-items:center;justify-content:center;flex-shrink:0';
+        const chk = document.createElement('input');
+        chk.type = 'checkbox';
+        chk.className = 'ing-principal-chk';
+        chk.style.cssText = 'width:16px;height:16px;accent-color:var(--primary);cursor:pointer;margin:0';
+        chk.title = '';
+        if (esPrincipal) chk.checked = true;
+        const tip = document.createElement('div');
+        tip.style.cssText = 'display:none;position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:#1a1a2e;color:#fff;padding:.55rem .8rem;border-radius:8px;font-size:.72rem;white-space:normal;width:230px;text-align:center;box-shadow:0 4px 14px rgba(0,0,0,.4);z-index:300;line-height:1.45;pointer-events:none;font-family:Montserrat,sans-serif';
+        tip.innerHTML = '<strong style="display:block;margin-bottom:.25rem">¿Es un ingrediente principal?</strong>Si se activa, este ingrediente no podrá deseleccionarse al personalizar el platillo en el menú del cliente y requerirá doble confirmación para eliminarse en inventario.';
+        principalCell.appendChild(chk);
+        principalCell.appendChild(tip);
+        principalCell.addEventListener('mouseenter', function() { tip.style.display = 'block'; });
+        principalCell.addEventListener('mouseleave', function() { tip.style.display = 'none'; });
+        chk.addEventListener('touchstart', function(e) {
+            e.stopPropagation();
+            tip.style.display = tip.style.display === 'block' ? 'none' : 'block';
+        }, { passive: true });
+        // Actualizar grid para 5 columnas
+        row.style.gridTemplateColumns = '2fr 1fr 1fr auto auto';
+
         row.appendChild(select);
         row.appendChild(inputCantidad);
         row.appendChild(selUnidad);
+        row.appendChild(principalCell);
         row.appendChild(removeBtn);
         container.appendChild(row);
         window._recalcularStockPlatillo();
@@ -375,8 +393,12 @@
         window.platilloEditandoId = id;
         document.getElementById('platilloModalTitle').textContent = 'Editar Platillo';
         window.limpiarImagenPreview();
+        // Poblar el select de categorías ANTES de asignar el valor (4.1 fix)
+        window.cargarCategoriasSelect();
         document.getElementById('platilloNombre').value = platillo.nombre || '';
         document.getElementById('platilloCategoria').value = platillo.categoria || '';
+        // Poblar subcategorías para la categoría del platillo y asignar valor
+        window.cargarSubcategoriasSelect(platillo.categoria || '');
         document.getElementById('platilloSubcategoria').value = platillo.subcategoria || '';
         document.getElementById('platilloPrecio').value = platillo.precio || '';
         document.getElementById('platilloDescripcion').value = platillo.descripcion || '';
@@ -395,7 +417,7 @@
         document.getElementById('ingredientesContainer').innerHTML = '';
         if (platillo.ingredientes) {
             Object.entries(platillo.ingredientes).forEach(([ingId, ingInfo]) => {
-                window.agregarIngredienteRow(ingId, ingInfo.cantidad, ingInfo.unidad);
+                window.agregarIngredienteRow(ingId, ingInfo.cantidad, ingInfo.unidad, ingInfo.principal || false);
             });
         }
         document.getElementById('platilloModal').classList.add('active');
@@ -537,11 +559,13 @@
                 const selIng    = row.querySelector('select:not(.ing-row-unidad)');
                 const selUnidad = row.querySelector('select.ing-row-unidad');
                 const cantInput = row.querySelector('input[type="number"]');
+                const chkPrincipal = row.querySelector('.ing-principal-chk');
                 if (selIng && selIng.value && cantInput && cantInput.value) {
                     ingredientes[selIng.value] = {
-                        cantidad: parseFloat(cantInput.value),
-                        nombre: selIng.options[selIng.selectedIndex]?.text || selIng.value,
-                        unidad: selUnidad ? selUnidad.value : 'unidades'
+                        cantidad:  parseFloat(cantInput.value),
+                        nombre:    selIng.options[selIng.selectedIndex]?.text || selIng.value,
+                        unidad:    selUnidad ? selUnidad.value : 'unidades',
+                        principal: chkPrincipal ? chkPrincipal.checked : false
                     };
                 }
             });
