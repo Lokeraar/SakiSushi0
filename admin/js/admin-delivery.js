@@ -14,6 +14,7 @@
             window.deliverys = data || [];
             await window.renderizarDeliverys();
             if (window.cargarUltimosViajes) window.cargarUltimosViajes();
+            if (window._actualizarDeliverysHoyStats) window._actualizarDeliverysHoyStats();
         } catch (e) { console.error('Error cargando deliverys:', e); }
     };
 
@@ -471,5 +472,147 @@
     document.getElementById('deliveryFoto')?.addEventListener('change', handleDeliveryFotoFile);
     document.getElementById('deliveryFotoUrl')?.addEventListener('input', handleDeliveryFotoUrl);
     document.getElementById('deliveryFotoRemoveBtn')?.addEventListener('click', removeDeliveryFoto);
+
+
+    // ── Tarea 5.1: Stats cards deliverys ────────────────────────────────────
+    window._actualizarDeliverysHoyStats = async function() {
+        try {
+            const tasa = window.configGlobal?.tasa_efectiva || window.configGlobal?.tasa_cambio || 400;
+            const hoy  = new Date(); hoy.setHours(0,0,0,0);
+            const man  = new Date(hoy); man.setDate(man.getDate()+1);
+            const { data: allData } = await window.supabaseClient
+                .from('entregas_delivery').select('monto_bs');
+            const totAll    = (allData||[]).reduce((s,e) => s+(e.monto_bs||0), 0);
+            const totAllUsd = tasa>0 ? totAll/tasa : 0;
+            const { data: hoyData } = await window.supabaseClient
+                .from('entregas_delivery').select('monto_bs')
+                .gte('fecha_entrega', hoy.toISOString())
+                .lt('fecha_entrega', man.toISOString());
+            const lista  = hoyData || [];
+            const totBs  = lista.reduce((s,e) => s+(e.monto_bs||0), 0);
+            const totUsd = tasa>0 ? totBs/tasa : 0;
+            const cnt    = lista.length;
+            const avgBs  = cnt>0 ? totBs/cnt : 0;
+            const avgUsd = tasa>0 ? avgBs/tasa : 0;
+            const _s = (id,v) => { const el=document.getElementById(id); if(el) el.textContent=v; };
+            _s('deliverysHoyDashboard', window.formatUSD(totUsd)+' / '+window.formatBs(totBs));
+            _s('deliverysTotalCard',    window.formatUSD(totAllUsd)+' / '+window.formatBs(totAll));
+            _s('deliverysCountCard',    String(cnt));
+            _s('deliverysPromedioCard', window.formatUSD(avgUsd)+' / '+window.formatBs(avgBs));
+        } catch(e) { console.error('Error stats deliverys:', e); }
+    };
+
+    // ── Tarea 5.2: Tabla últimos 5 viajes ───────────────────────────────────
+    window.cargarUltimosViajes = async function() {
+        const tbody = document.getElementById('ultimosViajesTbody');
+        if (!tbody) return;
+        try {
+            const tasa = window.configGlobal?.tasa_efectiva || window.configGlobal?.tasa_cambio || 400;
+            const { data, error } = await window.supabaseClient
+                .from('entregas_delivery')
+                .select('*, deliverys(nombre), pedidos(id, mesa, cliente_nombre, items)')
+                .order('fecha_entrega', { ascending: false }).limit(5);
+            if (error) throw error;
+            const lista = data || [];
+            if (!lista.length) {
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:1.5rem;color:var(--text-muted)">Sin viajes registrados</td></tr>';
+                return;
+            }
+            tbody.innerHTML = lista.map(e => {
+                const motor = e.deliverys?.nombre || '—';
+                let resumen = '—';
+                if (e.pedidos?.mesa)            resumen = 'Mesa ' + e.pedidos.mesa;
+                else if (e.pedidos?.cliente_nombre) resumen = e.pedidos.cliente_nombre;
+                else if (e.pedidos?.items?.length) {
+                    resumen = e.pedidos.items.slice(0,2).map(i => (i.cantidad||1)+'x '+i.nombre).join(', ');
+                    if (e.pedidos.items.length > 2) resumen += ' +' + (e.pedidos.items.length-2) + ' más';
+                } else if (e.pedido_id) { resumen = e.pedido_id.slice(0,8); }
+                const mBs  = e.monto_bs || 0;
+                const mUsd = tasa>0 ? mBs/tasa : 0;
+                const hora = new Date(e.fecha_entrega).toLocaleString('es-VE',
+                    {timeZone:'America/Caracas', hour:'2-digit', minute:'2-digit'});
+                return `<tr>
+                    <td style="padding:.6rem 1rem;border-bottom:1px solid var(--border);font-size:.82rem;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${resumen}</td>
+                    <td style="padding:.6rem 1rem;border-bottom:1px solid var(--border);font-size:.82rem;font-weight:600">${motor}</td>
+                    <td style="padding:.6rem 1rem;border-bottom:1px solid var(--border);font-size:.82rem;font-weight:700;color:var(--delivery)">${window.formatUSD(mUsd)}<br><span style="font-size:.72rem;color:var(--text-muted)">${window.formatBs(mBs)}</span></td>
+                    <td style="padding:.6rem 1rem;border-bottom:1px solid var(--border);font-size:.78rem;color:var(--text-muted)">${hora}</td>
+                </tr>`;
+            }).join('');
+        } catch(err) {
+            const tb = document.getElementById('ultimosViajesTbody');
+            if (tb) tb.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--danger)">Error al cargar</td></tr>';
+        }
+    };
+
+    // ── Tarea 5.3: Historial completo de envíos hoy ──────────────────────────
+    window.verHistorialEnviosHoy = async function() {
+        try {
+            const tasa = window.configGlobal?.tasa_efectiva || window.configGlobal?.tasa_cambio || 400;
+            const hoy  = new Date(); hoy.setHours(0,0,0,0);
+            const man  = new Date(hoy); man.setDate(man.getDate()+1);
+            const { data } = await window.supabaseClient
+                .from('entregas_delivery')
+                .select('*, deliverys(nombre), pedidos(id, mesa, cliente_nombre, items)')
+                .gte('fecha_entrega', hoy.toISOString())
+                .lt('fecha_entrega', man.toISOString())
+                .order('fecha_entrega', { ascending: false });
+            const lista  = data || [];
+            const totBs  = lista.reduce((s,e) => s+(e.monto_bs||0), 0);
+            const totUsd = tasa>0 ? totBs/tasa : 0;
+            const rows = lista.map(e => {
+                const motor = e.deliverys?.nombre || '—';
+                let resumen = '—';
+                if (e.pedidos?.mesa)            resumen = 'Mesa ' + e.pedidos.mesa;
+                else if (e.pedidos?.cliente_nombre) resumen = e.pedidos.cliente_nombre;
+                else if (e.pedidos?.items?.length) {
+                    resumen = e.pedidos.items.slice(0,2).map(i => (i.cantidad||1)+'x '+i.nombre).join(', ');
+                    if (e.pedidos.items.length > 2) resumen += ' +' + (e.pedidos.items.length-2) + ' más';
+                }
+                const mBs  = e.monto_bs||0;
+                const mUsd = tasa>0 ? mBs/tasa : 0;
+                const hora = new Date(e.fecha_entrega).toLocaleString('es-VE',
+                    {timeZone:'America/Caracas', day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit'});
+                return `<tr>
+                    <td style="padding:.55rem .85rem;border-bottom:1px solid var(--border);font-size:.8rem">${resumen}</td>
+                    <td style="padding:.55rem .85rem;border-bottom:1px solid var(--border);font-size:.82rem;font-weight:600">${motor}</td>
+                    <td style="padding:.55rem .85rem;border-bottom:1px solid var(--border);font-size:.82rem;font-weight:700;color:var(--delivery)">${window.formatUSD(mUsd)} / ${window.formatBs(mBs)}</td>
+                    <td style="padding:.55rem .85rem;border-bottom:1px solid var(--border);font-size:.78rem;color:var(--text-muted)">${hora}</td>
+                </tr>`;
+            }).join('');
+            const totLine = `${lista.length} envío${lista.length!==1?'s':''} · Total: ${window.formatUSD(totUsd)} / ${window.formatBs(totBs)}`;
+            const ov = document.createElement('div');
+            ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:10001;display:flex;align-items:center;justify-content:center;padding:1rem;backdrop-filter:blur(3px)';
+            ov.innerHTML = `
+                <div style="background:var(--card-bg);border-radius:16px;max-width:700px;width:100%;max-height:85vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 20px 40px rgba(0,0,0,.4)">
+                    <div style="background:linear-gradient(135deg,var(--delivery),#00838F);padding:1rem 1.5rem;color:#fff;display:flex;justify-content:space-between;align-items:center">
+                        <div>
+                            <div style="font-weight:700;font-size:1rem"><i class="fas fa-motorcycle"></i> Historial Envíos — Hoy</div>
+                            <div style="font-size:.75rem;opacity:.8;margin-top:2px">${totLine}</div>
+                        </div>
+                        <button onclick="this.closest('[style*=position]').remove()" style="background:rgba(255,255,255,.2);border:none;color:#fff;border-radius:50%;width:30px;height:30px;cursor:pointer;font-size:1rem;font-weight:700;display:flex;align-items:center;justify-content:center">✕</button>
+                    </div>
+                    <div style="overflow-y:auto;flex:1">
+                        <table style="width:100%;border-collapse:collapse">
+                            <thead><tr style="background:var(--secondary)">
+                                <th style="padding:.6rem .85rem;text-align:left;font-size:.72rem;text-transform:uppercase;color:var(--text-muted);font-weight:700">Resumen</th>
+                                <th style="padding:.6rem .85rem;text-align:left;font-size:.72rem;text-transform:uppercase;color:var(--text-muted);font-weight:700">Motorizado</th>
+                                <th style="padding:.6rem .85rem;text-align:left;font-size:.72rem;text-transform:uppercase;color:var(--text-muted);font-weight:700">Monto</th>
+                                <th style="padding:.6rem .85rem;text-align:left;font-size:.72rem;text-transform:uppercase;color:var(--text-muted);font-weight:700">Hora</th>
+                            </tr></thead>
+                            <tbody>${rows || '<tr><td colspan="4" style="text-align:center;padding:1.5rem;color:var(--text-muted)">Sin envíos hoy</td></tr>'}</tbody>
+                        </table>
+                    </div>
+                    <div style="padding:.85rem 1.5rem;border-top:1px solid var(--border);display:flex;justify-content:flex-end">
+                        <button onclick="this.closest('[style*=position]').remove()" style="background:var(--primary);color:#fff;border:none;padding:.55rem 1.25rem;border-radius:8px;cursor:pointer;font-family:Montserrat,sans-serif;font-weight:600;font-size:.85rem">Cerrar</button>
+                    </div>
+                </div>`;
+            ov.addEventListener('click', e => { if(e.target===ov) ov.remove(); });
+            document.body.appendChild(ov);
+        } catch(err) {
+            console.error('Error historial envíos:', err);
+            window.mostrarToast('❌ Error al cargar historial', 'error');
+        }
+    };
+
 
 })();
