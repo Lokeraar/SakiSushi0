@@ -1447,8 +1447,26 @@ html.dark-theme .modal-close:hover { color: #fff; }
 .inv-top { display: flex; align-items: center; justify-content: space-between; gap: .5rem; }
 .inv-nombre { font-weight: 700; font-size: .88rem; color: var(--text-dark); flex: 1; word-break: break-word; }
 .inv-actions { display: flex; gap: .3rem; flex-shrink: 0; }
-.inv-stock-row { display: flex; align-items: baseline; gap: .3rem; }
-.inv-stock-num { font-size: 1.5rem; font-weight: 800; }
+.inv-stock-row {
+    flex-wrap: wrap;
+    gap: 0.3rem;
+}
+.inv-stock-num {
+    word-break: break-word;
+}
+.inv-reservado {
+    margin-left: auto;
+    white-space: nowrap;
+}
+@media (max-width: 480px) {
+    .inv-stock-row {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .inv-reservado {
+        margin-left: 0;
+    }
+}
 .inv-stock-num.ok { color: var(--success); }
 .inv-stock-num.bajo { color: var(--warning); }
 .inv-stock-num.critico { color: var(--danger); }
