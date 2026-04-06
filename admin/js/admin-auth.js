@@ -136,9 +136,9 @@
                     await window.cargarQRs();
                     await window.cargarReportes();
                     await window.cargarPedidosRecientes();
-                    await window.cargarMesoneros();
-                    await window.cargarDeliverys();
-                    await window.cargarPropinas();
+                    if (typeof window.cargarMesoneros === 'function') await window.cargarMesoneros();
+                    if (typeof window.cargarDeliverys  === 'function') await window.cargarDeliverys();
+                    if (typeof window.cargarPropinas   === 'function') await window.cargarPropinas();
                     window.setupEventListeners();
                     window.setupRealtimeSubscriptions();
                     window.setupStockRealtime();
@@ -194,7 +194,6 @@
     };
 
     window.cerrarSesion = function() {
-        // Limpiar TODOS los estados de sesión
         sessionStorage.removeItem('admin_authenticated');
         sessionStorage.removeItem('admin_jwt_token');
         sessionStorage.removeItem('admin_user');
@@ -204,11 +203,6 @@
         // Limpiar campo contraseña
         const pwdInput = document.getElementById('adminPassword');
         if (pwdInput) pwdInput.value = '';
-        // Ocultar panel principal y mostrar login
-        const mainPanel = document.getElementById('mainPanel');
-        const loginPanel = document.getElementById('loginPanel');
-        if (mainPanel) mainPanel.style.display = 'none';
-        if (loginPanel) loginPanel.style.display = '';
         // Volver al selector de admins
         const selectorPanel = document.getElementById('loginSelectorPanel');
         const passwordPanel = document.getElementById('loginPasswordPanel');
