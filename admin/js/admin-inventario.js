@@ -25,10 +25,23 @@
         if (!grid) return;
         grid.innerHTML = '';
         const _normI = t => (t || '').normalize('NFD').replace(/[áéíóú]/g, '').toLowerCase();
-        const _baseI = [...window.inventarioItems].sort((a,b) => a.nombre.localeCompare(b.nombre));
-        const items = filtro
-            ? _baseI.filter(i => _normI(i.nombre).includes(_normI(filtro)))
-            : _baseI;
+        const _baseI = [...window.inventarioItems];
+        
+        // Calcular estado para ordenamiento
+        const estadoMap = {};
+        _baseI.forEach(item => {
+            const disponible = (item.stock||0) - (item.reservado||0);
+            const minimo = item.minimo || 0;
+            if (disponible <= 0) estadoMap[item.id] = 'agotado';
+            else if (disponible <= minimo) estadoMap[item.id] = 'critico';
+            else if (disponible <= minimo * 2) estadoMap[item.id] = 'moderado';
+            else estadoMap[item.id] = 'optimo';
+        });
+        
+        const ordenEstados = { agotado: 0, critico: 1, moderado: 2, optimo: 3 };
+        const items = (filtro ? _baseI.filter(i => _normI(i.nombre).includes(_normI(filtro))) : _baseI)
+            .sort((a,b) => ordenEstados[estadoMap[a.id]] - ordenEstados[estadoMap[b.id]]);
+        
         if (!items.length) {
             grid.innerHTML = '<p style="color:var(--text-muted);font-size:.85rem;padding:.75rem">' +
                 (filtro ? 'Sin resultados para "' + filtro + '"' : 'No hay ingredientes registrados.') + '</p>';
@@ -41,13 +54,12 @@
             let estado = 'ok';
             if (disponible <= 0) estado = 'agotado';
             else if (disponible <= minimo) estado = 'critico';
-            else if (disponible <= minimo * 1.5) estado = 'bajo';
-            else estado = 'ok';
+            else if (disponible <= minimo * 2) estado = 'moderado';
+            else estado = 'optimo';
             
             const el = document.createElement('div');
             el.className = 'inv-list-item' + (item.id === window._invActiveId ? ' active' : '');
             el.id = 'invItem_' + item.id;
-            // Mostrar imagen pequeña si existe
             const imgHtml = item.imagen ? `<img src="${item.imagen}" style="width:24px;height:24px;object-fit:cover;border-radius:4px;margin-right:8px">` : '';
             el.innerHTML = `
                 <div style="display:flex;align-items:center;flex:1;min-width:0">
@@ -93,13 +105,20 @@
         let estado = 'ok';
         if (disponible <= 0) estado = 'agotado';
         else if (disponible <= minimo) estado = 'critico';
-        else if (disponible <= minimo * 1.5) estado = 'bajo';
-        else estado = 'ok';
+        else if (disponible <= minimo * 2) estado = 'moderado';
+        else estado = 'optimo';
         
-        // Calcular porcentaje para barra: máximo entre stock y minimo*2 para referencia
+        let colorEstado;
+        switch (estado) {
+            case 'agotado': colorEstado = 'var(--danger)'; break;
+            case 'critico': colorEstado = 'var(--danger)'; break;
+            case 'moderado': colorEstado = 'var(--warning)'; break;
+            default: colorEstado = 'var(--success)';
+        }
+        
+        // Barra invertida: llenar desde la derecha
         const maxReferencia = Math.max(item.stock, minimo * 2, 10);
         const porcentaje = Math.min(100, (disponible / maxReferencia) * 100);
-        const colorEstado = estado === 'critico' || estado === 'agotado' ? 'var(--danger)' : estado === 'bajo' ? 'var(--warning)' : 'var(--success)';
         
         const imgHtml = item.imagen ? `<img src="${item.imagen}" style="width:60px;height:60px;object-fit:cover;border-radius:8px;margin-bottom:.5rem">` : '';
 
@@ -117,7 +136,7 @@
                     <span class="inv-stock-unit" style="font-size:.9rem">${item.unidad_base||'u'}</span>
                     <span style="font-size:.75rem;color:var(--text-muted);margin-left:auto">Reservado: ${item.reservado||0}</span>
                 </div>
-                <div class="inv-bar" style="margin-bottom:.85rem"><div class="inv-bar-fill ${estado}" style="width:${porcentaje}%;background:${colorEstado}"></div></div>
+                <div class="inv-bar" style="margin-bottom:.85rem; direction: rtl;"><div class="inv-bar-fill ${estado}" style="width:${porcentaje}%;background:${colorEstado}"></div></div>
                 <div class="inv-meta-grid" style="grid-template-columns:1fr 1fr 1fr;gap:.75rem;margin-bottom:.85rem">
                     <div class="inv-meta-item">
                         <span class="inv-meta-label">Mínimo</span>
@@ -230,8 +249,6 @@
         }
     }
 
-
-    // Sincronizar Mercancía Nueva con Cantidad Comprada
     function syncAgregarToCantidadComprada() {
         const agregarInput = document.getElementById('ingredienteAgregar');
         const cantidadComprada = document.getElementById('cantidadComprada');
@@ -240,8 +257,6 @@
         }
         window._syncIngredientePreview();
     }
-
-	
 
     window.mostrarModalContraseñaStock = function() {
         const input = document.getElementById('stockPasswordModalInput');
@@ -269,27 +284,25 @@
         }
         if (btnConfirm) { btnConfirm.disabled = true; btnConfirm.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Validando...'; }
         try {
-            // Obtener usuario admin actual (puede haber varios)
-            const userData = sessionStorage.getItem('admin_user');
-            let currentAdminUsername = null;
-            if (userData) {
-                try {
-                    const user = JSON.parse(userData);
-                    currentAdminUsername = user.username;
-                } catch(e) {}
-            }
             let esValida = false;
-            // Primero verificar contra config (admin_password)
             if (window.configGlobal?.admin_password === pwd) esValida = true;
-            // Si no, verificar contra tabla usuarios con rol admin
-            if (!esValida && currentAdminUsername) {
-                const { data: authData } = await window.supabaseClient.rpc('verify_user_credentials', {
-                    p_username: currentAdminUsername,
-                    p_password: pwd
-                });
-                if (authData && authData.success === true) esValida = true;
+            if (!esValida) {
+                const userData = sessionStorage.getItem('admin_user');
+                let currentAdminUsername = null;
+                if (userData) {
+                    try {
+                        const user = JSON.parse(userData);
+                        currentAdminUsername = user.username;
+                    } catch(e) {}
+                }
+                if (currentAdminUsername) {
+                    const { data: authData } = await window.supabaseClient.rpc('verify_user_credentials', {
+                        p_username: currentAdminUsername,
+                        p_password: pwd
+                    });
+                    if (authData && authData.success === true) esValida = true;
+                }
             }
-            // Si aún no, verificar cualquier admin
             if (!esValida) {
                 const { data: adminUsers } = await window.supabaseClient.from('usuarios').select('username').eq('rol', 'admin');
                 if (adminUsers && adminUsers.length) {
@@ -369,7 +382,6 @@
         const costo = parseFloat(document.getElementById('ingredienteCosto').value) || 0;
         const venta = parseFloat(document.getElementById('ingredienteVenta').value) || 0;
         
-        // Obtener imagen
         let imagenUrl = '';
         const archivoImagen = document.getElementById('ingredienteImagen').files[0];
         const imagenUrlInput = document.getElementById('ingredienteImagenUrl').value;
@@ -425,7 +437,19 @@
         const id = window.ingredienteEditandoId;
         if (!id) return;
         const ing = (window.inventarioItems || []).find(i => i.id === id);
-        if (!confirm(`¿Eliminar el ingrediente "${ing?.nombre || id}"?`)) return;
+        // Verificar si es ingrediente principal en algún platillo
+        const platillosQueLoUsan = [];
+        for (const platillo of window.menuItems) {
+            if (platillo.ingredientes && platillo.ingredientes[id] && platillo.ingredientes[id].principal === true) {
+                platillosQueLoUsan.push(platillo.nombre);
+            }
+        }
+        if (platillosQueLoUsan.length > 0) {
+            const confirmMsg = `El ingrediente "${ing?.nombre}" es INGREDIENTE PRINCIPAL en:\n${platillosQueLoUsan.join('\n')}\n\n¿Realmente deseas eliminarlo? Esto afectará la disponibilidad de esos platillos.`;
+            if (!confirm(confirmMsg)) return;
+        } else {
+            if (!confirm(`¿Eliminar el ingrediente "${ing?.nombre || id}"?`)) return;
+        }
         try {
             const { error } = await window.supabaseClient.from('inventario').delete().eq('id', id);
             if (error) throw error;
@@ -484,165 +508,163 @@
     };
 
     function removeIngredienteImage() {
-		const fileInput = document.getElementById('ingredienteImagen');
-		const urlInput = document.getElementById('ingredienteImagenUrl');
-		const previewDiv = document.getElementById('ingredienteImagenPreview');
-		const previewImg = document.getElementById('ingredientePreviewImg');
-		const removeBtn = document.getElementById('ingredienteImgRemoveBtn');
-		if (fileInput) fileInput.value = '';
-		if (urlInput) {
-			urlInput.value = '';
-			urlInput.disabled = false;
-		}
-		if (previewDiv) previewDiv.style.display = 'none';
-		if (removeBtn) removeBtn.style.display = 'none';
-		if (previewImg) previewImg.src = '';
-		currentIngredienteImagenFile = null;
-		currentIngredienteImagenUrl = '';
-	}
+        const fileInput = document.getElementById('ingredienteImagen');
+        const urlInput = document.getElementById('ingredienteImagenUrl');
+        const previewDiv = document.getElementById('ingredienteImagenPreview');
+        const previewImg = document.getElementById('ingredientePreviewImg');
+        const removeBtn = document.getElementById('ingredienteImgRemoveBtn');
+        if (fileInput) fileInput.value = '';
+        if (urlInput) {
+            urlInput.value = '';
+            urlInput.disabled = false;
+        }
+        if (previewDiv) previewDiv.style.display = 'none';
+        if (removeBtn) removeBtn.style.display = 'none';
+        if (previewImg) previewImg.src = '';
+        currentIngredienteImagenFile = null;
+        currentIngredienteImagenUrl = '';
+    }
 
-	window.abrirModalNuevoIngrediente = function() {
-		window.ingredienteEditandoId = null;
-		const modalTitle = document.getElementById('ingredienteModalTitle');
-		if (modalTitle) modalTitle.textContent = 'Nuevo Ingrediente';
-		const nombreInput = document.getElementById('ingredienteNombre');
-		if (nombreInput) nombreInput.value = '';
-		const minimoInput = document.getElementById('ingredienteMinimo');
-		if (minimoInput) minimoInput.value = '';
-		const costoInput = document.getElementById('ingredienteCosto');
-		if (costoInput) costoInput.value = '';
-		const ventaInput = document.getElementById('ingredienteVenta');
-		if (ventaInput) ventaInput.value = '';
-		const agregarInput = document.getElementById('ingredienteAgregar');
-		if (agregarInput) agregarInput.value = '';
-		const cantidadComprada = document.getElementById('cantidadComprada');
-		if (cantidadComprada) cantidadComprada.value = '';
-		const costoTotal = document.getElementById('costoTotal');
-		if (costoTotal) costoTotal.value = '';
-		
-		removeIngredienteImage();
-		
-		const stockInput = document.getElementById('ingredienteStock');
-		const lockIcon = document.getElementById('stockLockIcon');
-		const clickArea = document.getElementById('stockClickArea');
-		if (stockInput) {
-			stockInput.disabled = false;
-			stockInput.readOnly = false;
-			stockInput.value = '0';
-			stockInput.style.cursor = 'text';
-			stockInput.onclick = null;
-		}
-		if (lockIcon) {
-			lockIcon.innerHTML = '<i class="fas fa-lock-open" style="font-size:.8rem; color:var(--success)"></i>';
-			lockIcon.style.cursor = 'default';
-		}
-		if (clickArea) {
-			clickArea.onclick = null;
-			clickArea.style.cursor = 'default';
-			clickArea.style.borderColor = '';
-			clickArea.style.backgroundColor = '';
-		}
-		const deleteBtn = document.getElementById('deleteIngredienteBtn');
-		if (deleteBtn) deleteBtn.style.display = 'none';
-		const modal = document.getElementById('ingredienteModal');
-		if (modal) modal.classList.add('active');
-	};
+    window.abrirModalNuevoIngrediente = function() {
+        window.ingredienteEditandoId = null;
+        const modalTitle = document.getElementById('ingredienteModalTitle');
+        if (modalTitle) modalTitle.textContent = 'Nuevo Ingrediente';
+        const nombreInput = document.getElementById('ingredienteNombre');
+        if (nombreInput) nombreInput.value = '';
+        const minimoInput = document.getElementById('ingredienteMinimo');
+        if (minimoInput) minimoInput.value = '';
+        const costoInput = document.getElementById('ingredienteCosto');
+        if (costoInput) costoInput.value = '';
+        const ventaInput = document.getElementById('ingredienteVenta');
+        if (ventaInput) ventaInput.value = '';
+        const agregarInput = document.getElementById('ingredienteAgregar');
+        if (agregarInput) agregarInput.value = '';
+        const cantidadComprada = document.getElementById('cantidadComprada');
+        if (cantidadComprada) cantidadComprada.value = '';
+        const costoTotal = document.getElementById('costoTotal');
+        if (costoTotal) costoTotal.value = '';
+        
+        removeIngredienteImage();
+        
+        const stockInput = document.getElementById('ingredienteStock');
+        const lockIcon = document.getElementById('stockLockIcon');
+        const clickArea = document.getElementById('stockClickArea');
+        if (stockInput) {
+            stockInput.disabled = false;
+            stockInput.readOnly = false;
+            stockInput.value = '0';
+            stockInput.style.cursor = 'text';
+            stockInput.onclick = null;
+        }
+        if (lockIcon) {
+            lockIcon.innerHTML = '<i class="fas fa-lock-open" style="font-size:.8rem; color:var(--success)"></i>';
+            lockIcon.style.cursor = 'default';
+        }
+        if (clickArea) {
+            clickArea.onclick = null;
+            clickArea.style.cursor = 'default';
+            clickArea.style.borderColor = '';
+            clickArea.style.backgroundColor = '';
+        }
+        const deleteBtn = document.getElementById('deleteIngredienteBtn');
+        if (deleteBtn) deleteBtn.style.display = 'none';
+        const modal = document.getElementById('ingredienteModal');
+        if (modal) modal.classList.add('active');
+    };
 
-	window.editarIngrediente = function(id) {
-		const ingrediente = window.inventarioItems.find(i => i.id === id);
-		if (!ingrediente) return;
-		window.ingredienteEditandoId = id;
-		const modalTitle = document.getElementById('ingredienteModalTitle');
-		if (modalTitle) modalTitle.textContent = 'Editar Ingrediente';
-		const nombreInput = document.getElementById('ingredienteNombre');
-		if (nombreInput) nombreInput.value = ingrediente.nombre || '';
-		const stockInput = document.getElementById('ingredienteStock');
-		if (stockInput) stockInput.value = ingrediente.stock || 0;
-		const unidadSelect = document.getElementById('ingredienteUnidad');
-		if (unidadSelect) unidadSelect.value = ingrediente.unidad_base || 'unidades';
-		const minimoInput = document.getElementById('ingredienteMinimo');
-		if (minimoInput) minimoInput.value = ingrediente.minimo || 0;
-		const costoInput = document.getElementById('ingredienteCosto');
-		if (costoInput) costoInput.value = ingrediente.precio_costo || 0;
-		const ventaInput = document.getElementById('ingredienteVenta');
-		if (ventaInput) ventaInput.value = ingrediente.precio_unitario || 0;
-		const agregarInput = document.getElementById('ingredienteAgregar');
-		if (agregarInput) agregarInput.value = '';
-		const cantidadComprada = document.getElementById('cantidadComprada');
-		if (cantidadComprada) cantidadComprada.value = '';
-		const costoTotal = document.getElementById('costoTotal');
-		if (costoTotal) costoTotal.value = '';
-		
-		if (ingrediente.imagen) {
-			const previewDiv = document.getElementById('ingredienteImagenPreview');
-			const previewImg = document.getElementById('ingredientePreviewImg');
-			if (previewImg) previewImg.src = ingrediente.imagen;
-			if (previewDiv) previewDiv.style.display = 'flex';
-			const urlInput = document.getElementById('ingredienteImagenUrl');
-			if (urlInput) urlInput.value = ingrediente.imagen;
-			currentIngredienteImagenUrl = ingrediente.imagen;
-			const removeBtn = document.getElementById('ingredienteImgRemoveBtn');
-			if (removeBtn) removeBtn.style.display = 'flex';
-		} else {
-			removeIngredienteImage();
-		}
-		
-		if (stockInput) {
-			stockInput.disabled = true;
-			stockInput.readOnly = true;
-			stockInput.style.cursor = 'pointer';
-			stockInput.value = ingrediente.stock || 0;
-			stockInput.onclick = null;
-		}
-		const lockIcon = document.getElementById('stockLockIcon');
-		if (lockIcon) {
-			lockIcon.innerHTML = '<i class="fas fa-lock" style="font-size:.8rem"></i>';
-			lockIcon.style.cursor = 'default';
-		}
-		const clickArea = document.getElementById('stockClickArea');
-		if (clickArea) {
-			clickArea.onclick = function(e) {
-				e.stopPropagation();
-				window.mostrarModalContraseñaStock();
-			};
-			clickArea.style.cursor = 'pointer';
-			clickArea.style.borderColor = '';
-			clickArea.style.backgroundColor = '';
-		} else if (stockInput) {
-			stockInput.onclick = function(e) {
-				e.stopPropagation();
-				window.mostrarModalContraseñaStock();
-			};
-		}
-		const deleteBtn = document.getElementById('deleteIngredienteBtn');
-		if (deleteBtn) deleteBtn.style.display = 'inline-flex';
-		const modal = document.getElementById('ingredienteModal');
-		if (modal) modal.classList.add('active');
-	};
+    window.editarIngrediente = function(id) {
+        const ingrediente = window.inventarioItems.find(i => i.id === id);
+        if (!ingrediente) return;
+        window.ingredienteEditandoId = id;
+        const modalTitle = document.getElementById('ingredienteModalTitle');
+        if (modalTitle) modalTitle.textContent = 'Editar Ingrediente';
+        const nombreInput = document.getElementById('ingredienteNombre');
+        if (nombreInput) nombreInput.value = ingrediente.nombre || '';
+        const stockInput = document.getElementById('ingredienteStock');
+        if (stockInput) stockInput.value = ingrediente.stock || 0;
+        const unidadSelect = document.getElementById('ingredienteUnidad');
+        if (unidadSelect) unidadSelect.value = ingrediente.unidad_base || 'unidades';
+        const minimoInput = document.getElementById('ingredienteMinimo');
+        if (minimoInput) minimoInput.value = ingrediente.minimo || 0;
+        const costoInput = document.getElementById('ingredienteCosto');
+        if (costoInput) costoInput.value = ingrediente.precio_costo || 0;
+        const ventaInput = document.getElementById('ingredienteVenta');
+        if (ventaInput) ventaInput.value = ingrediente.precio_unitario || 0;
+        const agregarInput = document.getElementById('ingredienteAgregar');
+        if (agregarInput) agregarInput.value = '';
+        const cantidadComprada = document.getElementById('cantidadComprada');
+        if (cantidadComprada) cantidadComprada.value = '';
+        const costoTotal = document.getElementById('costoTotal');
+        if (costoTotal) costoTotal.value = '';
+        
+        if (ingrediente.imagen) {
+            const previewDiv = document.getElementById('ingredienteImagenPreview');
+            const previewImg = document.getElementById('ingredientePreviewImg');
+            if (previewImg) previewImg.src = ingrediente.imagen;
+            if (previewDiv) previewDiv.style.display = 'flex';
+            const urlInput = document.getElementById('ingredienteImagenUrl');
+            if (urlInput) urlInput.value = ingrediente.imagen;
+            currentIngredienteImagenUrl = ingrediente.imagen;
+            const removeBtn = document.getElementById('ingredienteImgRemoveBtn');
+            if (removeBtn) removeBtn.style.display = 'flex';
+        } else {
+            removeIngredienteImage();
+        }
+        
+        if (stockInput) {
+            stockInput.disabled = true;
+            stockInput.readOnly = true;
+            stockInput.style.cursor = 'pointer';
+            stockInput.value = ingrediente.stock || 0;
+            stockInput.onclick = null;
+        }
+        const lockIcon = document.getElementById('stockLockIcon');
+        if (lockIcon) {
+            lockIcon.innerHTML = '<i class="fas fa-lock" style="font-size:.8rem"></i>';
+            lockIcon.style.cursor = 'default';
+        }
+        const clickArea = document.getElementById('stockClickArea');
+        if (clickArea) {
+            clickArea.onclick = function(e) {
+                e.stopPropagation();
+                window.mostrarModalContraseñaStock();
+            };
+            clickArea.style.cursor = 'pointer';
+            clickArea.style.borderColor = '';
+            clickArea.style.backgroundColor = '';
+        } else if (stockInput) {
+            stockInput.onclick = function(e) {
+                e.stopPropagation();
+                window.mostrarModalContraseñaStock();
+            };
+        }
+        const deleteBtn = document.getElementById('deleteIngredienteBtn');
+        if (deleteBtn) deleteBtn.style.display = 'inline-flex';
+        const modal = document.getElementById('ingredienteModal');
+        if (modal) modal.classList.add('active');
+    };
 
-	// Reemplazar eliminarIngrediente para usar confirmación premium
-	window.eliminarIngrediente = async function(id) {
-		const ingrediente = window.inventarioItems.find(i => i.id === id);
-		if (!ingrediente) return;
-		window.mostrarConfirmacionPremium(
-			'Eliminar Ingrediente',
-			`¿Estás seguro de eliminar "${ingrediente.nombre}"? Esta acción no se puede deshacer.`,
-			async () => {
-				try {
-					await window.supabaseClient.from('inventario').delete().eq('id', id);
-					await window.cargarInventario();
-					window.mostrarToast('🗑️ Ingrediente eliminado', 'success');
-				} catch (e) {
-					console.error('Error eliminando ingrediente:', e);
-					window.mostrarToast('❌ Error al eliminar ingrediente', 'error');
-				}
-			}
-		);
-	};
+    window.eliminarIngrediente = async function(id) {
+        const ingrediente = window.inventarioItems.find(i => i.id === id);
+        if (!ingrediente) return;
+        window.mostrarConfirmacionPremium(
+            'Eliminar Ingrediente',
+            `¿Estás seguro de eliminar "${ingrediente.nombre}"? Esta acción no se puede deshacer.`,
+            async () => {
+                try {
+                    await window.supabaseClient.from('inventario').delete().eq('id', id);
+                    await window.cargarInventario();
+                    window.mostrarToast('🗑️ Ingrediente eliminado', 'success');
+                } catch (e) {
+                    console.error('Error eliminando ingrediente:', e);
+                    window.mostrarToast('❌ Error al eliminar ingrediente', 'error');
+                }
+            }
+        );
+    };
 
     window.actualizarAlertasStock = function() {
         document.getElementById('alertasStock').textContent = window.inventarioItems.filter(i => i.stock <= i.minimo).length;
-        // Hacer clic en la tarjeta redirige a stock crítico
         const alertCard = document.querySelector('.dashboard-card:nth-child(3)');
         if (alertCard && !alertCard.hasAttribute('data-listener')) {
             alertCard.setAttribute('data-listener', 'true');
