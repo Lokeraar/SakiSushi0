@@ -1,5 +1,19 @@
 // admin-ui.js - UI genérica: tabs, modales, eventos, helpers visuales
 (function() {
+    window.irADeliverys = function() {
+        document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+        document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
+        const t=document.querySelector('.tab[data-tab="deliverys"]');
+        const p=document.getElementById('deliverysPane');
+        if(t)t.classList.add('active'); if(p){p.classList.add('active');p.scrollIntoView({behavior:'smooth',block:'start'});}
+    };
+    window.irAMenu = function() {
+        document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+        document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
+        const t=document.querySelector('.tab[data-tab="menu"]');
+        const p=document.getElementById('menuPane');
+        if(t)t.classList.add('active'); if(p){p.classList.add('active');p.scrollIntoView({behavior:'smooth',block:'start'});}
+    };
     window.setupEventListeners = function() {
         // Funciones de scroll para tabs con doble chevron
         window._scrollTabs = function(dir) {
@@ -107,18 +121,12 @@
             if (e.target === this) window.cerrarModal('qrAmpliadoModal');
         });
 
-        // Botones logout (desktop + mobile)
-        const _logoutBtns = ['logoutButton', 'logoutButtonMobile'];
-        _logoutBtns.forEach(id => {
+        // Botón logout
+        ['logoutButton','logoutButtonMobile'].forEach(id => {
             const btn = document.getElementById(id);
             if (btn) btn.addEventListener('click', () => {
-                if (typeof window.cerrarSesion === 'function') {
-                    window.cerrarSesion();
-                } else {
-                    // Safety net: limpiar sesión y recargar
-                    sessionStorage.clear();
-                    window.location.reload();
-                }
+                if (typeof window.cerrarSesion === 'function') window.cerrarSesion();
+                else { sessionStorage.clear(); window.location.reload(); }
             });
         });
     };
@@ -223,40 +231,6 @@
             el.style.animation = 'pulse 0.6s ease-in-out 2';
             setTimeout(() => { el.style.animation = ''; }, 1200);
         }
-    };
-
-    // ==================== NUEVAS FUNCIONES PARA NAVEGACIÓN ====================
-    window.irAMenu = function() {
-        const tabs = document.querySelectorAll('.tab');
-        const panes = document.querySelectorAll('.tab-pane');
-        tabs.forEach(tab => tab.classList.remove('active'));
-        panes.forEach(pane => pane.classList.remove('active'));
-        const menuTab = document.querySelector('.tab[data-tab="menu"]');
-        const menuPane = document.getElementById('menuPane');
-        if (menuTab) menuTab.classList.add('active');
-        if (menuPane) menuPane.classList.add('active');
-    };
-
-    window.irAStockCritico = function() {
-        const stockCriticoDiv = document.getElementById('stockCritico');
-        if (stockCriticoDiv) {
-            stockCriticoDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            window.resaltarElemento('stockCritico', 'border');
-            // También dar animación al contenedor padre
-            stockCriticoDiv.classList.add('pulse-critico');
-            setTimeout(() => stockCriticoDiv.classList.remove('pulse-critico'), 1000);
-        }
-    };
-
-    window.irADelivery = function() {
-        const tabs = document.querySelectorAll('.tab');
-        const panes = document.querySelectorAll('.tab-pane');
-        tabs.forEach(tab => tab.classList.remove('active'));
-        panes.forEach(pane => pane.classList.remove('active'));
-        const deliveryTab = document.querySelector('.tab[data-tab="deliverys"]');
-        const deliveryPane = document.getElementById('deliverysPane');
-        if (deliveryTab) deliveryTab.classList.add('active');
-        if (deliveryPane) deliveryPane.classList.add('active');
     };
 
     // ==================== INICIALIZACIÓN AL CARGAR LA PÁGINA ====================
