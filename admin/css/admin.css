@@ -2393,3 +2393,34 @@ html.dark-theme #stockCalculadoWrap {
 
 /* ── 4.2 Ingrediente principal: tooltip ──────────────────────────────────── */
 .ing-principal-chk { cursor: pointer; }
+
+/* Reubicar botón Salir en móvil */
+@media (max-width: 768px) {
+    .header-right {
+        order: 1;
+        width: 100%;
+        justify-content: flex-end;
+    }
+    .header-row-sucursal {
+        order: 2;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: 100%;
+    }
+    .logout-button {
+        order: 3;
+        margin-left: auto;
+    }
+    /* Asegurar que el botón Salir esté al final de la línea de sucursal */
+    .header-row-sucursal .logout-button {
+        margin-left: auto;
+    }
+}
+/* Mover el botón Salir dentro de la fila de sucursal en móvil */
+@media (max-width: 768px) {
+    .header .logout-button {
+        position: static;
+        order: 2;
+    }
+}
