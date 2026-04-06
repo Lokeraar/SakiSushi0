@@ -50,11 +50,11 @@
             // Mostrar imagen pequeña si existe
             const imgHtml = item.imagen ? `<img src="${item.imagen}" style="width:24px;height:24px;object-fit:cover;border-radius:4px;margin-right:8px">` : '';
             el.innerHTML = `
-                <div style="display:flex;align-items:center;flex:1;min-width:0;overflow:hidden">
+                <div style="display:flex;align-items:center;flex:1;min-width:0">
                     ${imgHtml}
-                    <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">${item.nombre}</span>
+                    <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${item.nombre}</span>
                 </div>
-                <span class="inv-item-badge ${estado}" style="flex-shrink:0;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.72rem">${parseFloat(disponible.toPrecision(10))} ${item.unidad_base||'u'}</span>`;
+                <span class="inv-item-badge ${estado}">${disponible} ${item.unidad_base||'u'}</span>`;
             el.addEventListener('click', function() {
                 const wasActive = item.id === window._invActiveId;
                 document.querySelectorAll('.inv-list-item').forEach(e => e.classList.remove('active'));
@@ -112,10 +112,10 @@
                     </button>
                 </div>
                 ${imgHtml}
-                <div class="inv-stock-row" style="margin-bottom:.5rem;flex-wrap:wrap;gap:.35rem">
-                    <span class="inv-stock-num ${estado}" style="font-size:2rem">${parseFloat(disponible.toPrecision(10))}</span>
+                <div class="inv-stock-row" style="margin-bottom:.5rem">
+                    <span class="inv-stock-num ${estado}" style="font-size:2rem">${disponible}</span>
                     <span class="inv-stock-unit" style="font-size:.9rem">${item.unidad_base||'u'}</span>
-                    <span style="font-size:.72rem;color:var(--text-muted);margin-left:auto;background:var(--secondary);padding:2px 8px;border-radius:20px;white-space:nowrap">Reservado: ${parseFloat((item.reservado||0).toPrecision(10))}</span>
+                    <span style="font-size:.75rem;color:var(--text-muted);margin-left:auto">Reservado: ${item.reservado||0}</span>
                 </div>
                 <div class="inv-bar" style="margin-bottom:.85rem"><div class="inv-bar-fill ${estado}" style="width:${porcentaje}%;background:${colorEstado}"></div></div>
                 <div class="inv-meta-grid" style="grid-template-columns:1fr 1fr 1fr;gap:.75rem;margin-bottom:.85rem">
