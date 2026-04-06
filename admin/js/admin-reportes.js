@@ -109,24 +109,39 @@
         }).join('');
     };
 
+    // PEDIDOS RECIENTES – VERSIÓN EXPANDIBLE CON DETALLE COMPLETO
     window.cargarPedidosRecientes = async function() {
         try {
             const { data, error } = await window.supabaseClient.from('pedidos').select('*').order('fecha', { ascending: false }).limit(5);
             if (error) throw error;
             const pedidosCount = document.getElementById('pedidosCountBadge');
             if (pedidosCount) pedidosCount.textContent = (data || []).length;
-            document.getElementById('pedidosRecientes').innerHTML = (data || []).map(p => {
+            const container = document.getElementById('pedidosRecientes');
+            if (!container) return;
+            
+            container.innerHTML = (data || []).map(p => {
                 const hora = new Date(p.fecha).toLocaleTimeString('es-VE', {hour:'2-digit',minute:'2-digit'});
                 const fecha = new Date(p.fecha).toLocaleDateString('es-VE', {day:'2-digit',month:'2-digit'});
-                const items = (p.items || []).slice(0,2).map(i => `${i.cantidad||1}x ${i.nombre}`).join(', ');
-                const masItems = (p.items||[]).length > 2 ? ` +${(p.items||[]).length-2} más` : '';
+                // Agrupar items por nombre (sumar cantidades)
+                const itemsMap = {};
+                (p.items || []).forEach(item => {
+                    const nombre = item.nombre;
+                    if (itemsMap[nombre]) itemsMap[nombre].cantidad += (item.cantidad || 1);
+                    else itemsMap[nombre] = { nombre, cantidad: item.cantidad || 1, precioUnitarioUSD: item.precioUnitarioUSD || 0 };
+                });
+                const itemsAgrupados = Object.values(itemsMap);
+                const itemsResumen = itemsAgrupados.slice(0, 2).map(i => `${i.cantidad}x ${i.nombre}`).join(', ');
+                const masItems = itemsAgrupados.length > 2 ? ` +${itemsAgrupados.length-2} más` : '';
                 const tipoIcon = p.tipo==='delivery' ? '🛵' : p.tipo==='reserva' ? '📅' : '🍽️';
                 const tipoColor = p.tipo==='delivery' ? 'var(--delivery)' : p.tipo==='reserva' ? 'var(--propina)' : 'var(--info)';
                 const totalBs = window.formatBs(window.usdToBs(p.total||0));
                 const estadoText = p.estado ? p.estado.replace(/_/g,' ') : '';
                 const estadoColor = p.estado === 'entregado' ? 'var(--success)' : p.estado === 'en_camino' ? 'var(--delivery)' : p.estado === 'en_cocina' ? 'var(--warning)' : 'var(--text-muted)';
-                return `<div class="pedido-item-modern" style="background:var(--card-bg); border-radius:12px; padding:.8rem 1rem; border:1px solid var(--border); transition:all .2s; cursor:pointer" onclick="window._abrirDetallePedidoAdmin('${p.id}')">
-                    <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:.5rem; margin-bottom:.5rem">
+                const metodoPago = p.metodo_pago || (p.pagos_mixtos && p.pagos_mixtos.length ? 'Mixto' : 'N/A');
+                
+                // HTML del pedido (colapsable)
+                return `<div class="pedido-item-modern" style="background:var(--card-bg); border-radius:12px; padding:.8rem 1rem; border:1px solid var(--border); transition:all .2s; margin-bottom:.6rem">
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:.5rem; margin-bottom:.5rem; cursor:pointer" onclick="window._togglePedidoDetalle('${p.id}')">
                         <div style="display:flex; align-items:center; gap:.6rem; flex-wrap:wrap">
                             <span style="font-size:1.1rem">${tipoIcon}</span>
                             <span style="font-weight:700; color:${tipoColor}">${p.tipo || 'mesa'} ${p.mesa ? `· Mesa ${p.mesa}` : ''}</span>
@@ -135,24 +150,43 @@
                         <div style="display:flex; align-items:center; gap:.5rem">
                             <span style="font-size:.7rem; color:var(--text-muted)">${fecha} ${hora}</span>
                             <span style="font-weight:800; color:var(--accent); font-size:.9rem">${totalBs}</span>
+                            <i class="fas fa-chevron-down" style="color:var(--text-muted); font-size:.7rem; transition:transform .2s" id="chevron_${p.id}"></i>
                         </div>
                     </div>
-                    <div style="font-size:.75rem; color:var(--text-muted); display:flex; flex-wrap:wrap; gap:.3rem">
-                        <span><i class="fas fa-receipt" style="width:14px; margin-right:.3rem"></i> ${items || 'Sin items'}</span>
+                    <div style="font-size:.75rem; color:var(--text-muted); display:flex; flex-wrap:wrap; gap:.3rem; cursor:pointer" onclick="window._togglePedidoDetalle('${p.id}')">
+                        <span><i class="fas fa-receipt" style="width:14px; margin-right:.3rem"></i> ${itemsResumen || 'Sin items'}</span>
                         ${masItems ? `<span style="color:var(--accent)">${masItems}</span>` : ''}
+                        <span style="margin-left:auto"><i class="fas fa-credit-card"></i> ${metodoPago}</span>
+                    </div>
+                    <div id="detalle_${p.id}" style="display:none; margin-top:.8rem; padding-top:.6rem; border-top:1px solid var(--border); font-size:.82rem">
+                        ${itemsAgrupados.map(item => `<div style="display:flex; justify-content:space-between; padding:.2rem 0"><span>${item.cantidad}x ${item.nombre}</span><span>${window.formatBs(window.usdToBs(item.precioUnitarioUSD * item.cantidad))}</span></div>`).join('')}
+                        <div style="display:flex; justify-content:space-between; margin-top:.5rem; padding-top:.3rem; border-top:1px dashed var(--border); font-weight:700"><span>Total</span><span>${totalBs}</span></div>
                     </div>
                 </div>`;
             }).join('') || '<div style="text-align:center; padding:1rem; color:var(--text-muted)"><i class="fas fa-inbox"></i><p style="margin-top:.5rem">No hay pedidos recientes</p></div>';
         } catch (e) { console.error('Error cargando pedidos recientes:', e); }
     };
 
+    window._togglePedidoDetalle = function(pedidoId) {
+        const detalle = document.getElementById(`detalle_${pedidoId}`);
+        const chevron = document.getElementById(`chevron_${pedidoId}`);
+        if (detalle) {
+            if (detalle.style.display === 'none') {
+                detalle.style.display = 'block';
+                if (chevron) chevron.style.transform = 'rotate(180deg)';
+            } else {
+                detalle.style.display = 'none';
+                if (chevron) chevron.style.transform = 'rotate(0deg)';
+            }
+        }
+    };
+
     window._abrirDetallePedidoAdmin = async function(pedidoId) {
-        // Buscar en memoria primero; si no, cargar de Supabase
+        // ... (código existente sin cambios)
         let pedido = (window.pedidos || []).find(function(p){ return p.id === pedidoId; });
         if (!pedido) {
             try {
-                const { data, error } = await window.supabaseClient
-                    .from('pedidos').select('*').eq('id', pedidoId).maybeSingle();
+                const { data, error } = await window.supabaseClient.from('pedidos').select('*').eq('id', pedidoId).maybeSingle();
                 if (error) throw error;
                 pedido = data;
             } catch(e) {
@@ -174,7 +208,6 @@
         const sc    = estadoCols[pedido.estado] || 'var(--text-muted)';
         const totBs = (pedido.total || 0) * tasa;
 
-        // Comprimir items duplicados por nombre
         const map = {};
         (pedido.items || []).forEach(function(it) {
             if (map[it.nombre]) map[it.nombre].cantidad += (it.cantidad || 1);
@@ -185,9 +218,7 @@
         const iHtml = items.length ? items.map(function(it) {
             const pu  = it.precioUnitarioUSD || it.precio || 0;
             const su  = pu * (it.cantidad || 1);
-            const qty = it.cantidad > 1
-                ? '<span style="background:var(--primary);color:#fff;border-radius:12px;padding:1px 7px;font-size:.7rem;font-weight:700;margin-left:.4rem">×' + it.cantidad + '</span>'
-                : '';
+            const qty = it.cantidad > 1 ? '<span style="background:var(--primary);color:#fff;border-radius:12px;padding:1px 7px;font-size:.7rem;font-weight:700;margin-left:.4rem">×' + it.cantidad + '</span>' : '';
             return '<div style="display:flex;justify-content:space-between;align-items:center;padding:.45rem 0;border-bottom:1px solid var(--border)">'
                 + '<span style="font-size:.85rem;font-weight:500;color:var(--text-dark)">' + it.nombre + qty + '</span>'
                 + '<span style="font-size:.82rem;font-weight:700;color:var(--accent);white-space:nowrap;margin-left:.5rem">'
@@ -195,7 +226,6 @@
                 + '</span></div>';
         }).join('') : '<p style="color:var(--text-muted);font-size:.82rem;text-align:center;padding:.75rem">Sin items registrados</p>';
 
-        // Método de pago legible
         const metodosLabel = {
             efectivo_bs:'Efectivo Bs', efectivo_usd:'Efectivo USD',
             pago_movil:'Pago Móvil', punto_venta:'Punto de Venta', invitacion:'Invitación'
@@ -289,6 +319,7 @@
     };
 
     window._abrirDetalleDeliverysAdmin = async function() {
+        // ... (código existente sin cambios)
         try {
             const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
             const manana = new Date(hoy); manana.setDate(manana.getDate() + 1);
@@ -369,6 +400,7 @@
     };
 
     window._abrirDetalleVentasAdmin = async function() {
+        // ... (código existente sin cambios)
         try {
             const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
             const manana = new Date(hoy); manana.setDate(manana.getDate() + 1);
