@@ -1,19 +1,5 @@
 // admin-ui.js - UI genérica: tabs, modales, eventos, helpers visuales
 (function() {
-    window.irADeliverys = function() {
-        document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-        document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
-        const t=document.querySelector('.tab[data-tab="deliverys"]');
-        const p=document.getElementById('deliverysPane');
-        if(t)t.classList.add('active'); if(p){p.classList.add('active');p.scrollIntoView({behavior:'smooth',block:'start'});}
-    };
-    window.irAMenu = function() {
-        document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-        document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
-        const t=document.querySelector('.tab[data-tab="menu"]');
-        const p=document.getElementById('menuPane');
-        if(t)t.classList.add('active'); if(p){p.classList.add('active');p.scrollIntoView({behavior:'smooth',block:'start'});}
-    };
     window.setupEventListeners = function() {
         // Funciones de scroll para tabs con doble chevron
         window._scrollTabs = function(dir) {
@@ -122,12 +108,8 @@
         });
 
         // Botón logout
-        ['logoutButton','logoutButtonMobile'].forEach(id => {
-            const btn = document.getElementById(id);
-            if (btn) btn.addEventListener('click', () => {
-                if (typeof window.cerrarSesion === 'function') window.cerrarSesion();
-                else { sessionStorage.clear(); window.location.reload(); }
-            });
+        document.getElementById('logoutButton').addEventListener('click', () => {
+            window.cerrarSesion();
         });
     };
 
@@ -255,9 +237,9 @@
                     await window.cargarQRs();
                     await window.cargarReportes();
                     await window.cargarPedidosRecientes();
-                    await window.cargarMesoneros();
-                    await window.cargarDeliverys();
-                    await window.cargarPropinas();
+                    if (typeof window.cargarMesoneros === 'function') await window.cargarMesoneros();
+                    if (typeof window.cargarDeliverys  === 'function') await window.cargarDeliverys();
+                    if (typeof window.cargarPropinas   === 'function') await window.cargarPropinas();
                     window.setupEventListeners();
                     window.setupRealtimeSubscriptions();
                     window.setupStockRealtime();
