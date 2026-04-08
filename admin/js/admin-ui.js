@@ -1,6 +1,50 @@
 // admin-ui.js - UI genérica: tabs, modales, eventos, helpers visuales
 (function() {
-    window.setupEventListeners = function() {
+    window.irADeliverys = function() {
+        var tabs = document.querySelectorAll('.tab');
+        var panes = document.querySelectorAll('.tab-pane');
+        tabs.forEach(function(t){ t.classList.remove('active'); });
+        panes.forEach(function(p){ p.classList.remove('active'); });
+        var t = document.querySelector('.tab[data-tab="deliverys"]');
+        var p = document.getElementById('deliverysPane');
+        if (t) t.classList.add('active');
+        if (p) { p.classList.add('active'); p.scrollIntoView({behavior:'smooth',block:'start'}); }
+    };
+    window.irAMenu = function() {
+        var tabs = document.querySelectorAll('.tab');
+        var panes = document.querySelectorAll('.tab-pane');
+        tabs.forEach(function(t){ t.classList.remove('active'); });
+        panes.forEach(function(p){ p.classList.remove('active'); });
+        var t = document.querySelector('.tab[data-tab="menu"]');
+        var p = document.getElementById('menuPane');
+        if (t) t.classList.add('active');
+        if (p) { p.classList.add('active'); p.scrollIntoView({behavior:'smooth',block:'start'}); }
+    };
+    window.irAStockCritico = function() {
+        var tabs = document.querySelectorAll('.tab');
+        var panes = document.querySelectorAll('.tab-pane');
+        tabs.forEach(function(t){ t.classList.remove('active'); });
+        panes.forEach(function(p){ p.classList.remove('active'); });
+        var t = document.querySelector('.tab[data-tab="dashboard"]');
+        var p = document.getElementById('dashboardPane');
+        if (t) t.classList.add('active');
+        if (p) p.classList.add('active');
+        setTimeout(function(){
+            var el = document.getElementById('stockCritico'); if (!el) return;
+            el.scrollIntoView({behavior:'smooth',block:'center'});
+            var par = el.closest('.lower-stock') || el.parentElement;
+            if (par) {
+                var n = 0;
+                var iv = setInterval(function(){
+                    n++;
+                    par.style.boxShadow = n%2===0 ? '0 0 0 3px #FFC107,0 0 20px rgba(255,193,7,.4)' : 'none';
+                    par.style.borderColor = n%2===0 ? '#FFC107' : '';
+                    if (n >= 6) { clearInterval(iv); par.style.boxShadow=''; par.style.borderColor=''; }
+                }, 300);
+            }
+        }, 150);
+    };
+        window.setupEventListeners = function() {
         // Funciones de scroll para tabs con doble chevron
         window._scrollTabs = function(dir) {
             const c = document.getElementById('tabsContainer');
@@ -108,8 +152,12 @@
         });
 
         // Botón logout
-        document.getElementById('logoutButton').addEventListener('click', () => {
-            window.cerrarSesion();
+        ['logoutButton', 'logoutButtonMobile'].forEach(id => {
+            const btn = document.getElementById(id);
+            if (btn) btn.addEventListener('click', () => {
+                if (typeof window.cerrarSesion === 'function') window.cerrarSesion();
+                else { sessionStorage.clear(); window.location.reload(); }
+            });
         });
     };
 
@@ -237,9 +285,9 @@
                     await window.cargarQRs();
                     await window.cargarReportes();
                     await window.cargarPedidosRecientes();
-                    if (typeof window.cargarMesoneros === 'function') await window.cargarMesoneros();
-                    if (typeof window.cargarDeliverys  === 'function') await window.cargarDeliverys();
-                    if (typeof window.cargarPropinas   === 'function') await window.cargarPropinas();
+                    await window.cargarMesoneros();
+                    await window.cargarDeliverys();
+                    await window.cargarPropinas();
                     window.setupEventListeners();
                     window.setupRealtimeSubscriptions();
                     window.setupStockRealtime();
