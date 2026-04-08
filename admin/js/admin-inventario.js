@@ -321,21 +321,21 @@
         const lockIcon   = document.getElementById('stockLockIcon');
         const clickArea  = document.getElementById('stockClickArea');
         if (stockInput) {
-            stockInput.disabled    = false;
-            stockInput.readOnly    = false;
-            stockInput.style.cursor        = 'text';
+            stockInput.disabled = false;
+            stockInput.readOnly = false;
+            stockInput.style.cursor = 'text';
             stockInput.style.pointerEvents = 'auto';
             stockInput.onclick = null;
             setTimeout(() => stockInput.focus(), 150);
         }
         if (lockIcon)  { lockIcon.innerHTML = '<i class="fas fa-lock-open" style="font-size:.8rem; color:var(--success)"></i>'; lockIcon.style.cursor = 'default'; }
         if (clickArea) { clickArea.onclick = null; clickArea.style.cursor = 'default'; clickArea.style.borderColor = 'var(--success)'; clickArea.style.backgroundColor = 'rgba(56,142,60,0.1)'; }
-        // Cerrar el modal de contraseña limpiamente sin afectar el modal padre
+        // Cerrar passwordStockModal directamente sin pasar por cerrarModal para no afectar z-index del modal padre
         const pwdModal = document.getElementById('passwordStockModal');
         if (pwdModal) {
             pwdModal.classList.remove('active');
             pwdModal.style.display = 'none';
-            setTimeout(() => { pwdModal.style.display = ''; }, 50);
+            setTimeout(() => { pwdModal.style.display = ''; }, 60);
         }
         window.mostrarToast('✅ Stock desbloqueado. Puedes editar la cantidad.', 'success');
     };
@@ -398,7 +398,6 @@
                 precio_costo: costo,
                 precio_unitario: venta,
                 imagen: imagenUrl || null
-                // stock_maximo se omite — columna no existe en el schema actual
             };
             let error;
             if (esNuevo) ({ error } = await window.supabaseClient.from('inventario').insert([ingrediente]));
