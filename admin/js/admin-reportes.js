@@ -153,7 +153,7 @@
             try {
                 const {data,error}=await window.supabaseClient.from('pedidos').select('*').eq('id',pedidoId).maybeSingle();
                 if(error) throw error; pedido=data;
-            } catch(e){ window.mostrarToast('❌ Error al cargar pedido','error'); return; }
+            } catch(e){ window.mostrarToast('Error al cargar pedido','error'); return; }
         }
         if (!pedido){ window.mostrarToast('Pedido no encontrado','error'); return; }
         const tasa=(window.configGlobal?.tasa_efectiva||window.configGlobal?.tasa_cambio||400);
@@ -163,44 +163,19 @@
         const sc=ecols[pedido.estado]||'var(--text-muted)';
         const map={};
         (pedido.items||[]).forEach(it=>{if(map[it.nombre])map[it.nombre].cantidad+=(it.cantidad||1);else map[it.nombre]={...it,cantidad:it.cantidad||1};});
-        const items=Object.values(map);
-        const iHtml=items.length?items.map(it=>{
+        const iHtml=Object.values(map).map(it=>{
             const pu=it.precioUnitarioUSD||it.precio||0; const su=pu*(it.cantidad||1);
             const qty=it.cantidad>1?`<span style="background:var(--primary);color:#fff;border-radius:12px;padding:1px 7px;font-size:.7rem;font-weight:700;margin-left:.3rem">×${it.cantidad}</span>`:'';
-            return `<div style="display:flex;justify-content:space-between;align-items:center;padding:.45rem 0;border-bottom:1px solid var(--border)">
-                <span style="font-size:.85rem;font-weight:500;color:var(--text-dark)">${it.nombre}${qty}</span>
-                <span style="font-size:.82rem;font-weight:700;color:var(--accent);white-space:nowrap;margin-left:.5rem">${window.formatUSD(su)} / ${window.formatBs(su*tasa)}</span>
-            </div>`;
-        }).join(''):'<p style="color:var(--text-muted);font-size:.82rem;text-align:center;padding:.75rem">Sin items</p>';
+            return `<div style="display:flex;justify-content:space-between;align-items:center;padding:.45rem 0;border-bottom:1px solid var(--border)"><span style="font-size:.85rem;font-weight:500;color:var(--text-dark)">${it.nombre}${qty}</span><span style="font-size:.82rem;font-weight:700;color:var(--accent);white-space:nowrap;margin-left:.5rem">${window.formatUSD(su)} / ${window.formatBs(su*tasa)}</span></div>`;
+        }).join('')||'<p style="color:var(--text-muted);font-size:.82rem;text-align:center;padding:.75rem">Sin items</p>';
         const metLbl={efectivo_bs:'Efectivo Bs',efectivo_usd:'Efectivo USD',pago_movil:'Pago Móvil',punto_venta:'Punto de Venta',invitacion:'Invitación'};
         let metodo='N/A';
         if(pedido.pagos_mixtos?.length) metodo=pedido.pagos_mixtos.map(pg=>metLbl[pg.metodo]||pg.metodo).join(' + ');
         else if(pedido.metodo_pago) metodo=metLbl[pedido.metodo_pago]||pedido.metodo_pago;
+        const fechaStr=new Date(pedido.fecha).toLocaleString('es-VE',{timeZone:'America/Caracas',day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
         const ov=document.createElement('div');
         ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:10001;display:flex;align-items:center;justify-content:center;padding:1rem;backdrop-filter:blur(3px)';
-        const fechaStr=new Date(pedido.fecha).toLocaleString('es-VE',{timeZone:'America/Caracas',day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
-        ov.innerHTML=`<div style="background:var(--card-bg);border-radius:16px;max-width:480px;width:100%;max-height:88vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 20px 40px rgba(0,0,0,.4)">
-            <div style="background:linear-gradient(135deg,#1a1a2e,#2d2d4e);padding:1rem 1.5rem;color:#fff;display:flex;justify-content:space-between;align-items:flex-start">
-                <div><div style="font-size:1rem;font-weight:700">${tipoIcon} ${tipoLabel}</div><div style="font-size:.72rem;opacity:.75;margin-top:3px">${fechaStr}</div></div>
-                <div style="display:flex;align-items:center;gap:.75rem">
-                    <span style="font-size:.7rem;background:${sc}30;color:${sc};padding:.2rem .7rem;border-radius:20px;font-weight:600">${(pedido.estado||'').replace(/_/g,' ')}</span>
-                    <button onclick="this.closest('[style*=position]').remove()" style="background:rgba(255,255,255,.15);border:none;color:#fff;border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:.9rem;font-weight:700;display:flex;align-items:center;justify-content:center">✕</button>
-                </div>
-            </div>
-            <div style="overflow-y:auto;flex:1;padding:1rem 1.5rem">
-                <div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);margin-bottom:.6rem"><i class="fas fa-receipt" style="margin-right:.3rem"></i>Items</div>
-                ${iHtml}
-            </div>
-            <div style="padding:.85rem 1.5rem;border-top:1px solid var(--border)">
-                <div style="display:flex;justify-content:space-between;margin-bottom:.4rem;font-size:.82rem">
-                    <span style="color:var(--text-muted)">Método de pago</span><span style="font-weight:600">${metodo}</span>
-                </div>
-                <div style="display:flex;justify-content:space-between;align-items:center">
-                    <span style="font-size:.82rem;color:var(--text-muted)">Total</span>
-                    <span style="font-size:1rem;font-weight:800;color:var(--accent)">${window.formatUSD(pedido.total||0)} / ${window.formatBs((pedido.total||0)*tasa)}</span>
-                </div>
-            </div>
-        </div>`;
+        ov.innerHTML=`<div style="background:var(--card-bg);border-radius:16px;max-width:480px;width:100%;max-height:88vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 20px 40px rgba(0,0,0,.4)"><div style="background:linear-gradient(135deg,#1a1a2e,#2d2d4e);padding:1rem 1.5rem;color:#fff;display:flex;justify-content:space-between;align-items:flex-start"><div><div style="font-size:1rem;font-weight:700">${tipoIcon} ${tipoLabel}</div><div style="font-size:.72rem;opacity:.75;margin-top:3px">${fechaStr}</div></div><div style="display:flex;align-items:center;gap:.75rem"><span style="font-size:.7rem;background:${sc}30;color:${sc};padding:.2rem .7rem;border-radius:20px;font-weight:600">${(pedido.estado||'').replace(/_/g,' ')}</span><button onclick="this.closest('[style*=position]').remove()" style="background:rgba(255,255,255,.15);border:none;color:#fff;border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:.9rem;font-weight:700;display:flex;align-items:center;justify-content:center">✕</button></div></div><div style="overflow-y:auto;flex:1;padding:1rem 1.5rem"><div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);margin-bottom:.6rem"><i class="fas fa-receipt" style="margin-right:.3rem"></i>Items</div>${iHtml}</div><div style="padding:.85rem 1.5rem;border-top:1px solid var(--border)"><div style="display:flex;justify-content:space-between;margin-bottom:.4rem;font-size:.82rem"><span style="color:var(--text-muted)">Método de pago</span><span style="font-weight:600">${metodo}</span></div><div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:.82rem;color:var(--text-muted)">Total</span><span style="font-size:1rem;font-weight:800;color:var(--accent)">${window.formatUSD(pedido.total||0)} / ${window.formatBs((pedido.total||0)*tasa)}</span></div></div></div>`;
         ov.addEventListener('click',e=>{if(e.target===ov)ov.remove();});
         document.body.appendChild(ov);
     };
