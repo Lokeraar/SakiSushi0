@@ -44,7 +44,7 @@
                 <div class="mc2-header">
                     <div class="mc2-info">
                         <div class="mc2-nombre">${item.nombre}</div>
-                        <div class="mc2-cat">${(window.categoriasMenuLabels?.[item.categoria]||item.categoria||'')}${item.subcategoria?' · '+item.subcategoria:''}</div>
+                        <div class="mc2-cat">${item.categoria || ''}${item.subcategoria ? ' · ' + item.subcategoria : ''}</div>
                         <div class="mc2-precio">${window.formatUSD(item.precio || 0)}
                             <span class="mc2-precio-bs">/ ${window.formatBs(window.usdToBs(item.precio || 0))}</span>
                         </div>
@@ -105,19 +105,19 @@
 
     window.expandirImagen = function(src) {
         if (!src) return;
-        const prev = document.getElementById('_imgOverlay');
+        var prev = document.getElementById('_imgOverlay');
         if (prev) prev.remove();
-        const ov = document.createElement('div');
+        var ov = document.createElement('div');
         ov.id = '_imgOverlay';
         ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:10000;display:flex;align-items:center;justify-content:center';
-        const wrap = document.createElement('div');
+        var wrap = document.createElement('div');
         wrap.style.cssText = 'position:relative;display:inline-block;max-width:92vw;max-height:92vh';
-        const img = document.createElement('img');
+        var img = document.createElement('img');
         img.src = src;
         img.style.cssText = 'max-width:100%;max-height:90vh;object-fit:contain;border-radius:10px;display:block';
-        const btn = document.createElement('button');
+        var btn = document.createElement('button');
         btn.textContent = '✕';
-        btn.style.cssText = 'position:absolute;top:-18px;right:-18px;width:42px;height:42px;border-radius:50%;background:#D32F2F;color:#fff;border:2.5px solid #fff;font-size:1.2rem;cursor:pointer;font-weight:900;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 12px rgba(0,0,0,.5);z-index:1;line-height:1;font-family:Montserrat,sans-serif';
+        btn.style.cssText = 'position:absolute;top:-18px;right:-18px;width:42px;height:42px;border-radius:50%;background:#D32F2F;color:#fff;border:2.5px solid #fff;font-size:1.2rem;cursor:pointer;font-weight:900;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 12px rgba(0,0,0,.5);z-index:1;line-height:1';
         btn.addEventListener('click', function(e){ e.stopPropagation(); ov.remove(); });
         wrap.appendChild(img); wrap.appendChild(btn); ov.appendChild(wrap);
         ov.addEventListener('click', function(e){ if(e.target===ov) ov.remove(); });
@@ -279,32 +279,33 @@
     };
 
     window.cargarCategoriasSelect = function() {
-        let sel = document.getElementById('platilloCategoria');
+        var sel = document.getElementById('platilloCategoria');
         if (!sel) return;
-        const labels = window.categoriasMenuLabels || {};
-        sel.innerHTML = '<option value="">Seleccionar categoría</option>';
-        Object.keys(window.categoriasMenu || {}).forEach(id => {
-            const opt = document.createElement('option');
+        var labels = window.categoriasMenuLabels || {};
+        sel.innerHTML = '<option value="">Seleccionar categoria</option>';
+        Object.keys(window.categoriasMenu || {}).forEach(function(id) {
+            var opt = document.createElement('option');
             opt.value = id;
             opt.textContent = labels[id] || id;
             sel.appendChild(opt);
         });
-        const nuevo = sel.cloneNode(true);
+        // Clonar para eliminar listeners previos
+        var nuevo = sel.cloneNode(true);
         sel.parentNode.replaceChild(nuevo, sel);
-        nuevo.addEventListener('change', e => {
+        nuevo.addEventListener('change', function(e) {
             window.cargarSubcategoriasSelect(e.target.value);
             if (window._recalcularStockPlatillo) window._recalcularStockPlatillo();
         });
     };
 
     window.cargarSubcategoriasSelect = function(catId) {
-        const sel  = document.getElementById('platilloSubcategoria');
-        const wrap = document.getElementById('subcategoriaContainer');
+        var sel  = document.getElementById('platilloSubcategoria');
+        var wrap = document.getElementById('subcategoriaContainer');
         if (!sel) return;
-        sel.innerHTML = '<option value="">Sin subcategoría</option>';
-        const subs = (catId && window.categoriasMenu?.[catId]) ? window.categoriasMenu[catId] : [];
+        sel.innerHTML = '<option value="">Sin subcategoria</option>';
+        var subs = (catId && window.categoriasMenu && window.categoriasMenu[catId]) ? window.categoriasMenu[catId] : [];
         if (subs.length) {
-            subs.forEach(s => { const o=document.createElement('option'); o.value=s; o.textContent=s; sel.appendChild(o); });
+            subs.forEach(function(s) { var o=document.createElement('option'); o.value=s; o.textContent=s; sel.appendChild(o); });
             if (wrap) wrap.style.display = 'block';
         } else {
             if (wrap) wrap.style.display = 'none';
@@ -367,19 +368,19 @@
         removeBtn.style.cssText = 'background:#ffebee;color:var(--danger);border:none;border-radius:6px;width:28px;height:28px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0';
         removeBtn.onclick = () => { row.remove(); window._recalcularStockPlatillo(); };
 
-        const principalWrap = document.createElement('div');
+        var principalWrap = document.createElement('div');
         principalWrap.style.cssText = 'position:relative;display:flex;align-items:center;justify-content:center;flex-shrink:0';
-        const chk = document.createElement('input');
-        chk.type = 'checkbox'; chk.className = 'ing-principal-chk';
-        chk.style.cssText = 'width:16px;height:16px;accent-color:var(--primary);cursor:pointer';
-        if (esPrincipal) chk.checked = true;
-        const tip = document.createElement('div');
-        tip.style.cssText = 'display:none;position:absolute;bottom:calc(100%+8px);left:50%;transform:translateX(-50%);background:#1a1a2e;color:#fff;padding:.55rem .8rem;border-radius:8px;font-size:.72rem;width:230px;text-align:center;box-shadow:0 4px 14px rgba(0,0,0,.4);z-index:300;line-height:1.45;pointer-events:none;font-family:Montserrat,sans-serif';
-        tip.innerHTML = '<strong style="display:block;margin-bottom:.25rem">¿Es un ingrediente principal?</strong>Si se activa, el cliente no podrá deseleccionarlo al personalizar el platillo y requerirá doble confirmación para eliminarse en inventario.';
+        var chk = document.createElement('input');
+        chk.type='checkbox'; chk.className='ing-principal-chk';
+        chk.style.cssText='width:16px;height:16px;accent-color:var(--primary);cursor:pointer';
+        if (esPrincipal) chk.checked=true;
+        var tip = document.createElement('div');
+        tip.style.cssText='display:none;position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:#1a1a2e;color:#fff;padding:.55rem .8rem;border-radius:8px;font-size:.72rem;width:230px;text-align:center;box-shadow:0 4px 14px rgba(0,0,0,.4);z-index:300;line-height:1.45;pointer-events:none;font-family:Montserrat,sans-serif';
+        tip.innerHTML='<strong style="display:block;margin-bottom:.25rem">¿Es un ingrediente principal?</strong>Si se activa, el cliente no podrá deseleccionarlo al personalizar el platillo y requerirá doble confirmación para eliminarse en inventario.';
         principalWrap.appendChild(chk); principalWrap.appendChild(tip);
-        principalWrap.addEventListener('mouseenter', ()=>tip.style.display='block');
-        principalWrap.addEventListener('mouseleave', ()=>tip.style.display='none');
-        chk.addEventListener('touchstart', e=>{ e.stopPropagation(); tip.style.display=tip.style.display==='block'?'none':'block'; }, {passive:true});
+        principalWrap.addEventListener('mouseenter',function(){tip.style.display='block';});
+        principalWrap.addEventListener('mouseleave',function(){tip.style.display='none';});
+        chk.addEventListener('touchstart',function(e){e.stopPropagation();tip.style.display=tip.style.display==='block'?'none':'block';},{passive:true});
         row.appendChild(select); row.appendChild(inputCantidad); row.appendChild(selUnidad);
         row.appendChild(principalWrap); row.appendChild(removeBtn);
         container.appendChild(row);
@@ -443,14 +444,39 @@
     };
 
     window.actualizarProductosActivos = function() {
-        const el = document.getElementById('productosActivos');
-        if (el) el.textContent = (window.menuItems||[]).filter(m=>m.disponible).length;
+        const prodCard = document.querySelector('.dashboard-card:nth-child(3)');
+        if (prodCard) prodCard.textContent = window.menuItems.filter(m => m.disponible).length;
     };
 
     window._onCategoriaChange = function() {
-        const catId = document.getElementById('platilloCategoria')?.value || '';
-        window.cargarSubcategoriasSelect(catId);
-        if (window._recalcularStockPlatillo) window._recalcularStockPlatillo();
+        const cat = document.getElementById('platilloCategoria')?.value;
+        const wrap = document.getElementById('subcategoriaContainer');
+        const sel  = document.getElementById('platilloSubcategoria');
+        if (!wrap || !sel) return;
+        const SUBCATEGORIAS = {
+            'rolls': [{ id: 'rolls-frios', name: 'Rolls Fríos (10 pzas)' }, { id: 'rolls-tempura', name: 'Rolls Tempura (12 pzas)' }],
+            'china': [
+                { id: 'arroz-chino', name: 'Arroz Chino' }, { id: 'arroz-cantones', name: 'Arroz Cantones' },
+                { id: 'chopsuey', name: 'Chopsuey' }, { id: 'lomey', name: 'Lomey' }, { id: 'chow-mein', name: 'Chow Mein' },
+                { id: 'fideos-arroz', name: 'Fideos de Arroz' }, { id: 'tallarines-cantones', name: 'Tallarines Cantones' },
+                { id: 'mariscos', name: 'Mariscos' }, { id: 'foo-yung', name: 'Foo Yong' }, { id: 'sopas', name: 'Sopas' },
+                { id: 'entremeses', name: 'Entremeses' }
+            ],
+            'japonesa': [
+                { id: 'yakimeshi', name: 'Yakimeshi' }, { id: 'yakisoba', name: 'Yakisoba' },
+                { id: 'pasta-udon', name: 'Pasta Udon' }, { id: 'churrasco', name: 'Churrasco' }
+            ]
+        };
+        const subs = SUBCATEGORIAS[cat];
+        if (subs && subs.length) {
+            wrap.style.display = 'block';
+            sel.innerHTML = '<option value="">Sin subcategoría</option>' +
+                subs.map(s => `<option value="${s.id}">${s.name}</option>`).join('');
+        } else {
+            wrap.style.display = 'none';
+            sel.innerHTML = '<option value="">Ninguna</option>';
+        }
+        window._recalcularStockPlatillo();
     };
 
     window._previewPrecioBs = function() {
@@ -531,7 +557,7 @@
                 const selIng    = row.querySelector('select:not(.ing-row-unidad)');
                 const selUnidad = row.querySelector('select.ing-row-unidad');
                 const cantInput = row.querySelector('input[type="number"]');
-                const chkP = row.querySelector('.ing-principal-chk');
+                var chkP = row.querySelector('.ing-principal-chk');
                 if (selIng && selIng.value && cantInput && cantInput.value) {
                     ingredientes[selIng.value] = {
                         cantidad:  parseFloat(cantInput.value),
