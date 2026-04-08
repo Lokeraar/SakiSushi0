@@ -19,13 +19,13 @@
             return;
         }
         grid.innerHTML = window.usuarios.map(user => {
-            const inicial = (user.nombre||'?').charAt(0).toUpperCase();
-            const rolBadge = user.rol==='admin'?'<span class="usuario-rol admin">Admin</span>':'<span class="usuario-rol cajero">Cajero</span>';
-            const badge = user.activo
+            const inicial     = (user.nombre||'?').charAt(0).toUpperCase();
+            const rolBadge    = user.rol==='admin' ? '<span class="usuario-rol admin">Admin</span>' : '<span class="usuario-rol cajero">Cajero</span>';
+            const statusBadge = user.activo
                 ? '<span class="status-activo"><i class="fas fa-check-circle"></i> Activo</span>'
                 : '<span class="status-inactivo"><i class="fas fa-circle"></i> Inactivo</span>';
             const avatarInner = user.foto
-                ? `<img src="${user.foto}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;cursor:pointer" onclick="window.expandirImagen(this.src)">`
+                ? `<img src="${user.foto}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;cursor:pointer" onclick="window.expandirImagen&&window.expandirImagen(this.src)">`
                 : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:1.5rem;font-weight:700;color:#fff;background:linear-gradient(135deg,var(--primary),var(--primary-dark));border-radius:50%">${inicial}</div>`;
             return `<div class="usuario-card-v2">
                 <div class="ucard-avatar">${avatarInner}</div>
@@ -36,7 +36,7 @@
                             <span class="usuario-username">@${user.username}</span>
                             ${rolBadge}
                         </div>
-                        <div class="ucard-status">${badge}</div>
+                        <div class="ucard-status">${statusBadge}</div>
                     </div>
                     <div class="ucard-actions">
                         <button class="btn-icon edit" onclick="window.editarUsuario('${user.id}')" title="Editar usuario"><i class="fas fa-pen"></i></button>
