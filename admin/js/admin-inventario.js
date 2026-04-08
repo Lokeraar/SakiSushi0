@@ -50,11 +50,11 @@
             // Mostrar imagen pequeña si existe
             const imgHtml = item.imagen ? `<img src="${item.imagen}" style="width:24px;height:24px;object-fit:cover;border-radius:4px;margin-right:8px">` : '';
             el.innerHTML = `
-                <div style="display:flex;align-items:center;flex:1;min-width:0;overflow:hidden">
+                <div style="display:flex;align-items:center;flex:1;min-width:0">
                     ${imgHtml}
-                    <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1">${item.nombre}</span>
+                    <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${item.nombre}</span>
                 </div>
-                <span class="inv-item-badge ${estado}" style="flex-shrink:0;font-size:.72rem;white-space:nowrap">${parseFloat(disponible.toPrecision(10))} ${item.unidad_base||'u'}</span>`;
+                <span class="inv-item-badge ${estado}">${disponible} ${item.unidad_base||'u'}</span>`;
             el.addEventListener('click', function() {
                 const wasActive = item.id === window._invActiveId;
                 document.querySelectorAll('.inv-list-item').forEach(e => e.classList.remove('active'));
@@ -89,28 +89,19 @@
     window._invMostrarDetalle = function(item) {
         const isMobile = window.innerWidth <= 768;
         const disponible = (item.stock||0) - (item.reservado||0);
-        const minimo     = item.minimo || 0;
-        const stockMax   = item.stock_maximo || item.stock || 1;
-
-        // 4 niveles de estado
-        let estado;
-        if (disponible <= 0)                      estado = 'agotado';
-        else if (disponible <= minimo)             estado = 'critico';
-        else if (disponible <= stockMax * 0.5)     estado = 'moderado';
-        else                                       estado = 'optimo';
-
-        const pct = stockMax > 0 ? Math.min(100, (disponible / stockMax) * 100) : 0;
-        const paleta = {
-            optimo:  { color:'#43a047', grad:'linear-gradient(270deg,#43a047,#66bb6a)', label:'✅ Óptimo (>50%)'  },
-            moderado:{ color:'#fb8c00', grad:'linear-gradient(270deg,#fb8c00,#ffa726)', label:'🟡 Moderado (≤50%)' },
-            critico: { color:'#e53935', grad:'linear-gradient(270deg,#e53935,#ef5350)', label:'⚠️ Crítico (≤mín)'  },
-            agotado: { color:'#546e7a', grad:'linear-gradient(270deg,#37474f,#546e7a)', label:'🔴 Agotado (=0)'    }
-        };
-        const p = paleta[estado];
-        const barW = estado === 'agotado' ? 0 : pct.toFixed(1);
-
-        const imgHtml = item.imagen
-            ? `<img src="${item.imagen}" style="width:60px;height:60px;object-fit:cover;border-radius:8px;margin-bottom:.5rem;cursor:pointer" onclick="window.expandirImagen('${item.imagen.replace(/'/g,"\'")}')">` : '';
+        const minimo = item.minimo || 0;
+        let estado = 'ok';
+        if (disponible <= 0) estado = 'agotado';
+        else if (disponible <= minimo) estado = 'critico';
+        else if (disponible <= minimo * 1.5) estado = 'bajo';
+        else estado = 'ok';
+        
+        // Calcular porcentaje para barra: máximo entre stock y minimo*2 para referencia
+        const maxReferencia = Math.max(item.stock, minimo * 2, 10);
+        const porcentaje = Math.min(100, (disponible / maxReferencia) * 100);
+        const colorEstado = estado === 'critico' || estado === 'agotado' ? 'var(--danger)' : estado === 'bajo' ? 'var(--warning)' : 'var(--success)';
+        
+        const imgHtml = item.imagen ? `<img src="${item.imagen}" style="width:60px;height:60px;object-fit:cover;border-radius:8px;margin-bottom:.5rem">` : '';
 
         const detailHTML = `
             <div class="inv-detail-card" id="invDetailCard_${item.id}">
@@ -121,27 +112,16 @@
                     </button>
                 </div>
                 ${imgHtml}
-                <div class="inv-stock-row" style="margin-bottom:.4rem;display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">
-                    <span style="font-size:2rem;font-weight:800;color:${p.color}">${parseFloat(disponible.toPrecision(10))}</span>
+                <div class="inv-stock-row" style="margin-bottom:.5rem">
+                    <span class="inv-stock-num ${estado}" style="font-size:2rem">${disponible}</span>
                     <span class="inv-stock-unit" style="font-size:.9rem">${item.unidad_base||'u'}</span>
-                    <span style="margin-left:auto;font-size:.7rem;padding:2px 9px;border-radius:20px;background:${p.color}22;color:${p.color};font-weight:700">${p.label}</span>
+                    <span style="font-size:.75rem;color:var(--text-muted);margin-left:auto">Reservado: ${item.reservado||0}</span>
                 </div>
-                <div style="font-size:.7rem;color:var(--text-muted);margin-bottom:.4rem">
-                    Reservado: ${parseFloat((item.reservado||0).toPrecision(10))} · Máx: ${stockMax} ${item.unidad_base||'u'}
-                </div>
-                <!-- Barra invertida: se vacía de derecha a izquierda -->
-                <div style="height:10px;background:rgba(0,0,0,.08);border-radius:6px;overflow:hidden;margin-bottom:.3rem;position:relative">
-                    <div style="position:absolute;top:0;right:0;height:100%;width:${barW}%;background:${p.grad};border-radius:6px 0 0 6px;transition:width .6s cubic-bezier(.4,0,.2,1)"></div>
-                </div>
-                <div style="font-size:.72rem;color:${p.color};font-weight:600;margin-bottom:.75rem;display:flex;align-items:center;gap:.4rem">
-                    <span style="width:9px;height:9px;border-radius:50%;background:${p.color};display:inline-block;flex-shrink:0"></span>
-                    ${p.label}
-                    <span style="margin-left:auto;color:var(--text-muted);font-weight:400">${pct.toFixed(0)}%</span>
-                </div>
+                <div class="inv-bar" style="margin-bottom:.85rem;position:relative;overflow:hidden"><div class="inv-bar-fill ${estado}" style="position:absolute;top:0;right:0;height:100%;width:${porcentaje}%;background:${colorEstado};transition:width .5s ease"></div></div>
                 <div class="inv-meta-grid" style="grid-template-columns:1fr 1fr 1fr;gap:.75rem;margin-bottom:.85rem">
                     <div class="inv-meta-item">
                         <span class="inv-meta-label">Mínimo</span>
-                        <span class="inv-meta-val" style="color:${p.color}">${minimo} ${item.unidad_base||'u'}</span>
+                        <span class="inv-meta-val" style="color:${colorEstado}">${minimo} ${item.unidad_base||'u'}</span>
                     </div>
                     <div class="inv-meta-item">
                         <span class="inv-meta-label">Costo (USD/Bs)</span>
@@ -338,19 +318,25 @@
 
     window._desbloquearStock = async function() {
         const stockInput = document.getElementById('ingredienteStock');
-        const lockIcon = document.getElementById('stockLockIcon');
-        const clickArea = document.getElementById('stockClickArea');
+        const lockIcon   = document.getElementById('stockLockIcon');
+        const clickArea  = document.getElementById('stockClickArea');
         if (stockInput) {
-            stockInput.disabled = false;
-            stockInput.readOnly = false;
-            stockInput.style.cursor = 'text';
+            stockInput.disabled    = false;
+            stockInput.readOnly    = false;
+            stockInput.style.cursor        = 'text';
             stockInput.style.pointerEvents = 'auto';
             stockInput.onclick = null;
-            stockInput.focus();
+            setTimeout(() => stockInput.focus(), 150);
         }
-        if (lockIcon) { lockIcon.innerHTML = '<i class="fas fa-lock-open" style="font-size:.8rem; color:var(--success)"></i>'; lockIcon.style.cursor = 'default'; }
+        if (lockIcon)  { lockIcon.innerHTML = '<i class="fas fa-lock-open" style="font-size:.8rem; color:var(--success)"></i>'; lockIcon.style.cursor = 'default'; }
         if (clickArea) { clickArea.onclick = null; clickArea.style.cursor = 'default'; clickArea.style.borderColor = 'var(--success)'; clickArea.style.backgroundColor = 'rgba(56,142,60,0.1)'; }
-        window.cerrarModal('passwordStockModal');
+        // Cerrar el modal de contraseña limpiamente sin afectar el modal padre
+        const pwdModal = document.getElementById('passwordStockModal');
+        if (pwdModal) {
+            pwdModal.classList.remove('active');
+            pwdModal.style.display = 'none';
+            setTimeout(() => { pwdModal.style.display = ''; }, 50);
+        }
         window.mostrarToast('✅ Stock desbloqueado. Puedes editar la cantidad.', 'success');
     };
 
@@ -403,18 +389,16 @@
         try {
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
-            const stockTotal = stockActual + agregar;
-            const prevItem = (window.inventarioItems||[]).find(i=>i.id===id);
             const ingrediente = {
                 id, nombre,
-                stock: stockTotal,
+                stock: stockActual + agregar,
                 reservado: 0,
                 unidad_base: unidad,
                 minimo,
                 precio_costo: costo,
                 precio_unitario: venta,
-                imagen: imagenUrl || null,
-                stock_maximo: esNuevo ? stockTotal : Math.max(stockTotal, prevItem?.stock_maximo || stockTotal)
+                imagen: imagenUrl || null
+                // stock_maximo se omite — columna no existe en el schema actual
             };
             let error;
             if (esNuevo) ({ error } = await window.supabaseClient.from('inventario').insert([ingrediente]));
@@ -645,36 +629,23 @@
 
 	// Reemplazar eliminarIngrediente para usar confirmación premium
 	window.eliminarIngrediente = async function(id) {
-        const ingrediente = window.inventarioItems.find(i => i.id === id);
-        if (!ingrediente) return;
-        const dependen = (window.menuItems||[]).filter(p => p.ingredientes?.[id]?.principal === true);
-        const hacerEliminar = () => {
-            window.mostrarConfirmacionPremium(
-                'Confirmar eliminación',
-                `¿Eliminar definitivamente <strong>${ingrediente.nombre}</strong>? Esta acción no se puede deshacer.`,
-                async () => {
-                    try {
-                        await window.supabaseClient.from('inventario').delete().eq('id', id);
-                        await window.cargarInventario();
-                        window.mostrarToast('🗑️ Ingrediente eliminado', 'success');
-                    } catch(e) { console.error('Error eliminando:', e); window.mostrarToast('❌ Error: '+(e.message||e), 'error'); }
-                }
-            );
-        };
-        if (dependen.length > 0) {
-            window.mostrarConfirmacionPremium(
-                '⚠️ Ingrediente esencial en el menú',
-                `<strong>${ingrediente.nombre}</strong> es ingrediente principal de:<br><br>
-                 <div style="background:rgba(211,47,47,.08);border-radius:8px;padding:.6rem .85rem;margin:.4rem 0;text-align:left;font-size:.85rem;line-height:1.8">
-                 ${dependen.map(pl=>'🍱 '+pl.nombre).join('<br>')}
-                 </div>
-                 Si lo eliminas, esos platillos lo perderán permanentemente. ¿Continuar?`,
-                () => hacerEliminar()
-            );
-        } else {
-            hacerEliminar();
-        }
-    };
+		const ingrediente = window.inventarioItems.find(i => i.id === id);
+		if (!ingrediente) return;
+		window.mostrarConfirmacionPremium(
+			'Eliminar Ingrediente',
+			`¿Estás seguro de eliminar "${ingrediente.nombre}"? Esta acción no se puede deshacer.`,
+			async () => {
+				try {
+					await window.supabaseClient.from('inventario').delete().eq('id', id);
+					await window.cargarInventario();
+					window.mostrarToast('🗑️ Ingrediente eliminado', 'success');
+				} catch (e) {
+					console.error('Error eliminando ingrediente:', e);
+					window.mostrarToast('❌ Error al eliminar ingrediente', 'error');
+				}
+			}
+		);
+	};
 
     window.actualizarAlertasStock = function() {
         document.getElementById('alertasStock').textContent = window.inventarioItems.filter(i => i.stock <= i.minimo).length;
@@ -754,31 +725,6 @@
         }).join('');
     };
 
-    window.irAStockCritico = function() {
-        document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
-        document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
-        const t=document.querySelector('.tab[data-tab="dashboard"]');
-        const p=document.getElementById('dashboardPane');
-        if(t) t.classList.add('active'); if(p) p.classList.add('active');
-        setTimeout(()=>{
-            const el=document.getElementById('stockCritico'); if(!el) return;
-            el.scrollIntoView({behavior:'smooth',block:'center'});
-            const par=el.closest('.lower-stock')||el.parentElement;
-            if(par){
-                let n=0;
-                const iv=setInterval(()=>{
-                    n++;
-                    par.style.boxShadow=n%2===0?'0 0 0 3px #FFC107,0 0 20px rgba(255,193,7,.4)':'none';
-                    par.style.borderColor=n%2===0?'#FFC107':'';
-                    if(n>=6){clearInterval(iv);par.style.boxShadow='';par.style.borderColor='';}
-                },300);
-            }
-            document.querySelectorAll('#stockCritico .alert-item.critical').forEach(e=>{
-                e.style.animation='none'; e.offsetHeight;
-                e.style.animation='pulse-critico 0.8s ease-in-out 3';
-            });
-        },150);
-    };
     window._irAIngrediente = function(ingredienteId) {
         const tabs = document.querySelectorAll('.tab');
         const panes = document.querySelectorAll('.tab-pane');
