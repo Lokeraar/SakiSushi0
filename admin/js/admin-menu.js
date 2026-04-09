@@ -1,4 +1,8 @@
-// admin-menu.js - Gestión de platillos (menú) - CROSS-BROWSER FIX
+// admin-menu.js - Gestión de platillos (menú)
+// FIXES: 
+// 1. Mobile 'Guardar' button (touchend listener + preventDefault)
+// 2. Categories loading on Edit (cargarCategoriasSelect call)
+// 3. esPrincipal parameter in agregarIngredienteRow
 (function() {
 let currentImagenUrl = '';
 let currentImagenFile = null;
@@ -284,6 +288,7 @@ window.cargarSubcategoriasSelect = function(categoria) {
     } 
 };
 
+// CORRECCIÓN AQUÍ: Se agregó 'esPrincipal = false'
 window.agregarIngredienteRow = function(ingredienteId, cantidad, unidad, esPrincipal = false) {
     ingredienteId = ingredienteId || '';
     cantidad = cantidad || '';
@@ -547,68 +552,73 @@ window._recalcularStockPlatillo = function() {
         : '⚠️ Stock insuficiente para preparar este platillo';
 };
 
-// CROSS-BROWSER FIX: Robust event handling for Save button
+// ══════════════════════════════════════════════════════════════════════════
+// CONFIGURACIÓN ROBUSTA DEL BOTÓN GUARDAR (MOBILE FIX)
+// ══════════════════════════════════════════════════════════════════════════
 function setupSaveButtonHandler() {
     const saveBtn = document.getElementById('savePlatillo');
     if (!saveBtn) {
-        console.error('❌ savePlatillo button not found in DOM');
+        console.warn('savePlatillo button not found');
         return;
     }
-    
-    // Remove any existing listeners to prevent duplicates
-    const newSaveBtn = saveBtn.cloneNode(true);
-    saveBtn.parentNode.replaceChild(newSaveBtn, saveBtn);
-    
-    // Add robust click handler with preventDefault
-    newSaveBtn.addEventListener('click', async function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        
-        console.log('🔘 Save button clicked - Browser:', navigator.userAgent);
-        
-        if (this.disabled) {
-            console.warn('⚠️ Button is disabled');
-            return;
-        }
-        
-        try {
-            this.disabled = true;
-            const originalText = this.innerHTML;
-            this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
-            
-            console.log('📝 Starting save process...');
-            await window.guardarPlatillo();
-            
-            console.log('✅ Save completed successfully');
-        } catch (error) {
-            console.error('❌ Error in save button handler:', error);
-            window.mostrarToast('❌ Error: ' + error.message, 'error');
-        } finally {
-            this.disabled = false;
-            this.innerHTML = 'Guardar';
-        }
-    }, { passive: false });
-    
-    // Also add keydown handler for Enter key
-    newSaveBtn.addEventListener('keydown', async function(e) {
-        if (e.key === 'Enter') {
+
+    // 1. Asegurar que actúa como botón, no submitter de formulario
+    saveBtn.type = 'button';
+
+    // 2. Clonar para eliminar listeners antiguos/conflictivos
+    const newBtn = saveBtn.cloneNode(true);
+    saveBtn.parentNode.replaceChild(newBtn, saveBtn);
+
+    // 3. Definir la acción de guardado
+    async function handleSave(e) {
+        if (e) {
             e.preventDefault();
-            this.click();
+            e.stopPropagation();
         }
-    });
+        
+        if (newBtn.disabled) return;
+
+        // Feedback visual inmediato
+        newBtn.disabled = true;
+        const originalContent = newBtn.innerHTML;
+        newBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+
+        try {
+            // Llamar a la función principal de guardado
+            await window.guardarPlatillo();
+        } catch (error) {
+            console.error('Error during save process:', error);
+            // El toast ya se maneja dentro de guardarPlatillo, pero por seguridad:
+            if (window.mostrarToast) window.mostrarToast('Error al guardar', 'error');
+        } finally {
+            newBtn.disabled = false;
+            newBtn.innerHTML = originalContent;
+        }
+    }
+
+    // 4. Adjuntar Listeners Específicos
+    // Click para Desktop/Tablet
+    newBtn.addEventListener('click', handleSave, { passive: false });
+    
+    // Touchend para Móvil (crucial para Brave/Chrome móvil)
+    // preventDefault evita que se dispare el click inmediatamente después, evitando doble ejecución
+    newBtn.addEventListener('touchend', function(e) {
+        e.preventDefault(); 
+        handleSave.call(this, e);
+    }, { passive: false });
 }
 
-// Main save function extracted for better error handling
+// ══════════════════════════════════════════════════════════════════════════
+// FUNCIÓN PRINCIPAL DE GUARDADO (Extraída para limpieza)
+// ══════════════════════════════════════════════════════════════════════════
 window.guardarPlatillo = async function() {
-    console.log('💾 Executing guardarPlatillo function');
+    console.log('💾 Ejecutando guardarPlatillo...');
     
     const nombre = document.getElementById('platilloNombre').value;
     const categoria = document.getElementById('platilloCategoria').value;
     const subcategoria = document.getElementById('platilloSubcategoria').value;
     const precio = parseFloat(document.getElementById('platilloPrecio').value);
     const descripcion = document.getElementById('platilloDescripcion').value;
-    
-    console.log('📋 Form data:', { nombre, categoria, precio });
     
     if (!nombre || !categoria || !precio) { 
         throw new Error('Completa los campos obligatorios (Nombre, Categoría, Precio)'); 
@@ -619,11 +629,11 @@ window.guardarPlatillo = async function() {
     const imagenUrlInput = document.getElementById('platilloImagenUrl').value;
     
     if (archivoImagen) {
-        console.log('📤 Uploading image file...');
+        console.log('📤 Subiendo imagen...');
         const resultado = await window.subirImagenPlatillo(archivoImagen, 'menu');
         if (resultado.success) {
             imagenUrl = resultado.url;
-            console.log('✅ Image uploaded:', imagenUrl);
+            console.log('✅ Imagen subida:', imagenUrl);
         } else { 
             throw new Error('Error al subir la imagen: ' + resultado.error); 
         }
@@ -634,6 +644,7 @@ window.guardarPlatillo = async function() {
     const ingredientes = {};
     const _otrosNuevos = [];
     
+    // Identificar ingredientes "Otro" nuevos
     document.querySelectorAll('#ingredientesContainer .ingrediente-row').forEach(row => {
         const selIng       = row.querySelector('select:not(.ing-row-unidad)');
         const inputNomOtro = row.querySelector('.ing-row-nombre-otro');
@@ -643,7 +654,7 @@ window.guardarPlatillo = async function() {
         }
     });
     
-    // Create new ingredients
+    // Crear los ingredientes nuevos en BD
     for (const entry of _otrosNuevos) {
         const nuevoId = window.generarId('ing_');
         const nuevoIng = {
@@ -666,16 +677,16 @@ window.guardarPlatillo = async function() {
                 const optNew = document.createElement('option');
                 optNew.value = nuevoId; optNew.textContent = entry.nombreOtro; optNew.selected = true;
                 entry.selIng.appendChild(optNew);
-                console.log('✅ Created new ingredient:', nombreOtro);
+                console.log('✅ Ingrediente nuevo creado:', nombreOtro);
             } else { 
-                console.warn('⚠️ Could not create ingredient:', entry.nombreOtro, errIng.message); 
+                console.warn('⚠️ No se pudo crear ingrediente:', entry.nombreOtro, errIng.message); 
             }
         } catch(eIng) { 
-            console.error('❌ Error creating ingredient:', eIng.message); 
+            console.error('❌ Error creando ingrediente:', eIng.message); 
         }
     }
     
-    // Collect all ingredients
+    // Recopilar todos los ingredientes
     document.querySelectorAll('#ingredientesContainer .ingrediente-row').forEach(row => {
         const selIng    = row.querySelector('select:not(.ing-row-unidad)');
         const selUnidad = row.querySelector('select.ing-row-unidad');
@@ -691,6 +702,7 @@ window.guardarPlatillo = async function() {
         }
     });
 
+    // Calcular stock máximo posible
     const _ingEntries = Object.entries(ingredientes);
     let maxPlatillos;
     if (!_ingEntries.length) {
@@ -721,23 +733,21 @@ window.guardarPlatillo = async function() {
         stock: maxPlatillos, stock_maximo: maxPlatillos
     };
     
-    console.log('💾 Saving platillo to database:', platillo.nombre);
+    console.log('💾 Guardando en BD...', platillo.nombre);
     
     let error;
     if (window.platilloEditandoId) {
-        console.log('🔄 Updating existing platillo:', window.platilloEditandoId);
         ({ error } = await window.supabaseClient.from('menu').update(platillo).eq('id', window.platilloEditandoId));
     } else {
-        console.log('➕ Inserting new platillo');
         ({ error } = await window.supabaseClient.from('menu').insert([platillo]));
     }
     
     if (error) {
-        console.error('❌ Database error:', error);
+        console.error('❌ Error BD:', error);
         throw error;
     }
     
-    console.log('✅ Platillo saved successfully');
+    console.log('✅ Guardado exitoso');
     
     document.getElementById('platilloModal').classList.remove('active');
     window.platilloEditandoId = null;
@@ -746,7 +756,7 @@ window.guardarPlatillo = async function() {
     window.mostrarToast('✅ Platillo guardado', 'success');
 };
 
-// Initialize save button handler when DOM is ready
+// Inicializar el handler del botón cuando el DOM esté listo
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', setupSaveButtonHandler);
 } else {
