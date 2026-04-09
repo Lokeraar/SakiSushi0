@@ -105,23 +105,11 @@
 
     window.expandirImagen = function(src) {
         if (!src) return;
-        var prev = document.getElementById('_imgOverlay');
-        if (prev) prev.remove();
-        var ov = document.createElement('div');
-        ov.id = '_imgOverlay';
-        ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:10000;display:flex;align-items:center;justify-content:center';
-        var wrap = document.createElement('div');
-        wrap.style.cssText = 'position:relative;display:inline-block;max-width:92vw;max-height:92vh';
-        var img = document.createElement('img');
-        img.src = src;
-        img.style.cssText = 'max-width:100%;max-height:90vh;object-fit:contain;border-radius:10px;display:block';
-        var btn = document.createElement('button');
-        btn.textContent = '✕';
-        btn.style.cssText = 'position:absolute;top:-18px;right:-18px;width:42px;height:42px;border-radius:50%;background:#D32F2F;color:#fff;border:2.5px solid #fff;font-size:1.2rem;cursor:pointer;font-weight:900;display:flex;align-items:center;justify-content:center;box-shadow:0 3px 12px rgba(0,0,0,.5);z-index:1;line-height:1';
-        btn.addEventListener('click', function(e){ e.stopPropagation(); ov.remove(); });
-        wrap.appendChild(img); wrap.appendChild(btn); ov.appendChild(wrap);
-        ov.addEventListener('click', function(e){ if(e.target===ov) ov.remove(); });
-        document.body.appendChild(ov);
+        const modal = document.createElement('div');
+        modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.9);z-index:10000;display:flex;align-items:center;justify-content:center;cursor:pointer';
+        modal.innerHTML = `<img src="${src}" style="max-width:90%;max-height:90%;object-fit:contain;border-radius:8px">`;
+        modal.addEventListener('click', () => modal.remove());
+        document.body.appendChild(modal);
     };
 
     window.toggleDisponiblePlatillo = async function(id, disponible) {
@@ -279,40 +267,31 @@
     };
 
     window.cargarCategoriasSelect = function() {
-        var sel = document.getElementById('platilloCategoria');
-        if (!sel) return;
-        var labels = window.categoriasMenuLabels || {};
-        sel.innerHTML = '<option value="">Seleccionar categoria</option>';
-        Object.keys(window.categoriasMenu || {}).forEach(function(id) {
-            var opt = document.createElement('option');
-            opt.value = id;
-            opt.textContent = labels[id] || id;
-            sel.appendChild(opt);
+        const select = document.getElementById('platilloCategoria');
+        select.innerHTML = '<option value="">Seleccionar</option>';
+        Object.keys(window.categoriasMenu || {}).forEach(cat => {
+            const opt = document.createElement('option');
+            opt.value = cat;
+            opt.textContent = cat;
+            select.appendChild(opt);
         });
-        // Clonar para eliminar listeners previos
-        var nuevo = sel.cloneNode(true);
-        sel.parentNode.replaceChild(nuevo, sel);
-        nuevo.addEventListener('change', function(e) {
-            window.cargarSubcategoriasSelect(e.target.value);
-            if (window._recalcularStockPlatillo) window._recalcularStockPlatillo();
-        });
+        select.addEventListener('change', (e) => { window.cargarSubcategoriasSelect(e.target.value); });
     };
 
-    window.cargarSubcategoriasSelect = function(catId) {
-        var sel  = document.getElementById('platilloSubcategoria');
-        var wrap = document.getElementById('subcategoriaContainer');
-        if (!sel) return;
-        sel.innerHTML = '<option value="">Sin subcategoria</option>';
-        var subs = (catId && window.categoriasMenu && window.categoriasMenu[catId]) ? window.categoriasMenu[catId] : [];
-        if (subs.length) {
-            subs.forEach(function(s) { var o=document.createElement('option'); o.value=s; o.textContent=s; sel.appendChild(o); });
-            if (wrap) wrap.style.display = 'block';
-        } else {
-            if (wrap) wrap.style.display = 'none';
+    window.cargarSubcategoriasSelect = function(categoria) {
+        const select = document.getElementById('platilloSubcategoria');
+        select.innerHTML = '<option value="">Ninguna</option>';
+        if (categoria && window.categoriasMenu && window.categoriasMenu[categoria]) {
+            window.categoriasMenu[categoria].forEach(sub => {
+                const opt = document.createElement('option');
+                opt.value = sub;
+                opt.textContent = sub;
+                select.appendChild(opt);
+            });
         }
     };
 
-    window.agregarIngredienteRow = function(ingredienteId, cantidad, unidad, esPrincipal) {
+    window.agregarIngredienteRow = function(ingredienteId, cantidad, unidad) {
         ingredienteId = ingredienteId || '';
         cantidad = cantidad || '';
         if (!unidad && ingredienteId) {
@@ -323,11 +302,19 @@
         const container = document.getElementById('ingredientesContainer');
         const row = document.createElement('div');
         row.className = 'ingrediente-row';
-        row.style.cssText = 'display:grid;grid-template-columns:2fr 1fr 1fr auto auto;gap:.4rem;align-items:center;margin-bottom:.4rem;background:var(--card-bg);padding:.3rem .4rem;border-radius:6px;border:1px solid var(--border)';
+        row.style.cssText = 'display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:.4rem;align-items:center;margin-bottom:.4rem';
 
         const select = document.createElement('select');
         select.style.cssText = 'font-family:Montserrat,sans-serif;font-size:.82rem';
-        select.innerHTML = '<option value="">Seleccionar ingrediente</option>';
+        // Opción vacía
+        const optBlank = document.createElement('option');
+        optBlank.value = ''; optBlank.textContent = 'Seleccionar ingrediente';
+        select.appendChild(optBlank);
+        // Opción "Otro" PRIMERO
+        const optOtro = document.createElement('option');
+        optOtro.value = '__otro__'; optOtro.textContent = '➕ Otro (nuevo ingrediente)';
+        select.appendChild(optOtro);
+        // Resto de ingredientes del inventario
         const sorted = [...(window.inventarioItems || [])].sort((a,b) => a.nombre.localeCompare(b.nombre));
         sorted.forEach(ing => {
             const opt = document.createElement('option');
@@ -336,11 +323,26 @@
             if (ing.id === ingredienteId) opt.selected = true;
             select.appendChild(opt);
         });
+        // Input nombre personalizado (visible solo si se elige "Otro")
+        const inputNombreOtro = document.createElement('input');
+        inputNombreOtro.type = 'text';
+        inputNombreOtro.placeholder = 'Nombre del ingrediente';
+        inputNombreOtro.className = 'ing-row-nombre-otro';
+        inputNombreOtro.style.cssText = 'display:none;font-family:Montserrat,sans-serif;font-size:.82rem;width:100%;padding:.3rem .5rem;border:1px solid var(--border);border-radius:6px;background:var(--input-bg);color:var(--text-dark);box-sizing:border-box;margin-top:.25rem';
+        // Reemplazar select por un wrapper que contiene ambos
+        const selWrap = document.createElement('div');
+        selWrap.style.cssText = 'display:flex;flex-direction:column;min-width:0';
+        selWrap.appendChild(select);
+        selWrap.appendChild(inputNombreOtro);
         select.addEventListener('change', function() {
-            const ing = (window.inventarioItems || []).find(i => i.id === this.value);
-            if (ing && ing.unidad_base) {
-                const unitSel = this.parentElement.querySelector('.ing-row-unidad');
-                if (unitSel) unitSel.value = ing.unidad_base;
+            const isOtro = this.value === '__otro__';
+            inputNombreOtro.style.display = isOtro ? 'block' : 'none';
+            if (!isOtro) {
+                const ing = (window.inventarioItems || []).find(i => i.id === this.value);
+                if (ing && ing.unidad_base) {
+                    const unitSel = row.querySelector('select.ing-row-unidad');
+                    if (unitSel) unitSel.value = ing.unidad_base;
+                }
             }
             window._recalcularStockPlatillo();
         });
@@ -366,23 +368,54 @@
         removeBtn.type = 'button';
         removeBtn.innerHTML = '<i class="fas fa-times"></i>';
         removeBtn.style.cssText = 'background:#ffebee;color:var(--danger);border:none;border-radius:6px;width:28px;height:28px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0';
-        removeBtn.onclick = () => { row.remove(); window._recalcularStockPlatillo(); };
+        removeBtn.onclick = () => { if(row._hideTip) row._hideTip(); row.remove(); window._recalcularStockPlatillo(); };
 
-        var principalWrap = document.createElement('div');
-        principalWrap.style.cssText = 'position:relative;display:flex;align-items:center;justify-content:center;flex-shrink:0';
-        var chk = document.createElement('input');
-        chk.type='checkbox'; chk.className='ing-principal-chk';
-        chk.style.cssText='width:16px;height:16px;accent-color:var(--primary);cursor:pointer';
-        if (esPrincipal) chk.checked=true;
-        var tip = document.createElement('div');
-        tip.style.cssText='display:none;position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);background:#1a1a2e;color:#fff;padding:.55rem .8rem;border-radius:8px;font-size:.72rem;width:230px;text-align:center;box-shadow:0 4px 14px rgba(0,0,0,.4);z-index:300;line-height:1.45;pointer-events:none;font-family:Montserrat,sans-serif';
-        tip.innerHTML='<strong style="display:block;margin-bottom:.25rem">¿Es un ingrediente principal?</strong>Si se activa, el cliente no podrá deseleccionarlo al personalizar el platillo y requerirá doble confirmación para eliminarse en inventario.';
-        principalWrap.appendChild(chk); principalWrap.appendChild(tip);
-        principalWrap.addEventListener('mouseenter',function(){tip.style.display='block';});
-        principalWrap.addEventListener('mouseleave',function(){tip.style.display='none';});
-        chk.addEventListener('touchstart',function(e){e.stopPropagation();tip.style.display=tip.style.display==='block'?'none':'block';},{passive:true});
-        row.appendChild(select); row.appendChild(inputCantidad); row.appendChild(selUnidad);
-        row.appendChild(principalWrap); row.appendChild(removeBtn);
+        // Checkbox "ingrediente principal" con tooltip portal
+        const principalWrap = document.createElement('div');
+        principalWrap.style.cssText = 'display:flex;align-items:center;justify-content:center;flex-shrink:0;position:relative';
+        const chk = document.createElement('input');
+        chk.type = 'checkbox'; chk.className = 'ing-principal-chk';
+        chk.style.cssText = 'width:16px;height:16px;accent-color:var(--primary);cursor:pointer;display:block';
+        if (esPrincipal) chk.checked = true;
+        // Tooltip tipo portal — se inserta en body para superar overflow:hidden del modal
+        let _tipEl = null;
+        const _showTip = function() {
+            if (_tipEl) return;
+            const rect = chk.getBoundingClientRect();
+            _tipEl = document.createElement('div');
+            _tipEl.style.cssText = 'position:fixed;background:#1a1a2e;color:#fff;padding:.6rem .9rem;border-radius:9px;font-size:.72rem;width:250px;text-align:center;box-shadow:0 6px 22px rgba(0,0,0,.55);z-index:99999;line-height:1.55;pointer-events:none;font-family:Montserrat,sans-serif';
+            _tipEl.innerHTML = '<strong style="display:block;margin-bottom:.3rem;font-size:.76rem">¿Es un ingrediente principal?</strong>Si lo activas, el cliente no podrá deseleccionarlo al personalizar el platillo y requerirá doble confirmación antes de eliminarse del inventario.';
+            document.body.appendChild(_tipEl);
+            const tw = _tipEl.offsetWidth, th = _tipEl.offsetHeight;
+            let left = rect.left + rect.width/2 - tw/2;
+            let top  = rect.top - th - 10;
+            if (left < 6) left = 6;
+            if (left + tw > window.innerWidth - 6) left = window.innerWidth - tw - 6;
+            if (top < 6) top = rect.bottom + 10;
+            _tipEl.style.left = left + 'px';
+            _tipEl.style.top  = top  + 'px';
+        };
+        const _hideTip = function() { if (_tipEl) { _tipEl.remove(); _tipEl = null; } };
+        chk.addEventListener('mouseenter', _showTip);
+        chk.addEventListener('mouseleave', _hideTip);
+        chk.addEventListener('focus',      _showTip);
+        chk.addEventListener('blur',       _hideTip);
+        chk.addEventListener('touchstart', function(e){
+            e.stopPropagation();
+            _tipEl ? _hideTip() : _showTip();
+            setTimeout(_hideTip, 2800);
+        }, {passive:true});
+        principalWrap.appendChild(chk);
+        row._hideTip = _hideTip;
+
+        // Grid 5 columnas para acomodar el checkbox
+        row.style.cssText = 'display:grid;grid-template-columns:2fr 1fr 1fr auto auto;gap:.4rem;align-items:start;margin-bottom:.4rem;background:var(--card-bg);padding:.3rem .4rem;border-radius:6px;border:1px solid var(--border)';
+
+        row.appendChild(selWrap);
+        row.appendChild(inputCantidad);
+        row.appendChild(selUnidad);
+        row.appendChild(principalWrap);
+        row.appendChild(removeBtn);
         container.appendChild(row);
         window._recalcularStockPlatillo();
     };
@@ -393,10 +426,8 @@
         window.platilloEditandoId = id;
         document.getElementById('platilloModalTitle').textContent = 'Editar Platillo';
         window.limpiarImagenPreview();
-        window.cargarCategoriasSelect();
         document.getElementById('platilloNombre').value = platillo.nombre || '';
         document.getElementById('platilloCategoria').value = platillo.categoria || '';
-        window.cargarSubcategoriasSelect(platillo.categoria || '');
         document.getElementById('platilloSubcategoria').value = platillo.subcategoria || '';
         document.getElementById('platilloPrecio').value = platillo.precio || '';
         document.getElementById('platilloDescripcion').value = platillo.descripcion || '';
@@ -553,12 +584,51 @@
             } else if (imagenUrlInput) imagenUrl = imagenUrlInput;
             
             const ingredientes = {};
+            // 1.3 Crear ingredientes "Otro" en inventario antes de guardar
+            const _otrosNuevos = [];
+            document.querySelectorAll('#ingredientesContainer .ingrediente-row').forEach(row => {
+                const selIng       = row.querySelector('select:not(.ing-row-unidad)');
+                const inputNomOtro = row.querySelector('.ing-row-nombre-otro');
+                if (selIng && selIng.value === '__otro__' && inputNomOtro) {
+                    const nombreOtro = inputNomOtro.value.trim();
+                    if (nombreOtro) _otrosNuevos.push({ row, nombreOtro, selIng });
+                }
+            });
+            // Crear los ingredientes "Otro" en Supabase y asignarles un id real
+            for (const entry of _otrosNuevos) {
+                const nuevoId = window.generarId('ing_');
+                const nuevoIng = {
+                    id: nuevoId,
+                    nombre: entry.nombreOtro,
+                    stock: 0,
+                    reservado: 0,
+                    unidad_base: 'unidades',
+                    minimo: 0,
+                    precio_costo: 0,
+                    precio_unitario: 0,
+                    imagen: null
+                };
+                try {
+                    const { error: errIng } = await window.supabaseClient.from('inventario').insert([nuevoIng]);
+                    if (!errIng) {
+                        // Añadir al array local para que esté disponible de inmediato
+                        if (!window.inventarioItems) window.inventarioItems = [];
+                        window.inventarioItems.push(nuevoIng);
+                        // Asignar el nuevo id al select para que se guarde en ingredientes
+                        entry.selIng.value = nuevoId;
+                        const optNew = document.createElement('option');
+                        optNew.value = nuevoId; optNew.textContent = entry.nombreOtro; optNew.selected = true;
+                        entry.selIng.appendChild(optNew);
+                    } else { window.mostrarToast('⚠️ No se pudo crear el ingrediente "' + entry.nombreOtro + '": ' + errIng.message, 'error'); }
+                } catch(eIng) { window.mostrarToast('⚠️ Error creando ingrediente: ' + eIng.message, 'error'); }
+            }
+            // Ahora recolectar todos los ingredientes (incluyendo los recién creados)
             document.querySelectorAll('#ingredientesContainer .ingrediente-row').forEach(row => {
                 const selIng    = row.querySelector('select:not(.ing-row-unidad)');
                 const selUnidad = row.querySelector('select.ing-row-unidad');
                 const cantInput = row.querySelector('input[type="number"]');
-                var chkP = row.querySelector('.ing-principal-chk');
-                if (selIng && selIng.value && cantInput && cantInput.value) {
+                const chkP = row.querySelector('.ing-principal-chk');
+                if (selIng && selIng.value && selIng.value !== '__otro__' && cantInput && cantInput.value) {
                     ingredientes[selIng.value] = {
                         cantidad:  parseFloat(cantInput.value),
                         nombre:    selIng.options[selIng.selectedIndex]?.text || selIng.value,
