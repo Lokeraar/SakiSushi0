@@ -22,6 +22,7 @@
     <script src="js/admin-menu.js" defer></script>
     <script src="js/admin-inventario.js" defer></script>
     <script src="js/admin-usuarios.js" defer></script>
+    <script src="js/admin-mesoneros.js" defer></script>
     <script src="js/admin-delivery.js" defer></script>
     <script src="js/admin-qr.js" defer></script>
     <script src="js/admin-reportes.js" defer></script>
@@ -77,12 +78,34 @@
     <!-- PANEL PRINCIPAL -->
     <div class="panel-container" id="panelContainer">
         <header class="header">
-            <div class="header-left"><h2><i class="fas fa-crown"></i> Administración Saki Sushi</h2></div>
-            <div class="header-right">
+            <div class="hrow htitle">
+                <div class="header-left"><h2><i class="fas fa-crown"></i> <span class="header-title-text">Administración Saki Sushi</span></h2></div>
+                <button class="logout-button hrm-salir-inline" id="logoutButtonMobile"><i class="fas fa-sign-out-alt"></i> Salir</button>
+                <div class="hrd">
+                    <button class="nav-button" onclick="window.abrirSelectorMesaAdmin()"><i class="fas fa-utensils"></i> Mesas</button>
+                    <a href="../Cajero/index.html" target="_blank" class="nav-button"><i class="fas fa-cash-register"></i> Cajero</a>
+                    <span class="header-sucursal-label">Seleccionar sucursal</span>
+                    <button class="nav-button header-sucursal-btn" id="sucursalBtn" title="Próximamente"><i class="fas fa-store"></i> <span id="sucursalNombre">Principal</span></button>
+                    <div class="theme-toggle-wrap" onclick="window.toggleTheme()" title="Cambiar tema" role="button">
+                        <i class="fas fa-sun theme-toggle-icon-sun"></i>
+                        <div class="theme-toggle-track" id="themeToggle"><div class="theme-toggle-thumb" id="themeIcon"><i class="fas fa-sun"></i></div></div>
+                        <i class="fas fa-moon theme-toggle-icon-moon"></i>
+                    </div>
+                    <button class="logout-button" id="logoutButton"><i class="fas fa-sign-out-alt"></i> Salir</button>
+                </div>
+            </div>
+            <div class="hrow hrm hrm-nav">
                 <button class="nav-button" onclick="window.abrirSelectorMesaAdmin()"><i class="fas fa-utensils"></i> Mesas</button>
                 <a href="../Cajero/index.html" target="_blank" class="nav-button"><i class="fas fa-cash-register"></i> Cajero</a>
-                <button class="theme-toggle" id="themeToggle" onclick="window.toggleTheme()" title="Cambiar tema"><i class="fas fa-sun" id="themeIcon"></i></button>
-                <button class="logout-button" id="logoutButton"><i class="fas fa-sign-out-alt"></i> Salir</button>
+            </div>
+            <div class="hrow hrm hrm-suc">
+                <div class="theme-toggle-wrap" onclick="window.toggleTheme()" title="Cambiar tema" role="button">
+                    <i class="fas fa-sun theme-toggle-icon-sun"></i>
+                    <div class="theme-toggle-track" id="themeToggleMobile"><div class="theme-toggle-thumb" id="themeIconMobile"><i class="fas fa-sun"></i></div></div>
+                    <i class="fas fa-moon theme-toggle-icon-moon"></i>
+                </div>
+                <span class="header-sucursal-label">Seleccionar sucursal</span>
+                <button class="nav-button header-sucursal-btn" id="sucursalBtnMobile" title="Próximamente"><i class="fas fa-store"></i> <span>Principal</span></button>
             </div>
             <div id="stockCriticoHeader" style="width:100%; margin-top:.5rem; padding:.4rem .8rem; background:rgba(0,0,0,.2); border-radius:8px; display:flex; align-items:center; gap:.8rem; flex-wrap:wrap; font-size:.75rem">
                 <span style="font-weight:700; color:var(--danger); white-space:nowrap"><i class="fas fa-exclamation-triangle"></i> STOCK CRÍTICO:</span>
@@ -95,7 +118,7 @@
                 <i class="fas fa-chevron-left"></i><i class="fas fa-chevron-left"></i>
             </button>
             <div class="tabs" id="tabsContainer">
-                <div class="tab active" data-tab="dashboard">Dashboard</div>
+                <div class="tab active" data-tab="dashboard">Inicio</div>
                 <div class="tab" data-tab="menu">Menú y Precios</div>
                 <div class="tab" data-tab="inventario">Inventario</div>
                 <div class="tab" data-tab="usuarios">Usuarios</div>
@@ -114,7 +137,7 @@
             <!-- DASHBOARD -->
             <div class="tab-pane active" id="dashboardPane">
                 <div class="pane-header">
-                    <h2 class="section-title"><i class="fas fa-tachometer-alt"></i> Dashboard</h2>
+                    <h2 class="section-title"><i class="fas fa-home"></i> Inicio</h2>
                 </div>
                 <div class="tasa-cards-bar" id="tasaBar">
                     <div class="tcb-cards">
@@ -181,9 +204,17 @@
                         <div class="card-value" id="ventasHoy">$0.00</div>
                         <div style="font-size:.72rem;color:var(--text-muted);margin-top:.25rem">Toca para ver desglose</div>
                     </div>
-                    <div class="dashboard-card"><div class="card-title">Deliverys Hoy</div><div class="card-value" id="deliverysHoyDashboard">Bs 0,00</div></div>
-                    <div class="dashboard-card" style="cursor:pointer" onclick="window.irAMenu()"><div class="card-title">Productos Activos</div><div class="card-value" id="productosActivos">0</div></div>
-                    <div class="dashboard-card" style="cursor:pointer" onclick="window.irAStockCritico()"><div class="card-title">Alertas Stock</div><div class="card-value" id="alertasStock">0</div></div>
+                    <div class="dashboard-card" style="cursor:pointer" onclick="window.irADeliverys&&window.irADeliverys()" title="Ver módulo Deliverys"><div class="card-title">Deliverys Hoy <i class="fas fa-external-link-alt" style="font-size:.55rem;opacity:.6;margin-left:.25rem"></i></div><div class="card-value" id="deliverysHoyDashboard">$0.00 / Bs 0,00</div><div style="font-size:.72rem;color:var(--text-muted);margin-top:.25rem">Toca para ver detalle</div></div>
+                    <div class="dashboard-col-mini">
+                        <div class="dashboard-card dashboard-card-sm" style="cursor:pointer" onclick="window.irAMenu()" title="Ver menú">
+                            <div class="card-title">Productos Activos</div>
+                            <div class="card-value" id="productosActivos">0</div>
+                        </div>
+                        <div class="dashboard-card dashboard-card-sm" style="cursor:pointer" onclick="window.irAStockCritico&&window.irAStockCritico()" title="Stock crítico">
+                            <div class="card-title">Alertas Stock</div>
+                            <div class="card-value" id="alertasStock">0</div>
+                        </div>
+                    </div>
                     <div class="dashboard-card" id="propinasHoyCard" style="cursor:pointer" onclick="window._irAMesoneros()" title="Ir a gestión de mesoneros y propinas">
                         <div class="card-title">Propinas Hoy <i class="fas fa-external-link-alt" style="font-size:.6rem;opacity:.5;margin-left:.3rem"></i></div>
                         <div class="card-value" id="propinasHoyDashboard">Bs 0,00</div>
@@ -270,7 +301,33 @@
                         <button class="btn-delivery" onclick="window.agregarDelivery()"><i class="fas fa-plus"></i> Agregar</button>
                     </div>
                 </div>
+                <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.85rem;margin-bottom:1.25rem" id="deliveryStatsGrid">
+                    <div class="delivery-stat-card"><div class="delivery-stat-label"><i class="fas fa-coins"></i> Total acumulado</div><div class="delivery-stat-value" id="deliverysTotalCard">$0.00 / Bs 0,00</div></div>
+                    <div class="delivery-stat-card"><div class="delivery-stat-label"><i class="fas fa-motorcycle"></i> Envíos hoy</div><div class="delivery-stat-value" id="deliverysCountCard">0</div></div>
+                    <div class="delivery-stat-card"><div class="delivery-stat-label"><i class="fas fa-chart-line"></i> Promedio</div><div class="delivery-stat-value" id="deliverysPromedioCard">$0.00 / Bs 0,00</div></div>
+                </div>
                 <div class="delivery-list" id="deliverysGrid" style="display:grid"></div>
+                <div id="ultimosViajesSection" style="margin-top:2rem">
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.85rem">
+                        <h3 style="font-family:Montserrat,sans-serif;font-size:.88rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);margin:0">
+                            <i class="fas fa-history" style="margin-right:.4rem;color:var(--delivery)"></i>Últimos 5 Viajes
+                        </h3>
+                        <button class="btn-secondary" onclick="window.verHistorialEnviosHoy&&window.verHistorialEnviosHoy()" style="font-size:.78rem;padding:.4rem .9rem;display:flex;align-items:center;gap:.4rem">
+                            <i class="fas fa-list"></i> Historial de hoy
+                        </button>
+                    </div>
+                    <div style="background:var(--card-bg);border-radius:14px;overflow:hidden;box-shadow:var(--shadow-sm);border:1px solid var(--border)">
+                        <table style="width:100%;border-collapse:collapse">
+                            <thead><tr style="background:var(--secondary)">
+                                <th style="padding:.65rem 1rem;text-align:left;font-size:.72rem;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);font-weight:700">Resumen</th>
+                                <th style="padding:.65rem 1rem;text-align:left;font-size:.72rem;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);font-weight:700">Motorizado</th>
+                                <th style="padding:.65rem 1rem;text-align:left;font-size:.72rem;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);font-weight:700">Monto</th>
+                                <th style="padding:.65rem 1rem;text-align:left;font-size:.72rem;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);font-weight:700">Hora</th>
+                            </tr></thead>
+                            <tbody id="ultimosViajesTbody"><tr><td colspan="4" style="text-align:center;padding:1.5rem;color:var(--text-muted);font-size:.85rem">Cargando...</td></tr></tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
 
             <!-- MESONEROS -->
@@ -289,7 +346,12 @@
                 </div>
                 <div id="mesonerosList" class="mesoneros-grid"></div>
                 <div class="table-section" style="margin-top:1.5rem">
-                    <h3 class="table-section-title">Historial de Propinas de Hoy</h3>
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.85rem">
+                        <h3 class="table-section-title" style="margin:0">Últimas 5 Propinas</h3>
+                        <button class="btn-secondary" onclick="window.verHistorialPropinaHoy&&window.verHistorialPropinaHoy()" style="font-size:.78rem;padding:.4rem .9rem;display:flex;align-items:center;gap:.4rem">
+                            <i class="fas fa-list"></i> Historial de hoy
+                        </button>
+                    </div>
                     <div class="table-responsive">
                         <table class="data-table" id="propinasTable">
                             <thead><tr><th>Hora</th><th>Mesonero</th><th>Mesa</th><th>Método</th><th>Monto</th><th>Cajero</th></tr></thead>
@@ -343,10 +405,18 @@
                 <div class="pane-header">
                     <h2 class="section-title"><i class="fas fa-chart-bar"></i> Reportes</h2>
                 </div>
-                <div class="reportes-filters">
-                    <div class="form-group"><label>Desde</label><input type="date" id="reporteDesde"></div>
-                    <div class="form-group"><label>Hasta</label><input type="date" id="reporteHasta"></div>
-                    <button class="btn-primary" onclick="window.cargarReportes()"><i class="fas fa-search"></i> Buscar</button>
+                <div style="display:flex;flex-wrap:wrap;gap:.75rem;align-items:flex-end;justify-content:flex-start;margin-bottom:1.25rem">
+                    <div style="flex:0 0 auto">
+                        <label style="display:block;margin-bottom:.35rem;font-size:.82rem;font-weight:600;color:var(--text-dark)">Desde</label>
+                        <input type="date" id="reporteDesde" style="padding:.6rem .9rem;min-width:160px;width:160px;background:var(--input-bg);color:var(--text-dark);border:1.5px solid var(--input-border);border-radius:8px;font-family:Montserrat,sans-serif;font-size:.9rem;outline:none;box-sizing:border-box">
+                    </div>
+                    <div style="flex:0 0 auto">
+                        <label style="display:block;margin-bottom:.35rem;font-size:.82rem;font-weight:600;color:var(--text-dark)">Hasta</label>
+                        <input type="date" id="reporteHasta" style="padding:.6rem .9rem;min-width:160px;width:160px;background:var(--input-bg);color:var(--text-dark);border:1.5px solid var(--input-border);border-radius:8px;font-family:Montserrat,sans-serif;font-size:.9rem;outline:none;box-sizing:border-box">
+                    </div>
+                    <div style="flex:0 0 auto">
+                        <button class="btn-primary" onclick="window.cargarReportes()" style="padding:.6rem 1.2rem"><i class="fas fa-search"></i> Buscar</button>
+                    </div>
                 </div>
                 <div class="dashboard-grid">
                     <div class="dashboard-card"><div class="card-title">Ventas Día</div><div class="card-value" id="ventasDia">$0.00</div></div>
@@ -413,7 +483,7 @@
                             </div>
                             <div id="ingredienteImagenPreview" class="image-preview" style="display:none;width:70px;height:70px;flex-shrink:0;position:relative">
                                 <img id="ingredientePreviewImg" style="width:100%;height:100%;object-fit:cover;border-radius:8px">
-                                <button type="button" id="ingredienteImagenRemoveBtn" style="position:absolute;top:-8px;right:-8px;background:var(--danger);color:#fff;border:none;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.7rem">✕</button>
+                                <button type="button" id="ingredienteImgRemoveBtn" style="position:absolute;top:-8px;right:-8px;background:var(--danger);color:#fff;border:none;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.7rem">✕</button>
                             </div>
                         </div>
                     </div>
@@ -429,7 +499,12 @@
                     <div class="form-group"><label style="display:flex; align-items:center; gap:.4rem">Mercancía a agregar<span class="tooltip-wrap" style="position:relative; display:inline-flex; cursor:help"><span style="display:inline-flex; align-items:center; justify-content:center; width:15px; height:15px; background:#aaa; color:#fff; border-radius:50%; font-size:.65rem; font-weight:700">?</span><span class="tooltip-text" style="display:none; position:absolute; bottom:calc(100% + 6px); left:50%; transform:translateX(-50%); background:var(--toast-bg); color:var(--toast-text); padding:.5rem .75rem; border-radius:8px; font-size:.75rem; white-space:normal; width:230px; text-align:center; box-shadow:0 4px 12px rgba(0,0,0,.3); z-index:100; line-height:1.4">Cuando el stock disponible baje de este valor, aparecerá una alerta en el Dashboard (Stock Crítico) y se enviará una notificación push.</span></span></label><input type="number" step="0.001" id="ingredienteMinimo" placeholder="Ej: 5"></div>
                     <div class="form-group" style="background:var(--card-bg); border-radius:10px; padding:.85rem; border:1px solid var(--border)"><label style="font-weight:700; font-size:.8rem; text-transform:uppercase; letter-spacing:.5px; color:var(--text-muted); margin-bottom:.5rem; display:block"><i class="fas fa-calculator" style="margin-right:.3rem; color:var(--accent)"></i>Calculadora de Costo Unitario</label><div style="display:flex; gap:.75rem; align-items:flex-end"><div style="flex:1"><label style="font-size:.78rem">Costo Total Compra (USD)</label><input type="number" step="0.01" id="costoTotal" placeholder="0.00" oninput="window.calcularCostoUnitario()"></div><div style="flex:1"><label style="font-size:.78rem">Cantidad Comprada</label><input type="number" step="0.001" id="cantidadComprada" placeholder="0" oninput="window.calcularCostoUnitario()"></div></div><div id="calcResultado" style="display:none; margin-top:.5rem; padding:.4rem .6rem; background:rgba(0,0,0,.2); border-radius:6px; border:1px solid var(--border); font-size:.82rem">Costo unitario: <strong id="calcPrecioUnitario">0.00</strong> USD<span id="calcUnidadResult" style="color:var(--text-muted)"></span></div></div>
                     <div class="form-row"><div class="form-group"><label>Precio de Costo (USD/Bs)</label><input type="number" step="0.01" id="ingredienteCosto" placeholder="0.00"></div><div class="form-group"><label>Precio de Venta (USD/Bs)</label><input type="number" step="0.01" id="ingredienteVenta" placeholder="0.00"></div></div>
-                    </div>
+                    <!-- imagen movida al tope del formulario (tarea 3.5) -->
+                </form>
+            </div>
+            <div class="modal-footer" style="display:flex; justify-content:space-between; align-items:center"><button class="btn-primary" id="deleteIngredienteBtn" type="button" style="display:none; padding:.6rem 1.2rem; border-radius:8px; background:var(--danger); color:#fff; border:none; cursor:pointer; font-size:.85rem; font-weight:600" onclick="window._eliminarIngredienteDesdeModal()"><i class="fas fa-trash"></i> Eliminar</button><div style="display:flex; gap:.75rem"><button class="btn-secondary" id="cancelIngrediente" type="button">Cancelar</button><button class="btn-primary" id="saveIngrediente" type="button">Guardar</button></div></div>
+        </div>
+    </div>
 
     <!-- MODAL USUARIO -->
     <div class="modal" id="usuarioModal">
@@ -437,11 +512,16 @@
             <div class="modal-header"><h3 id="usuarioModalTitle">Nuevo Cajero/Admin</h3><button class="modal-close" id="closeUsuarioModal">&times;</button></div>
             <div class="modal-body">
                 <form id="usuarioForm">
+                    <div class="form-group"><label>Foto de perfil (opcional)</label>
+                        <div style="display:flex;gap:.75rem;align-items:flex-start">
+                            <div style="flex:1"><input type="file" id="usuarioFoto" accept="image/*" style="margin-bottom:.3rem"><input type="url" id="usuarioFotoUrl" placeholder="O pega la URL de la imagen" style="width:100%"></div>
+                            <div id="usuarioFotoPreview" class="image-preview" style="display:none;width:70px;height:70px;flex-shrink:0;position:relative"><img id="usuarioPreviewImg" style="width:100%;height:100%;object-fit:cover;border-radius:8px"><button type="button" id="usuarioFotoRemoveBtn" style="position:absolute;top:-8px;right:-8px;background:var(--danger);color:#fff;border:none;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.7rem">✕</button></div>
+                        </div>
+                    </div>
                     <div class="form-group"><label>Nombre completo *</label><input type="text" id="usuarioNombre" required placeholder="Ej: María González"></div>
                     <div style="display:flex;gap:.75rem"><div class="form-group" style="flex:1"><label>Nombre de usuario *</label><input type="text" id="usuarioUsername" required placeholder="Ej: cajero3"></div><div class="form-group" style="flex:1"><label>Rol</label><select id="usuarioRol"><option value="cajero">Cajero</option><option value="admin">Administrador</option></select></div></div>
                     <div class="form-group"><label>Contraseña</label><input type="text" id="usuarioPassword" placeholder="Déjalo vacío para no cambiar" autocomplete="off"></div>
                     <div class="form-group"><label>Estado</label><select id="usuarioActivo"><option value="true">Activo</option><option value="false">Inactivo</option></select></div>
-                    <div class="form-group"><label>Foto de perfil (opcional)</label><div style="display:flex; gap:.75rem; align-items:flex-start"><div style="flex:1"><input type="file" id="usuarioFoto" accept="image/*" style="margin-bottom:.3rem"><input type="url" id="usuarioFotoUrl" placeholder="O pega la URL de la imagen" style="width:100%"></div><div id="usuarioFotoPreview" class="image-preview" style="display:none; width:70px; height:70px; flex-shrink:0; position:relative"><img id="usuarioPreviewImg" style="width:100%;height:100%;object-fit:cover;border-radius:8px"><button type="button" id="usuarioFotoRemoveBtn" style="position:absolute; top:-8px; right:-8px; background:var(--danger); color:#fff; border:none; border-radius:50%; width:22px; height:22px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:.7rem">✕</button></div></div></div>
                 </form>
             </div>
             <div class="modal-footer"><button class="btn-secondary" id="cancelUsuario">Cancelar</button><button class="btn-primary" id="saveUsuario">Guardar</button></div>
@@ -454,9 +534,14 @@
             <div class="modal-header" style="background:linear-gradient(135deg,var(--delivery),#00838F)"><h3><i class="fas fa-motorcycle"></i> Editar Motorizado</h3><button class="modal-close" id="closeDeliveryModal">&times;</button></div>
             <div class="modal-body">
                 <form id="deliveryForm">
+                    <div class="form-group"><label>Foto de perfil (opcional)</label>
+                        <div style="display:flex;gap:.75rem;align-items:flex-start">
+                            <div style="flex:1"><input type="file" id="deliveryFoto" accept="image/*" style="margin-bottom:.3rem"><input type="url" id="deliveryFotoUrl" placeholder="O pega la URL de la imagen" style="width:100%"></div>
+                            <div id="deliveryFotoPreview" class="image-preview" style="display:none;width:70px;height:70px;flex-shrink:0;position:relative"><img id="deliveryPreviewImg" style="width:100%;height:100%;object-fit:cover;border-radius:8px"><button type="button" id="deliveryFotoRemoveBtn" style="position:absolute;top:-8px;right:-8px;background:var(--danger);color:#fff;border:none;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.7rem">✕</button></div>
+                        </div>
+                    </div>
                     <div class="form-group"><label>Nombre</label><input type="text" id="deliveryNombre" required></div>
                     <div class="form-group"><label>Estado</label><select id="deliveryEstado"><option value="true">Activo</option><option value="false">Inactivo</option></select></div>
-                    <div class="form-group"><label>Foto de perfil (opcional)</label><div style="display:flex; gap:.75rem; align-items:flex-start"><div style="flex:1"><input type="file" id="deliveryFoto" accept="image/*" style="margin-bottom:.3rem"><input type="url" id="deliveryFotoUrl" placeholder="O pega la URL de la imagen" style="width:100%"></div><div id="deliveryFotoPreview" class="image-preview" style="display:none; width:70px; height:70px; flex-shrink:0; position:relative"><img id="deliveryPreviewImg" style="width:100%;height:100%;object-fit:cover;border-radius:8px"><button type="button" id="deliveryFotoRemoveBtn" style="position:absolute; top:-8px; right:-8px; background:var(--danger); color:#fff; border:none; border-radius:50%; width:22px; height:22px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:.7rem">✕</button></div></div></div>
                 </form>
             </div>
             <div class="modal-footer"><button class="btn-secondary" id="cancelDeliveryEdit">Cancelar</button><button class="btn-primary" id="saveDelivery" style="background:linear-gradient(135deg,var(--delivery),#00838F)">Guardar</button></div>
@@ -469,9 +554,14 @@
             <div class="modal-header" style="background:linear-gradient(135deg,var(--propina),#7B1FA2)"><h3 id="mesoneroModalTitle"><i class="fas fa-user-tie"></i> Editar Mesonero</h3><button class="modal-close" id="closeMesoneroModal">&times;</button></div>
             <div class="modal-body">
                 <form id="mesoneroForm">
+                    <div class="form-group"><label>Foto de perfil (opcional)</label>
+                        <div style="display:flex;gap:.75rem;align-items:flex-start">
+                            <div style="flex:1"><input type="file" id="mesoneroFoto" accept="image/*" style="margin-bottom:.3rem"><input type="url" id="mesoneroFotoUrl" placeholder="O pega la URL de la imagen" style="width:100%"></div>
+                            <div id="mesoneroFotoPreview" class="image-preview" style="display:none;width:70px;height:70px;flex-shrink:0;position:relative"><img id="mesoneroPreviewImg" style="width:100%;height:100%;object-fit:cover;border-radius:8px"><button type="button" id="mesoneroFotoRemoveBtn" style="position:absolute;top:-8px;right:-8px;background:var(--danger);color:#fff;border:none;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.7rem">✕</button></div>
+                        </div>
+                    </div>
                     <div class="form-group"><label>Nombre completo *</label><input type="text" id="mesoneroNombre" required placeholder="Ej: Carlos Méndez"></div>
                     <div class="form-group"><label>Estado</label><select id="mesoneroActivo"><option value="true">Activo</option><option value="false">Inactivo</option></select></div>
-                    <div class="form-group"><label>Foto de perfil (opcional)</label><div style="display:flex; gap:.75rem; align-items:flex-start"><div style="flex:1"><input type="file" id="mesoneroFoto" accept="image/*" style="margin-bottom:.3rem"><input type="url" id="mesoneroFotoUrl" placeholder="O pega la URL de la imagen" style="width:100%"></div><div id="mesoneroFotoPreview" class="image-preview" style="display:none; width:70px; height:70px; flex-shrink:0; position:relative"><img id="mesoneroPreviewImg" style="width:100%;height:100%;object-fit:cover;border-radius:8px"><button type="button" id="mesoneroFotoRemoveBtn" style="position:absolute; top:-8px; right:-8px; background:var(--danger); color:#fff; border:none; border-radius:50%; width:22px; height:22px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:.7rem">✕</button></div></div></div>
                 </form>
             </div>
             <div class="modal-footer"><button class="btn-secondary" id="cancelMesoneroEdit">Cancelar</button><button class="btn-primary" id="saveMesonero" style="background:linear-gradient(135deg,var(--propina),#7B1FA2)">Guardar</button></div>
@@ -492,7 +582,7 @@
         <div class="modal-content" style="max-width:400px">
             <div class="modal-header"><h3>Código QR</h3><button class="modal-close" id="closeQrAmpliadoModal">&times;</button></div>
             <div class="modal-body" style="text-align:center"><div id="qrAmpliado" style="width:300px;height:300px;margin:0 auto"></div><div id="qrAmpliadoInfo" style="margin-top:1rem"></div></div>
-            <div class="modal-footer"><button class="btn-primary" id="closeQrAmpliado">Cerrar</button></div>
+            <!-- footer QR: Eliminar + Cerrar generados por ampliarQR() -->
         </div>
     </div>
 
