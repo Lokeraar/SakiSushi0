@@ -2,6 +2,7 @@
 (function() {
 let currentImagenUrl = '';
 let currentImagenFile = null;
+
 window.cargarMenu = async function() {
     try {
         const { data, error } = await window.supabaseClient.from('menu').select('*');
@@ -81,7 +82,6 @@ window.renderizarMenu = function(filtro) {
                 </button>
             </div>`;
         
-        // Evento para expandir imagen al hacer clic
         const imgElement = card.querySelector('.mc2-img');
         if (imgElement) {
             imgElement.style.cursor = 'pointer';
@@ -90,7 +90,6 @@ window.renderizarMenu = function(filtro) {
                 window.expandirImagen(imgSrc);
             });
         }
-        // Evento para ingredientes
         card.querySelectorAll('.ing-tag[data-ingrediente-id]').forEach(tag => {
             tag.addEventListener('click', (e) => {
                 e.stopPropagation();
@@ -285,7 +284,6 @@ window.cargarSubcategoriasSelect = function(categoria) {
     } 
 };
 
-// CORRECCIÓN AQUÍ: Se agregó 'esPrincipal = false'
 window.agregarIngredienteRow = function(ingredienteId, cantidad, unidad, esPrincipal = false) {
     ingredienteId = ingredienteId || '';
     cantidad = cantidad || '';
@@ -414,6 +412,10 @@ window.editarPlatillo = function(id) {
     window.platilloEditandoId = id;
     document.getElementById('platilloModalTitle').textContent = 'Editar Platillo';
     window.limpiarImagenPreview();
+    
+    // FIX: Cargar categorías inmediatamente para asegurar que el dropdown nunca esté vacío
+    window.cargarCategoriasSelect();
+    
     document.getElementById('platilloNombre').value = platillo.nombre || '';
     document.getElementById('platilloCategoria').value = platillo.categoria || '';
      document.getElementById('platilloSubcategoria').value = platillo.subcategoria || '';
