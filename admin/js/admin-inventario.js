@@ -87,21 +87,37 @@
     window._invActiveId = null;
 
     window._invMostrarDetalle = function(item) {
-        const isMobile = window.innerWidth <= 768;
+        const isMobile   = window.innerWidth <= 768;
         const disponible = (item.stock||0) - (item.reservado||0);
-        const minimo = item.minimo || 0;
-        let estado = 'ok';
-        if (disponible <= 0) estado = 'agotado';
-        else if (disponible <= minimo) estado = 'critico';
-        else if (disponible <= minimo * 1.5) estado = 'bajo';
-        else estado = 'ok';
-        
-        // Calcular porcentaje para barra: máximo entre stock y minimo*2 para referencia
-        const maxReferencia = Math.max(item.stock, minimo * 2, 10);
-        const porcentaje = Math.min(100, (disponible / maxReferencia) * 100);
-        const colorEstado = estado === 'critico' || estado === 'agotado' ? 'var(--danger)' : estado === 'bajo' ? 'var(--warning)' : 'var(--success)';
-        
-        const imgHtml = item.imagen ? `<img src="${item.imagen}" style="width:60px;height:60px;object-fit:cover;border-radius:8px;margin-bottom:.5rem">` : '';
+        const minimo     = item.minimo || 0;
+        // Usar el stock guardado como 100% de referencia (creado/editado = 100%)
+        const stockBase  = Math.max(item.stock || 0, 0.0001);
+
+        // ── 4 estados según reglas del spec ──────────────────────────────
+        let estado, estadoLabel, estadoColor, estadoGrad;
+        if (disponible <= 0) {
+            estado='agotado'; estadoLabel='Agotado (=0)';
+            estadoColor='#546e7a'; estadoGrad='linear-gradient(90deg,#37474f,#546e7a)';
+        } else if (disponible <= minimo) {
+            estado='critico'; estadoLabel='Crítico (≤ Stock mínimo)';
+            estadoColor='#e53935'; estadoGrad='linear-gradient(90deg,#e53935,#ef5350)';
+        } else if ((disponible / stockBase) * 100 <= 50) {
+            estado='moderado'; estadoLabel='Moderado (≤ 50%)';
+            estadoColor='#fb8c00'; estadoGrad='linear-gradient(90deg,#fb8c00,#ffa726)';
+        } else {
+            estado='optimo'; estadoLabel='Óptimo (> 50%)';
+            estadoColor='#43a047'; estadoGrad='linear-gradient(90deg,#43a047,#66bb6a)';
+        }
+
+        // Porcentaje para barra (invertida: se vacía de derecha a izquierda)
+        const pct = Math.min(100, Math.max(0, (disponible / stockBase) * 100));
+
+        // ── Precisión numérica: hasta milésimas, sin ceros innecesarios ──
+        const fmt = (n) => parseFloat(n.toPrecision(10)).toString().replace(/\.?0+$/, '') || '0';
+
+        const imgHtml = item.imagen
+            ? `<img src="${item.imagen}" style="width:60px;height:60px;object-fit:cover;border-radius:8px;margin-bottom:.5rem;cursor:pointer" onclick="window.expandirImagen&&window.expandirImagen('${item.imagen}')">`
+            : '';
 
         const detailHTML = `
             <div class="inv-detail-card" id="invDetailCard_${item.id}">
@@ -112,24 +128,35 @@
                     </button>
                 </div>
                 ${imgHtml}
-                <div class="inv-stock-row" style="margin-bottom:.5rem">
-                    <span class="inv-stock-num ${estado}" style="font-size:2rem">${disponible}</span>
+                <div class="inv-stock-row" style="margin-bottom:.4rem;display:flex;align-items:baseline;gap:.4rem;flex-wrap:wrap">
+                    <span style="font-size:2.2rem;font-weight:800;color:${estadoColor};line-height:1">${fmt(disponible)}</span>
                     <span class="inv-stock-unit" style="font-size:.9rem">${item.unidad_base||'u'}</span>
-                    <span style="font-size:.75rem;color:var(--text-muted);margin-left:auto">Reservado: ${item.reservado||0}</span>
+                    <span style="font-size:.7rem;color:var(--text-muted);margin-left:auto;background:var(--secondary);padding:2px 8px;border-radius:20px;white-space:nowrap">
+                        Reservado: ${fmt(item.reservado||0)}
+                    </span>
                 </div>
-                <div class="inv-bar" style="margin-bottom:.85rem;position:relative;overflow:hidden"><div class="inv-bar-fill ${estado}" style="position:absolute;top:0;right:0;height:100%;width:${porcentaje}%;background:${colorEstado};transition:width .5s ease"></div></div>
+                <!-- Barra 4 estados: se vacía de derecha → izquierda -->
+                <div style="height:10px;background:rgba(0,0,0,.08);border-radius:6px;overflow:hidden;margin-bottom:.35rem;position:relative">
+                    <div style="position:absolute;top:0;right:0;height:100%;width:${pct.toFixed(1)}%;background:${estadoGrad};border-radius:6px 0 0 6px;transition:width .55s cubic-bezier(.4,0,.2,1)"></div>
+                </div>
+                <!-- Solo el estado actual visible -->
+                <div style="display:flex;align-items:center;gap:.45rem;margin-bottom:.85rem;font-size:.75rem;font-weight:700;color:${estadoColor}">
+                    <span style="width:9px;height:9px;border-radius:50%;background:${estadoColor};display:inline-block;flex-shrink:0"></span>
+                    ${estadoLabel}
+                    <span style="margin-left:auto;color:var(--text-muted);font-weight:400">${pct.toFixed(0)}% del stock</span>
+                </div>
                 <div class="inv-meta-grid" style="grid-template-columns:1fr 1fr 1fr;gap:.75rem;margin-bottom:.85rem">
                     <div class="inv-meta-item">
-                        <span class="inv-meta-label">Mínimo</span>
-                        <span class="inv-meta-val" style="color:${colorEstado}">${minimo} ${item.unidad_base||'u'}</span>
+                        <span class="inv-meta-label">Stock mínimo</span>
+                        <span class="inv-meta-val" style="color:${estadoColor}">${fmt(minimo)} ${item.unidad_base||'u'}</span>
                     </div>
                     <div class="inv-meta-item">
-                        <span class="inv-meta-label">Costo (USD/Bs)</span>
+                        <span class="inv-meta-label">Costo</span>
                         <span class="inv-meta-val">${window.formatUSD(item.precio_costo||0)}</span>
                         <span class="inv-meta-bs">${window.formatBs(window.usdToBs(item.precio_costo||0))}</span>
                     </div>
                     <div class="inv-meta-item">
-                        <span class="inv-meta-label">Venta (USD/Bs)</span>
+                        <span class="inv-meta-label">Venta</span>
                         <span class="inv-meta-val">${window.formatUSD(item.precio_unitario||0)}</span>
                         <span class="inv-meta-bs">${window.formatBs(window.usdToBs(item.precio_unitario||0))}</span>
                     </div>
@@ -318,25 +345,19 @@
 
     window._desbloquearStock = async function() {
         const stockInput = document.getElementById('ingredienteStock');
-        const lockIcon   = document.getElementById('stockLockIcon');
-        const clickArea  = document.getElementById('stockClickArea');
+        const lockIcon = document.getElementById('stockLockIcon');
+        const clickArea = document.getElementById('stockClickArea');
         if (stockInput) {
             stockInput.disabled = false;
             stockInput.readOnly = false;
             stockInput.style.cursor = 'text';
             stockInput.style.pointerEvents = 'auto';
             stockInput.onclick = null;
-            setTimeout(() => stockInput.focus(), 150);
+            stockInput.focus();
         }
-        if (lockIcon)  { lockIcon.innerHTML = '<i class="fas fa-lock-open" style="font-size:.8rem; color:var(--success)"></i>'; lockIcon.style.cursor = 'default'; }
+        if (lockIcon) { lockIcon.innerHTML = '<i class="fas fa-lock-open" style="font-size:.8rem; color:var(--success)"></i>'; lockIcon.style.cursor = 'default'; }
         if (clickArea) { clickArea.onclick = null; clickArea.style.cursor = 'default'; clickArea.style.borderColor = 'var(--success)'; clickArea.style.backgroundColor = 'rgba(56,142,60,0.1)'; }
-        // Cerrar passwordStockModal directamente sin pasar por cerrarModal para no afectar z-index del modal padre
-        const pwdModal = document.getElementById('passwordStockModal');
-        if (pwdModal) {
-            pwdModal.classList.remove('active');
-            pwdModal.style.display = 'none';
-            setTimeout(() => { pwdModal.style.display = ''; }, 60);
-        }
+        window.cerrarModal('passwordStockModal');
         window.mostrarToast('✅ Stock desbloqueado. Puedes editar la cantidad.', 'success');
     };
 
@@ -389,13 +410,13 @@
         try {
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
-            const ingrediente = {
-                id, nombre,
-                stock: stockActual + agregar,
+            const ingrediente = { 
+                id, nombre, 
+                stock: stockActual + agregar, 
                 reservado: 0,
-                unidad_base: unidad,
-                minimo,
-                precio_costo: costo,
+                unidad_base: unidad, 
+                minimo, 
+                precio_costo: costo, 
                 precio_unitario: venta,
                 imagen: imagenUrl || null
             };
