@@ -35,7 +35,7 @@
         } catch(e) { console.error('Error obteniendo acumulado propinas:', e); }
 
         const sorted = [...window.mesoneros].sort((a, b) => a.nombre.localeCompare(b.nombre));
-        const tasa   = window.configGlobal?.tasa_efectiva || window.configGlobal?.tasa_cambio || 400;
+        const tasa   = Number(window.configGlobal?.tasa_efectiva || window.configGlobal?.tasa_cambio || 400) || 400;
 
         container.innerHTML = sorted.map(m => {
             const inicial = m.nombre.charAt(0).toUpperCase();
@@ -49,7 +49,7 @@
                 ? '<span class="status-activo"><i class="fas fa-check-circle"></i> Activo</span>'
                 : '<span class="status-inactivo"><i class="fas fa-circle"></i> Inactivo</span>';
             const propStr = hayAcum
-                ? window.formatUSD(acumUsd) + ' / ' + window.formatBs(acum)
+                ? window.formatUSD(acumUsd) + ' | ' + window.formatBs(acum)
                 : 'Bs 0,00';
             const propColor = hayAcum ? 'var(--propina)' : 'var(--text-muted)';
             const propWeight = hayAcum ? '700' : '400';
@@ -96,7 +96,7 @@
         const tasa    = window.configGlobal?.tasa_efectiva || window.configGlobal?.tasa_cambio || 400;
         const acumUsd = tasa > 0 ? acum / tasa : 0;
         const body = document.getElementById('confirmPagoDeliveryBody');
-        if (body) body.innerHTML = '<p style="margin-bottom:1rem"><strong>' + mesonero.nombre + '</strong> tiene propinas pendientes: <span style="color:var(--propina);font-weight:700;font-size:1.1rem">' + window.formatUSD(acumUsd) + ' / ' + window.formatBs(acum) + '</span></p>'
+        if (body) body.innerHTML = '<p style="margin-bottom:1rem"><strong>' + mesonero.nombre + '</strong> tiene propinas pendientes: <span style="color:var(--propina);font-weight:700;font-size:1.1rem">' + window.formatUSD(acumUsd) + ' | ' + window.formatBs(acum) + '</span></p>'
             + '<div style="display:flex;flex-direction:column;gap:.75rem">'
             + '<label style="display:flex;align-items:flex-start;gap:.75rem;padding:.85rem 1rem;border:2px solid var(--border);border-radius:10px;cursor:pointer">'
             + '<input type="radio" name="tipoPagoMes" value="total" checked style="margin-top:3px;accent-color:var(--success)">'
@@ -288,11 +288,11 @@
                     + '<td style="padding:.55rem .85rem;border-bottom:1px solid var(--border);font-size:.82rem;font-weight:600">' + (p.mesoneros ? p.mesoneros.nombre : 'N/A') + '</td>'
                     + '<td style="padding:.55rem .85rem;border-bottom:1px solid var(--border);font-size:.78rem;color:var(--text-muted)">' + (p.mesa||'N/A') + '</td>'
                     + '<td style="padding:.55rem .85rem;border-bottom:1px solid var(--border);font-size:.78rem">' + (p.metodo||'N/A') + '</td>'
-                    + '<td style="padding:.55rem .85rem;border-bottom:1px solid var(--border);font-size:.82rem;font-weight:700;color:var(--propina)">' + window.formatUSD(mUsd) + ' / ' + window.formatBs(p.monto_bs||0) + '</td>'
+                    + '<td style="padding:.55rem .85rem;border-bottom:1px solid var(--border);font-size:.82rem;font-weight:700;color:var(--propina)">' + window.formatUSD(mUsd) + ' | ' + window.formatBs(p.monto_bs||0) + '</td>'
                     + '</tr>';
             }).join('');
             var pl = lista.length;
-            var totLine = pl + ' propina' + (pl!==1?'s':'') + ' · Total: ' + window.formatUSD(totUsd) + ' / ' + window.formatBs(totBs);
+            var totLine = pl + ' propina' + (pl!==1?'s':'') + ' · Total: ' + window.formatUSD(totUsd) + ' | ' + window.formatBs(totBs);
             var emptyRow = '<tr><td colspan="5" style="text-align:center;padding:1.5rem;color:var(--text-muted)">Sin propinas hoy</td></tr>';
             var ov = document.createElement('div');
             ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:10001;display:flex;align-items:center;justify-content:center;padding:1rem;backdrop-filter:blur(3px)';
