@@ -1,4 +1,4 @@
-// admin-menu.js - Gestión de platillos (menú)
+// admin-menu.js - Gestión de platillos (menú) - CROSS-BROWSER FIX
 (function() {
 let currentImagenUrl = '';
 let currentImagenFile = null;
@@ -547,133 +547,211 @@ window._recalcularStockPlatillo = function() {
         : '⚠️ Stock insuficiente para preparar este platillo';
 };
 
-document.getElementById('savePlatillo').addEventListener('click', async () => {
+// CROSS-BROWSER FIX: Robust event handling for Save button
+function setupSaveButtonHandler() {
     const saveBtn = document.getElementById('savePlatillo');
-    if (saveBtn && saveBtn.disabled) return;
-    try {
-        saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
-        saveBtn.disabled = true;
-        
-        const nombre = document.getElementById('platilloNombre').value;
-        const categoria = document.getElementById('platilloCategoria').value;
-        const subcategoria = document.getElementById('platilloSubcategoria').value;
-        const precio = parseFloat(document.getElementById('platilloPrecio').value);
-        const descripcion = document.getElementById('platilloDescripcion').value;
-        
-        if (!nombre || !categoria || !precio) { window.mostrarToast('Completa los campos obligatorios', 'error'); return; }
-        
-        let imagenUrl = '';
-        const archivoImagen = document.getElementById('platilloImagen').files[0];
-        const imagenUrlInput = document.getElementById('platilloImagenUrl').value;
-        
-        if (archivoImagen) {
-            const resultado = await window.subirImagenPlatillo(archivoImagen, 'menu');
-            if (resultado.success) imagenUrl = resultado.url;
-            else { window.mostrarToast('Error al subir la imagen: ' + resultado.error, 'error'); return; }
-        } else if (imagenUrlInput) imagenUrl = imagenUrlInput;
-        
-        const ingredientes = {};
-        const _otrosNuevos = [];
-        document.querySelectorAll('#ingredientesContainer .ingrediente-row').forEach(row => {
-            const selIng       = row.querySelector('select:not(.ing-row-unidad)');
-            const inputNomOtro = row.querySelector('.ing-row-nombre-otro');
-            if (selIng && selIng.value === '__otro__' && inputNomOtro) {
-                const nombreOtro = inputNomOtro.value.trim();
-                if (nombreOtro) _otrosNuevos.push({ row, nombreOtro, selIng });
-            }
-        });
-        for (const entry of _otrosNuevos) {
-            const nuevoId = window.generarId('ing_');
-            const nuevoIng = {
-                 id: nuevoId,
-                nombre: entry.nombreOtro,
-                stock: 0,
-                reservado: 0,
-                unidad_base: 'unidades',
-                minimo: 0,
-                precio_costo: 0,
-                precio_unitario: 0,
-                imagen: null
-            };
-            try {
-                const { error: errIng } = await window.supabaseClient.from('inventario').insert([nuevoIng]);
-                if (!errIng) {
-                     if (!window.inventarioItems) window.inventarioItems = [];
-                    window.inventarioItems.push(nuevoIng);
-                     entry.selIng.value = nuevoId;
-                    const optNew = document.createElement('option');
-                     optNew.value = nuevoId; optNew.textContent = entry.nombreOtro; optNew.selected = true;
-                    entry.selIng.appendChild(optNew);
-                } else { window.mostrarToast('⚠️ No se pudo crear el ingrediente "' + entry.nombreOtro + '": ' + errIng.message, 'error'); }
-            } catch(eIng) { window.mostrarToast('⚠️ Error creando ingrediente: ' + eIng.message, 'error'); }
-        }
-        document.querySelectorAll('#ingredientesContainer .ingrediente-row').forEach(row => {
-            const selIng    = row.querySelector('select:not(.ing-row-unidad)');
-            const selUnidad = row.querySelector('select.ing-row-unidad');
-            const cantInput = row.querySelector('input[type="number"]');
-            const chkP = row.querySelector('.ing-principal-chk');
-            if (selIng && selIng.value && selIng.value !== '__otro__' && cantInput && cantInput.value) {
-                ingredientes[selIng.value] = {
-                    cantidad: parseFloat(cantInput.value),
-                    nombre:    selIng.options[selIng.selectedIndex]?.text || selIng.value,
-                    unidad:    selUnidad ? selUnidad.value : 'unidades',
-                    principal: chkP ? chkP.checked : false
-                 };
-            }
-        });
-
-        const _ingEntries = Object.entries(ingredientes);
-        let maxPlatillos;
-        if (!_ingEntries.length) {
-            const _existing = (window.menuItems || []).find(p => p.id === (window.platilloEditandoId || ''));
-            maxPlatillos = _existing ? (_existing.stock || 0) : 0;
-        } else {
-            maxPlatillos = Infinity;
-             _ingEntries.forEach(([ingId, ingData]) => {
-                const inv = (window.inventarioItems || []).find(i => i.id === ingId);
-                if (inv) {
-                    const disponibleInv = (inv.stock || 0) - (inv.reservado || 0);
-                    const unidadRef  = inv.unidad_base || 'unidades';
-                    const unidadDato = ingData.unidad || unidadRef;
-                    const necesario  = window._convertirUnidad(ingData.cantidad, unidadDato, unidadRef);
-                    if (necesario > 0) maxPlatillos = Math.min(maxPlatillos, Math.floor(disponibleInv / necesario));
-                } else { maxPlatillos = 0; }
-            });
-            if (!isFinite(maxPlatillos) || maxPlatillos < 0) maxPlatillos = 0;
-        }
-
-        const chkDisp = document.getElementById('platilloDisponibleCheck');
-        const disponibleFinal = chkDisp ? chkDisp.checked : true;
-
-         const platillo = {
-            id: window.platilloEditandoId || window.generarId('plat_'),
-            nombre, categoria, subcategoria: subcategoria || null, precio, descripcion,
-            imagen: imagenUrl, ingredientes, disponible: disponibleFinal,
-            stock: maxPlatillos, stock_maximo: maxPlatillos
-        };
-        
-        let error;
-         if (window.platilloEditandoId) {
-            ({ error } = await window.supabaseClient.from('menu').update(platillo).eq('id', window.platilloEditandoId));
-        } else {
-             ({ error } = await window.supabaseClient.from('menu').insert([platillo]));
-        }
-        if (error) throw error;
-        
-        document.getElementById('platilloModal').classList.remove('active');
-        window.platilloEditandoId = null;
-        window.limpiarImagenPreview();
-        await window.cargarMenu();
-        window.mostrarToast('✅ Platillo guardado', 'success');
-    } catch (e) {
-        console.error('Error guardando platillo:', e);
-        window.mostrarToast('❌ Error al guardar el platillo: ' + e.message, 'error');
-    } finally {
-        const saveBtn = document.getElementById('savePlatillo');
-        saveBtn.innerHTML = 'Guardar';
-        saveBtn.disabled = false;
+    if (!saveBtn) {
+        console.error('❌ savePlatillo button not found in DOM');
+        return;
     }
-});
+    
+    // Remove any existing listeners to prevent duplicates
+    const newSaveBtn = saveBtn.cloneNode(true);
+    saveBtn.parentNode.replaceChild(newSaveBtn, saveBtn);
+    
+    // Add robust click handler with preventDefault
+    newSaveBtn.addEventListener('click', async function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        console.log('🔘 Save button clicked - Browser:', navigator.userAgent);
+        
+        if (this.disabled) {
+            console.warn('⚠️ Button is disabled');
+            return;
+        }
+        
+        try {
+            this.disabled = true;
+            const originalText = this.innerHTML;
+            this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+            
+            console.log('📝 Starting save process...');
+            await window.guardarPlatillo();
+            
+            console.log('✅ Save completed successfully');
+        } catch (error) {
+            console.error('❌ Error in save button handler:', error);
+            window.mostrarToast('❌ Error: ' + error.message, 'error');
+        } finally {
+            this.disabled = false;
+            this.innerHTML = 'Guardar';
+        }
+    }, { passive: false });
+    
+    // Also add keydown handler for Enter key
+    newSaveBtn.addEventListener('keydown', async function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            this.click();
+        }
+    });
+}
+
+// Main save function extracted for better error handling
+window.guardarPlatillo = async function() {
+    console.log('💾 Executing guardarPlatillo function');
+    
+    const nombre = document.getElementById('platilloNombre').value;
+    const categoria = document.getElementById('platilloCategoria').value;
+    const subcategoria = document.getElementById('platilloSubcategoria').value;
+    const precio = parseFloat(document.getElementById('platilloPrecio').value);
+    const descripcion = document.getElementById('platilloDescripcion').value;
+    
+    console.log('📋 Form data:', { nombre, categoria, precio });
+    
+    if (!nombre || !categoria || !precio) { 
+        throw new Error('Completa los campos obligatorios (Nombre, Categoría, Precio)'); 
+    }
+    
+    let imagenUrl = '';
+    const archivoImagen = document.getElementById('platilloImagen').files[0];
+    const imagenUrlInput = document.getElementById('platilloImagenUrl').value;
+    
+    if (archivoImagen) {
+        console.log('📤 Uploading image file...');
+        const resultado = await window.subirImagenPlatillo(archivoImagen, 'menu');
+        if (resultado.success) {
+            imagenUrl = resultado.url;
+            console.log('✅ Image uploaded:', imagenUrl);
+        } else { 
+            throw new Error('Error al subir la imagen: ' + resultado.error); 
+        }
+    } else if (imagenUrlInput) {
+        imagenUrl = imagenUrlInput;
+    }
+    
+    const ingredientes = {};
+    const _otrosNuevos = [];
+    
+    document.querySelectorAll('#ingredientesContainer .ingrediente-row').forEach(row => {
+        const selIng       = row.querySelector('select:not(.ing-row-unidad)');
+        const inputNomOtro = row.querySelector('.ing-row-nombre-otro');
+        if (selIng && selIng.value === '__otro__' && inputNomOtro) {
+            const nombreOtro = inputNomOtro.value.trim();
+            if (nombreOtro) _otrosNuevos.push({ row, nombreOtro, selIng });
+        }
+    });
+    
+    // Create new ingredients
+    for (const entry of _otrosNuevos) {
+        const nuevoId = window.generarId('ing_');
+        const nuevoIng = {
+            id: nuevoId,
+            nombre: entry.nombreOtro,
+            stock: 0,
+            reservado: 0,
+            unidad_base: 'unidades',
+            minimo: 0,
+            precio_costo: 0,
+            precio_unitario: 0,
+            imagen: null
+        };
+        try {
+            const { error: errIng } = await window.supabaseClient.from('inventario').insert([nuevoIng]);
+            if (!errIng) {
+                if (!window.inventarioItems) window.inventarioItems = [];
+                window.inventarioItems.push(nuevoIng);
+                entry.selIng.value = nuevoId;
+                const optNew = document.createElement('option');
+                optNew.value = nuevoId; optNew.textContent = entry.nombreOtro; optNew.selected = true;
+                entry.selIng.appendChild(optNew);
+                console.log('✅ Created new ingredient:', nombreOtro);
+            } else { 
+                console.warn('⚠️ Could not create ingredient:', entry.nombreOtro, errIng.message); 
+            }
+        } catch(eIng) { 
+            console.error('❌ Error creating ingredient:', eIng.message); 
+        }
+    }
+    
+    // Collect all ingredients
+    document.querySelectorAll('#ingredientesContainer .ingrediente-row').forEach(row => {
+        const selIng    = row.querySelector('select:not(.ing-row-unidad)');
+        const selUnidad = row.querySelector('select.ing-row-unidad');
+        const cantInput = row.querySelector('input[type="number"]');
+        const chkP = row.querySelector('.ing-principal-chk');
+        if (selIng && selIng.value && selIng.value !== '__otro__' && cantInput && cantInput.value) {
+            ingredientes[selIng.value] = {
+                cantidad: parseFloat(cantInput.value),
+                nombre:    selIng.options[selIng.selectedIndex]?.text || selIng.value,
+                unidad:    selUnidad ? selUnidad.value : 'unidades',
+                principal: chkP ? chkP.checked : false
+            };
+        }
+    });
+
+    const _ingEntries = Object.entries(ingredientes);
+    let maxPlatillos;
+    if (!_ingEntries.length) {
+        const _existing = (window.menuItems || []).find(p => p.id === (window.platilloEditandoId || ''));
+        maxPlatillos = _existing ? (_existing.stock || 0) : 0;
+    } else {
+        maxPlatillos = Infinity;
+        _ingEntries.forEach(([ingId, ingData]) => {
+            const inv = (window.inventarioItems || []).find(i => i.id === ingId);
+            if (inv) {
+                const disponibleInv = (inv.stock || 0) - (inv.reservado || 0);
+                const unidadRef  = inv.unidad_base || 'unidades';
+                const unidadDato = ingData.unidad || unidadRef;
+                const necesario  = window._convertirUnidad(ingData.cantidad, unidadDato, unidadRef);
+                if (necesario > 0) maxPlatillos = Math.min(maxPlatillos, Math.floor(disponibleInv / necesario));
+            } else { maxPlatillos = 0; }
+        });
+        if (!isFinite(maxPlatillos) || maxPlatillos < 0) maxPlatillos = 0;
+    }
+
+    const chkDisp = document.getElementById('platilloDisponibleCheck');
+    const disponibleFinal = chkDisp ? chkDisp.checked : true;
+
+    const platillo = {
+        id: window.platilloEditandoId || window.generarId('plat_'),
+        nombre, categoria, subcategoria: subcategoria || null, precio, descripcion,
+        imagen: imagenUrl, ingredientes, disponible: disponibleFinal,
+        stock: maxPlatillos, stock_maximo: maxPlatillos
+    };
+    
+    console.log('💾 Saving platillo to database:', platillo.nombre);
+    
+    let error;
+    if (window.platilloEditandoId) {
+        console.log('🔄 Updating existing platillo:', window.platilloEditandoId);
+        ({ error } = await window.supabaseClient.from('menu').update(platillo).eq('id', window.platilloEditandoId));
+    } else {
+        console.log('➕ Inserting new platillo');
+        ({ error } = await window.supabaseClient.from('menu').insert([platillo]));
+    }
+    
+    if (error) {
+        console.error('❌ Database error:', error);
+        throw error;
+    }
+    
+    console.log('✅ Platillo saved successfully');
+    
+    document.getElementById('platilloModal').classList.remove('active');
+    window.platilloEditandoId = null;
+    window.limpiarImagenPreview();
+    await window.cargarMenu();
+    window.mostrarToast('✅ Platillo guardado', 'success');
+};
+
+// Initialize save button handler when DOM is ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', setupSaveButtonHandler);
+} else {
+    setupSaveButtonHandler();
+}
 
 document.getElementById('cancelPlatillo').addEventListener('click', () => {
     document.getElementById('platilloModal').classList.remove('active');
