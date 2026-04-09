@@ -1,8 +1,4 @@
 // admin-menu.js - Gestión de platillos (menú)
-// FIXES: 
-// 1. Mobile 'Guardar' button (touchend listener + preventDefault)
-// 2. Categories loading on Edit (cargarCategoriasSelect call)
-// 3. esPrincipal parameter in agregarIngredienteRow
 (function() {
 let currentImagenUrl = '';
 let currentImagenFile = null;
@@ -288,7 +284,6 @@ window.cargarSubcategoriasSelect = function(categoria) {
     } 
 };
 
-// CORRECCIÓN AQUÍ: Se agregó 'esPrincipal = false'
 window.agregarIngredienteRow = function(ingredienteId, cantidad, unidad, esPrincipal = false) {
     ingredienteId = ingredienteId || '';
     cantidad = cantidad || '';
@@ -553,7 +548,7 @@ window._recalcularStockPlatillo = function() {
 };
 
 // ══════════════════════════════════════════════════════════════════════════
-// CONFIGURACIÓN ROBUSTA DEL BOTÓN GUARDAR (MOBILE FIX)
+// CONFIGURACIÓN ROBUSTA DEL BOTÓN GUARDAR (MÓVIL)
 // ══════════════════════════════════════════════════════════════════════════
 function setupSaveButtonHandler() {
     const saveBtn = document.getElementById('savePlatillo');
@@ -565,11 +560,15 @@ function setupSaveButtonHandler() {
     // 1. Asegurar que actúa como botón, no submitter de formulario
     saveBtn.type = 'button';
 
-    // 2. Clonar para eliminar listeners antiguos/conflictivos
+    // 2. Estilo táctil para evitar delay de 300ms
+    saveBtn.style.touchAction = 'manipulation';
+    saveBtn.style.webkitTapHighlightColor = 'transparent';
+
+    // 3. Clonar para eliminar listeners antiguos/conflictivos
     const newBtn = saveBtn.cloneNode(true);
     saveBtn.parentNode.replaceChild(newBtn, saveBtn);
 
-    // 3. Definir la acción de guardado
+    // 4. Definir la acción de guardado
     async function handleSave(e) {
         if (e) {
             e.preventDefault();
@@ -596,12 +595,11 @@ function setupSaveButtonHandler() {
         }
     }
 
-    // 4. Adjuntar Listeners Específicos
+    // 5. Adjuntar Listeners Específicos
     // Click para Desktop/Tablet
     newBtn.addEventListener('click', handleSave, { passive: false });
     
-    // Touchend para Móvil (crucial para Brave/Chrome móvil)
-    // preventDefault evita que se dispare el click inmediatamente después, evitando doble ejecución
+    // Touchend para Móvil (crucial para Chrome/Brave móvil)
     newBtn.addEventListener('touchend', function(e) {
         e.preventDefault(); 
         handleSave.call(this, e);
