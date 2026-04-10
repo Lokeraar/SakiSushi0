@@ -91,6 +91,7 @@ window._invMostrarDetalle = function(item) {
     const minimo     = item.minimo || 0;
     const stockBase  = Math.max(item.stock || 0, 0.0001);
 
+    // 4 estados
     let estado, estadoLabel, estadoColor, estadoGrad;
     if (disponible <= 0) {
         estado='agotado';  estadoLabel='Agotado (= 0)';
@@ -107,16 +108,17 @@ window._invMostrarDetalle = function(item) {
     }
 
     const pct = Math.min(100, Math.max(0, (disponible / stockBase) * 100));
+    // Formato de 3 decimales limpio
     const fmt = (n) => { 
         const s = parseFloat(n.toPrecision(10)).toFixed(3).replace(/\.?0+$/, ''); 
         return s === 'NaN' ? '0' : s; 
     };
 
     const imgHtml = item.imagen
-        ? `<img src="${item.imagen}" style="width:60px;height:60px;object-fit:cover;border-radius:8px;margin-bottom:.5rem;cursor:pointer" onclick="window.expandirImagen &&window.expandirImagen('${item.imagen.replace(/'/g, "\\'")}')">`
+        ? `<img src="${item.imagen}" style="width:60px;height:60px;object-fit:cover;border-radius:8px;margin-bottom:.5rem;cursor:pointer" onclick="window.expandirImagen &&window.expandirImagen('${item.imagen.replace(/'/g, "\'")}')">`
         : '';
 
-    // BARRA INVERTIDA: Color (restante) a la izquierda, Gris (consumido) a la derecha
+    // CORRECCIÓN: Barra con color a la izquierda, gris a la derecha
     const detailHTML = `
         <div class="inv-detail-card" id="invDetailCard_${item.id}">
             <div class="inv-detail-title">
@@ -133,10 +135,9 @@ window._invMostrarDetalle = function(item) {
                    Reservado: ${fmt(item.reservado||0)}
                 </span>
             </div>
-            <!-- Barra invertida: Stock restante (Color) a la izquierda -->
+            <!-- Barra: Color (stock actual) a la izquierda, Gris (consumido) a la derecha -->
             <div style="height:10px;background:rgba(0,0,0,.08);border-radius:6px;overflow:hidden;margin-bottom:.35rem;position:relative">
                 <div style="position:absolute;top:0;left:0;height:100%;width:${pct.toFixed(1)}%;background:${estadoGrad};border-radius:6px 0 0 6px;transition:width .55s cubic-bezier(.4,0,.2,1)"></div>
-                <!-- Parte consumida (Gris) a la derecha -->
                 <div style="position:absolute;top:0;right:0;height:100%;width:${(100-pct).toFixed(1)}%;background:rgba(0,0,0,.08);border-radius:0 6px 6px 0;transition:width .55s cubic-bezier(.4,0,.2,1)"></div>
             </div>
             <div style="display:flex;align-items:center;gap:.45rem;margin-bottom:.85rem;font-size:.75rem;font-weight:700;color:${estadoColor}">
@@ -868,8 +869,20 @@ function setupIngredienteModalEvents() {
     if (agregarInput) agregarInput.addEventListener('input', syncAgregarToCantidadComprada);
     if (cantidadComprada) cantidadComprada.readOnly = true;
     
-    // Tooltip para Stock Mínimo
-    const minimoLabel = document.querySelector('#ingredienteForm .form-group:nth-child(3) label');
+    const unidadLabel = document.querySelector('#ingredienteForm .form-group:nth-child(4) label'); // Ajustado índice tras cambio
+    if (unidadLabel) {
+        unidadLabel.innerHTML = `
+            Unidad de Medida
+            <span class="tooltip-wrap" style="position:relative; display:inline-flex; align-items:center; cursor:help; margin-left:.3rem">
+                <span style="display:inline-flex; align-items:center; justify-content:center; width:16px; height:16px; background:var(--text-muted); color:#fff; border-radius:50%; font-size:.65rem; font-weight:700">?</span>
+                <span class="tooltip-text" style="display:none; position:absolute; bottom:calc(100% + 6px); left:50%; transform:translateX(-50%); background:var(--toast-bg); color:var(--toast-text); padding:.5rem .75rem; border-radius:8px; font-size:.75rem; white-space:normal; width:260px; text-align:center; box-shadow:0 4px 12px rgba(0,0,0,.3); z-index:100; line-height:1.4">
+                   ⚠️ La unidad de medida es crítica: "1 aguacate" no equivale a 500 gramos. Asegúrate de seleccionar la unidad correcta (unidades, kilogramos, litros, etc.) según corresponda.
+                </span>
+            </span>
+        `;
+    }
+    
+    const minimoLabel = document.querySelector('#ingredienteForm .form-group:nth-child(5) label');
     if (minimoLabel) {
          minimoLabel.innerHTML = `
            Stock Mínimo
@@ -882,7 +895,6 @@ function setupIngredienteModalEvents() {
         `;
     }
     
-    // Tooltip para Precio de Costo
     const costoLabel = document.querySelector('#ingredienteForm .form-row .form-group:first-child label');
     if (costoLabel) {
         costoLabel.innerHTML = `
@@ -896,7 +908,6 @@ function setupIngredienteModalEvents() {
         `;
     }
     
-    // Tooltip para Precio de Venta
     const ventaLabel = document.querySelector('#ingredienteForm .form-row .form-group:last-child label');
     if (ventaLabel) {
         ventaLabel.innerHTML = `
