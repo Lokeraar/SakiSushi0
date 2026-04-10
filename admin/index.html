@@ -2,35 +2,34 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Saki Sushi - Panel Administración</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="admin.css">
 </head>
 <body>
-    <div id="loginContainer" class="login-container" style="display:none;">
-        <div class="login-box">
-            <div class="login-box-header">
-                <img src="https://lh3.googleusercontent.com/pw/AP1GczPrZAoWxmsOGRD9xl1hO5Q65JXuwUZzoR6gUk-cw5lVmarxQe_-lwqpA60tTKLlXfpvIjAJlKC6jFls-xETJOPkebLIIPhbGlUkknmhrRbdhMUll2UViGSUj3WmHKg2YEsZlAfxBPPTjIHhScjD0jfe=w1439-h1439-s-no-gm" alt="Logo" class="login-logo">
-                <h2>Administración</h2>
-            </div>
-            
-            <div id="loginSelectorPanel" class="login-selector-panel">
+    <!-- LOGIN SCREEN -->
+    <div id="loginContainer" class="login-container">
+        <div class="login-wrapper">
+            <div class="login-selector-panel" id="loginSelectorPanel">
                 <div class="login-selector-header">
+                    <img src="https://lh3.googleusercontent.com/pw/AP1GczPrZAoWxmsOGRD9xl1hO5Q65JXuwUZzoR6gUk-cw5lVmarxQe_-lwqpA60tTKLlXfpvIjAJlKC6jFls-xETJOPkebLIIPhbGlUkknmhrRbdhMUll2UViGSUj3WmHKg2YEsZlAfxBPPTjIHhScjD0jfe=w1439-h1439-s-no-gm" alt="Saki Sushi" class="login-logo">
+                    <h2>Administración</h2>
                     <p>Selecciona un administrador</p>
                 </div>
                 <div id="loginAdminsList" class="login-admins-list"></div>
-                <button id="clearRecentAdminsBtn" class="btn-link">Limpiar historial</button>
+                <div style="margin-top:1rem;text-align:center">
+                    <button id="clearRecentAdminsBtn" class="btn-link" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:.8rem">Limpiar historial</button>
+                </div>
             </div>
-
-            <div id="loginPasswordPanel" class="login-password-panel" style="display:none;">
+            <div class="login-password-panel" id="loginPasswordPanel" style="display:none">
                 <button id="backToSelectorBtn" class="btn-back"><i class="fas fa-arrow-left"></i> Volver</button>
                 <div class="selected-admin-info">
                     <img id="selectedAdminFoto" src="" alt="Admin">
                     <span id="selectedAdminNombre"></span>
                 </div>
                 <form id="loginForm" class="login-form">
-                    <input type="password" id="adminPassword" placeholder="Contraseña" required autocomplete="current-password">
+                    <input type="password" id="adminPassword" placeholder="Contraseña" required>
                     <button type="submit">Ingresar</button>
                 </form>
                 <a href="#" class="btn-link">¿Olvidaste la contraseña?</a>
@@ -38,26 +37,35 @@
         </div>
     </div>
 
+    <!-- MAIN PANEL -->
     <div id="panelContainer" class="panel-container">
-        <!-- HEADER ÚNICO LIMPIO -->
-        <div class="header">
+        <header class="header">
             <div class="header-left">
                 <h2><i class="fas fa-crown"></i> Administración Saki Sushi</h2>
-                <div class="header-right">
-                    <button id="mesasButton" class="nav-button"><i class="fas fa-th-large"></i> Mesas</button>
-                    <a href="../Cajero/index.html" class="nav-button"><i class="fas fa-cash-register"></i> Cajero</a>
-                    <button class="theme-toggle" id="themeToggle" title="Cambiar tema"><i class="fas fa-moon" id="themeIcon"></i></button>
-                    <button class="logout-button" id="logoutButton"><i class="fas fa-sign-out-alt"></i> Salir</button>
-                </div>
             </div>
-        </div>
-        <div class="header-row-sucursal">
-            <span class="sucursal-label">Seleccionar sucursal</span>
-            <button class="sucursal-button" id="btnSucursalPrincipal">Principal</button>
-        </div>
+            <div class="header-right">
+                <div class="theme-toggle-wrap" onclick="window.toggleTheme()">
+                    <span class="theme-toggle-icon-sun"><i class="fas fa-sun"></i></span>
+                    <div class="theme-toggle-track"><div class="theme-toggle-thumb"></div></div>
+                    <span class="theme-toggle-icon-moon"><i class="fas fa-moon"></i></span>
+                </div>
+                <button class="nav-button" onclick="window.abrirSelectorMesaAdmin()">
+                    <i class="fas fa-chair"></i> Mesas
+                </button>
+                <a href="../Cajero/index.html" class="nav-button">
+                    <i class="fas fa-cash-register"></i> Cajero
+                </a>
+                <button class="sucursal-button" onclick="window.toggleSucursal()">
+                    <i class="fas fa-store"></i> Principal
+                </button>
+                <button class="logout-button" id="logoutButton">
+                    <i class="fas fa-sign-out-alt"></i> Salir
+                </button>
+            </div>
+        </header>
 
         <div class="tabs-wrapper">
-            <button class="tabs-chevron tabs-chevron-left" id="tabsChevronLeft" onclick="window._scrollTabs(-1)">‹‹</button>
+            <button class="tabs-chevron tabs-chevron-left" onclick="window._scrollTabs(-1)" id="tabsChevronLeft">◀</button>
             <div class="tabs" id="tabsContainer">
                 <button class="tab active" data-tab="dashboard">Inicio</button>
                 <button class="tab" data-tab="menu">Menú y Precios</button>
@@ -69,34 +77,32 @@
                 <button class="tab" data-tab="qr">Códigos QR</button>
                 <button class="tab" data-tab="reportes">Reportes</button>
             </div>
-            <button class="tabs-chevron tabs-chevron-right" id="tabsChevronRight" onclick="window._scrollTabs(1)">››</button>
+            <button class="tabs-chevron tabs-chevron-right" onclick="window._scrollTabs(1)" id="tabsChevronRight">▶</button>
         </div>
 
-        <div class="content">
+        <main class="content">
             <!-- DASHBOARD -->
-            <div id="dashboardPane" class="tab-pane active">
+            <section id="dashboardPane" class="tab-pane active">
                 <div class="pane-header">
-                    <h2 class="section-title"><i class="fas fa-chart-line"></i> Dashboard</h2>
+                    <h2 class="section-title"><i class="fas fa-chart-line"></i> Inicio</h2>
                 </div>
                 <div class="tasa-cards-bar">
                     <div class="tcb-cards">
                         <div class="tcb-card tcb-card-base">
-                            <div class="tcb-label">Tasa Base</div>
-                            <input type="number" id="tasaBaseInput" class="tcb-input" value="400" step="0.01">
-                            <div class="tcb-sublabel">Bs. por $1</div>
+                            <div class="tcb-label">Tasa Base:</div>
+                            <input type="number" id="tasaBaseInput" class="tcb-input" placeholder="Bs. por $1" step="0.01">
                         </div>
                         <div class="tcb-card tcb-card-pct">
-                            <div class="tcb-label">Aumento Diario %</div>
-                            <input type="number" id="aumentoDiarioInput" class="tcb-input" value="0" step="0.1" disabled>
-                            <div class="tcb-sublabel">por periodo</div>
+                            <div class="tcb-label">Aumento Diario %:</div>
+                            <input type="number" id="aumentoDiarioInput" class="tcb-input" placeholder="por periodo" step="0.1">
                         </div>
                         <div class="tcb-card tcb-card-efectiva">
-                            <div class="tcb-label">Tasa Efectiva</div>
-                            <div class="tcb-value-big" id="tasaEfectivaDisplay">400.00 Bs. por $1 hoy</div>
+                            <div class="tcb-label">Tasa Efectiva:</div>
+                            <div class="tcb-value-big" id="tasaEfectivaValor">400.00 Bs. por $1 hoy</div>
                         </div>
                         <div class="tcb-card tcb-card-acum">
-                            <div class="tcb-label">Acumulado</div>
-                            <div class="tcb-value-big tcb-acum-val" id="aumentoAcumDisplay">0% aumento total</div>
+                            <div class="tcb-label">Acumulado:</div>
+                            <div class="tcb-value-big tcb-acum-val" id="aumentoAcumuladoValor">0% aumento total</div>
                         </div>
                     </div>
                     <div class="tcb-controls">
@@ -118,7 +124,7 @@
                                 </label>
                             </div>
                         </div>
-                        <div class="tcb-fechas-card" id="tasaFechasDiv" style="display:none;">
+                        <div class="tcb-fechas-card" id="tasaFechasDiv" style="display:none">
                             <div class="tcb-fecha-row">
                                 <span class="tcb-fecha-label">Desde:</span>
                                 <input type="date" id="aumentoDesde" class="tcb-fecha-input">
@@ -126,39 +132,41 @@
                             <div class="tcb-fecha-row">
                                 <span class="tcb-fecha-label">Hasta:</span>
                                 <input type="date" id="aumentoHasta" class="tcb-fecha-input">
-                                <label style="font-size:.68rem; display:flex; align-items:center; gap:.2rem; margin-left:.3rem; cursor:pointer;">
-                                    <input type="checkbox" id="aumentoIndefinido"> Indefinido
-                                </label>
                             </div>
+                            <label style="display:flex;align-items:center;gap:.4rem;font-size:.7rem;color:var(--text-muted);margin-top:.2rem;cursor:pointer">
+                                <input type="checkbox" id="aumentoIndefinido" style="accent-color:var(--accent)"> Indefinido
+                                <span class="tooltip-wrap" style="position:relative; display:inline-flex; cursor:help;">
+                                    <span style="display:inline-flex; align-items:center; justify-content:center; width:14px; height:14px; background:#aaa; color:#fff; border-radius:50%; font-size:.6rem; font-weight:700">?</span>
+                                    <span class="tooltip-text" style="display:none; position:absolute; bottom:calc(100% + 6px); left:50%; transform:translateX(-50%); background:var(--toast-bg); color:var(--toast-text); padding:.5rem .75rem; border-radius:8px; font-size:.72rem; white-space:normal; width:220px; text-align:center; box-shadow:0 4px 12px rgba(0,0,0,.3); z-index:100; line-height:1.4">Activa esto si quieres que el aumento siga sin limite de tiempo. Si lo dejas sin marcar, el aumento se detiene en la fecha "Hasta".</span>
+                                </span>
+                            </label>
                         </div>
                         <div class="tcb-save-wrap">
-                            <button id="saveAllButton" class="save-button tcb-save-btn"><i class="fas fa-save"></i> Guardar cambios en tasa</button>
+                            <button class="save-button tcb-save-btn" id="saveAllButton"><i class="fas fa-save"></i> Guardar cambios en tasa</button>
                         </div>
                     </div>
                 </div>
 
                 <div class="dashboard-grid">
-                    <div class="dashboard-card" id="ventasHoyCard" onclick="window._abrirDetalleVentasAdmin()">
+                    <div class="dashboard-card" onclick="window._abrirDetalleVentasAdmin()" style="cursor:pointer">
                         <div class="card-title">Ventas Hoy (Neto Cobrado)</div>
-                        <div class="card-value accent" id="ventasHoy">$0.00</div>
+                        <div class="card-value accent" id="ventasHoy">$0.00 / Bs 0,00</div>
                         <div style="font-size:.72rem;color:var(--text-muted);margin-top:.3rem">Toca para ver desglose</div>
                     </div>
-                    <div class="dashboard-card" id="deliverysHoyCard" onclick="window._abrirDetalleDeliverysAdmin()">
+                    <div class="dashboard-card" onclick="window._abrirDetalleDeliverysAdmin()" style="cursor:pointer" id="deliverysHoyCard">
                         <div class="card-title">Deliverys Hoy</div>
                         <div class="card-value" id="deliverysHoyDashboard">$0.00 / Bs 0,00</div>
                         <div style="font-size:.72rem;color:var(--text-muted);margin-top:.3rem">Toca para ver detalle</div>
                     </div>
-                    <div class="dashboard-grid" style="grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 0;">
-                        <div class="dashboard-card" style="margin-bottom:0;">
-                            <div class="card-title">Productos Activos</div>
-                            <div class="card-value" id="productosActivosCount">0</div>
-                        </div>
-                        <div class="dashboard-card" style="margin-bottom:0; cursor:pointer;" onclick="window.irAStockCritico()">
-                            <div class="card-title">Alertas Stock</div>
-                            <div class="card-value" id="alertasStock">0</div>
-                        </div>
+                    <div class="dashboard-card">
+                        <div class="card-title">Productos Activos</div>
+                        <div class="card-value" id="productosActivos">0</div>
                     </div>
-                    <div class="dashboard-card" onclick="window._irAMesoneros()">
+                    <div class="dashboard-card" style="cursor:pointer" onclick="window.irAStockCritico()">
+                        <div class="card-title">Alertas Stock</div>
+                        <div class="card-value" id="alertasStock">0</div>
+                    </div>
+                    <div class="dashboard-card" onclick="window._irAMesoneros()" style="cursor:pointer">
                         <div class="card-title">Propinas Hoy</div>
                         <div class="card-value" id="propinasHoyDashboard">Bs 0,00</div>
                         <div style="font-size:.72rem;color:var(--text-muted);margin-top:.3rem">Toca para gestionar propinas</div>
@@ -166,23 +174,25 @@
                 </div>
 
                 <div class="dashboard-lower-grid">
-                    <div class="lower-stock">
-                        <h3><i class="fas fa-exclamation-triangle" style="color:var(--danger);margin-right:.5rem;"></i>Stock Crítico</h3>
-                        <div id="stockCriticoTags" style="display:flex;flex-wrap:wrap;gap:.5rem;margin-bottom:1rem;"></div>
+                    <div class="lower-stock" id="stockCriticoHeader">
+                        <h3><i class="fas fa-exclamation-triangle" style="color:var(--danger)"></i> Stock Crítico</h3>
                         <div id="stockCritico" class="alert-list">
                             <p style="color:var(--text-muted);font-size:.85rem">No hay alertas de stock</p>
                         </div>
+                        <div id="stockCriticoTags" style="margin-top:.75rem;display:flex;flex-wrap:wrap;gap:.4rem"></div>
                     </div>
                     <div class="lower-pedidos">
-                        <h3><i class="fas fa-receipt" style="color:var(--info);margin-right:.5rem;"></i>Pedidos Recientes</h3>
-                        <div id="pedidosCountBadge" style="position:absolute;top:1rem;right:1.5rem;background:var(--danger);color:#fff;font-size:.7rem;padding:2px 8px;border-radius:20px;font-weight:700;">0</div>
-                        <div id="pedidosRecientes"></div>
+                        <h3><i class="fas fa-receipt" style="color:var(--info)"></i> Pedidos Recientes</h3>
+                        <div id="pedidosCountBadge" style="font-size:.7rem;background:var(--info);color:#fff;padding:2px 8px;border-radius:20px;margin-bottom:.5rem;display:inline-block">0</div>
+                        <div id="pedidosRecientes" style="display:flex;flex-direction:column;gap:.5rem;max-height:280px;overflow-y:auto">
+                            <div style="text-align:center;padding:1rem;color:var(--text-muted)"><i class="fas fa-inbox"></i> Cargando...</div>
+                        </div>
                     </div>
                 </div>
-            </div>
+            </section>
 
-            <!-- MENU -->
-            <div id="menuPane" class="tab-pane">
+            <!-- MENÚ -->
+            <section id="menuPane" class="tab-pane">
                 <div class="pane-header">
                     <h2 class="section-title"><i class="fas fa-utensils"></i> Menú y Precios</h2>
                     <div class="pane-actions">
@@ -191,46 +201,39 @@
                     </div>
                 </div>
                 <div id="menuGrid" class="menu-grid"></div>
-            </div>
+            </section>
 
             <!-- INVENTARIO -->
-            <div id="inventarioPane" class="tab-pane">
+            <section id="inventarioPane" class="tab-pane">
                 <div class="pane-header">
                     <h2 class="section-title"><i class="fas fa-boxes"></i> Inventario</h2>
-                    <div class="pane-actions">
-                        <div class="inv-search-wrap">
-                            <i class="fas fa-search inv-search-icon"></i>
-                            <input type="text" id="inventarioBuscador" class="inv-search-input" placeholder="Buscar ingrediente...">
-                        </div>
-                        <button class="btn-primary" onclick="window.abrirModalNuevoIngrediente()"><i class="fas fa-plus"></i> Nuevo Ingrediente</button>
-                    </div>
+                    <button class="btn-primary" onclick="window.abrirModalNuevoIngrediente()"><i class="fas fa-plus"></i> Nuevo Ingrediente</button>
+                </div>
+                <div class="inv-search-wrap">
+                    <i class="fas fa-search inv-search-icon"></i>
+                    <input type="text" id="inventarioBuscador" class="inv-search-input" placeholder="Buscar ingrediente...">
                 </div>
                 <div class="inv-panel">
                     <div class="inv-list-col">
                         <div class="inv-list-items" id="inventarioGrid"></div>
                     </div>
                     <div class="inv-detail-col" id="invDetailCol">
-                        <div class="inv-detail-empty" id="invDetailEmpty">
-                            <i class="fas fa-hand-point-left" style="font-size:2rem;margin-bottom:.75rem;display:block;opacity:.3"></i>
-                            Selecciona un ingrediente de la lista para ver su detalle
-                        </div>
+                        <div class="inv-detail-empty" id="invDetailEmpty"><i class="fas fa-hand-point-left" style="font-size:2rem;margin-bottom:.75rem;display:block;opacity:.3"></i>Selecciona un ingrediente de la lista para ver su detalle</div>
                     </div>
                 </div>
-            </div>
+            </section>
 
             <!-- USUARIOS -->
-            <div id="usuariosPane" class="tab-pane">
+            <section id="usuariosPane" class="tab-pane">
                 <div class="pane-header">
                     <h2 class="section-title"><i class="fas fa-users-cog"></i> Usuarios del Sistema</h2>
-                    <div class="pane-actions">
-                        <button class="btn-primary" onclick="window.abrirModalNuevoUsuario()"><i class="fas fa-user-plus"></i> Nuevo Cajero/Admin</button>
-                    </div>
+                    <button class="btn-primary" onclick="window.abrirModalNuevoUsuario()"><i class="fas fa-plus"></i> Nuevo Cajero/Admin</button>
                 </div>
                 <div id="usuariosGrid" class="usuarios-grid"></div>
-            </div>
+            </section>
 
             <!-- DELIVERYS -->
-            <div id="deliverysPane" class="tab-pane">
+            <section id="deliverysPane" class="tab-pane">
                 <div class="pane-header">
                     <h2 class="section-title"><i class="fas fa-motorcycle"></i> Motorizados</h2>
                     <div class="pane-actions">
@@ -238,21 +241,19 @@
                         <button class="btn-delivery" onclick="window.agregarDelivery()"><i class="fas fa-plus"></i> Agregar</button>
                     </div>
                 </div>
-                <div class="delivery-grid" id="deliveryStatsGrid">
-                    <div class="delivery-stat-card">
-                        <div class="delivery-stat-label">Total acumulado</div>
-                        <div class="delivery-stat-value" id="deliverysTotalCard">$0.00 / Bs 0,00</div>
-                    </div>
-                    <div class="delivery-stat-card">
-                        <div class="delivery-stat-label">Envíos hoy</div>
-                        <div class="delivery-stat-value" id="deliverysCountCard">0</div>
-                    </div>
-                    <div class="delivery-stat-card">
-                        <div class="delivery-stat-label">Promedio</div>
-                        <div class="delivery-stat-value" id="deliverysPromedioCard">$0.00 / Bs 0,00</div>
-                    </div>
+                <div class="delivery-stat-card" style="margin-bottom:1.25rem">
+                    <div class="delivery-stat-label">Total acumulado</div>
+                    <div class="delivery-stat-value" id="deliverysTotalCard">$0.00 / Bs 0,00</div>
                 </div>
-                <div class="table-section">
+                <div class="delivery-stat-card" style="margin-bottom:1.25rem">
+                    <div class="delivery-stat-label">Envíos hoy</div>
+                    <div class="delivery-stat-value" id="deliverysCountCard">0</div>
+                </div>
+                <div class="delivery-stat-card" style="margin-bottom:1.25rem">
+                    <div class="delivery-stat-label">Promedio</div>
+                    <div class="delivery-stat-value" id="deliverysPromedioCard">$0.00 / Bs 0,00</div>
+                </div>
+                <div class="table-section" style="margin-bottom:1.25rem">
                     <div class="table-section-title">Últimos 5 Viajes</div>
                     <div class="table-responsive">
                         <table class="data-table">
@@ -260,20 +261,20 @@
                             <tbody id="ultimosViajesTbody"><tr><td colspan="4" style="text-align:center;padding:1rem;color:var(--text-muted)">Cargando...</td></tr></tbody>
                         </table>
                     </div>
-                    <div style="text-align:right;margin-top:.75rem;">
-                        <button class="btn-secondary" onclick="window.verHistorialEnviosHoy()" style="font-size:.82rem;">Ver historial de hoy</button>
-                    </div>
                 </div>
-                <div id="deliverysGrid" class="delivery-list" style="margin-top:1.5rem;"></div>
-            </div>
+                <div style="text-align:right;margin-bottom:1.5rem">
+                    <button class="btn-secondary" onclick="window.verHistorialEnviosHoy()"><i class="fas fa-history"></i> Historial de hoy</button>
+                </div>
+                <div id="deliverysGrid" class="delivery-list"></div>
+            </section>
 
             <!-- MESONEROS -->
-            <div id="mesonerosPane" class="tab-pane">
+            <section id="mesonerosPane" class="tab-pane">
                 <div class="pane-header">
-                    <h2 class="section-title"><i class="fas fa-concierge-bell"></i> Mesoneros y Propinas</h2>
+                    <h2 class="section-title"><i class="fas fa-user-tie"></i> Mesoneros y Propinas</h2>
                     <div class="pane-actions">
                         <input type="text" id="nuevoMesonero" class="pane-input" placeholder="Nombre del mesonero...">
-                        <button class="btn-primary" onclick="window.agregarMesonero()"><i class="fas fa-plus"></i> Agregar</button>
+                        <button class="btn-delivery" style="background:linear-gradient(135deg,var(--propina),#7B1FA2)" onclick="window.agregarMesonero()"><i class="fas fa-plus"></i> Agregar</button>
                     </div>
                 </div>
                 <div class="propinas-stats">
@@ -290,7 +291,7 @@
                         <div class="stat-label">Promedio</div>
                     </div>
                 </div>
-                <div class="table-section">
+                <div class="table-section" style="margin-bottom:1.25rem">
                     <div class="table-section-title">Últimas 5 Propinas</div>
                     <div class="table-responsive">
                         <table class="data-table">
@@ -298,94 +299,68 @@
                             <tbody id="propinasTableBody"><tr><td colspan="6" style="text-align:center;padding:1rem;color:var(--text-muted)">Cargando...</td></tr></tbody>
                         </table>
                     </div>
-                    <div style="text-align:right;margin-top:.75rem;">
-                        <button class="btn-secondary" onclick="window.verHistorialPropinaHoy()" style="font-size:.82rem;">Ver historial de hoy</button>
-                    </div>
                 </div>
-                <div id="mesonerosList" class="mesoneros-grid" style="margin-top:1.5rem;"></div>
-            </div>
+                <div style="text-align:right;margin-bottom:1.5rem">
+                    <button class="btn-secondary" onclick="window.verHistorialPropinaHoy()"><i class="fas fa-history"></i> Historial de hoy</button>
+                </div>
+                <div id="mesonerosList" class="mesoneros-grid"></div>
+            </section>
 
-            <!-- CONFIGURACION -->
-            <div id="configPane" class="tab-pane">
+            <!-- CONFIGURACIÓN -->
+            <section id="configPane" class="tab-pane">
                 <div class="pane-header">
                     <h2 class="section-title"><i class="fas fa-cogs"></i> Configuración</h2>
                 </div>
-                <div class="config-section">
-                    <h3>Cambiar Contraseña</h3>
-                    <div class="form-group">
-                        <label>Contraseña Actual</label>
-                        <input type="password" id="configPassActual">
+                <div class="config-grid">
+                    <div class="config-section">
+                        <h3><i class="fas fa-lock"></i> Cambiar Contraseña</h3>
+                        <div class="form-group"><label>Contraseña Actual</label><input type="password" id="configPassActual"></div>
+                        <div class="form-group"><label>Nueva Contraseña</label><input type="password" id="configPassNueva"></div>
+                        <div class="form-group"><label>Confirmar Nueva Contraseña</label><input type="password" id="configPassConfirm"></div>
+                        <div id="configPassError" style="color:var(--danger);font-size:.82rem;margin-bottom:.75rem;display:none"></div>
+                        <button class="btn-primary" onclick="window.guardarConfigPassword()"><i class="fas fa-save"></i> Guardar contraseña</button>
                     </div>
-                    <div class="form-group">
-                        <label>Nueva Contraseña</label>
-                        <input type="password" id="configPassNueva">
+                    <div class="config-section">
+                        <h3><i class="fas fa-envelope"></i> Correo de Recuperación</h3>
+                        <div class="form-group"><label>Correo Electrónico</label><input type="email" id="configRecoveryEmail"></div>
+                        <button class="btn-primary" onclick="window.guardarConfigEmail()"><i class="fas fa-save"></i> Guardar correo</button>
                     </div>
-                    <div class="form-group">
-                        <label>Confirmar Nueva Contraseña</label>
-                        <input type="password" id="configPassConfirm">
-                    </div>
-                    <div id="configPassError" style="color:var(--danger);font-size:.82rem;display:none;margin-bottom:.5rem;"></div>
-                    <button class="btn-primary" id="saveConfigPass"><i class="fas fa-key"></i> Guardar contraseña</button>
                 </div>
-                <div class="config-section">
-                    <h3>Correo de Recuperación</h3>
-                    <div class="form-group">
-                        <label>Correo Electrónico</label>
-                        <input type="email" id="configRecoveryEmail">
-                    </div>
-                    <button class="btn-primary" id="saveConfigEmail"><i class="fas fa-envelope"></i> Guardar correo</button>
-                </div>
-            </div>
+            </section>
 
-            <!-- QR -->
-            <div id="qrPane" class="tab-pane">
+            <!-- CÓDIGOS QR -->
+            <section id="qrPane" class="tab-pane">
                 <div class="pane-header">
                     <h2 class="section-title"><i class="fas fa-qrcode"></i> Códigos QR</h2>
                 </div>
                 <div class="qr-generator-card">
                     <div class="qr-generator-grid">
-                        <div class="form-group">
-                            <label>Nombre de la Mesa</label>
-                            <input type="text" id="qrNombreMesa" placeholder="Ej: Mesa 1, Barra, etc.">
-                        </div>
-                        <div class="form-group">
-                            <label>Red WiFi (SSID)</label>
-                            <input type="text" id="qrWifiSsid" placeholder="Nombre de la red WiFi">
-                        </div>
-                        <div class="form-group">
-                            <label>Contraseña WiFi</label>
-                            <input type="text" id="qrWifiPassword" placeholder="Contraseña del WiFi">
-                        </div>
-                        <div style="display:flex;align-items:flex-end;">
-                            <button class="btn-primary" onclick="window.generarQR()"><i class="fas fa-qrcode"></i> Generar QR</button>
-                        </div>
+                        <div class="form-group"><label>Nombre de la Mesa</label><input type="text" id="qrNombreMesa" placeholder="Ej: Mesa 1"></div>
+                        <div class="form-group"><label>Red WiFi (SSID)</label><input type="text" id="qrWifiSsid" placeholder="Opcional"></div>
+                        <div class="form-group"><label>Contraseña WiFi</label><input type="text" id="qrWifiPassword" placeholder="Opcional"></div>
                     </div>
+                    <button class="btn-primary" onclick="window.generarQR()"><i class="fas fa-qrcode"></i> Generar QR</button>
                     <div class="qr-wifi-hint">
-                        <i class="fas fa-info-circle" style="margin-top:2px;"></i>
-                        <div>El QR lleva al cliente directo al menú de esa mesa. Si agregas los datos de WiFi, el QR también conecta automáticamente al escanear.</div>
+                        <i class="fas fa-info-circle"></i> El QR lleva al cliente directo al menú de esa mesa. Si agregas los datos de WiFi, el QR también conecta automáticamente al escanear.
                     </div>
                 </div>
                 <div id="qrGrid" class="qr-grid"></div>
-            </div>
+            </section>
 
             <!-- REPORTES -->
-            <div id="reportesPane" class="tab-pane">
+            <section id="reportesPane" class="tab-pane">
                 <div class="pane-header">
                     <h2 class="section-title"><i class="fas fa-chart-bar"></i> Reportes</h2>
-                </div>
-                <div class="reportes-filters">
-                    <div class="form-group" style="margin-bottom:0;min-width:150px;">
-                        <label>Desde</label>
-                        <input type="date" id="reporteDesde">
+                    <div class="pane-actions">
+                        <div class="reportes-filters">
+                            <div class="form-group" style="margin:0"><label>Desde</label><input type="date" id="reporteDesde"></div>
+                            <div class="form-group" style="margin:0"><label>Hasta</label><input type="date" id="reporteHasta"></div>
+                            <button class="btn-primary" onclick="window.cargarReportes()"><i class="fas fa-search"></i> Buscar</button>
+                        </div>
                     </div>
-                    <div class="form-group" style="margin-bottom:0;min-width:150px;">
-                        <label>Hasta</label>
-                        <input type="date" id="reporteHasta">
-                    </div>
-                    <button class="btn-primary" onclick="window.cargarReportes()"><i class="fas fa-search"></i> Buscar</button>
                 </div>
-                <div class="dashboard-grid" style="grid-template-columns: repeat(4, 1fr); margin-bottom: 1.5rem;">
-                    <div class="dashboard-card"><div class="card-title">Ventas Día</div><div class="card-value" id="ventasDia">$0.00</div></div>
+                <div class="dashboard-grid" style="margin-bottom:1.5rem">
+                    <div class="dashboard-card"><div class="card-title">Ventas Día</div><div class="card-value accent" id="ventasDia">$0.00</div></div>
                     <div class="dashboard-card"><div class="card-title">Ventas Semana</div><div class="card-value" id="ventasSemana">$0.00</div></div>
                     <div class="dashboard-card"><div class="card-title">Ticket Promedio</div><div class="card-value" id="ticketPromedio">$0.00</div></div>
                     <div class="dashboard-card"><div class="card-title">Platillo Top</div><div class="card-value" id="platilloTop">-</div></div>
@@ -396,368 +371,216 @@
                     <div class="chart-container"><h3>Métodos de Pago</h3><div class="chart-wrapper"><canvas id="pagosChart"></canvas></div></div>
                     <div class="chart-container"><h3>Ventas por Hora</h3><div class="chart-wrapper"><canvas id="horaChart"></canvas></div></div>
                 </div>
-                <div class="table-section" style="margin-top:1.5rem;">
+                <div class="table-section" style="margin-top:1.5rem">
                     <div class="table-section-title">Detalle de Ventas</div>
                     <div class="table-responsive">
                         <table class="data-table">
                             <thead><tr><th>Fecha</th><th>Pedido</th><th>Total</th><th>Items</th><th>Método</th><th>Tipo</th></tr></thead>
-                            <tbody id="ventasTableBody"><tr><td colspan="6" style="text-align:center;padding:1rem;color:var(--text-muted)">Cargando...</td></tr></tbody>
+                            <tbody id="ventasTableBody"><tr><td colspan="6" style="text-align:center;padding:1rem;color:var(--text-muted)">Selecciona un rango para cargar datos</td></tr></tbody>
                         </table>
                     </div>
                 </div>
-            </div>
-        </div>
+            </section>
+        </main>
     </div>
 
     <!-- MODALES -->
-    <div class="modal" id="platilloModal">
+    <!-- Platillo -->
+    <div id="platilloModal" class="modal">
         <div class="modal-content">
-            <div class="modal-header">
-                <h3 id="platilloModalTitle">Nuevo Platillo</h3>
-                <button class="modal-close" id="closePlatilloModal">&times;</button>
-            </div>
+            <div class="modal-header"><h3 id="platilloModalTitle">Nuevo Platillo</h3><button class="modal-close" id="closePlatilloModal">&times;</button></div>
             <div class="modal-body">
                 <form id="platilloForm">
                     <div class="form-group">
                         <label>Imagen del Platillo</label>
                         <input type="file" id="platilloImagen" accept="image/*">
-                        <input type="text" id="platilloImagenUrl" placeholder="O pega URL de imagen">
-                        <div class="image-preview" id="imagenPreview" style="display:none;">
-                            <img id="previewImg" src="" alt="Preview">
-                        </div>
+                        <input type="text" id="platilloImagenUrl" placeholder="O pega URL directa" style="margin-top:.4rem">
+                        <div id="imagenPreview" style="display:none;margin-top:.75rem"><img id="previewImg" src="" style="max-height:150px;border-radius:8px"></div>
                     </div>
                     <div class="form-row">
-                        <div class="form-group">
-                            <label>Nombre del Platillo</label>
-                            <input type="text" id="platilloNombre" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Categoría</label>
-                            <select id="platilloCategoria" required><option value="">Seleccionar</option></select>
-                        </div>
+                        <div class="form-group"><label>Nombre del Platillo</label><input type="text" id="platilloNombre" required></div>
+                        <div class="form-group"><label>Categoría</label><select id="platilloCategoria"><option value="">Seleccionar</option></select></div>
                     </div>
-                    <div class="form-group" id="subcategoriaContainer" style="display:none;">
-                        <label>Subcategoría</label>
-                        <select id="platilloSubcategoria"><option value="">Ninguna</option></select>
-                    </div>
+                    <div class="form-group" id="subcategoriaContainer" style="display:none"><label>Subcategoría</label><select id="platilloSubcategoria"><option value="">Ninguna</option></select></div>
                     <div class="form-row">
-                        <div class="form-group">
-                            <label>Precio (USD)</label>
-                            <input type="number" id="platilloPrecio" step="0.01" required>
-                            <div id="platilloPrecioBsPreview" style="font-size:.75rem;color:var(--text-muted);margin-top:.25rem;"></div>
-                        </div>
-                        <div class="form-group">
-                            <label>Disponible</label>
-                            <div style="display:flex;align-items:center;gap:.5rem;margin-top:.5rem;">
-                                <input type="checkbox" id="platilloDisponibleCheck" checked style="width:18px;height:18px;accent-color:var(--success);">
-                                <span id="platilloDisponibleLabel" style="font-weight:600;color:var(--success);">Sí</span>
-                            </div>
+                        <div class="form-group"><label>Precio (USD)</label><input type="number" id="platilloPrecio" step="0.01" required></div>
+                        <div class="form-group"><label>Disponible</label>
+                            <label style="display:flex;align-items:center;gap:.5rem;margin-top:.3rem;cursor:pointer">
+                                <input type="checkbox" id="platilloDisponibleCheck" checked style="width:18px;height:18px;accent-color:var(--success)">
+                                <span id="platilloDisponibleLabel" style="font-weight:600;color:var(--success)">Sí</span>
+                            </label>
                             <input type="hidden" id="platilloDisponible" value="true">
                         </div>
                     </div>
-                    <div class="form-group">
-                        <label>Descripción</label>
-                        <textarea id="platilloDescripcion" rows="2"></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label>Ingredientes del Platillo</label>
-                        <div id="ingredientesContainer"></div>
-                        <button type="button" class="btn-secondary" id="addIngredienteBtn" style="margin-top:.5rem;width:100%;"><i class="fas fa-plus"></i> Agregar Ingrediente</button>
-                        <div id="stockCalculadoWrap" style="display:none;margin-top:.75rem;padding:.6rem .8rem;border-radius:8px;background:#f0fdf4;border:1px solid #bbf7d0;">
-                            <span id="stockCalculadoText" style="font-size:.82rem;font-weight:600;color:#166534;"></span>
-                        </div>
-                    </div>
+                    <div class="form-group"><label>Descripción</label><textarea id="platilloDescripcion" rows="2"></textarea></div>
+                    <div class="form-group"><label>Ingredientes del Platillo</label><div id="ingredientesContainer"></div><button type="button" class="btn-secondary" id="addIngredienteBtn" style="margin-top:.5rem;width:100%"><i class="fas fa-plus"></i> Agregar Ingrediente</button></div>
+                    <div id="stockCalculadoWrap" style="display:none;padding:.85rem;border-radius:10px;margin-top:1rem;border:1px solid transparent;font-size:.85rem"><span id="stockCalculadoText"></span></div>
                 </form>
             </div>
-            <div class="modal-footer">
-                <button class="btn-secondary" id="cancelPlatillo">Cancelar</button>
-                <button class="btn-primary" id="savePlatillo">Guardar</button>
-            </div>
+            <div class="modal-footer"><button class="btn-secondary" id="cancelPlatillo">Cancelar</button><button class="btn-primary" id="savePlatillo">Guardar</button></div>
         </div>
     </div>
 
-    <div class="modal" id="ingredienteModal">
+    <!-- Ingrediente -->
+    <div id="ingredienteModal" class="modal">
         <div class="modal-content">
-            <div class="modal-header">
-                <h3 id="ingredienteModalTitle">Nuevo Ingrediente</h3>
-                <button class="modal-close" id="closeIngredienteModal">&times;</button>
-            </div>
+            <div class="modal-header"><h3 id="ingredienteModalTitle">Nuevo Ingrediente</h3><button class="modal-close" id="closeIngredienteModal">&times;</button></div>
             <div class="modal-body">
                 <form id="ingredienteForm">
                     <div class="form-group">
                         <label>Imagen del Ingrediente (opcional)</label>
                         <input type="file" id="ingredienteImagen" accept="image/*">
-                        <input type="text" id="ingredienteImagenUrl" placeholder="O pega URL de imagen">
-                        <div class="image-preview" id="ingredienteImagenPreview" style="display:none;">
-                            <img id="ingredientePreviewImg" src="" alt="Preview">
-                            <button type="button" class="btn-small" id="ingredienteImgRemoveBtn" style="position:absolute;top:-8px;right:-8px;background:rgba(0,0,0,.6);color:#fff;border:none;border-radius:50%;width:24px;height:24px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.8rem;">✕</button>
-                        </div>
+                        <input type="text" id="ingredienteImagenUrl" placeholder="O pega URL directa" style="margin-top:.4rem">
+                        <div id="ingredienteImagenPreview" style="display:none;margin-top:.75rem;position:relative"><img id="ingredientePreviewImg" src="" style="max-height:120px;border-radius:8px"><button type="button" id="ingredienteImgRemoveBtn" style="position:absolute;top:-8px;right:-8px;background:rgba(0,0,0,.6);color:#fff;border:none;border-radius:50%;width:24px;height:24px;cursor:pointer;display:none;align-items:center;justify-content:center;font-size:.8rem;z-index:10"><i class="fas fa-times"></i></button></div>
                     </div>
-                    <!-- CORRECCIÓN APLICADA: Primer label renombrado -->
-                    <div class="form-group">
-                        <label>Nombre del Ingrediente</label>
-                        <input type="text" id="ingredienteNombre" placeholder="Ej: Tomate, Harina, etc." required>
-                    </div>
-                    <div class="form-group password-protected">
-                        <label>Stock Actual</label>
-                        <div id="stockClickArea" style="position:relative;display:flex;width:100%;">
-                            <input type="number" id="ingredienteStock" step="0.001" value="0" disabled style="flex:1;cursor:pointer;">
-                            <span id="stockLockIcon" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);cursor:pointer;"><i class="fas fa-lock" style="font-size:.8rem;"></i></span>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label>Mercancía Nueva a Agregar</label>
-                        <input type="number" id="ingredienteAgregar" step="0.001" placeholder="0">
-                        <div id="stockTotalPreview" style="font-size:.75rem;color:var(--text-muted);margin-top:.25rem;"></div>
-                        <div id="stockConversionPreview" style="font-size:.75rem;color:var(--text-muted);"></div>
-                    </div>
-                    <div class="form-group">
-                        <label>Unidad de Medida</label>
-                        <select id="ingredienteUnidad">
-                            <option value="unidades">Unidades/Piezas</option>
-                            <option value="gramos">Gramos</option>
-                            <option value="mililitros">Mililitros</option>
-                            <option value="kilogramos">Kilogramos</option>
-                            <option value="litros">Litros</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Stock Mínimo</label>
-                        <input type="number" id="ingredienteMinimo" step="0.001" placeholder="0">
-                    </div>
+                    <div class="form-group"><label>Nombre del Ingrediente</label><input type="text" id="ingredienteNombre" required placeholder="Ej: Arroz para sushi"></div>
                     <div class="form-row">
-                        <div class="form-group">
-                            <label>Costo Total Compra (USD)</label>
-                            <input type="number" id="costoTotal" step="0.01">
+                        <div class="form-group password-overlay">
+                            <label>Stock Actual</label>
+                            <div id="stockClickArea" style="position:relative;cursor:pointer">
+                                <input type="number" id="ingredienteStock" step="0.001" value="0" disabled style="padding-right:2.5rem">
+                                <span id="stockLockIcon" style="position:absolute;right:.8rem;top:50%;transform:translateY(-50%);color:var(--text-muted);pointer-events:none"><i class="fas fa-lock"></i></span>
+                            </div>
                         </div>
-                        <div class="form-group">
-                            <label>Cantidad Comprada</label>
-                            <input type="number" id="cantidadComprada" step="0.001" readonly>
-                        </div>
+                        <div class="form-group"><label>Mercancía Nueva a Agregar</label><input type="number" id="ingredienteAgregar" step="0.001" value="0"></div>
                     </div>
-                    <div id="calcResultado" style="display:none;background:#f8f9fa;padding:.6rem;border-radius:8px;margin-bottom:1rem;font-size:.85rem;">
-                        <strong>Costo unitario:</strong> <span id="calcPrecioUnitario">0.00</span> USD <span id="calcUnidadResult"></span>
+                    <div id="stockTotalPreview" style="font-size:.82rem;color:var(--success);margin-top:-.5rem;margin-bottom:.75rem"></div>
+                    <div id="stockConversionPreview" style="font-size:.78rem;color:var(--text-muted);margin-top:-.5rem;margin-bottom:.75rem"></div>
+                    <div class="form-group"><label>Unidad de Medida</label>
+                        <select id="ingredienteUnidad"><option value="unidades">Unidades/Piezas</option><option value="gramos">Gramos</option><option value="mililitros">Mililitros</option><option value="kilogramos">Kilogramos</option><option value="litros">Litros</option></select>
                     </div>
+                    <div class="form-group"><label>Stock Mínimo (Alerta)</label><input type="number" id="ingredienteMinimo" step="0.001" value="0"></div>
                     <div class="form-row">
-                        <div class="form-group">
-                            <label>Precio de Costo (USD/Bs)</label>
-                            <input type="number" id="ingredienteCosto" step="0.01">
+                        <div class="form-group"><label>Precio de Costo (USD/Bs)</label><input type="number" id="ingredienteCosto" step="0.0001" value="0"></div>
+                        <div class="form-group"><label>Precio de Venta (USD/Bs)</label><input type="number" id="ingredienteVenta" step="0.0001" value="0"></div>
+                    </div>
+                    <div class="form-group">
+                        <label>Calculadora de Costo Unitario</label>
+                        <div class="form-row" style="margin-top:.4rem">
+                            <div class="form-group"><label>Costo Total Compra (USD)</label><input type="number" id="costoTotal" step="0.01" value="0"></div>
+                            <div class="form-group"><label>Cantidad Comprada</label><input type="number" id="cantidadComprada" step="0.001" value="0" readonly></div>
                         </div>
-                        <div class="form-group">
-                            <label>Precio de Venta (USD/Bs)</label>
-                            <input type="number" id="ingredienteVenta" step="0.01">
-                        </div>
+                        <div id="calcResultado" style="display:none;background:var(--secondary);padding:.75rem;border-radius:8px;margin-top:.75rem;font-size:.85rem;text-align:center">Costo unitario: <span id="calcPrecioUnitario" style="font-weight:700;color:var(--accent)">0.00</span> <span id="calcUnidadResult"></span></div>
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
-                <button class="btn-danger" id="deleteIngredienteBtn" style="display:none;"><i class="fas fa-trash"></i> Eliminar</button>
+                <button class="btn-danger" id="deleteIngredienteBtn" style="display:none"><i class="fas fa-trash"></i> Eliminar</button>
                 <button class="btn-secondary" id="cancelIngrediente">Cancelar</button>
                 <button class="btn-primary" id="saveIngrediente">Guardar</button>
             </div>
         </div>
     </div>
 
-    <div class="modal" id="usuarioModal">
+    <!-- Usuario -->
+    <div id="usuarioModal" class="modal">
         <div class="modal-content">
-            <div class="modal-header">
-                <h3 id="usuarioModalTitle">Nuevo Cajero/Admin</h3>
-                <button class="modal-close" id="closeUsuarioModal">&times;</button>
-            </div>
+            <div class="modal-header"><h3 id="usuarioModalTitle">Nuevo Cajero/Admin</h3><button class="modal-close" id="closeUsuarioModal">&times;</button></div>
             <div class="modal-body">
                 <form id="usuarioForm">
                     <div class="form-group">
                         <label>Foto de perfil (opcional)</label>
                         <input type="file" id="usuarioFoto" accept="image/*">
-                        <input type="text" id="usuarioFotoUrl" placeholder="O pega URL de imagen">
-                        <div class="image-preview" id="usuarioFotoPreview" style="display:none;">
-                            <img id="usuarioPreviewImg" src="" alt="Preview">
-                            <button type="button" id="usuarioFotoRemoveBtn" style="position:absolute;top:-8px;right:-8px;background:rgba(0,0,0,.6);color:#fff;border:none;border-radius:50%;width:24px;height:24px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.8rem;">✕</button>
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label>Nombre completo *</label>
-                        <input type="text" id="usuarioNombre" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Nombre de usuario *</label>
-                        <input type="text" id="usuarioUsername" required>
+                        <input type="text" id="usuarioFotoUrl" placeholder="O pega URL directa" style="margin-top:.4rem">
+                        <div id="usuarioFotoPreview" style="display:none;margin-top:.75rem;position:relative"><img id="usuarioPreviewImg" src="" style="max-height:120px;border-radius:8px"><button type="button" id="usuarioFotoRemoveBtn" style="position:absolute;top:-8px;right:-8px;background:rgba(0,0,0,.6);color:#fff;border:none;border-radius:50%;width:24px;height:24px;cursor:pointer;display:none;align-items:center;justify-content:center;font-size:.8rem;z-index:10"><i class="fas fa-times"></i></button></div>
                     </div>
                     <div class="form-row">
-                        <div class="form-group">
-                            <label>Rol</label>
-                            <select id="usuarioRol">
-                                <option value="cajero">Cajero</option>
-                                <option value="admin">Administrador</option>
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label>Contraseña</label>
-                            <input type="password" id="usuarioPassword">
-                        </div>
+                        <div class="form-group"><label>Nombre completo *</label><input type="text" id="usuarioNombre" required></div>
+                        <div class="form-group"><label>Nombre de usuario *</label><input type="text" id="usuarioUsername" required></div>
                     </div>
-                    <div class="form-group">
-                        <label>Estado</label>
-                        <select id="usuarioActivo">
-                            <option value="true">Activo</option>
-                            <option value="false">Inactivo</option>
-                        </select>
+                    <div class="form-row">
+                        <div class="form-group"><label>Rol</label><select id="usuarioRol"><option value="cajero">Cajero</option><option value="admin">Administrador</option></select></div>
+                        <div class="form-group"><label>Contraseña</label><input type="password" id="usuarioPassword"></div>
                     </div>
+                    <div class="form-group"><label>Estado</label><select id="usuarioActivo"><option value="true">Activo</option><option value="false">Inactivo</option></select></div>
                 </form>
             </div>
-            <div class="modal-footer">
-                <button class="btn-secondary" id="cancelUsuario">Cancelar</button>
-                <button class="btn-primary" id="saveUsuario">Guardar</button>
-            </div>
+            <div class="modal-footer"><button class="btn-secondary" id="cancelUsuario">Cancelar</button><button class="btn-primary" id="saveUsuario">Guardar</button></div>
         </div>
     </div>
 
-    <div class="modal" id="deliveryModal">
+    <!-- Delivery -->
+    <div id="deliveryModal" class="modal">
         <div class="modal-content">
-            <div class="modal-header">
-                <h3>Editar Motorizado</h3>
-                <button class="modal-close" id="closeDeliveryModal">&times;</button>
-            </div>
+            <div class="modal-header"><h3>Editar Motorizado</h3><button class="modal-close" id="closeDeliveryModal">&times;</button></div>
             <div class="modal-body">
-                <div class="form-group">
-                    <label>Foto de perfil (opcional)</label>
-                    <input type="file" id="deliveryFoto" accept="image/*">
-                    <input type="text" id="deliveryFotoUrl" placeholder="O pega URL de imagen">
-                    <div class="image-preview" id="deliveryFotoPreview" style="display:none;">
-                        <img id="deliveryPreviewImg" src="" alt="Preview">
-                        <button type="button" id="deliveryFotoRemoveBtn" style="position:absolute;top:-8px;right:-8px;background:rgba(0,0,0,.6);color:#fff;border:none;border-radius:50%;width:24px;height:24px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.8rem;">✕</button>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label>Nombre</label>
-                    <input type="text" id="deliveryNombre">
-                </div>
-                <div class="form-group">
-                    <label>Estado</label>
-                    <select id="deliveryEstado">
-                        <option value="true">Activo</option>
-                        <option value="false">Inactivo</option>
-                    </select>
-                </div>
+                <div class="form-group"><label>Foto de perfil (opcional)</label><input type="file" id="deliveryFoto" accept="image/*"><input type="text" id="deliveryFotoUrl" placeholder="O pega URL directa" style="margin-top:.4rem"><div id="deliveryFotoPreview" style="display:none;margin-top:.75rem;position:relative"><img id="deliveryPreviewImg" src="" style="max-height:120px;border-radius:8px"><button type="button" id="deliveryFotoRemoveBtn" style="position:absolute;top:-8px;right:-8px;background:rgba(0,0,0,.6);color:#fff;border:none;border-radius:50%;width:24px;height:24px;cursor:pointer;display:none;align-items:center;justify-content:center;font-size:.8rem;z-index:10"><i class="fas fa-times"></i></button></div></div>
+                <div class="form-group"><label>Nombre</label><input type="text" id="deliveryNombre"></div>
+                <div class="form-group"><label>Estado</label><select id="deliveryEstado"><option value="true">Activo</option><option value="false">Inactivo</option></select></div>
             </div>
-            <div class="modal-footer">
-                <button class="btn-secondary" id="cancelDeliveryEdit">Cancelar</button>
-                <button class="btn-primary" id="saveDelivery">Guardar</button>
-            </div>
+            <div class="modal-footer"><button class="btn-secondary" id="cancelDeliveryEdit">Cancelar</button><button class="btn-primary" id="saveDelivery">Guardar</button></div>
         </div>
     </div>
 
-    <div class="modal" id="mesoneroModal">
+    <!-- Mesonero -->
+    <div id="mesoneroModal" class="modal">
         <div class="modal-content">
-            <div class="modal-header">
-                <h3 id="mesoneroModalTitle">Editar Mesonero</h3>
-                <button class="modal-close" id="closeMesoneroModal">&times;</button>
-            </div>
+            <div class="modal-header"><h3 id="mesoneroModalTitle">Editar Mesonero</h3><button class="modal-close" id="closeMesoneroModal">&times;</button></div>
             <div class="modal-body">
-                <div class="form-group">
-                    <label>Foto de perfil (opcional)</label>
-                    <input type="file" id="mesoneroFoto" accept="image/*">
-                    <input type="text" id="mesoneroFotoUrl" placeholder="O pega URL de imagen">
-                    <div class="image-preview" id="mesoneroFotoPreview" style="display:none;">
-                        <img id="mesoneroPreviewImg" src="" alt="Preview">
-                        <button type="button" id="mesoneroFotoRemoveBtn" style="position:absolute;top:-8px;right:-8px;background:rgba(0,0,0,.6);color:#fff;border:none;border-radius:50%;width:24px;height:24px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.8rem;">✕</button>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label>Nombre completo *</label>
-                    <input type="text" id="mesoneroNombre">
-                </div>
-                <div class="form-group">
-                    <label>Estado</label>
-                    <select id="mesoneroActivo">
-                        <option value="true">Activo</option>
-                        <option value="false">Inactivo</option>
-                    </select>
-                </div>
+                <div class="form-group"><label>Foto de perfil (opcional)</label><input type="file" id="mesoneroFoto" accept="image/*"><input type="text" id="mesoneroFotoUrl" placeholder="O pega URL directa" style="margin-top:.4rem"><div id="mesoneroFotoPreview" style="display:none;margin-top:.75rem;position:relative"><img id="mesoneroPreviewImg" src="" style="max-height:120px;border-radius:8px"><button type="button" id="mesoneroFotoRemoveBtn" style="position:absolute;top:-8px;right:-8px;background:rgba(0,0,0,.6);color:#fff;border:none;border-radius:50%;width:24px;height:24px;cursor:pointer;display:none;align-items:center;justify-content:center;font-size:.8rem;z-index:10"><i class="fas fa-times"></i></button></div></div>
+                <div class="form-group"><label>Nombre completo *</label><input type="text" id="mesoneroNombre"></div>
+                <div class="form-group"><label>Estado</label><select id="mesoneroActivo"><option value="true">Activo</option><option value="false">Inactivo</option></select></div>
             </div>
-            <div class="modal-footer">
-                <button class="btn-secondary" id="cancelMesoneroEdit">Cancelar</button>
-                <button class="btn-primary" id="saveMesonero">Guardar</button>
-            </div>
+            <div class="modal-footer"><button class="btn-secondary" id="cancelMesoneroEdit">Cancelar</button><button class="btn-primary" id="saveMesonero">Guardar</button></div>
         </div>
     </div>
 
-    <div class="modal" id="confirmPagoDeliveryModal">
+    <!-- Pago -->
+    <div id="confirmPagoDeliveryModal" class="modal">
         <div class="modal-content">
-            <div class="modal-header">
-                <h3>Confirmar Pago</h3>
-                <button class="modal-close" onclick="window.cerrarModal('confirmPagoDeliveryModal')">&times;</button>
-            </div>
+            <div class="modal-header"><h3>Confirmar Pago</h3><button class="modal-close" onclick="window.cerrarModal('confirmPagoDeliveryModal')">&times;</button></div>
             <div class="modal-body" id="confirmPagoDeliveryBody"></div>
-            <div class="modal-footer">
-                <button class="btn-secondary" onclick="window.cerrarModal('confirmPagoDeliveryModal')">Cancelar</button>
-                <button class="btn-primary" id="confirmPagoDeliveryBtn">Confirmar</button>
-            </div>
+            <div class="modal-footer"><button class="btn-secondary" onclick="window.cerrarModal('confirmPagoDeliveryModal')">Cancelar</button><button class="btn-primary" id="confirmPagoDeliveryBtn">Confirmar</button></div>
         </div>
     </div>
 
-    <div class="modal" id="qrAmpliadoModal">
-        <div class="modal-content" style="max-width:400px;">
-            <div class="modal-header">
-                <h3>Código QR</h3>
-                <button class="modal-close" id="closeQrAmpliadoModal">&times;</button>
-            </div>
-            <div class="modal-body" style="text-align:center;">
-                <div id="qrAmpliado"></div>
-                <div id="qrAmpliadoInfo"></div>
-            </div>
+    <!-- QR Ampliado -->
+    <div id="qrAmpliadoModal" class="modal">
+        <div class="modal-content" style="max-width:450px;text-align:center">
+            <div class="modal-header"><h3>Código QR</h3><button class="modal-close" id="closeQrAmpliadoModal">&times;</button></div>
+            <div class="modal-body"><div id="qrAmpliado"></div><div id="qrAmpliadoInfo"></div></div>
+            <div class="modal-footer"><button class="btn-primary" id="closeQrAmpliado">Cerrar</button></div>
         </div>
     </div>
 
-    <div class="modal" id="adminMesaModal">
-        <div class="modal-content" style="max-width:500px;">
-            <div class="modal-header">
-                <h3>Mesas</h3>
-                <button class="modal-close" onclick="window.cerrarModal('adminMesaModal')">&times;</button>
-            </div>
+    <!-- Mesas -->
+    <div id="adminMesaModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header"><h3>Mesas</h3><button class="modal-close" onclick="window.cerrarModal('adminMesaModal')">&times;</button></div>
             <div class="modal-body">
-                <p style="margin-bottom:1rem;font-size:.88rem;color:var(--text-muted);">Selecciona una mesa para abrir el menú del cliente en esa mesa.</p>
-                <div id="adminMesaList" class="mesa-admin-grid">Cargando mesas...</div>
+                <p style="margin-bottom:1rem;color:var(--text-muted);font-size:.9rem">Selecciona una mesa para abrir el menú del cliente en esa mesa.</p>
+                <div id="adminMesaList" class="mesa-admin-grid"><p style="color:var(--text-muted)">Cargando mesas...</p></div>
             </div>
-            <div class="modal-footer">
-                <button class="btn-secondary" onclick="window.cerrarModal('adminMesaModal')">Cerrar</button>
-            </div>
+            <div class="modal-footer"><button class="btn-secondary" onclick="window.cerrarModal('adminMesaModal')">Cerrar</button></div>
         </div>
     </div>
 
-    <div class="modal" id="passwordStockModal">
-        <div class="modal-content" style="max-width:360px;">
-            <div class="modal-header">
-                <h3>Desbloquear Stock</h3>
-                <button class="modal-close" onclick="window.cerrarModal('passwordStockModal')">&times;</button>
-            </div>
+    <!-- Desbloquear Stock -->
+    <div id="passwordStockModal" class="modal">
+        <div class="modal-content" style="max-width:400px">
+            <div class="modal-header"><h3>Desbloquear Stock</h3></div>
             <div class="modal-body">
-                <p style="font-size:.88rem;color:var(--text-muted);margin-bottom:1rem;">Ingresa la contraseña de administrador para poder editar el stock actual:</p>
-                <div class="form-group">
-                    <label>Contraseña de Administrador</label>
-                    <input type="password" id="stockPasswordModalInput" autocomplete="current-password">
-                </div>
-                <div id="passwordStockError" style="color:var(--danger);font-size:.82rem;display:none;margin-bottom:.5rem;"></div>
+                <p style="margin-bottom:1rem;font-size:.9rem">Ingresa la contraseña de administrador para poder editar el stock actual:</p>
+                <div class="form-group"><label>Contraseña de Administrador</label><input type="password" id="stockPasswordModalInput" placeholder="••••••"></div>
+                <div id="passwordStockError" style="color:var(--danger);font-size:.82rem;margin-top:-.5rem;display:none">Contraseña incorrecta</div>
             </div>
-            <div class="modal-footer">
-                <button class="btn-secondary" onclick="window.cerrarModal('passwordStockModal')">Cancelar</button>
-                <button class="btn-primary" id="confirmPasswordStockBtn">Confirmar</button>
-            </div>
+            <div class="modal-footer"><button class="btn-secondary" onclick="window.cerrarModal('passwordStockModal')">Cancelar</button><button class="btn-primary" id="confirmPasswordStockBtn">Confirmar</button></div>
         </div>
     </div>
 
+    <!-- Toast -->
     <div id="toast" class="toast"></div>
-    <audio id="notificationSound" src="https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3" preload="auto"></audio>
+    <audio id="notificationSound" src="https://iqwwoihiiyrtypyqzhgy.supabase.co/storage/v1/object/public/alarma/notificacion.mp3" preload="auto"></audio>
 
-    <!-- SCRIPTS -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
     <script src="supabase-config.js"></script>
     <script src="admin-core.js"></script>
     <script src="admin-auth.js"></script>
     <script src="admin-ui.js"></script>
-    <script src="admin-menu.js"></script>
     <script src="admin-inventario.js"></script>
+    <script src="admin-menu.js"></script>
     <script src="admin-usuarios.js"></script>
     <script src="admin-delivery.js"></script>
     <script src="admin-mesoneros.js"></script>
