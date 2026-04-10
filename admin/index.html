@@ -22,6 +22,7 @@
     <script src="js/admin-menu.js" defer></script>
     <script src="js/admin-inventario.js" defer></script>
     <script src="js/admin-usuarios.js" defer></script>
+    <script src="js/admin-mesoneros.js" defer></script>
     <script src="js/admin-delivery.js" defer></script>
     <script src="js/admin-qr.js" defer></script>
     <script src="js/admin-reportes.js" defer></script>
@@ -77,51 +78,39 @@
     <!-- PANEL PRINCIPAL -->
     <div class="panel-container" id="panelContainer">
         <header class="header">
-            <!-- Título (siempre visible) + controles desktop en una fila -->
-            <div class="header-row header-row-title">
-                <div class="header-left">
-                    <h2><i class="fas fa-crown"></i> <span class="header-title-text">Administración Saki Sushi</span></h2>
-                </div>
-                <!-- Desktop: todo en una fila -->
+            <!-- Fila 1: Logo + Salir en la misma línea (visible siempre) -->
+            <div class="hrow htitle">
+                <div class="header-left"><h2><i class="fas fa-crown"></i> <span class="header-title-text">Administración Saki Sushi</span></h2></div>
+                <!-- Salir: visible en móvil junto al logo; en desktop se oculta aquí y aparece en hrd -->
+                <button class="logout-button hrm-salir-inline" id="logoutButtonMobile"><i class="fas fa-sign-out-alt"></i> Salir</button>
+                <!-- Controles completos en desktop -->
                 <div class="hrd">
                     <button class="nav-button" onclick="window.abrirSelectorMesaAdmin()"><i class="fas fa-utensils"></i> Mesas</button>
                     <a href="../Cajero/index.html" target="_blank" class="nav-button"><i class="fas fa-cash-register"></i> Cajero</a>
                     <span class="header-sucursal-label">Seleccionar sucursal</span>
-                    <button class="nav-button header-sucursal-btn" id="sucursalBtn" title="Cambiar sucursal (próximamente)">
-                        <i class="fas fa-store"></i> <span id="sucursalNombre">Principal</span>
-                    </button>
+                    <button class="nav-button header-sucursal-btn" id="sucursalBtn" title="Próximamente"><i class="fas fa-store"></i> <span>Principal</span></button>
                     <div class="theme-toggle-wrap" onclick="window.toggleTheme()" title="Cambiar tema" role="button">
                         <i class="fas fa-sun theme-toggle-icon-sun"></i>
-                        <div class="theme-toggle-track" id="themeToggle">
-                            <div class="theme-toggle-thumb" id="themeIcon"><i class="fas fa-sun"></i></div>
-                        </div>
+                        <div class="theme-toggle-track" id="themeToggle"><div class="theme-toggle-thumb" id="themeIcon"><i class="fas fa-sun"></i></div></div>
                         <i class="fas fa-moon theme-toggle-icon-moon"></i>
                     </div>
                     <button class="logout-button" id="logoutButton"><i class="fas fa-sign-out-alt"></i> Salir</button>
                 </div>
             </div>
-            <!-- Móvil fila 2: Mesas + Cajero → alineados a la derecha -->
-            <div class="hrm hrm-nav">
+            <!-- Fila 2 móvil: Mesas + Cajero -->
+            <div class="hrow hrm hrm-nav">
                 <button class="nav-button" onclick="window.abrirSelectorMesaAdmin()"><i class="fas fa-utensils"></i> Mesas</button>
                 <a href="../Cajero/index.html" target="_blank" class="nav-button"><i class="fas fa-cash-register"></i> Cajero</a>
             </div>
-            <!-- Móvil fila 3: toggle tema + "Seleccionar sucursal" + botón sucursal → todo alineado a la derecha -->
-            <div class="hrm hrm-sucursal">
+            <!-- Fila 3 móvil: toggle tema + sucursal -->
+            <div class="hrow hrm hrm-suc">
                 <div class="theme-toggle-wrap" onclick="window.toggleTheme()" title="Cambiar tema" role="button">
                     <i class="fas fa-sun theme-toggle-icon-sun"></i>
-                    <div class="theme-toggle-track" id="themeToggleMobile">
-                        <div class="theme-toggle-thumb" id="themeIconMobile"><i class="fas fa-sun"></i></div>
-                    </div>
+                    <div class="theme-toggle-track" id="themeToggleMobile"><div class="theme-toggle-thumb" id="themeIconMobile"><i class="fas fa-sun"></i></div></div>
                     <i class="fas fa-moon theme-toggle-icon-moon"></i>
                 </div>
                 <span class="header-sucursal-label">Seleccionar sucursal</span>
-                <button class="nav-button header-sucursal-btn" id="sucursalBtnMobile" title="Cambiar sucursal (próximamente)">
-                    <i class="fas fa-store"></i> <span>Principal</span>
-                </button>
-            </div>
-            <!-- Móvil fila 4: botón Salir -->
-            <div class="hrm hrm-salir">
-                <button class="logout-button" id="logoutButtonMobile"><i class="fas fa-sign-out-alt"></i> Salir</button>
+                <button class="nav-button header-sucursal-btn" id="sucursalBtnMobile" title="Próximamente"><i class="fas fa-store"></i> <span>Principal</span></button>
             </div>
             <div id="stockCriticoHeader" style="width:100%; margin-top:.5rem; padding:.4rem .8rem; background:rgba(0,0,0,.2); border-radius:8px; display:flex; align-items:center; gap:.8rem; flex-wrap:wrap; font-size:.75rem">
                 <span style="font-weight:700; color:var(--danger); white-space:nowrap"><i class="fas fa-exclamation-triangle"></i> STOCK CRÍTICO:</span>
@@ -134,7 +123,7 @@
                 <i class="fas fa-chevron-left"></i><i class="fas fa-chevron-left"></i>
             </button>
             <div class="tabs" id="tabsContainer">
-                <div class="tab active" data-tab="dashboard">Inicio</div>
+                <div class="tab active" data-tab="dashboard">Dashboard</div>
                 <div class="tab" data-tab="menu">Menú y Precios</div>
                 <div class="tab" data-tab="inventario">Inventario</div>
                 <div class="tab" data-tab="usuarios">Usuarios</div>
@@ -153,7 +142,7 @@
             <!-- DASHBOARD -->
             <div class="tab-pane active" id="dashboardPane">
                 <div class="pane-header">
-                    <h2 class="section-title"><i class="fas fa-home"></i> Inicio</h2>
+                    <h2 class="section-title"><i class="fas fa-tachometer-alt"></i> Dashboard</h2>
                 </div>
                 <div class="tasa-cards-bar" id="tasaBar">
                     <div class="tcb-cards">
@@ -220,20 +209,9 @@
                         <div class="card-value" id="ventasHoy">$0.00</div>
                         <div style="font-size:.72rem;color:var(--text-muted);margin-top:.25rem">Toca para ver desglose</div>
                     </div>
-                    <div class="dashboard-card" style="cursor:pointer" onclick="window.irADeliverys && window.irADeliverys()" title="Ver módulo de Deliverys">
-                        <div class="card-title">Deliverys Hoy <i class="fas fa-external-link-alt" style="font-size:.55rem;opacity:.6;margin-left:.25rem"></i></div>
-                        <div class="card-value" id="deliverysHoyDashboard">$0.00 / Bs 0,00</div>
-                    </div>
-                    <div class="dashboard-col-mini">
-                        <div class="dashboard-card dashboard-card-sm" style="cursor:pointer" onclick="window.irAStockCritico()">
-                            <div class="card-title">Alertas Stock</div>
-                            <div class="card-value" id="alertasStock">0</div>
-                        </div>
-                        <div class="dashboard-card dashboard-card-sm" style="cursor:pointer" onclick="window.irAMenu()">
-                            <div class="card-title">Productos Activos</div>
-                            <div class="card-value" id="productosActivos">0</div>
-                        </div>
-                    </div>
+                    <div class="dashboard-card"><div class="card-title">Deliverys Hoy</div><div class="card-value" id="deliverysHoyDashboard">Bs 0,00</div></div>
+                    <div class="dashboard-card" style="cursor:pointer" onclick="window.irAMenu()"><div class="card-title">Productos Activos</div><div class="card-value" id="productosActivos">0</div></div>
+                    <div class="dashboard-card" style="cursor:pointer" onclick="window.irAStockCritico()"><div class="card-title">Alertas Stock</div><div class="card-value" id="alertasStock">0</div></div>
                     <div class="dashboard-card" id="propinasHoyCard" style="cursor:pointer" onclick="window._irAMesoneros()" title="Ir a gestión de mesoneros y propinas">
                         <div class="card-title">Propinas Hoy <i class="fas fa-external-link-alt" style="font-size:.6rem;opacity:.5;margin-left:.3rem"></i></div>
                         <div class="card-value" id="propinasHoyDashboard">Bs 0,00</div>
@@ -339,7 +317,13 @@
                 </div>
                 <div id="mesonerosList" class="mesoneros-grid"></div>
                 <div class="table-section" style="margin-top:1.5rem">
-                    <h3 class="table-section-title">Historial de Propinas de Hoy</h3>
+                    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.85rem">
+                        <h3 class="table-section-title" style="margin-bottom:0">Últimas 5 Propinas</h3>
+                        <button class="btn-secondary" onclick="window.verHistorialPropinaHoy && window.verHistorialPropinaHoy()"
+                            style="font-size:.78rem;padding:.4rem .9rem;display:flex;align-items:center;gap:.4rem">
+                            <i class="fas fa-list"></i> Historial de hoy
+                        </button>
+                    </div>
                     <div class="table-responsive">
                         <table class="data-table" id="propinasTable">
                             <thead><tr><th>Hora</th><th>Mesonero</th><th>Mesa</th><th>Método</th><th>Monto</th><th>Cajero</th></tr></thead>
@@ -479,23 +463,11 @@
             <div class="modal-header"><h3 id="usuarioModalTitle">Nuevo Cajero/Admin</h3><button class="modal-close" id="closeUsuarioModal">&times;</button></div>
             <div class="modal-body">
                 <form id="usuarioForm">
-                    <!-- Foto de perfil PRIMERO -->
-                    <div class="form-group"><label>Foto de perfil (opcional)</label>
-                        <div style="display:flex;gap:.75rem;align-items:flex-start">
-                            <div style="flex:1">
-                                <input type="file" id="usuarioFoto" accept="image/*" style="margin-bottom:.3rem">
-                                <input type="url" id="usuarioFotoUrl" placeholder="O pega la URL de la imagen" style="width:100%">
-                            </div>
-                            <div id="usuarioFotoPreview" class="image-preview" style="display:none;width:70px;height:70px;flex-shrink:0;position:relative">
-                                <img id="usuarioPreviewImg" style="width:100%;height:100%;object-fit:cover;border-radius:8px">
-                                <button type="button" id="usuarioFotoRemoveBtn" style="position:absolute;top:-8px;right:-8px;background:var(--danger);color:#fff;border:none;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.7rem">✕</button>
-                            </div>
-                        </div>
-                    </div>
                     <div class="form-group"><label>Nombre completo *</label><input type="text" id="usuarioNombre" required placeholder="Ej: María González"></div>
                     <div style="display:flex;gap:.75rem"><div class="form-group" style="flex:1"><label>Nombre de usuario *</label><input type="text" id="usuarioUsername" required placeholder="Ej: cajero3"></div><div class="form-group" style="flex:1"><label>Rol</label><select id="usuarioRol"><option value="cajero">Cajero</option><option value="admin">Administrador</option></select></div></div>
                     <div class="form-group"><label>Contraseña</label><input type="text" id="usuarioPassword" placeholder="Déjalo vacío para no cambiar" autocomplete="off"></div>
                     <div class="form-group"><label>Estado</label><select id="usuarioActivo"><option value="true">Activo</option><option value="false">Inactivo</option></select></div>
+                    <div class="form-group"><label>Foto de perfil (opcional)</label><div style="display:flex; gap:.75rem; align-items:flex-start"><div style="flex:1"><input type="file" id="usuarioFoto" accept="image/*" style="margin-bottom:.3rem"><input type="url" id="usuarioFotoUrl" placeholder="O pega la URL de la imagen" style="width:100%"></div><div id="usuarioFotoPreview" class="image-preview" style="display:none; width:70px; height:70px; flex-shrink:0; position:relative"><img id="usuarioPreviewImg" style="width:100%;height:100%;object-fit:cover;border-radius:8px"><button type="button" id="usuarioFotoRemoveBtn" style="position:absolute; top:-8px; right:-8px; background:var(--danger); color:#fff; border:none; border-radius:50%; width:22px; height:22px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:.7rem">✕</button></div></div></div>
                 </form>
             </div>
             <div class="modal-footer"><button class="btn-secondary" id="cancelUsuario">Cancelar</button><button class="btn-primary" id="saveUsuario">Guardar</button></div>
@@ -508,21 +480,9 @@
             <div class="modal-header" style="background:linear-gradient(135deg,var(--delivery),#00838F)"><h3><i class="fas fa-motorcycle"></i> Editar Motorizado</h3><button class="modal-close" id="closeDeliveryModal">&times;</button></div>
             <div class="modal-body">
                 <form id="deliveryForm">
-                    <!-- Foto de perfil PRIMERO -->
-                    <div class="form-group"><label>Foto de perfil (opcional)</label>
-                        <div style="display:flex;gap:.75rem;align-items:flex-start">
-                            <div style="flex:1">
-                                <input type="file" id="deliveryFoto" accept="image/*" style="margin-bottom:.3rem">
-                                <input type="url" id="deliveryFotoUrl" placeholder="O pega la URL de la imagen" style="width:100%">
-                            </div>
-                            <div id="deliveryFotoPreview" class="image-preview" style="display:none;width:70px;height:70px;flex-shrink:0;position:relative">
-                                <img id="deliveryPreviewImg" style="width:100%;height:100%;object-fit:cover;border-radius:8px">
-                                <button type="button" id="deliveryFotoRemoveBtn" style="position:absolute;top:-8px;right:-8px;background:var(--danger);color:#fff;border:none;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.7rem">✕</button>
-                            </div>
-                        </div>
-                    </div>
                     <div class="form-group"><label>Nombre</label><input type="text" id="deliveryNombre" required></div>
                     <div class="form-group"><label>Estado</label><select id="deliveryEstado"><option value="true">Activo</option><option value="false">Inactivo</option></select></div>
+                    <div class="form-group"><label>Foto de perfil (opcional)</label><div style="display:flex; gap:.75rem; align-items:flex-start"><div style="flex:1"><input type="file" id="deliveryFoto" accept="image/*" style="margin-bottom:.3rem"><input type="url" id="deliveryFotoUrl" placeholder="O pega la URL de la imagen" style="width:100%"></div><div id="deliveryFotoPreview" class="image-preview" style="display:none; width:70px; height:70px; flex-shrink:0; position:relative"><img id="deliveryPreviewImg" style="width:100%;height:100%;object-fit:cover;border-radius:8px"><button type="button" id="deliveryFotoRemoveBtn" style="position:absolute; top:-8px; right:-8px; background:var(--danger); color:#fff; border:none; border-radius:50%; width:22px; height:22px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:.7rem">✕</button></div></div></div>
                 </form>
             </div>
             <div class="modal-footer"><button class="btn-secondary" id="cancelDeliveryEdit">Cancelar</button><button class="btn-primary" id="saveDelivery" style="background:linear-gradient(135deg,var(--delivery),#00838F)">Guardar</button></div>
@@ -535,21 +495,9 @@
             <div class="modal-header" style="background:linear-gradient(135deg,var(--propina),#7B1FA2)"><h3 id="mesoneroModalTitle"><i class="fas fa-user-tie"></i> Editar Mesonero</h3><button class="modal-close" id="closeMesoneroModal">&times;</button></div>
             <div class="modal-body">
                 <form id="mesoneroForm">
-                    <!-- Foto de perfil PRIMERO -->
-                    <div class="form-group"><label>Foto de perfil (opcional)</label>
-                        <div style="display:flex;gap:.75rem;align-items:flex-start">
-                            <div style="flex:1">
-                                <input type="file" id="mesoneroFoto" accept="image/*" style="margin-bottom:.3rem">
-                                <input type="url" id="mesoneroFotoUrl" placeholder="O pega la URL de la imagen" style="width:100%">
-                            </div>
-                            <div id="mesoneroFotoPreview" class="image-preview" style="display:none;width:70px;height:70px;flex-shrink:0;position:relative">
-                                <img id="mesoneroPreviewImg" style="width:100%;height:100%;object-fit:cover;border-radius:8px">
-                                <button type="button" id="mesoneroFotoRemoveBtn" style="position:absolute;top:-8px;right:-8px;background:var(--danger);color:#fff;border:none;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.7rem">✕</button>
-                            </div>
-                        </div>
-                    </div>
                     <div class="form-group"><label>Nombre completo *</label><input type="text" id="mesoneroNombre" required placeholder="Ej: Carlos Méndez"></div>
                     <div class="form-group"><label>Estado</label><select id="mesoneroActivo"><option value="true">Activo</option><option value="false">Inactivo</option></select></div>
+                    <div class="form-group"><label>Foto de perfil (opcional)</label><div style="display:flex; gap:.75rem; align-items:flex-start"><div style="flex:1"><input type="file" id="mesoneroFoto" accept="image/*" style="margin-bottom:.3rem"><input type="url" id="mesoneroFotoUrl" placeholder="O pega la URL de la imagen" style="width:100%"></div><div id="mesoneroFotoPreview" class="image-preview" style="display:none; width:70px; height:70px; flex-shrink:0; position:relative"><img id="mesoneroPreviewImg" style="width:100%;height:100%;object-fit:cover;border-radius:8px"><button type="button" id="mesoneroFotoRemoveBtn" style="position:absolute; top:-8px; right:-8px; background:var(--danger); color:#fff; border:none; border-radius:50%; width:22px; height:22px; display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:.7rem">✕</button></div></div></div>
                 </form>
             </div>
             <div class="modal-footer"><button class="btn-secondary" id="cancelMesoneroEdit">Cancelar</button><button class="btn-primary" id="saveMesonero" style="background:linear-gradient(135deg,var(--propina),#7B1FA2)">Guardar</button></div>
