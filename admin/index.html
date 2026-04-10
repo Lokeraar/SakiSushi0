@@ -19,7 +19,7 @@
                 </div>
                 <div id="loginAdminsList" class="login-admins-list"></div>
                 <div style="margin-top:1rem;text-align:center">
-                    <button id="clearRecentAdminsBtn" class="btn-link" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:.8rem"> Limpiar historial</button>
+                    <button id="clearRecentAdminsBtn" class="btn-link">Limpiar historial</button>
                 </div>
             </div>
             <div class="login-password-panel" id="loginPasswordPanel" style="display:none">
@@ -41,7 +41,7 @@
     <div id="panelContainer" class="panel-container">
         <header class="header">
             <div class="header-left">
-                <h2><i class="fas fa-crown"></i> Administración Saki Sushi</h2>
+                <h2><img src="https://lh3.googleusercontent.com/pw/AP1GczPrZAoWxmsOGRD9xl1hO5Q65JXuwUZzoR6gUk-cw5lVmarxQe_-lwqpA60tTKLlXfpvIjAJlKC6jFls-xETJOPkebLIIPhbGlUkknmhrRbdhMUll2UViGSUj3WmHKg2YEsZlAfxBPPTjIHhScjD0jfe=w1439-h1439-s-no-gm" alt="Saki Sushi" style="width:32px;height:32px;border-radius:50%;margin-right:8px"> Administración Saki Sushi</h2>
             </div>
             <div class="header-right">
                 <div class="theme-toggle-wrap" onclick="window.toggleTheme()">
@@ -137,7 +137,7 @@
                                 <input type="checkbox" id="aumentoIndefinido" style="accent-color:var(--accent)"> Indefinido
                                 <span class="tooltip-wrap" style="position:relative; display:inline-flex; cursor:help;">
                                     <span style="display:inline-flex; align-items:center; justify-content:center; width:14px; height:14px; background:#aaa; color:#fff; border-radius:50%; font-size:.6rem; font-weight:700">?</span>
-                                    <span class="tooltip-text" style="display:none; position:absolute; bottom:calc(100% + 6px); left:50%; transform:translateX(-50%); background:var(--toast-bg); color:var(--toast-text); padding:.5rem .75rem; border-radius:8px; font-size:.72rem; white-space:normal; width:220px; text-align:center; box-shadow:0 4px 12px rgba(0,0,0,.3); z-index:100; line-height:1.4">Activa esto si quieres que el aumento siga sin limite de tiempo. Si lo dejas sin marcar, el aumento se detiene en la fecha "Hasta".</span>
+                                    <span class="tooltip-text">Activa esto si quieres que el aumento siga sin limite de tiempo. Si lo dejas sin marcar, el aumento se detiene en la fecha "Hasta".</span>
                                 </span>
                             </label>
                         </div>
@@ -170,6 +170,16 @@
                         <div class="card-title">Propinas Hoy</div>
                         <div class="card-value" id="propinasHoyDashboard">Bs 0,00</div>
                         <div style="font-size:.72rem;color:var(--text-muted);margin-top:.3rem">Toca para gestionar propinas</div>
+                    </div>
+                    <div class="dashboard-card" id="diferenciaTasaCard" style="cursor:pointer" onclick="window.mostrarToast('Diferencia acumulada a favor del restaurante por aumento de tasa', 'info')">
+                        <div class="card-title">
+                            Acumulado Dif. Tasa Base y Efectiva 
+                            <span class="tooltip-wrap" style="position:relative; display:inline-flex; cursor:help; margin-left:.3rem">
+                                <span style="display:inline-flex; align-items:center; justify-content:center; width:16px; height:16px; background:#aaa; color:#fff; border-radius:50%; font-size:.65rem; font-weight:700">?</span>
+                                <span class="tooltip-text">Es la ganancia extra generada por la diferencia entre la tasa base y la tasa efectiva aplicada a los pedidos cobrados. Esta diferencia queda a favor del restaurante.</span>
+                            </span>
+                        </div>
+                        <div class="card-value" id="diferenciaTasaValor">Bs 0,00</div>
                     </div>
                 </div>
 
