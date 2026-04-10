@@ -27,7 +27,7 @@
     <script src="js/admin-reportes.js" defer></script>
 </head>
 <body>
-    <!-- Aviso de salida (se mantiene igual) -->
+    <!-- Aviso de salida -->
     <div id="_salidaAviso" style="display:none;position:fixed;inset:0;z-index:9999;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.55);padding:1rem">
         <div style="background:linear-gradient(135deg,#1a1a2e,#16213e);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:1.4rem 1.2rem;width:100%;max-width:400px;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,.5)">
             <p style="color:#fff;font-size:1rem;font-weight:600;margin-bottom:1.2rem">¿Seguro que deseas salir?</p>
@@ -77,39 +77,18 @@
     <!-- PANEL PRINCIPAL -->
     <div class="panel-container" id="panelContainer">
         <header class="header">
-            <!-- Fila 1: Logo + Salir en móvil, todo en desktop -->
-            <div class="hrow htitle">
-                <div class="header-left"><h2><i class="fas fa-crown"></i> <span class="header-title-text">Administración Saki Sushi</span></h2></div>
-                <!-- Salir junto al logo en móvil -->
-                <button class="logout-button hrm-salir-inline" id="logoutButtonMobile"><i class="fas fa-sign-out-alt"></i> Salir</button>
-                <!-- Desktop: controles completos en una fila -->
-                <div class="hrd">
+            <div class="header-row header-row-main">
+                <div class="header-left"><h2><i class="fas fa-crown"></i> Administración Saki Sushi</h2></div>
+                <div class="header-right">
                     <button class="nav-button" onclick="window.abrirSelectorMesaAdmin()"><i class="fas fa-utensils"></i> Mesas</button>
                     <a href="../Cajero/index.html" target="_blank" class="nav-button"><i class="fas fa-cash-register"></i> Cajero</a>
-                    <span class="header-sucursal-label">Seleccionar sucursal</span>
-                    <button class="nav-button header-sucursal-btn" id="sucursalBtn" title="Próximamente"><i class="fas fa-store"></i> <span id="sucursalNombre">Principal</span></button>
-                    <div class="theme-toggle-wrap" onclick="window.toggleTheme()" title="Cambiar tema" role="button">
-                        <i class="fas fa-sun theme-toggle-icon-sun"></i>
-                        <div class="theme-toggle-track" id="themeToggle"><div class="theme-toggle-thumb" id="themeIcon"><i class="fas fa-sun"></i></div></div>
-                        <i class="fas fa-moon theme-toggle-icon-moon"></i>
-                    </div>
-                    <button class="logout-button" id="logoutButton"><i class="fas fa-sign-out-alt"></i> Salir</button>
+                    <button class="theme-toggle" id="themeToggle" onclick="window.toggleTheme()" title="Cambiar tema"><i class="fas fa-sun" id="themeIcon"></i></button>
+                    <button class="logout-button" id="logoutButton" onclick="window.cerrarSesion()"><i class="fas fa-sign-out-alt"></i> Salir</button>
                 </div>
             </div>
-            <!-- Móvil fila 2: Mesas + Cajero → derecha -->
-            <div class="hrow hrm hrm-nav">
-                <button class="nav-button" onclick="window.abrirSelectorMesaAdmin()"><i class="fas fa-utensils"></i> Mesas</button>
-                <a href="../Cajero/index.html" target="_blank" class="nav-button"><i class="fas fa-cash-register"></i> Cajero</a>
-            </div>
-            <!-- Móvil fila 3: toggle + sucursal → derecha -->
-            <div class="hrow hrm hrm-suc">
-                <div class="theme-toggle-wrap" onclick="window.toggleTheme()" title="Cambiar tema" role="button">
-                    <i class="fas fa-sun theme-toggle-icon-sun"></i>
-                    <div class="theme-toggle-track" id="themeToggleMobile"><div class="theme-toggle-thumb" id="themeIconMobile"><i class="fas fa-sun"></i></div></div>
-                    <i class="fas fa-moon theme-toggle-icon-moon"></i>
-                </div>
-                <span class="header-sucursal-label">Seleccionar sucursal</span>
-                <button class="nav-button header-sucursal-btn" id="sucursalBtnMobile" title="Próximamente"><i class="fas fa-store"></i> <span>Principal</span></button>
+            <div class="header-row header-row-sucursal" id="sucursalRow">
+                <span class="sucursal-label">Seleccionar sucursal</span>
+                <button class="sucursal-button" id="sucursalButton">Sucursal Principal</button>
             </div>
             <div id="stockCriticoHeader" style="width:100%; margin-top:.5rem; padding:.4rem .8rem; background:rgba(0,0,0,.2); border-radius:8px; display:flex; align-items:center; gap:.8rem; flex-wrap:wrap; font-size:.75rem">
                 <span style="font-weight:700; color:var(--danger); white-space:nowrap"><i class="fas fa-exclamation-triangle"></i> STOCK CRÍTICO:</span>
@@ -208,13 +187,17 @@
                         <div class="card-value" id="ventasHoy">$0.00</div>
                         <div style="font-size:.72rem;color:var(--text-muted);margin-top:.25rem">Toca para ver desglose</div>
                     </div>
-                    <div class="dashboard-card" style="cursor:pointer" onclick="window.irADeliverys&&window.irADeliverys()" title="Ver módulo Deliverys"><div class="card-title">Deliverys Hoy <i class="fas fa-external-link-alt" style="font-size:.55rem;opacity:.6;margin-left:.25rem"></i></div><div class="card-value" id="deliverysHoyDashboard">$0.00 / Bs 0,00</div></div>
+                    <div class="dashboard-card" id="deliverysHoyCard" style="cursor:pointer" onclick="window.irADelivery()" title="Ver módulo de Deliverys">
+                        <div class="card-title">Deliverys Hoy</div>
+                        <div class="card-value" id="deliverysHoyDashboard">Bs 0,00</div>
+                        <div style="font-size:.72rem;color:var(--text-muted);margin-top:.25rem">Toca para ver detalle</div>
+                    </div>
                     <div class="dashboard-col-mini">
                         <div class="dashboard-card dashboard-card-sm" style="cursor:pointer" onclick="window.irAMenu()" title="Ver menú">
                             <div class="card-title">Productos Activos</div>
                             <div class="card-value" id="productosActivos">0</div>
                         </div>
-                        <div class="dashboard-card dashboard-card-sm" style="cursor:pointer" onclick="window.irAStockCritico&&window.irAStockCritico()" title="Ver stock crítico">
+                        <div class="dashboard-card dashboard-card-sm" style="cursor:pointer" onclick="window.irAStockCritico()" title="Ver stock crítico">
                             <div class="card-title">Alertas Stock</div>
                             <div class="card-value" id="alertasStock">0</div>
                         </div>
@@ -305,14 +288,23 @@
                         <button class="btn-delivery" onclick="window.agregarDelivery()"><i class="fas fa-plus"></i> Agregar</button>
                     </div>
                 </div>
-                <!-- Stats deliverys (5.1) -->
-                <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.85rem;margin-bottom:1.25rem" id="deliveryStatsGrid">
-                    <div class="delivery-stat-card"><div class="delivery-stat-label"><i class="fas fa-coins"></i> Total acumulado</div><div class="delivery-stat-value" id="deliverysTotalCard">$0.00 / Bs 0,00</div></div>
-                    <div class="delivery-stat-card"><div class="delivery-stat-label"><i class="fas fa-motorcycle"></i> Envíos hoy</div><div class="delivery-stat-value" id="deliverysCountCard">0</div></div>
-                    <div class="delivery-stat-card"><div class="delivery-stat-label"><i class="fas fa-chart-line"></i> Promedio por envío</div><div class="delivery-stat-value" id="deliverysPromedioCard">$0.00 / Bs 0,00</div></div>
+                <!-- Stats cards -->
+                <div class="delivery-stats-grid" id="deliveryStatsGrid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:.85rem;margin-bottom:1.25rem">
+                    <div class="delivery-stat-card">
+                        <div class="delivery-stat-label"><i class="fas fa-coins"></i> Total acumulado (todos)</div>
+                        <div class="delivery-stat-value" id="deliverysTotalCard">$0.00 / Bs 0,00</div>
+                    </div>
+                    <div class="delivery-stat-card">
+                        <div class="delivery-stat-label"><i class="fas fa-motorcycle"></i> Envíos hoy</div>
+                        <div class="delivery-stat-value" id="deliverysCountCard">0</div>
+                    </div>
+                    <div class="delivery-stat-card">
+                        <div class="delivery-stat-label"><i class="fas fa-chart-line"></i> Promedio por envío</div>
+                        <div class="delivery-stat-value" id="deliverysPromedioCard">$0.00 / Bs 0,00</div>
+                    </div>
                 </div>
                 <div class="delivery-list" id="deliverysGrid" style="display:grid"></div>
-                <!-- Tabla últimos 5 viajes (5.2) -->
+                <!-- Tabla últimos 5 viajes -->
                 <div id="ultimosViajesSection" style="margin-top:2rem">
                     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.85rem">
                         <h3 style="font-family:Montserrat,sans-serif;font-size:.88rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);margin:0">
@@ -329,8 +321,10 @@
                                 <th style="padding:.65rem 1rem;text-align:left;font-size:.72rem;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);font-weight:700">Motorizado</th>
                                 <th style="padding:.65rem 1rem;text-align:left;font-size:.72rem;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);font-weight:700">Monto</th>
                                 <th style="padding:.65rem 1rem;text-align:left;font-size:.72rem;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);font-weight:700">Hora</th>
-                            </tr></thead>
-                            <tbody id="ultimosViajesTbody"><tr><td colspan="4" style="text-align:center;padding:1.5rem;color:var(--text-muted);font-size:.85rem">Cargando...</td></tr></tbody>
+                             </tr></thead>
+                            <tbody id="ultimosViajesTbody">
+                                 <tr><td colspan="4" style="text-align:center;padding:1.5rem;color:var(--text-muted);font-size:.85rem">Cargando...</td></tr>
+                            </tbody>
                         </table>
                     </div>
                 </div>
@@ -409,11 +403,11 @@
                 <div class="reportes-filters" style="display:flex;flex-wrap:wrap;align-items:flex-end;gap:.75rem;justify-content:flex-start;margin-bottom:1.25rem">
                     <div class="form-group" style="flex:0 0 auto;margin-bottom:0">
                         <label style="display:block;margin-bottom:.35rem;font-size:.8rem;font-weight:600">Desde</label>
-                        <input type="date" id="reporteDesde" style="padding:.55rem .8rem;min-width:155px;background:var(--input-bg);color:var(--text-dark);border:1px solid var(--input-border);border-radius:8px;font-family:Montserrat,sans-serif;font-size:.88rem">
+                        <input type="date" id="reporteDesde" style="padding:.55rem .8rem;min-width:180px;background:var(--input-bg);color:var(--text-dark);border:1px solid var(--input-border);border-radius:8px;font-family:Montserrat,sans-serif;font-size:.88rem">
                     </div>
                     <div class="form-group" style="flex:0 0 auto;margin-bottom:0">
                         <label style="display:block;margin-bottom:.35rem;font-size:.8rem;font-weight:600">Hasta</label>
-                        <input type="date" id="reporteHasta" style="padding:.55rem .8rem;min-width:155px;background:var(--input-bg);color:var(--text-dark);border:1px solid var(--input-border);border-radius:8px;font-family:Montserrat,sans-serif;font-size:.88rem">
+                        <input type="date" id="reporteHasta" style="padding:.55rem .8rem;min-width:180px;background:var(--input-bg);color:var(--text-dark);border:1px solid var(--input-border);border-radius:8px;font-family:Montserrat,sans-serif;font-size:.88rem">
                     </div>
                     <button class="btn-primary" onclick="window.cargarReportes()" style="flex:0 0 auto"><i class="fas fa-search"></i> Buscar</button>
                 </div>
@@ -450,7 +444,6 @@
                             <div style="flex:1"><input type="file" id="platilloImagen" accept="image/*" style="margin-bottom:.3rem"><input type="url" id="platilloImagenUrl" placeholder="O pega aquí el link de la imagen" oninput="window._previewPlatilloUrl(this.value)"></div>
                             <div id="imagenPreview" class="image-preview" style="display:none;width:80px;height:80px;flex-shrink:0;position:relative">
                                 <img id="previewImg" style="width:100%;height:100%;object-fit:cover;border-radius:8px">
-                                <!-- El botón de eliminar se crea dinámicamente en admin-menu.js (X flotante) -->
                             </div>
                         </div>
                     </div>
@@ -473,7 +466,6 @@
             <div class="modal-body">
                 <form id="ingredienteForm">
                     <div class="form-group"><label>Nombre del Ingrediente</label><input type="text" id="ingredienteNombre" required placeholder="Ej: Salmón fresco"></div>
-                    <!-- Campo Stock Actual (deshabilitado, se desbloquea con contraseña) -->
                     <div class="form-group" id="stockOverlay">
                         <label style="display:flex; align-items:center; gap:.5rem">Stock Actual<span id="stockLockIcon" style="color:var(--text-muted)"><i class="fas fa-lock" style="font-size:.8rem"></i></span></label>
                         <div id="stockClickArea" style="position:relative; cursor:pointer; border:1px solid var(--border); border-radius:8px; background:var(--input-bg); transition:all .2s; display:flex; align-items:center; width:100%; box-sizing:border-box" onclick="window.mostrarModalContraseñaStock()" onmouseover="this.style.borderColor='var(--accent)'; this.style.boxShadow='0 0 0 2px rgba(255,152,0,.2)'" onmouseout="this.style.borderColor='var(--border)'; this.style.boxShadow='none'">
@@ -568,7 +560,6 @@
         <div class="modal-content" style="max-width:400px">
             <div class="modal-header"><h3>Código QR</h3><button class="modal-close" id="closeQrAmpliadoModal">&times;</button></div>
             <div class="modal-body" style="text-align:center"><div id="qrAmpliado" style="width:300px;height:300px;margin:0 auto"></div><div id="qrAmpliadoInfo" style="margin-top:1rem"></div></div>
-            <!-- footer QR: botones generados por ampliarQR() -->
         </div>
     </div>
 
