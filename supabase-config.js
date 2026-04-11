@@ -27,7 +27,7 @@ window.inicializarSupabaseCliente = (jwtToken = null) => {
         window.SUPABASE_ANON_KEY,
         options
     );
-    console.log(jwtToken ? 'Cliente Supabase con JWT' : 'Cliente Supabase anonimo');
+    console.log(jwtToken ? 'Cliente Supabase con JWT' : 'Cliente Supabase anónimo');
     return window.supabaseClient;
 };
 
@@ -249,7 +249,7 @@ window.subirImagenPlatillo = async function(archivoImagen, carpetaAdicional = ''
             .from('imagenes-platillos')
             .upload(ruta, archivoImagen, { cacheControl: '3600', upsert: false, contentType: archivoImagen.type });
         if (error) throw error;
-        const {  urlData } = window.supabaseClient.storage.from('imagenes-platillos').getPublicUrl(ruta);
+        const { data: urlData } = window.supabaseClient.storage.from('imagenes-platillos').getPublicUrl(ruta);
         return { success: true, path: ruta, url: urlData.publicUrl };
     } catch (error) {
         console.error('Error subiendo imagen:', error);
@@ -286,7 +286,7 @@ window.subirComprobante = async function(file, tipo, onProgress) {
             .from('comprobantes')
             .upload(ruta, file, { cacheControl: '3600', upsert: false, contentType: file.type });
         if (error) throw new Error(error.message || 'Error al subir el archivo');
-        const {  urlData } = window.supabaseClient.storage.from('comprobantes').getPublicUrl(ruta);
+        const { data: urlData } = window.supabaseClient.storage.from('comprobantes').getPublicUrl(ruta);
         if (onProgress) onProgress({ loaded: file.size, total: file.size, percent: 100 });
         return { success: true, url: urlData.publicUrl };
     } catch (error) {
@@ -429,6 +429,7 @@ window._mostrarPantallaWifi = function(wifiSsid, wifiPwd) {
         <p style="font-size:.75rem;opacity:.4">O escanea el QR nuevamente</p>
     </div>`;
 };
+
 console.log('✅ supabase-config.js cargado correctamente');
 console.log('   - Anon key:', window.SUPABASE_ANON_KEY ? '✅' : '❌');
 console.log('   - VAPID Public Key:', window.VAPID_PUBLIC_KEY ? '✅' : '❌');
