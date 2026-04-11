@@ -66,6 +66,7 @@
                     +   '</div>'
                     + '</div>';
                 grid.appendChild(card);
+            }
         } finally { window._renderizandoDeliverys = false; }
     };
 
