@@ -118,7 +118,7 @@ window._invMostrarDetalle = function(item) {
         ? `<img src="${item.imagen}" style="width:60px;height:60px;object-fit:cover;border-radius:8px;margin-bottom:.5rem;cursor:pointer" onclick="window.expandirImagen &&window.expandirImagen('${item.imagen.replace(/'/g, "\'")}')">`
         : '';
 
-    // CORRECCIÓN: Barra con color a la izquierda, gris a la derecha
+    // Barra de stock: Color a la izquierda, Gris a la derecha
     const detailHTML = `
         <div class="inv-detail-card" id="invDetailCard_${item.id}">
             <div class="inv-detail-title">
@@ -135,10 +135,9 @@ window._invMostrarDetalle = function(item) {
                    Reservado: ${fmt(item.reservado||0)}
                 </span>
             </div>
-            <!-- Barra: Color (stock actual) a la izquierda, Gris (consumido) a la derecha -->
+            <!-- Barra invertida: parte de color a la izquierda, gris a la derecha -->
             <div style="height:10px;background:rgba(0,0,0,.08);border-radius:6px;overflow:hidden;margin-bottom:.35rem;position:relative">
                 <div style="position:absolute;top:0;left:0;height:100%;width:${pct.toFixed(1)}%;background:${estadoGrad};border-radius:6px 0 0 6px;transition:width .55s cubic-bezier(.4,0,.2,1)"></div>
-                <div style="position:absolute;top:0;right:0;height:100%;width:${(100-pct).toFixed(1)}%;background:rgba(0,0,0,.08);border-radius:0 6px 6px 0;transition:width .55s cubic-bezier(.4,0,.2,1)"></div>
             </div>
             <div style="display:flex;align-items:center;gap:.45rem;margin-bottom:.85rem;font-size:.75rem;font-weight:700;color:${estadoColor}">
                 <span style="width:9px;height:9px;border-radius:50%;background:${estadoColor};display:inline-block;flex-shrink:0"></span>
@@ -302,14 +301,14 @@ window.verificarContraseñaStock = async function() {
         let esValida = false;
         if (window.configGlobal?.admin_password === pwd) esValida = true; 
         if (!esValida && currentAdminUsername) {
-            const {  authData } = await window.supabaseClient.rpc('verify_user_credentials', {
+            const { data: authData } = await window.supabaseClient.rpc('verify_user_credentials', {
                 p_username: currentAdminUsername,
                  p_password: pwd
             });
             if (authData && authData.success === true) esValida = true;
         }
         if (!esValida) {
-            const {  adminUsers } = await window.supabaseClient.from('usuarios').select('username').eq('rol', 'admin');
+            const { data: adminUsers } = await window.supabaseClient.from('usuarios').select('username').eq('rol', 'admin');
             if (adminUsers && adminUsers.length) {
                 for (const admin of adminUsers) {
                     const { data: authData } = await window.supabaseClient.rpc('verify_user_credentials', { 
@@ -807,7 +806,7 @@ window.verificarYNotificarStockReactivado = async function(ingredienteId, ingred
             const titulo = `🍣 ${platillo.nombre} disponible de nuevo!`;
             const mensaje = `Ya tenemos ${platillo.nombre} en stock. ¡Pide ahora!`;
              try {
-                const {  pedidosUnicos } = await window.supabaseClient.from('pedidos').select('session_id').not('session_id', 'is', null).order('fecha', { ascending: false });
+                const { data: pedidosUnicos } = await window.supabaseClient.from('pedidos').select('session_id').not('session_id', 'is', null).order('fecha', { ascending: false });
                 const sessionIds = [...new Set(pedidosUnicos?.map(p => p.session_id) || [])];
                 for (const sessionId of sessionIds) await window.enviarNotificacionPush(titulo, mensaje, sessionId);
                 window.mostrarToast(`📢 Notificación enviada: ${platillo.nombre} disponible`, 'success');
@@ -869,7 +868,7 @@ function setupIngredienteModalEvents() {
     if (agregarInput) agregarInput.addEventListener('input', syncAgregarToCantidadComprada);
     if (cantidadComprada) cantidadComprada.readOnly = true;
     
-    const unidadLabel = document.querySelector('#ingredienteForm .form-group:nth-child(4) label'); // Ajustado índice tras cambio
+    const unidadLabel = document.querySelector('#ingredienteForm .form-group:nth-child(2) label');
     if (unidadLabel) {
         unidadLabel.innerHTML = `
             Unidad de Medida
@@ -882,7 +881,7 @@ function setupIngredienteModalEvents() {
         `;
     }
     
-    const minimoLabel = document.querySelector('#ingredienteForm .form-group:nth-child(5) label');
+    const minimoLabel = document.querySelector('#ingredienteForm .form-group:nth-child(3) label');
     if (minimoLabel) {
          minimoLabel.innerHTML = `
            Stock Mínimo
