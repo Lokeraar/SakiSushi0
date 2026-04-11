@@ -323,9 +323,361 @@
     <!-- Toast -->
     <div id="toast" class="toast"></div>
 
-    <!-- MODALES (Simplificados para brevedad, usa tus originales) -->
-    <!-- [AQUÍ MANTÉN TUS MODALES ORIGINALES DE PLATILLO, INGREDIENTE, USUARIO, ETC. PARA NO PERDER FUNCIONALIDAD] -->
-    <!-- ... -->
+        <!-- ================= MODALES (FORMULARIOS) ================= -->
+
+    <!-- Modal Platillo -->
+    <div id="platilloModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="platilloModalTitle">Nuevo Platillo</h3>
+                <button class="modal-close" id="closePlatilloModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="platilloForm">
+                    <div class="form-group">
+                        <label>Imagen del Platillo</label>
+                        <input type="file" id="platilloImagen" accept="image/*">
+                        <input type="url" id="platilloImagenUrl" placeholder="O ingresa URL de imagen">
+                        <div id="imagenPreview" class="image-preview" style="display:none;">
+                            <img id="previewImg" src="" alt="Preview">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Nombre del Platillo *</label>
+                        <input type="text" id="platilloNombre" required>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Categoría *</label>
+                            <select id="platilloCategoria" required>
+                                <option value="">Seleccionar</option>
+                            </select>
+                        </div>
+                        <div class="form-group" id="subcategoriaContainer" style="display:none;">
+                            <label>Subcategoría</label>
+                            <select id="platilloSubcategoria">
+                                <option value="">Ninguna</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Precio (USD) *</label>
+                        <input type="number" id="platilloPrecio" step="0.01" min="0" required>
+                        <div id="platilloPrecioBsPreview" style="font-size:.75rem;color:var(--text-muted);margin-top:.3rem;"></div>
+                    </div>
+                    <div class="form-group">
+                        <label>Disponible</label>
+                        <div style="display:flex;align-items:center;gap:.5rem;">
+                            <input type="checkbox" id="platilloDisponibleCheck" checked style="width:auto;">
+                            <span id="platilloDisponibleLabel" style="font-size:.85rem;">Sí</span>
+                            <input type="hidden" id="platilloDisponible" value="true">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Descripción</label>
+                        <textarea id="platilloDescripcion" rows="3"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>Ingredientes del Platillo</label>
+                        <div id="ingredientesContainer"></div>
+                        <button type="button" class="btn-secondary" onclick="window.agregarIngredienteRow()" style="margin-top:.5rem;">
+                            <i class="fas fa-plus"></i> Agregar Ingrediente
+                        </button>
+                        <div id="stockCalculadoWrap" style="margin-top:.75rem;padding:.6rem;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;display:none;">
+                            <div id="stockCalculadoText" style="font-size:.8rem;color:#166534;font-weight:600;"></div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="cancelPlatillo"><i class="fas fa-times"></i> Cancelar</button>
+                <button class="btn-primary" id="savePlatillo"><i class="fas fa-save"></i> Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Ingrediente -->
+    <div id="ingredienteModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="ingredienteModalTitle">Nuevo Ingrediente</h3>
+                <button class="modal-close" id="closeIngredienteModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="ingredienteForm">
+                    <div class="form-group">
+                        <label>Nombre del Ingrediente *</label>
+                        <input type="text" id="ingredienteNombre" required>
+                    </div>
+                    <div class="form-group password-overlay">
+                        <div id="stockClickArea" style="display:flex;align-items:center;gap:.5rem;padding:.65rem .9rem;border:1px solid var(--input-border);border-radius:8px;background:var(--input-bg);cursor:pointer;">
+                            <input type="number" id="ingredienteStock" step="0.001" min="0" value="0" disabled style="flex:1;border:none;background:transparent;outline:none;font-family:Montserrat,sans-serif;font-size:.875rem;color:var(--text-dark);" readonly>
+                            <div id="stockLockIcon" style="color:var(--text-muted);font-size:.9rem;"><i class="fas fa-lock"></i></div>
+                        </div>
+                        <div style="font-size:.75rem;color:var(--text-muted);margin-top:.3rem;">Stock Actual</div>
+                    </div>
+                    <div class="form-group">
+                        <label>Mercancía Nueva a Agregar</label>
+                        <input type="number" id="ingredienteAgregar" step="0.001" min="0" value="0" onchange="window._syncIngredientePreview()">
+                        <div id="stockTotalPreview" style="font-size:.75rem;color:var(--text-muted);margin-top:.3rem;"></div>
+                    </div>
+                    <div class="form-group">
+                        <label>Unidad de Medida</label>
+                        <select id="ingredienteUnidad" onchange="window._syncIngredientePreview()">
+                            <option value="unidades">Unidades/Piezas</option>
+                            <option value="gramos">Gramos</option>
+                            <option value="mililitros">Mililitros</option>
+                            <option value="kilogramos">Kilogramos</option>
+                            <option value="litros">Litros</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Stock Mínimo de Alerta</label>
+                        <input type="number" id="ingredienteMinimo" step="0.001" min="0" value="0">
+                        <div style="font-size:.7rem;color:var(--text-muted);margin-top:.2rem;">Al llegar a esta cantidad, aparecerá alerta de stock crítico.</div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Costo Total Compra (USD)</label>
+                            <input type="number" id="costoTotal" step="0.01" min="0" onchange="window.calcularCostoUnitario()">
+                        </div>
+                        <div class="form-group">
+                            <label>Cantidad Comprada</label>
+                            <input type="number" id="cantidadComprada" step="0.001" min="0" onchange="window.calcularCostoUnitario()">
+                        </div>
+                    </div>
+                    <div id="calcResultado" style="display:none;margin-bottom:1rem;padding:.6rem;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;">
+                        <div style="font-size:.8rem;color:#166534;">Costo unitario: <strong id="calcPrecioUnitario">0.00</strong> USD <span id="calcUnidadResult"></span></div>
+                    </div>
+                    <div class="form-group">
+                        <label>Precio de Costo (USD/Bs)</label>
+                        <input type="number" id="ingredienteCosto" step="0.0001" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label>Precio de Venta (USD/Bs)</label>
+                        <input type="number" id="ingredienteVenta" step="0.0001" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label>Imagen del Ingrediente (opcional)</label>
+                        <input type="file" id="ingredienteImagen" accept="image/*">
+                        <input type="url" id="ingredienteImagenUrl" placeholder="O ingresa URL de imagen">
+                        <div id="ingredienteImagenPreview" class="image-preview" style="display:none;">
+                            <img id="ingredientePreviewImg" src="" alt="Preview">
+                            <button type="button" id="ingredienteImgRemoveBtn" class="btn-small" style="display:none;"><i class="fas fa-times"></i></button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-danger" id="deleteIngredienteBtn" style="display:none;"><i class="fas fa-trash"></i> Eliminar</button>
+                <button class="btn-secondary" id="cancelIngrediente"><i class="fas fa-times"></i> Cancelar</button>
+                <button class="btn-primary" id="saveIngrediente"><i class="fas fa-save"></i> Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Usuario -->
+    <div id="usuarioModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="usuarioModalTitle">Nuevo Cajero/Admin</h3>
+                <button class="modal-close" id="closeUsuarioModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="usuarioForm">
+                    <div class="form-group">
+                        <label>Foto de perfil (opcional)</label>
+                        <input type="file" id="usuarioFoto" accept="image/*">
+                        <input type="url" id="usuarioFotoUrl" placeholder="O ingresa URL de imagen">
+                        <div id="usuarioFotoPreview" class="image-preview" style="display:none;">
+                            <img id="usuarioPreviewImg" src="" alt="Preview" style="width:80px;height:80px;object-fit:cover;border-radius:50%;">
+                            <button type="button" id="usuarioFotoRemoveBtn" class="btn-small" style="display:none;"><i class="fas fa-times"></i></button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Nombre completo *</label>
+                        <input type="text" id="usuarioNombre" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Nombre de usuario *</label>
+                        <input type="text" id="usuarioUsername" required>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Rol</label>
+                            <select id="usuarioRol">
+                                <option value="cajero">Cajero</option>
+                                <option value="admin">Administrador</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Contraseña</label>
+                            <input type="password" id="usuarioPassword">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Estado</label>
+                        <select id="usuarioActivo">
+                            <option value="true">Activo</option>
+                            <option value="false">Inactivo</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="cancelUsuario"><i class="fas fa-times"></i> Cancelar</button>
+                <button class="btn-primary" id="saveUsuario"><i class="fas fa-save"></i> Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Delivery -->
+    <div id="deliveryModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="deliveryModalTitle">Editar Motorizado</h3>
+                <button class="modal-close" id="closeDeliveryModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="deliveryForm">
+                    <div class="form-group">
+                        <label>Foto de perfil (opcional)</label>
+                        <input type="file" id="deliveryFoto" accept="image/*">
+                        <input type="url" id="deliveryFotoUrl" placeholder="O ingresa URL de imagen">
+                        <div id="deliveryFotoPreview" class="image-preview" style="display:none;">
+                            <img id="deliveryPreviewImg" src="" alt="Preview">
+                            <button type="button" id="deliveryFotoRemoveBtn" class="btn-small" style="display:none;"><i class="fas fa-times"></i></button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Nombre</label>
+                        <input type="text" id="deliveryNombre" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Estado</label>
+                        <select id="deliveryEstado">
+                            <option value="true">Activo</option>
+                            <option value="false">Inactivo</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="cancelDeliveryEdit"><i class="fas fa-times"></i> Cancelar</button>
+                <button class="btn-primary" id="saveDelivery"><i class="fas fa-save"></i> Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Mesonero -->
+    <div id="mesoneroModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="mesoneroModalTitle">Editar Mesonero</h3>
+                <button class="modal-close" id="closeMesoneroModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="mesoneroForm">
+                    <div class="form-group">
+                        <label>Foto de perfil (opcional)</label>
+                        <input type="file" id="mesoneroFoto" accept="image/*">
+                        <input type="url" id="mesoneroFotoUrl" placeholder="O ingresa URL de imagen">
+                        <div id="mesoneroFotoPreview" class="image-preview" style="display:none;">
+                            <img id="mesoneroPreviewImg" src="" alt="Preview">
+                            <button type="button" id="mesoneroFotoRemoveBtn" class="btn-small" style="display:none;"><i class="fas fa-times"></i></button>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Nombre completo *</label>
+                        <input type="text" id="mesoneroNombre" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Estado</label>
+                        <select id="mesoneroActivo">
+                            <option value="true">Activo</option>
+                            <option value="false">Inactivo</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="cancelMesoneroEdit"><i class="fas fa-times"></i> Cancelar</button>
+                <button class="btn-primary" id="saveMesonero"><i class="fas fa-save"></i> Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Confirmar Pago Delivery/Mesonero -->
+    <div id="confirmPagoDeliveryModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Confirmar Pago</h3>
+                <button class="modal-close" onclick="window.cerrarModal('confirmPagoDeliveryModal')">&times;</button>
+            </div>
+            <div class="modal-body" id="confirmPagoDeliveryBody">
+                <!-- Contenido dinámico -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="window.cerrarModal('confirmPagoDeliveryModal')"><i class="fas fa-times"></i> Cancelar</button>
+                <button class="btn-primary" id="confirmPagoDeliveryBtn"><i class="fas fa-check"></i> Confirmar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal QR Ampliado -->
+    <div id="qrAmpliadoModal" class="modal">
+        <div class="modal-content" style="max-width:500px;">
+            <div class="modal-header">
+                <h3>Código QR</h3>
+                <button class="modal-close" id="closeQrAmpliado">&times;</button>
+            </div>
+            <div class="modal-body" style="text-align:center;">
+                <div id="qrAmpliado"></div>
+                <div id="qrAmpliadoInfo"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Mesas Admin -->
+    <div id="adminMesaModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Seleccionar Mesa</h3>
+                <button class="modal-close" onclick="window.cerrarModal('adminMesaModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p style="margin-bottom:1rem;color:var(--text-muted);font-size:.85rem;">Selecciona una mesa para abrir el menú del cliente en esa mesa.</p>
+                <div id="adminMesaList" class="mesa-admin-grid">
+                    <p style="color:var(--text-muted);">Cargando mesas...</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="window.cerrarModal('adminMesaModal')"><i class="fas fa-times"></i> Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Desbloquear Stock -->
+    <div id="passwordStockModal" class="modal">
+        <div class="modal-content" style="max-width:400px;">
+            <div class="modal-header">
+                <h3>Desbloquear Stock</h3>
+                <button class="modal-close" onclick="window.cerrarModal('passwordStockModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p style="margin-bottom:1rem;color:var(--text-muted);font-size:.85rem;">Ingresa la contraseña de administrador para poder editar el stock actual:</p>
+                <div class="form-group">
+                    <label>Contraseña de Administrador</label>
+                    <input type="password" id="stockPasswordModalInput" placeholder="Ingresa tu contraseña">
+                </div>
+                <div id="passwordStockError" style="color:var(--danger);font-size:.8rem;margin-top:.5rem;display:none;">Contraseña incorrecta</div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="window.cerrarModal('passwordStockModal')"><i class="fas fa-times"></i> Cancelar</button>
+                <button class="btn-primary" id="confirmPasswordStockBtn" onclick="window.verificarContraseñaStock()"><i class="fas fa-unlock"></i> Confirmar</button>
+            </div>
+        </div>
+    </div>
 
     <!-- Scripts: Orden correcto -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
