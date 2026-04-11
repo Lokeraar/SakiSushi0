@@ -136,20 +136,20 @@ const previewImg = document.getElementById('previewImg');
 const existingQuitar = document.querySelector('#imagenPreview .btn-small, #imagenPreview button:not(.preview-remove-btn)');
 if (existingQuitar) existingQuitar.remove();
 
-let remove PreviewBtn = null;
+let removePreviewBtn = null;
 function updateRemoveButton() {
     if (removePreviewBtn) removePreviewBtn.remove();
-    if (previewDiv  & & previewDiv.style.display === 'flex') {
+    if (previewDiv && previewDiv.style.display === 'flex') {
         removePreviewBtn = document.createElement('button');
-        removePreviewBtn.innerHTML = ' <i class= "fas fa-times-circle " > </i >';
-        removePreviewBtn.style.cssText = 'position:absolute;top:-8px;right:-8px;background:rgba(0,0,0,.6);color:#fff;border:none;border-radius:50%;width:24px;height:24px;cursor :pointer;display:flex;align-items:center;justify-content:center;font-size:.8rem;z-index:10;backdrop-filter:blur(2px)';
+        removePreviewBtn.innerHTML = '<i class="fas fa-times-circle"></i>';
+        removePreviewBtn.style.cssText = 'position:absolute;top:-8px;right:-8px;background:rgba(0,0,0,.6);color:#fff;border:none;border-radius:50%;width:24px;height:24px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.8rem;z-index:10;backdrop-filter:blur(2px)';
         removePreviewBtn.title = 'Eliminar imagen';
-          removePreviewBtn.onclick = (e) = > {
+        removePreviewBtn.onclick = (e) => {
             e.stopPropagation();
             window.limpiarImagenPreview();
         };
         previewDiv.style.position = 'relative';
-        previewDiv.appendChild(removePrev iewBtn);
+        previewDiv.appendChild(removePreviewBtn);
     }
 }
 
