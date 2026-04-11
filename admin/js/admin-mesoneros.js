@@ -4,29 +4,34 @@
 let currentMesoneroFotoFile = null;
 let currentMesoneroFotoUrl  = '';
 
+// ════════════════════════════════════════
+// CARGAR / RENDERIZAR
+// ════════════════════════════════════════
 window.cargarMesoneros = async function() {
     try {
-        const { data, error } = await window.supabaseClient.from('mesoneros').select('*').order('nombre');
+        const { data, error } = await window.supabaseClient
+            .from('mesoneros').select('*').order('nombre');
         if (error) throw error;
         window.mesoneros = data || [];
-        await window.renderizarMesoneros();
+         await window.renderizarMesoneros();
         window.cargarPropinas();
     } catch(e) { console.error('Error cargando mesoneros:', e); }
 };
 
+// Función CORREGIDA para mostrar propinas acumuladas
 window.renderizarMesoneros = async function() {
     const container = document.getElementById('mesonerosList');
     if (!container) return;
-    
     if (!window.mesoneros || !window.mesoneros.length) {
-        container.innerHTML = '<p style="color:var(--text-muted);font-size:.88rem;text-align:center;padding:2rem;">No hay mesoneros registrados.</p>';
+        container.innerHTML = '<p style="color:var(--text-muted);font-size:.88rem">No hay mesoneros registrados.</p>';
         return;
     }
-
-    // 1. Calcular acumulado de propinas NO entregadas
+    
     let acumulados = {};
     try {
-        const { data: allProp } = await window.supabaseClient.from('propinas').select('mesonero_id, monto_bs, entregado').eq('entregado', false);
+        // Traemos solo las propinas NO entregadas para sumar el acumulado pendiente
+        const { data: allProp } = await window.supabaseClient
+            .from('propinas').select('mesonero_id, monto_bs, entregado').eq('entregado', false);
         (allProp || []).forEach(p => {
             acumulados[p.mesonero_id] = (acumulados[p.mesonero_id] || 0) + (p.monto_bs || 0);
         });
@@ -40,68 +45,55 @@ window.renderizarMesoneros = async function() {
         const acum    = acumulados[m.id] || 0;
         const hayAcum = acum > 0;
         const acumUsd = tasa > 0 ? acum / tasa : 0;
-        
         const avatar  = m.foto
-            ? `<img src="${m.foto}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;cursor:pointer;" onclick="window.expandirImagen(this.src)">`
-            : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.4rem;background:linear-gradient(135deg,var(--propina),#7B1FA2);border-radius:50%;">${inicial}</div>`;
-        
-        const statusClass = m.activo ? 'status-activo' : 'status-inactivo';
-        const statusText  = m.activo ? 'Activo' : 'Inactivo';
+            ? '<div class="ucard-avatar"><img src="' + m.foto + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;cursor:pointer" onclick="window.expandirImagen(this.src)"></div>'
+            : '<div class="ucard-avatar"><div class="mesonero-avatar" style="width:100%;height:100%;font-size:1.4rem;border-radius:50%">' + inicial + '</div></div>';
+        const badge = m.activo
+            ? '<span class="status-activo"><i class="fas fa-check-circle"></i> Activo</span>'
+            : '<span class="status-inactivo"><i class="fas fa-circle"></i> Inactivo</span>';
+        const propStr = hayAcum
+            ? window.formatUSD(acumUsd) + ' | ' + window.formatBs(acum)
+            : 'Bs 0,00';
+        const propColor = hayAcum ? 'var(--propina)' : 'var(--text-muted)';
+        const propWeight = hayAcum ? '700' : '400';
         const toggleClass = m.activo ? 'btn-toggle-on' : 'btn-toggle-off';
-        const toggleTxt   = m.activo ? 'Inhabilitar' : 'Activar';
+        const toggleTxt    = m.activo ? 'Inhabilitar' : 'Activar';
         const toggleVal   = String(!m.activo);
-        const propColor   = hayAcum ? 'var(--propina)' : 'var(--text-muted)';
-        const propWeight  = hayAcum ? '700' : '400';
-
-        return `
-        <div class="mesonero-card" style="display:grid; grid-template-columns: 64px 1fr auto; grid-template-rows: auto auto auto; gap: 8px 12px; align-items: center; background: var(--card-bg); border-radius: 14px; padding: 12px 16px; box-shadow: var(--shadow-sm); border: 1px solid var(--border); border-left: 4px solid var(--propina); transition: var(--transition);">
-            <!-- Izquierda: Foto -->
-            <div style="grid-row: 1 / 4; width: 64px; height: 64px; border-radius: 50%; overflow: hidden; display: flex; align-items: center; justify-content: center; background: var(--secondary);">
-                ${avatar}
-            </div>
-
-            <!-- Centro Línea 1: Nombre -->
-            <div style="grid-column: 2; grid-row: 1; font-weight: 700; font-size: 0.95rem; color: var(--text-dark); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                ${m.nombre}
-            </div>
-
-            <!-- Centro Línea 2: Acumulado Propinas -->
-            <div style="grid-column: 2; grid-row: 2; font-size: 0.85rem; font-weight: ${propWeight}; color: ${propColor};">
-                Propinas: ${hayAcum ? window.formatUSD(acumUsd) + ' | ' : ''}${window.formatBs(acum)}
-            </div>
-
-            <!-- Centro Línea 3: Pagado + Toggle -->
-            <div style="grid-column: 2; grid-row: 3; display: flex; gap: 6px; align-items: center; flex-wrap: wrap;">
-                <button class="btn-sm" style="background:linear-gradient(135deg,var(--propina),#7B1FA2);color:#fff; font-size:0.75rem; padding:4px 10px; border-radius:20px; border:none; cursor:pointer; display:inline-flex; align-items:center; gap:4px;" onclick="window.mostrarPagoMesonero('${m.id}')" ${!hayAcum ? 'disabled style="opacity:0.5;cursor:not-allowed;background:#ccc;"' : ''}>
-                    <i class="fas fa-hand-holding-heart"></i> Pagado
-                </button>
-                <button class="btn-toggle ${toggleClass}" onclick="window.toggleMesoneroActivo('${m.id}', ${toggleVal})">${toggleTxt}</button>
-            </div>
-
-            <!-- Derecha Línea 1: Estado -->
-            <div style="grid-column: 3; grid-row: 1; justify-self: end;">
-                <span class="${statusClass}"><i class="fas ${m.activo ? 'fa-check-circle' : 'fa-circle'}"></i> ${statusText}</span>
-            </div>
-
-            <!-- Derecha Línea 2: (Vacío) -->
-            <div style="grid-column: 3; grid-row: 2;"></div>
-
-            <!-- Derecha Línea 3: Editar + Papelera -->
-            <div style="grid-column: 3; grid-row: 3; justify-self: end; display: flex; gap: 6px;">
-                <button class="btn-icon edit" onclick="window.editarMesonero('${m.id}')" title="Editar"><i class="fas fa-pen"></i></button>
-                <button class="btn-icon delete" onclick="window.eliminarMesonero('${m.id}')" title="Eliminar"><i class="fas fa-trash"></i></button>
-            </div>
-        </div>`;
+        
+        return '<div class="usuario-card-v2" style="border-left-color:var(--propina)">'
+            + avatar
+            + '<div class="ucard-body">'
+            +   '<div class="ucard-top">'
+            +     '<div class="ucard-names">'
+            +       '<span class="mesonero-nombre">' + m.nombre + '</span>'
+            +       '<span style="font-size:.72rem;color:' + propColor + ';font-weight:' + propWeight + '">Propinas: ' + propStr + '</span>'
+            +     '</div>'
+            +     '<div class="ucard-status">' + badge + '</div>'
+            +   '</div>'
+            +   '<div class="ucard-actions">'
+            +     '<button class="btn-sm" style="background:linear-gradient(135deg,var(--propina),#7B1FA2);color:#fff;white-space:nowrap" onclick="window.mostrarPagoMesonero(\'' + m.id + '\')">'
+            +       '<i class="fas fa-hand-holding-heart"></i> Pagado'
+            +     '</button>'
+            +     '<button class="btn-icon edit" onclick="window.editarMesonero(\'' + m.id + '\')" title="Editar"><i class="fas fa-pen"></i></button>'
+            +     '<button class="btn-toggle ' + toggleClass + '" onclick="window.toggleMesoneroActivo(\'' + m.id + '\',' + toggleVal + ')">' + toggleTxt + '</button>'
+            +     '<button class="btn-icon delete" onclick="window.eliminarMesonero(\'' + m.id + '\')" title="Eliminar"><i class="fas fa-trash"></i></button>'
+            +   '</div>'
+            + '</div>'
+            + '</div>';
     }).join('');
 };
 
+// ════════════════════════════════════════
+// PAGO PROPINAS (completo o parcial)
+// ════════════════════════════════════════
 window.mostrarPagoMesonero = async function(id) {
     const mesonero = (window.mesoneros || []).find(m => m.id === id);
     if (!mesonero) return;
     window.mesoneroParaPago = id;
     let acum = 0;
     try {
-        const { data } = await window.supabaseClient.from('propinas').select('monto_bs').eq('mesonero_id', id).eq('entregado', false);
+        const { data } = await window.supabaseClient
+            .from('propinas').select('monto_bs').eq('mesonero_id', id).eq('entregado', false);
         acum = (data || []).reduce((s, p) => s + (p.monto_bs || 0), 0);
     } catch(e) { console.error('Error propinas pendientes:', e); }
     if (acum <= 0) { window.mostrarToast(mesonero.nombre + ' no tiene propinas pendientes', 'info'); return; }
@@ -148,7 +140,7 @@ window.confirmarPagoMesonero = async function() {
         } else {
             const { error } = await window.supabaseClient.from('propinas')
                 .update({ entregado: true })
-                .eq('mesonero_id', window.mesoneroParaPago).eq('entregado', false);
+                 .eq('mesonero_id', window.mesoneroParaPago).eq('entregado', false);
             if (error) throw error;
             window.mostrarToast('Propinas pagadas a ' + (mesonero ? mesonero.nombre : ''), 'success');
         }
@@ -165,6 +157,14 @@ window.confirmarPagoMesonero = async function() {
     }
 };
 
+window.pagarPropinaMesonero = async function(mesoneroId) {
+    window.mesoneroParaPago = mesoneroId;
+    await window.mostrarPagoMesonero(mesoneroId);
+};
+
+// ════════════════════════════════════════
+// EDITAR / TOGGLE / ELIMINAR / AGREGAR
+// ════════════════════════════════════════
 window.editarMesonero = function(id) {
     const m = (window.mesoneros || []).find(x => x.id === id);
     if (!m) return;
@@ -203,7 +203,7 @@ window.eliminarMesonero = async function(id) {
         async function() {
             try {
                 await window.supabaseClient.from('mesoneros').delete().eq('id', id);
-                await window.cargarMesoneros();
+                 await window.cargarMesoneros();
                 window.mostrarToast('Mesonero eliminado', 'success');
             } catch(e) { window.mostrarToast('Error: ' + (e.message || e), 'error'); }
         }
@@ -230,6 +230,9 @@ window.agregarMesonero = async function() {
     }
 };
 
+// ════════════════════════════════════════
+// PROPINAS — cargar + renderizar + historial
+// ════════════════════════════════════════
 window.cargarPropinas = async function() {
     try {
         const h = new Date(); h.setHours(0,0,0,0);
@@ -260,14 +263,72 @@ window.renderizarPropinas = function() {
         if (ultimas5.length) {
             tbody.innerHTML = ultimas5.map(function(p) {
                 var hora = new Date(p.fecha).toLocaleString('es-VE',{timeZone:'America/Caracas',hour:'2-digit',minute:'2-digit'});
-                return '<tr><td>'+hora+'</td><td>'+(p.mesoneros ? p.mesoneros.nombre : 'N/A')+'</td><td>'+(p.mesa||'N/A')+'</td><td>'+(p.metodo||'N/A')+'</td><td>'+window.formatBs(p.monto_bs)+'</td><td>'+(p.cajero||'N/A')+'</td></tr>';
+                return '<tr><td>' + hora + '</td><td>' + (p.mesoneros ? p.mesoneros.nombre : 'N/A') + '</td><td>' + (p.mesa||'N/A') + '</td><td>' + (p.metodo||'N/A') + '</td><td>' + window.formatBs(p.monto_bs) + '</td><td>' + (p.cajero||'N/A') + '</td></tr>';
             }).join('');
         } else {
-            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-muted)">Sin propinas hoy</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:1rem;color:var(--text-muted)">Sin propinas hoy</td></tr>';
         }
     }
 };
 
+window.verHistorialPropinaHoy = async function() {
+    try {
+        const h   = new Date(); h.setHours(0,0,0,0);
+        const m   = new Date(h); m.setDate(m.getDate()+1);
+        const tasa = window.configGlobal?.tasa_efectiva || window.configGlobal?.tasa_cambio || 400;
+        const { data, error } = await window.supabaseClient
+             .from('propinas').select('*, mesoneros(nombre)')
+            .gte('fecha', h.toISOString()).lt('fecha', m.toISOString())
+            .order('fecha', { ascending: false }); 
+        if (error) throw error;
+        const lista  = data || [];
+        const totBs  = lista.reduce(function(s,p){ return s+(p.monto_bs||0); }, 0);
+        const totUsd = tasa > 0 ? totBs/tasa : 0;
+        const rows = lista.map(function(p) {
+            var mUsd = tasa > 0 ? (p.monto_bs||0)/tasa : 0;
+            var hora = new Date(p.fecha).toLocaleString('es-VE',{timeZone:'America/Caracas',hour:'2-digit',minute:'2-digit'});
+            return '<tr>'
+                + '<td style="padding:.55rem .85rem;border-bottom:1px solid var(--border);font-size:.78rem;color:var(--text-muted)">' + hora + '</td>'
+                + '<td style="padding:.55rem .85rem;border-bottom:1px solid var(--border);font-size:.82rem;font-weight:600">' + (p.mesoneros ? p.mesoneros.nombre : 'N/A') + '</td>'
+                + '<td style="padding:.55rem .85rem;border-bottom:1px solid var(--border);font-size:.78rem;color:var(--text-muted)">' + (p.mesa||'N/A') + '</td>'
+                + '<td style="padding:.55rem .85rem;border-bottom:1px solid var(--border);font-size:.78rem">' + (p.metodo||'N/A') + '</td>'
+                + '<td style="padding:.55rem .85rem;border-bottom:1px solid var(--border);font-size:.82rem;font-weight:700;color:var(--propina)">' + window.formatUSD(mUsd) + ' | ' + window.formatBs(p.monto_bs||0) + '</td>'
+                + '</tr>';
+        }).join('');
+        var pl = lista.length;
+        var totLine = pl + ' propina' + (pl!==1?'s':'') + ' · Total: ' + window.formatUSD(totUsd) + ' | ' + window.formatBs(totBs);
+        var emptyRow = '<tr><td colspan="5" style="text-align:center;padding:1.5rem;color:var(--text-muted)">Sin propinas hoy</td></tr>';
+        var ov = document.createElement('div');
+        ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:10001;display:flex;align-items:center;justify-content:center;padding:1rem;backdrop-filter:blur(3px)';
+        ov.innerHTML = '<div style="background:var(--card-bg);border-radius:16px;max-width:680px;width:100%;max-height:85vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 20px 40px rgba(0,0,0,.4)">'
+            + '<div style="background:linear-gradient(135deg,var(--propina),#7B1FA2);padding:1rem 1.5rem;color:#fff;display:flex;justify-content:space-between;align-items:center">'
+            +   '<div><div style="font-weight:700;font-size:1rem"><i class="fas fa-hand-holding-heart"></i> Historial de Propinas — Hoy</div>'
+            +   '<div style="font-size:.75rem;opacity:.8;margin-top:2px">' + totLine + '</div></div>'
+            +   '<button onclick="this.closest(\'[style*=position]\').remove()" style="background:rgba(255,255,255,.2);border:none;color:#fff;border-radius:50%;width:30px;height:30px;cursor:pointer;font-size:1rem;font-weight:700;display:flex;align-items:center;justify-content:center">&#x2715;</button>'
+            + '</div>'
+            + '<div style="overflow-y:auto;flex:1"><table style="width:100%;border-collapse:collapse">'
+            + '<thead><tr style="background:var(--secondary)">'
+            + '<th style="padding:.6rem .85rem;text-align:left;font-size:.72rem;text-transform:uppercase;color:var(--text-muted);font-weight:700">Hora</th>'
+            + '<th style="padding:.6rem .85rem;text-align:left;font-size:.72rem;text-transform:uppercase;color:var(--text-muted);font-weight:700">Mesonero</th>'
+            + '<th style="padding:.6rem .85rem;text-align:left;font-size:.72rem;text-transform:uppercase;color:var(--text-muted);font-weight:700">Mesa</th>'
+            + '<th style="padding:.6rem .85rem;text-align:left;font-size:.72rem;text-transform:uppercase;color:var(--text-muted);font-weight:700">Método</th>'
+            + '<th style="padding:.6rem .85rem;text-align:left;font-size:.72rem;text-transform:uppercase;color:var(--text-muted);font-weight:700">Monto</th>'
+            + '</tr></thead>'
+            + '<tbody>' + (rows || emptyRow) + '</tbody></table></div>'
+            + '<div style="padding:.85rem 1.5rem;border-top:1px solid var(--border);display:flex;justify-content:flex-end">'
+            + '<button onclick="this.closest(\'[style*=position]\').remove()" style="background:var(--primary);color:#fff;border:none;padding:.55rem 1.25rem;border-radius:8px;cursor:pointer;font-family:Montserrat,sans-serif;font-weight:600;font-size:.85rem">Cerrar</button>'
+            + '</div></div>';
+        ov.addEventListener('click', function(e){ if(e.target===ov) ov.remove(); });
+        document.body.appendChild(ov);
+    } catch(e) {
+        console.error('Error historial propinas:', e);
+        window.mostrarToast('Error al cargar historial', 'error');
+    }
+};
+
+// ════════════════════════════════════════
+// FOTO MESONERO
+// ════════════════════════════════════════
 function handleMesoneroFotoFile() {
     var fi=document.getElementById('mesoneroFoto');
     var ui=document.getElementById('mesoneroFotoUrl');
@@ -279,7 +340,7 @@ function handleMesoneroFotoFile() {
         currentMesoneroFotoFile=fi.files[0]; currentMesoneroFotoUrl='';
         if(ui){ui.value='';ui.disabled=true;}
         var reader=new FileReader();
-        reader.onload=function(e){if(pi)pi.src=e.target.result;pd.style.display='flex';if(rb)rb.style.display='flex';};
+         reader.onload=function(e){if(pi)pi.src=e.target.result;pd.style.display='flex';if(rb)rb.style.display='flex';};
         reader.readAsDataURL(fi.files[0]);
     } else { if(ui)ui.disabled=false; }
 }
@@ -306,6 +367,9 @@ function removeMesoneroFoto() {
     if(pi)pi.src=''; currentMesoneroFotoFile=null; currentMesoneroFotoUrl='';
 }
 
+// ════════════════════════════════════════
+// GUARDAR MESONERO
+// ════════════════════════════════════════
 var saveMesoneroBtn = document.getElementById('saveMesonero');
 if (saveMesoneroBtn) {
     saveMesoneroBtn.addEventListener('click', async function() {
@@ -317,7 +381,7 @@ if (saveMesoneroBtn) {
         var activo = activoEl ? activoEl.value === 'true' : true;
         if (!nombre) { window.mostrarToast('Ingresa un nombre', 'error'); return; }
         var fotoUrl = '';
-        var archivoFoto = (document.getElementById('mesoneroFoto')||{files:[]}).files[0];
+        var archivoFoto = (document.getElementById('mesoneroFoto')||{files:[]}).files[0]; 
         var fotoUrlInput = ((document.getElementById('mesoneroFotoUrl')||{}).value)||'';
         if (archivoFoto) {
             var res = await window.subirImagenPlatillo(archivoFoto, 'mesoneros');
