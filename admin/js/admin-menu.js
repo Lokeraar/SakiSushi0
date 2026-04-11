@@ -39,14 +39,29 @@ const disponibleFinal = item.disponible && todosDisponibles;
 const imgSrc = item.imagen || '';
 const card = document.createElement('div');
 card.className = 'menu-card-v2' + (item.disponible ? '' : ' no-disponible');
-card.innerHTML = 
-`<div class=` `"mc2-header` `"` `> ` `<div class=` `"mc2-info` `"` `> ` `<div class=` `"mc2-nombre` `"` `>${item.nombre}` `</div` `> ` `<div class=` `"mc2-cat` `"` `>${item.categoria || ''}${item.subcategoria ? ' · ' + item.subcategoria : ''}` `</div` `> ` `<div class=` `"mc2-precio` `"` `>${window.formatUSD(item.precio || 0)} ` `<span class=` `"mc2-precio-bs` `"` `>/ ${window.formatBs(window.usdToBs(item.precio || 0))}` `</span` `> ` `</div` `> ` `<div class=` `"mc2-stock-line` `"` `> Stock: ` `<span class=` `"mc2-stock-val` `"` `>${item.stock || 0}` `</span` `> ` `<span class=` `"mc2-badge ${disponibleFinal ? 'mc2-badge-ok' : 'mc2-badge-off'}` `"` `> ${disponibleFinal ? 'Disponible' : 'No disponible'} ` `</span` `> ` `</div` `> ` `</div` `> ${imgSrc ?`
-`: ''} </div> ${item.descripcion ?`
-${item.descripcion}
-`: ''} <div class="mc2-tags">${ingredientesEstado.map(ing =>`
-${ing.nombre} 
-`).join('') || '` `<span class=` `"ing-tag` `" style=` `"opacity:.5` `"` `>Sin ingredientes` `</span` `>'}` `</div` `> ` `<div class=` `"mc2-actions` `"` `> ` `<label style=` `"display:flex;align-items:center;gap:.35rem;cursor:pointer;margin-right:.25rem` `" title=` `"${disponibleFinal ? 'Marcar como no disponible' : 'Marcar como disponible}` `"` `> ` `<span style=` `"font-size:.72rem;color:${disponibleFinal ? 'var(--success)' : 'var(--text-muted)'};font-weight:600` `"` `> ${disponibleFinal ? 'Disponible' : 'No disponible'} ` `</span` `> ` `<input type=` `"checkbox` `" ${item.disponible ? 'checked' : ''} style=` `"accent-color:var(--success);cursor:pointer` `" onchange=` `"window.toggleDisponiblePlatillo('${item.id}', this.checked)` `"` `> ` `</label` `> ` `<button class=` `"btn-icon edit` `" onclick=` `"window.editarPlatillo('${item.id}')` `" title=` `"Editar platillo` `"` `> ` `<i class=` `"fas fa-pen` `"` `>` `</i` `> ` `</button` `> ` `<button class=` `"btn-icon delete` `" onclick=` `"window.eliminarPlatillo('${item.id}')` `" title=` `"Eliminar platillo` `"` `> ` `<i class=` `"fas fa-trash` `"` `>` `</i` `> ` `</button` `> ` `</div` `>`
-;
+card.innerHTML = `
+    <div class="mc2-header">
+        <div class="mc2-info">
+            <div class="mc2-nombre">${item.nombre}</div>
+            <div class="mc2-cat">${item.categoria || ''}${item.subcategoria ? ' · ' + item.subcategoria : ''}</div>
+            <div class="mc2-precio">${window.formatUSD(item.precio || 0)} <span class="mc2-precio-bs">/ ${window.formatBs(window.usdToBs(item.precio || 0))}</span></div>
+            <div class="mc2-stock-line">Stock: <span class="mc2-stock-val">${item.stock || 0}</span> <span class="mc2-badge ${disponibleFinal ? 'mc2-badge-ok' : 'mc2-badge-off'}">${disponibleFinal ? 'Disponible' : 'No disponible'}</span></div>
+        </div>
+        ${imgSrc ? `<div class="mc2-img-wrap"><img class="mc2-img" src="${imgSrc}" alt="${item.nombre}"></div>` : ''}
+    </div>
+    ${item.descripcion ? `<div class="mc2-desc">${item.descripcion}</div>` : ''}
+    <div class="mc2-tags">
+        ${ingredientesEstado.map(ing => `<span class="ing-tag ${!ing.disponible ? 'ing-tag-sin-stock' : ''}" data-ingrediente-id="${ing.id}">${ing.nombre}</span>`).join('') || '<span class="ing-tag" style="opacity:.5">Sin ingredientes</span>'}
+    </div>
+    <div class="mc2-actions">
+        <label style="display:flex;align-items:center;gap:.35rem;cursor:pointer;margin-right:.25rem;" title="${disponibleFinal ? 'Marcar como no disponible' : 'Marcar como disponible'}">
+            <span style="font-size:.72rem;color:${disponibleFinal ? 'var(--success)' : 'var(--text-muted)'};font-weight:600;">${disponibleFinal ? 'Disponible' : 'No disponible'}</span>
+            <input type="checkbox" ${item.disponible ? 'checked' : ''} style="accent-color:var(--success);cursor:pointer;" onchange="window.toggleDisponiblePlatillo('${item.id}', this.checked)">
+        </label>
+        <button class="btn-icon edit" onclick="window.editarPlatillo('${item.id}')" title="Editar platillo"><i class="fas fa-pen"></i></button>
+        <button class="btn-icon delete" onclick="window.eliminarPlatillo('${item.id}')" title="Eliminar platillo"><i class="fas fa-trash"></i></button>
+    </div>
+`;
     const imgElement = card.querySelector('.mc2-img');
     if (imgElement) {
         imgElement.style.cursor = 'pointer';
