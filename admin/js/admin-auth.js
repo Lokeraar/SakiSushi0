@@ -6,18 +6,18 @@ window.cargarListaAdminsRecientes = async function() {
     const container = document.getElementById('loginAdminsList');
     if (!container) return;
     
-    // Esperar a que supabaseClient esté listo
-    let intentos = 0;
-    while (!window.supabaseClient && intentos < 30) {
-        await new Promise(r => setTimeout(r, 150));
-        intentos++;
-    }
+    container.innerHTML = '<div class="loading-spinner" style="margin:0 auto;"></div>';
     
-    if (!window.supabaseClient) {
-        console.error('❌ Supabase client no inicializado');
-        container.innerHTML = '<p style="color:var(--danger)">Error de conexión. Recarga la página.</p>';
-        return;
-    }
+    try {
+        let intentos = 0;
+        while (!window.supabaseClient && intentos < 20) {
+            await new Promise(r => setTimeout(r, 100));
+            intentos++;
+        }
+        
+        if (!window.supabaseClient) {
+            throw new Error('Supabase client no inicializado');
+        }
         
         const recent = window.obtenerAdminsRecientes();
         let admins = [];
@@ -67,7 +67,7 @@ window.cargarListaAdminsRecientes = async function() {
         container.innerHTML = '<p style="color:var(--danger);text-align:center">Error al cargar administradores. Recarga la página.</p>';
     }
 };
-
+    
 window.hacerLogin = async function() {
     if (!selectedAdmin) {
         window.mostrarToast('Selecciona un administrador primero', 'error');
