@@ -63,8 +63,7 @@ window.cargarListaAdminsRecientes = async function() {
                 document.getElementById('adminPassword').focus();
             });
         });
-    } catch (error) {
-        console.error('Error cargando administradores:', error);
+    } catch (e) { console.error('Error cargando administradores:', e);
         container.innerHTML = '<p style="color:var(--danger);text-align:center">Error al cargar administradores. Recarga la página.</p>';
     }
 };
