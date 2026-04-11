@@ -1,94 +1,94 @@
-// admin-usuarios.js - Gestión de usuarios (cajeros y admins)
+// admin-usuarios.js - ndeusuarios (cajerosyadmins)
 (function() {
-let currentUserFotoFile = null;
-let currentUserFotoUrl = '';
+letcurrentUserFotoFile = null;
+letcurrentUserFotoUrl = '';
 
-window.cargarUsuarios = async function() {
+window.cargarUsuarios = asyncfunction() {
     try {
-        const { data, error } = await window.supabaseClient.from('usuarios').select('*').order('nombre');
-        if (error) throw error;
+        const { data, error } = awaitwindow.supabaseClient.from('usuarios').select('*').order('nombre');
+        if (error) throwerror;
         window.usuarios = data || [];
         window.renderizarUsuarios();
-    } catch (e) { console.error('Error cargando usuarios:', e); window.mostrarToast('Error cargando usuarios', 'error'); }
+    } catch (e) { console.error('Errorcargandousuarios:', e); window.mostrarToast('Errorcargandousuarios', 'error'); }
 };
 
 window.renderizarUsuarios = function() {
-    const grid = document.getElementById('usuariosGrid');
+    constgrid = document.getElementById('usuariosGrid');
     if (!grid) return;
     
     if (!window.usuarios || !window.usuarios.length) {
-        grid.innerHTML = '<p style="color:var(--text-muted);font-size:.88rem;text-align:center;padding:2rem;">No hay cajeros registrados.</p>';
+        grid.innerHTML = '<pstyle="color:var(--text-muted);font-size:.88rem;text-align:center;padding:2rem;">Nohaycajerosregistrados.</p>';
         return;
     }
 
     grid.innerHTML = window.usuarios.map(user => {
-        const inicial = (user.nombre || '?').charAt(0).toUpperCase();
-        const avatarInner = user.foto
-            ? `<img src="${user.foto}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;cursor:pointer;" onclick="window.expandirImagen && window.expandirImagen(this.src)">`
-            : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:1.5rem;font-weight:700;color:#fff;background:linear-gradient(135deg,var(--info),#1565c0);border-radius:50%;">${inicial}</div>`;
+        constinicial = (user.nombre || '?').charAt(0).toUpperCase();
+        constavatarInner = user.foto
+            ? `<imgsrc="${user.foto}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;cursor:pointer;" onclick="window.expandirImagen && window.expandirImagen(this.src)">`
+            : `<divstyle="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:1.5rem;font-weight:700;color:#fff;background:linear-gradient(135deg,var(--info),#1565c0);border-radius:50%;">${inicial}</div>`;
         
-        const statusClass = user.activo ? 'status-activo' : 'status-inactivo';
-        const statusText = user.activo ? 'Activo' : 'Inactivo';
-        const toggleClass = user.activo ? 'btn-toggle-on' : 'btn-toggle-off';
-        const toggleTxt = user.activo ? 'Inhabilitar' : 'Activar';
-        const toggleVal = String(!user.activo);
+        conststatusClass = user.activo ? 'status-activo' : 'status-inactivo';
+        conststatusText = user.activo ? 'Activo' : 'Inactivo';
+        consttoggleClass = user.activo ? 'btn-toggle-on' : 'btn-toggle-off';
+        consttoggleTxt = user.activo ? 'Inhabilitar' : 'Activar';
+        consttoggleVal = String(!user.activo);
 
         return `
-        <div class="usuario-card-v2" style="display:grid; grid-template-columns: 64px 1fr auto; grid-template-rows: auto auto auto; gap: 8px 12px; align-items: center; background: var(--card-bg); border-radius: 14px; padding: 12px 16px; box-shadow: var(--shadow-sm); border: 1px solid var(--border); border-left: 4px solid var(--info); transition: var(--transition);">
-            <!-- Izquierda: Foto (ocupa las 3 líneas) -->
-            <div style="grid-row: 1 / 4; width: 64px; height: 64px; border-radius: 50%; overflow: hidden; display: flex; align-items: center; justify-content: center; background: var(--secondary);">
+        <divclass="usuario-card-v2" style="display:grid; grid-template-columns: 64px 1frauto; grid-template-rows: autoautoauto; gap: 8px 12px; align-items: center; background: var(--card-bg); border-radius: 14px; padding: 12px 16px; box-shadow: var(--shadow-sm); border: 1pxsolidvar(--border); border-left: 4pxsolidvar(--info); transition: var(--transition);">
+            <!-- Izquierda: Foto (ocupalas 3l) -->
+            <divstyle="grid-row: 1 / 4; width: 64px; height: 64px; border-radius: 50%; overflow: hidden; display: flex; align-items: center; justify-content: center; background: var(--secondary);">
                 ${avatarInner}
             </div>
 
-            <!-- Centro Línea 1: Nombre -->
-            <div style="grid-column: 2; grid-row: 1; font-weight: 700; font-size: 0.95rem; color: var(--text-dark); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+            <!-- CentroL 1: Nombre -->
+            <divstyle="grid-column: 2; grid-row: 1; font-weight: 700; font-size: 0.95rem; color: var(--text-dark); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                 ${user.nombre}
             </div>
 
-            <!-- Centro Línea 2: Monto (En usuarios se muestra el rol como referencia) -->
-            <div style="grid-column: 2; grid-row: 2; font-size: 0.8rem; color: var(--text-muted); display: flex; align-items: center; gap: 6px;">
-                <span class="usuario-rol ${user.rol}" style="display:inline-block; font-size:.65rem; font-weight:700; text-transform:uppercase; letter-spacing:.5px; padding:2px 8px; border-radius:20px; ${user.rol==='admin' ? 'background:#fff3e0;color:var(--warning);' : 'background:#e3f2fd;color:var(--info);'}">
+            <!-- CentroL 2: Monto (Enusuariossemuestraelrolcomoreferencia) -->
+            <divstyle="grid-column: 2; grid-row: 2; font-size: 0.8rem; color: var(--text-muted); display: flex; align-items: center; gap: 6px;">
+                <spanclass="usuario-rol ${user.rol}" style="display:inline-block; font-size:.65rem; font-weight:700; text-transform:uppercase; letter-spacing:.5px; padding:2px 8px; border-radius:20px; ${user.rol==='admin' ? 'background:#fff3e0;color:var(--warning);' : 'background:#e3f2fd;color:var(--info);'}">
                     ${user.rol === 'admin' ? 'Admin' : 'Cajero'}
                 </span>
-                <span style="opacity:0.6;">@${user.username}</span>
+                <spanstyle="opacity:0.6;">@${user.username}</span>
             </div>
 
-            <!-- Centro Línea 3: Toggle (Se omite Pagado) -->
-            <div style="grid-column: 2; grid-row: 3; display: flex; gap: 6px; align-items: center;">
-                <button class="btn-toggle ${toggleClass}" onclick="window.toggleUsuarioActivo('${user.id}', ${toggleVal})">${toggleTxt}</button>
+            <!-- CentroL 3: Toggle (SeomitePagado) -->
+            <divstyle="grid-column: 2; grid-row: 3; display: flex; gap: 6px; align-items: center;">
+                <buttonclass="btn-toggle ${toggleClass}" onclick="window.toggleUsuarioActivo('${user.id}', ${toggleVal})">${toggleTxt}</button>
             </div>
 
-            <!-- Derecha Línea 1: Estado -->
-            <div style="grid-column: 3; grid-row: 1; justify-self: end;">
-                <span class="${statusClass}"><i class="fas ${user.activo ? 'fa-check-circle' : 'fa-circle'}"></i> ${statusText}</span>
+            <!-- DerechaL 1: Estado -->
+            <divstyle="grid-column: 3; grid-row: 1; justify-self: end;">
+                <spanclass="${statusClass}"><iclass="fas ${user.activo ? 'fa-check-circle' : 'fa-circle'}"></i> ${statusText}</span>
             </div>
 
-            <!-- Derecha Línea 2: (Vacío) -->
-            <div style="grid-column: 3; grid-row: 2;"></div>
+            <!-- DerechaL 2: (Vacío) -->
+            <divstyle="grid-column: 3; grid-row: 2;"></div>
 
-            <!-- Derecha Línea 3: Editar y Papelera -->
-            <div style="grid-column: 3; grid-row: 3; justify-self: end; display: flex; gap: 6px;">
-                <button class="btn-icon edit" onclick="window.editarUsuario('${user.id}')" title="Editar usuario"><i class="fas fa-pen"></i></button>
-                <button class="btn-icon delete" onclick="window.eliminarUsuario('${user.id}')" title="Eliminar"><i class="fas fa-trash"></i></button>
+            <!-- DerechaL 3: EditaryPapelera -->
+            <divstyle="grid-column: 3; grid-row: 3; justify-self: end; display: flex; gap: 6px;">
+                <buttonclass="btn-iconedit" onclick="window.editarUsuario('${user.id}')" title="Editarusuario"><iclass="fasfa-pen"></i></button>
+                <buttonclass="btn-icondelete" onclick="window.eliminarUsuario('${user.id}')" title="Eliminar"><iclass="fasfa-trash"></i></button>
             </div>
         </div>`;
     }).join('');
 };
 
-function handleUsuarioFotoFile() {
-    const fileInput = document.getElementById('usuarioFoto');
-    const urlInput = document.getElementById('usuarioFotoUrl');
-    const previewDiv = document.getElementById('usuarioFotoPreview');
-    const previewImg = document.getElementById('usuarioPreviewImg');
-    const removeBtn = document.getElementById('usuarioFotoRemoveBtn');
+functionhandleUsuarioFotoFile() {
+    constfileInput = document.getElementById('usuarioFoto');
+    consturlInput = document.getElementById('usuarioFotoUrl');
+    constpreviewDiv = document.getElementById('usuarioFotoPreview');
+    constpreviewImg = document.getElementById('usuarioPreviewImg');
+    constremoveBtn = document.getElementById('usuarioFotoRemoveBtn');
     
     if (fileInput.files && fileInput.files[0]) {
-        const file = fileInput.files[0];
+        constfile = fileInput.files[0];
         currentUserFotoFile = file;
         currentUserFotoUrl = '';
         urlInput.value = '';
         urlInput.disabled = true;
-        const reader = new FileReader();
+        constreader = newFileReader();
         reader.onload = function(e) {
             previewImg.src = e.target.result;
             previewDiv.style.display = 'flex';
@@ -111,15 +111,15 @@ function handleUsuarioFotoFile() {
     }
 }
 
-function handleUsuarioFotoUrl() {
-    const urlInput = document.getElementById('usuarioFotoUrl');
-    const fileInput = document.getElementById('usuarioFoto');
-    const previewDiv = document.getElementById('usuarioFotoPreview');
-    const previewImg = document.getElementById('usuarioPreviewImg');
-    const removeBtn = document.getElementById('usuarioFotoRemoveBtn');
+functionhandleUsuarioFotoUrl() {
+    consturlInput = document.getElementById('usuarioFotoUrl');
+    constfileInput = document.getElementById('usuarioFoto');
+    constpreviewDiv = document.getElementById('usuarioFotoPreview');
+    constpreviewImg = document.getElementById('usuarioPreviewImg');
+    constremoveBtn = document.getElementById('usuarioFotoRemoveBtn');
     
     if (fileInput.files && fileInput.files[0]) return;
-    const url = urlInput.value.trim();
+    consturl = urlInput.value.trim();
     if (url) {
         currentUserFotoUrl = url;
         currentUserFotoFile = null;
@@ -134,12 +134,12 @@ function handleUsuarioFotoUrl() {
     }
 }
 
-function removeUsuarioFoto() {
-    const fileInput = document.getElementById('usuarioFoto');
-    const urlInput = document.getElementById('usuarioFotoUrl');
-    const previewDiv = document.getElementById('usuarioFotoPreview');
-    const previewImg = document.getElementById('usuarioPreviewImg');
-    const removeBtn = document.getElementById('usuarioFotoRemoveBtn');
+functionremoveUsuarioFoto() {
+    constfileInput = document.getElementById('usuarioFoto');
+    consturlInput = document.getElementById('usuarioFotoUrl');
+    constpreviewDiv = document.getElementById('usuarioFotoPreview');
+    constpreviewImg = document.getElementById('usuarioPreviewImg');
+    constremoveBtn = document.getElementById('usuarioFotoRemoveBtn');
     
     fileInput.value = '';
     urlInput.value = '';
@@ -151,166 +151,166 @@ function removeUsuarioFoto() {
     currentUserFotoUrl = '';
 }
 
-window.toggleUsuarioActivo = async function(userId, activo) {
-    const user = window.usuarios.find(u => u.id === userId);
+window.toggleUsuarioActivo = asyncfunction(userId, activo) {
+    constuser = window.usuarios.find(u => u.id === userId);
     if (user && user.rol === 'admin') {
-        const adminsActivos = window.usuarios.filter(u => u.rol === 'admin' && u.activo === true);
+        constadminsActivos = window.usuarios.filter(u => u.rol === 'admin' && u.activo === true);
         if (adminsActivos.length === 1 && !activo) {
-            window.mostrarToast('⚠️ No se puede desactivar el único administrador activo', 'warning');
+            window.mostrarToast('⚠Nosesepuededesactivarelnicoadministradoractivo', 'warning');
             return;
         }
     }
     try {
-        await window.supabaseClient.from('usuarios').update({ activo }).eq('id', userId);
-        await window.cargarUsuarios();
+        awaitwindow.supabaseClient.from('usuarios').update({ activo }).eq('id', userId);
+        awaitwindow.cargarUsuarios();
         window.mostrarToast(`✅ Usuario ${activo ? 'activado' : 'desactivado'}`, 'success');
-    } catch (e) { console.error('Error actualizando usuario:', e); window.mostrarToast('❌ Error al actualizar usuario', 'error'); }
+    } catch (e) { console.error('Erroractualizandousuario:', e); window.mostrarToast('❌ Erroralactualizarusuario', 'error'); }
 };
 
 window.abrirModalNuevoUsuario = function() {
-	const form = document.getElementById('usuarioForm');
+	constform = document.getElementById('usuarioForm');
 	if (form) form.reset();
-	const rolSelect = document.getElementById('usuarioRol');
+	constrolSelect = document.getElementById('usuarioRol');
 	if (rolSelect) rolSelect.value = 'cajero';
-	const activoSelect = document.getElementById('usuarioActivo');
+	constactivoSelect = document.getElementById('usuarioActivo');
 	if (activoSelect) activoSelect.value = 'true';
 	currentUserFotoFile = null;
 	currentUserFotoUrl = '';
-	const fotoInput = document.getElementById('usuarioFoto');
+	constfotoInput = document.getElementById('usuarioFoto');
 	if (fotoInput) fotoInput.value = '';
-	const urlInput = document.getElementById('usuarioFotoUrl');
+	consturlInput = document.getElementById('usuarioFotoUrl');
 	if (urlInput) urlInput.value = '';
-	const previewDiv = document.getElementById('usuarioFotoPreview');
+	constpreviewDiv = document.getElementById('usuarioFotoPreview');
 	if (previewDiv) previewDiv.style.display = 'none';
-	const modalTitle = document.getElementById('usuarioModalTitle');
-	if (modalTitle) modalTitle.textContent = 'Nuevo Cajero/Admin';
+	constmodalTitle = document.getElementById('usuarioModalTitle');
+	if (modalTitle) modalTitle.textContent = 'NuevoCajero/Admin';
 	window.usuarioEditandoId = null;
-	const modal = document.getElementById('usuarioModal');
+	constmodal = document.getElementById('usuarioModal');
 	if (modal) modal.classList.add('active');
 };
 
 window.editarUsuario = function(id) {
-	const user = window.usuarios.find(u => u.id === id);
+	constuser = window.usuarios.find(u => u.id === id);
 	if (!user) return;
 	window.usuarioEditandoId = id;
-	const modalTitle = document.getElementById('usuarioModalTitle');
-	if (modalTitle) modalTitle.textContent = 'Editar Usuario';
-	const nombreInput = document.getElementById('usuarioNombre');
+	constmodalTitle = document.getElementById('usuarioModalTitle');
+	if (modalTitle) modalTitle.textContent = 'EditarUsuario';
+	constnombreInput = document.getElementById('usuarioNombre');
 	if (nombreInput) nombreInput.value = user.nombre || '';
-	const usernameInput = document.getElementById('usuarioUsername');
+	constusernameInput = document.getElementById('usuarioUsername');
 	if (usernameInput) usernameInput.value = user.username || '';
-	const rolSelect = document.getElementById('usuarioRol');
+	constrolSelect = document.getElementById('usuarioRol');
 	if (rolSelect) rolSelect.value = user.rol || 'cajero';
-	const activoSelect = document.getElementById('usuarioActivo');
+	constactivoSelect = document.getElementById('usuarioActivo');
 	if (activoSelect) activoSelect.value = user.activo ? 'true' : 'false';
-	const passwordInput = document.getElementById('usuarioPassword');
+	constpasswordInput = document.getElementById('usuarioPassword');
 	if (passwordInput) passwordInput.value = '';
 	if (user.foto) {
-		const urlInput = document.getElementById('usuarioFotoUrl');
+		consturlInput = document.getElementById('usuarioFotoUrl');
 		if (urlInput) urlInput.value = user.foto;
-		const previewImg = document.getElementById('usuarioPreviewImg');
+		constpreviewImg = document.getElementById('usuarioPreviewImg');
 		if (previewImg) previewImg.src = user.foto;
-		const previewDiv = document.getElementById('usuarioFotoPreview');
+		constpreviewDiv = document.getElementById('usuarioFotoPreview');
 		if (previewDiv) previewDiv.style.display = 'flex';
 		currentUserFotoUrl = user.foto;
 	} else {
-		const urlInput = document.getElementById('usuarioFotoUrl');
+		consturlInput = document.getElementById('usuarioFotoUrl');
 		if (urlInput) urlInput.value = '';
-		const previewDiv = document.getElementById('usuarioFotoPreview');
+		constpreviewDiv = document.getElementById('usuarioFotoPreview');
 		if (previewDiv) previewDiv.style.display = 'none';
 	}
-	const modal = document.getElementById('usuarioModal');
+	constmodal = document.getElementById('usuarioModal');
 	if (modal) modal.classList.add('active');
 };
 
-window.eliminarUsuario = async function(userId) {
-	const user = window.usuarios.find(u => u.id === userId);
+window.eliminarUsuario = asyncfunction(userId) {
+	constuser = window.usuarios.find(u => u.id === userId);
 	if (!user) return;
 	if (user.rol === 'admin') {
-		const adminsActivos = window.usuarios.filter(u => u.rol === 'admin' && u.activo === true);
+		constadminsActivos = window.usuarios.filter(u => u.rol === 'admin' && u.activo === true);
 		if (adminsActivos.length === 1) {
-			window.mostrarToast('⚠️ No se puede eliminar el único administrador. El sistema quedaría inoperativo.', 'error');
+			window.mostrarToast('⚠Nosesepuedeeliminarelnicoadministrador. Elsistemaainoperativo.', 'error');
 			return;
 		}
 	}
 	window.mostrarConfirmacionPremium(
-		'Eliminar Usuario',
-		`¿Estás seguro de eliminar al usuario "${user.nombre}"? Esta acción no se puede deshacer.`,
+		'EliminarUsuario',
+		`¿ssegurodeeliminaralusuario "${user.nombre}"? Estaaccinosepuededeshacer.`,
 		async () => {
 			try {
-				await window.supabaseClient.from('usuarios').delete().eq('id', userId);
-				await window.cargarUsuarios();
-				window.mostrarToast('🗑️ Usuario eliminado', 'success');
+				awaitwindow.supabaseClient.from('usuarios').delete().eq('id', userId);
+				awaitwindow.cargarUsuarios();
+				window.mostrarToast('🗑Usuarioeliminadoeliminado', 'success');
 			} catch (e) {
-				console.error('Error eliminando usuario:', e);
-				window.mostrarToast('❌ Error al eliminar usuario', 'error');
+				console.error('Erroreliminandousuario:', e);
+				window.mostrarToast('❌ Erroraleliminarusuario', 'error');
 			}
 		}
 	);
 };
 
 document.getElementById('saveUsuario').addEventListener('click', async () => {
-    const btn = document.getElementById('saveUsuario');
+    constbtn = document.getElementById('saveUsuario');
     if (btn && btn.disabled) return;
-    if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...'; }
-    const nombre   = document.getElementById('usuarioNombre').value.trim();
-    const username = document.getElementById('usuarioUsername').value.trim().toLowerCase();
-    const password = document.getElementById('usuarioPassword').value.trim();
-    const rol = document.getElementById('usuarioRol').value;
-    const activo = document.getElementById('usuarioActivo').value === 'true';
+    if (btn) { btn.disabled = true; btn.innerHTML = '<iclass="fasfa-spinnerfa-spin"></i> Guardando...'; }
+    constnombre   = document.getElementById('usuarioNombre').value.trim();
+    constusername = document.getElementById('usuarioUsername').value.trim().toLowerCase();
+    constpassword = document.getElementById('usuarioPassword').value.trim();
+    constrol = document.getElementById('usuarioRol').value;
+    constactivo = document.getElementById('usuarioActivo').value === 'true';
     
     if (!nombre || !username) {
-        window.mostrarToast('Completa nombre y usuario', 'error');
+        window.mostrarToast('Completanombreyusuario', 'error');
         if (btn) { btn.disabled = false; btn.innerHTML = 'Guardar'; }
         return;
     }
     if (!window.usuarioEditandoId && !password) {
-        window.mostrarToast('Ingresa una contraseña para el nuevo usuario', 'error');
+        window.mostrarToast('Ingresaunaaparaelnuevousuario', 'error');
         if (btn) { btn.disabled = false; btn.innerHTML = 'Guardar'; }
         return;
     }
     
-    let fotoUrl = '';
-    const archivoFoto = document.getElementById('usuarioFoto').files[0];
-    const fotoUrlInput = document.getElementById('usuarioFotoUrl').value;
+    letfotoUrl = '';
+    constarchivoFoto = document.getElementById('usuarioFoto').files[0];
+    constfotoUrlInput = document.getElementById('usuarioFotoUrl').value;
     if (archivoFoto) {
-        const resultado = await window.subirImagenPlatillo(archivoFoto, 'usuarios');
+        constresultado = awaitwindow.subirImagenPlatillo(archivoFoto, 'usuarios');
         if (resultado.success) fotoUrl = resultado.url;
-        else { window.mostrarToast('Error al subir la foto: ' + resultado.error, 'error'); return; }
-    } else if (fotoUrlInput) fotoUrl = fotoUrlInput;
+        else { window.mostrarToast('Erroralsubirlafoto: ' + resultado.error, 'error'); return; }
+    } elseif (fotoUrlInput) fotoUrl = fotoUrlInput;
     
     try {
-        let hashed = null;
+        lethashed = null;
         if (password) {
-            const { data: h, error: hashErr } = await window.supabaseClient.rpc('hash_password', { plain_password: password });
-            if (hashErr) throw hashErr;
+            const { data: h, error: hashErr } = awaitwindow.supabaseClient.rpc('hash_password', { plain_password: password });
+            if (hashErr) throwhashErr;
             hashed = h;
         }
-        const userData = {
+        constuserData = {
             id: window.usuarioEditandoId || window.generarId('user_'),
             nombre, username, rol, activo, foto: fotoUrl || null
         };
         if (hashed) userData.password_hash = hashed;
         
-        let error;
+        leterror;
         if (window.usuarioEditandoId) {
-            ({ error } = await window.supabaseClient.from('usuarios').update(userData).eq('id', window.usuarioEditandoId));
+            ({ error } = awaitwindow.supabaseClient.from('usuarios').update(userData).eq('id', window.usuarioEditandoId));
         } else {
-            ({ error } = await window.supabaseClient.from('usuarios').insert([userData]));
+            ({ error } = awaitwindow.supabaseClient.from('usuarios').insert([userData]));
         }
-        if (error) throw error;
+        if (error) throwerror;
         
         if (rol === 'admin' && activo) {
-            const adminData = { id: userData.id, nombre: userData.nombre, username: userData.username, foto: userData.foto, rol: 'admin' };
+            constadminData = { id: userData.id, nombre: userData.nombre, username: userData.username, foto: userData.foto, rol: 'admin' };
             window.guardarAdminReciente(adminData);
         }
         
         document.getElementById('usuarioModal').classList.remove('active');
         window.usuarioEditandoId = null;
-        await window.cargarUsuarios();
-        window.mostrarToast('✅ Usuario guardado', 'success');
+        awaitwindow.cargarUsuarios();
+        window.mostrarToast('✅ Usuarioguardado', 'success');
     } catch (e) {
-        console.error('Error guardando usuario:', e);
+        console.error('Errorguardandousuario:', e);
         window.mostrarToast('❌ Error: ' + (e.message || e), 'error');
     } finally {
         if (btn) { btn.disabled = false; btn.innerHTML = 'Guardar'; }
@@ -320,10 +320,10 @@ document.getElementById('saveUsuario').addEventListener('click', async () => {
 document.getElementById('cancelUsuario').addEventListener('click', () => document.getElementById('usuarioModal').classList.remove('active'));
 document.getElementById('closeUsuarioModal').addEventListener('click', () => document.getElementById('usuarioModal').classList.remove('active'));
 
-function setupUsuarioFotoEvents() {
-    const fileInput = document.getElementById('usuarioFoto');
-    const urlInput = document.getElementById('usuarioFotoUrl');
-    const removeBtn = document.getElementById('usuarioFotoRemoveBtn');
+functionsetupUsuarioFotoEvents() {
+    constfileInput = document.getElementById('usuarioFoto');
+    consturlInput = document.getElementById('usuarioFotoUrl');
+    constremoveBtn = document.getElementById('usuarioFotoRemoveBtn');
     if (fileInput) fileInput.addEventListener('change', handleUsuarioFotoFile);
     if (urlInput) urlInput.addEventListener('input', handleUsuarioFotoUrl);
     if (removeBtn) removeBtn.addEventListener('click', removeUsuarioFoto);
