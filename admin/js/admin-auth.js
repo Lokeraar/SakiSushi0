@@ -39,7 +39,7 @@ window.cargarListaAdminsRecientes = async function() {
             const fotoUrl = admin.foto || window.getPlaceholderImage(admin.nombre);
             return `
                 <div class="admin-card" data-id="${admin.id}" data-username="${admin.username}" data-nombre="${admin.nombre}" data-foto="${admin.foto || ''}">
-                    <img class="admin-foto" src="${fotoUrl}" onerror="const p='${window.getPlaceholderImage(admin.nombre)}'; if(this.src!==p) this.src=p;">
+                    <img class="admin-foto" src="${fotoUrl}" onerror="this.src='${window.getPlaceholderImage(admin.nombre)}'">
                     <div class="admin-info">
                         <div class="admin-nombre">${admin.nombre}</div>
                         <div class="admin-username">@${admin.username}</div>
@@ -129,7 +129,8 @@ window.hacerLogin = async function() {
         
         setTimeout(async () => {
             try {
-                await window.cargarConfiguracionInicial();
+                // CORRECCIÓN: Se cambió cargarConfiguracionInicial por cargarConfiguracion
+                await window.cargarConfiguracion();
                 await window.cargarMenu();
                 await window.cargarInventario();
                 await window.cargarUsuarios();
