@@ -1,11 +1,11 @@
-// sw.js — Service Worker para Saki Sushi
-// Maneja: notificaciones push entrantes (vía VAPID) y
-//         notificaciones locales solicitadas por la página cuando está en segundo plano.
+// sw.js — ServiceWorkerparaSakiSushi
+// Maneja: notificacionespushentrantes (aVAPID) y
+//         notificacioneslocalessolicitadasporlapcuandoestensegundoplano.
 
-const CACHE_NAME = 'saki-sushi-v1';
+constCACHE_NAME = 'saki-sushi-v1';
 
 // ─────────────────────────────────────────
-// INSTALACIÓN Y ACTIVACIÓN
+// NYACTIVACIÓN
 // ─────────────────────────────────────────
 self.addEventListener('install', (event) => {
     console.log('[SW] Instalado');
@@ -18,26 +18,26 @@ self.addEventListener('activate', (event) => {
 });
 
 // ─────────────────────────────────────────
-// NOTIFICACIONES PUSH (servidor → dispositivo)
-// Disparadas por la Edge Function send-push vía VAPID.
+// NOTIFICACIONESPUSH (servidor → dispositivo)
+// DisparadasporlaEdgeFunctionsend-pushvVAPID.
 // ─────────────────────────────────────────
 self.addEventListener('push', (event) => {
-    console.log('[SW] Push recibido');
+    console.log('[SW] Pushrecibido');
 
-    let data = {};
+    letdata = {};
     try {
         data = event.data ? event.data.json() : {};
     } catch (e) {
-        data = { titulo: '🍣 Saki Sushi', mensaje: event.data ? event.data.text() : 'Nueva notificación' };
+        data = { titulo: '🍣 SakiSushi', mensaje: event.data ? event.data.text() : 'Nuevanotificaci' };
     }
 
-    const titulo  = data.titulo  || '🍣 Saki Sushi';
-    const mensaje = data.mensaje || 'Tienes una nueva notificación';
-    const url     = data.url     || '/SakiSushi0/Cliente/';
-    const icon    = data.icon    || 'https://lh3.googleusercontent.com/pw/AP1GczPrZAoWxmsOGRD9xl1hO5Q65JXuwUZzoR6gUk-cw5lVmarxQe_-lwqpA60tTKLlXfpvIjAJlKC6jFls-xETJOPkebLIIPhbGlUkknmhrRbdhMUll2UViGSUj3WmHKg2YEsZlAfxBPPTjIHhScjD0jfe=w1439-h1439-s-no-gm';
-    const badge   = data.badge   || 'https://lh3.googleusercontent.com/pw/AP1GczPrZAoWxmsOGRD9xl1hO5Q65JXuwUZzoR6gUk-cw5lVmarxQe_-lwqpA60tTKLlXfpvIjAJlKC6jFls-xETJOPkebLIIPhbGlUkknmhrRbdhMUll2UViGSUj3WmHKg2YEsZlAfxBPPTjIHhScjD0jfe=w1439-h1439-s-no-gm';
+    consttitulo  = data.titulo  || '🍣 SakiSushi';
+    constmensaje = data.mensaje || 'Tienesunanuevanotificaci';
+    consturl     = data.url     || '/SakiSushi0/Cliente/';
+    consticon    = data.icon    || 'https://lh3.googleusercontent.com/pw/AP1GczPrZAoWxmsOGRD9xl1hO5Q65JXuwUZzoR6gUk-cw5lVmarxQe_-lwqpA60tTKLlXfpvIjAJlKC6jFls-xETJOPkebLIIPhbGlUkknmhrRbdhMUll2UViGSUj3WmHKg2YEsZlAfxBPPTjIHhScjD0jfe=w1439-h1439-s-no-gm';
+    constbadge   = data.badge   || 'https://lh3.googleusercontent.com/pw/AP1GczPrZAoWxmsOGRD9xl1hO5Q65JXuwUZzoR6gUk-cw5lVmarxQe_-lwqpA60tTKLlXfpvIjAJlKC6jFls-xETJOPkebLIIPhbGlUkknmhrRbdhMUll2UViGSUj3WmHKg2YEsZlAfxBPPTjIHhScjD0jfe=w1439-h1439-s-no-gm';
 
-    const options = {
+    constoptions = {
         body:    mensaje,
         icon:    icon,
         badge:   badge,
@@ -46,7 +46,7 @@ self.addEventListener('push', (event) => {
         renotify: true,
         data: { url, pedido_id: data.pedido_id, tipo: data.tipo },
         actions: [
-            { action: 'ver', title: '👁 Ver pedido' },
+            { action: 'ver', title: '👁 Verpedido' },
             { action: 'cerrar', title: 'Cerrar' }
         ]
     };
@@ -57,20 +57,20 @@ self.addEventListener('push', (event) => {
 });
 
 // ─────────────────────────────────────────
-// NOTIFICACIONES LOCALES (página en segundo plano → SW)
-// La página detecta una notificación nueva vía polling y
-// le envía un postMessage al SW para que la muestre.
+// NOTIFICACIONESLOCALES (ginaensegundoplano → SW)
+// Lapdetectaunannuevaapollingy
+// leenvunpostMessagealSWparaquelamuestre.
 // ─────────────────────────────────────────
 self.addEventListener('message', (event) => {
     if (!event.data) return;
 
     if (event.data.type === 'SHOW_LOCAL_NOTIFICATION') {
-        const titulo  = event.data.titulo  || '🍣 Saki Sushi';
-        const mensaje = event.data.mensaje || 'Tienes una nueva notificación';
-        const url     = event.data.url     || '/SakiSushi0/Cliente/';
-        const tipo    = event.data.tipo    || 'info';
+        consttitulo  = event.data.titulo  || '🍣 SakiSushi';
+        constmensaje = event.data.mensaje || 'Tienesunanuevanotificaci';
+        consturl     = event.data.url     || '/SakiSushi0/Cliente/';
+        consttipo    = event.data.tipo    || 'info';
 
-        const options = {
+        constoptions = {
             body:    mensaje,
             icon:    'https://lh3.googleusercontent.com/pw/AP1GczPrZAoWxmsOGRD9xl1hO5Q65JXuwUZzoR6gUk-cw5lVmarxQe_-lwqpA60tTKLlXfpvIjAJlKC6jFls-xETJOPkebLIIPhbGlUkknmhrRbdhMUll2UViGSUj3WmHKg2YEsZlAfxBPPTjIHhScjD0jfe=w1439-h1439-s-no-gm',
             badge:   'https://lh3.googleusercontent.com/pw/AP1GczPrZAoWxmsOGRD9xl1hO5Q65JXuwUZzoR6gUk-cw5lVmarxQe_-lwqpA60tTKLlXfpvIjAJlKC6jFls-xETJOPkebLIIPhbGlUkknmhrRbdhMUll2UViGSUj3WmHKg2YEsZlAfxBPPTjIHhScjD0jfe=w1439-h1439-s-no-gm',
@@ -80,7 +80,7 @@ self.addEventListener('message', (event) => {
             renotify: true,
             data: { url, tipo },
             actions: [
-                { action: 'ver', title: '👁 Ver pedido' },
+                { action: 'ver', title: '👁 Verpedido' },
                 { action: 'cerrar', title: 'Cerrar' }
             ]
         };
@@ -92,27 +92,27 @@ self.addEventListener('message', (event) => {
 });
 
 // ─────────────────────────────────────────
-// CLIC EN NOTIFICACIÓN
-// Abre o enfoca la pestaña del cliente al hacer clic.
+// CLICENNOTIFICACIÓN
+// Abreoenfocalaadelclientealhacerclic.
 // ─────────────────────────────────────────
 self.addEventListener('notificationclick', (event) => {
     event.notification.close();
 
     if (event.action === 'cerrar') return;
 
-    const urlDestino = event.notification.data?.url || '/SakiSushi0/Cliente/';
+    consturlDestino = event.notification.data?.url || '/SakiSushi0/Cliente/';
 
     event.waitUntil(
         clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
-            // Si ya hay una pestaña abierta con esa URL, la enfocamos
-            for (const client of clientList) {
-                if (client.url.includes('/Cliente/') && 'focus' in client) {
-                    return client.focus();
+            // SiyahayunaaabiertaconesaURL, laenfocamos
+            for (constclientofclientList) {
+                if (client.url.includes('/Cliente/') && 'focus' inclient) {
+                    returnclient.focus();
                 }
             }
-            // Si no hay ninguna, abrimos una nueva
+            // Sinohayninguna, abrimosunanueva
             if (clients.openWindow) {
-                return clients.openWindow(urlDestino);
+                returnclients.openWindow(urlDestino);
             }
         })
     );
