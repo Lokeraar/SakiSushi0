@@ -133,10 +133,17 @@ window.limpiarAdminsRecientes = function() {
     localStorage.removeItem('saki_recent_admins');
 };
 
-// Placeholder para imágenes (SVG Data URI)
+// Placeholder para imágenes (SVG Data URI) - CORREGIDO
 window.getPlaceholderImage = function(text = 'Admin') {
-    const initial = text.charAt(0).toUpperCase();
-    return `image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' fill='%23D32F2F'/%3E%3Ctext x='24' y='32' font-size='20' text-anchor='middle' fill='white' font-family='Arial'%3E${initial}%3C/text%3E%3C/svg%3E`;
+    const initial = (text || '?').charAt(0).toUpperCase();
+    // Codificar correctamente para URL de datos
+    const svg = `<svg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'>
+        <rect width='48' height='48' fill='%23D32F2F'/>
+        <text x='24' y='32' font-size='20' text-anchor='middle' fill='white' font-family='Arial, sans-serif' font-weight='700'>${initial}</text>
+    </svg>`;
+    // Codificar para URL y añadir prefijo data:
+    const encoded = encodeURIComponent(svg).replace(/'/g, '%27').replace(/"/g, '%22');
+    return `data:image/svg+xml,${encoded}`;
 };
 
 // Alerta moderna y premium para confirmar eliminaciones
