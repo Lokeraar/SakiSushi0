@@ -1,48 +1,48 @@
-// admin-auth.js - Autenticación con selección de administrador (corregido)
+// admin-auth.js - Autenticaciónconseleccióndeadministrador (corregido)
 (function() {
-let selectedAdmin = null;
+letselectedAdmin = null;
 
-window.cargarListaAdminsRecientes = async function() {
-    const container = document.getElementById('loginAdminsList');
+window.cargarListaAdminsRecientes = asyncfunction() {
+    constcontainer = document.getElementById('loginAdminsList');
     if (!container) return;
     
-    container.innerHTML = '<div class="loading-spinner" style="margin:0 auto;"></div>';
+    container.innerHTML = '<divclass="loading-spinner" style="margin:0auto;"></div>';
     
     try {
-        let intentos = 0;
+        letintentos = 0;
         while (!window.supabaseClient && intentos < 20) {
-            await new Promise(r => setTimeout(r, 100));
+            awaitnewPromise(r => setTimeout(r, 100));
             intentos++;
         }
         
         if (!window.supabaseClient) {
-            throw new Error('Supabase client no inicializado');
+            thrownewError('Supabaseclientnoinicializado');
         }
         
-        const recent = window.obtenerAdminsRecientes();
-        let admins = [];
+        constrecent = window.obtenerAdminsRecientes();
+        letadmins = [];
         
         if (recent.length) {
             admins = recent;
         } else {
-            const { data, error } = await window.supabaseClient.from('usuarios').select('*').eq('rol', 'admin').eq('activo', true);
-            if (error) throw error;
+            const { data, error } = awaitwindow.supabaseClient.from('usuarios').select('*').eq('rol', 'admin').eq('activo', true);
+            if (error) throwerror;
             admins = data || [];
         }
         
         if (!admins.length) {
-            container.innerHTML = '<p style="color:var(--text-muted);text-align:center">No hay administradores registrados</p>';
+            container.innerHTML = '<pstyle="color:var(--text-muted);text-align:center">Nohayadministradoresregistrados</p>';
             return;
         }
         
         container.innerHTML = admins.map(admin => {
-            const fotoUrl = admin.foto || window.getPlaceholderImage(admin.nombre);
+            constfotoUrl = admin.foto || window.getPlaceholderImage(admin.nombre);
             return `
-                <div class="admin-card" data-id="${admin.id}" data-username="${admin.username}" data-nombre="${admin.nombre}" data-foto="${admin.foto || ''}">
-                    <img class="admin-foto" src="${fotoUrl}" onerror="this.src='${window.getPlaceholderImage(admin.nombre)}'">
-                    <div class="admin-info">
-                        <div class="admin-nombre">${admin.nombre}</div>
-                        <div class="admin-username">@${admin.username}</div>
+                <divclass="admin-card" data-id="${admin.id}" data-username="${admin.username}" data-nombre="${admin.nombre}" data-foto="${admin.foto || ''}">
+                    <imgclass="admin-foto" src="${fotoUrl}" onerror="this.src='${window.getPlaceholderImage(admin.nombre)}'">
+                    <divclass="admin-info">
+                        <divclass="admin-nombre">${admin.nombre}</div>
+                        <divclass="admin-username">@${admin.username}</div>
                     </div>
                 </div>
             `;
@@ -50,10 +50,10 @@ window.cargarListaAdminsRecientes = async function() {
         
         document.querySelectorAll('.admin-card').forEach(card => {
             card.addEventListener('click', async (e) => {
-                const id = card.dataset.id;
-                const username = card.dataset.username;
-                const nombre = card.dataset.nombre;
-                const foto = card.dataset.foto;
+                constid = card.dataset.id;
+                constusername = card.dataset.username;
+                constnombre = card.dataset.nombre;
+                constfoto = card.dataset.foto;
                 selectedAdmin = { id, username, nombre, foto };
                 document.getElementById('loginSelectorPanel').classList.add('hide');
                 document.getElementById('loginPasswordPanel').classList.add('show');
@@ -63,36 +63,36 @@ window.cargarListaAdminsRecientes = async function() {
                 document.getElementById('adminPassword').focus();
             });
         });
-    } catch (e) { console.error('Error cargando administradores:', e);
-        container.innerHTML = '<p style="color:var(--danger);text-align:center">Error al cargar administradores. Recarga la página.</p>';
+    } catch (e) { console.error('Errorcargandoadministradores:', e);
+        container.innerHTML = '<pstyle="color:var(--danger);text-align:center">Erroralcargaradministradores. Recargalapágina.</p>';
     }
 };
     
-window.hacerLogin = async function() {
+window.hacerLogin = asyncfunction() {
     if (!selectedAdmin) {
-        window.mostrarToast('Selecciona un administrador primero', 'error');
+        window.mostrarToast('Seleccionaunadministradorprimero', 'error');
         return;
     }
-    const password = document.getElementById('adminPassword').value;
-    if (!password) { window.mostrarToast('Ingresa la contraseña', 'error'); return; }
+    constpassword = document.getElementById('adminPassword').value;
+    if (!password) { window.mostrarToast('Ingresalacontraseña', 'error'); return; }
     
-    const loginBtn = document.querySelector('#loginForm button[type="submit"]');
-    if (loginBtn) { loginBtn.disabled = true; loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Conectando...'; }
+    constloginBtn = document.querySelector('#loginFormbutton[type="submit"]');
+    if (loginBtn) { loginBtn.disabled = true; loginBtn.innerHTML = '<iclass="fasfa-spinnerfa-spin"></i> Conectando...'; }
     
     try {
-        const response = await fetch('https://iqwwoihiiyrtypyqzhgy.supabase.co/functions/v1/login', {
+        constresponse = awaitfetch('https://iqwwoihiiyrtypyqzhgy.supabase.co/functions/v1/login', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username: selectedAdmin.username, password: password })
         });
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.error || `Error ${response.status}`);
-        if (!data.success) { window.mostrarToast('❌ Contraseña incorrecta', 'error'); return; }
-        if (data.user.rol !== 'admin') { window.mostrarToast('Acceso denegado. Se requiere rol de administrador.', 'error'); return; }
+        constdata = awaitresponse.json();
+        if (!response.ok) thrownewError(data.error || `Error ${response.status}`);
+        if (!data.success) { window.mostrarToast('❌ Contraseñaincorrecta', 'error'); return; }
+        if (data.user.rol !== 'admin') { window.mostrarToast('Accesodenegado. Serequiereroldeadministrador.', 'error'); return; }
         
-        const existingToken = sessionStorage.getItem('admin_jwt_token');
+        constexistingToken = sessionStorage.getItem('admin_jwt_token');
         if (existingToken && existingToken !== data.token) {
-            const confirmForce = confirm('Ya hay una sesión de administrador activa en otro dispositivo. ¿Deseas cerrarla y continuar con esta?'); 
+            constconfirmForce = confirm('Yahayunasesióndeadministradoractivaenotrodispositivo. ¿Deseascerrarlaycontinuarconesta?'); 
             if (!confirmForce) return;
             sessionStorage.removeItem('admin_authenticated');
             sessionStorage.removeItem('admin_jwt_token');
@@ -105,7 +105,7 @@ window.hacerLogin = async function() {
         sessionStorage.setItem('admin_jwt_token', window.jwtToken);
         sessionStorage.setItem('admin_user', JSON.stringify(data.user));
         
-        const adminUser = data.user;
+        constadminUser = data.user;
         if (adminUser.foto === undefined && selectedAdmin.foto) adminUser.foto = selectedAdmin.foto;
         window.guardarAdminReciente(adminUser);
         
@@ -113,46 +113,46 @@ window.hacerLogin = async function() {
         
         document.getElementById('loginContainer').style.display = 'none';
         document.getElementById('panelContainer').classList.add('active');
-        window.mostrarToast('✅ Bienvenido Administrador', 'success');
+        window.mostrarToast('✅ BienvenidoAdministrador', 'success');
         
-        const headerTitle = document.querySelector('.header-left h2');
+        constheaderTitle = document.querySelector('.header-lefth2');
         if (headerTitle && adminUser.nombre) {
-            headerTitle.innerHTML = `<i class="fas fa-crown"></i> Administración Saki Sushi - ${adminUser.nombre}`;
+            headerTitle.innerHTML = `<iclass="fasfa-crown"></i> AdministraciónSakiSushi - ${adminUser.nombre}`;
         }
         
         setTimeout(async () => {
             try {
-                await window.cargarConfiguracionInicial();
-                await window.cargarMenu();
-                await window.cargarInventario();
-                await window.cargarUsuarios();
-                await window.cargarQRs();
-                await window.cargarReportes();
-                await window.cargarPedidosRecientes();
-                if (typeof window.cargarMesoneros === 'function') await window.cargarMesoneros();
-                if (typeof window.cargarDeliverys === 'function') await window.cargarDeliverys();
-                if (typeof window.cargarPropinas === 'function') await window.cargarPropinas();
+                awaitwindow.cargarConfiguracionInicial();
+                awaitwindow.cargarMenu();
+                awaitwindow.cargarInventario();
+                awaitwindow.cargarUsuarios();
+                awaitwindow.cargarQRs();
+                awaitwindow.cargarReportes();
+                awaitwindow.cargarPedidosRecientes();
+                if (typeofwindow.cargarMesoneros === 'function') awaitwindow.cargarMesoneros();
+                if (typeofwindow.cargarDeliverys === 'function') awaitwindow.cargarDeliverys();
+                if (typeofwindow.cargarPropinas === 'function') awaitwindow.cargarPropinas();
                 window.setupEventListeners();
                 window.setupRealtimeSubscriptions();
                 window.setupStockRealtime();
                 window.restaurarWifiPersistente();
-                if (typeof window._registrarPushAdmin === 'function') window._registrarPushAdmin();
+                if (typeofwindow._registrarPushAdmin === 'function') window._registrarPushAdmin();
                 window.agregarTarjetaDiferenciaTasa();
                 window._verificarTasaDeHoy((tasa) => {
-                    const tasaInput = document.getElementById('tasaBaseInput');
+                    consttasaInput = document.getElementById('tasaBaseInput');
                     if (tasaInput) tasaInput.value = tasa;
                     window.configGlobal.tasa_cambio = tasa;
                     window.recalcularTasaEfectiva();
                     window._verificarAvisoLunes();
                 });
-                await window._actualizarVentasHoyNeto();
-                await window._actualizarDeliverysHoy();
+                awaitwindow._actualizarVentasHoyNeto();
+                awaitwindow._actualizarDeliverysHoy();
                 setInterval(async () => { 
-                    await window._actualizarVentasHoyNeto();
-                    await window._actualizarDeliverysHoy();
+                    awaitwindow._actualizarVentasHoyNeto();
+                    awaitwindow._actualizarDeliverysHoy();
                     window.actualizarTarjetaDiferenciaTasa();
                 }, 60000);
-            } catch (e) { console.error('Error cargando datos:', e); window.mostrarToast('Error cargando datos: ' + e.message, 'error'); }
+            } catch (e) { console.error('Errorcargandodatos:', e); window.mostrarToast('Errorcargandodatos: ' + e.message, 'error'); }
         }, 100);
     } catch (error) {
         console.error('❌ Error:', error);
@@ -162,26 +162,26 @@ window.hacerLogin = async function() {
     }
 };
 
-window.restaurarSesionAdmin = async function() {
-    const token = sessionStorage.getItem('admin_jwt_token');
-    const userData = sessionStorage.getItem('admin_user');
-    if (!token || !userData) return false;
+window.restaurarSesionAdmin = asyncfunction() {
+    consttoken = sessionStorage.getItem('admin_jwt_token');
+    constuserData = sessionStorage.getItem('admin_user');
+    if (!token || !userData) returnfalse;
     try {
-        const user = JSON.parse(userData);
-        if (user.rol !== 'admin') return false;
-        const { error } = await window.supabaseClient.from('config').select('id').limit(1).maybeSingle();
+        constuser = JSON.parse(userData);
+        if (user.rol !== 'admin') returnfalse;
+        const { error } = awaitwindow.supabaseClient.from('config').select('id').limit(1).maybeSingle();
         if (error && error.message.includes('JWT')) {
             window.cerrarSesion();
-            return false;
+            returnfalse;
         }
         window.jwtToken = token;
         window.isAdminAuthenticated = true;
         window.supabaseClient = window.inicializarSupabaseCliente(window.jwtToken);
-        return true;
+        returntrue;
     } catch (e) {
-        console.error('Error restaurando sesión:', e); 
+        console.error('Errorrestaurandosesión:', e); 
         window.cerrarSesion();
-        return false;
+        returnfalse;
     }
 };
 
@@ -192,14 +192,14 @@ window.cerrarSesion = function() {
     window.isAdminAuthenticated = false;
     window.jwtToken = null;
     selectedAdmin = null;
-    const mainPanel = document.getElementById('mainPanel');
-    const loginPanel = document.getElementById('loginPanel');
+    constmainPanel = document.getElementById('mainPanel');
+    constloginPanel = document.getElementById('loginPanel');
     if (mainPanel) mainPanel.style.display = 'none';
     if (loginPanel) loginPanel.style.display = '';
-    const pwdInput = document.getElementById('adminPassword');
+    constpwdInput = document.getElementById('adminPassword');
     if (pwdInput) pwdInput.value = '';
-    const selectorPanel = document.getElementById('loginSelectorPanel');
-    const passwordPanel = document.getElementById('loginPasswordPanel');
+    constselectorPanel = document.getElementById('loginSelectorPanel');
+    constpasswordPanel = document.getElementById('loginPasswordPanel');
     if (selectorPanel) {
         selectorPanel.classList.remove('hide');
         selectorPanel.style.display = 'block';
@@ -209,12 +209,12 @@ window.cerrarSesion = function() {
         passwordPanel.style.display = 'none';
     }
     window.mostrarLogin();
-    window.mostrarToast('🔓 Sesión cerrada', 'info');
+    window.mostrarToast('🔓 Sesióncerrada', 'info');
     window.supabaseClient = window.inicializarSupabaseCliente();
     setTimeout(() => window.cargarListaAdminsRecientes(), 500);
 };
 
-const backBtn = document.getElementById('backToSelectorBtn');
+constbackBtn = document.getElementById('backToSelectorBtn');
 if (backBtn) {
     backBtn.addEventListener('click', () => {
         document.getElementById('loginSelectorPanel').classList.remove('hide');
@@ -225,18 +225,18 @@ if (backBtn) {
     });
 } 
 
-const clearBtn = document.getElementById('clearRecentAdminsBtn');
+constclearBtn = document.getElementById('clearRecentAdminsBtn');
 if (clearBtn) {
     clearBtn.addEventListener('click', () => {
-        if (confirm('¿Borrar el historial de administradores recientes?')) {
+        if (confirm('¿Borrarelhistorialdeadministradoresrecientes?')) {
             window.limpiarAdminsRecientes();
             window.cargarListaAdminsRecientes();
         }
     });
 }
 
-window.iniciarLoginUI = async function() {
-    await new Promise(r => setTimeout(r, 300));
-    await window.cargarListaAdminsRecientes();
+window.iniciarLoginUI = asyncfunction() {
+    awaitnewPromise(r => setTimeout(r, 300));
+    awaitwindow.cargarListaAdminsRecientes();
 };
 })();
