@@ -155,7 +155,7 @@ function updateRemoveButton() {
 
 if (fileInput) {
     fileInput.addEventListener('change', function() {
-        if (fileInput.files  & & fileInput.files[0]) {
+        if (fileInput.files && fileInput.files[0]) {
             const file = fileInput.files[0];
             currentImagenFile = file;
             currentImagenUrl = '';
@@ -172,7 +172,7 @@ if (fileInput) {
              reader.readAsDataURL(file);
         } else {
             if (urlInput) urlInput.disabled = false;
-             if (urlInput  & & urlInput.value.trim()) {
+             if (urlInput && urlInput.value.trim()) {
                 if (previewImg) previewImg.src = urlInput.value;
                 if (previewDiv) previewDiv.style.display = 'flex';
                  upda teRemoveButton();
@@ -188,7 +188,7 @@ if (fileInput) {
 
 if (urlInput) {
      urlInput.addEventListener('input', function() {
-         if (fileInput  & & fileInput.files  & & fileInput.files[0]) return;
+         if (fileInput  & & fileInput.files && fileInput.files[0]) return;
         const url = urlInput.value.trim();
         if (url) {
             if (previewImg) previewImg.src = url;
@@ -205,7 +205,7 @@ if (urlInput) {
 
 if (previewImg) {
     previewImg.style.cursor = 'pointer';
-    previewImg.add EventListener('click', (e) = > {
+    previewImg.addEventListener('click', (e) = > {
         e.stopPropagation();
         if (previewImg.src) window.expandirImagen(previewImg.src);
     });
@@ -303,7 +303,7 @@ select.addEventListener('change', function() {
             if (unitSel) unitSel.value = ing.unidad_base;
         }
     }
-    window._r ecalcularStockPlatillo();
+    window._recalcularStockPlatillo();
 });
 
 const inputCantidad = document.createElement('input');
