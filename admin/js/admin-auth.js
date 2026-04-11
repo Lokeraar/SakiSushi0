@@ -10,13 +10,23 @@ window.cargarListaAdminsRecientes = async function() {
     container.innerHTML = '<div class="loading-spinner" style="margin:0 auto;"></div>';
     
     try {
-        // Esperar a que supabaseClient esté listo (puede tardar un momento)
+        // ESPERA ROBUSTA: Esperar a que supabaseClient esté listo
         let intentos = 0;
-        while (!window.supabaseClient && intentos < 20) {
-            await new Promise(r => setTimeout(r, 100));
+        const maxIntentos = 50; // Aumentado de 20 a 50
+        const delay = 100; // ms
+        
+        while (!window.supabaseClient && intentos < maxIntentos) {
+            console.log(`[Auth] Esperando inicialización de Supabase... Intento ${intentos + 1}/${maxIntentos}`);
+            await new Promise(r => setTimeout(r, delay));
             intentos++;
         }
         
+        if (!window.supabaseClient) {
+            throw new Error('Error de conexión: El cliente de Supabase no se inicializó correctamente.');
+        }
+        
+        console.log('[Auth] Cliente Supabase listo. Cargando administradores...');
+
         const recent = window.obtenerAdminsRecientes();
         let admins = [];
         
@@ -67,8 +77,18 @@ window.cargarListaAdminsRecientes = async function() {
             });
         });
     } catch (error) {
-        console.error('Error cargando administradores:', error);
-        container.innerHTML = '<p style="color:var(--danger);text-align:center">Error al cargar administradores. Recarga la página.</p>';
+        console.error('❌ Error cargando administradores:', error);
+        if (container) {
+            container.innerHTML = `
+                <div style="text-align:center; padding:1rem;">
+                    <p style="color:var(--danger); font-weight:700; margin-bottom:0.5rem;">Error de conexión</p>
+                    <p style="color:var(--text-muted); font-size:0.8rem; margin-bottom:1rem;">${error.message}</p>
+                    <button onclick="window.cargarListaAdminsRecientes()" class="btn-primary" style="font-size:0.8rem;">
+                        <i class="fas fa-sync"></i> Reintentar
+                    </button>
+                </div>
+            `;
+        }
     }
 };
 
