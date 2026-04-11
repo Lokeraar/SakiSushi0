@@ -1,354 +1,354 @@
-<!DOCTYPEhtml>
-<htmllang="es">
+<!DOCTYPE html>
+<html lang="es">
 <head>
-    <metacharset="UTF-8">
-    <metaname="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SakiSushi - PanelAdministraci</title>
-    <linkrel="stylesheet" href="../admin/css/admin.css">
-    <linkrel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Saki Sushi - Panel Administración</title>
+    <link rel="stylesheet" href="../admin/css/admin.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
-    <!-- Sonidodenotificación -->
-    <audioid="notificationSound" preload="auto">
-        <sourcesrc="https://iqwwoihiiyrtypyqzhgy.supabase.co/storage/v1/object/public/alarma/notificacion.mp3" type="audio/mpeg">
+    <!-- Sonido de notificación -->
+    <audio id="notificationSound" preload="auto">
+        <source src="https://iqwwoihiiyrtypyqzhgy.supabase.co/storage/v1/object/public/alarma/notificacion.mp3" type="audio/mpeg">
     </audio>
 
-    <!-- Modaldendesalida -->
-    <divid="exitModal" class="modal">
-        <divclass="modal-content" style="max-width:400px;">
-            <divclass="modal-header">
-                <h3>¿Seguroquedeseassalir?</h3>
-                <buttonclass="modal-close" onclick="window.cerrarModal('exitModal')">&times;</button>
+    <!-- Modal de confirmación de salida -->
+    <div id="exitModal" class="modal">
+        <div class="modal-content" style="max-width:400px;">
+            <div class="modal-header">
+                <h3>¿Seguro que deseas salir?</h3>
+                <button class="modal-close" onclick="window.cerrarModal('exitModal')">&times;</button>
             </div>
-            <divclass="modal-footer">
-                <buttonclass="btn-secondary" onclick="window.cerrarModal('exitModal')">Cancelar</button>
-                <buttonclass="btn-danger" onclick="window.cerrarSesion()">Salir</button>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="window.cerrarModal('exitModal')">Cancelar</button>
+                <button class="btn-danger" onclick="window.cerrarSesion()">Salir</button>
             </div>
         </div>
     </div>
 
-    <!-- LoginContainer -->
-    <divid="loginContainer" class="login-container">
-        <divclass="login-wrapper">
-            <!-- PanelSelectordeAdministradores -->
-            <divid="loginSelectorPanel" class="login-selector-panel">
-                <divclass="login-selector-header">
-                    <imgsrc="https://lh3.googleusercontent.com/pw/AP1GczPrZAoWxmsOGRD9xl1hO5Q65JXuwUZzoR6gUk-cw5lVmarxQe_-lwqpA60tTKLlXfpvIjAJlKC6jFls-xETJOPkebLIIPhbGlUkknmhrRbdhMUll2UViGSUj3WmHKg2YEsZlAfxBPPTjIHhScjD0jfe=w1439-h1439-s-no-gm" alt="SakiSushi" class="login-logo">
+    <!-- Login Container -->
+    <div id="loginContainer" class="login-container">
+        <div class="login-wrapper">
+            <!-- Panel Selector de Administradores -->
+            <div id="loginSelectorPanel" class="login-selector-panel">
+                <div class="login-selector-header">
+                    <img src="https://lh3.googleusercontent.com/pw/AP1GczPrZAoWxmsOGRD9xl1hO5Q65JXuwUZzoR6gUk-cw5lVmarxQe_-lwqpA60tTKLlXfpvIjAJlKC6jFls-xETJOPkebLIIPhbGlUkknmhrRbdhMUll2UViGSUj3WmHKg2YEsZlAfxBPPTjIHhScjD0jfe=w1439-h1439-s-no-gm" alt="Saki Sushi" class="login-logo">
                     <h2>Administración</h2>
-                    <p>Seleccionaunadministrador</p>
+                    <p>Selecciona un administrador</p>
                 </div>
-                <divid="loginAdminsList" class="login-admins-list">
-                    <divclass="loading-spinner"></div>
+                <div id="loginAdminsList" class="login-admins-list">
+                    <div class="loading-spinner"></div>
                 </div>
-                <divstyle="display:flex;gap:.5rem;margin-top:1rem;justify-content:center;">
-                    <buttonclass="btn-back" id="clearRecentAdminsBtn" style="background:rgba(255,255,255,.1);border:none;color:#fff;padding:.5rem 1rem;border-radius:30px;cursor:pointer;">
-                        <iclass="fasfa-trash"></i> Limpiarhistorial
+                <div style="display:flex;gap:.5rem;margin-top:1rem;justify-content:center;">
+                    <button class="btn-back" id="clearRecentAdminsBtn" style="background:rgba(255,255,255,.1);border:none;color:#fff;padding:.5rem 1rem;border-radius:30px;cursor:pointer;">
+                        <i class="fas fa-trash"></i> Limpiar historial
                     </button>
-                    <buttonclass="btn-back" onclick="window.cerrarModal('loginSelectorPanel')" style="background:rgba(255,255,255,.1);border:none;color:#fff;padding:.5rem 1rem;border-radius:30px;cursor:pointer;">
-                        <iclass="fasfa-arrow-left"></i> Volver
+                    <button class="btn-back" onclick="window.cerrarModal('loginSelectorPanel')" style="background:rgba(255,255,255,.1);border:none;color:#fff;padding:.5rem 1rem;border-radius:30px;cursor:pointer;">
+                        <i class="fas fa-arrow-left"></i> Volver
                     </button>
                 </div>
             </div>
 
-            <!-- PaneldeContraseña -->
-            <divid="loginPasswordPanel" class="login-password-panel" style="display:none;">
-                <buttonclass="btn-back" id="backToSelectorBtn">
-                    <iclass="fasfa-arrow-left"></i> Volver
+            <!-- Panel de Contraseña -->
+            <div id="loginPasswordPanel" class="login-password-panel" style="display:none;">
+                <button class="btn-back" id="backToSelectorBtn">
+                    <i class="fas fa-arrow-left"></i> Volver
                 </button>
-                <divclass="selected-admin-info">
-                    <imgid="selectedAdminFoto" src="" alt="Admin">
-                    <spanid="selectedAdminNombre"></span>
+                <div class="selected-admin-info">
+                    <img id="selectedAdminFoto" src="" alt="Admin">
+                    <span id="selectedAdminNombre"></span>
                 </div>
-                <formid="loginForm" class="login-form" onsubmit="event.preventDefault(); window.hacerLogin();">
-                    <inputtype="password" id="adminPassword" placeholder="Contraseña" requiredautocomplete="current-password">
-                    <buttontype="submit">Ingresar</button>
+                <form id="loginForm" class="login-form" onsubmit="event.preventDefault(); window.hacerLogin();">
+                    <input type="password" id="adminPassword" placeholder="Contraseña" required autocomplete="current-password">
+                    <button type="submit">Ingresar</button>
                 </form>
-                <ahref="#" class="recovery-link">
-                    <ahref="#" style="color:rgba(255,255,255,.6);font-size:.85rem;text-decoration:none;">¿Olvidastelacontraseña?</a>
+                <a href="#" class="recovery-link">
+                    <a href="#" style="color:rgba(255,255,255,.6);font-size:.85rem;text-decoration:none;">¿Olvidaste la contraseña?</a>
                 </a>
             </div>
         </div>
     </div>
 
-    <!-- PanelContainer -->
-    <divid="panelContainer" class="panel-container">
+    <!-- Panel Container -->
+    <div id="panelContainer" class="panel-container">
         <!-- Header -->
-        <headerclass="header">
-            <divclass="header-row-main">
-                <divclass="header-left">
+        <header class="header">
+            <div class="header-row-main">
+                <div class="header-left">
                     <h2>
-                        <imgsrc="https://lh3.googleusercontent.com/pw/AP1GczPrZAoWxmsOGRD9xl1hO5Q65JXuwUZzoR6gUk-cw5lVmarxQe_-lwqpA60tTKLlXfpvIjAJlKC6jFls-xETJOPkebLIIPhbGlUkknmhrRbdhMUll2UViGSUj3WmHKg2YEsZlAfxBPPTjIHhScjD0jfe=w1439-h1439-s-no-gm" alt="SakiSushi" style="width:32px;height:32px;border-radius:50%;margin-right:8px;">
-                        nSakiSushi
+                        <img src="https://lh3.googleusercontent.com/pw/AP1GczPrZAoWxmsOGRD9xl1hO5Q65JXuwUZzoR6gUk-cw5lVmarxQe_-lwqpA60tTKLlXfpvIjAJlKC6jFls-xETJOPkebLIIPhbGlUkknmhrRbdhMUll2UViGSUj3WmHKg2YEsZlAfxBPPTjIHhScjD0jfe=w1439-h1439-s-no-gm" alt="Saki Sushi" style="width:32px;height:32px;border-radius:50%;margin-right:8px;">
+                        Administración Saki Sushi
                     </h2>
                 </div>
-                <divclass="header-right">
-                    <buttonclass="nav-button" onclick="window.abrirSelectorMesaAdmin()" title="Vermendemesa">
-                        <iclass="fasfa-chair"></i> SalirMesas
+                <div class="header-right">
+                    <button class="nav-button" onclick="window.abrirSelectorMesaAdmin()" title="Ver menú de mesa">
+                        <i class="fas fa-chair"></i> Salir Mesas
                     </button>
-                    <ahref="../Cajero/index.html" class="nav-button">
-                        <iclass="fasfa-cash-register"></i> Cajero
+                    <a href="../Cajero/index.html" class="nav-button">
+                        <i class="fas fa-cash-register"></i> Cajero
                     </a>
-                    <buttonclass="theme-toggle" id="themeToggle" onclick="window.toggleTheme()" title="Cambiartema">
-                        <iclass="fasfa-sun" id="themeIcon"></i>
+                    <button class="theme-toggle" id="themeToggle" onclick="window.toggleTheme()" title="Cambiar tema">
+                        <i class="fas fa-sun" id="themeIcon"></i>
                     </button>
-                    <buttonclass="logout-button" id="logoutButton" onclick="document.getElementById('exitModal').classList.add('active')">
-                        <iclass="fasfa-sign-out-alt"></i> Salir
+                    <button class="logout-button" id="logoutButton" onclick="document.getElementById('exitModal').classList.add('active')">
+                        <i class="fas fa-sign-out-alt"></i> Salir
                     </button>
                 </div>
             </div>
-            <divclass="header-row-sucursal">
-                <spanclass="sucursal-label">Seleccionarsucursal</span>
-                <buttonclass="sucursal-button">Principal</button>
-                <divid="stockCriticoHeader" style="margin-left:auto;"></div>
+            <div class="header-row-sucursal">
+                <span class="sucursal-label">Seleccionar sucursal</span>
+                <button class="sucursal-button">Principal</button>
+                <div id="stockCriticoHeader" style="margin-left:auto;"></div>
             </div>
         </header>
 
-        <!-- NavigationTabs -->
-        <divclass="tabs-wrapper">
-            <buttonclass="tabs-chevrontabs-chevron-left" id="tabsChevronLeft" onclick="window._scrollTabs(-1)">&#10094;&#10094;</button>
-            <divclass="tabs" id="tabsContainer">
-                <buttonclass="tabactive" data-tab="dashboard">Inicio</button>
-                <buttonclass="tab" data-tab="menu">buttonclassPrecios</button>
-                <buttonclass="tab" data-tab="inventario">Inventario</button>
-                <buttonclass="tab" data-tab="usuarios">Usuarios</button>
-                <buttonclass="tab" data-tab="deliverys">Deliverys</button>
-                <buttonclass="tab" data-tab="mesoneros">Mesoneros</button>
-                <buttonclass="tab" data-tab="config">Configuración</button>
-                <buttonclass="tab" data-tab="qr">digosQR</button>
-                <buttonclass="tab" data-tab="reportes">Reportes</button>
+        <!-- Navigation Tabs -->
+        <div class="tabs-wrapper">
+            <button class="tabs-chevron tabs-chevron-left" id="tabsChevronLeft" onclick="window._scrollTabs(-1)">&#10094;&#10094;</button>
+            <div class="tabs" id="tabsContainer">
+                <button class="tab active" data-tab="dashboard">Inicio</button>
+                <button class="tab" data-tab="menu">Menú y Precios</button>
+                <button class="tab" data-tab="inventario">Inventario</button>
+                <button class="tab" data-tab="usuarios">Usuarios</button>
+                <button class="tab" data-tab="deliverys">Deliverys</button>
+                <button class="tab" data-tab="mesoneros">Mesoneros</button>
+                <button class="tab" data-tab="config">Configuración</button>
+                <button class="tab" data-tab="qr">Códigos QR</button>
+                <button class="tab" data-tab="reportes">Reportes</button>
             </div>
-            <buttonclass="tabs-chevrontabs-chevron-right" id="tabsChevronRight" onclick="window._scrollTabs(1)">&#10095;&#10095;</button>
+            <button class="tabs-chevron tabs-chevron-right" id="tabsChevronRight" onclick="window._scrollTabs(1)">&#10095;&#10095;</button>
         </div>
 
         <!-- Content -->
-        <divclass="content">
-            <!-- DashboardPane -->
-            <divid="dashboardPane" class="tab-paneactive">
-                <divclass="pane-header">
-                    <h2class="section-title"><iclass="fasfa-home"></i> Dashboard</h2>
+        <div class="content">
+            <!-- Dashboard Pane -->
+            <div id="dashboardPane" class="tab-pane active">
+                <div class="pane-header">
+                    <h2 class="section-title"><i class="fas fa-home"></i> Dashboard</h2>
                 </div>
 
-                <!-- TasaCardsBar -->
-                <divclass="tasa-cards-bar">
-                    <divclass="tcb-cards">
-                        <divclass="tcb-cardtcb-card-base">
-                            <divclass="tcb-label">TasaBase: Bs. por $1</div>
-                            <inputtype="number" id="tasaBaseInput" class="tcb-input" step="0.01" min="0" onchange="window.recalcularTasaEfectiva()">
+                <!-- Tasa Cards Bar -->
+                <div class="tasa-cards-bar">
+                    <div class="tcb-cards">
+                        <div class="tcb-card tcb-card-base">
+                            <div class="tcb-label">Tasa Base: Bs. por $1</div>
+                            <input type="number" id="tasaBaseInput" class="tcb-input" step="0.01" min="0" onchange="window.recalcularTasaEfectiva()">
                         </div>
-                        <divclass="tcb-cardtcb-card-pct">
-                            <divclass="tcb-label">AumentoDiario %: porperiodo</div>
-                            <inputtype="number" id="aumentoDiarioInput" class="tcb-input" step="0.01" min="0" value="0" onchange="window.recalcularTasaEfectiva()">
+                        <div class="tcb-card tcb-card-pct">
+                            <div class="tcb-label">Aumento Diario %: por periodo</div>
+                            <input type="number" id="aumentoDiarioInput" class="tcb-input" step="0.01" min="0" value="0" onchange="window.recalcularTasaEfectiva()">
                         </div>
-                        <divclass="tcb-cardtcb-card-efectiva">
-                            <divclass="tcb-label">TasaEfectiva:</div>
-                            <divclass="tcb-value-big" id="tasaEfectivaDisplay">400.00Bs. por $1hoy</div>
+                        <div class="tcb-card tcb-card-efectiva">
+                            <div class="tcb-label">Tasa Efectiva:</div>
+                            <div class="tcb-value-big" id="tasaEfectivaDisplay">400.00 Bs. por $1 hoy</div>
                         </div>
-                        <divclass="tcb-cardtcb-card-acum">
-                            <divclass="tcb-label">Acumulado:</div>
-                            <divclass="tcb-value-bigtcb-acum-val" id="aumentoAcumuladoDisplay">0% aumentototal</div>
+                        <div class="tcb-card tcb-card-acum">
+                            <div class="tcb-label">Acumulado:</div>
+                            <div class="tcb-value-big tcb-acum-val" id="aumentoAcumuladoDisplay">0% aumento total</div>
                         </div>
                     </div>
-                    <divclass="tcb-controls">
-                        <divclass="tcb-toggle-card">
-                            <divclass="tcb-toggle-top">
-                                <labelclass="tcb-toggle-label">Aumentodiarioactivo</label>
-                                <labelclass="toggle-switch">
-                                    <inputtype="checkbox" id="aumentoActivoToggle" onchange="window.configGlobal.aumento_detenido=!this.checked;window.recalcularTasaEfectiva()">
-                                    <spanclass="toggle-slider"></span>
+                    <div class="tcb-controls">
+                        <div class="tcb-toggle-card">
+                            <div class="tcb-toggle-top">
+                                <label class="tcb-toggle-label">Aumento diario activo</label>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="aumentoActivoToggle" onchange="window.configGlobal.aumento_detenido=!this.checked;window.recalcularTasaEfectiva()">
+                                    <span class="toggle-slider"></span>
                                 </label>
                             </div>
                         </div>
-                        <divclass="tcb-toggle-card">
-                            <divclass="tcb-toggle-top">
-                                <labelclass="tcb-toggle-label">Aumentosemanalactivo</label>
-                                <labelclass="toggle-switch">
-                                    <inputtype="checkbox" id="aumentoSemanalToggle" onchange="window.recalcularTasaEfectiva()">
-                                    <spanclass="toggle-slider"></span>
+                        <div class="tcb-toggle-card">
+                            <div class="tcb-toggle-top">
+                                <label class="tcb-toggle-label">Aumento semanal activo</label>
+                                <label class="toggle-switch">
+                                    <input type="checkbox" id="aumentoSemanalToggle" onchange="window.recalcularTasaEfectiva()">
+                                    <span class="toggle-slider"></span>
                                 </label>
                             </div>
                         </div>
-                        <divclass="tcb-fechas-card" id="tasaFechasDiv" style="display:none;">
-                            <divclass="tcb-fecha-row">
-                                <labelclass="tcb-fecha-label">Desde:</label>
-                                <inputtype="date" id="aumentoDesde" class="tcb-fecha-input">
+                        <div class="tcb-fechas-card" id="tasaFechasDiv" style="display:none;">
+                            <div class="tcb-fecha-row">
+                                <label class="tcb-fecha-label">Desde:</label>
+                                <input type="date" id="aumentoDesde" class="tcb-fecha-input">
                             </div>
-                            <divclass="tcb-fecha-row">
-                                <labelclass="tcb-fecha-label">Hasta:</label>
-                                <inputtype="date" id="aumentoHasta" class="tcb-fecha-input">
+                            <div class="tcb-fecha-row">
+                                <label class="tcb-fecha-label">Hasta:</label>
+                                <input type="date" id="aumentoHasta" class="tcb-fecha-input">
                             </div>
-                            <divclass="tcb-fecha-row">
-                                <labelclass="tcb-fecha-label">Indefinido</label>
-                                <inputtype="checkbox" id="aumentoIndefinido" onchange="document.getElementById('aumentoHasta').disabled=this.checked;if(this.checked)document.getElementById('aumentoHasta').value='';">
-                                <spanclass="tooltip-wrap" style="margin-left:4px;">
-                                    <spanstyle="color:#666;font-size:.7rem;">?</span>
-                                    <spanstyle="display:none;position:absolute;background:#333;color:#fff;padding:4px 8px;border-radius:4px;font-size:.7rem;white-space:normal;width:200px;z-index:100;">Activaestosiquieresqueelaumentosigasinlimitedetiempo. Silodejassinmarcar, elaumentosedetieneenlafecha "Hasta".</span>
+                            <div class="tcb-fecha-row">
+                                <label class="tcb-fecha-label">Indefinido</label>
+                                <input type="checkbox" id="aumentoIndefinido" onchange="document.getElementById('aumentoHasta').disabled=this.checked;if(this.checked)document.getElementById('aumentoHasta').value='';">
+                                <span class="tooltip-wrap" style="margin-left:4px;">
+                                    <span style="color:#666;font-size:.7rem;">?</span>
+                                    <span style="display:none;position:absolute;background:#333;color:#fff;padding:4px 8px;border-radius:4px;font-size:.7rem;white-space:normal;width:200px;z-index:100;">Activa esto si quieres que el aumento siga sin limite de tiempo. Si lo dejas sin marcar, el aumento se detiene en la fecha "Hasta".</span>
                                 </span>
                             </div>
                         </div>
-                        <divclass="tcb-save-wrap">
-                            <buttonclass="btn-primarytcb-save-btn" id="saveAllButton">
-                                <iclass="fasfa-save"></i> Guardarcambiosentasa
+                        <div class="tcb-save-wrap">
+                            <button class="btn-primary tcb-save-btn" id="saveAllButton">
+                                <i class="fas fa-save"></i> Guardar cambios en tasa
                             </button>
                         </div>
                     </div>
                 </div>
 
-                <!-- DashboardGrid -->
-                <divclass="dashboard-grid">
-                    <divclass="dashboard-card" id="ventasHoyCard" onclick="window._abrirDetalleVentasAdmin()" style="cursor:pointer;">
-                        <divclass="card-title">VentasHoy (NetoCobrado)</div>
-                        <divclass="card-value" id="ventasHoy">$0.00</div>
-                        <divstyle="font-size:.75rem;color:var(--text-muted);margin-top:.3rem;">Tocaparaverdesglose</div>
+                <!-- Dashboard Grid -->
+                <div class="dashboard-grid">
+                    <div class="dashboard-card" id="ventasHoyCard" onclick="window._abrirDetalleVentasAdmin()" style="cursor:pointer;">
+                        <div class="card-title">Ventas Hoy (Neto Cobrado)</div>
+                        <div class="card-value" id="ventasHoy">$0.00</div>
+                        <div style="font-size:.75rem;color:var(--text-muted);margin-top:.3rem;">Toca para ver desglose</div>
                     </div>
                     
-                    <divclass="dashboard-card" id="deliverysHoyCard" onclick="window._abrirDetalleDeliverysAdmin()" style="cursor:pointer;">
-                        <divclass="card-title">DeliverysHoy</div>
-                        <divclass="card-value" id="deliverysHoyDashboard">$0.00 / Bs 0,00</div>
-                        <divstyle="font-size:.75rem;color:var(--text-muted);margin-top:.3rem;">Tocaparaverdetalle</div>
+                    <div class="dashboard-card" id="deliverysHoyCard" onclick="window._abrirDetalleDeliverysAdmin()" style="cursor:pointer;">
+                        <div class="card-title">Deliverys Hoy</div>
+                        <div class="card-value" id="deliverysHoyDashboard">$0.00 / Bs 0,00</div>
+                        <div style="font-size:.75rem;color:var(--text-muted);margin-top:.3rem;">Toca para ver detalle</div>
                     </div>
                     
-                    <divclass="dashboard-card" onclick="window.irAMenu()">
-                        <divclass="card-title">ProductosActivos</div>
-                        <divclass="card-value" id="productosActivosCount">0</div>
+                    <div class="dashboard-card" onclick="window.irAMenu()">
+                        <div class="card-title">Productos Activos</div>
+                        <div class="card-value" id="productosActivosCount">0</div>
                     </div>
                     
-                    <divclass="dashboard-card" onclick="window.irAStockCritico()">
-                        <divclass="card-title">AlertasStock</div>
-                        <divclass="card-value" id="alertasStock">0</div>
+                    <div class="dashboard-card" onclick="window.irAStockCritico()">
+                        <div class="card-title">Alertas Stock</div>
+                        <div class="card-value" id="alertasStock">0</div>
                     </div>
                     
-                    <divclass="dashboard-card" onclick="window._irAMesoneros()">
-                        <divclass="card-title">PropinasHoy</div>
-                        <divclass="card-value" id="propinasHoyDashboard">Bs 0,00</div>
-                        <divstyle="font-size:.75rem;color:var(--text-muted);margin-top:.3rem;">Tocaparagestionarpropinas</div>
+                    <div class="dashboard-card" onclick="window._irAMesoneros()">
+                        <div class="card-title">Propinas Hoy</div>
+                        <div class="card-value" id="propinasHoyDashboard">Bs 0,00</div>
+                        <div style="font-size:.75rem;color:var(--text-muted);margin-top:.3rem;">Toca para gestionar propinas</div>
                     </div>
 
-                    <divclass="dashboard-card" id="diferenciaTasaCard" style="cursor:pointer;" onclick="window.mostrarToast('Diferenciaacumuladaafavordelrestauranteporaumentodetasa', 'info')">
-                        <divclass="card-title">
-                            AcumuladoDif. TasaBaseyEfectiva
-                            <spanclass="tooltip-wrap" style="position:relative; display:inline-flex; cursor:help; margin-left:.3rem;">
-                                <spanstyle="display:inline-flex; align-items:center; justify-content:center; width:16px; height:16px; background:#aaa; color:#fff; border-radius:50%; font-size:.65rem; font-weight:700;">?</span>
-                                <spanclass="tooltip-text" style="display:none; position:absolute; bottom:calc(100% + 6px); left:50%; transform:translateX(-50%); background:var(--toast-bg); color:var(--toast-text); padding:.5rem .75rem; border-radius:8px; font-size:.75rem; white-space:normal; width:250px; text-align:center; box-shadow:0 4px 12pxrgba(0,0,0,.3); z-index:100; line-height:1.4;">
-                                    Eslagananciaextrageneradaporladiferenciaentrelatasabaseylatasaefectivaaplicadaalospedidoscobrados. Estadiferenciaquedaafavordelrestaurante.
+                    <div class="dashboard-card" id="diferenciaTasaCard" style="cursor:pointer;" onclick="window.mostrarToast('Diferencia acumulada a favor del restaurante por aumento de tasa', 'info')">
+                        <div class="card-title">
+                            Acumulado Dif. Tasa Base y Efectiva
+                            <span class="tooltip-wrap" style="position:relative; display:inline-flex; cursor:help; margin-left:.3rem;">
+                                <span style="display:inline-flex; align-items:center; justify-content:center; width:16px; height:16px; background:#aaa; color:#fff; border-radius:50%; font-size:.65rem; font-weight:700;">?</span>
+                                <span class="tooltip-text" style="display:none; position:absolute; bottom:calc(100% + 6px); left:50%; transform:translateX(-50%); background:var(--toast-bg); color:var(--toast-text); padding:.5rem .75rem; border-radius:8px; font-size:.75rem; white-space:normal; width:250px; text-align:center; box-shadow:0 4px 12px rgba(0,0,0,.3); z-index:100; line-height:1.4;">
+                                    Es la ganancia extra generada por la diferencia entre la tasa base y la tasa efectiva aplicada a los pedidos cobrados. Esta diferencia queda a favor del restaurante.
                                 </span>
                             </span>
                         </div>
-                        <divclass="card-value" id="diferenciaTasaValor">Bs 0,00</div>
+                        <div class="card-value" id="diferenciaTasaValor">Bs 0,00</div>
                     </div>
                 </div>
 
-                <!-- LowerGrid -->
-                <divclass="dashboard-lower-grid">
-                    <divclass="lower-stock">
-                        <h3>StockCr</h3>
-                        <divid="stockCritico">
-                            <pstyle="color:var(--text-muted);font-size:.88rem;">Nohayalertasdestock</p>
+                <!-- Lower Grid -->
+                <div class="dashboard-lower-grid">
+                    <div class="lower-stock">
+                        <h3>Stock Crítico</h3>
+                        <div id="stockCritico">
+                            <p style="color:var(--text-muted);font-size:.88rem;">No hay alertas de stock</p>
                         </div>
                     </div>
-                    <divclass="lower-pedidos">
-                        <h3>PedidosRecientes <spanid="pedidosCountBadge" style="background:var(--primary);color:#fff;border-radius:12px;padding:2px 8px;font-size:.7rem;margin-left:6px;">0</span></h3>
-                        <divid="pedidosRecientes">
-                            <pstyle="color:var(--text-muted);font-size:.88rem;">Cargando...</p>
+                    <div class="lower-pedidos">
+                        <h3>Pedidos Recientes <span id="pedidosCountBadge" style="background:var(--primary);color:#fff;border-radius:12px;padding:2px 8px;font-size:.7rem;margin-left:6px;">0</span></h3>
+                        <div id="pedidosRecientes">
+                            <p style="color:var(--text-muted);font-size:.88rem;">Cargando...</p>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- MenuPane -->
-            <divid="menuPane" class="tab-pane">
-                <divclass="pane-header">
-                    <h2class="section-title"><iclass="fasfa-utensils"></i> h2classPrecios</h2>
-                    <divclass="pane-actions">
-                        <buttonclass="btn-primary" onclick="window.abrirModalNuevoPlatillo()">
-                            <iclass="fasfa-plus"></i> NuevoPlatillo
+            <!-- Menu Pane -->
+            <div id="menuPane" class="tab-pane">
+                <div class="pane-header">
+                    <h2 class="section-title"><i class="fas fa-utensils"></i> Menú y Precios</h2>
+                    <div class="pane-actions">
+                        <button class="btn-primary" onclick="window.abrirModalNuevoPlatillo()">
+                            <i class="fas fa-plus"></i> Nuevo Platillo
                         </button>
                     </div>
                 </div>
-                <divclass="inv-search-wrap">
-                    <iclass="fasfa-searchinv-search-icon"></i>
-                    <inputtype="text" class="inv-search-input" id="menuBuscador" placeholder="Buscarplatillo..." oninput="window.renderizarMenu(this.value)">
+                <div class="inv-search-wrap">
+                    <i class="fas fa-search inv-search-icon"></i>
+                    <input type="text" class="inv-search-input" id="menuBuscador" placeholder="Buscar platillo..." oninput="window.renderizarMenu(this.value)">
                 </div>
-                <divclass="menu-grid" id="menuGrid">
-                    <pstyle="color:var(--text-muted);text-align:center;">Cargandomen...</p>
+                <div class="menu-grid" id="menuGrid">
+                    <p style="color:var(--text-muted);text-align:center;">Cargando menú...</p>
                 </div>
             </div>
 
-            <!-- InventarioPane -->
-            <divid="inventarioPane" class="tab-pane">
-                <divclass="pane-header">
-                    <h2class="section-title"><iclass="fasfa-boxes"></i> Inventario</h2>
-                    <divclass="pane-actions">
-                        <buttonclass="btn-primary" onclick="window.abrirModalNuevoIngrediente()">
-                            <iclass="fasfa-plus"></i> NuevoIngrediente
+            <!-- Inventario Pane -->
+            <div id="inventarioPane" class="tab-pane">
+                <div class="pane-header">
+                    <h2 class="section-title"><i class="fas fa-boxes"></i> Inventario</h2>
+                    <div class="pane-actions">
+                        <button class="btn-primary" onclick="window.abrirModalNuevoIngrediente()">
+                            <i class="fas fa-plus"></i> Nuevo Ingrediente
                         </button>
                     </div>
                 </div>
-                <divclass="inv-panel">
-                    <divclass="inv-list-col">
-                        <divclass="inv-list-search">
-                            <inputtype="text" id="inventarioBuscador" placeholder="Buscaringrediente..." oninput="window.renderizarInventario(this.value)">
+                <div class="inv-panel">
+                    <div class="inv-list-col">
+                        <div class="inv-list-search">
+                            <input type="text" id="inventarioBuscador" placeholder="Buscar ingrediente..." oninput="window.renderizarInventario(this.value)">
                         </div>
-                        <divclass="inv-list-items" id="inventarioGrid">
-                            <!-- Ingredientesserenderizanaqu -->
+                        <div class="inv-list-items" id="inventarioGrid">
+                            <!-- Ingredientes se renderizan aquí -->
                         </div>
                     </div>
-                    <divclass="inv-detail-col" id="invDetailCol">
-                        <divclass="inv-detail-empty">
-                            <iclass="fasfa-hand-point-left" style="font-size:2rem;margin-bottom:.75rem;display:block;opacity:.3;"></i>
-                            Seleccionauningredientedelalistaparaversudetalle
+                    <div class="inv-detail-col" id="invDetailCol">
+                        <div class="inv-detail-empty">
+                            <i class="fas fa-hand-point-left" style="font-size:2rem;margin-bottom:.75rem;display:block;opacity:.3;"></i>
+                            Selecciona un ingrediente de la lista para ver su detalle
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- UsuariosPane -->
-            <divid="usuariosPane" class="tab-pane">
-                <divclass="pane-header">
-                    <h2class="section-title"><iclass="fasfa-users"></i> UsuariosdelSistema</h2>
-                    <divclass="pane-actions">
-                        <buttonclass="btn-primary" onclick="window.abrirModalNuevoUsuario()">
-                            <iclass="fasfa-plus"></i> NuevoCajero/Admin
+            <!-- Usuarios Pane -->
+            <div id="usuariosPane" class="tab-pane">
+                <div class="pane-header">
+                    <h2 class="section-title"><i class="fas fa-users"></i> Usuarios del Sistema</h2>
+                    <div class="pane-actions">
+                        <button class="btn-primary" onclick="window.abrirModalNuevoUsuario()">
+                            <i class="fas fa-plus"></i> Nuevo Cajero/Admin
                         </button>
                     </div>
                 </div>
-                <divclass="usuarios-grid" id="usuariosGrid">
-                    <pstyle="color:var(--text-muted);">Cargandousuarios...</p>
+                <div class="usuarios-grid" id="usuariosGrid">
+                    <p style="color:var(--text-muted);">Cargando usuarios...</p>
                 </div>
             </div>
 
-            <!-- DeliverysPane -->
-            <divid="deliverysPane" class="tab-pane">
-                <divclass="pane-header">
-                    <h2class="section-title"><iclass="fasfa-motorcycle"></i> Motorizados</h2>
-                    <divclass="pane-actions">
-                        <inputtype="text" id="nuevoDelivery" class="pane-input" placeholder="Nombredelmotorizado" onkeypress="if(event.key==='Enter')window.agregarDelivery()">
-                        <buttonclass="btn-delivery" onclick="window.agregarDelivery()">
-                            <iclass="fasfa-plus"></i> Agregar
+            <!-- Deliverys Pane -->
+            <div id="deliverysPane" class="tab-pane">
+                <div class="pane-header">
+                    <h2 class="section-title"><i class="fas fa-motorcycle"></i> Motorizados</h2>
+                    <div class="pane-actions">
+                        <input type="text" id="nuevoDelivery" class="pane-input" placeholder="Nombre del motorizado" onkeypress="if(event.key==='Enter')window.agregarDelivery()">
+                        <button class="btn-delivery" onclick="window.agregarDelivery()">
+                            <i class="fas fa-plus"></i> Agregar
                         </button>
                     </div>
                 </div>
                 
-                <!-- StatsCards -->
-                <divclass="delivery-stat-cards" id="deliveryStatsGrid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-bottom:1.5rem;">
-                    <divclass="delivery-stat-card">
-                        <divclass="delivery-stat-label">Totalacumulado</div>
-                        <divclass="delivery-stat-value" id="deliverysTotalCard">$0.00 / Bs 0,00</div>
+                <!-- Stats Cards -->
+                <div class="delivery-stat-cards" id="deliveryStatsGrid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1rem;margin-bottom:1.5rem;">
+                    <div class="delivery-stat-card">
+                        <div class="delivery-stat-label">Total acumulado</div>
+                        <div class="delivery-stat-value" id="deliverysTotalCard">$0.00 / Bs 0,00</div>
                     </div>
-                    <divclass="delivery-stat-card">
-                        <divclass="delivery-stat-label">oshoy</div>
-                        <divclass="delivery-stat-value" id="deliverysCountCard">0</div>
+                    <div class="delivery-stat-card">
+                        <div class="delivery-stat-label">Envíos hoy</div>
+                        <div class="delivery-stat-value" id="deliverysCountCard">0</div>
                     </div>
-                    <divclass="delivery-stat-card">
-                        <divclass="delivery-stat-label">Promedio</div>
-                        <divclass="delivery-stat-value" id="deliverysPromedioCard">$0.00 / Bs 0,00</div>
+                    <div class="delivery-stat-card">
+                        <div class="delivery-stat-label">Promedio</div>
+                        <div class="delivery-stat-value" id="deliverysPromedioCard">$0.00 / Bs 0,00</div>
                     </div>
                 </div>
 
-                <!-- Últimos 5Viajes -->
-                <divclass="table-section">
-                    <divclass="table-section-title">Últimos 5Viajes</div>
-                    <divclass="table-responsive">
-                        <tableclass="data-table">
+                <!-- Últimos 5 Viajes -->
+                <div class="table-section">
+                    <div class="table-section-title">Últimos 5 Viajes</div>
+                    <div class="table-responsive">
+                        <table class="data-table">
                             <thead>
                                 <tr>
                                     <th>Resumen</th>
@@ -357,52 +357,52 @@
                                     <th>Hora</th>
                                 </tr>
                             </thead>
-                            <tbodyid="ultimosViajesTbody">
-                                <tr><tdcolspan="4" style="text-align:center;padding:1.5rem;color:var(--text-muted);">Cargando...</td></tr>
+                            <tbody id="ultimosViajesTbody">
+                                <tr><td colspan="4" style="text-align:center;padding:1.5rem;color:var(--text-muted);">Cargando...</td></tr>
                             </tbody>
                         </table>
                     </div>
                 </div>
 
-                <!-- ListadeDeliverys -->
-                <divclass="delivery-list" id="deliverysGrid" style="margin-top:1.5rem;">
-                    <pstyle="color:var(--text-muted);">Cargandomotorizados...</p>
+                <!-- Lista de Deliverys -->
+                <div class="delivery-list" id="deliverysGrid" style="margin-top:1.5rem;">
+                    <p style="color:var(--text-muted);">Cargando motorizados...</p>
                 </div>
             </div>
 
-            <!-- MesonerosPane -->
-            <divid="mesonerosPane" class="tab-pane">
-                <divclass="pane-header">
-                    <h2class="section-title"><iclass="fasfa-concierge-bell"></i> MesonerosyPropinas</h2>
-                    <divclass="pane-actions">
-                        <inputtype="text" id="nuevoMesonero" class="pane-input" placeholder="Nombredelmesonero" onkeypress="if(event.key==='Enter')window.agregarMesonero()">
-                        <buttonclass="btn-primary" onclick="window.agregarMesonero()">
-                            <iclass="fasfa-plus"></i> Agregar
+            <!-- Mesoneros Pane -->
+            <div id="mesonerosPane" class="tab-pane">
+                <div class="pane-header">
+                    <h2 class="section-title"><i class="fas fa-concierge-bell"></i> Mesoneros y Propinas</h2>
+                    <div class="pane-actions">
+                        <input type="text" id="nuevoMesonero" class="pane-input" placeholder="Nombre del mesonero" onkeypress="if(event.key==='Enter')window.agregarMesonero()">
+                        <button class="btn-primary" onclick="window.agregarMesonero()">
+                            <i class="fas fa-plus"></i> Agregar
                         </button>
                     </div>
                 </div>
 
-                <!-- PropinasStats -->
-                <divclass="propinas-stats">
-                    <divclass="propina-card">
-                        <divclass="stat-value" id="propinasTotal">Bs 0,00</div>
-                        <divclass="stat-label">TotaldelDía</div>
+                <!-- Propinas Stats -->
+                <div class="propinas-stats">
+                    <div class="propina-card">
+                        <div class="stat-value" id="propinasTotal">Bs 0,00</div>
+                        <div class="stat-label">Total del Día</div>
                     </div>
-                    <divclass="propina-card">
-                        <divclass="stat-value" id="propinasCantidad">0</div>
-                        <divclass="stat-label">PropinasHoy</div>
+                    <div class="propina-card">
+                        <div class="stat-value" id="propinasCantidad">0</div>
+                        <div class="stat-label">Propinas Hoy</div>
                     </div>
-                    <divclass="propina-card">
-                        <divclass="stat-value" id="propinasPromedio">Bs 0,00</div>
-                        <divclass="stat-label">Promedio</div>
+                    <div class="propina-card">
+                        <div class="stat-value" id="propinasPromedio">Bs 0,00</div>
+                        <div class="stat-label">Promedio</div>
                     </div>
                 </div>
 
-                <!-- Últimas 5Propinas -->
-                <divclass="table-section">
-                    <divclass="table-section-title">Últimas 5Propinas</div>
-                    <divclass="table-responsive">
-                        <tableclass="data-table">
+                <!-- Últimas 5 Propinas -->
+                <div class="table-section">
+                    <div class="table-section-title">Últimas 5 Propinas</div>
+                    <div class="table-responsive">
+                        <table class="data-table">
                             <thead>
                                 <tr>
                                     <th>Hora</th>
@@ -413,165 +413,165 @@
                                     <th>Cajero</th>
                                 </tr>
                             </thead>
-                            <tbodyid="propinasTableBody">
-                                <tr><tdcolspan="6" style="text-align:center;padding:1.5rem;color:var(--text-muted);">Cargando...</td></tr>
+                            <tbody id="propinasTableBody">
+                                <tr><td colspan="6" style="text-align:center;padding:1.5rem;color:var(--text-muted);">Cargando...</td></tr>
                             </tbody>
                         </table>
                     </div>
                 </div>
 
-                <!-- ListadeMesoneros -->
-                <divclass="mesoneros-list" id="mesonerosList" style="margin-top:1.5rem;">
-                    <pstyle="color:var(--text-muted);">Cargandomesoneros...</p>
+                <!-- Lista de Mesoneros -->
+                <div class="mesoneros-list" id="mesonerosList" style="margin-top:1.5rem;">
+                    <p style="color:var(--text-muted);">Cargando mesoneros...</p>
                 </div>
             </div>
 
-            <!-- ConfigPane -->
-            <divid="configPane" class="tab-pane">
-                <h2class="section-title"><iclass="fasfa-cog"></i> Configuración</h2>
+            <!-- Config Pane -->
+            <div id="configPane" class="tab-pane">
+                <h2 class="section-title"><i class="fas fa-cog"></i> Configuración</h2>
                 
-                <divclass="config-section">
-                    <h3>CambiarContrase</h3>
-                    <divclass="form-group">
-                        <label>aActual</label>
-                        <inputtype="password" id="currentPassword" placeholder="aactual">
+                <div class="config-section">
+                    <h3>Cambiar Contraseña</h3>
+                    <div class="form-group">
+                        <label>Contraseña Actual</label>
+                        <input type="password" id="currentPassword" placeholder="Contraseña actual">
                     </div>
-                    <divclass="form-group">
-                        <label>NuevaContrase</label>
-                        <inputtype="password" id="newPassword" placeholder="Nuevacontrase">
+                    <div class="form-group">
+                        <label>Nueva Contraseña</label>
+                        <input type="password" id="newPassword" placeholder="Nueva contraseña">
                     </div>
-                    <divclass="form-group">
-                        <label>ConfirmarNuevaContraseña</label>
-                        <inputtype="password" id="confirmPassword" placeholder="Confirmarcontrase">
+                    <div class="form-group">
+                        <label>Confirmar Nueva Contraseña</label>
+                        <input type="password" id="confirmPassword" placeholder="Confirmar contraseña">
                     </div>
-                    <divid="passwordChangeError" style="color:var(--danger);font-size:.8rem;margin-bottom:.5rem;display:none;">Erroralcambiarlacontraseña</div>
-                    <buttonclass="btn-primary" onclick="window.cambiarContraseñaAdmin()">
-                        <iclass="fasfa-save"></i> Guardarcontrase
+                    <div id="passwordChangeError" style="color:var(--danger);font-size:.8rem;margin-bottom:.5rem;display:none;">Error al cambiar la contraseña</div>
+                    <button class="btn-primary" onclick="window.cambiarContraseñaAdmin()">
+                        <i class="fas fa-save"></i> Guardar contraseña
                     </button>
                 </div>
 
-                <divclass="config-section">
-                    <h3>CorreodeRecuperación</h3>
-                    <divclass="form-group">
-                        <label>CorreoElectr</label>
-                        <inputtype="email" id="recoveryEmail" value="admin@sakisushi.com">
+                <div class="config-section">
+                    <h3>Correo de Recuperación</h3>
+                    <div class="form-group">
+                        <label>Correo Electrónico</label>
+                        <input type="email" id="recoveryEmail" value="admin@sakisushi.com">
                     </div>
-                    <buttonclass="btn-primary" onclick="window.guardarCorreoRecuperacion()">
-                        <iclass="fasfa-save"></i> Guardarcorreo
+                    <button class="btn-primary" onclick="window.guardarCorreoRecuperacion()">
+                        <i class="fas fa-save"></i> Guardar correo
                     </button>
                 </div>
             </div>
 
-            <!-- QRPane -->
-            <divid="qrPane" class="tab-pane">
-                <divclass="pane-header">
-                    <h2class="section-title"><iclass="fasfa-qrcode"></i> digosQR</h2>
+            <!-- QR Pane -->
+            <div id="qrPane" class="tab-pane">
+                <div class="pane-header">
+                    <h2 class="section-title"><i class="fas fa-qrcode"></i> Códigos QR</h2>
                 </div>
 
-                <divclass="qr-generator-card">
-                    <divclass="qr-generator-grid">
-                        <divclass="form-group">
-                            <label>NombredelaMesa</label>
-                            <inputtype="text" id="qrNombreMesa" placeholder="Ej: Mesa 1">
+                <div class="qr-generator-card">
+                    <div class="qr-generator-grid">
+                        <div class="form-group">
+                            <label>Nombre de la Mesa</label>
+                            <input type="text" id="qrNombreMesa" placeholder="Ej: Mesa 1">
                         </div>
-                        <divclass="form-group">
-                            <label>RedWiFi (SSID)</label>
-                            <inputtype="text" id="qrWifiSsid" placeholder="Opcional">
+                        <div class="form-group">
+                            <label>Red WiFi (SSID)</label>
+                            <input type="text" id="qrWifiSsid" placeholder="Opcional">
                         </div>
-                        <divclass="form-group">
-                            <label>aWiFi</label>
-                            <inputtype="password" id="qrWifiPassword" placeholder="Opcional">
+                        <div class="form-group">
+                            <label>Contraseña WiFi</label>
+                            <input type="password" id="qrWifiPassword" placeholder="Opcional">
                         </div>
-                        <divclass="form-group">
-                            <buttonclass="btn-primary" onclick="window.generarQR()" style="width:100%;">
-                                <iclass="fasfa-qrcode"></i> GenerarQR
+                        <div class="form-group">
+                            <button class="btn-primary" onclick="window.generarQR()" style="width:100%;">
+                                <i class="fas fa-qrcode"></i> Generar QR
                             </button>
                         </div>
                     </div>
-                    <divclass="qr-wifi-hint">
-                        <iclass="fasfa-info-circle"></i> ElQRllevaalclientedirectoalmendeesamesa. SiagregaslosdatosdeWiFi, elQRnconectaticamentealescanear.
+                    <div class="qr-wifi-hint">
+                        <i class="fas fa-info-circle"></i> El QR lleva al cliente directo al menú de esa mesa. Si agregas los datos de WiFi, el QR también conecta automáticamente al escanear.
                     </div>
                 </div>
 
-                <divclass="qr-grid" id="qrGrid">
-                    <pstyle="color:var(--text-muted);">CargandoQRs...</p>
+                <div class="qr-grid" id="qrGrid">
+                    <p style="color:var(--text-muted);">Cargando QRs...</p>
                 </div>
             </div>
 
-            <!-- ReportesPane -->
-            <divid="reportesPane" class="tab-pane">
-                <divclass="pane-header">
-                    <h2class="section-title"><iclass="fasfa-chart-bar"></i> Reportes</h2>
+            <!-- Reportes Pane -->
+            <div id="reportesPane" class="tab-pane">
+                <div class="pane-header">
+                    <h2 class="section-title"><i class="fas fa-chart-bar"></i> Reportes</h2>
                 </div>
 
-                <divclass="reportes-filters">
-                    <divclass="form-group" style="margin-bottom:0;">
+                <div class="reportes-filters">
+                    <div class="form-group" style="margin-bottom:0;">
                         <label>Desde</label>
-                        <inputtype="date" id="reporteDesde">
+                        <input type="date" id="reporteDesde">
                     </div>
-                    <divclass="form-group" style="margin-bottom:0;">
+                    <div class="form-group" style="margin-bottom:0;">
                         <label>Hasta</label>
-                        <inputtype="date" id="reporteHasta">
+                        <input type="date" id="reporteHasta">
                     </div>
-                    <buttonclass="btn-primary" onclick="window.cargarReportes()">
-                        <iclass="fasfa-search"></i> Buscar
+                    <button class="btn-primary" onclick="window.cargarReportes()">
+                        <i class="fas fa-search"></i> Buscar
                     </button>
                 </div>
 
-                <divclass="dashboard-grid">
-                    <divclass="dashboard-card">
-                        <divclass="card-title">VentasD</div>
-                        <divclass="card-value" id="ventasDia">$0.00 / Bs 0,00</div>
+                <div class="dashboard-grid">
+                    <div class="dashboard-card">
+                        <div class="card-title">Ventas Día</div>
+                        <div class="card-value" id="ventasDia">$0.00 / Bs 0,00</div>
                     </div>
-                    <divclass="dashboard-card">
-                        <divclass="card-title">VentasSemana</div>
-                        <divclass="card-value" id="ventasSemana">$0.00 / Bs 0,00</div>
+                    <div class="dashboard-card">
+                        <div class="card-title">Ventas Semana</div>
+                        <div class="card-value" id="ventasSemana">$0.00 / Bs 0,00</div>
                     </div>
-                    <divclass="dashboard-card">
-                        <divclass="card-title">TicketPromedio</div>
-                        <divclass="card-value" id="ticketPromedio">$0.00 / Bs 0,00</div>
+                    <div class="dashboard-card">
+                        <div class="card-title">Ticket Promedio</div>
+                        <div class="card-value" id="ticketPromedio">$0.00 / Bs 0,00</div>
                     </div>
-                    <divclass="dashboard-card">
-                        <divclass="card-title">PlatilloTop</div>
-                        <divclass="card-value" id="platilloTop">-</div>
+                    <div class="dashboard-card">
+                        <div class="card-title">Platillo Top</div>
+                        <div class="card-value" id="platilloTop">-</div>
                     </div>
-                    <divclass="dashboard-card">
-                        <divclass="card-title">CantidaddePedidos</div>
-                        <divclass="card-value" id="cantidadPedidos">0</div>
-                    </div>
-                </div>
-
-                <divclass="charts-grid">
-                    <divclass="chart-container">
-                        <h3>Ventas Últimos 7D</h3>
-                        <divclass="chart-wrapper">
-                            <canvasid="ventasChart"></canvas>
-                        </div>
-                    </div>
-                    <divclass="chart-container">
-                        <h3>VentasporCategoría</h3>
-                        <divclass="chart-wrapper">
-                            <canvasid="categoriasChart"></canvas>
-                        </div>
-                    </div>
-                    <divclass="chart-container">
-                        <h3>todosdePago</h3>
-                        <divclass="chart-wrapper">
-                            <canvasid="pagosChart"></canvas>
-                        </div>
-                    </div>
-                    <divclass="chart-container">
-                        <h3>VentasporHora</h3>
-                        <divclass="chart-wrapper">
-                            <canvasid="horaChart"></canvas>
-                        </div>
+                    <div class="dashboard-card">
+                        <div class="card-title">Cantidad de Pedidos</div>
+                        <div class="card-value" id="cantidadPedidos">0</div>
                     </div>
                 </div>
 
-                <divclass="table-section" style="margin-top:1.5rem;">
-                    <divclass="table-section-title">DetalledeVentas</div>
-                    <divclass="table-responsive">
-                        <tableclass="data-table">
+                <div class="charts-grid">
+                    <div class="chart-container">
+                        <h3>Ventas Últimos 7 Días</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="ventasChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <h3>Ventas por Categoría</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="categoriasChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <h3>Métodos de Pago</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="pagosChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <h3>Ventas por Hora</h3>
+                        <div class="chart-wrapper">
+                            <canvas id="horaChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-section" style="margin-top:1.5rem;">
+                    <div class="table-section-title">Detalle de Ventas</div>
+                    <div class="table-responsive">
+                        <table class="data-table">
                             <thead>
                                 <tr>
                                     <th>Fecha</th>
@@ -582,8 +582,8 @@
                                     <th>Tipo</th>
                                 </tr>
                             </thead>
-                            <tbodyid="ventasTableBody">
-                                <tr><tdcolspan="6" style="text-align:center;padding:1.5rem;color:var(--text-muted);">Cargando...</td></tr>
+                            <tbody id="ventasTableBody">
+                                <tr><td colspan="6" style="text-align:center;padding:1.5rem;color:var(--text-muted);">Cargando...</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -593,420 +593,420 @@
     </div>
 
     <!-- Toast -->
-    <divid="toast" class="toast"></div>
+    <div id="toast" class="toast"></div>
 
-    <!-- ModalPlatillo -->
-    <divid="platilloModal" class="modal">
-        <divclass="modal-content">
-            <divclass="modal-header">
-                <h3id="platilloModalTitle">NuevoPlatillo</h3>
-                <buttonclass="modal-close" id="closePlatilloModal">&times;</button>
+    <!-- Modal Platillo -->
+    <div id="platilloModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="platilloModalTitle">Nuevo Platillo</h3>
+                <button class="modal-close" id="closePlatilloModal">&times;</button>
             </div>
-            <divclass="modal-body">
-                <formid="platilloForm">
-                    <divclass="form-group">
-                        <label>ImagendelPlatillo</label>
-                        <inputtype="file" id="platilloImagen" accept="image/*">
-                        <inputtype="url" id="platilloImagenUrl" placeholder="OingresaURLdeimagen">
-                        <divid="imagenPreview" class="image-preview" style="display:none;">
-                            <imgid="previewImg" src="" alt="Preview">
+            <div class="modal-body">
+                <form id="platilloForm">
+                    <div class="form-group">
+                        <label>Imagen del Platillo</label>
+                        <input type="file" id="platilloImagen" accept="image/*">
+                        <input type="url" id="platilloImagenUrl" placeholder="O ingresa URL de imagen">
+                        <div id="imagenPreview" class="image-preview" style="display:none;">
+                            <img id="previewImg" src="" alt="Preview">
                         </div>
                     </div>
-                    <divclass="form-group">
-                        <label>NombredelPlatillo *</label>
-                        <inputtype="text" id="platilloNombre" required>
+                    <div class="form-group">
+                        <label>Nombre del Platillo *</label>
+                        <input type="text" id="platilloNombre" required>
                     </div>
-                    <divclass="form-row">
-                        <divclass="form-group">
+                    <div class="form-row">
+                        <div class="form-group">
                             <label>Categoría *</label>
-                            <selectid="platilloCategoria" required>
-                                <optionvalue="">Seleccionar</option>
+                            <select id="platilloCategoria" required>
+                                <option value="">Seleccionar</option>
                             </select>
                         </div>
-                        <divclass="form-group" id="subcategoriaContainer" style="display:none;">
+                        <div class="form-group" id="subcategoriaContainer" style="display:none;">
                             <label>Subcategoría</label>
-                            <selectid="platilloSubcategoria">
-                                <optionvalue="">Ninguna</option>
+                            <select id="platilloSubcategoria">
+                                <option value="">Ninguna</option>
                             </select>
                         </div>
                     </div>
-                    <divclass="form-group">
+                    <div class="form-group">
                         <label>Precio (USD) *</label>
-                        <inputtype="number" id="platilloPrecio" step="0.01" min="0" required>
-                        <divid="platilloPrecioBsPreview" style="font-size:.75rem;color:var(--text-muted);margin-top:.3rem;"></div>
+                        <input type="number" id="platilloPrecio" step="0.01" min="0" required>
+                        <div id="platilloPrecioBsPreview" style="font-size:.75rem;color:var(--text-muted);margin-top:.3rem;"></div>
                     </div>
-                    <divclass="form-group">
+                    <div class="form-group">
                         <label>Disponible</label>
-                        <divstyle="display:flex;align-items:center;gap:.5rem;">
-                            <inputtype="checkbox" id="platilloDisponibleCheck" checkedstyle="width:auto;">
-                            <spanid="platilloDisponibleLabel" style="font-size:.85rem;">Sí</span>
-                            <inputtype="hidden" id="platilloDisponible" value="true">
+                        <div style="display:flex;align-items:center;gap:.5rem;">
+                            <input type="checkbox" id="platilloDisponibleCheck" checked style="width:auto;">
+                            <span id="platilloDisponibleLabel" style="font-size:.85rem;">Sí</span>
+                            <input type="hidden" id="platilloDisponible" value="true">
                         </div>
                     </div>
-                    <divclass="form-group">
+                    <div class="form-group">
                         <label>Descripción</label>
-                        <textareaid="platilloDescripcion" rows="3"></textarea>
+                        <textarea id="platilloDescripcion" rows="3"></textarea>
                     </div>
-                    <divclass="form-group">
-                        <label>IngredientesdelPlatillo</label>
-                        <divid="ingredientesContainer"></div>
-                        <buttontype="button" class="btn-secondary" onclick="window.agregarIngredienteRow()" style="margin-top:.5rem;">
-                            <iclass="fasfa-plus"></i> AgregarIngrediente
+                    <div class="form-group">
+                        <label>Ingredientes del Platillo</label>
+                        <div id="ingredientesContainer"></div>
+                        <button type="button" class="btn-secondary" onclick="window.agregarIngredienteRow()" style="margin-top:.5rem;">
+                            <i class="fas fa-plus"></i> Agregar Ingrediente
                         </button>
-                        <divid="stockCalculadoWrap" style="margin-top:.75rem;padding:.6rem;background:#f0fdf4;border:1pxsolid #bbf7d0;border-radius:8px;display:none;">
-                            <divid="stockCalculadoText" style="font-size:.8rem;color:#166534;font-weight:600;"></div>
+                        <div id="stockCalculadoWrap" style="margin-top:.75rem;padding:.6rem;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;display:none;">
+                            <div id="stockCalculadoText" style="font-size:.8rem;color:#166534;font-weight:600;"></div>
                         </div>
                     </div>
                 </form>
             </div>
-            <divclass="modal-footer">
-                <buttonclass="btn-secondary" id="cancelPlatillo">
-                    <iclass="fasfa-times"></i> Cancelar
+            <div class="modal-footer">
+                <button class="btn-secondary" id="cancelPlatillo">
+                    <i class="fas fa-times"></i> Cancelar
                 </button>
-                <buttonclass="btn-primary" id="savePlatillo">
-                    <iclass="fasfa-save"></i> Guardar
+                <button class="btn-primary" id="savePlatillo">
+                    <i class="fas fa-save"></i> Guardar
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- ModalIngrediente -->
-    <divid="ingredienteModal" class="modal">
-        <divclass="modal-content">
-            <divclass="modal-header">
-                <h3id="ingredienteModalTitle">NuevoIngrediente</h3>
-                <buttonclass="modal-close" id="closeIngredienteModal">&times;</button>
+    <!-- Modal Ingrediente -->
+    <div id="ingredienteModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="ingredienteModalTitle">Nuevo Ingrediente</h3>
+                <button class="modal-close" id="closeIngredienteModal">&times;</button>
             </div>
-            <divclass="modal-body">
-                <formid="ingredienteForm">
-                    <divclass="form-group">
-                        <label>NombredelIngrediente *</label>
-                        <inputtype="text" id="ingredienteNombre" required>
+            <div class="modal-body">
+                <form id="ingredienteForm">
+                    <div class="form-group">
+                        <label>Nombre del Ingrediente *</label>
+                        <input type="text" id="ingredienteNombre" required>
                     </div>
-                    <divclass="form-grouppassword-overlay">
-                        <divid="stockClickArea" style="display:flex;align-items:center;gap:.5rem;padding:.65rem .9rem;border:1pxsolidvar(--input-border);border-radius:8px;background:var(--input-bg);cursor:pointer;">
-                            <inputtype="number" id="ingredienteStock" step="0.001" min="0" value="0" disabledstyle="flex:1;border:none;background:transparent;outline:none;font-family:Montserrat,sans-serif;font-size:.875rem;color:var(--text-dark);" readonly>
-                            <divid="stockLockIcon" style="color:var(--text-muted);font-size:.9rem;"><iclass="fasfa-lock"></i></div>
+                    <div class="form-group password-overlay">
+                        <div id="stockClickArea" style="display:flex;align-items:center;gap:.5rem;padding:.65rem .9rem;border:1px solid var(--input-border);border-radius:8px;background:var(--input-bg);cursor:pointer;">
+                            <input type="number" id="ingredienteStock" step="0.001" min="0" value="0" disabled style="flex:1;border:none;background:transparent;outline:none;font-family:Montserrat,sans-serif;font-size:.875rem;color:var(--text-dark);" readonly>
+                            <div id="stockLockIcon" style="color:var(--text-muted);font-size:.9rem;"><i class="fas fa-lock"></i></div>
                         </div>
-                        <divstyle="font-size:.75rem;color:var(--text-muted);margin-top:.3rem;">StockActual</div>
+                        <div style="font-size:.75rem;color:var(--text-muted);margin-top:.3rem;">Stock Actual</div>
                     </div>
-                    <divclass="form-group">
-                        <label>aNuevaaAgregar</label>
-                        <inputtype="number" id="ingredienteAgregar" step="0.001" min="0" value="0" onchange="window._syncIngredientePreview()">
-                        <divid="stockTotalPreview" style="font-size:.75rem;color:var(--text-muted);margin-top:.3rem;"></div>
-                        <divid="stockConversionPreview" style="font-size:.7rem;color:var(--text-muted);"></div>
+                    <div class="form-group">
+                        <label>Mercancía Nueva a Agregar</label>
+                        <input type="number" id="ingredienteAgregar" step="0.001" min="0" value="0" onchange="window._syncIngredientePreview()">
+                        <div id="stockTotalPreview" style="font-size:.75rem;color:var(--text-muted);margin-top:.3rem;"></div>
+                        <div id="stockConversionPreview" style="font-size:.7rem;color:var(--text-muted);"></div>
                     </div>
-                    <divclass="form-group">
-                        <label>UnidaddeMedida</label>
-                        <selectid="ingredienteUnidad" onchange="window._syncIngredientePreview()">
-                            <optionvalue="unidades">Unidades/Piezas</option>
-                            <optionvalue="gramos">Gramos</option>
-                            <optionvalue="mililitros">Mililitros</option>
-                            <optionvalue="kilogramos">Kilogramos</option>
-                            <optionvalue="litros">Litros</option>
+                    <div class="form-group">
+                        <label>Unidad de Medida</label>
+                        <select id="ingredienteUnidad" onchange="window._syncIngredientePreview()">
+                            <option value="unidades">Unidades/Piezas</option>
+                            <option value="gramos">Gramos</option>
+                            <option value="mililitros">Mililitros</option>
+                            <option value="kilogramos">Kilogramos</option>
+                            <option value="litros">Litros</option>
                         </select>
                     </div>
-                    <divclass="form-group">
-                        <label>StockMdeAlerta</label>
-                        <inputtype="number" id="ingredienteMinimo" step="0.001" min="0" value="0">
-                        <divstyle="font-size:.7rem;color:var(--text-muted);margin-top:.2rem;">Cuandoelstockdisponiblebajedeestevalor, divstylealertaenelDashboard (StockCr) ysedivstylenpush.</div>
+                    <div class="form-group">
+                        <label>Stock Mínimo de Alerta</label>
+                        <input type="number" id="ingredienteMinimo" step="0.001" min="0" value="0">
+                        <div style="font-size:.7rem;color:var(--text-muted);margin-top:.2rem;">Cuando el stock disponible baje de este valor, aparecerá una alerta en el Dashboard (Stock Crítico) y se enviará una notificación push.</div>
                     </div>
-                    <divclass="form-row">
-                        <divclass="form-group">
-                            <label>CostoTotalCompra (USD)</label>
-                            <inputtype="number" id="costoTotal" step="0.01" min="0" onchange="window.calcularCostoUnitario()">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Costo Total Compra (USD)</label>
+                            <input type="number" id="costoTotal" step="0.01" min="0" onchange="window.calcularCostoUnitario()">
                         </div>
-                        <divclass="form-group">
-                            <label>CantidadComprada</label>
-                            <inputtype="number" id="cantidadComprada" step="0.001" min="0" onchange="window.calcularCostoUnitario()">
+                        <div class="form-group">
+                            <label>Cantidad Comprada</label>
+                            <input type="number" id="cantidadComprada" step="0.001" min="0" onchange="window.calcularCostoUnitario()">
                         </div>
                     </div>
-                    <divid="calcResultado" style="display:none;margin-bottom:1rem;padding:.6rem;background:#f0fdf4;border:1pxsolid #bbf7d0;border-radius:8px;">
-                        <divstyle="font-size:.8rem;color:#166534;">Costounitario: <strongid="calcPrecioUnitario">0.00</strong> USD <spanid="calcUnidadResult"></span></div>
+                    <div id="calcResultado" style="display:none;margin-bottom:1rem;padding:.6rem;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;">
+                        <div style="font-size:.8rem;color:#166534;">Costo unitario: <strong id="calcPrecioUnitario">0.00</strong> USD <span id="calcUnidadResult"></span></div>
                     </div>
-                    <divclass="form-group">
-                        <label>PreciodeCosto (USD/Bs)</label>
-                        <inputtype="number" id="ingredienteCosto" step="0.0001" min="0">
+                    <div class="form-group">
+                        <label>Precio de Costo (USD/Bs)</label>
+                        <input type="number" id="ingredienteCosto" step="0.0001" min="0">
                     </div>
-                    <divclass="form-group">
-                        <label>PreciodeVenta (USD/Bs)</label>
-                        <inputtype="number" id="ingredienteVenta" step="0.0001" min="0">
+                    <div class="form-group">
+                        <label>Precio de Venta (USD/Bs)</label>
+                        <input type="number" id="ingredienteVenta" step="0.0001" min="0">
                     </div>
-                    <divclass="form-group">
-                        <label>ImagendelIngrediente (opcional)</label>
-                        <inputtype="file" id="ingredienteImagen" accept="image/*">
-                        <inputtype="url" id="ingredienteImagenUrl" placeholder="OingresaURLdeimagen">
-                        <divid="ingredienteImagenPreview" class="image-preview" style="display:none;">
-                            <imgid="ingredientePreviewImg" src="" alt="Preview">
-                            <buttontype="button" id="ingredienteImgRemoveBtn" class="btn-small" style="display:none;">
-                                <iclass="fasfa-times"></i>
+                    <div class="form-group">
+                        <label>Imagen del Ingrediente (opcional)</label>
+                        <input type="file" id="ingredienteImagen" accept="image/*">
+                        <input type="url" id="ingredienteImagenUrl" placeholder="O ingresa URL de imagen">
+                        <div id="ingredienteImagenPreview" class="image-preview" style="display:none;">
+                            <img id="ingredientePreviewImg" src="" alt="Preview">
+                            <button type="button" id="ingredienteImgRemoveBtn" class="btn-small" style="display:none;">
+                                <i class="fas fa-times"></i>
                             </button>
                         </div>
                     </div>
                 </form>
             </div>
-            <divclass="modal-footer">
-                <buttonclass="btn-danger" id="deleteIngredienteBtn" style="display:none;">
-                    <iclass="fasfa-trash"></i> Eliminar
+            <div class="modal-footer">
+                <button class="btn-danger" id="deleteIngredienteBtn" style="display:none;">
+                    <i class="fas fa-trash"></i> Eliminar
                 </button>
-                <buttonclass="btn-secondary" id="cancelIngrediente">
-                    <iclass="fasfa-times"></i> Cancelar
+                <button class="btn-secondary" id="cancelIngrediente">
+                    <i class="fas fa-times"></i> Cancelar
                 </button>
-                <buttonclass="btn-primary" id="saveIngrediente">
-                    <iclass="fasfa-save"></i> Guardar
+                <button class="btn-primary" id="saveIngrediente">
+                    <i class="fas fa-save"></i> Guardar
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- ModalUsuario -->
-    <divid="usuarioModal" class="modal">
-        <divclass="modal-content">
-            <divclass="modal-header">
-                <h3id="usuarioModalTitle">NuevoCajero/Admin</h3>
-                <buttonclass="modal-close" id="closeUsuarioModal">&times;</button>
+    <!-- Modal Usuario -->
+    <div id="usuarioModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="usuarioModalTitle">Nuevo Cajero/Admin</h3>
+                <button class="modal-close" id="closeUsuarioModal">&times;</button>
             </div>
-            <divclass="modal-body">
-                <formid="usuarioForm">
-                    <divclass="form-group">
-                        <label>Fotodeperfil (opcional)</label>
-                        <inputtype="file" id="usuarioFoto" accept="image/*">
-                        <inputtype="url" id="usuarioFotoUrl" placeholder="OingresaURLdeimagen">
-                        <divid="usuarioFotoPreview" class="image-preview" style="display:none;">
-                            <imgid="usuarioPreviewImg" src="" alt="Preview" style="width:80px;height:80px;object-fit:cover;border-radius:50%;">
-                            <buttontype="button" id="usuarioFotoRemoveBtn" class="btn-small" style="display:none;">
-                                <iclass="fasfa-times"></i>
+            <div class="modal-body">
+                <form id="usuarioForm">
+                    <div class="form-group">
+                        <label>Foto de perfil (opcional)</label>
+                        <input type="file" id="usuarioFoto" accept="image/*">
+                        <input type="url" id="usuarioFotoUrl" placeholder="O ingresa URL de imagen">
+                        <div id="usuarioFotoPreview" class="image-preview" style="display:none;">
+                            <img id="usuarioPreviewImg" src="" alt="Preview" style="width:80px;height:80px;object-fit:cover;border-radius:50%;">
+                            <button type="button" id="usuarioFotoRemoveBtn" class="btn-small" style="display:none;">
+                                <i class="fas fa-times"></i>
                             </button>
                         </div>
                     </div>
-                    <divclass="form-group">
-                        <label>Nombrecompleto *</label>
-                        <inputtype="text" id="usuarioNombre" required>
+                    <div class="form-group">
+                        <label>Nombre completo *</label>
+                        <input type="text" id="usuarioNombre" required>
                     </div>
-                    <divclass="form-group">
-                        <label>Nombredeusuario *</label>
-                        <inputtype="text" id="usuarioUsername" required>
+                    <div class="form-group">
+                        <label>Nombre de usuario *</label>
+                        <input type="text" id="usuarioUsername" required>
                     </div>
-                    <divclass="form-row">
-                        <divclass="form-group">
+                    <div class="form-row">
+                        <div class="form-group">
                             <label>Rol</label>
-                            <selectid="usuarioRol">
-                                <optionvalue="cajero">Cajero</option>
-                                <optionvalue="admin">Administrador</option>
+                            <select id="usuarioRol">
+                                <option value="cajero">Cajero</option>
+                                <option value="admin">Administrador</option>
                             </select>
                         </div>
-                        <divclass="form-group">
+                        <div class="form-group">
                             <label>Contraseña</label>
-                            <inputtype="password" id="usuarioPassword">
+                            <input type="password" id="usuarioPassword">
                         </div>
                     </div>
-                    <divclass="form-group">
+                    <div class="form-group">
                         <label>Estado</label>
-                        <selectid="usuarioActivo">
-                            <optionvalue="true">Activo</option>
-                            <optionvalue="false">Inactivo</option>
+                        <select id="usuarioActivo">
+                            <option value="true">Activo</option>
+                            <option value="false">Inactivo</option>
                         </select>
                     </div>
                 </form>
             </div>
-            <divclass="modal-footer">
-                <buttonclass="btn-secondary" id="cancelUsuario">
-                    <iclass="fasfa-times"></i> Cancelar
+            <div class="modal-footer">
+                <button class="btn-secondary" id="cancelUsuario">
+                    <i class="fas fa-times"></i> Cancelar
                 </button>
-                <buttonclass="btn-primary" id="saveUsuario">
-                    <iclass="fasfa-save"></i> Guardar
+                <button class="btn-primary" id="saveUsuario">
+                    <i class="fas fa-save"></i> Guardar
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- ModalDelivery -->
-    <divid="deliveryModal" class="modal">
-        <divclass="modal-content">
-            <divclass="modal-header">
-                <h3id="deliveryModalTitle">EditarMotorizado</h3>
-                <buttonclass="modal-close" id="closeDeliveryModal">&times;</button>
+    <!-- Modal Delivery -->
+    <div id="deliveryModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="deliveryModalTitle">Editar Motorizado</h3>
+                <button class="modal-close" id="closeDeliveryModal">&times;</button>
             </div>
-            <divclass="modal-body">
-                <formid="deliveryForm">
-                    <divclass="form-group">
-                        <label>Fotodeperfil (opcional)</label>
-                        <inputtype="file" id="deliveryFoto" accept="image/*">
-                        <inputtype="url" id="deliveryFotoUrl" placeholder="OingresaURLdeimagen">
-                        <divid="deliveryFotoPreview" class="image-preview" style="display:none;">
-                            <imgid="deliveryPreviewImg" src="" alt="Preview">
-                            <buttontype="button" id="deliveryFotoRemoveBtn" class="btn-small" style="display:none;">
-                                <iclass="fasfa-times"></i>
+            <div class="modal-body">
+                <form id="deliveryForm">
+                    <div class="form-group">
+                        <label>Foto de perfil (opcional)</label>
+                        <input type="file" id="deliveryFoto" accept="image/*">
+                        <input type="url" id="deliveryFotoUrl" placeholder="O ingresa URL de imagen">
+                        <div id="deliveryFotoPreview" class="image-preview" style="display:none;">
+                            <img id="deliveryPreviewImg" src="" alt="Preview">
+                            <button type="button" id="deliveryFotoRemoveBtn" class="btn-small" style="display:none;">
+                                <i class="fas fa-times"></i>
                             </button>
                         </div>
                     </div>
-                    <divclass="form-group">
+                    <div class="form-group">
                         <label>Nombre</label>
-                        <inputtype="text" id="deliveryNombre" required>
+                        <input type="text" id="deliveryNombre" required>
                     </div>
-                    <divclass="form-group">
+                    <div class="form-group">
                         <label>Estado</label>
-                        <selectid="deliveryEstado">
-                            <optionvalue="true">Activo</option>
-                            <optionvalue="false">Inactivo</option>
+                        <select id="deliveryEstado">
+                            <option value="true">Activo</option>
+                            <option value="false">Inactivo</option>
                         </select>
                     </div>
                 </form>
             </div>
-            <divclass="modal-footer">
-                <buttonclass="btn-secondary" id="cancelDeliveryEdit">
-                    <iclass="fasfa-times"></i> Cancelar
+            <div class="modal-footer">
+                <button class="btn-secondary" id="cancelDeliveryEdit">
+                    <i class="fas fa-times"></i> Cancelar
                 </button>
-                <buttonclass="btn-primary" id="saveDelivery">
-                    <iclass="fasfa-save"></i> Guardar
+                <button class="btn-primary" id="saveDelivery">
+                    <i class="fas fa-save"></i> Guardar
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- ModalMesonero -->
-    <divid="mesoneroModal" class="modal">
-        <divclass="modal-content">
-            <divclass="modal-header">
-                <h3id="mesoneroModalTitle">EditarMesonero</h3>
-                <buttonclass="modal-close" id="closeMesoneroModal">&times;</button>
+    <!-- Modal Mesonero -->
+    <div id="mesoneroModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="mesoneroModalTitle">Editar Mesonero</h3>
+                <button class="modal-close" id="closeMesoneroModal">&times;</button>
             </div>
-            <divclass="modal-body">
-                <formid="mesoneroForm">
-                    <divclass="form-group">
-                        <label>Fotodeperfil (opcional)</label>
-                        <inputtype="file" id="mesoneroFoto" accept="image/*">
-                        <inputtype="url" id="mesoneroFotoUrl" placeholder="OingresaURLdeimagen">
-                        <divid="mesoneroFotoPreview" class="image-preview" style="display:none;">
-                            <imgid="mesoneroPreviewImg" src="" alt="Preview">
-                            <buttontype="button" id="mesoneroFotoRemoveBtn" class="btn-small" style="display:none;">
-                                <iclass="fasfa-times"></i>
+            <div class="modal-body">
+                <form id="mesoneroForm">
+                    <div class="form-group">
+                        <label>Foto de perfil (opcional)</label>
+                        <input type="file" id="mesoneroFoto" accept="image/*">
+                        <input type="url" id="mesoneroFotoUrl" placeholder="O ingresa URL de imagen">
+                        <div id="mesoneroFotoPreview" class="image-preview" style="display:none;">
+                            <img id="mesoneroPreviewImg" src="" alt="Preview">
+                            <button type="button" id="mesoneroFotoRemoveBtn" class="btn-small" style="display:none;">
+                                <i class="fas fa-times"></i>
                             </button>
                         </div>
                     </div>
-                    <divclass="form-group">
-                        <label>Nombrecompleto *</label>
-                        <inputtype="text" id="mesoneroNombre" required>
+                    <div class="form-group">
+                        <label>Nombre completo *</label>
+                        <input type="text" id="mesoneroNombre" required>
                     </div>
-                    <divclass="form-group">
+                    <div class="form-group">
                         <label>Estado</label>
-                        <selectid="mesoneroActivo">
-                            <optionvalue="true">Activo</option>
-                            <optionvalue="false">Inactivo</option>
+                        <select id="mesoneroActivo">
+                            <option value="true">Activo</option>
+                            <option value="false">Inactivo</option>
                         </select>
                     </div>
                 </form>
             </div>
-            <divclass="modal-footer">
-                <buttonclass="btn-secondary" id="cancelMesoneroEdit">
-                    <iclass="fasfa-times"></i> Cancelar
+            <div class="modal-footer">
+                <button class="btn-secondary" id="cancelMesoneroEdit">
+                    <i class="fas fa-times"></i> Cancelar
                 </button>
-                <buttonclass="btn-primary" id="saveMesonero">
-                    <iclass="fasfa-save"></i> Guardar
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <!-- ModalConfirmarPagoDelivery/Mesonero -->
-    <divid="confirmPagoDeliveryModal" class="modal">
-        <divclass="modal-content">
-            <divclass="modal-header">
-                <h3>ConfirmarPago</h3>
-                <buttonclass="modal-close" onclick="window.cerrarModal('confirmPagoDeliveryModal')">&times;</button>
-            </div>
-            <divclass="modal-body" id="confirmPagoDeliveryBody">
-                <!-- Contenidodin -->
-            </div>
-            <divclass="modal-footer">
-                <buttonclass="btn-secondary" onclick="window.cerrarModal('confirmPagoDeliveryModal')">
-                    <iclass="fasfa-times"></i> Cancelar
-                </button>
-                <buttonclass="btn-primary" id="confirmPagoDeliveryBtn">
-                    <iclass="fasfa-check"></i> Confirmar
+                <button class="btn-primary" id="saveMesonero">
+                    <i class="fas fa-save"></i> Guardar
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- ModalQRAmpliado -->
-    <divid="qrAmpliadoModal" class="modal">
-        <divclass="modal-content" style="max-width:500px;">
-            <divclass="modal-header">
-                <h3>digoQR</h3>
-                <buttonclass="modal-close" id="closeQrAmpliado">&times;</button>
+    <!-- Modal Confirmar Pago Delivery/Mesonero -->
+    <div id="confirmPagoDeliveryModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Confirmar Pago</h3>
+                <button class="modal-close" onclick="window.cerrarModal('confirmPagoDeliveryModal')">&times;</button>
             </div>
-            <divclass="modal-body" style="text-align:center;">
-                <divid="qrAmpliado"></div>
-                <divid="qrAmpliadoInfo"></div>
+            <div class="modal-body" id="confirmPagoDeliveryBody">
+                <!-- Contenido dinámico -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="window.cerrarModal('confirmPagoDeliveryModal')">
+                    <i class="fas fa-times"></i> Cancelar
+                </button>
+                <button class="btn-primary" id="confirmPagoDeliveryBtn">
+                    <i class="fas fa-check"></i> Confirmar
+                </button>
             </div>
         </div>
     </div>
 
-    <!-- ModalMesasAdmin -->
-    <divid="adminMesaModal" class="modal">
-        <divclass="modal-content">
-            <divclass="modal-header">
-                <h3>SeleccionarMesa</h3>
-                <buttonclass="modal-close" onclick="window.cerrarModal('adminMesaModal')">&times;</button>
+    <!-- Modal QR Ampliado -->
+    <div id="qrAmpliadoModal" class="modal">
+        <div class="modal-content" style="max-width:500px;">
+            <div class="modal-header">
+                <h3>Código QR</h3>
+                <button class="modal-close" id="closeQrAmpliado">&times;</button>
             </div>
-            <divclass="modal-body">
-                <pstyle="margin-bottom:1rem;color:var(--text-muted);font-size:.85rem;">Seleccionaunamesaparaabrirelpstyleclienteenesamesa.</p>
-                <divid="adminMesaList" class="mesa-admin-grid">
-                    <pstyle="color:var(--text-muted);">Cargandomesas...</p>
+            <div class="modal-body" style="text-align:center;">
+                <div id="qrAmpliado"></div>
+                <div id="qrAmpliadoInfo"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Mesas Admin -->
+    <div id="adminMesaModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Seleccionar Mesa</h3>
+                <button class="modal-close" onclick="window.cerrarModal('adminMesaModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p style="margin-bottom:1rem;color:var(--text-muted);font-size:.85rem;">Selecciona una mesa para abrir el menú del cliente en esa mesa.</p>
+                <div id="adminMesaList" class="mesa-admin-grid">
+                    <p style="color:var(--text-muted);">Cargando mesas...</p>
                 </div>
             </div>
-            <divclass="modal-footer">
-                <buttonclass="btn-secondary" onclick="window.cerrarModal('adminMesaModal')">
-                    <iclass="fasfa-times"></i> Cerrar
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="window.cerrarModal('adminMesaModal')">
+                    <i class="fas fa-times"></i> Cerrar
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- ModalDesbloquearStock -->
-    <divid="passwordStockModal" class="modal">
-        <divclass="modal-content" style="max-width:400px;">
-            <divclass="modal-header">
-                <h3>DesbloquearStock</h3>
-                <buttonclass="modal-close" onclick="window.cerrarModal('passwordStockModal')">&times;</button>
+    <!-- Modal Desbloquear Stock -->
+    <div id="passwordStockModal" class="modal">
+        <div class="modal-content" style="max-width:400px;">
+            <div class="modal-header">
+                <h3>Desbloquear Stock</h3>
+                <button class="modal-close" onclick="window.cerrarModal('passwordStockModal')">&times;</button>
             </div>
-            <divclass="modal-body">
-                <pstyle="margin-bottom:1rem;color:var(--text-muted);font-size:.85rem;">Ingresalaadeadministradorparapodereditarelstockactual:</p>
-                <divclass="form-group">
-                    <label>adeAdministrador</label>
-                    <inputtype="password" id="stockPasswordModalInput" placeholder="Ingresatucontraseña">
+            <div class="modal-body">
+                <p style="margin-bottom:1rem;color:var(--text-muted);font-size:.85rem;">Ingresa la contraseña de administrador para poder editar el stock actual:</p>
+                <div class="form-group">
+                    <label>Contraseña de Administrador</label>
+                    <input type="password" id="stockPasswordModalInput" placeholder="Ingresa tu contraseña">
                 </div>
-                <divid="passwordStockError" style="color:var(--danger);font-size:.8rem;margin-top:.5rem;display:none;">aincorrecta</div>
+                <div id="passwordStockError" style="color:var(--danger);font-size:.8rem;margin-top:.5rem;display:none;">Contraseña incorrecta</div>
             </div>
-            <divclass="modal-footer">
-                <buttonclass="btn-secondary" onclick="window.cerrarModal('passwordStockModal')">
-                    <iclass="fasfa-times"></i> Cancelar
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="window.cerrarModal('passwordStockModal')">
+                    <i class="fas fa-times"></i> Cancelar
                 </button>
-                <buttonclass="btn-primary" id="confirmPasswordStockBtn" onclick="window.verificarContraseñaStock()">
-                    <iclass="fasfa-unlock"></i> Confirmar
+                <button class="btn-primary" id="confirmPasswordStockBtn" onclick="window.verificarContraseñaStock()">
+                    <i class="fas fa-unlock"></i> Confirmar
                 </button>
             </div>
         </div>
     </div>
 
     <!-- Scripts -->
-    <!-- 1. PrimerolaadeSupabase -->
-    <scriptsrc="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- 1. Primero la librería de Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
-    <!-- 2. Luegotuconfiguración -->
-    <scriptsrc="../supabase-config.js"></script>
+    <!-- 2. Luego tu configuración -->
+    <script src="../supabase-config.js"></script>
     
-    <!-- 3. Finalmentelosmódulos -->
-    <scriptsrc="../admin/js/admin-core.js"></script>
-    <scriptsrc="../admin/js/admin-auth.js"></script>
-    <scriptsrc="../admin/js/admin-ui.js"></script>
-    <scriptsrc="../admin/js/admin-menu.js"></script>
-    <scriptsrc="../admin/js/admin-inventario.js"></script>
-    <scriptsrc="../admin/js/admin-usuarios.js"></script>
-    <scriptsrc="../admin/js/admin-delivery.js"></script>
-    <scriptsrc="../admin/js/admin-mesoneros.js"></script>
-    <scriptsrc="../admin/js/admin-qr.js"></script>
-    <scriptsrc="../admin/js/admin-reportes.js"></script>
+    <!-- 3. Finalmente los módulos -->
+    <script src="../admin/js/admin-core.js"></script>
+    <script src="../admin/js/admin-auth.js"></script>
+    <script src="../admin/js/admin-ui.js"></script>
+    <script src="../admin/js/admin-menu.js"></script>
+    <script src="../admin/js/admin-inventario.js"></script>
+    <script src="../admin/js/admin-usuarios.js"></script>
+    <script src="../admin/js/admin-delivery.js"></script>
+    <script src="../admin/js/admin-mesoneros.js"></script>
+    <script src="../admin/js/admin-qr.js"></script>
+    <script src="../admin/js/admin-reportes.js"></script>
 </body>
 </html>
