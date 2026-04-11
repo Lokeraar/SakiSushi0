@@ -52,39 +52,61 @@ window.actualizarGraficos = function(pedidos) {
     for (let i = 6; i >= 0; i--) { const f = new Date(); f.setDate(f.getDate() - i); ventasPorDia[f.toISOString().split('T')[0]] = 0; }
     pedidos.forEach(p => { const f = new Date(p.fecha).toISOString().split('T')[0]; if (ventasPorDia.hasOwnProperty(f)) ventasPorDia[f] += p.total || 0; });
     if (window.charts.ventas) window.charts.ventas.destroy();
-    window.charts.ventas = new Chart(document.getElementById('ventasChart'), {
-        type: 'line',
-         { labels: Object.keys(ventasPorDia), datasets: [{ label: 'Ventas (USD)',  Object.values(ventasPorDia), borderColor: 'var(--primary)', backgroundColor: 'rgba(211,47,47,0.1)', tension: 0.1 }] }
-    });
-    
-    const categorias = {};
-    pedidos.forEach(p => { if (p.items) p.items.forEach(item => { const platillo = window.menuItems.find(m => m.nombre === item.nombre); const cat = platillo?.categoria || 'Otros'; categorias[cat] = (categorias[cat] || 0) + ((item.precioUnitarioUSD || 0) * (item.cantidad || 0)); }); });
-     if (window.charts.categorias) window.charts.categorias.destroy();
-    window.charts.categorias = new Chart(document.getElementById('categoriasChart'), {
-        type: 'doughnut',
-        data: { labels: Object.keys(categorias), datasets: [{  Object.values(categorias), backgroundColor: ['#D32F2F', '#FF9800', '#1976D2', '#388E3C', '#F57C00', '#6c757d'] }] }
-    });
-    
-    const metodos = {};
-    pedidos.forEach(p => {
-        if (p.pagos_mixtos) p.pagos_mixtos.forEach(pago => { metodos[pago.metodo] = (metodos[pago.metodo] || 0) + (pago.monto || 0); });
-        else if (p.metodo_pago) metodos[p.metodo_pago] = (metodos[p.metodo_pago] || 0) + (p.total || 0);
-    });
-    if (window.charts.pagos) window.charts.pagos.destroy();
-    window.charts.pagos = new Chart(document.getElementById('pagosChart'), {
-        type: 'bar',
-         { labels: Object.keys(metodos).map(m => { const n = { efectivo_bs: 'Efectivo Bs', efectivo_usd: 'Efectivo USD', pago_movil: 'Pago Móvil', punto_venta: 'Punto de Venta', mixto: 'Mixto', invitacion: 'Invitación' }; return n[m] || m; }), datasets: [{ label: 'Monto (USD)', data: Object.values(metodos).map(v => v / (window.configGlobal?.tasa_efectiva || 400)), backgroundColor: 'var(--info)' }] }
-    });
-    
-    const horas = {}; for (let i = 0; i < 24; i++) horas[i] = 0;
-    pedidos.forEach(p => { const h = new Date(p.fecha).getHours(); horas[h] += p.total || 0; });
-    if (window.charts.hora) window.charts.hora.destroy();
-    window.charts.hora = new Chart(document.getElementById('horaChart'), {
-        type: 'bar',
-         { labels: Object.keys(horas).map(h => `${h}:00`), datasets: [{ label: 'Ventas (USD)',  Object.values(horas), backgroundColor: 'var(--accent)' }] }
-    });
-};
+    // Gráfico de Ventas (línea 56 aprox)
+window.charts.ventas = new Chart(document.getElementById('ventasChart'), {
+    type: 'line',
+    data: {  // ✅ AÑADIR "data:"
+        labels: Object.keys(ventasPorDia), 
+        datasets: [{ 
+            label: 'Ventas (USD)', 
+            data: Object.values(ventasPorDia),  // ✅ AÑADIR "data:"
+            borderColor: 'var(--primary)', 
+            backgroundColor: 'rgba(211,47,47,0.1)', 
+            tension: 0.1 
+        }] 
+    }
+});
 
+// Gráfico de Categorías (doughnut)
+window.charts.categorias = new Chart(document.getElementById('categoriasChart'), {
+    type: 'doughnut',
+    data: {  // ✅ AÑADIR "data:"
+        labels: Object.keys(categorias), 
+        datasets: [{ 
+            data: Object.values(categorias),  // ✅ AÑADIR "data:"
+            backgroundColor: ['#D32F2F', '#FF9800', '#1976D2', '#388E3C', '#F57C00', '#6c757d'] 
+        }] 
+    }
+});
+
+// Gráfico de Métodos de Pago (bar)
+window.charts.pagos = new Chart(document.getElementById('pagosChart'), {
+    type: 'bar',
+    data: {  // ✅ AÑADIR "data:"
+        labels: Object.keys(metodos).map(m => { 
+            const n = { efectivo_bs: 'Efectivo Bs', efectivo_usd: 'Efectivo USD', pago_movil: 'Pago Móvil', punto_venta: 'Punto de Venta', mixto: 'Mixto', invitacion: 'Invitación' }; 
+            return n[m] || m; 
+        }), 
+        datasets: [{ 
+            label: 'Monto (USD)', 
+            data: Object.values(metodos).map(v => v / (window.configGlobal?.tasa_efectiva || 400)), 
+            backgroundColor: 'var(--info)' 
+        }] 
+    }
+});
+
+// Gráfico de Ventas por Hora (bar)
+window.charts.hora = new Chart(document.getElementById('horaChart'), {
+    type: 'bar',
+    data: {  // ✅ AÑADIR "data:"
+        labels: Object.keys(horas).map(h => `${h}:00`), 
+        datasets: [{ 
+            label: 'Ventas (USD)', 
+            data: Object.values(horas),  // ✅ AÑADIR "data:"
+            backgroundColor: 'var(--accent)' 
+        }] 
+    }
+});
 window.actualizarTablaVentas = function(pedidos) {
      const tbody = document.getElementById('ventasTableBody');
     const tasa = (window.configGlobal && window.configGlobal.tasa_efectiva) || window.configGlobal?.tasa_cambio || 400;
