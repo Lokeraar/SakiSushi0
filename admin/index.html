@@ -80,10 +80,7 @@
         <header class="header">
             <div class="hrow htitle">
                 <div class="header-left"><h2><i class="fas fa-crown"></i> <span class="header-title-text">Administración Saki Sushi</span></h2></div>
-                <button class="logout-button hrm-salir-inline" id="logoutButtonMobile"><i class="fas fa-sign-out-alt"></i> Salir</button>
                 <div class="hrd">
-                    <button class="nav-button" onclick="window.abrirSelectorMesaAdmin()"><i class="fas fa-utensils"></i> Mesas</button>
-                    <a href="../Cajero/index.html" target="_blank" class="nav-button"><i class="fas fa-cash-register"></i> Cajero</a>
                     <span class="header-sucursal-label">Seleccionar sucursal</span>
                     <button class="nav-button header-sucursal-btn" id="sucursalBtn" title="Próximamente"><i class="fas fa-store"></i> <span id="sucursalNombre">Principal</span></button>
                     <div class="theme-toggle-wrap" onclick="window.toggleTheme()" title="Cambiar tema" role="button">
@@ -97,15 +94,16 @@
             <div class="hrow hrm hrm-nav">
                 <button class="nav-button" onclick="window.abrirSelectorMesaAdmin()"><i class="fas fa-utensils"></i> Mesas</button>
                 <a href="../Cajero/index.html" target="_blank" class="nav-button"><i class="fas fa-cash-register"></i> Cajero</a>
+                <button class="logout-button hrm-salir-inline" id="logoutButtonMobile"><i class="fas fa-sign-out-alt"></i> Salir</button>
             </div>
             <div class="hrow hrm hrm-suc">
+                <span class="header-sucursal-label">Seleccionar sucursal</span>
+                <button class="nav-button header-sucursal-btn" id="sucursalBtnMobile" title="Próximamente"><i class="fas fa-store"></i> <span>Principal</span></button>
                 <div class="theme-toggle-wrap" onclick="window.toggleTheme()" title="Cambiar tema" role="button">
                     <i class="fas fa-sun theme-toggle-icon-sun"></i>
                     <div class="theme-toggle-track" id="themeToggleMobile"><div class="theme-toggle-thumb" id="themeIconMobile"><i class="fas fa-sun"></i></div></div>
                     <i class="fas fa-moon theme-toggle-icon-moon"></i>
                 </div>
-                <span class="header-sucursal-label">Seleccionar sucursal</span>
-                <button class="nav-button header-sucursal-btn" id="sucursalBtnMobile" title="Próximamente"><i class="fas fa-store"></i> <span>Principal</span></button>
             </div>
             <div id="stockCriticoHeader" style="width:100%; margin-top:.5rem; padding:.4rem .8rem; background:rgba(0,0,0,.2); border-radius:8px; display:flex; align-items:center; gap:.8rem; flex-wrap:wrap; font-size:.75rem">
                 <span style="font-weight:700; color:var(--danger); white-space:nowrap"><i class="fas fa-exclamation-triangle"></i> STOCK CRÍTICO:</span>

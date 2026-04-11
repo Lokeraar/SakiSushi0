@@ -475,8 +475,10 @@
     };
 
     window.actualizarProductosActivos = function() {
-        const prodCard = document.querySelector('.dashboard-card:nth-child(3)');
-        if (prodCard) prodCard.textContent = window.menuItems.filter(m => m.disponible).length;
+        const el = document.getElementById('productosActivos');
+        if (el && window.menuItems) {
+            el.textContent = window.menuItems.filter(m => m.disponible).length;
+        }
     };
 
     window._onCategoriaChange = function() {

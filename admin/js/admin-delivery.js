@@ -41,7 +41,7 @@
                 var toggleTxt   = d.activo ? 'Inhabilitar' : 'Activar';
                 var toggleVal   = String(!d.activo);
                 var card = document.createElement('div');
-                card.className = 'usuario-card-v2';
+                card.className = 'usuario-card-v2 delivery-card';
                 card.style.borderLeftColor = 'var(--delivery)';
                 card.innerHTML = avatar
                     + '<div class="ucard-body">'
@@ -55,16 +55,17 @@
                     +     '<div class="ucard-status">' + dbadge + '</div>'
                     +   '</div>'
                     +   '<div class="ucard-actions">'
-                    +     '<button class="btn-icon edit" onclick="window.editarDelivery(\'' + d.id + '\')" title="Editar"><i class="fas fa-edit"></i></button>'
-                    +     '<button class="btn-toggle ' + toggleClass + '" onclick="window.toggleDeliveryActivo(\'' + d.id + '\',' + toggleVal + ')">' + toggleTxt + '</button>'
                     +     '<button class="btn-sm" style="background:linear-gradient(135deg,var(--success),#2E7D32);color:#fff" onclick="window.mostrarPagoDelivery(\'' + d.id + '\')">'
                     +       '<i class="fas fa-hand-holding-usd"></i> Pagado'
                     +     '</button>'
-                    +     '<button class="btn-icon delete" onclick="window.eliminarDelivery(\'' + d.id + '\')" title="Eliminar"><i class="fas fa-trash"></i></button>'
+                    +     '<div style="display:flex;gap:.35rem;margin-left:auto">'
+                    +       '<button class="btn-icon edit" onclick="window.editarDelivery(\'' + d.id + '\')" title="Editar"><i class="fas fa-edit"></i></button>'
+                    +       '<button class="btn-icon delete" onclick="window.eliminarDelivery(\'' + d.id + '\')" title="Eliminar"><i class="fas fa-trash"></i></button>'
+                    +     '</div>'
+                    +     '<button class="btn-toggle ' + toggleClass + '" onclick="window.toggleDeliveryActivo(\'' + d.id + '\',' + toggleVal + ')">' + toggleTxt + '</button>'
                     +   '</div>'
                     + '</div>';
                 grid.appendChild(card);
-            }
         } finally { window._renderizandoDeliverys = false; }
     };
 
