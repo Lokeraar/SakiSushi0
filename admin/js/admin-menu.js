@@ -11,19 +11,18 @@ window.renderizarMenu();
 window.actualizarProductosActivos();
 } catch (e) { console.error('Error cargando menú:', e); window.mostrarToast('Error cargando menú', 'error'); }
 };
+// admin-menu.js - Función renderizarMenu corregida (líneas 15-35)
 window.renderizarMenu = function(filtro) {
-const grid = document.getElementById('menuGrid');
-if (!grid) return;
-grid.innerHTML = '';
-const _norm = t => (t || '').normalize('NFD').replace(/[áéíóú]/g, '').toLowerCase();
-const _base = [...window.menuItems].sort((a,b) => a.nombre.localeCompare(b.nombre));
-const items = filtro ? _base.filter(item => _norm(item.nombre).includes(_norm(filtro))) : _base;
-if (!items.length) {
-grid.innerHTML = '
-' +
-(filtro ? 'Sin resultados para "' + filtro + '"' : 'No hay platillos registrados.') + '
-';
-return;
+    const grid = document.getElementById('menuGrid');
+    if (!grid) return;
+    grid.innerHTML = '';
+    const _norm = t => (t || '').normalize('NFD').replace(/[áéíóú]/g, '').toLowerCase();
+    const _base = [...window.menuItems].sort((a,b) => a.nombre.localeCompare(b.nombre));
+    const items = filtro ? _base.filter(item => _norm(item.nombre).includes(_norm(filtro))) : _base;
+    if (!items.length) {
+        grid.innerHTML = '<p style="color:var(--text-muted);text-align:center;">' +
+            (filtro ? 'Sin resultados para "' + filtro + '"' : 'No hay platillos registrados.') + '</p>';
+        return;
 }
 items.forEach(item => {
 const ingredientesEstado = [];
