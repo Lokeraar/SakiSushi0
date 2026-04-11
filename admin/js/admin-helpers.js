@@ -1,72 +1,71 @@
-// admin-helpers.js - Funcionesauxiliares (nodependientesdeotrosmódulos)
+// admin-helpers.js - Funciones auxiliares (no dependientes de otros módulos)
 (function() {
-    window.cambiarPassword = asyncfunction() {
-        constcurrent = document.getElementById('currentPassword').value;
-        constnueva = document.getElementById('newPassword').value;
-        constconfirm = document.getElementById('confirmPassword').value;
-        consterrorDiv = document.getElementById('passwordChangeError');
+    window.cambiarPassword = async function() {
+        const current = document.getElementById('currentPassword').value;
+        const nueva = document.getElementById('newPassword').value;
+        const confirm = document.getElementById('confirmPassword').value;
+        const errorDiv = document.getElementById('passwordChangeError');
         
         if (errorDiv) errorDiv.style.display = 'none';
         
         if (!current || !nueva || !confirm) {
-            window.mostrarToast('Completatodosloscampos', 'error');
+            window.mostrarToast('Completa todos los campos', 'error');
             return;
         }
         if (nueva !== confirm) {
-            window.mostrarToast('Lascontraseñasnocoinciden', 'error');
+            window.mostrarToast('Las contraseñas no coinciden', 'error');
             return;
-        
         }
         if (nueva.length < 4) {
-            window.mostrarToast('Lacontraseñadebeteneralmenos 4caracteres', 'error');
+            window.mostrarToast('La contraseña debe tener al menos 4 caracteres', 'error');
             return;
         }
         
-        constbtn = document.querySelector('[onclick="window.cambiarPassword()"]');
-        constoriginalText = btn ? btn.innerHTML : '';
+        const btn = document.querySelector('[onclick="window.cambiarPassword()"]');
+        const originalText = btn ? btn.innerHTML : '';
         if (btn) {
             btn.disabled = true;
-            btn.innerHTML = '<iclass="fasfa-spinnerfa-spin"></i> Actualizando...';
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Actualizando...';
         }
         
         try {
-            const { data: adminData, error: userError } = awaitwindow.supabaseClient
+            const { data: adminData, error: userError } = await window.supabaseClient
                 .from('usuarios')
                 .select('username')
                 .eq('rol', 'admin')
                 .maybeSingle();
-            if (userError) throwuserError;
+            if (userError) throw userError;
             if (!adminData) {
-                window.mostrarToast('Noseencontró usuarioadministrador', 'error');
+                window.mostrarToast('No se encontró usuario administrador', 'error');
                 return;
             }
             
-            const { data: authData, error: authError } = awaitwindow.supabaseClient
+            const { data: authData, error: authError } = await window.supabaseClient
                 .rpc('verify_user_credentials', {
                     p_username: adminData.username,
                     p_password: current
                 });
-            if (authError) throwauthError;
+            if (authError) throw authError;
             if (!authData || !authData.success) {
-                window.mostrarToast('Contraseñaactualincorrecta', 'error');
+                window.mostrarToast('Contraseña actual incorrecta', 'error');
                 return;
             }
             
-            const { data: hashed, error: hashErr } = awaitwindow.supabaseClient
+            const { data: hashed, error: hashErr } = await window.supabaseClient
                 .rpc('hash_password', { plain_password: nueva });
-            if (hashErr) throwhashErr;
+            if (hashErr) throw hashErr;
             
-            const { error: updateUserError } = awaitwindow.supabaseClient
+            const { error: updateUserError } = await window.supabaseClient
                 .from('usuarios')
                 .update({ password_hash: hashed })
                 .eq('rol', 'admin');
-            if (updateUserError) throwupdateUserError;
+            if (updateUserError) throw updateUserError;
             
-            const { error: updateConfigError } = awaitwindow.supabaseClient
+            const { error: updateConfigError } = await window.supabaseClient
                 .from('config')
                 .update({ admin_password: nueva })
                 .eq('id', 1);
-            if (updateConfigError) throwupdateConfigError;
+            if (updateConfigError) throw updateConfigError;
             
             window.configGlobal.admin_password = nueva;
             
@@ -74,15 +73,15 @@
             document.getElementById('newPassword').value = '';
             document.getElementById('confirmPassword').value = '';
             
-            window.mostrarToast('✅ Contraseñaactualizadacorrectamenteentodoelsistema', 'success');
+            window.mostrarToast('✅ Contraseña actualizada correctamente en todo el sistema', 'success');
             
         } catch (e) {
-            console.error('Errorcambiandocontraseña:', e);
+            console.error('Error cambiando contraseña:', e);
             if (errorDiv) {
                 errorDiv.style.display = 'block';
-                errorDiv.innerHTML = '<iclass="fasfa-exclamation-circle"></i> Error: ' + (e.message || 'Erroralcambiarlacontraseña');
+                errorDiv.innerHTML = '<i class="fas fa-exclamation-circle"></i> Error: ' + (e.message || 'Error al cambiar la contraseña');
             }
-            window.mostrarToast('❌ Erroralcambiarlacontraseña: ' + (e.message || e), 'error');
+            window.mostrarToast('❌ Error al cambiar la contraseña: ' + (e.message || e), 'error');
         } finally {
             if (btn) {
                 btn.disabled = false;
@@ -91,18 +90,18 @@
         }
     };
 
-    window.guardarRecoveryEmail = asyncfunction() {
-        constemail = document.getElementById('recoveryEmail').value;
-        if (!email || !email.includes('@')) { window.mostrarToast('Ingresauncorreoválido', 'error'); return; }
+    window.guardarRecoveryEmail = async function() {
+        const email = document.getElementById('recoveryEmail').value;
+        if (!email || !email.includes('@')) { window.mostrarToast('Ingresa un correo válido', 'error'); return; }
         try {
-            awaitwindow.supabaseClient.from('config').update({ recovery_email: email }).eq('id', 1);
-            window.mostrarToast('✉️ Correoderecuperaciónguardado', 'success');
-        } catch (e) { console.error('Errorguardandoemail:', e); window.mostrarToast('❌ Erroralguardarelcorreo', 'error'); }
+            await window.supabaseClient.from('config').update({ recovery_email: email }).eq('id', 1);
+            window.mostrarToast('✉️ Correo de recuperación guardado', 'success');
+        } catch (e) { console.error('Error guardando email:', e); window.mostrarToast('❌ Error al guardar el correo', 'error'); }
     };
 
     window.guardarWifiPersistente = function() {
-        constssid = document.getElementById('qrWifiSsid')?.value || '';
-        constpassword = document.getElementById('qrWifiPassword')?.value || '';
+        const ssid = document.getElementById('qrWifiSsid')?.value || '';
+        const password = document.getElementById('qrWifiPassword')?.value || '';
         
         if (ssid !== window.wifiSsidPersistente) {
             window.wifiSsidPersistente = ssid;
@@ -115,24 +114,24 @@
     };
 
     window.restaurarWifiPersistente = function() {
-        constssidInput = document.getElementById('qrWifiSsid');
-        constpasswordInput = document.getElementById('qrWifiPassword');
+        const ssidInput = document.getElementById('qrWifiSsid');
+        const passwordInput = document.getElementById('qrWifiPassword');
         if (ssidInput && window.wifiSsidPersistente) ssidInput.value = window.wifiSsidPersistente;
         if (passwordInput && window.wifiPasswordPersistente) passwordInput.value = window.wifiPasswordPersistente;
     };
 
     window._convertirUnidad = function(valor, desde, hacia) {
-        if (!desde || !hacia || desde === hacia) returnvalor;
-        letbase = valor;
+        if (!desde || !hacia || desde === hacia) return valor;
+        let base = valor;
         if (desde === 'kilogramos') base = valor * 1000;
-        elseif (desde === 'litros') base = valor * 1000;
-        if (hacia === 'kilogramos') returnbase / 1000;
-        if (hacia === 'litros')     returnbase / 1000;
-        returnbase;
+        else if (desde === 'litros') base = valor * 1000;
+        if (hacia === 'kilogramos') return base / 1000;
+        if (hacia === 'litros')     return base / 1000;
+        return base;
     };
 
     window._pedirTasaDeHoy = function(onConfirm) {
-        constoverlay = document.createElement('div');
+        const overlay = document.createElement('div');
         overlay.id = 'tasaHoyOverlay';
         overlay.style.cssText = [
             'position:fixed','top:0','left:0','width:100%','height:100%',
@@ -141,48 +140,48 @@
             'font-family:Montserrat,sans-serif'
         ].join(';');
         overlay.innerHTML = `
-            <divstyle="background:#fff;border-radius:16px;padding:2rem 2.5rem;width:90%;max-width:400px;box-shadow:0 8px 32pxrgba(0,0,0,.3);text-align:center">
-                <divstyle="font-size:2.5rem;margin-bottom:.75rem">💱</div>
-                <h2style="font-size:1.3rem;color:#1a1a2e;margin-bottom:.4rem">Tasadecambiodehoy</h2>
-                <pstyle="font-size:.88rem;color:#666;margin-bottom:1.5rem">
-                    Ingresaelvaloractualdeldólarenbolívaresparaqueelsistemacalculecorrectamentetodoslospreciosdehoy.
+            <div style="background:#fff;border-radius:16px;padding:2rem 2.5rem;width:90%;max-width:400px;box-shadow:0 8px 32px rgba(0,0,0,.3);text-align:center">
+                <div style="font-size:2.5rem;margin-bottom:.75rem">💱</div>
+                <h2 style="font-size:1.3rem;color:#1a1a2e;margin-bottom:.4rem">Tasa de cambio de hoy</h2>
+                <p style="font-size:.88rem;color:#666;margin-bottom:1.5rem">
+                    Ingresa el valor actual del dólar en bolívares para que el sistema calcule correctamente todos los precios de hoy.
                 </p>
-                <inputtype="number" id="tasaHoyInput" placeholder="Ej: 42.50"
+                <input type="number" id="tasaHoyInput" placeholder="Ej: 42.50"
                     step="0.01" min="1"
                     style="width:100%;padding:.8rem 1rem;font-size:1.1rem;font-weight:700;text-align:center;
-                           border:2pxsolid #e0e0e0;border-radius:10px;outline:none;
+                           border:2px solid #e0e0e0;border-radius:10px;outline:none;
                            font-family:Montserrat,sans-serif;margin-bottom:1rem;box-sizing:border-box">
-                <divid="tasaHoyError" style="color:#D32F2F;font-size:.82rem;margin-bottom:.75rem;display:none">
-                    Porfavoringresaunvalorválidomayora 0.
+                <div id="tasaHoyError" style="color:#D32F2F;font-size:.82rem;margin-bottom:.75rem;display:none">
+                    Por favor ingresa un valor válido mayor a 0.
                 </div>
-                <buttonid="tasaHoyBtn"
+                <button id="tasaHoyBtn"
                     style="width:100%;padding:.9rem;background:linear-gradient(135deg,#D32F2F,#B71C1C);
                            color:#fff;border:none;border-radius:10px;font-size:1rem;font-weight:700;
                            cursor:pointer;font-family:Montserrat,sans-serif;letter-spacing:.5px">
-                    Confirmartasadehoy
+                    Confirmar tasa de hoy
                 </button>
-                <pstyle="font-size:.75rem;color:#999;margin-top:.75rem">
-                    Podrásajustarlaencualquiermomentodesdelabarradetasa.
+                <p style="font-size:.75rem;color:#999;margin-top:.75rem">
+                    Podrás ajustarla en cualquier momento desde la barra de tasa.
                 </p>
             </div>
         `;
         document.body.appendChild(overlay);
 
         setTimeout(() => {
-            constinput = document.getElementById('tasaHoyInput');
+            const input = document.getElementById('tasaHoyInput');
             if (input) input.focus();
         }, 100);
 
-        constconfirmar = () => {
-            constval = parseFloat(document.getElementById('tasaHoyInput').value);
-            consterrEl = document.getElementById('tasaHoyError');
+        const confirmar = () => {
+            const val = parseFloat(document.getElementById('tasaHoyInput').value);
+            const errEl = document.getElementById('tasaHoyError');
             if (!val || val <= 0) {
                 errEl.style.display = 'block';
                 document.getElementById('tasaHoyInput').focus();
                 return;
             }
             errEl.style.display = 'none';
-            consthoy = newDate().toISOString().split('T')[0];
+            const hoy = new Date().toISOString().split('T')[0];
             localStorage.setItem('saki_tasa_fecha', hoy);
             localStorage.setItem('saki_tasa_valor', val);
             overlay.remove();
@@ -196,9 +195,9 @@
     };
 
     window._verificarTasaDeHoy = function(onReady) {
-        consthoy  = newDate().toISOString().split('T')[0];
-        constfecha = localStorage.getItem('saki_tasa_fecha');
-        constvalor = parseFloat(localStorage.getItem('saki_tasa_valor'));
+        const hoy  = new Date().toISOString().split('T')[0];
+        const fecha = localStorage.getItem('saki_tasa_fecha');
+        const valor = parseFloat(localStorage.getItem('saki_tasa_valor'));
 
         if (fecha === hoy && valor > 0) {
             onReady(valor);
@@ -212,38 +211,38 @@
     window._verificarAvisoLunes = function() {
         if (!window.configGlobal || !window.configGlobal.aumento_semanal) return;
 
-        consthoy = newDate();
+        const hoy = new Date();
         if (hoy.getDay() !== 1) return;
 
-        constclaveAviso = 'saki_aviso_lunes_' + hoy.toISOString().split('T')[0];
+        const claveAviso = 'saki_aviso_lunes_' + hoy.toISOString().split('T')[0];
         if (localStorage.getItem(claveAviso)) return;
         localStorage.setItem(claveAviso, '1');
 
-        constnotif = document.createElement('div');
+        const notif = document.createElement('div');
         notif.style.cssText = [
             'position:fixed','top:1.5rem','left:50%','transform:translateX(-50%)',
             'background:#1a1a2e','color:#fff','border-radius:12px',
-            'padding:1.2rem 1.5rem','z-index:8000','box-shadow:0 4px 20pxrgba(0,0,0,.4)',
+            'padding:1.2rem 1.5rem','z-index:8000','box-shadow:0 4px 20px rgba(0,0,0,.4)',
             'max-width:420px','width:90%','font-family:Montserrat,sans-serif',
-            'border-left:4pxsolid #FF9800'
+            'border-left:4px solid #FF9800'
         ].join(';');
         notif.innerHTML = `
-            <divstyle="display:flex;align-items:flex-start;gap:.75rem">
-                <divstyle="font-size:1.5rem;flex-shrink:0">📅</div>
-                <divstyle="flex:1">
-                    <divstyle="font-weight:700;margin-bottom:.3rem;font-size:.95rem">Nuevasemana — ¿Actualizaselporcentaje?</div>
-                    <divstyle="font-size:.82rem;opacity:.85;margin-bottom:.75rem">
-                        Hoyeslunesytienesactivoelaumentosemanal.
-                        ¿Quieresajustarelporcentajedeaumentoparaestasemana?
+            <div style="display:flex;align-items:flex-start;gap:.75rem">
+                <div style="font-size:1.5rem;flex-shrink:0">📅</div>
+                <div style="flex:1">
+                    <div style="font-weight:700;margin-bottom:.3rem;font-size:.95rem">Nueva semana — ¿Actualizas el porcentaje?</div>
+                    <div style="font-size:.82rem;opacity:.85;margin-bottom:.75rem">
+                        Hoy es lunes y tienes activo el aumento semanal.
+                        ¿Quieres ajustar el porcentaje de aumento para esta semana?
                     </div>
-                    <divstyle="display:flex;gap:.5rem;justify-content:flex-end">
-                        <buttonid="avisoLunesNo"
+                    <div style="display:flex;gap:.5rem;justify-content:flex-end">
+                        <button id="avisoLunesNo"
                             style="padding:.4rem .9rem;background:rgba(255,255,255,.15);color:#fff;
-                                   border:1pxsolidrgba(255,255,255,.3);border-radius:6px;
+                                   border:1px solid rgba(255,255,255,.3);border-radius:6px;
                                    cursor:pointer;font-family:Montserrat,sans-serif;font-size:.82rem">
-                            No, dejarloigual
+                            No, dejarlo igual
                         </button>
-                        <buttonid="avisoLunesSi"
+                        <button id="avisoLunesSi"
                             style="padding:.4rem .9rem;background:#FF9800;color:#1a1a2e;border:none;
                                    border-radius:6px;cursor:pointer;font-family:Montserrat,sans-serif;
                                    font-weight:700;font-size:.82rem">
@@ -259,11 +258,11 @@
         document.getElementById('avisoLunesSi').addEventListener('click', () => {
             notif.remove();
             window.scrollTo({ top: 0, behavior: 'smooth' });
-            constinput = document.getElementById('aumentoDiarioInput');
+            const input = document.getElementById('aumentoDiarioInput');
             if (input) {
                 input.focus();
                 input.select();
-                input.style.outline = '3pxsolid #FF9800';
+                input.style.outline = '3px solid #FF9800';
                 setTimeout(() => { input.style.outline = ''; }, 3000);
             }
         });
@@ -272,35 +271,35 @@
     };
 
     window._simularLunes = function() {
-        console.log('%c📅 Simulandolunesparapruebadeavisosemanal...', 'color:#FF9800;font-weight:700');
-        consthoy = newDate().toISOString().split('T')[0];
+        console.log('%c📅 Simulando lunes para prueba de aviso semanal...', 'color:#FF9800;font-weight:700');
+        const hoy = new Date().toISOString().split('T')[0];
         localStorage.removeItem('saki_aviso_lunes_' + hoy);
-        constestadoOriginal = window.configGlobal?.aumento_semanal;
+        const estadoOriginal = window.configGlobal?.aumento_semanal;
         if (window.configGlobal) window.configGlobal.aumento_semanal = true;
-        const_orig = Date.prototype.getDay;
+        const _orig = Date.prototype.getDay;
         Date.prototype.getDay = function() { return 1; };
         window._verificarAvisoLunes();
         Date.prototype.getDay = _orig;
         if (window.configGlobal && estadoOriginal !== undefined)
             window.configGlobal.aumento_semanal = estadoOriginal;
-        console.log('%c✅ Avisodelunesdisparado. Miralapantalla.', 'color:green;font-weight:700');
+        console.log('%c✅ Aviso de lunes disparado. Mira la pantalla.', 'color:green;font-weight:700');
     };
 
     window._simularPeriodoSemanal = function(semanas) {
         semanas = semanas || 1;
-        constinput = document.getElementById('aumentoDiarioInput');
-        constpct = parseFloat(input?.value) || 0;
-        constbase = parseFloat(document.getElementById('tasaBaseInput')?.value) || 0;
-        constacum = semanas * pct;
-        constefectiva = base * (1 + acum / 100);
-        console.group('%c📊 Simulación: ' + semanas + ' semana(s) deaumentosemanal', 'color:#FF9800;font-weight:700');
-        console.log('Tasabase:', base);
-        console.log('% porsemana:', pct + '%');
-        console.log('Semanassimuladas:', semanas);
-        console.log('Acumuladosimulado:', acum.toFixed(2) + '%');
-        console.log('Tasaefectivasimulada: Bs', efectiva.toFixed(2));
-        console.log('Diferenciavsactual: Bs', (efectiva - (window.configGlobal?.tasa_efectiva || base)).toFixed(2));
+        const input = document.getElementById('aumentoDiarioInput');
+        const pct = parseFloat(input?.value) || 0;
+        const base = parseFloat(document.getElementById('tasaBaseInput')?.value) || 0;
+        const acum = semanas * pct;
+        const efectiva = base * (1 + acum / 100);
+        console.group('%c📊 Simulación: ' + semanas + ' semana(s) de aumento semanal', 'color:#FF9800;font-weight:700');
+        console.log('Tasa base:', base);
+        console.log('% por semana:', pct + '%');
+        console.log('Semanas simuladas:', semanas);
+        console.log('Acumulado simulado:', acum.toFixed(2) + '%');
+        console.log('Tasa efectiva simulada: Bs', efectiva.toFixed(2));
+        console.log('Diferencia vs actual: Bs', (efectiva - (window.configGlobal?.tasa_efectiva || base)).toFixed(2));
         console.groupEnd();
-        console.log('%c💡 Tip: pruebawindow._simularPeriodoSemanal(3) para 3semanas', 'color:gray');
+        console.log('%c💡 Tip: prueba window._simularPeriodoSemanal(3) para 3 semanas', 'color:gray');
     };
 })();
