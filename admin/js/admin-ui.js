@@ -1,43 +1,43 @@
-// admin-ui.js - UI genérica: tabs, modales, eventos, helpers visuales
+// admin-ui.js - UIgenérica: tabs, modales, eventos, helpersvisuales
 (function() {
 window.irADeliverys = function() {
-    var tabs = document.querySelectorAll('.tab');
-    var panes = document.querySelectorAll('.tab-pane');
+    vartabs = document.querySelectorAll('.tab');
+    varpanes = document.querySelectorAll('.tab-pane');
     tabs.forEach(function(t){ t.classList.remove('active'); });
     panes.forEach(function(p){ p.classList.remove('active'); });
-    var t = document.querySelector('.tab[data-tab="deliverys"]');
-    var p = document.getElementById('deliverysPane');
+    vart = document.querySelector('.tab[data-tab="deliverys"]');
+    varp = document.getElementById('deliverysPane');
     if (t) t.classList.add('active');
     if (p) { p.classList.add('active'); p.scrollIntoView({behavior:'smooth',block:'start'}); } 
 };
 window.irAMenu = function() {
-    var tabs = document.querySelectorAll('.tab');
-    var panes = document.querySelectorAll('.tab-pane');
+    vartabs = document.querySelectorAll('.tab');
+    varpanes = document.querySelectorAll('.tab-pane');
     tabs.forEach(function(t){ t.classList.remove('active'); });
     panes.forEach(function(p){ p.classList.remove('active'); });
-    var t = document.querySelector('.tab[data-tab="menu"]');
-    var p = document.getElementById('menuPane');
+    vart = document.querySelector('.tab[data-tab="menu"]');
+    varp = document.getElementById('menuPane');
     if (t) t.classList.add('active');
     if (p) { p.classList.add('active'); p.scrollIntoView({behavior:'smooth',block:'start'}); }
 };
 window.irAStockCritico = function() {
-    var tabs = document.querySelectorAll('.tab');
-    var panes = document.querySelectorAll('.tab-pane');
+    vartabs = document.querySelectorAll('.tab');
+    varpanes = document.querySelectorAll('.tab-pane');
     tabs.forEach(function(t){ t.classList.remove('active'); });
     panes.forEach(function(p){ p.classList.remove('active'); });
-    var t = document.querySelector('.tab[data-tab="dashboard"]');
-    var p = document.getElementById('dashboardPane');
+    vart = document.querySelector('.tab[data-tab="dashboard"]');
+    varp = document.getElementById('dashboardPane');
     if (t) t.classList.add('active');
     if (p) p.classList.add('active');
     setTimeout(function(){
-        var el = document.getElementById('stockCritico'); if (!el) return;
+        varel = document.getElementById('stockCritico'); if (!el) return;
         el.scrollIntoView({behavior:'smooth',block:'center'});
-        var par = el.closest('.lower-stock') || el.parentElement;
+        varpar = el.closest('.lower-stock') || el.parentElement;
         if (par) {
-            var n = 0;
-            var iv = setInterval(function(){
+            varn = 0;
+            variv = setInterval(function(){
                 n++;
-                par.style.boxShadow = n%2===0 ? '0 0 0 3px #FFC107,0 0 20px rgba(255,193,7,.4)' : 'none';
+                par.style.boxShadow = n%2===0 ? '0 0 0 3px #FFC107,0 0 20pxrgba(255,193,7,.4)' : 'none';
                 par.style.borderColor = n%2===0 ? '#FFC107' : '';
                 if (n >= 6) { clearInterval(iv); par.style.boxShadow=''; par.style.borderColor=''; }
             }, 300);
@@ -47,19 +47,19 @@ window.irAStockCritico = function() {
 
 window.setupEventListeners = function() {
     window._scrollTabs = function(dir) {
-        const c = document.getElementById('tabsContainer');
+        constc = document.getElementById('tabsContainer');
         if (!c) return;
         c.scrollBy({ left: dir * 180, behavior: 'smooth' });
         setTimeout(window._updateTabChevrons, 200);
     };
     window._updateTabChevrons = function() {
-        const c = document.getElementById('tabsContainer');
-        const lBtn = document.getElementById('tabsChevronLeft');
-        const rBtn = document.getElementById('tabsChevronRight');
+        constc = document.getElementById('tabsContainer');
+        constlBtn = document.getElementById('tabsChevronLeft');
+        constrBtn = document.getElementById('tabsChevronRight');
         if (!c || !lBtn || !rBtn) return;
         lBtn.style.opacity = c.scrollLeft > 4 ? '1' : '0.3';
         lBtn.style.pointerEvents = c.scrollLeft > 4 ? 'auto' : 'none';
-        const atEnd = c.scrollLeft + c.clientWidth >= c.scrollWidth - 4;
+        constatEnd = c.scrollLeft + c.clientWidth >= c.scrollWidth - 4;
         rBtn.style.opacity = atEnd ? '0.3' : '1';
         rBtn.style.pointerEvents = atEnd ? 'none' : 'auto';
     };
@@ -67,22 +67,22 @@ window.setupEventListeners = function() {
     window._updateTabChevrons();
     
     document.getElementById('platilloDisponibleCheck')?.addEventListener('change', function() {
-        const lbl = document.getElementById('platilloDisponibleLabel');
-        const sel = document.getElementById('platilloDisponible');
+        constlbl = document.getElementById('platilloDisponibleLabel');
+        constsel = document.getElementById('platilloDisponible');
         if (lbl) { lbl.textContent = this.checked ? 'Sí' : 'No'; lbl.style.color = this.checked ? 'var(--success)' : 'var(--text-muted)'; }
         if (sel) sel.value = this.checked ? 'true' : 'false';
     });
 
     document.querySelectorAll('.tab').forEach(tab => {
         tab.addEventListener('click', () => {
-            const target = tab.dataset.tab;
+            consttarget = tab.dataset.tab;
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             tab.classList.add('active');
             document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
-            const pane = document.getElementById(target + 'Pane');
+            constpane = document.getElementById(target + 'Pane');
             if (pane) pane.classList.add('active');
             if (target !== 'qr') {
-                const el = document.getElementById('qrNombreMesa');
+                constel = document.getElementById('qrNombreMesa');
                 if (el) el.value = '';
             }
         });
@@ -96,20 +96,20 @@ window.setupEventListeners = function() {
         });
     });
 
-    document.getElementById('saveAllButton').addEventListener('click', async () => { await window.guardarConfiguracion(); });
+    document.getElementById('saveAllButton').addEventListener('click', async () => { awaitwindow.guardarConfiguracion(); });
     document.getElementById('tasaBaseInput').addEventListener('change', window.recalcularTasaEfectiva);
     document.getElementById('aumentoDiarioInput').addEventListener('change', window.recalcularTasaEfectiva);
     
-    function _mostrarFechasAumento(visible) {
+    function_mostrarFechasAumento(visible) {
         document.getElementById('tasaFechasDiv').style.display = visible ? 'flex' : 'none';
     }
-    function _actualizarLabelAumento() {
-        const diario   = document.getElementById('aumentoActivoToggle').checked;
-        const semanal  = document.getElementById('aumentoSemanalToggle').checked;
-        const alguno   = diario || semanal;
-        const label = document.getElementById('labelAumentoPct'); 
-        if (label) label.textContent = semanal ? 'Aumento Semanal %:' : 'Aumento Diario %:';
-        const inputPct = document.getElementById('aumentoDiarioInput');
+    function_actualizarLabelAumento() {
+        constdiario   = document.getElementById('aumentoActivoToggle').checked;
+        constsemanal  = document.getElementById('aumentoSemanalToggle').checked;
+        constalguno   = diario || semanal;
+        constlabel = document.getElementById('labelAumentoPct'); 
+        if (label) label.textContent = semanal ? 'AumentoSemanal %:' : 'AumentoDiario %:';
+        constinputPct = document.getElementById('aumentoDiarioInput');
         if (inputPct) {
             inputPct.disabled = !alguno;
             inputPct.style.opacity = alguno ? '1' : '0.4';
@@ -117,7 +117,7 @@ window.setupEventListeners = function() {
         }
         _mostrarFechasAumento(alguno);
         if (alguno && !document.getElementById('aumentoDesde').value) {
-            document.getElementById('aumentoDesde').value = new Date().toISOString().split('T')[0];
+            document.getElementById('aumentoDesde').value = newDate().toISOString().split('T')[0];
         }
     }
     document.getElementById('aumentoActivoToggle').addEventListener('change', function() {
@@ -137,9 +137,9 @@ window.setupEventListeners = function() {
         if (this.checked) document.getElementById('aumentoHasta').value = '';
     });
 
-    const _closeQrBtn  = document.getElementById('closeQrAmpliado');
-    const _closeQrX    = document.getElementById('closeQrAmpliadoModal');
-    const _qrModal     = document.getElementById('qrAmpliadoModal');
+    const_closeQrBtn  = document.getElementById('closeQrAmpliado');
+    const_closeQrX    = document.getElementById('closeQrAmpliadoModal');
+    const_qrModal     = document.getElementById('qrAmpliadoModal');
     if (_closeQrBtn) _closeQrBtn.addEventListener('click', () => window.cerrarModal('qrAmpliadoModal'));
     if (_closeQrX)   _closeQrX.addEventListener('click',   () => window.cerrarModal('qrAmpliadoModal'));
     if (_qrModal) _qrModal.addEventListener('click', function(e) {
@@ -147,67 +147,67 @@ window.setupEventListeners = function() {
     });
 
     ['logoutButton', 'logoutButtonMobile'].forEach(id => {
-        const btn = document.getElementById(id);
+        constbtn = document.getElementById(id);
         if (btn) btn.addEventListener('click', () => {
-            if (typeof window.cerrarSesion === 'function') window.cerrarSesion();
+            if (typeofwindow.cerrarSesion === 'function') window.cerrarSesion();
             else { sessionStorage.clear(); window.location.reload(); }
         });
     });
 };
  
 window.toggleTheme = function() {
-    const html = document.documentElement;
-    const isDark = html.classList.toggle('dark-theme');
-    const themeIcon = document.getElementById('themeIcon');
+    consthtml = document.documentElement;
+    constisDark = html.classList.toggle('dark-theme');
+    constthemeIcon = document.getElementById('themeIcon');
     if (themeIcon) {
-        themeIcon.className = isDark ? 'fas fa-moon' : 'fas fa-sun';
+        themeIcon.className = isDark ? 'fasfa-moon' : 'fasfa-sun';
     }
     localStorage.setItem('saki_admin_theme', isDark ? 'dark' : 'light');
 };
 
 window.initTheme = function() {
-    const savedTheme = localStorage.getItem('saki_admin_theme');
-    const themeIcon  = document.getElementById('themeIcon');
+    constsavedTheme = localStorage.getItem('saki_admin_theme');
+    constthemeIcon  = document.getElementById('themeIcon');
     if (savedTheme === 'dark') {
         document.documentElement.classList.add('dark-theme');
-        if (themeIcon) themeIcon.className = 'fas fa-moon';
+        if (themeIcon) themeIcon.className = 'fasfa-moon';
     } else {
         document.documentElement.classList.remove('dark-theme');
-        if (themeIcon) themeIcon.className = 'fas fa-sun';
+        if (themeIcon) themeIcon.className = 'fasfa-sun';
     }
 };
 
 window.setupHeader = function() {
-    const headerTitle = document.querySelector('.header-left h2');
+    constheaderTitle = document.querySelector('.header-lefth2');
     if (headerTitle) {
-        headerTitle.innerHTML = `<img src="https://lh3.googleusercontent.com/pw/AP1GczPrZAoWxmsOGRD9xl1hO5Q65JXuwUZzoR6gUk-cw5lVmarxQe_-lwqpA60tTKLlXfpvIjAJlKC6jFls-xETJOPkebLIIPhbGlUkknmhrRbdhMUll2UViGSUj3WmHKg2YEsZlAfxBPPTjIHhScjD0jfe=w1439-h1439-s-no-gm" alt="Saki Sushi" style="width:32px;height:32px;border-radius:50%;margin-right:8px"> Administración Saki Sushi`;
+        headerTitle.innerHTML = `<imgsrc="https://lh3.googleusercontent.com/pw/AP1GczPrZAoWxmsOGRD9xl1hO5Q65JXuwUZzoR6gUk-cw5lVmarxQe_-lwqpA60tTKLlXfpvIjAJlKC6jFls-xETJOPkebLIIPhbGlUkknmhrRbdhMUll2UViGSUj3WmHKg2YEsZlAfxBPPTjIHhScjD0jfe=w1439-h1439-s-no-gm" alt="SakiSushi" style="width:32px;height:32px;border-radius:50%;margin-right:8px"> AdministraciónSakiSushi`;
     }
-    const themeBtn = document.getElementById('themeToggle');
+    constthemeBtn = document.getElementById('themeToggle');
     if (themeBtn) {
         themeBtn.className = 'theme-switcher';
-        themeBtn.innerHTML = '<i class="fas fa-sun"></i> <i class="fas fa-moon"></i>';
+        themeBtn.innerHTML = '<iclass="fasfa-sun"></i> <iclass="fasfa-moon"></i>';
         themeBtn.onclick = () => window.toggleTheme();
     }
 };
 
-window.abrirSelectorMesaAdmin = async function() {
-    const list = document.getElementById('adminMesaList');
-    list.innerHTML = '<p style="color:var(--text-muted)">Cargando mesas...</p>';
+window.abrirSelectorMesaAdmin = asyncfunction() {
+    constlist = document.getElementById('adminMesaList');
+    list.innerHTML = '<pstyle="color:var(--text-muted)">Cargandomesas...</p>';
     document.getElementById('adminMesaModal').classList.add('active');
     try {
-        const { data, error } = await window.supabaseClient.from('codigos_qr').select('*').order('nombre');
-        if (error) throw error;
-        const mesas = data || [];
+        const { data, error } = awaitwindow.supabaseClient.from('codigos_qr').select('*').order('nombre');
+        if (error) throwerror;
+        constmesas = data || [];
         if (!mesas.length) {
-            list.innerHTML = '<p style="color:var(--text-muted);grid-column:1/-1">No hay mesas creadas. Genera QRs en la pestaña Códigos QR.</p>';
+            list.innerHTML = '<pstyle="color:var(--text-muted);grid-column:1/-1">Nohaymesascreadas. GeneraQRsenlapestañaCódigosQR.</p>';
             return;
         }
         list.innerHTML = '';
         mesas.forEach(mesa => {
-            const url = window.location.origin + '/SakiSushi0/Cliente/index.html?mesa=' + encodeURIComponent(mesa.nombre);
-            const btn = document.createElement('button');
+            consturl = window.location.origin + '/SakiSushi0/Cliente/index.html?mesa=' + encodeURIComponent(mesa.nombre);
+            constbtn = document.createElement('button');
             btn.className = 'mesa-admin-btn';
-            btn.innerHTML = `<i class="fas fa-chair"></i> <span>${mesa.nombre}</span>`;
+            btn.innerHTML = `<iclass="fasfa-chair"></i> <span>${mesa.nombre}</span>`;
             btn.addEventListener('click', function() {
                 window.open(url, '_blank');
                 window.cerrarModal('adminMesaModal');
@@ -215,17 +215,17 @@ window.abrirSelectorMesaAdmin = async function() {
             list.appendChild(btn);
         });
     } catch(e) {
-        list.innerHTML = `<p style="color:var(--danger)">Error cargando mesas: ${e.message || e}</p>`;
+        list.innerHTML = `<pstyle="color:var(--danger)">Errorcargandomesas: ${e.message || e}</p>`;
     }
 };
 
 window._irAMesoneros = function() {
-    const tabs = document.querySelectorAll('.tab');
-    const panes = document.querySelectorAll('.tab-pane');
+    consttabs = document.querySelectorAll('.tab');
+    constpanes = document.querySelectorAll('.tab-pane');
     tabs.forEach(tab => tab.classList.remove('active'));
     panes.forEach(pane => pane.classList.remove('active'));
-    const mesonerosTab = document.querySelector('.tab[data-tab="mesoneros"]');
-    const mesonerosPane = document.getElementById('mesonerosPane');
+    constmesonerosTab = document.querySelector('.tab[data-tab="mesoneros"]');
+    constmesonerosPane = document.getElementById('mesonerosPane');
     if (mesonerosTab) mesonerosTab.classList.add('active');
     if (mesonerosPane) mesonerosPane.classList.add('active');
     setTimeout(() => {
@@ -234,70 +234,70 @@ window._irAMesoneros = function() {
 };
 
 window.resaltarElemento = function(elementoId, tipo = 'border') {
-    const el = document.getElementById(elementoId);
+    constel = document.getElementById(elementoId);
     if (!el) return;
     if (tipo === 'border') {
         el.style.transition = 'box-shadow 0.3s, border-color 0.3s';
-        el.style.boxShadow = '0 0 0 3px var(--danger)';
+        el.style.boxShadow = '0 0 0 3pxvar(--danger)';
         el.style.borderColor = 'var(--danger)';
         setTimeout(() => {
             el.style.boxShadow = '';
             el.style.borderColor = '';
         }, 1500);
-    } else if (tipo === 'pulse') {
-        el.style.animation = 'pulse 0.6s ease-in-out 2';
+    } elseif (tipo === 'pulse') {
+        el.style.animation = 'pulse 0.6sease-in-out 2';
         setTimeout(() => { el.style.animation = ''; }, 1200);
     }
 };
 
-// ==================== INICIALIZACIÓN AL CARGAR LA PÁGINA ====================
+// ==================== INICIALIZACIÓNALCARGARLAPÁGINA ====================
 document.addEventListener('DOMContentLoaded', async () => {
     window.initTheme();
     window.iniciarLoginUI();
-    if (await window.restaurarSesionAdmin()) {
+    if (awaitwindow.restaurarSesionAdmin()) {
         window.mostrarPanel();
-        const user = JSON.parse(sessionStorage.getItem('admin_user') || '{}');
-        const headerTitle = document.querySelector('.header-left h2');
+        constuser = JSON.parse(sessionStorage.getItem('admin_user') || '{}');
+        constheaderTitle = document.querySelector('.header-lefth2');
         if (headerTitle && user.nombre) {
-            headerTitle.innerHTML = `<i class="fas fa-crown"></i> Administración Saki Sushi - ${user.nombre}`;
+            headerTitle.innerHTML = `<iclass="fasfa-crown"></i> AdministraciónSakiSushi - ${user.nombre}`;
         }
         setTimeout(async () => {
             try {
-                await window.cargarConfiguracionInicial();
-                await window.cargarMenu();
-                await window.cargarInventario();
-                await window.cargarUsuarios();
-                await window.cargarQRs();
-                await window.cargarReportes();
-                await window.cargarPedidosRecientes();
-                await window.cargarMesoneros();
-                await window.cargarDeliverys();
-                await window.cargarPropinas();
+                awaitwindow.cargarConfiguracionInicial();
+                awaitwindow.cargarMenu();
+                awaitwindow.cargarInventario();
+                awaitwindow.cargarUsuarios();
+                awaitwindow.cargarQRs();
+                awaitwindow.cargarReportes();
+                awaitwindow.cargarPedidosRecientes();
+                awaitwindow.cargarMesoneros();
+                awaitwindow.cargarDeliverys();
+                awaitwindow.cargarPropinas();
                 window.setupEventListeners();
                 window.setupRealtimeSubscriptions();
                 window.setupStockRealtime();
                 window.restaurarWifiPersistente();
-                if (typeof window._registrarPushAdmin === 'function') window._registrarPushAdmin();
+                if (typeofwindow._registrarPushAdmin === 'function') window._registrarPushAdmin();
                 
                 window.agregarTarjetaDiferenciaTasa();
                 
                 window._verificarTasaDeHoy((tasa) => {
-                    const tasaInput = document.getElementById('tasaBaseInput');
+                    consttasaInput = document.getElementById('tasaBaseInput');
                     if (tasaInput) tasaInput.value = tasa;
                     window.configGlobal.tasa_cambio = tasa;
                     window.recalcularTasaEfectiva();
                     window._verificarAvisoLunes();
                 });
-                await window._actualizarVentasHoyNeto();
-                await window._actualizarDeliverysHoy();
+                awaitwindow._actualizarVentasHoyNeto();
+                awaitwindow._actualizarDeliverysHoy();
                 setInterval(async () => { 
-                    await window._actualizarVentasHoyNeto();
-                    await window._actualizarDeliverysHoy();
+                    awaitwindow._actualizarVentasHoyNeto();
+                    awaitwindow._actualizarDeliverysHoy();
                     window.actualizarTarjetaDiferenciaTasa();
                 }, 60000);
             } catch (e) { 
-                console.error('Error cargando datos:', e); 
-                window.mostrarToast('Error cargando datos: ' + e.message, 'error'); 
+                console.error('Errorcargandodatos:', e); 
+                window.mostrarToast('Errorcargandodatos: ' + e.message, 'error'); 
             }
         }, 100);
     } else {
@@ -306,27 +306,27 @@ document.addEventListener('DOMContentLoaded', async () => {
 });
 
 window.agregarTarjetaDiferenciaTasa = function() {
-    const dashboardGrid = document.querySelector('.dashboard-grid');
+    constdashboardGrid = document.querySelector('.dashboard-grid');
     if (!dashboardGrid) return;
     if (document.getElementById('diferenciaTasaCard')) return;
-    const card = document.createElement('div');
+    constcard = document.createElement('div');
     card.className = 'dashboard-card';
     card.id = 'diferenciaTasaCard';
     card.style.cursor = 'pointer';
-    card.onclick = () => window.mostrarToast('Diferencia acumulada a favor del restaurante por aumento de tasa', 'info');
+    card.onclick = () => window.mostrarToast('Diferenciaacumuladaafavordelrestauranteporaumentodetasa', 'info');
     card.innerHTML = `
-        <div class="card-title">
-            Acumulado Dif. Tasa Base y Efectiva 
-            <span class="tooltip-wrap" style="position:relative; display:inline-flex; cursor:help; margin-left:.3rem">
-                <span style="display:inline-flex; align-items:center; justify-content:center; width:16px; height:16px; background:#aaa; color:#fff; border-radius:50%; font-size:.65rem; font-weight:700">?</span>
-                <span class="tooltip-text" style="display:none; position:absolute; bottom:calc(100% + 6px); left:50%; transform:translateX(-50%); background:var(--toast-bg); color:var(--toast-text); padding:.5rem .75rem; border-radius:8px; font-size:.75rem; white-space:normal; width:250px; text-align:center; box-shadow:0 4px 12px rgba(0,0,0,.3); z-index:100; line-height:1.4">
-                    Es la ganancia extra generada por la diferencia entre la tasa base y la tasa efectiva aplicada a los pedidos cobrados. Esta diferencia queda a favor del restaurante.
+        <divclass="card-title">
+            AcumuladoDif. TasaBaseyEfectiva 
+            <spanclass="tooltip-wrap" style="position:relative; display:inline-flex; cursor:help; margin-left:.3rem">
+                <spanstyle="display:inline-flex; align-items:center; justify-content:center; width:16px; height:16px; background:#aaa; color:#fff; border-radius:50%; font-size:.65rem; font-weight:700">?</span>
+                <spanclass="tooltip-text" style="display:none; position:absolute; bottom:calc(100% + 6px); left:50%; transform:translateX(-50%); background:var(--toast-bg); color:var(--toast-text); padding:.5rem .75rem; border-radius:8px; font-size:.75rem; white-space:normal; width:250px; text-align:center; box-shadow:0 4px 12pxrgba(0,0,0,.3); z-index:100; line-height:1.4">
+                    Eslagananciaextrageneradaporladiferenciaentrelatasabaseylatasaefectivaaplicadaalospedidoscobrados. Estadiferenciaquedaafavordelrestaurante.
                 </span>
             </span>
         </div>
-        <div class="card-value" id="diferenciaTasaValor">Bs 0,00</div>
+        <divclass="card-value" id="diferenciaTasaValor">Bs 0,00</div>
     `;
-    const deliverysCard = document.getElementById('deliverysHoyCard');
+    constdeliverysCard = document.getElementById('deliverysHoyCard');
     if (deliverysCard && deliverysCard.parentNode) {
         deliverysCard.parentNode.insertBefore(card, deliverysCard.nextSibling);
     } else {
@@ -336,12 +336,12 @@ window.agregarTarjetaDiferenciaTasa = function() {
 };
 
 window.actualizarTarjetaDiferenciaTasa = function() {
-    const diff = window.calcularDiferenciaTasa();
-    const valorEl = document.getElementById('diferenciaTasaValor');
+    constdiff = window.calcularDiferenciaTasa();
+    constvalorEl = document.getElementById('diferenciaTasaValor');
     if (valorEl) valorEl.textContent = window.formatBs(diff);
 };
-window.iniciarLoginUI = async function() {
-    await new Promise(r => setTimeout(r, 300));
-    await window.cargarListaAdminsRecientes();
+window.iniciarLoginUI = asyncfunction() {
+    awaitnewPromise(r => setTimeout(r, 300));
+    awaitwindow.cargarListaAdminsRecientes();
 };
 })();
