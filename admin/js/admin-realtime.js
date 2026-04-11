@@ -1,4 +1,4 @@
-// admin-realtime.js - Suscripcionesrealtimeypush
+// admin-realtime.js - Suscripciones realtime y push
 (function() {
     window.setupRealtimeSubscriptions = function() {
         try {
@@ -14,11 +14,11 @@
                     async (p) => {
                         if (p.eventType === 'UPDATE' && p.new.stock <= p.new.minimo) {
                             window.verificarStockCritico();
-                            window.mostrarToast(`⚠Stockcrcrítico: ${p.new.nombre}`, 'warning');
+                            window.mostrarToast(`⚠️ Stock crítico: ${p.new.nombre}`, 'warning');
                             window._notificarAdminStockCritico && window._notificarAdminStockCritico(p.new.nombre);
                         }
                         if (p.eventType === 'UPDATE' && (p.old?.stock || 0) <= 0 && p.new.stock > 0) {
-                            awaitwindow._notificarPlatillosReactivados(p.new.id, p.new.nombre);
+                            await window._notificarPlatillosReactivados(p.new.id, p.new.nombre);
                         }
                         window.cargarInventario();
                         window.actualizarStockCriticoHeader();
@@ -42,7 +42,7 @@
                 .on('postgres_changes', { event: '*', schema: 'public', table: 'pedidos' },
                     () => {
                         window.cargarPedidosRecientes();
-                        constrPane = document.getElementById('reportesPane');
+                        const rPane = document.getElementById('reportesPane');
                         if (rPane && rPane.classList.contains('active')) window.cargarReportes();
                     })
                 .subscribe();
@@ -70,82 +70,82 @@
                 .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'config' },
                     (p) => {
                         window.configGlobal = { ...window.configGlobal, ...p.new };
-                        constbi = document.getElementById('tasaBaseInput');
+                        const bi = document.getElementById('tasaBaseInput');
                         if (bi && p.new.tasa_cambio) bi.value = parseFloat(p.new.tasa_cambio).toFixed(2);
                         window.recalcularTasaEfectiva && window.recalcularTasaEfectiva();
-                        window.mostrarToast('💱 Tasaactualizadadesdecajero: Bs ' + parseFloat(p.new.tasa_cambio||0).toFixed(2), 'info');
+                        window.mostrarToast('💱 Tasa actualizada desde cajero: Bs ' + parseFloat(p.new.tasa_cambio||0).toFixed(2), 'info');
                     })
                 .subscribe();
 
-        } catch (e) { console.error('Errorconfigurandosuscripcionesrealtime:', e); }
+        } catch (e) { console.error('Error configurando suscripciones realtime:', e); }
     };
 
-    window._notificarAdminStockCritico = asyncfunction(ingredienteNombre) {
+    window._notificarAdminStockCritico = async function(ingredienteNombre) {
         try {
-            const { data: subs } = awaitwindow.supabaseClient
+            const { data: subs } = await window.supabaseClient
                 .from('push_subscriptions')
                 .select('session_id')
                 .in('rol', ['admin', 'cajero']);
             if (!subs || !subs.length) return;
-            constsessions = [...newSet(subs.map(s => s.session_id).filter(Boolean))];
-            for (constsidofsessions) {
-                awaitwindow.supabaseClient.from('notificaciones').insert([{
+            const sessions = [...new Set(subs.map(s => s.session_id).filter(Boolean))];
+            for (const sid of sessions) {
+                await window.supabaseClient.from('notificaciones').insert([{
                     pedido_id: null, tipo: 'stock_critico',
-                    titulo: '⚠Stockcrcrítico',
-                    mensaje: `Elingrediente "${ingredienteNombre}" Elingredientedebajodelmínimo. Revisaelinventario.`,
+                    titulo: '⚠️ Stock crítico',
+                    mensaje: `El ingrediente "${ingredienteNombre}" está por debajo del mínimo. Revisa el inventario.`,
                     session_id: sid, leida: false
                 }]);
             }
-            window.mostrarToast(`🔔 Alertaenviada: stockcren ${ingredienteNombre}`, 'warning');
-        } catch (e) { console.error('Errornotificandostockcr:', e); }
+            window.mostrarToast(`🔔 Alerta enviada: stock crítico en ${ingredienteNombre}`, 'warning');
+        } catch (e) { console.error('Error notificando stock crítico:', e); }
     };
 
-    window._registrarPushAdmin = asyncfunction() {
-        if (!('Notification' inwindow) || !('serviceWorker' innavigator)) return;
+    window._registrarPushAdmin = async function() {
+        if (!('Notification' in window) || !('serviceWorker' in navigator)) return;
         if (location.protocol !== 'https:' && location.hostname !== 'localhost') return;
         if (Notification.permission === 'denied') return;
 
-        letsid = localStorage.getItem('saki_admin_session_id');
+        let sid = localStorage.getItem('saki_admin_session_id');
         if (!sid) {
             sid = 'admin_' + Date.now() + '_' + Math.random().toString(36).slice(2, 9);
             localStorage.setItem('saki_admin_session_id', sid);
         }
 
-        const_registrar = async () => {
+        const _registrar = async () => {
             try {
-                constreg  = awaitnavigator.serviceWorker.register('/SakiSushi0/sw.js', { scope: '/SakiSushi0/' });
-                awaitnavigator.serviceWorker.ready;
-                letsub = awaitreg.pushManager.getSubscription();
+                const reg  = await navigator.serviceWorker.register('/SakiSushi0/sw.js', { scope: '/SakiSushi0/' });
+                await navigator.serviceWorker.ready;
+                let sub = await reg.pushManager.getSubscription();
                 if (!sub) {
-                    constvapid = 'BC6oJ4E+5pGIn4icpzCBLMi6/nk+1JJenrUA41uJrAs1ELraSw5ctvRAlh8sHVldqzBXUtEwEeFKBm0/hmuM9EY=';
-                    constkey   = (function(b64) {
-                        constpad = '='.repeat((4 - b64.length % 4) % 4);
-                        constraw = atob((b64 + pad).replace(/-/g, '+').replace(/_/g, '/'));
-                        constarr = newUint8Array(raw.length);
-                        for (leti = 0; i < raw.length; i++) arr[i] = raw.charCodeAt(i);
-                        returnarr;
+                    const vapid = 'BC6oJ4E+5pGIn4icpzCBLMi6/nk+1JJenrUA41uJrAs1ELraSw5ctvRAlh8sHVldqzBXUtEwEeFKBm0/hmuM9EY=';
+                    const key   = (function(b64) {
+                        const pad = '='.repeat((4 - b64.length % 4) % 4);
+                        const raw = atob((b64 + pad).replace(/-/g, '+').replace(/_/g, '/'));
+                        const arr = new Uint8Array(raw.length);
+                        for (let i = 0; i < raw.length; i++) arr[i] = raw.charCodeAt(i);
+                        return arr;
                     })(vapid);
-                    sub = awaitreg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: key });
+                    sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: key });
                 }
-                constp256dh = btoa(String.fromCharCode.apply(null, newUint8Array(sub.getKey('p256dh'))));
-                constauth   = btoa(String.fromCharCode.apply(null, newUint8Array(sub.getKey('auth'))));
-                awaitwindow.supabaseClient.from('push_subscriptions').upsert([{
+                const p256dh = btoa(String.fromCharCode.apply(null, new Uint8Array(sub.getKey('p256dh'))));
+                const auth   = btoa(String.fromCharCode.apply(null, new Uint8Array(sub.getKey('auth'))));
+                await window.supabaseClient.from('push_subscriptions').upsert([{
                     session_id: sid,
                     endpoint:   sub.endpoint,
                     p256dh, auth,
                     rol: 'admin',
                     user_agent: navigator.userAgent
                 }], { onConflict: 'endpoint' });
-                console.log('📢 Pushadminregistrado:', sid);
-            } catch (e) { console.warn('⚠Pushadminadminnodisponible:', e.message); }
+                console.log('📢 Push admin registrado:', sid);
+            } catch (e) { console.warn('⚠️ Push admin no disponible:', e.message); }
         };
 
         if (Notification.permission === 'granted') {
-            await_registrar();
+            await _registrar();
         } else {
             setTimeout(async () => {
-                constperm = awaitNotification.requestPermission();
-                if (perm === 'granted') await_registrar();
+                const perm = await Notification.requestPermission();
+                if (perm === 'granted') await _registrar();
             }, 3000);
         }
     };
