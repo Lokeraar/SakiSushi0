@@ -207,7 +207,7 @@ window.abrirSelectorMesaAdmin = async function() {
             const url = window.location.origin + '/SakiSushi0/Cliente/index.html?mesa=' + encodeURIComponent(mesa.nombre);
             const btn = document.createElement('button');
             btn.className = 'mesa-admin-btn';
-            btn.innerHTML = '<i class="fas fa-chair"></i> <span>' + mesa.nombre + '</span>';
+            btn.innerHTML = `<i class="fas fa-chair"></i> <span>${mesa.nombre}</span>`;
             btn.addEventListener('click', function() {
                 window.open(url, '_blank');
                 window.cerrarModal('adminMesaModal');
@@ -215,7 +215,7 @@ window.abrirSelectorMesaAdmin = async function() {
             list.appendChild(btn);
         });
     } catch(e) {
-        list.innerHTML = '<p style="color:var(--danger)">Error cargando mesas: ' + (e.message || e) + '</p>';
+        list.innerHTML = `<p style="color:var(--danger)">Error cargando mesas: ${e.message || e}</p>`;
     }
 };
 
