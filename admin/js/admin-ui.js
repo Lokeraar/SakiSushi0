@@ -46,6 +46,7 @@ window.irAStockCritico = function() {
 };
 
 window.setupEventListeners = function() {
+    // Funciones de scroll para tabs con doble chevron
     window._scrollTabs = function(dir) {
         const c = document.getElementById('tabsContainer');
         if (!c) return;
@@ -66,6 +67,7 @@ window.setupEventListeners = function() {
     document.getElementById('tabsContainer')?.addEventListener('scroll', window._updateTabChevrons);
     window._updateTabChevrons();
     
+    // Checkbox de disponible en modal platillo
     document.getElementById('platilloDisponibleCheck')?.addEventListener('change', function() {
         const lbl = document.getElementById('platilloDisponibleLabel');
         const sel = document.getElementById('platilloDisponible');
@@ -73,6 +75,7 @@ window.setupEventListeners = function() {
         if (sel) sel.value = this.checked ? 'true' : 'false';
     });
 
+    // Navegación por tabs
     document.querySelectorAll('.tab').forEach(tab => {
         tab.addEventListener('click', () => {
             const target = tab.dataset.tab;
@@ -88,6 +91,7 @@ window.setupEventListeners = function() {
         });
     });
 
+    // Cerrar modales al hacer clic fuera
     document.querySelectorAll('.modal').forEach(modal => {
         modal.addEventListener('click', function(e) {
             if (e.target === this) {
@@ -96,6 +100,7 @@ window.setupEventListeners = function() {
         });
     });
 
+    // Guardar configuración de tasa
     document.getElementById('saveAllButton').addEventListener('click', async () => { await window.guardarConfiguracion(); });
     document.getElementById('tasaBaseInput').addEventListener('change', window.recalcularTasaEfectiva);
     document.getElementById('aumentoDiarioInput').addEventListener('change', window.recalcularTasaEfectiva);
@@ -137,6 +142,7 @@ window.setupEventListeners = function() {
         if (this.checked) document.getElementById('aumentoHasta').value = '';
     });
 
+    // Modales QR
     const _closeQrBtn  = document.getElementById('closeQrAmpliado');
     const _closeQrX    = document.getElementById('closeQrAmpliadoModal');
     const _qrModal     = document.getElementById('qrAmpliadoModal');
@@ -146,6 +152,7 @@ window.setupEventListeners = function() {
         if (e.target === this) window.cerrarModal('qrAmpliadoModal');
     });
 
+    // Botón logout
     ['logoutButton', 'logoutButtonMobile'].forEach(id => {
         const btn = document.getElementById(id);
         if (btn) btn.addEventListener('click', () => {
@@ -253,9 +260,14 @@ window.resaltarElemento = function(elementoId, tipo = 'border') {
 // ==================== INICIALIZACIÓN AL CARGAR LA PÁGINA ====================
 document.addEventListener('DOMContentLoaded', async () => {
     window.initTheme();
-    window.iniciarLoginUI();
+    // Inicializar UI de login (cargar lista de administradores)
+    if (typeof window.iniciarLoginUI === 'function') {
+        window.iniciarLoginUI();
+    }
+    
     if (await window.restaurarSesionAdmin()) {
         window.mostrarPanel();
+        // Actualizar header con nombre de usuario
         const user = JSON.parse(sessionStorage.getItem('admin_user') || '{}');
         const headerTitle = document.querySelector('.header-left h2');
         if (headerTitle && user.nombre) {
@@ -339,9 +351,5 @@ window.actualizarTarjetaDiferenciaTasa = function() {
     const diff = window.calcularDiferenciaTasa();
     const valorEl = document.getElementById('diferenciaTasaValor');
     if (valorEl) valorEl.textContent = window.formatBs(diff);
-};
-window.iniciarLoginUI = async function() {
-    await new Promise(r => setTimeout(r, 300));
-    await window.cargarListaAdminsRecientes();
 };
 })();
