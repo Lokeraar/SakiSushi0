@@ -340,4 +340,8 @@ window.actualizarTarjetaDiferenciaTasa = function() {
     const valorEl = document.getElementById('diferenciaTasaValor');
     if (valorEl) valorEl.textContent = window.formatBs(diff);
 };
+window.iniciarLoginUI = async function() {
+    await new Promise(r => setTimeout(r, 300));
+    await window.cargarListaAdminsRecientes();
+};
 })();
