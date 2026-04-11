@@ -415,6 +415,7 @@ window.actualizarBadgeNotificaciones = function(conteo) {
 // ============================================
 // FUNCIÓN AUXILIAR PARA WIFI (cliente)
 // ============================================
+// supabase-config.js - Líneas corregidas alrededor de la línea 60
 window._mostrarPantallaWifi = function(wifiSsid, wifiPwd) {
     document.body.innerHTML = `<div style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center; background:linear-gradient(135deg,#1a1a2e,#16213e);color:#fff;padding:2rem;text-align:center;font-family:Roboto,sans-serif"> 
         <div style="font-size:3rem;margin-bottom:1rem">📶</div> 
