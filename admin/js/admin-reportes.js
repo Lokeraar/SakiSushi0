@@ -24,6 +24,7 @@ window.cargarReportes = async function() {
     } catch (e) { console.error('Error cargando reportes:', e); window.mostrarToast('Error cargando reportes', 'error'); }
 };
 
+// admin-reportes.js - Función corregida
 window.actualizarEstadisticasReportes = function(pedidos) {
     const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
     const ventasHoy = pedidos.filter(p => new Date(p.fecha) >= hoy).reduce((s, p) => s + (p.total || 0), 0);
@@ -37,12 +38,12 @@ window.actualizarEstadisticasReportes = function(pedidos) {
     for (const [n, c] of Object.entries(platillosCount)) { if (c > maxCount) { maxCount = c; platilloTop = n; } }
     
     const tasa = window.configGlobal?.tasa_efectiva || 400;
-    const _s=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
-    _s('ventasDia',      `${window.formatUSD(ventasHoy)} / ${window.formatBs(ventasHoy * tasa)}`);
-    _s('ventasSemana',   `${window.formatUSD(ventasSemana)} / ${window.formatBs(ventasSemana * tasa)}`);
+    const _s = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+    _s('ventasDia', `${window.formatUSD(ventasHoy)} / ${window.formatBs(ventasHoy * tasa)}`);
+    _s('ventasSemana', `${window.formatUSD(ventasSemana)} / ${window.formatBs(ventasSemana * tasa)}`);
     _s('ticketPromedio', `${window.formatUSD(ticketPromedio)} / ${window.formatBs(ticketPromedio * tasa)}`);
-    _s('platilloTop',    platilloTop);
-    _s('cantidadPedidos', pedidos.length); // Actualización para la nueva tarjeta
+    _s('platilloTop', platilloTop);
+    _s('cantidadPedidos', pedidos.length);
 };
 
 window.actualizarGraficos = function(pedidos) {
