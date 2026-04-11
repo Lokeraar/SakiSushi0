@@ -57,7 +57,7 @@ window.configGlobal = {
 // CACHÉ GLOBAL MEJORADO
 // ============================================
 window.appCache = {
-    stock: {  {}, lastUpdate: 0, duration: 5000 },
+    stock: { data: {}, lastUpdate: 0, duration: 5000 },
     platillos: new Map(),
     pedidos: new Map(),
     notificaciones: new Map(),
