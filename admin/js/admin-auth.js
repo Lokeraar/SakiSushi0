@@ -10,22 +10,35 @@ window.cargarListaAdminsRecientes = async function() {
     container.innerHTML = '<div class="loading-spinner" style="margin:0 auto;"></div>';
     
     try {
-        // ESPERA ROBUSTA: Esperar a que supabaseClient esté listo
+        // 1. ESPERA PACIENTE: Esperar a que supabaseClient esté listo
         let intentos = 0;
-        const maxIntentos = 50; // Aumentado de 20 a 50
-        const delay = 100; // ms
+        const maxIntentos = 100; // 10 segundos de espera máxima
         
         while (!window.supabaseClient && intentos < maxIntentos) {
-            console.log(`[Auth] Esperando inicialización de Supabase... Intento ${intentos + 1}/${maxIntentos}`);
-            await new Promise(r => setTimeout(r, delay));
+            // console.log(`[Auth] Esperando inicialización de Supabase... Intento ${intentos + 1}/${maxIntentos}`);
+            await new Promise(r => setTimeout(r, 100));
             intentos++;
         }
         
-        if (!window.supabaseClient) {
-            throw new Error('Error de conexión: El cliente de Supabase no se inicializó correctamente.');
+        // 2. RECUPERACIÓN DE EMERGENCIA
+        // Si tras la espera sigue sin existir, intentamos inicializarlo manualmente
+        if (!window.supabaseClient && typeof window.inicializarSupabaseCliente === 'function') {
+            console.warn('[Auth] Cliente no encontrado tras espera. Ejecutando inicialización forzada...');
+            try {
+                window.supabaseClient = window.inicializarSupabaseCliente();
+                // Breve pausa para asegurar que la conexión se estableció
+                await new Promise(r => setTimeout(r, 500));
+            } catch (e) {
+                console.error('[Auth] Falló la inicialización forzada:', e);
+            }
         }
         
-        console.log('[Auth] Cliente Supabase listo. Cargando administradores...');
+        // 3. VERIFICACIÓN FINAL
+        if (!window.supabaseClient) {
+            throw new Error('No se pudo conectar a Supabase. Revisa tu conexión a internet.');
+        }
+        
+        // console.log('[Auth] Cliente Supabase listo. Cargando administradores...');
 
         const recent = window.obtenerAdminsRecientes();
         let admins = [];
@@ -149,8 +162,7 @@ window.hacerLogin = async function() {
         
         setTimeout(async () => {
             try {
-                // CORRECCIÓN: Se cambió cargarConfiguracionInicial por cargarConfiguracion
-                await window.cargarConfiguracion();
+                await window.cargarConfiguracionInicial();
                 await window.cargarMenu();
                 await window.cargarInventario();
                 await window.cargarUsuarios();
@@ -159,12 +171,12 @@ window.hacerLogin = async function() {
                 await window.cargarPedidosRecientes();
                 if (typeof window.cargarMesoneros === 'function') await window.cargarMesoneros();
                 if (typeof window.cargarDeliverys === 'function') await window.cargarDeliverys();
-                if (typeof window.cargarPropinas === 'function') await window.cargarPropinas();
+                if (typeof window.cargarPropinas   === 'function') await window.cargarPropinas();
                 window.setupEventListeners();
                 window.setupRealtimeSubscriptions();
                 window.setupStockRealtime();
                 window.restaurarWifiPersistente();
-                if (typeof window._registrarPushAdmin === 'function') window._registrarPushAdmin();
+                window._registrarPushAdmin();
                 window.agregarTarjetaDiferenciaTasa();
                 window._verificarTasaDeHoy((tasa) => {
                     const tasaInput = document.getElementById('tasaBaseInput');
