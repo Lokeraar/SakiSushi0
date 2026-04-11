@@ -415,18 +415,18 @@ window.actualizarBadgeNotificaciones = function(conteo) {
 // ============================================
 // FUNCIÓN AUXILIAR PARA WIFI (cliente)
 // ============================================
-// supabase-config.js - Líneas corregidas alrededor de la línea 60
 window._mostrarPantallaWifi = function(wifiSsid, wifiPwd) {
-    document.body.innerHTML = `<div style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center; background:linear-gradient(135deg,#1a1a2e,#16213e);color:#fff;padding:2rem;text-align:center;font-family:Roboto,sans-serif"> 
-        <div style="font-size:3rem;margin-bottom:1rem">📶</div> 
-        <h2 style="color:#FF9800;font-size:1.4rem;margin-bottom:.75rem">Conéctate al WiFi del restaurante</h2> 
-        <p style="font-size:1rem;opacity:.85;margin-bottom:1.5rem">Para acceder al menú necesitas estar conectado a:</p> 
-        <div style="background:rgba(255,255,255,.1);border-radius:12px;padding:1.2rem 2rem;margin-bottom:2rem;border:1px solid rgba(255,255,255,.2)"> 
-            <div style="font-size:1.3rem;font-weight:700;color:#fff;letter-spacing:1px">${wifiSsid}</div> ${wifiPwd ? '<div style="font-size:.85rem;opacity:.6;margin-top:.3rem">Contraseña: ' + wifiPwd + '</div>' : ''} 
-        </div> 
-        <p style="font-size:.85rem;opacity:.65;margin-bottom:2rem">Ve a Ajustes → WiFi, conéctate a la red y luego toca:</p> 
-        <button onclick="window.location.reload()" style="background:linear-gradient(135deg,#D32F2F,#B71C1C);color:#fff;border:none;padding:.9rem 2rem; border-radius:10px;font-size:1rem;font-weight:700;cursor:pointer;letter-spacing:.5px;margin-bottom:1rem"> 🔄 Ya me conecté — Abrir Menú </button> 
-        <p style="font-size:.75rem;opacity:.4">O escanea el QR nuevamente</p> 
+    document.body.innerHTML = `<div style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(135deg,#1a1a2e,#16213e);color:#fff;padding:2rem;text-align:center;font-family:Roboto,sans-serif">
+        <div style="font-size:3rem;margin-bottom:1rem">📶</div>
+        <h2 style="color:#FF9800;font-size:1.4rem;margin-bottom:.75rem">Conéctate al WiFi del restaurante</h2>
+        <p style="font-size:1rem;opacity:.85;margin-bottom:1.5rem">Para acceder al menú necesitas estar conectado a:</p>
+        <div style="background:rgba(255,255,255,.1);border-radius:12px;padding:1.2rem 2rem;margin-bottom:2rem;border:1px solid rgba(255,255,255,.2)">
+            <div style="font-size:1.3rem;font-weight:700;color:#fff;letter-spacing:1px">${wifiSsid}</div>
+            ${wifiPwd ? `<div style="font-size:.85rem;opacity:.6;margin-top:.3rem">Contraseña: ${wifiPwd}</div>` : ''}
+        </div>
+        <p style="font-size:.85rem;opacity:.65;margin-bottom:2rem">Ve a Ajustes → WiFi, conéctate a la red y luego toca:</p>
+        <button onclick="window.location.reload()" style="background:linear-gradient(135deg,#D32F2F,#B71C1C);color:#fff;border:none;padding:.9rem 2rem;border-radius:10px;font-size:1rem;font-weight:700;cursor:pointer;letter-spacing:.5px;margin-bottom:1rem">🔄 Ya me conecté — Abrir Menú</button>
+        <p style="font-size:.75rem;opacity:.4">O escanea el QR nuevamente</p>
     </div>`;
 };
 console.log('✅ supabase-config.js cargado correctamente');
