@@ -53,7 +53,7 @@ window.actualizarGraficos = function(pedidos) {
     if (window.charts.ventas) window.charts.ventas.destroy();
     window.charts.ventas = new Chart(document.getElementById('ventasChart'), {
         type: 'line',
-        data: { labels: Object.keys(ventasPorDia), datasets: [{ label: 'Ventas (USD)', data: Object.values(ventasPorDia), borderColor: 'var(--primary)', backgroundColor: 'rgba(211,47,47,0.1)', tension: 0.1 }] }
+         { labels: Object.keys(ventasPorDia), datasets: [{ label: 'Ventas (USD)',  Object.values(ventasPorDia), borderColor: 'var(--primary)', backgroundColor: 'rgba(211,47,47,0.1)', tension: 0.1 }] }
     });
     
     const categorias = {};
@@ -61,7 +61,7 @@ window.actualizarGraficos = function(pedidos) {
      if (window.charts.categorias) window.charts.categorias.destroy();
     window.charts.categorias = new Chart(document.getElementById('categoriasChart'), {
         type: 'doughnut',
-        data: { labels: Object.keys(categorias), datasets: [{ data: Object.values(categorias), backgroundColor: ['#D32F2F', '#FF9800', '#1976D2', '#388E3C', '#F57C00', '#6c757d'] }] }
+        data: { labels: Object.keys(categorias), datasets: [{  Object.values(categorias), backgroundColor: ['#D32F2F', '#FF9800', '#1976D2', '#388E3C', '#F57C00', '#6c757d'] }] }
     });
     
     const metodos = {};
@@ -72,7 +72,7 @@ window.actualizarGraficos = function(pedidos) {
     if (window.charts.pagos) window.charts.pagos.destroy();
     window.charts.pagos = new Chart(document.getElementById('pagosChart'), {
         type: 'bar',
-        data: { labels: Object.keys(metodos).map(m => { const n = { efectivo_bs: 'Efectivo Bs', efectivo_usd: 'Efectivo USD', pago_movil: 'Pago Móvil', punto_venta: 'Punto de Venta', mixto: 'Mixto', invitacion: 'Invitación' }; return n[m] || m; }), datasets: [{ label: 'Monto (USD)', data: Object.values(metodos).map(v => v / (window.configGlobal?.tasa_efectiva || 400)), backgroundColor: 'var(--info)' }] }
+         { labels: Object.keys(metodos).map(m => { const n = { efectivo_bs: 'Efectivo Bs', efectivo_usd: 'Efectivo USD', pago_movil: 'Pago Móvil', punto_venta: 'Punto de Venta', mixto: 'Mixto', invitacion: 'Invitación' }; return n[m] || m; }), datasets: [{ label: 'Monto (USD)', data: Object.values(metodos).map(v => v / (window.configGlobal?.tasa_efectiva || 400)), backgroundColor: 'var(--info)' }] }
     });
     
     const horas = {}; for (let i = 0; i < 24; i++) horas[i] = 0;
@@ -80,7 +80,7 @@ window.actualizarGraficos = function(pedidos) {
     if (window.charts.hora) window.charts.hora.destroy();
     window.charts.hora = new Chart(document.getElementById('horaChart'), {
         type: 'bar',
-        data: { labels: Object.keys(horas).map(h => `${h}:00`), datasets: [{ label: 'Ventas (USD)', data: Object.values(horas), backgroundColor: 'var(--accent)' }] }
+         { labels: Object.keys(horas).map(h => `${h}:00`), datasets: [{ label: 'Ventas (USD)',  Object.values(horas), backgroundColor: 'var(--accent)' }] }
     });
 };
 
@@ -185,7 +185,7 @@ window._actualizarVentasHoyNeto = async function() {
     try {
         const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
         const manana = new Date(hoy); manana.setDate(manana.getDate() + 1);
-        const { data: ventasHoy } = await window.supabaseClient.from('ventas').select('pedido_id').gte('fecha', hoy.toISOString()).lt('fecha', manana.toISOString());
+        const {  ventasHoy } = await window.supabaseClient.from('ventas').select('pedido_id').gte('fecha', hoy.toISOString()).lt('fecha', manana.toISOString());
         if (!ventasHoy || ventasHoy.length === 0) { document.getElementById('ventasHoy').textContent = '$0.00 / Bs 0.00'; return; }
         const pedidoIds = ventasHoy.map(v => v.pedido_id);
         const { data: pedidosData } = await window.supabaseClient.from('pedidos').select('*').in('id', pedidoIds);
@@ -230,7 +230,7 @@ window._abrirDetalleDeliverysAdmin = async function() {
         const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
         const manana = new Date(hoy); manana.setDate(manana.getDate() + 1);
         const { data: entregas } = await window.supabaseClient.from('entregas_delivery').select('*, deliverys(*)').gte('fecha_entrega', hoy.toISOString()).lt('fecha_entrega', manana.toISOString());
-        const { data: motorizados } = await window.supabaseClient.from('deliverys').select('*').order('nombre');
+        const {  motorizados } = await window.supabaseClient.from('deliverys').select('*').order('nombre');
         const acumulado = {};
         (entregas || []).forEach(e => { acumulado[e.delivery_id] = (acumulado[e.delivery_id] || 0) + (e.monto_bs || 0); });
         const totalAcumulado = Object.values(acumulado).reduce((s, v) => s + v, 0);
@@ -312,7 +312,7 @@ window._abrirDetalleVentasAdmin = async function() {
         const { data: ventasHoy } = await window.supabaseClient.from('ventas').select('*').gte('fecha', hoy.toISOString()).lt('fecha', manana.toISOString());
         if (!ventasHoy || ventasHoy.length === 0) { window.mostrarToast('No hay ventas registradas hoy', 'info'); return; }
         const pedidoIds = ventasHoy.map(v => v.pedido_id);
-        const { data: pedidosHoy } = await window.supabaseClient.from('pedidos').select('*').in('id', pedidoIds);
+        const {  pedidosHoy } = await window.supabaseClient.from('pedidos').select('*').in('id', pedidoIds);
         const tasa = window.configGlobal?.tasa_cambio || window.configGlobal?.tasa_efectiva || 400;
         const fmtBs = window.formatBs;
         const _netoCobradoPedido = (pedido) => {
