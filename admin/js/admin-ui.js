@@ -321,11 +321,13 @@ window.agregarTarjetaDiferenciaTasa = function() {
     const dashboardGrid = document.querySelector('.dashboard-grid');
     if (!dashboardGrid) return;
     if (document.getElementById('diferenciaTasaCard')) return;
+    
     const card = document.createElement('div');
     card.className = 'dashboard-card';
     card.id = 'diferenciaTasaCard';
     card.style.cursor = 'pointer';
     card.onclick = () => window.mostrarToast('Diferencia acumulada a favor del restaurante por aumento de tasa', 'info');
+    
     card.innerHTML = `
         <div class="card-title">
             Acumulado Dif. Tasa Base y Efectiva 
@@ -338,6 +340,7 @@ window.agregarTarjetaDiferenciaTasa = function() {
         </div>
         <div class="card-value" id="diferenciaTasaValor">Bs 0,00</div>
     `;
+    
     const deliverysCard = document.getElementById('deliverysHoyCard');
     if (deliverysCard && deliverysCard.parentNode) {
         deliverysCard.parentNode.insertBefore(card, deliverysCard.nextSibling);
