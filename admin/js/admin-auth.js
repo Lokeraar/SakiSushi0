@@ -6,25 +6,25 @@ window.cargarListaAdminsRecientes = async function() {
     const container = document.getElementById('loginAdminsList');
     if (!container) return;
     
+    // Mostrar spinner de carga
     container.innerHTML = '<div class="loading-spinner" style="margin:0 auto;"></div>';
     
     try {
+        // Esperar a que supabaseClient esté listo (puede tardar un momento)
         let intentos = 0;
         while (!window.supabaseClient && intentos < 20) {
             await new Promise(r => setTimeout(r, 100));
             intentos++;
         }
         
-        if (!window.supabaseClient) {
-            throw new Error('Supabase client no inicializado');
-        }
-        
         const recent = window.obtenerAdminsRecientes();
         let admins = [];
         
         if (recent.length) {
+            // Usar los recientes (ya tienen foto o null)
             admins = recent;
         } else {
+            // Obtener todos los admins activos de la BD
             const { data, error } = await window.supabaseClient.from('usuarios').select('*').eq('rol', 'admin').eq('activo', true);
             if (error) throw error;
             admins = data || [];
@@ -48,6 +48,7 @@ window.cargarListaAdminsRecientes = async function() {
             `;
         }).join('');
         
+        // Agregar evento click a cada tarjeta
         document.querySelectorAll('.admin-card').forEach(card => {
             card.addEventListener('click', async (e) => {
                 const id = card.dataset.id;
@@ -55,19 +56,22 @@ window.cargarListaAdminsRecientes = async function() {
                 const nombre = card.dataset.nombre;
                 const foto = card.dataset.foto;
                 selectedAdmin = { id, username, nombre, foto };
+                // Mostrar panel de contraseña
                 document.getElementById('loginSelectorPanel').classList.add('hide');
                 document.getElementById('loginPasswordPanel').classList.add('show');
                 document.getElementById('selectedAdminFoto').src = foto || window.getPlaceholderImage(nombre);
                 document.getElementById('selectedAdminNombre').textContent = nombre;
+                // Limpiar campo contraseña
                 document.getElementById('adminPassword').value = '';
                 document.getElementById('adminPassword').focus();
             });
         });
-    } catch (e) { console.error('Error cargando administradores:', e);
+    } catch (error) {
+        console.error('Error cargando administradores:', error);
         container.innerHTML = '<p style="color:var(--danger);text-align:center">Error al cargar administradores. Recarga la página.</p>';
     }
 };
-    
+
 window.hacerLogin = async function() {
     if (!selectedAdmin) {
         window.mostrarToast('Selecciona un administrador primero', 'error');
@@ -90,6 +94,7 @@ window.hacerLogin = async function() {
         if (!data.success) { window.mostrarToast('❌ Contraseña incorrecta', 'error'); return; }
         if (data.user.rol !== 'admin') { window.mostrarToast('Acceso denegado. Se requiere rol de administrador.', 'error'); return; }
         
+        // Verificar sesión duplicada
         const existingToken = sessionStorage.getItem('admin_jwt_token');
         if (existingToken && existingToken !== data.token) {
             const confirmForce = confirm('Ya hay una sesión de administrador activa en otro dispositivo. ¿Deseas cerrarla y continuar con esta?'); 
@@ -105,6 +110,7 @@ window.hacerLogin = async function() {
         sessionStorage.setItem('admin_jwt_token', window.jwtToken);
         sessionStorage.setItem('admin_user', JSON.stringify(data.user));
         
+        // Guardar este admin en recientes (con foto actualizada si la tiene)
         const adminUser = data.user;
         if (adminUser.foto === undefined && selectedAdmin.foto) adminUser.foto = selectedAdmin.foto;
         window.guardarAdminReciente(adminUser);
@@ -115,6 +121,7 @@ window.hacerLogin = async function() {
         document.getElementById('panelContainer').classList.add('active');
         window.mostrarToast('✅ Bienvenido Administrador', 'success');
         
+        // Actualizar header con nombre
         const headerTitle = document.querySelector('.header-left h2');
         if (headerTitle && adminUser.nombre) {
             headerTitle.innerHTML = `<i class="fas fa-crown"></i> Administración Saki Sushi - ${adminUser.nombre}`;
@@ -169,6 +176,7 @@ window.restaurarSesionAdmin = async function() {
     try {
         const user = JSON.parse(userData);
         if (user.rol !== 'admin') return false;
+        // Verificar token con Supabase
         const { error } = await window.supabaseClient.from('config').select('id').limit(1).maybeSingle();
         if (error && error.message.includes('JWT')) {
             window.cerrarSesion();
@@ -192,12 +200,15 @@ window.cerrarSesion = function() {
     window.isAdminAuthenticated = false;
     window.jwtToken = null;
     selectedAdmin = null;
+    // Ocultar panel principal y mostrar login
     const mainPanel = document.getElementById('mainPanel');
     const loginPanel = document.getElementById('loginPanel');
     if (mainPanel) mainPanel.style.display = 'none';
     if (loginPanel) loginPanel.style.display = '';
+    // Limpiar campo contraseña
     const pwdInput = document.getElementById('adminPassword');
     if (pwdInput) pwdInput.value = '';
+    // Volver al selector de admins
     const selectorPanel = document.getElementById('loginSelectorPanel');
     const passwordPanel = document.getElementById('loginPasswordPanel');
     if (selectorPanel) {
@@ -211,9 +222,11 @@ window.cerrarSesion = function() {
     window.mostrarLogin();
     window.mostrarToast('🔓 Sesión cerrada', 'info');
     window.supabaseClient = window.inicializarSupabaseCliente();
+    // Recargar la lista de admins (por si cambió)
     setTimeout(() => window.cargarListaAdminsRecientes(), 500);
 };
 
+// Botón volver
 const backBtn = document.getElementById('backToSelectorBtn');
 if (backBtn) {
     backBtn.addEventListener('click', () => {
@@ -225,6 +238,7 @@ if (backBtn) {
     });
 } 
 
+// Botón limpiar historial
 const clearBtn = document.getElementById('clearRecentAdminsBtn');
 if (clearBtn) {
     clearBtn.addEventListener('click', () => {
@@ -235,7 +249,9 @@ if (clearBtn) {
     });
 }
 
+// Inicializar la lista al cargar la página (se llama desde DOMContentLoaded)
 window.iniciarLoginUI = async function() {
+    // Esperar un poco para que supabaseClient se inicialice
     await new Promise(r => setTimeout(r, 300));
     await window.cargarListaAdminsRecientes();
 };
