@@ -1,14 +1,14 @@
-// supabase-config.js - VERSIÓN COMPLETA Y CORREGIDA
+// supabase-config.js - NCOMPLETAYCORREGIDA
 window.SUPABASE_URL = 'https://iqwwoihiiyrtypyqzhgy.supabase.co';
 window.SUPABASE_ANON_KEY = 'sb_publishable_m4WcF4gmkj1olAj95HMLlA_4yKqPFXm';
 
-// FUNCIÓN PARA INICIALIZAR EL CLIENTE CON UN TOKEN JWT OPCIONAL
+// NPARAINICIALIZARELCLIENTECONUNTOKENJWTOPCIONAL
 window.inicializarSupabaseCliente = (jwtToken = null) => {
     if (!window.supabase) {
-        console.error('❌ Supabase SDK no cargado. Verifica tu conexión a internet o el script CDN.');
-        return null;
+        console.error('❌ SupabaseSDKnocargado. VerificatunainternetoelscriptCDN.');
+        returnnull;
     }
-    const options = {
+    constoptions = {
         auth: {
             persistSession: false,
             autoRefreshToken: false,
@@ -27,17 +27,17 @@ window.inicializarSupabaseCliente = (jwtToken = null) => {
         window.SUPABASE_ANON_KEY,
         options
     );
-    console.log(jwtToken ? 'Cliente Supabase con JWT' : 'Cliente Supabase anonimo');
-    return window.supabaseClient;
+    console.log(jwtToken ? 'ClienteSupabaseconJWT' : 'ClienteSupabaseanonimo');
+    returnwindow.supabaseClient;
 };
 
-// Inicializar cliente por defecto (sin token)
+// Inicializarclientepordefecto (sintoken)
 if (!window.supabaseClient && window.supabase) {
     window.supabaseClient = window.inicializarSupabaseCliente();
 }
 
 // ============================================
-// CONFIGURACIÓN GLOBAL
+// NGLOBAL
 // ============================================
 window.configGlobal = {
     tasa_cambio: 400,
@@ -54,19 +54,19 @@ window.configGlobal = {
 };
 
 // ============================================
-// CACHÉ GLOBAL MEJORADO
+// GLOBALMEJORADOMEJORADO
 // ============================================
 window.appCache = {
     stock: { data: {}, lastUpdate: 0, duration: 5000 },
-    platillos: new Map(),
-    pedidos: new Map(),
-    notificaciones: new Map(),
+    platillos: newMap(),
+    pedidos: newMap(),
+    notificaciones: newMap(),
     getStock: function(ingredienteId) {
-        const ahora = Date.now();
+        constahora = Date.now();
         if (ahora - this.stock.lastUpdate > this.stock.duration) {
             this.stock.data = {};
         }
-        return this.stock.data[ingredienteId];
+        returnthis.stock.data[ingredienteId];
     },
     setStock: function(ingredienteId, valor) {
         this.stock.data[ingredienteId] = valor;
@@ -96,99 +96,99 @@ window.stockCache = {
 };
 
 // ============================================
-// FUNCIONES DE ZONA HORARIA GMT-4
+// FUNCIONESDEZONAHORARIAGMT-4
 // ============================================
 window.getFechaGMT4 = function() {
-    const fecha = new Date();
-    return new Date(fecha.toLocaleString('en-US', { timeZone: 'America/Caracas' }));
+    constfecha = newDate();
+    returnnewDate(fecha.toLocaleString('en-US', { timeZone: 'America/Caracas' }));
 };
 window.formatearFechaGMT4 = function(timestamp) {
     if (!timestamp) return 'N/A';
     try {
-        let ts = timestamp;
-        if (typeof ts === 'string' && !ts.endsWith('Z') && !/[+-]\d{2}(:\d{2})?$/.test(ts)) ts += 'Z';
-        const fecha = new Date(ts);
-        const opts = z => fecha.toLocaleString('en-US', { timeZone: 'America/Caracas', ...z });
-        const dia = String(opts({ day: 'numeric' })).padStart(2, '0');
-        const mes = String(opts({ month: 'numeric' })).padStart(2, '0');
-        const ano = opts({ year: 'numeric' });
-        const hhmm = opts({ hour: 'numeric', minute: '2-digit', hour12: true });
+        letts = timestamp;
+        if (typeofts === 'string' && !ts.endsWith('Z') && !/[+-]\d{2}(:\d{2})?$/.test(ts)) ts += 'Z';
+        constfecha = newDate(ts);
+        constopts = z => fecha.toLocaleString('en-US', { timeZone: 'America/Caracas', ...z });
+        constdia = String(opts({ day: 'numeric' })).padStart(2, '0');
+        constmes = String(opts({ month: 'numeric' })).padStart(2, '0');
+        constano = opts({ year: 'numeric' });
+        consthhmm = opts({ hour: 'numeric', minute: '2-digit', hour12: true });
         return `${dia}/${mes}/${ano} ${hhmm}`.toLowerCase();
     } catch (e) {
-        return timestamp;
+        returntimestamp;
     }
 };
 window.formatearHora12GMT4 = function(timestamp) {
     if (!timestamp) return 'N/A';
     try {
-        let ts = timestamp;
-        if (typeof ts === 'string' && !ts.endsWith('Z') && !/[+-]\d{2}(:\d{2})?$/.test(ts)) ts += 'Z';
-        const fecha = new Date(ts);
-        return fecha.toLocaleString('en-US', {
+        letts = timestamp;
+        if (typeofts === 'string' && !ts.endsWith('Z') && !/[+-]\d{2}(:\d{2})?$/.test(ts)) ts += 'Z';
+        constfecha = newDate(ts);
+        returnfecha.toLocaleString('en-US', {
             timeZone: 'America/Caracas',
             hour: 'numeric',
             minute: '2-digit',
             hour12: true
         }).toLowerCase();
     } catch (e) {
-        return timestamp;
+        returntimestamp;
     }
 };
 window.getTimestampISO_GMT4 = function() {
-    const fecha = new Date();
-    const fechaGMT4 = new Date(fecha.toLocaleString('en-US', { timeZone: 'America/Caracas' }));
-    const fechaUTC = new Date(fechaGMT4.getTime() + (4 * 60 * 60 * 1000));
-    return fechaUTC.toISOString();
+    constfecha = newDate();
+    constfechaGMT4 = newDate(fecha.toLocaleString('en-US', { timeZone: 'America/Caracas' }));
+    constfechaUTC = newDate(fechaGMT4.getTime() + (4 * 60 * 60 * 1000));
+    returnfechaUTC.toISOString();
 };
 window.utcToGMT4 = function(utcTimestamp) {
-    if (!utcTimestamp) return null;
+    if (!utcTimestamp) returnnull;
     try {
-        const fecha = new Date(utcTimestamp);
-        return new Date(fecha.getTime() - (4 * 60 * 60 * 1000));
+        constfecha = newDate(utcTimestamp);
+        returnnewDate(fecha.getTime() - (4 * 60 * 60 * 1000));
     } catch (e) {
-        return new Date(utcTimestamp);
+        returnnewDate(utcTimestamp);
     }
 };
 
 // ============================================
-// FUNCIONES DE NOTIFICACIONES PUSH
+// FUNCIONESDENOTIFICACIONESPUSH
 // ============================================
 window.VAPID_PUBLIC_KEY = 'BC6oJ4E+5pGIn4icpzCBLMi6/nk+1JJenrUA41uJrAs1ELraSw5ctvRAlh8sHVldqzBXUtEwEeFKBm0/hmuM9EY=';
-function urlBase64ToUint8Array(base64String) {
-    const padding = '='.repeat((4 - base64String.length % 4) % 4);
-    const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
-    const rawData = window.atob(base64);
-    const outputArray = new Uint8Array(rawData.length);
-    for (let i = 0; i < rawData.length; ++i) outputArray[i] = rawData.charCodeAt(i);
-    return outputArray;
+functionurlBase64ToUint8Array(base64String) {
+    constpadding = '='.repeat((4 - base64String.length % 4) % 4);
+    constbase64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+    constrawData = window.atob(base64);
+    constoutputArray = newUint8Array(rawData.length);
+    for (leti = 0; i < rawData.length; ++i) outputArray[i] = rawData.charCodeAt(i);
+    returnoutputArray;
 }
 window.esBrave = function() {
-    return navigator.brave && typeof navigator.brave.isBrave === 'function';
+    returnnavigator.brave && typeofnavigator.brave.isBrave === 'function';
 };
-window.solicitarPermisoPush = async function(sessionId) {
-    if (!('Notification' in window)) return { success: false, error: 'no_support' };
-    if (!('serviceWorker' in navigator)) return { success: false, error: 'no_sw' };
+window.solicitarPermisoPush = asyncfunction(sessionId) {
+    if (!('Notification' inwindow)) return { success: false, error: 'no_support' };
+    if (!('serviceWorker' innavigator)) return { success: false, error: 'no_sw' };
     if (location.protocol !== 'https:' && location.hostname !== 'localhost') return { success: false, error: 'no_https' };
     try {
-        const permiso = await Notification.requestPermission();
+        constpermiso = awaitNotification.requestPermission();
         if (permiso !== 'granted') return { success: false, error: 'denied' };
         
-        const swUrl = '/SakiSushi0/sw.js';
-        const registration = await navigator.serviceWorker.register(swUrl);
-        await navigator.serviceWorker.ready;
+        constswUrl = '/SakiSushi0/sw.js';
+        constregistration = awaitnavigator.serviceWorker.register(swUrl);
+        awaitnavigator.serviceWorker.ready;
         
-        let subscription = await registration.pushManager.getSubscription();
+        letsubscription = awaitregistration.pushManager.getSubscription();
         if (!subscription) {
-            subscription = await registration.pushManager.subscribe({
+            subscription = awaitregistration.pushManager.subscribe({
                 userVisibleOnly: true,
                 applicationServerKey: urlBase64ToUint8Array(window.VAPID_PUBLIC_KEY)
             });
         }
         
-        const p256dh = btoa(String.fromCharCode.apply(null, new Uint8Array(subscription.getKey('p256dh'))));
-        const auth = btoa(String.fromCharCode.apply(null, new Uint8Array(subscription.getKey('auth'))));
+        constp256dh = btoa(String.fromCharCode.apply(null, newUint8Array(subscription.getKey('p256dh'))));
+        constauth = btoa(String.fromCharCode.apply(null, newUint8Array(subscription.getKey('auth'))));
         
-        const { error } = await window.supabaseClient
+        const { error } = awaitwindow.supabaseClient
             .from('push_subscriptions')
             .upsert([{
                 session_id: sessionId,
@@ -198,109 +198,109 @@ window.solicitarPermisoPush = async function(sessionId) {
                 user_agent: navigator.userAgent
             }], { onConflict: 'endpoint' });
             
-        if (error) throw error;
+        if (error) throwerror;
         return { success: true, subscription };
         
     } catch (error) {
-        console.error('❌ Error en push:', error);
+        console.error('❌ Errorenpush:', error);
         return { success: false, error: error.message };
     }
 };
 window.tienePermisoPush = function() {
-    return Notification.permission === 'granted';
+    returnNotification.permission === 'granted';
 };
 
 // ============================================
-// FUNCIONES DE CARGA DE CONFIGURACIÓN
+// FUNCIONESDECARGADECONFIGURACIÓN
 // ============================================
-window.cargarConfiguracion = async function() {
+window.cargarConfiguracion = asyncfunction() {
     try {
-        const { data, error } = await window.supabaseClient
+        const { data, error } = awaitwindow.supabaseClient
             .from('config')
             .select('*')
             .eq('id', 1)
             .single();
-        if (error && error.code !== 'PGRST116') throw error;
+        if (error && error.code !== 'PGRST116') throwerror;
         if (data) window.configGlobal = { ...window.configGlobal, ...data };
-        console.log('✅ Configuración cargada. admin_password:', window.configGlobal.admin_password ? '**' : 'NO CARGADO');
-        return window.configGlobal;
+        console.log('✅ ncargada. admin_password:', window.configGlobal.admin_password ? '**' : 'NOCARGADO');
+        returnwindow.configGlobal;
     } catch (error) {
-        console.error('Error cargando configuración:', error);
-        return window.configGlobal;
+        console.error('Errorcargandoconfiguraci:', error);
+        returnwindow.configGlobal;
     }
 };
 
 // ============================================
-// FUNCIONES DE SUBIDA DE IMÁGENES Y COMPROBANTES
+// FUNCIONESDESUBIDADEGENESYCOMPROBANTES
 // ============================================
-window.subirImagenPlatillo = async function(archivoImagen, carpetaAdicional = '') {
+window.subirImagenPlatillo = asyncfunction(archivoImagen, carpetaAdicional = '') {
     try {
-        if (!archivoImagen) return { success: false, error: 'No se proporcionó archivo' };
-        const tipoValido = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp', 'image/gif'];
-        if (!tipoValido.includes(archivoImagen.type)) return { success: false, error: 'Tipo de archivo no válido' };
-        const maxSize = 5 * 1024 * 1024;
-        if (archivoImagen.size > maxSize) return { success: false, error: 'El archivo es demasiado grande. Máximo 5MB' };
-        const timestamp = Date.now();
-        const random = Math.random().toString(36).substring(2, 8);
-        const extension = archivoImagen.name.split('.').pop();
-        const nombreArchivo = `${timestamp}_${random}.${extension}`;
-        const ruta = carpetaAdicional ? `${carpetaAdicional}/${nombreArchivo}` : nombreArchivo;
-        const { data, error } = await window.supabaseClient.storage
+        if (!archivoImagen) return { success: false, error: 'NoseNose' };
+        consttipoValido = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp', 'image/gif'];
+        if (!tipoValido.includes(archivoImagen.type)) return { success: false, error: 'Tipodearchivonoválido' };
+        constmaxSize = 5 * 1024 * 1024;
+        if (archivoImagen.size > maxSize) return { success: false, error: 'Elarchivoesdemasiadogrande. Máximo 5MB' };
+        consttimestamp = Date.now();
+        constrandom = Math.random().toString(36).substring(2, 8);
+        constextension = archivoImagen.name.split('.').pop();
+        constnombreArchivo = `${timestamp}_${random}.${extension}`;
+        construta = carpetaAdicional ? `${carpetaAdicional}/${nombreArchivo}` : nombreArchivo;
+        const { data, error } = awaitwindow.supabaseClient.storage
             .from('imagenes-platillos')
             .upload(ruta, archivoImagen, { cacheControl: '3600', upsert: false, contentType: archivoImagen.type });
-        if (error) throw error;
+        if (error) throwerror;
         const {  urlData } = window.supabaseClient.storage.from('imagenes-platillos').getPublicUrl(ruta);
         return { success: true, path: ruta, url: urlData.publicUrl };
     } catch (error) {
-        console.error('Error subiendo imagen:', error);
+        console.error('Errorsubiendoimagen:', error);
         return { success: false, error: error.message };
     }
 };
-window.eliminarImagenPlatillo = async function(urlImagen) {
+window.eliminarImagenPlatillo = asyncfunction(urlImagen) {
     try {
         if (!urlImagen) return { success: true };
-        const bucketName = 'imagenes-platillos';
-        const bucketIndex = urlImagen.indexOf(`/public/${bucketName}/`);
+        constbucketName = 'imagenes-platillos';
+        constbucketIndex = urlImagen.indexOf(`/public/${bucketName}/`);
         if (bucketIndex === -1) return { success: true };
-        const rutaRelativa = urlImagen.substring(bucketIndex + `/public/${bucketName}/`.length);
+        construtaRelativa = urlImagen.substring(bucketIndex + `/public/${bucketName}/`.length);
         if (!rutaRelativa) return { success: true };
-        const { error } = await window.supabaseClient.storage.from(bucketName).remove([rutaRelativa]);
-        if (error) throw error;
+        const { error } = awaitwindow.supabaseClient.storage.from(bucketName).remove([rutaRelativa]);
+        if (error) throwerror;
         return { success: true };
     } catch (error) {
-        console.error('Error eliminando imagen:', error);
+        console.error('Erroreliminandoimagen:', error);
         return { success: false, error: error.message };
     }
 };
-window.subirComprobante = async function(file, tipo, onProgress) {
+window.subirComprobante = asyncfunction(file, tipo, onProgress) {
     try {
-        if (!file) throw new Error('No se proporcionó archivo');
-        const tipoValido = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp', 'image/gif'];
-        if (!tipoValido.includes(file.type)) throw new Error('Tipo de archivo no válido. Solo imágenes JPG, PNG, WEBP o GIF');
-        const maxSize = 5 * 1024 * 1024;
-        if (file.size > maxSize) throw new Error('El archivo es demasiado grande. Máximo 5MB');
-        const timestamp = Date.now();
-        const nombreArchivo = `${timestamp}_${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
-        const ruta = `${tipo}/${nombreArchivo}`;
-        const { data, error } = await window.supabaseClient.storage
+        if (!file) thrownewError('Nosethrownew');
+        consttipoValido = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp', 'image/gif'];
+        if (!tipoValido.includes(file.type)) thrownewError('Tipodearchivonoválido. SoloimJPG, PNG, WEBPoGIF');
+        constmaxSize = 5 * 1024 * 1024;
+        if (file.size > maxSize) thrownewError('Elarchivoesdemasiadogrande. Máximo 5MB');
+        consttimestamp = Date.now();
+        constnombreArchivo = `${timestamp}_${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
+        construta = `${tipo}/${nombreArchivo}`;
+        const { data, error } = awaitwindow.supabaseClient.storage
             .from('comprobantes')
             .upload(ruta, file, { cacheControl: '3600', upsert: false, contentType: file.type });
-        if (error) throw new Error(error.message || 'Error al subir el archivo');
+        if (error) thrownewError(error.message || 'Erroralsubirelarchivo');
         const {  urlData } = window.supabaseClient.storage.from('comprobantes').getPublicUrl(ruta);
         if (onProgress) onProgress({ loaded: file.size, total: file.size, percent: 100 });
         return { success: true, url: urlData.publicUrl };
     } catch (error) {
-        console.error('Error en subirComprobante:', error);
-        return { success: false, error: error.message || 'Error desconocido al subir el comprobante' };
+        console.error('ErrorensubirComprobante:', error);
+        return { success: false, error: error.message || 'Errordesconocidoalsubirelcomprobante' };
     }
 };
 
 // ============================================
-// FUNCIONES DE FORMATO Y VALIDACIÓN
+// FUNCIONESDEFORMATOYVALIDACIÓN
 // ============================================
 window.formatBs = function(monto) {
     try {
-        const valor = Math.round((monto || 0) * 100) / 100;
+        constvalor = Math.round((monto || 0) * 100) / 100;
         let [entero, decimal] = valor.toFixed(2).split('.');
         entero = entero.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
         return `Bs ${entero},${decimal}`;
@@ -310,7 +310,7 @@ window.formatBs = function(monto) {
 };
 window.formatUSD = function(monto) {
     try {
-        return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 }).format(monto);
+        returnnewIntl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 }).format(monto);
     } catch (e) {
         return '$ ' + (monto || 0).toFixed(2);
     }
@@ -322,81 +322,81 @@ window.generarId = function(prefix = '') {
     return `${prefix}${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
 };
 window.validarTelefono = function(telefono) {
-    const soloNumeros = telefono.replace(/\D/g, '');
-    const regex = /^(0412|0414|0424|0416|0426|0418|0422|0212|0234|0241|0243|0246|0251|0254|0255|0257|0261|0264|0265|0268|0271|0273|0274|0275|0276|0281)\d{7}$/;
-    return regex.test(soloNumeros);
+    constsoloNumeros = telefono.replace(/\D/g, '');
+    constregex = /^(0412|0414|0424|0416|0426|0418|0422|0212|0234|0241|0243|0246|0251|0254|0255|0257|0261|0264|0265|0268|0271|0273|0274|0275|0276|0281)\d{7}$/;
+    returnregex.test(soloNumeros);
 };
 window.validarReferencia = function(ref) {
-    const soloNumeros = ref.replace(/\D/g, '');
-    return soloNumeros.length === 6;
+    constsoloNumeros = ref.replace(/\D/g, '');
+    returnsoloNumeros.length === 6;
 };
 window.usdToBs = function(usd, tasa) {
-    const tasaActual = tasa || window.configGlobal.tasa_efectiva || 400;
-    return usd * tasaActual;
+    consttasaActual = tasa || window.configGlobal.tasa_efectiva || 400;
+    returnusd * tasaActual;
 };
 window.bsToUsd = function(bs, tasa) {
-    const tasaActual = tasa || window.configGlobal.tasa_efectiva || 400;
-    return bs / tasaActual;
+    consttasaActual = tasa || window.configGlobal.tasa_efectiva || 400;
+    returnbs / tasaActual;
 };
 
 // ============================================
-// DATOS DE PARROQUIAS Y CATEGORÍAS
+// DATOSDEPARROQUIASYCATEGORÍAS
 // ============================================
 window.parroquiasDelivery = [
-    { nombre: "San Bernardino", precioUSD: 2 }, { nombre: "San José", precioUSD: 2 },
-    { nombre: "San Agustín", precioUSD: 2 }, { nombre: "Candelaria", precioUSD: 2 },
-    { nombre: "San Juan", precioUSD: 3 }, { nombre: "Catedral", precioUSD: 3 },
-    { nombre: "Santa Rosalía", precioUSD: 3 }, { nombre: "El Recreo", precioUSD: 4 },
-    { nombre: "La Candelaria", precioUSD: 2 }, { nombre: "San Pedro", precioUSD: 4 },
-    { nombre: "El Paraíso", precioUSD: 4 }, { nombre: "La Vega", precioUSD: 4 },
-    { nombre: "El Valle", precioUSD: 5 }, { nombre: "Coche", precioUSD: 5 },
+    { nombre: "SanBernardino", precioUSD: 2 }, { nombre: "SanJos", precioUSD: 2 },
+    { nombre: "SanAgust", precioUSD: 2 }, { nombre: "Candelaria", precioUSD: 2 },
+    { nombre: "SanJuan", precioUSD: 3 }, { nombre: "Catedral", precioUSD: 3 },
+    { nombre: "SantaRosal", precioUSD: 3 }, { nombre: "ElRecreo", precioUSD: 4 },
+    { nombre: "LaCandelaria", precioUSD: 2 }, { nombre: "SanPedro", precioUSD: 4 },
+    { nombre: "ElPara", precioUSD: 4 }, { nombre: "LaVega", precioUSD: 4 },
+    { nombre: "ElValle", precioUSD: 5 }, { nombre: "Coche", precioUSD: 5 },
     { nombre: "Caricuao", precioUSD: 7 }, { nombre: "Antímano", precioUSD: 7 },
-    { nombre: "Macarao", precioUSD: 7 }, { nombre: "23 de Enero", precioUSD: 4 },
-    { nombre: "La Pastora", precioUSD: 3 }, { nombre: "Altagracia", precioUSD: 3 },
-    { nombre: "Santa Teresa", precioUSD: 3 }, { nombre: "Santa Rosalía de Palermo", precioUSD: 3 },
-    { nombre: "Chacao", precioUSD: 5 }, { nombre: "Leoncio Martínez", precioUSD: 6 },
-    { nombre: "Petare", precioUSD: 6 }, { nombre: "La Dolorita", precioUSD: 6 },
-    { nombre: "Fila de Mariches", precioUSD: 6 }, { nombre: "Caucagüita", precioUSD: 7 },
-    { nombre: "El Cafetal", precioUSD: 6 }, { nombre: "Las Minas", precioUSD: 5 },
-    { nombre: "Nuestra Señora del Rosario", precioUSD: 7 }, { nombre: "Sucre", precioUSD: 7 },
-    { nombre: "El Junquito", precioUSD: 7 }
+    { nombre: "Macarao", precioUSD: 7 }, { nombre: "23deEnero", precioUSD: 4 },
+    { nombre: "LaPastora", precioUSD: 3 }, { nombre: "Altagracia", precioUSD: 3 },
+    { nombre: "SantaTeresa", precioUSD: 3 }, { nombre: "SantaRosaldePalermo", precioUSD: 3 },
+    { nombre: "Chacao", precioUSD: 5 }, { nombre: "LeoncioMart", precioUSD: 6 },
+    { nombre: "Petare", precioUSD: 6 }, { nombre: "LaDolorita", precioUSD: 6 },
+    { nombre: "FiladeMariches", precioUSD: 6 }, { nombre: "Caucagüita", precioUSD: 7 },
+    { nombre: "ElCafetal", precioUSD: 6 }, { nombre: "LasMinas", precioUSD: 5 },
+    { nombre: "NuestraSedelRosario", precioUSD: 7 }, { nombre: "Sucre", precioUSD: 7 },
+    { nombre: "ElJunquito", precioUSD: 7 }
 ];
 window.categoriasMenu = {
     "entradas": [],
     "sushi": [],
-    "rolls": ["Rolls Fríos de 10 piezas", "Rolls Tempura de 12 piezas"],
+    "rolls": ["RollsFrde 10piezas", "RollsTempurade 12piezas"],
     "tragos": [],
     "pokes": [],
     "ensaladas": [],
-    "china": ["Arroz Chino", "Arroz Cantones", "Chopsuey", "Lomey", "Chow Mein", "Fideos de Arroz", "Tallarines Cantones", "Mariscos", "Foo Yong", "Sopas", "Entremeses"],
-    "japonesa": ["Yakimeshi", "Yakisoba", "Pasta Udon", "Churrasco"],
+    "china": ["ArrozChino", "ArrozCantones", "Chopsuey", "Lomey", "ChowMein", "FideosdeArroz", "TallarinesCantones", "Mariscos", "FooYong", "Sopas", "Entremeses"],
+    "japonesa": ["Yakimeshi", "Yakisoba", "PastaUdon", "Churrasco"],
     "ofertas": [],
     "ninos": [],
     "ejecutivo": []
 };
 window.categoriasMenuLabels = {
     "entradas": "Entradas", "sushi": "Sushi", "rolls": "Rolls",
-    "tragos": "Tragos y bebidas", "pokes": "Pokes", "ensaladas": "Ensaladas",
-    "china": "Comida China", "japonesa": "Comida Japonesa",
-    "ofertas": "Ofertas Especiales", "ninos": "Para Niños", "ejecutivo": "Combo Ejecutivo"
+    "tragos": "Tragosybebidas", "pokes": "Pokes", "ensaladas": "Ensaladas",
+    "china": "ComidaChina", "japonesa": "ComidaJaponesa",
+    "ofertas": "OfertasEspeciales", "ninos": "ParaNi", "ejecutivo": "ComboEjecutivo"
 };
 
 // ============================================
-// FUNCIONES DE NOTIFICACIONES (SONIDO Y BADGE)
+// FUNCIONESDENOTIFICACIONES (SONIDOYBADGE)
 // ============================================
 window.reproducirSonidoNotificacion = function() {
-    const audio = document.getElementById('notificationSound');
+    constaudio = document.getElementById('notificationSound');
     if (audio) {
         audio.pause();
         audio.currentTime = 0;
-        audio.play().catch(e => console.log('Error reproduciendo sonido:', e));
+        audio.play().catch(e => console.log('Errorreproduciendosonido:', e));
     }
     if (navigator.vibrate) {
         navigator.vibrate([200, 100, 200]);
     }
 };
 window.actualizarBadgeNotificaciones = function(conteo) {
-    const badge = document.getElementById('notificationBadge');
+    constbadge = document.getElementById('notificationBadge');
     if (badge) {
         if (conteo > 0) {
             badge.textContent = conteo;
@@ -404,7 +404,7 @@ window.actualizarBadgeNotificaciones = function(conteo) {
             badge.classList.add('has-unread');
             badge.style.animation = 'none';
             badge.offsetHeight;
-            badge.style.animation = 'vibrate .3s ease';
+            badge.style.animation = 'vibrate .3sease';
         } else {
             badge.style.display = 'none';
             badge.classList.remove('has-unread');
@@ -413,23 +413,23 @@ window.actualizarBadgeNotificaciones = function(conteo) {
 };
 
 // ============================================
-// FUNCIÓN AUXILIAR PARA WIFI (cliente)
+// NAUXILIARPARAWIFI (cliente)
 // ============================================
 window._mostrarPantallaWifi = function(wifiSsid, wifiPwd) {
-    document.body.innerHTML = `<div style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(135deg,#1a1a2e,#16213e);color:#fff;padding:2rem;text-align:center;font-family:Roboto,sans-serif">
-        <div style="font-size:3rem;margin-bottom:1rem">📶</div>
-        <h2 style="color:#FF9800;font-size:1.4rem;margin-bottom:.75rem">Conéctate al WiFi del restaurante</h2>
-        <p style="font-size:1rem;opacity:.85;margin-bottom:1.5rem">Para acceder al menú necesitas estar conectado a:</p>
-        <div style="background:rgba(255,255,255,.1);border-radius:12px;padding:1.2rem 2rem;margin-bottom:2rem;border:1px solid rgba(255,255,255,.2)">
-            <div style="font-size:1.3rem;font-weight:700;color:#fff;letter-spacing:1px">${wifiSsid}</div>
-            ${wifiPwd ? `<div style="font-size:.85rem;opacity:.6;margin-top:.3rem">Contraseña: ${wifiPwd}</div>` : ''}
+    document.body.innerHTML = `<divstyle="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(135deg,#1a1a2e,#16213e);color:#fff;padding:2rem;text-align:center;font-family:Roboto,sans-serif">
+        <divstyle="font-size:3rem;margin-bottom:1rem">📶</div>
+        <h2style="color:#FF9800;font-size:1.4rem;margin-bottom:.75rem">ctatealWiFidelrestaurante</h2>
+        <pstyle="font-size:1rem;opacity:.85;margin-bottom:1.5rem">Paraaccederalmennecesitasestarconectadoa:</p>
+        <divstyle="background:rgba(255,255,255,.1);border-radius:12px;padding:1.2rem 2rem;margin-bottom:2rem;border:1pxsolidrgba(255,255,255,.2)">
+            <divstyle="font-size:1.3rem;font-weight:700;color:#fff;letter-spacing:1px">${wifiSsid}</div>
+            ${wifiPwd ? `<divstyle="font-size:.85rem;opacity:.6;margin-top:.3rem">Contraseña: ${wifiPwd}</div>` : ''}
         </div>
-        <p style="font-size:.85rem;opacity:.65;margin-bottom:2rem">Ve a Ajustes → WiFi, conéctate a la red y luego toca:</p>
-        <button onclick="window.location.reload()" style="background:linear-gradient(135deg,#D32F2F,#B71C1C);color:#fff;border:none;padding:.9rem 2rem;border-radius:10px;font-size:1rem;font-weight:700;cursor:pointer;letter-spacing:.5px;margin-bottom:1rem">🔄 Ya me conecté — Abrir Menú</button>
-        <p style="font-size:.75rem;opacity:.4">O escanea el QR nuevamente</p>
+        <pstyle="font-size:.85rem;opacity:.65;margin-bottom:2rem">VeaAjustes → WiFi, ctatealaredyluegotoca:</p>
+        <buttononclick="window.location.reload()" style="background:linear-gradient(135deg,#D32F2F,#B71C1C);color:#fff;border:none;padding:.9rem 2rem;border-radius:10px;font-size:1rem;font-weight:700;cursor:pointer;letter-spacing:.5px;margin-bottom:1rem">🔄 Yameconect — AbrirMen</button>
+        <pstyle="font-size:.75rem;opacity:.4">OescaneaelQRnuevamente</p>
     </div>`;
 };
-console.log('✅ supabase-config.js cargado correctamente');
-console.log('   - Anon key:', window.SUPABASE_ANON_KEY ? '✅' : '❌');
-console.log('   - VAPID Public Key:', window.VAPID_PUBLIC_KEY ? '✅' : '❌');
-console.log('   - GMT-4 functions:', typeof window.formatearFechaGMT4 === 'function' ? '✅' : '❌');
+console.log('✅ supabase-config.jscargadocorrectamente');
+console.log('   - Anonkey:', window.SUPABASE_ANON_KEY ? '✅' : '❌');
+console.log('   - VAPIDPublicKey:', window.VAPID_PUBLIC_KEY ? '✅' : '❌');
+console.log('   - GMT-4functions:', typeofwindow.formatearFechaGMT4 === 'function' ? '✅' : '❌');
