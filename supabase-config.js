@@ -4,10 +4,6 @@ window.SUPABASE_ANON_KEY = 'sb_publishable_m4WcF4gmkj1olAj95HMLlA_4yKqPFXm';
 
 // FUNCIÓN PARA INICIALIZAR EL CLIENTE CON UN TOKEN JWT OPCIONAL
 window.inicializarSupabaseCliente = (jwtToken = null) => {
-    if (!window.supabase) {
-        console.error('❌ Supabase SDK no cargado. Verifica tu conexión a internet o el script CDN.');
-        return null;
-    }
     const options = {
         auth: {
             persistSession: false,
@@ -17,24 +13,72 @@ window.inicializarSupabaseCliente = (jwtToken = null) => {
         realtime: {
             heartbeatIntervalMs: 60000,
             reconnectAfterMs: (tries) => Math.min(tries * 2000, 30000)
+        },
+        // Evitar warning de múltiples instancias
+        global: {
+            headers: jwtToken ? { Authorization: `Bearer ${jwtToken}` } : {}
         }
     };
-    if (jwtToken) {
-        options.global = { headers: { Authorization: `Bearer ${jwtToken}` } };
-    }
+
     window.supabaseClient = window.supabase.createClient(
         window.SUPABASE_URL,
         window.SUPABASE_ANON_KEY,
         options
     );
-    console.log(jwtToken ? 'Cliente Supabase con JWT' : 'Cliente Supabase anónimo');
+
+    console.log(jwtToken ? '✅ Cliente Supabase con JWT inicializado' : '✅ Cliente Supabase anónimo inicializado');
     return window.supabaseClient;
 };
 
 // Inicializar cliente por defecto (sin token)
-if (!window.supabaseClient && window.supabase) {
+if (!window.supabaseClient) {
     window.supabaseClient = window.inicializarSupabaseCliente();
 }
+
+// ============================================
+// FUNCIÓN FALTANTE: Cargar Configuración Inicial
+// ============================================
+window.cargarConfiguracionInicial = async function() {
+    try {
+        console.log('🔄 Cargando configuración inicial...');
+        const { data, error } = await window.supabaseClient
+            .from('config')
+            .select('*')
+            .eq('id', 1)
+            .maybeSingle(); // maybeSingle evita error si no hay filas
+
+        if (error) throw error;
+
+        if (data) {
+            // Actualizar variables globales
+            window.configGlobal = { ...window.configGlobal, ...data };
+            
+            // Aplicar configuraciones al DOM si existe
+            const tasaInput = document.getElementById('tasaBaseInput');
+            if (tasaInput) tasaInput.value = data.tasa_cambio || 400;
+            
+            const aumentoToggle = document.getElementById('aumentoActivoToggle');
+            if (aumentoToggle) aumentoToggle.checked = !!data.aumento_activo;
+            
+            const aumentoSemanalToggle = document.getElementById('aumentoSemanalToggle');
+            if (aumentoSemanalToggle) aumentoSemanalToggle.checked = !!data.aumento_semanal;
+
+            // Recalcular tasas si la función existe
+            if (typeof window.recalcularTasaEfectiva === 'function') {
+                window.recalcularTasaEfectiva();
+            }
+
+            console.log('✅ Configuración cargada correctamente:', data);
+        } else {
+            console.warn('⚠️ No se encontró configuración en la BD, usando valores por defecto.');
+        }
+        return window.configGlobal;
+    } catch (error) {
+        console.error('❌ Error cargando configuración inicial:', error);
+        window.mostrarToast('Error cargando configuración: ' + error.message, 'error');
+        return window.configGlobal;
+    }
+};
 
 // ============================================
 // CONFIGURACIÓN GLOBAL
@@ -48,7 +92,7 @@ window.configGlobal = {
     aumento_detenido: false,
     fecha_ultimo_aumento: null,
     ultima_actualizacion: null,
-    admin_password: 'admin123',
+    admin_password: 'admin123', // Valor por defecto, se sobrescribe al cargar
     recovery_email: 'admin@sakisushi.com',
     alerta_stock_minimo: 5
 };
@@ -57,7 +101,7 @@ window.configGlobal = {
 // CACHÉ GLOBAL MEJORADO
 // ============================================
 window.appCache = {
-    stock: { data: {}, lastUpdate: 0, duration: 5000 },
+    stock: {  {}, lastUpdate: 0, duration: 5000 },
     platillos: new Map(),
     pedidos: new Map(),
     notificaciones: new Map(),
@@ -85,6 +129,7 @@ window.appCache = {
         this.notificaciones.clear();
     }
 };
+
 window.stockCache = {
     get: (id) => window.appCache.getStock(id),
     set: (id, v) => window.appCache.setStock(id, v),
@@ -102,6 +147,7 @@ window.getFechaGMT4 = function() {
     const fecha = new Date();
     return new Date(fecha.toLocaleString('en-US', { timeZone: 'America/Caracas' }));
 };
+
 window.formatearFechaGMT4 = function(timestamp) {
     if (!timestamp) return 'N/A';
     try {
@@ -118,6 +164,7 @@ window.formatearFechaGMT4 = function(timestamp) {
         return timestamp;
     }
 };
+
 window.formatearHora12GMT4 = function(timestamp) {
     if (!timestamp) return 'N/A';
     try {
@@ -134,12 +181,14 @@ window.formatearHora12GMT4 = function(timestamp) {
         return timestamp;
     }
 };
+
 window.getTimestampISO_GMT4 = function() {
     const fecha = new Date();
     const fechaGMT4 = new Date(fecha.toLocaleString('en-US', { timeZone: 'America/Caracas' }));
     const fechaUTC = new Date(fechaGMT4.getTime() + (4 * 60 * 60 * 1000));
     return fechaUTC.toISOString();
 };
+
 window.utcToGMT4 = function(utcTimestamp) {
     if (!utcTimestamp) return null;
     try {
@@ -154,6 +203,7 @@ window.utcToGMT4 = function(utcTimestamp) {
 // FUNCIONES DE NOTIFICACIONES PUSH
 // ============================================
 window.VAPID_PUBLIC_KEY = 'BC6oJ4E+5pGIn4icpzCBLMi6/nk+1JJenrUA41uJrAs1ELraSw5ctvRAlh8sHVldqzBXUtEwEeFKBm0/hmuM9EY=';
+
 function urlBase64ToUint8Array(base64String) {
     const padding = '='.repeat((4 - base64String.length % 4) % 4);
     const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
@@ -162,21 +212,24 @@ function urlBase64ToUint8Array(base64String) {
     for (let i = 0; i < rawData.length; ++i) outputArray[i] = rawData.charCodeAt(i);
     return outputArray;
 }
+
 window.esBrave = function() {
     return navigator.brave && typeof navigator.brave.isBrave === 'function';
 };
+
 window.solicitarPermisoPush = async function(sessionId) {
     if (!('Notification' in window)) return { success: false, error: 'no_support' };
     if (!('serviceWorker' in navigator)) return { success: false, error: 'no_sw' };
     if (location.protocol !== 'https:' && location.hostname !== 'localhost') return { success: false, error: 'no_https' };
+
     try {
         const permiso = await Notification.requestPermission();
         if (permiso !== 'granted') return { success: false, error: 'denied' };
-        
+
         const swUrl = '/SakiSushi0/sw.js';
         const registration = await navigator.serviceWorker.register(swUrl);
         await navigator.serviceWorker.ready;
-        
+
         let subscription = await registration.pushManager.getSubscription();
         if (!subscription) {
             subscription = await registration.pushManager.subscribe({
@@ -184,10 +237,10 @@ window.solicitarPermisoPush = async function(sessionId) {
                 applicationServerKey: urlBase64ToUint8Array(window.VAPID_PUBLIC_KEY)
             });
         }
-        
+
         const p256dh = btoa(String.fromCharCode.apply(null, new Uint8Array(subscription.getKey('p256dh'))));
         const auth = btoa(String.fromCharCode.apply(null, new Uint8Array(subscription.getKey('auth'))));
-        
+
         const { error } = await window.supabaseClient
             .from('push_subscriptions')
             .upsert([{
@@ -197,37 +250,17 @@ window.solicitarPermisoPush = async function(sessionId) {
                 auth: auth,
                 user_agent: navigator.userAgent
             }], { onConflict: 'endpoint' });
-            
+
         if (error) throw error;
         return { success: true, subscription };
-        
     } catch (error) {
         console.error('❌ Error en push:', error);
         return { success: false, error: error.message };
     }
 };
+
 window.tienePermisoPush = function() {
     return Notification.permission === 'granted';
-};
-
-// ============================================
-// FUNCIONES DE CARGA DE CONFIGURACIÓN
-// ============================================
-window.cargarConfiguracion = async function() {
-    try {
-        const { data, error } = await window.supabaseClient
-            .from('config')
-            .select('*')
-            .eq('id', 1)
-            .single();
-        if (error && error.code !== 'PGRST116') throw error;
-        if (data) window.configGlobal = { ...window.configGlobal, ...data };
-        console.log('✅ Configuración cargada. admin_password:', window.configGlobal.admin_password ? '**' : 'NO CARGADO');
-        return window.configGlobal;
-    } catch (error) {
-        console.error('Error cargando configuración:', error);
-        return window.configGlobal;
-    }
 };
 
 // ============================================
@@ -238,17 +271,22 @@ window.subirImagenPlatillo = async function(archivoImagen, carpetaAdicional = ''
         if (!archivoImagen) return { success: false, error: 'No se proporcionó archivo' };
         const tipoValido = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp', 'image/gif'];
         if (!tipoValido.includes(archivoImagen.type)) return { success: false, error: 'Tipo de archivo no válido' };
+        
         const maxSize = 5 * 1024 * 1024;
         if (archivoImagen.size > maxSize) return { success: false, error: 'El archivo es demasiado grande. Máximo 5MB' };
+
         const timestamp = Date.now();
         const random = Math.random().toString(36).substring(2, 8);
         const extension = archivoImagen.name.split('.').pop();
         const nombreArchivo = `${timestamp}_${random}.${extension}`;
         const ruta = carpetaAdicional ? `${carpetaAdicional}/${nombreArchivo}` : nombreArchivo;
+
         const { data, error } = await window.supabaseClient.storage
             .from('imagenes-platillos')
             .upload(ruta, archivoImagen, { cacheControl: '3600', upsert: false, contentType: archivoImagen.type });
+
         if (error) throw error;
+
         const { data: urlData } = window.supabaseClient.storage.from('imagenes-platillos').getPublicUrl(ruta);
         return { success: true, path: ruta, url: urlData.publicUrl };
     } catch (error) {
@@ -256,14 +294,17 @@ window.subirImagenPlatillo = async function(archivoImagen, carpetaAdicional = ''
         return { success: false, error: error.message };
     }
 };
+
 window.eliminarImagenPlatillo = async function(urlImagen) {
     try {
         if (!urlImagen) return { success: true };
         const bucketName = 'imagenes-platillos';
         const bucketIndex = urlImagen.indexOf(`/public/${bucketName}/`);
         if (bucketIndex === -1) return { success: true };
+        
         const rutaRelativa = urlImagen.substring(bucketIndex + `/public/${bucketName}/`.length);
         if (!rutaRelativa) return { success: true };
+
         const { error } = await window.supabaseClient.storage.from(bucketName).remove([rutaRelativa]);
         if (error) throw error;
         return { success: true };
@@ -272,22 +313,29 @@ window.eliminarImagenPlatillo = async function(urlImagen) {
         return { success: false, error: error.message };
     }
 };
+
 window.subirComprobante = async function(file, tipo, onProgress) {
     try {
         if (!file) throw new Error('No se proporcionó archivo');
         const tipoValido = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp', 'image/gif'];
         if (!tipoValido.includes(file.type)) throw new Error('Tipo de archivo no válido. Solo imágenes JPG, PNG, WEBP o GIF');
+        
         const maxSize = 5 * 1024 * 1024;
         if (file.size > maxSize) throw new Error('El archivo es demasiado grande. Máximo 5MB');
+
         const timestamp = Date.now();
         const nombreArchivo = `${timestamp}_${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
         const ruta = `${tipo}/${nombreArchivo}`;
+
         const { data, error } = await window.supabaseClient.storage
             .from('comprobantes')
             .upload(ruta, file, { cacheControl: '3600', upsert: false, contentType: file.type });
+
         if (error) throw new Error(error.message || 'Error al subir el archivo');
+
         const { data: urlData } = window.supabaseClient.storage.from('comprobantes').getPublicUrl(ruta);
         if (onProgress) onProgress({ loaded: file.size, total: file.size, percent: 100 });
+        
         return { success: true, url: urlData.publicUrl };
     } catch (error) {
         console.error('Error en subirComprobante:', error);
@@ -308,6 +356,7 @@ window.formatBs = function(monto) {
         return 'Bs ' + (monto || 0).toFixed(2);
     }
 };
+
 window.formatUSD = function(monto) {
     try {
         return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 }).format(monto);
@@ -315,25 +364,30 @@ window.formatUSD = function(monto) {
         return '$ ' + (monto || 0).toFixed(2);
     }
 };
+
 window.generarId = function(prefix = '') {
     if (window.crypto && window.crypto.randomUUID) {
         return `${prefix}${crypto.randomUUID()}`;
     }
     return `${prefix}${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
 };
+
 window.validarTelefono = function(telefono) {
     const soloNumeros = telefono.replace(/\D/g, '');
     const regex = /^(0412|0414|0424|0416|0426|0418|0422|0212|0234|0241|0243|0246|0251|0254|0255|0257|0261|0264|0265|0268|0271|0273|0274|0275|0276|0281)\d{7}$/;
     return regex.test(soloNumeros);
 };
+
 window.validarReferencia = function(ref) {
     const soloNumeros = ref.replace(/\D/g, '');
     return soloNumeros.length === 6;
 };
+
 window.usdToBs = function(usd, tasa) {
     const tasaActual = tasa || window.configGlobal.tasa_efectiva || 400;
     return usd * tasaActual;
 };
+
 window.bsToUsd = function(bs, tasa) {
     const tasaActual = tasa || window.configGlobal.tasa_efectiva || 400;
     return bs / tasaActual;
@@ -361,6 +415,7 @@ window.parroquiasDelivery = [
     { nombre: "Nuestra Señora del Rosario", precioUSD: 7 }, { nombre: "Sucre", precioUSD: 7 },
     { nombre: "El Junquito", precioUSD: 7 }
 ];
+
 window.categoriasMenu = {
     "entradas": [],
     "sushi": [],
@@ -374,6 +429,7 @@ window.categoriasMenu = {
     "ninos": [],
     "ejecutivo": []
 };
+
 window.categoriasMenuLabels = {
     "entradas": "Entradas", "sushi": "Sushi", "rolls": "Rolls",
     "tragos": "Tragos y bebidas", "pokes": "Pokes", "ensaladas": "Ensaladas",
@@ -395,6 +451,7 @@ window.reproducirSonidoNotificacion = function() {
         navigator.vibrate([200, 100, 200]);
     }
 };
+
 window.actualizarBadgeNotificaciones = function(conteo) {
     const badge = document.getElementById('notificationBadge');
     if (badge) {
@@ -416,18 +473,21 @@ window.actualizarBadgeNotificaciones = function(conteo) {
 // FUNCIÓN AUXILIAR PARA WIFI (cliente)
 // ============================================
 window._mostrarPantallaWifi = function(wifiSsid, wifiPwd) {
-    document.body.innerHTML = `<div style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(135deg,#1a1a2e,#16213e);color:#fff;padding:2rem;text-align:center;font-family:Roboto,sans-serif">
-        <div style="font-size:3rem;margin-bottom:1rem">📶</div>
-        <h2 style="color:#FF9800;font-size:1.4rem;margin-bottom:.75rem">Conéctate al WiFi del restaurante</h2>
-        <p style="font-size:1rem;opacity:.85;margin-bottom:1.5rem">Para acceder al menú necesitas estar conectado a:</p>
-        <div style="background:rgba(255,255,255,.1);border-radius:12px;padding:1.2rem 2rem;margin-bottom:2rem;border:1px solid rgba(255,255,255,.2)">
-            <div style="font-size:1.3rem;font-weight:700;color:#fff;letter-spacing:1px">${wifiSsid}</div>
-            ${wifiPwd ? `<div style="font-size:.85rem;opacity:.6;margin-top:.3rem">Contraseña: ${wifiPwd}</div>` : ''}
-        </div>
-        <p style="font-size:.85rem;opacity:.65;margin-bottom:2rem">Ve a Ajustes → WiFi, conéctate a la red y luego toca:</p>
-        <button onclick="window.location.reload()" style="background:linear-gradient(135deg,#D32F2F,#B71C1C);color:#fff;border:none;padding:.9rem 2rem;border-radius:10px;font-size:1rem;font-weight:700;cursor:pointer;letter-spacing:.5px;margin-bottom:1rem">🔄 Ya me conecté — Abrir Menú</button>
-        <p style="font-size:.75rem;opacity:.4">O escanea el QR nuevamente</p>
-    </div>`;
+    document.body.innerHTML = `
+        <div style="min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;background:linear-gradient(135deg,#1a1a2e,#16213e);color:#fff;padding:2rem;text-align:center;font-family:Roboto,sans-serif">
+            <div style="font-size:3rem;margin-bottom:1rem">📶</div>
+            <h2 style="color:#FF9800;font-size:1.4rem;margin-bottom:.75rem">Conéctate al WiFi del restaurante</h2>
+            <p style="font-size:1rem;opacity:.85;margin-bottom:1.5rem">Para acceder al menú necesitas estar conectado a:</p>
+            <div style="background:rgba(255,255,255,.1);border-radius:12px;padding:1.2rem 2rem;margin-bottom:2rem;border:1px solid rgba(255,255,255,.2)">
+                <div style="font-size:1.3rem;font-weight:700;color:#fff;letter-spacing:1px">${wifiSsid}</div>
+                ${wifiPwd ? `<div style="font-size:.85rem;opacity:.6;margin-top:.3rem">Contraseña: ${wifiPwd}</div>` : ''}
+            </div>
+            <p style="font-size:.85rem;opacity:.65;margin-bottom:2rem">Ve a Ajustes → WiFi, conéctate a la red y luego toca:</p>
+            <button onclick="window.location.reload()" style="background:linear-gradient(135deg,#D32F2F,#B71C1C);color:#fff;border:none;padding:.9rem 2rem; border-radius:10px;font-size:1rem;font-weight:700;cursor:pointer;letter-spacing:.5px;margin-bottom:1rem">
+                🔄 Ya me conecté — Abrir Menú
+            </button>
+            <p style="font-size:.75rem;opacity:.4">O escanea el QR nuevamente</p>
+        </div>`;
 };
 
 console.log('✅ supabase-config.js cargado correctamente');
