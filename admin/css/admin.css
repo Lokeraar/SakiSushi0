@@ -1110,35 +1110,77 @@ html.dark-theme .modal-close:hover { color: #fff; }
 .delivery-nombre { font-weight: 700; font-size: .9rem; color: var(--text-dark); flex: 1; }
 .delivery-actions { display: flex; gap: .35rem; flex-wrap: wrap; align-items: center; }
 
-/* Mesoneros grid */
+/* Mesoneros grid - layout de 3 líneas con foto a la izquierda */
 .mesonero-card {
     background: var(--card-bg);
     border-radius: 14px;
     padding: 1rem 1.2rem;
-    display: flex;
-    align-items: center;
-    gap: .85rem;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    grid-template-rows: auto auto auto;
+    gap: .5rem .85rem;
     box-shadow: var(--shadow-sm);
     border: 1px solid var(--border);
     border-left: 4px solid var(--propina);
     transition: var(--transition);
+    align-items: center;
 }
 .mesonero-card:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
-.mesonero-avatar {
-    width: 38px; height: 38px;
+.mesonero-card .ucard-avatar {
+    grid-row: 1 / span 3;
+    width: 64px;
+    height: 64px;
+    min-width: 64px;
     border-radius: 50%;
-    background: linear-gradient(135deg, var(--propina), #7B1FA2);
-    color: #fff;
-    display: flex; align-items: center; justify-content: center;
-    font-weight: 800; font-size: .85rem;
-    flex-shrink: 0;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--secondary);
+}
+.mesonero-card .ucard-body {
+    display: contents;
+}
+.mesonero-card .ucard-top {
+    grid-column: 2;
+    grid-row: 1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: .5rem;
+}
+.mesonero-card .ucard-names {
+    display: flex;
+    flex-direction: column;
+    gap: .15rem;
 }
 .mesonero-card .mesonero-nombre {
-    font-weight: 700; font-size: .88rem;
-    color: var(--text-dark); flex: 1;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    font-weight: 700;
+    font-size: .95rem;
+    color: var(--text-dark);
 }
-.mesonero-card .mesonero-actions { display: flex; gap: .35rem; }
+.mesonero-card .ucard-names span[style*="Propinas"] {
+    font-size: .72rem;
+    color: var(--propina);
+    font-weight: 700;
+}
+.mesonero-card .ucard-status {
+    grid-column: 3;
+    grid-row: 1;
+    flex-shrink: 0;
+}
+.mesonero-card .ucard-actions {
+    grid-column: 2 / span 2;
+    grid-row: 3;
+    display: flex;
+    gap: .5rem;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+}
+.mesonero-card .ucard-actions .btn-sm:first-child {
+    margin-right: auto;
+}
 
 /* Propinas stats */
 .propina-card {
