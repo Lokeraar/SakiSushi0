@@ -291,9 +291,10 @@
         }
     };
 
-    window.agregarIngredienteRow = function(ingredienteId, cantidad, unidad) {
+    window.agregarIngredienteRow = function(ingredienteId, cantidad, unidad, esPrincipal) {
         ingredienteId = ingredienteId || '';
         cantidad = cantidad || '';
+        esPrincipal = esPrincipal || false;
         if (!unidad && ingredienteId) {
             const _invItem = (window.inventarioItems || []).find(i => i.id === ingredienteId);
             unidad = _invItem?.unidad_base || 'unidades';
@@ -426,6 +427,8 @@
         window.platilloEditandoId = id;
         document.getElementById('platilloModalTitle').textContent = 'Editar Platillo';
         window.limpiarImagenPreview();
+        // Cargar categorías antes de llenar el formulario
+        window.cargarCategoriasSelect();
         document.getElementById('platilloNombre').value = platillo.nombre || '';
         document.getElementById('platilloCategoria').value = platillo.categoria || '';
         document.getElementById('platilloSubcategoria').value = platillo.subcategoria || '';
