@@ -6,19 +6,18 @@ window.cargarListaAdminsRecientes = async function() {
     const container = document.getElementById('loginAdminsList');
     if (!container) return;
     
-    container.innerHTML = '<div class="loading-spinner" style="margin:0 auto;"></div>';
+    // Esperar a que supabaseClient esté listo
+    let intentos = 0;
+    while (!window.supabaseClient && intentos < 30) {
+        await new Promise(r => setTimeout(r, 150));
+        intentos++;
+    }
     
-    try {
-        let intentos = 0;
-        while (!window.supabaseClient && intentos < 20) {
-            await new Promise(r => setTimeout(r, 100));
-            intentos++;
-        }
-        
-        // ✅ Verificación adicional
-        if (!window.supabaseClient) {
-            throw new Error('Supabase client no inicializado');
-        }
+    if (!window.supabaseClient) {
+        console.error('❌ Supabase client no inicializado');
+        container.innerHTML = '<p style="color:var(--danger)">Error de conexión. Recarga la página.</p>';
+        return;
+    }
         
         const recent = window.obtenerAdminsRecientes();
         let admins = [];
