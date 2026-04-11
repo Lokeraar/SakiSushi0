@@ -15,6 +15,11 @@ window.cargarListaAdminsRecientes = async function() {
             intentos++;
         }
         
+        // ✅ Verificación adicional
+        if (!window.supabaseClient) {
+            throw new Error('Supabase client no inicializado');
+        }
+        
         const recent = window.obtenerAdminsRecientes();
         let admins = [];
         
