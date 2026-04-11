@@ -405,30 +405,17 @@ window._abrirDetalleVentasAdmin = async function() {
              </div>`;
         }).join('');
         const contenido = `
-             <div style="margin-bottom:1rem;padding:.85rem;background:var(--table-header);border-radius:10px">
-                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.4rem">
-                     <span style="font-weight:700;color:var(--text-dark)">Neto cobrado hoy</span>
-                     <span style="font-weight:800;color:var(--success);font-size:1.15rem">${fmtBs(totalNeto)}</span>
-                 </div>
-                 <div style="display:flex;justify-content:space-between;color:var(--text-muted);font-size:.82rem">
-                     <span>Pedidos cobrados</span><span style="font-weight:600">${ventasHoy.length}</span>
-                 </div>
-             </div>
-             <div style="font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);margin-bottom:.6rem">Desglose por método de pago</div>
-             <div style="display:grid;grid-template-columns:1fr 1fr;gap:.5rem;margin-bottom:1rem">
-                ${vcol('fas fa-money-bill-wave', 'Efectivo Bs', vt_ebs, 'var(--success)')}
-                ${vcol('fas fa-dollar-sign', 'Efectivo USD', vt_eusd, '#4CAF50')}
-                ${vcol('fas fa-mobile-alt', 'Pago Móvil', vt_pm, 'var(--info)')}
-                ${vcol('fas fa-credit-card', 'Punto de Venta', vt_pv, 'var(--warning)')}
-                ${vcol('fas fa-motorcycle', 'Deliverys', vt_delivery, 'var(--delivery)')}
-                ${vt_inv_count > 0 ? `<div style="grid-column:1/-1;padding:8px;background:rgba(0,0,0,.06);border-radius:8px;border-left:3px solid var(--propina);font-size:.82rem">
-                     <span style="color:var(--propina);font-weight:700">🎁 Invitaciones: ${vt_inv_count}</span>
-                     <span style="color:var(--text-muted);font-size:.75rem;margin-left:.5rem">Valor real: ${fmtBs(vt_inv_acum)}</span>
-                 </div>` : ''}
-                ${vcol('fas fa-hand-holding-heart', 'Condonado', vt_cond, '#E91E63')}
-                ${vcol('fas fa-piggy-bank', 'A favor de caja', vt_favor, 'var(--accent)')}
-             </div>
-            ${detallesCobros ? `<div style="font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);margin-bottom:.6rem">Detalle por cobro</div>${detallesCobros}` : ''}`;
+    <div style="margin-bottom:1rem;padding:.85rem;background:var(--table-header);border-radius:10px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.4rem">
+            <span style="font-weight:700;color:var(--text-dark)">Neto cobrado hoy</span>
+            <span style="font-weight:800;color:var(--success);font-size:1.15rem">${fmtBs(totalNeto)}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;color:var(--text-muted);font-size:.82rem">
+            <span>Pedidos cobrados</span><span style="font-weight:600">${ventasHoy.length}</span>
+        </div>
+    </div>
+    ${detallesCobros ? `<div style="font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);margin-bottom:.6rem">Detalle por cobro</div>${detallesCobros}` : ''}
+`;
         const modal = document.createElement('div');
         modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:1rem';
         modal.innerHTML = `<div style="background:var(--card-bg);border-radius:16px;width:100%;max-width:500px;max-height:90vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.35)">
