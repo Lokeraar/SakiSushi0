@@ -1,5 +1,5 @@
 # SakiSushi0
-Página web de saki sushi, probando SupaBase.
+Paginawebdesakisushi, probandoSupaBase.
 
 
 Cliente: https://lokeraar.github.io/SakiSushi0/Cliente/
