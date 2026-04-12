@@ -166,26 +166,26 @@
 	window.toggleTheme = function() {
 		const html = document.documentElement;
 		const isDark = html.classList.toggle('dark-theme');
-		const themeIcon = document.getElementById('themeIcon');
-		if (themeIcon) {
-			themeIcon.className = isDark ? 'fas fa-moon' : 'fas fa-sun';
+		const themeSimpleIcon = document.getElementById('themeSimpleIcon');
+		if (themeSimpleIcon) {
+			themeSimpleIcon.className = isDark ? 'fas fa-moon' : 'fas fa-sun';
 		}
 		localStorage.setItem('saki_admin_theme', isDark ? 'dark' : 'light');
 	};
 
 	window.initTheme = function() {
 		const savedTheme = localStorage.getItem('saki_admin_theme');
-		const themeIcon = document.getElementById('themeIcon');
+		const themeSimpleIcon = document.getElementById('themeSimpleIcon');
 		if (savedTheme === 'dark') {
 			document.documentElement.classList.add('dark-theme');
-			if (themeIcon) themeIcon.className = 'fas fa-moon';
+			if (themeSimpleIcon) themeSimpleIcon.className = 'fas fa-moon';
 		} else {
 			document.documentElement.classList.remove('dark-theme');
-			if (themeIcon) themeIcon.className = 'fas fa-sun';
+			if (themeSimpleIcon) themeSimpleIcon.className = 'fas fa-sun';
 		}
 	};
 
-	// Setup del header: reemplazar corona por logo y convertir theme toggle a theme-switcher
+	// Setup del header: reemplazar corona por logo
 	window.setupHeader = function() {
 		const headerTitle = document.querySelector('.header-left h2');
 		if (headerTitle) {
@@ -193,15 +193,8 @@
 			// Reemplazar ícono corona por logo
 			headerTitle.innerHTML = `<img src="https://lh3.googleusercontent.com/pw/AP1GczPrZAoWxmsOGRD9xl1hO5Q65JXuwUZzoR6gUk-cw5lVmarxQe_-lwqpA60tTKLlXfpvIjAJlKC6jFls-xETJOPkebLIIPhbGlUkknmhrRbdhMUll2UViGSUj3WmHKg2YEsZlAfxBPPTjIHhScjD0jfe=w1439-h1439-s-no-gm" alt="Saki Sushi" style="width:32px;height:32px;border-radius:50%;margin-right:8px"> Administración Saki Sushi`;
 		}
-		// Convertir theme toggle a theme-switcher
-		const themeBtn = document.getElementById('themeToggle');
-		if (themeBtn) {
-			themeBtn.className = 'theme-switcher';
-			themeBtn.innerHTML = '<i class="fas fa-sun"></i><i class="fas fa-moon"></i>';
-			themeBtn.onclick = () => window.toggleTheme();
-		}
-	};
 
+	};
     window.abrirSelectorMesaAdmin = async function() {
         const list = document.getElementById('adminMesaList');
         list.innerHTML = '<p style="color:var(--text-muted)">Cargando mesas...</p>';
