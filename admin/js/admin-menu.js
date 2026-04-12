@@ -480,7 +480,8 @@
     window.actualizarProductosActivos = function() {
         const el = document.getElementById('productosActivos');
         if (el && window.menuItems) {
-            el.textContent = window.menuItems.filter(m => m.disponible).length;
+            const count = window.menuItems.filter(m => m.disponible).length;
+            el.textContent = Math.floor(count);
         }
     };
 
