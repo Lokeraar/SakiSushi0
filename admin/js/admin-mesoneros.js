@@ -44,10 +44,10 @@
             const acumUsd = tasa > 0 ? acum / tasa : 0;
             const avatar  = m.foto
                 ? '<div class="ucard-avatar"><img src="' + m.foto + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;cursor:pointer" onclick="window.expandirImagen(this.src)"></div>'
-                : '<div class="ucard-avatar"><div class="mesonero-avatar" style="width:100%;height:100%;font-size:1.4rem;border-radius:50%">' + inicial + '</div></div>';
+                : '<div class="ucard-avatar"><div class="mesonero-avatar" style="width:100%;height:100%;font-size:1.4rem;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--secondary);color:#fff">' + inicial + '</div></div>';
             const badge = m.activo
-                ? '<span class="status-activo"><i class="fas fa-check-circle"></i> Activo</span>'
-                : '<span class="status-inactivo"><i class="fas fa-circle"></i> Inactivo</span>';
+                ? '<span class="ucard-status-inline" style="color:var(--success)"><i class="fas fa-check-circle"></i> Activo</span>'
+                : '<span class="ucard-status-inline" style="color:var(--text-muted)"><i class="fas fa-circle"></i> Inactivo</span>';
             const propStr = hayAcum
                 ? window.formatUSD(acumUsd) + ' | ' + window.formatBs(acum)
                 : 'Bs 0,00';
@@ -56,23 +56,24 @@
             const toggleClass = m.activo ? 'btn-toggle-on' : 'btn-toggle-off';
             const toggleTxt   = m.activo ? 'Inhabilitar' : 'Activar';
             const toggleVal   = String(!m.activo);
-            return '<div class="usuario-card-v2" style="border-left-color:var(--propina)">'
+            return '<div class="usuario-card-v2 mesonero-card" style="border-left-color:var(--propina)">'
                 + avatar
                 + '<div class="ucard-body">'
                 +   '<div class="ucard-top">'
                 +     '<div class="ucard-names">'
-                +       '<span class="mesonero-nombre">' + m.nombre + '</span>'
-                +       '<span style="font-size:.72rem;color:' + propColor + ';font-weight:' + propWeight + '">Propinas: ' + propStr + '</span>'
+                +       '<div class="ucard-line1"><span class="mesonero-nombre">' + m.nombre + '</span>' + badge + '</div>'
+                +       '<div class="ucard-line2"><span style="font-size:.78rem;color:var(--delivery);font-weight:600">' + window.formatUSD(acumUsd) + ' / ' + window.formatBs(acum) + '</span></div>'
+                +       '<div class="ucard-line3">'
+                +         '<button class="btn-sm" style="background:linear-gradient(135deg,var(--propina),#7B1FA2);color:#fff;white-space:nowrap;font-size:.75rem;padding:.35rem .6rem" onclick="window.mostrarPagoMesonero(\'' + m.id + '\')">'
+                +           '<i class="fas fa-hand-holding-heart"></i> Pagado'
+                +         '</button>'
+                +         '<button class="btn-toggle ' + toggleClass + '" style="font-size:.75rem;padding:.35rem .6rem" onclick="window.toggleMesoneroActivo(\'' + m.id + '\',' + toggleVal + ')">' + toggleTxt + '</button>'
+                +         '<div class="ucard-actions-right">'
+                +           '<button class="btn-icon edit" onclick="window.editarMesonero(\'' + m.id + '\')" title="Editar"><i class="fas fa-pen"></i></button>'
+                +           '<button class="btn-icon delete" onclick="window.eliminarMesonero(\'' + m.id + '\')" title="Eliminar"><i class="fas fa-trash"></i></button>'
+                +         '</div>'
+                +       '</div>'
                 +     '</div>'
-                +     '<div class="ucard-status">' + badge + '</div>'
-                +   '</div>'
-                +   '<div class="ucard-actions">'
-                +     '<button class="btn-sm" style="background:linear-gradient(135deg,var(--propina),#7B1FA2);color:#fff;white-space:nowrap" onclick="window.mostrarPagoMesonero(\'' + m.id + '\')">'
-                +       '<i class="fas fa-hand-holding-heart"></i> Pagado'
-                +     '</button>'
-                +     '<button class="btn-icon edit" onclick="window.editarMesonero(\'' + m.id + '\')" title="Editar"><i class="fas fa-pen"></i></button>'
-                +     '<button class="btn-toggle ' + toggleClass + '" onclick="window.toggleMesoneroActivo(\'' + m.id + '\',' + toggleVal + ')">' + toggleTxt + '</button>'
-                +     '<button class="btn-icon delete" onclick="window.eliminarMesonero(\'' + m.id + '\')" title="Eliminar"><i class="fas fa-trash"></i></button>'
                 +   '</div>'
                 + '</div>'
                 + '</div>';

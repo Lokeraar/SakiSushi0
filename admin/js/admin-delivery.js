@@ -35,8 +35,8 @@
                     ? '<div class="ucard-avatar"><img src="' + d.foto + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;cursor:pointer" onclick="window.expandirImagen(this.src)"></div>'
                     : '<div class="ucard-avatar" style="background:linear-gradient(135deg,var(--delivery),#00838F);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.4rem"><i class="fas fa-motorcycle"></i></div>';
                 var dbadge = d.activo
-                    ? '<span class="status-activo"><i class="fas fa-check-circle"></i> Activo</span>'
-                    : '<span class="status-inactivo"><i class="fas fa-circle"></i> Inactivo</span>';
+                    ? '<span class="ucard-status-inline" style="color:var(--success)"><i class="fas fa-check-circle"></i> Activo</span>'
+                    : '<span class="ucard-status-inline" style="color:var(--text-muted)"><i class="fas fa-circle"></i> Inactivo</span>';
                 var toggleClass = d.activo ? 'btn-toggle-on' : 'btn-toggle-off';
                 var toggleTxt   = d.activo ? 'Inhabilitar' : 'Activar';
                 var toggleVal   = String(!d.activo);
@@ -47,22 +47,19 @@
                     + '<div class="ucard-body">'
                     +   '<div class="ucard-top">'
                     +     '<div class="ucard-names">'
-                    +       '<span class="delivery-nombre">' + d.nombre + '</span>'
-                    +       '<span style="font-size:.72rem;color:var(--delivery);font-weight:600">'
-                    +         window.formatUSD(acumUsd) + ' / ' + window.formatBs(acumulado)
-                    +       '</span>'
+                    +       '<div class="ucard-line1"><span class="delivery-nombre">' + d.nombre + '</span>' + dbadge + '</div>'
+                    +       '<div class="ucard-line2"><span style="font-size:.78rem;color:var(--delivery);font-weight:600">' + window.formatUSD(acumUsd) + ' / ' + window.formatBs(acumulado) + '</span></div>'
+                    +       '<div class="ucard-line3">'
+                    +         '<button class="btn-sm" style="background:linear-gradient(135deg,var(--success),#2E7D32);color:#fff;white-space:nowrap;font-size:.75rem;padding:.35rem .6rem" onclick="window.mostrarPagoDelivery(\'' + d.id + '\')">'
+                    +           '<i class="fas fa-hand-holding-usd"></i> Pagado'
+                    +         '</button>'
+                    +         '<button class="btn-toggle ' + toggleClass + '" style="font-size:.75rem;padding:.35rem .6rem" onclick="window.toggleDeliveryActivo(\'' + d.id + '\',' + toggleVal + ')">' + toggleTxt + '</button>'
+                    +         '<div class="ucard-actions-right">'
+                    +           '<button class="btn-icon edit" onclick="window.editarDelivery(\'' + d.id + '\')" title="Editar"><i class="fas fa-edit"></i></button>'
+                    +           '<button class="btn-icon delete" onclick="window.eliminarDelivery(\'' + d.id + '\')" title="Eliminar"><i class="fas fa-trash"></i></button>'
+                    +         '</div>'
+                    +       '</div>'
                     +     '</div>'
-                    +     '<div class="ucard-status">' + dbadge + '</div>'
-                    +   '</div>'
-                    +   '<div class="ucard-actions">'
-                    +     '<button class="btn-sm" style="background:linear-gradient(135deg,var(--success),#2E7D32);color:#fff" onclick="window.mostrarPagoDelivery(\'' + d.id + '\')">'
-                    +       '<i class="fas fa-hand-holding-usd"></i> Pagado'
-                    +     '</button>'
-                    +     '<div style="display:flex;gap:.35rem;margin-left:auto">'
-                    +       '<button class="btn-icon edit" onclick="window.editarDelivery(\'' + d.id + '\')" title="Editar"><i class="fas fa-edit"></i></button>'
-                    +       '<button class="btn-icon delete" onclick="window.eliminarDelivery(\'' + d.id + '\')" title="Eliminar"><i class="fas fa-trash"></i></button>'
-                    +     '</div>'
-                    +     '<button class="btn-toggle ' + toggleClass + '" onclick="window.toggleDeliveryActivo(\'' + d.id + '\',' + toggleVal + ')">' + toggleTxt + '</button>'
                     +   '</div>'
                     + '</div>';
                 grid.appendChild(card);
