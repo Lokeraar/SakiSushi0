@@ -78,22 +78,34 @@
     <!-- PANEL PRINCIPAL -->
     <div class="panel-container" id="panelContainer">
         <header class="header">
+            <!-- Línea 1: Logo + Título a la izquierda, Salir a la derecha -->
             <div class="hrow htitle">
-                <div class="header-left"><h2><i class="fas fa-crown"></i> <span class="header-title-text">Administración Saki Sushi</span></h2></div>
+                <div class="header-left">
+                    <img src="https://lh3.googleusercontent.com/pw/AM-JKlWbGfHx8vN9Q2qJ5X6Z4Y3R1T0S8W7V6U5O4P3M2L1K0J9I8H7G6F5E4D3C2B1A/s150-no" alt="Logo" class="header-logo" style="height:40px;width:auto;vertical-align:middle;margin-right:0.5rem">
+                    <h2><i class="fas fa-crown"></i> <span class="header-title-text">Administración Saki Sushi -</span></h2>
+                </div>
                 <div class="hrd">
                     <button class="logout-button" id="logoutButton"><i class="fas fa-sign-out-alt"></i> Salir</button>
                 </div>
             </div>
-            <div class="hrow hrm hrm-nav">
-                <a href="../Cajero/index.html" target="_blank" class="nav-button"><i class="fas fa-cash-register"></i> Cajero</a>
-                <button class="nav-button" onclick="window.abrirSelectorMesaAdmin()"><i class="fas fa-utensils"></i> Mesas</button>
-                <div class="theme-toggle-simple" onclick="window.toggleTheme()" title="Cambiar tema" role="button">
-                    <i class="fas fa-sun" id="themeSimpleIcon"></i>
+            <!-- Línea 2: Usuario actual a la izquierda, Toggle Theme + Cajero + Mesas a la derecha -->
+            <div class="hrow hrm hrm-user">
+                <div class="header-user-name" id="headerUsuarioNombre">[Usuario]</div>
+                <div class="header-actions-right">
+                    <div class="theme-toggle-simple" onclick="window.toggleTheme()" title="Cambiar tema" role="button">
+                        <i class="fas fa-sun" id="themeSimpleIcon"></i>
+                    </div>
+                    <a href="../Cajero/index.html" target="_blank" class="nav-button"><i class="fas fa-cash-register"></i> Cajero</a>
+                    <button class="nav-button" onclick="window.abrirSelectorMesaAdmin()"><i class="fas fa-utensils"></i> Mesas</button>
                 </div>
             </div>
-            <div class="hrow hrm hrm-parroquia">
-                <span class="header-sucursal-label">Seleccionar Sucursal</span>
-                <button class="nav-button header-sucursal-btn" id="parroquiaBtn" title="Próximamente"><i class="fas fa-map-marker-alt"></i> <span id="parroquiaNombre">--</span></button>
+            <!-- Línea 3: Eslogan a la izquierda, Seleccionar Sucursal a la derecha -->
+            <div class="hrow hrm hrm-slogan">
+                <div class="header-slogan" id="headerEslogan">El mejor sushi de la ciudad</div>
+                <div class="header-sucursal-wrapper">
+                    <span class="header-sucursal-label">Seleccionar Sucursal</span>
+                    <button class="nav-button header-sucursal-btn" id="parroquiaBtn" title="Próximamente"><i class="fas fa-map-marker-alt"></i> <span id="parroquiaNombre">--</span></button>
+                </div>
             </div>
             <div id="stockCriticoHeader" style="width:100%; margin-top:.5rem; padding:.4rem .8rem; background:rgba(0,0,0,.2); border-radius:8px; display:flex; align-items:center; gap:.8rem; flex-wrap:wrap; font-size:.75rem">
                 <span style="font-weight:700; color:var(--danger); white-space:nowrap"><i class="fas fa-exclamation-triangle"></i> STOCK CRÍTICO:</span>

@@ -109,8 +109,15 @@
         }
 
         const pct = Math.min(100, Math.max(0, (disponible / stockBase) * 100));
-        // Decimales limpios: hasta milésimas sin ceros extra
-        const fmt = (n) => { const s = parseFloat(n.toPrecision(10)).toString(); return s === 'NaN' ? '0' : s; };
+        // Decimales limpios: hasta milésimas (3 decimales) sin ceros extra
+        const fmt = (n) => { 
+            const num = parseFloat(n.toPrecision(10));
+            if (isNaN(num)) return '0';
+            // Mostrar hasta 3 decimales si es necesario
+            const s = num.toFixed(3);
+            // Eliminar ceros innecesarios después del punto decimal
+            return parseFloat(s).toString();
+        };
 
         const imgHtml = item.imagen
             ? `<img src="${item.imagen}" style="width:60px;height:60px;object-fit:cover;border-radius:8px;margin-bottom:.5rem;cursor:pointer" onclick="window.expandirImagen&&window.expandirImagen('${item.imagen.replace(/'/g,"\'")}')">`
