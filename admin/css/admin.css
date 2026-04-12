@@ -1,51 +1,52 @@
 /* ============================================
    SAKI SUSHI ADMIN — Estilo Premium Restaurante
-   Paleta: Rojo #D32F2F · Negro #000000 · Dorado #FF9800
+   Paleta: Rojo #D32F2F · Negro #1a1a1a · Naranja #FF7043
    ============================================ */
 
 @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap');
 
 :root {
-  --primary:      #D32F2F;
+  /* Colores Corporativos */
+  --primary:      #D32F2F;       /* Rojo Saki */
   --primary-dark: #B71C1C;
-  --accent:       #FF9800;
-  --accent-dark:  #E65100;
+  --accent:       #FF7043;       /* Naranja Salmón */
+  --accent-dark:  #E64A19;
   --gold:         #FFB300;
   
-  /* TEMA CLARO (Base Blanca Pura) */
+  /* TEMA CLARO - Base Blanca Pura */
   --secondary:    #ffffff;
   --header-bg:    #ffffff;
   --header-text:  #1a1a1a;
   --body-bg:      #ffffff;
   --card-bg:      #ffffff;
   --text-dark:    #1a1a1a;
-  --text-muted:   #5f6368;
+  --text-muted:   #555555;
   --border:       #e0e0e0;
   --tabs-bg:      #ffffff;
-  --tab-text:     #1a1a2e;
+  --tab-text:     #1a1a1a;
   --tab-active:   #D32F2F;
-  --tab-active-bg: #f0f0f0;
-  --table-header: #f8f9fa;
-  --table-header-text: #1a1a2e;
+  --tab-active-bg: #f5f5f5;
+  --table-header: #fafafa;
+  --table-header-text: #1a1a1a;
   --input-bg:     #ffffff;
   --input-border: #dadce0;
   --modal-header-bg: #ffffff;
   --modal-header-text: #1a1a1a;
   --toast-bg:     #1a1a1a;
   --toast-text:   #ffffff;
-  --card-title-color: #5f6368;
+  --card-title-color: #555555;
   --card-value-color: #1a1a1a;
   --section-title-color: #1a1a1a;
-  --tag-bg: #f0f0f0;
+  --tag-bg: #f5f5f5;
   --tag-text: #1a1a1a;
-  --tag-border: #d0d0d0;
-  --list-item-hover: #f5f5f5;
+  --tag-border: #e0e0e0;
+  --list-item-hover: #f9f9f9;
   --badge-ok-bg: #e8f5e9; --badge-ok-text: #2e7d32;
   --badge-bajo-bg: #fff8e1; --badge-bajo-text: #f57f17;
   --badge-critico-bg: #ffebee; --badge-critico-text: #c62828;
 }
 
-/* TEMA OSCURO (Negro Puro) */
+/* TEMA OSCURO - Negro Puro */
 html.dark-theme {
   --secondary:    #121212;
   --header-bg:    #000000;
@@ -54,15 +55,15 @@ html.dark-theme {
   --card-bg:      #121212;
   --text-dark:    #ffffff;
   --text-muted:   #b0b0b0;
-  --border:       rgba(255,255,255,.15);
+  --border:       rgba(255,255,255,0.15);
   --tabs-bg:      #121212;
-  --tab-text:     rgba(255,255,255,.7);
+  --tab-text:     rgba(255,255,255,0.7);
   --tab-active:   #FF9800;
   --tab-active-bg: #1a1a1a;
   --table-header: #121212;
   --table-header-text: #ffffff;
   --input-bg:     #1a1a1a;
-  --input-border: rgba(255,255,255,.2);
+  --input-border: rgba(255,255,255,0.2);
   --modal-header-bg: #121212;
   --modal-header-text: #ffffff;
   --toast-bg:     #1a1a1a;
@@ -70,93 +71,13 @@ html.dark-theme {
   --card-title-color: #b0b0b0;
   --card-value-color: #ffffff;
   --section-title-color: #ffffff;
-  --tag-bg: rgba(255,255,255,.1);
+  --tag-bg: rgba(255,255,255,0.1);
   --tag-text: #e0e0e0;
-  --tag-border: rgba(255,255,255,.2);
-  --list-item-hover: rgba(255,255,255,.08);
-  --badge-ok-bg: rgba(46,125,50,.4); --badge-ok-text: #69f0ae;
-  --badge-bajo-bg: rgba(245,127,23,.3); --badge-bajo-text: #ffcc02;
-  --badge-critico-bg: rgba(198,40,40,.35); --badge-critico-text: #ff6b6b;
-}
-/* ============================================
-   SAKI SUSHI ADMIN — Estilo Premium Restaurante
-   Paleta: Rojo #D32F2F · Negro #1a1a2e · Dorado #FF9800
-   ============================================ */
-
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap');
-
-:root {
-  --primary:      #D32F2F;
-  --primary-dark: #B71C1C;
-  --accent:       #FF9800;
-  --accent-dark:  #E65100;
-  --gold:         #FFB300;
-
-  /* Tema Claro (por defecto) */
-  --secondary:    #f8f9fa;
-  --header-bg:    linear-gradient(135deg, #1a1a2e 0%, #2d2d4e 100%);
-  --header-text:  #ffffff;
-  --body-bg:      #f4f4f8;
-  --card-bg:      #ffffff;
-  --text-dark:    #1a1a2e;
-  --text-muted:   #5f6368;
-  --border:       #e0e0e0;
-  --tabs-bg:      #ffffff;
-  --tab-text:     #1a1a2e;
-  --tab-active:   #D32F2F;
-  --tab-active-bg: #1a1a2e;
-  --table-header: #f1f3f4;
-  --table-header-text: #1a1a2e;
-  --input-bg:     #ffffff;
-  --input-border: #dadce0;
-  --modal-header-bg: linear-gradient(135deg, #1a1a2e, #2d2d4e);
-  --modal-header-text: #ffffff;
-  --toast-bg:     #1a1a2e;
-  --toast-text:   #ffffff;
-  --card-title-color: #5f6368;
-  --card-value-color: #1a1a2e;
-  --section-title-color: #1a1a2e;
-  --tag-bg: #f0f0f0;
-  --tag-text: #1a1a2e;
-  --tag-border: #d0d0d0;
-  --list-item-hover: #f0f0f8;
-  --badge-ok-bg: #e8f5e9; --badge-ok-text: #2e7d32;
-  --badge-bajo-bg: #fff8e1; --badge-bajo-text: #f57f17;
-  --badge-critico-bg: #ffebee; --badge-critico-text: #c62828;
-}
-
-/* Tema Oscuro */
-html.dark-theme {
-  --secondary:    #1a1a2e;
-  --header-bg:    linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-  --header-text:  #ffffff;
-  --body-bg:      #0f0f1a;
-  --card-bg:      #1e1e32;
-  --text-dark:    #f0f0f8;
-  --text-muted:   #a0a0c0;
-  --border:       rgba(255,255,255,.12);
-  --tabs-bg:      #1a1a2e;
-  --tab-text:     rgba(255,255,255,.75);
-  --tab-active:   #FF9800;
-  --tab-active-bg:#1a1a2e;
-  --table-header: #1a1a2e;
-  --table-header-text: #f0f0f8;
-  --input-bg:     #252545;
-  --input-border: rgba(255,255,255,.18);
-  --modal-header-bg: linear-gradient(135deg, #1a1a2e, #16213e);
-  --modal-header-text: #ffffff;
-  --toast-bg:     #252545;
-  --toast-text:   #ffffff;
-  --card-title-color: #a0a0c0;
-  --card-value-color: #f0f0f8;
-  --section-title-color: #f0f0f8;
-  --tag-bg: rgba(255,255,255,.08);
-  --tag-text: #e0e0f0;
-  --tag-border: rgba(255,255,255,.15);
-  --list-item-hover: rgba(255,255,255,.07);
-  --badge-ok-bg: rgba(46,125,50,.35); --badge-ok-text: #69f0ae;
-  --badge-bajo-bg: rgba(245,127,23,.25); --badge-bajo-text: #ffcc02;
-  --badge-critico-bg: rgba(198,40,40,.3); --badge-critico-text: #ff6b6b;
+  --tag-border: rgba(255,255,255,0.2);
+  --list-item-hover: rgba(255,255,255,0.08);
+  --badge-ok-bg: rgba(46,125,50,0.4); --badge-ok-text: #69f0ae;
+  --badge-bajo-bg: rgba(245,127,23,0.3); --badge-bajo-text: #ffcc02;
+  --badge-critico-bg: rgba(198,40,40,0.35); --badge-critico-text: #ff6b6b;
 }
 
 :root {
@@ -169,11 +90,11 @@ html.dark-theme {
   --favordecaja:  #FF9800;
   --condonar:     #E91E63;
   --light-bg:     var(--body-bg);
-  --shadow-sm:    0 2px 8px rgba(0,0,0,.08);
-  --shadow-md:    0 4px 16px rgba(0,0,0,.12);
-  --shadow-lg:    0 8px 32px rgba(0,0,0,.18);
+  --shadow-sm:    0 2px 8px rgba(0,0,0,0.08);
+  --shadow-md:    0 4px 16px rgba(0,0,0,0.12);
+  --shadow-lg:    0 8px 32px rgba(0,0,0,0.18);
   --radius:       10px;
-  --transition:   all .2s ease;
+  --transition:   all 0.2s ease;
 }
 
 * { margin:0; padding:0; box-sizing:border-box; }
