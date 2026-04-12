@@ -193,6 +193,43 @@
 		}
 
 	};
+	
+	// Función para configurar el toggle de tema
+	window.setupThemeToggle = function() {
+		const themeToggle = document.getElementById('themeToggle');
+		if (!themeToggle) return;
+		
+		// Cargar estado guardado
+		const temaGuardado = localStorage.getItem('saki_admin_theme') || 'light';
+		themeToggle.checked = temaGuardado === 'dark';
+		
+		// Listener para cambio de tema
+		themeToggle.addEventListener('change', (e) => {
+			const nuevoTema = e.target.checked ? 'dark' : 'light';
+			const html = document.documentElement;
+			
+			if (nuevoTema === 'dark') {
+				html.classList.add('dark-theme');
+			} else {
+				html.classList.remove('dark-theme');
+			}
+			
+			localStorage.setItem('saki_admin_theme', nuevoTema);
+		});
+	};
+	
+	// Función para configurar el header con nombre de usuario
+	window.setupHeaderUsuario = function() {
+		const usuarioDisplay = document.getElementById('nombreUsuarioDisplay');
+		if (!usuarioDisplay) return;
+		
+		const usuarioActual = JSON.parse(localStorage.getItem('usuario_saki'));
+		if (usuarioActual && usuarioActual.nombre) {
+			usuarioDisplay.textContent = usuarioActual.nombre;
+		} else {
+			usuarioDisplay.textContent = 'Invitado';
+		}
+	};
     window.abrirSelectorMesaAdmin = async function() {
         const list = document.getElementById('adminMesaList');
         list.innerHTML = '<p style="color:var(--text-muted)">Cargando mesas...</p>';
