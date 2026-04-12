@@ -257,16 +257,14 @@
     // ==================== INICIALIZACIÓN AL CARGAR LA PÁGINA ====================
     document.addEventListener('DOMContentLoaded', async () => {
         window.initTheme();
+        window.setupThemeToggle();
+        window.setupHeaderUsuario();
+        
 		// Inicializar UI de login (cargar lista de administradores)
 		window.iniciarLoginUI();
         if (await window.restaurarSesionAdmin()) {
             window.mostrarPanel();
-            // Actualizar header con nombre de usuario
-            const user = JSON.parse(sessionStorage.getItem('admin_user') || '{}');
-            const headerTitle = document.querySelector('.header-left h2');
-            if (headerTitle && user.nombre) {
-                headerTitle.innerHTML = `<i class="fas fa-crown"></i> Administración Saki Sushi - ${user.nombre}`;
-            }
+            // Actualizar header con nombre de usuario (ya se hace en setupHeaderUsuario)
             setTimeout(async () => {
                 try {
                     await window.cargarConfiguracionInicial();
