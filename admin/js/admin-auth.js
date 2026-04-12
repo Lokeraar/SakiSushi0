@@ -121,10 +121,10 @@
             document.getElementById('panelContainer').classList.add('active');
             window.mostrarToast('✅ Bienvenido Administrador', 'success');
             
-            // Actualizar header con nombre
-            const headerTitle = document.querySelector('.header-left h2');
-            if (headerTitle && adminUser.nombre) {
-                headerTitle.innerHTML = `<i class="fas fa-crown"></i> Administración Saki Sushi - ${adminUser.nombre}`;
+            // Actualizar header con nombre del usuario en línea 2
+            const headerUsuarioNombre = document.getElementById('headerUsuarioNombre');
+            if (headerUsuarioNombre && adminUser.nombre) {
+                headerUsuarioNombre.textContent = adminUser.nombre;
             }
             
             setTimeout(async () => {
