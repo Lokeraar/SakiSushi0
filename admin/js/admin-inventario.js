@@ -132,8 +132,9 @@
                         Reservado: ${fmt(item.reservado||0)}
                     </span>
                 </div>
-                <!-- Barra invertida: stock restante a la izquierda, se consume de derecha a izquierda -->
+                <!-- Barra invertida: stock restante a la izquierda (color), consumido a la derecha (gris) -->
                 <div style="height:10px;background:rgba(0,0,0,.08);border-radius:6px;overflow:hidden;margin-bottom:.35rem;position:relative">
+                    <div style="position:absolute;top:0;right:0;height:100%;width:${(100-pct).toFixed(1)}%;background:rgba(0,0,0,.15);border-radius:0 6px 6px 0;"></div>
                     <div style="position:absolute;top:0;left:0;height:100%;width:${pct.toFixed(1)}%;background:${estadoGrad};border-radius:6px 0 0 6px;transition:width .55s cubic-bezier(.4,0,.2,1)"></div>
                 </div>
                 <div style="display:flex;align-items:center;gap:.45rem;margin-bottom:.85rem;font-size:.75rem;font-weight:700;color:${estadoColor}">

@@ -2394,6 +2394,7 @@ html.dark-theme .mesa-admin-btn {
     border: 1px solid var(--border);
     border-left: 4px solid var(--info);
     transition: var(--transition);
+    align-items: stretch;
 }
 .usuario-card-v2:hover {
     box-shadow: var(--shadow-md);
@@ -2402,19 +2403,21 @@ html.dark-theme .mesa-admin-btn {
 .ucard-avatar {
     width: 64px;
     min-width: 64px;
-    height: 64px;
+    height: auto;
     border-radius: 50%;
     overflow: hidden;
     display: flex;
     align-items: center;
     justify-content: center;
     background: var(--secondary);
+    align-self: stretch;
 }
 .ucard-body {
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 0.5rem;
+    gap: 0.35rem;
+    justify-content: space-between;
 }
 .ucard-top {
     display: flex;
@@ -2424,6 +2427,18 @@ html.dark-theme .mesa-admin-btn {
 }
 .ucard-names {
     flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+.ucard-line1, .ucard-line2, .ucard-line3 {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+.ucard-line3 {
+    margin-top: auto;
 }
 .usuario-nombre {
     font-weight: 700;
@@ -2441,6 +2456,11 @@ html.dark-theme .mesa-admin-btn {
     gap: 0.5rem;
     flex-wrap: wrap;
 }
+.ucard-actions-right {
+    display: flex;
+    gap: 0.35rem;
+    align-items: center;
+}
 /* Responsive móvil */
 @media (max-width: 768px) {
     .usuario-card-v2 {
@@ -2450,6 +2470,7 @@ html.dark-theme .mesa-admin-btn {
     .ucard-avatar {
         align-self: center;
         margin-bottom: 0.5rem;
+        height: 64px;
     }
     .ucard-top {
         flex-direction: column;

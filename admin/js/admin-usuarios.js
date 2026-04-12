@@ -35,12 +35,12 @@
                             <div class="ucard-line1"><span class="usuario-nombre">${user.nombre}</span>${statusBadge}</div>
                             <div class="ucard-line2"><span class="usuario-username">@${user.username}</span> ${rolBadge}</div>
                             <div class="ucard-line3">
-                                <button class="btn-icon edit" onclick="window.editarUsuario('${user.id}')" title="Editar usuario"><i class="fas fa-pen"></i></button>
                                 <button class="btn-toggle ${user.activo ? 'btn-toggle-on' : 'btn-toggle-off'}"
                                     onclick="window.toggleUsuarioActivo('${user.id}', ${!user.activo})">
                                     ${user.activo ? 'Inhabilitar' : 'Activar'}
                                 </button>
                                 <div class="ucard-actions-right">
+                                    <button class="btn-icon edit" onclick="window.editarUsuario('${user.id}')" title="Editar usuario"><i class="fas fa-pen"></i></button>
                                     <button class="btn-icon delete" onclick="window.eliminarUsuario('${user.id}')" title="Eliminar"><i class="fas fa-trash"></i></button>
                                 </div>
                             </div>
