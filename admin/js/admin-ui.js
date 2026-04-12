@@ -152,12 +152,10 @@
         });
 
         // Botón logout
-        ['logoutButton', 'logoutButtonMobile'].forEach(id => {
-            const btn = document.getElementById(id);
-            if (btn) btn.addEventListener('click', () => {
-                if (typeof window.cerrarSesion === 'function') window.cerrarSesion();
-                else { sessionStorage.clear(); window.location.reload(); }
-            });
+        const btn = document.getElementById('logoutButton');
+        if (btn) btn.addEventListener('click', () => {
+            if (typeof window.cerrarSesion === 'function') window.cerrarSesion();
+            else { sessionStorage.clear(); window.location.reload(); }
         });
     };
 

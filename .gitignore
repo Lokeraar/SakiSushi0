@@ -6,7 +6,12 @@ __pycache__/
 *.obj
 dist/
 build/
-target/
+*.class
+*.exe
+*.dll
+*.so
+*.a
+*.out
 
 # Dependencies
 .venv/
@@ -14,18 +19,14 @@ venv/
 node_modules/
 .mypy_cache/
 .pytest_cache/
-.coverage
-node_modules/
-venv/
-.venv/
-.env
-.env.local
-.env.*
+target/
+.gradle/
 
 # Logs and temp files
 *.log
 *.tmp
 *.swp
+*.swo
 
 # Environment
 .env
@@ -41,7 +42,7 @@ venv/
 *.swp
 *.swo
 
-# OS specific
+# System files
 .DS_Store
 Thumbs.db
 
@@ -49,16 +50,6 @@ Thumbs.db
 coverage/
 htmlcov/
 .coverage
-
-# Build directories
-dist/
-build/
-target/
-.gradle/
-
-# Python specific
-.mypy_cache/
-.pytest_cache/
 
 # Compressed files
 *.zip
@@ -79,8 +70,4 @@ target/
 *.Z
 *.lz
 *.lzo
-*.tar.gz
-*.tar.bz2
-*.tar.xz
-*.tar.zst
 ```
