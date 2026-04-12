@@ -1,25 +1,45 @@
-# Examples 1:
-
-# Example 2 (Project with artifacts):
-#Compiled and build artifacts
+```
+# Compiled and build artifacts
 *.pyc
 __pycache__/
-*.o
-*.obj
-dist/
-build/
-#Dependencies
+
+# Dependencies
 .venv/
 venv/
 node_modules/
-#Logs and temp files
+dist/
+build/
+target/
+.gradle/
+
+# Logs and temp files
 *.log
 *.tmp
 *.swp
-#Environment
+
+# Environment
 .env
 .env.local
 .env.*
-#Editors
+
+# Editors
 .vscode/
 .idea/
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Coverage
+coverage/
+htmlcov/
+.coverage
+
+# Python specific
+*.py[cod]
+*$py.class
+*.so
+.Python
+eggs/
+.egg-info/
+```
