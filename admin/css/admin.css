@@ -341,6 +341,25 @@ html.dark-theme .logout-button:hover { background: rgba(255,255,255,.1); color: 
 html.dark-theme .theme-toggle { background: rgba(255,255,255,.1); color: #FFB300; border-color: rgba(255,255,255,.15); }
 html.dark-theme .theme-toggle:hover { background: rgba(255,255,255,.2); }
 
+/* Theme toggle simple (sol/luna) */
+.theme-toggle-simple {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    background: var(--secondary);
+    color: var(--text-dark);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: var(--transition);
+}
+.theme-toggle-simple:hover { background: var(--primary); color: #fff; border-color: var(--primary); }
+html.dark-theme .theme-toggle-simple { background: rgba(255,255,255,.1); color: #FFB300; border-color: rgba(255,255,255,.15); }
+html.dark-theme .theme-toggle-simple:hover { background: rgba(255,255,255,.2); }
+
 /* Tasa Cards Bar (dentro del Dashboard) */
 .tasa-cards-bar {
     background: var(--card-bg);
@@ -1184,7 +1203,7 @@ html.dark-theme .modal-close:hover { color: #fff; }
 }
 .mesonero-card:hover { box-shadow: var(--shadow-md); transform: translateY(-1px); }
 .mesonero-card .ucard-avatar {
-    grid-row: 1 / span 1;
+    grid-row: 1 / span 3;
     width: 64px;
     height: 64px;
     min-width: 64px;
@@ -2386,99 +2405,75 @@ html.dark-theme .mesa-admin-btn {
 
 /* ── Tarjeta ucard-v2 (usuarios / mesoneros / deliverys) ─────────────────── */
 .usuario-card-v2 {
-    display: flex;
-    gap: 1rem;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: .5rem .85rem;
     background: var(--card-bg);
     border-radius: 14px;
-    padding: 1rem;
+    padding: 1rem 1.2rem;
     border: 1px solid var(--border);
     border-left: 4px solid var(--info);
     transition: var(--transition);
-    align-items: stretch;
+    align-items: center;
 }
 .usuario-card-v2:hover {
     box-shadow: var(--shadow-md);
     transform: translateY(-2px);
 }
-.ucard-avatar {
+.usuario-card-v2 .ucard-avatar {
+    grid-row: 1 / span 3;
     width: 64px;
+    height: 64px;
     min-width: 64px;
-    height: auto;
     border-radius: 50%;
     overflow: hidden;
     display: flex;
     align-items: center;
     justify-content: center;
     background: var(--secondary);
-    align-self: stretch;
 }
-.ucard-body {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 0.35rem;
-    justify-content: space-between;
-}
-.ucard-top {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    gap: 0.5rem;
-}
-.ucard-names {
-    flex: 1;
+.usuario-card-v2 .ucard-body {
+    grid-column: 2;
+    grid-row: 1;
     display: flex;
     flex-direction: column;
     gap: 0.25rem;
 }
-.ucard-line1, .ucard-line2, .ucard-line3 {
+.usuario-card-v2 .ucard-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: .5rem;
+}
+.usuario-card-v2 .ucard-names {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: .15rem;
+}
+.usuario-card-v2 .ucard-line1 {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 0.5rem;
 }
-.ucard-line3 {
-    margin-top: auto;
-}
-.usuario-nombre {
-    font-weight: 700;
-    color: var(--text-dark);
-}
-.usuario-username {
-    font-size: 0.8rem;
-    color: var(--text-muted);
-}
-.ucard-status {
-    flex-shrink: 0;
-}
-.ucard-actions {
+.usuario-card-v2 .ucard-line2 {
     display: flex;
-    gap: 0.5rem;
-    flex-wrap: wrap;
-}
-.ucard-actions-right {
-    display: flex;
-    gap: 0.35rem;
     align-items: center;
 }
-/* Responsive móvil */
-@media (max-width: 768px) {
-    .usuario-card-v2 {
-        flex-direction: column;
-        align-items: stretch;
-    }
-    .ucard-avatar {
-        align-self: center;
-        margin-bottom: 0.5rem;
-        height: 64px;
-    }
-    .ucard-top {
-        flex-direction: column;
-        align-items: stretch;
-    }
-    .ucard-status {
-        align-self: flex-end;
-    }
+.usuario-card-v2 .ucard-line3 {
+    display: flex;
+    align-items: center;
+    gap: .5rem;
+    justify-content: space-between;
+}
+.usuario-card-v2 .ucard-actions-right {
+    display: flex;
+    gap: .35rem;
+    align-items: center;
+}
+.usuario-card-v2 .ucard-status-inline {
+    font-size: .75rem;
+    font-weight: 600;
 }
 
 /* ── Dashboard 4 cols + col-mini apilado ─────────────────────────────────── */
