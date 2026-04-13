@@ -189,7 +189,7 @@ html:not(.dark-theme) .login-container::before {
 .header {
     background: var(--header-bg);
     color: var(--header-text);
-    padding: 0 1.5rem;
+    padding: 0 1rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -203,6 +203,8 @@ html:not(.dark-theme) .login-container::before {
     gap: .5rem;
     border-bottom: 1px solid var(--border);
     transition: background .3s ease, color .3s ease;
+    width: 100%;
+    max-width: 100vw;
 }
 html.dark-theme .header {
     box-shadow: 0 2px 12px rgba(0,0,0,.3);
@@ -340,6 +342,7 @@ html.dark-theme .logout-button:hover { background: rgba(255,255,255,.1); color: 
         flex-direction: column;
         align-items: stretch;
         gap: 0.5rem;
+        padding: 0.75rem 1rem;
     }
     .hrow {
         flex-wrap: wrap;
@@ -2741,6 +2744,14 @@ html.dark-theme #stockCalculadoWrap {
     gap: 0.75rem;
 }
 
+/* Asegurar que header-right-group no tenga padding lateral excesivo */
+.header-right-group {
+    padding-left: 0;
+    padding-right: 0;
+    margin-left: 0;
+    margin-right: 0;
+}
+
 .header-logo-img {
     height: 45px;
     width: auto;
@@ -2762,15 +2773,32 @@ html.dark-theme #stockCalculadoWrap {
     opacity: 0.95;
 }
 
+/* Nivel 2: Usuario actual a la izquierda, Toggle Theme + Cajero + Mesas a la derecha */
+.header-level.level-2 {
+    display: flex;
+    flex-wrap: nowrap !important;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    max-width: 100vw;
+    padding: 0.25rem 0;
+}
+
 .controls-group {
     display: flex;
+    flex-wrap: nowrap !important;
     align-items: center;
-    gap: 0.5rem;
+    gap: 5px;
+    margin: 0;
+    padding: 0;
+    min-width: 0;
 }
 
 .btn-header-control {
     padding: 0.4rem 0.85rem;
     font-size: 0.8rem;
+    flex-shrink: 1;
+    white-space: nowrap;
 }
 
 .btn-header-sucursal {
@@ -2852,6 +2880,11 @@ html.dark-theme #stockCalculadoWrap {
         padding: 0.25rem 0;
     }
     
+    /* Nivel 2 debe mantenerse en una sola línea */
+    .header-level.level-2 {
+        flex-wrap: nowrap !important;
+    }
+    
     .header-left-group, .header-right-group {
         flex-wrap: wrap;
         gap: 0.5rem;
@@ -2859,8 +2892,10 @@ html.dark-theme #stockCalculadoWrap {
     
     .header-right-group.controls-group {
         justify-content: flex-end;
-        width: 100%;
-        margin-top: 0.25rem;
+        width: auto;
+        margin-top: 0;
+        flex-wrap: nowrap !important;
+        gap: 5px;
     }
     
     .header-level.level-3 .header-right-group {
@@ -2882,11 +2917,17 @@ html.dark-theme #stockCalculadoWrap {
 
 /* Ajustes para móviles estrechos (9:16 vertical) - mantener toggle + Cajero + Mesas en una línea */
 @media (max-width: 480px) {
+    .header-level.level-2 {
+        flex-wrap: nowrap !important;
+        padding: 0.2rem 0;
+    }
+    
     .header-right-group.controls-group {
         display: flex;
-        flex-wrap: nowrap;
+        flex-wrap: nowrap !important;
         justify-content: flex-end;
-        gap: 0.35rem;
+        gap: 5px;
+        min-width: 0;
     }
     
     .theme-switch-wrapper {
@@ -2901,6 +2942,7 @@ html.dark-theme #stockCalculadoWrap {
         padding: 0.3rem 0.5rem;
         font-size: 0.7rem;
         min-width: auto;
+        flex-shrink: 1;
     }
     
     .btn-header-control i {
