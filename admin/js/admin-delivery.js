@@ -48,7 +48,7 @@
                     +   '<div class="ucard-top">'
                     +     '<div class="ucard-names">'
                     +       '<div class="ucard-line1"><span class="delivery-nombre">' + d.nombre + '</span>' + dbadge + '</div>'
-                    +       '<div class="ucard-line2"><span style="font-size:.78rem;color:var(--delivery);font-weight:600">' + window.formatUSD(acumUsd) + ' / ' + window.formatBs(acumulado) + '</span></div>'
+                    +       '<div class="ucard-line2"><span style="font-size:.78rem;color:var(--delivery);font-weight:600">Total Acumulado ' + window.formatUSD(acumUsd) + ' / ' + window.formatBs(acumulado) + '</span></div>'
                     +       '<div class="ucard-line3">'
                     +         '<button class="btn-sm" style="background:linear-gradient(135deg,var(--success),#2E7D32);color:#fff;white-space:nowrap;font-size:.75rem;padding:.35rem .6rem" onclick="window.mostrarPagoDelivery(\'' + d.id + '\')">'
                     +           '<i class="fas fa-hand-holding-usd"></i> Pagado'
