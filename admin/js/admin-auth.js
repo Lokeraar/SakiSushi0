@@ -185,6 +185,13 @@
             window.jwtToken = token;
             window.isAdminAuthenticated = true;
             window.supabaseClient = window.inicializarSupabaseCliente(window.jwtToken);
+            
+            // ACTUALIZAR EL NOMBRE DEL USUARIO EN EL HEADER DESPUÉS DE RESTAURAR SESIÓN
+            const headerUsuarioNombre = document.getElementById('headerUsuarioNombre');
+            if (headerUsuarioNombre && user.nombre) {
+                headerUsuarioNombre.textContent = user.nombre;
+            }
+            
             return true;
         } catch (e) {
             console.error('Error restaurando sesión:', e);
