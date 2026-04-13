@@ -25,8 +25,8 @@
   --tabs-bg:      #ffffff;
   --tab-text:     #000000;
   --tab-active:   #D32F2F;
-  --tab-active-bg: #f0f0f0;
-  --table-header: #f8f8f8;
+  --tab-active-bg: #ffffff;
+  --table-header: #ffffff;
   --table-header-text: #000000;
   --input-bg:     #ffffff;
   --input-border: #c0c0c0;
@@ -410,7 +410,7 @@ html:not(.dark-theme) .icon-moon { opacity: 0.25; transform: scale(0.85); }
     height: 30px;
     appearance: none;
     -webkit-appearance: none;
-    background: linear-gradient(135deg, #f8f8f8 0%, #e8e8e8 100%);
+    background: linear-gradient(135deg, #ffffff 0%, #f0f0f0 100%);
     border-radius: 22px;
     cursor: pointer;
     transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
@@ -720,12 +720,12 @@ html.dark-theme .dashboard-card { border-color: transparent; border-left-color: 
 .btn-secondary {
     display: inline-flex; align-items: center; gap: .4rem;
     padding: .6rem 1.3rem;
-    background: #f5f5f5; color: var(--text-dark);
+    background: #ffffff; color: var(--text-dark);
     border: 1px solid var(--border); border-radius: 8px;
     font-size: .875rem; font-weight: 600; font-family: 'Montserrat', sans-serif;
     cursor: pointer; transition: var(--transition);
 }
-.btn-secondary:hover { background: #ebebeb; }
+.btn-secondary:hover { background: #ffffff; }
 .btn-danger {
     display: inline-flex; align-items: center; gap: .4rem;
     padding: .6rem 1.3rem;
@@ -786,8 +786,8 @@ html.dark-theme .dashboard-card { border-color: transparent; border-left-color: 
     padding: .2rem .6rem; border-radius: 20px;
     font-size: .72rem; font-weight: 700;
 }
-.disponible-badge.activo { background: #e8f5e9; color: var(--success); }
-.disponible-badge.inactivo { background: #ffebee; color: var(--danger); }
+.disponible-badge.activo { background: #ffffff; color: var(--success); }
+.disponible-badge.inactivo { background: #ffffff; color: var(--danger); }
 .activo  { color: var(--success); }
 .inactivo{ color: var(--danger);  }
 
@@ -799,13 +799,13 @@ html.dark-theme .dashboard-card { border-color: transparent; border-left-color: 
 .qr-actions { display: flex; justify-content: center; gap: .5rem; }
 .qr-actions button {
     padding: .4rem .8rem; border: none; border-radius: 6px;
-    background: #f5f5f5; color: var(--text-dark);
+    background: #ffffff; color: var(--text-dark);
     font-size: .8rem; cursor: pointer; transition: var(--transition);
 }
 .qr-actions button:hover { background: var(--primary); color: #fff; }
 .wifi-fields {
     margin-top: 12px; padding: 10px 12px;
-    background: #fff8e1; border-radius: 8px;
+    background: #ffffff; border-radius: 8px;
     color: #795548; font-size: .82rem;
     border-left: 3px solid var(--accent);
 }
@@ -943,7 +943,7 @@ html.dark-theme .dashboard-card { border-color: transparent; border-left-color: 
 .propinas-tabla th { background: var(--table-header); color: var(--table-header-text); padding: .75rem 1rem; text-align: left; font-size: .82rem; font-weight: 600; }
 html.dark-theme .propinas-tabla th { background: var(--secondary); color: #fff; }
 .propinas-tabla td { padding: .75rem 1rem; border-bottom: 1px solid #f0f0f0; font-size: .85rem; }
-.propinas-tabla tr:hover td { background: #f9f9f9; }
+.propinas-tabla tr:hover td { background: #ffffff; }
 
 /* Charts */
 .charts-grid {
@@ -961,13 +961,13 @@ html.dark-theme .propinas-tabla th { background: var(--secondary); color: #fff; 
 .data-table th { background: var(--table-header); color: var(--table-header-text); padding: .75rem 1rem; text-align: left; font-size: .82rem; font-weight: 600; }
 html.dark-theme .data-table th { background: var(--secondary); color: #fff; }
 .data-table td { padding: .75rem 1rem; border-bottom: 1px solid #f0f0f0; font-size: .85rem; }
-.data-table tr:hover td { background: #f9f9f9; }
+.data-table tr:hover td { background: #ffffff; }
 .table-responsive { overflow-x: auto; }
 
 /* Alerts / Stock */
 .alert-list { display: flex; flex-direction: column; gap: .5rem; }
 .alert-item { display: flex; justify-content: space-between; align-items: center; padding: .75rem 1rem; border-radius: 8px; }
-.alert-item.critical { background: #ffebee; border-left: 4px solid var(--danger); }
+.alert-item.critical { background: #ffffff; border-left: 4px solid var(--danger); }
 .critical { color: var(--danger); font-weight: 600; }
 
 /* Modals */
@@ -990,13 +990,13 @@ html.dark-theme .modal-close:hover { color: #fff; }
 
 /* Password overlay */
 .password-overlay { position: relative; }
-.password-protected input:disabled { background: #f5f5f5; cursor: not-allowed; }
+.password-protected input:disabled { background: #ffffff; cursor: not-allowed; }
 .password-unlock { display: flex; gap: .5rem; margin-top: .4rem; }
 .password-unlock input { flex: 1; }
 .password-unlock button { white-space: nowrap; }
 
 /* Ingrediente rows */
-.ingrediente-row { display: flex; gap: .5rem; align-items: flex-end; margin-bottom: .5rem; padding: .5rem; background: #f9f9f9; border-radius: 8px; }
+.ingrediente-row { display: flex; gap: .5rem; align-items: flex-end; margin-bottom: .5rem; padding: .5rem; background: #ffffff; border-radius: 8px; }
 .ingrediente-row .form-group { margin-bottom: 0; flex: 1; }
 
 /* Toast */
@@ -1042,7 +1042,7 @@ html.dark-theme .modal-close:hover { color: #fff; }
     align-items: center;
     gap: .5rem;
     padding: .4rem .75rem;
-    background: #fff8e1;
+    background: #ffffff;
     border-radius: 8px;
     border-left: 3px solid var(--accent);
     width: 100%;
@@ -1184,7 +1184,7 @@ html.dark-theme .modal-close:hover { color: #fff; }
     display: flex;
     gap: .4rem;
     padding: .75rem 1rem;
-    background: #fafafa;
+    background: #ffffff;
     border-top: 1px solid var(--border);
 }
 .inventario-card-name {
@@ -1208,7 +1208,7 @@ html.dark-theme .modal-close:hover { color: #fff; }
     display: flex;
     gap: .4rem;
     padding: .75rem 1rem;
-    background: #fafafa;
+    background: #ffffff;
     border-top: 1px solid var(--border);
     margin-top: auto;
 }
@@ -1255,8 +1255,8 @@ html.dark-theme .modal-close:hover { color: #fff; }
     border-radius: 20px;
     margin-top: 4px;
 }
-.usuario-rol.admin { background: #fff3e0; color: var(--warning); }
-.usuario-rol.cajero { background: #e3f2fd; color: var(--info); }
+.usuario-rol.admin { background: #ffffff; color: var(--warning); }
+.usuario-rol.cajero { background: #ffffff; color: var(--info); }
 
 /* Deliverys */
 .delivery-list {
@@ -1470,14 +1470,14 @@ html.dark-theme .modal-close:hover { color: #fff; }
     font-size: .8rem;
     transition: var(--transition);
 }
-.btn-icon.edit { background: #e3f2fd; color: var(--info); }
+.btn-icon.edit { background: #ffffff; color: var(--info); }
 .btn-icon.edit:hover { background: var(--info); color: #fff; }
-.btn-icon.delete { background: #ffebee; color: var(--danger); }
+.btn-icon.delete { background: #ffffff; color: var(--danger); }
 .btn-icon.delete:hover { background: var(--danger); color: #fff; }
-.btn-icon.toggle-on { background: #e8f5e9; color: var(--success); }
+.btn-icon.toggle-on { background: #ffffff; color: var(--success); }
 .btn-icon.toggle-on:hover { background: var(--success); color: #fff; }
-.btn-icon.toggle-off { background: #fafafa; color: var(--text-muted); }
-.btn-icon.toggle-off:hover { background: #eee; }
+.btn-icon.toggle-off { background: #ffffff; color: var(--text-muted); }
+.btn-icon.toggle-off:hover { background: #ffffff; }
 
 /* Reportes filters */
 .reportes-filters {
@@ -1511,8 +1511,8 @@ html.dark-theme .modal-close:hover { color: #fff; }
     border-radius: 20px;
     font-size: .7rem; font-weight: 700;
 }
-.stock-badge.critico { background: #ffebee; color: var(--danger); }
-.stock-badge.bajo { background: #fff8e1; color: var(--warning); }
+.stock-badge.critico { background: #ffffff; color: var(--danger); }
+.stock-badge.bajo { background: #ffffff; color: var(--warning); }
 
 /* Pedidos recientes */
 .pedido-reciente {
@@ -1524,7 +1524,7 @@ html.dark-theme .modal-close:hover { color: #fff; }
     font-size: .82rem;
     transition: var(--transition);
 }
-.pedido-reciente:hover { background: #f9f9f9; }
+.pedido-reciente:hover { background: #ffffff; }
 .pedido-reciente-tipo {
     width: 28px; height: 28px;
     border-radius: 8px;
@@ -1662,8 +1662,8 @@ html.dark-theme .modal-close:hover { color: #fff; }
 .mc2-stock-line { font-size: .75rem; color: var(--text-muted); margin-top: .2rem; display: flex; align-items: center; gap: .4rem; flex-wrap: wrap; }
 .mc2-stock-val { font-weight: 700; color: var(--success); }
 .mc2-badge { font-size: .6rem; font-weight: 700; padding: 2px 6px; border-radius: 20px; text-transform: uppercase; letter-spacing: .3px; }
-.mc2-badge-ok { background: #e8f5e9; color: var(--success); }
-.mc2-badge-off { background: #ffebee; color: var(--danger); }
+.mc2-badge-ok { background: #ffffff; color: var(--success); }
+.mc2-badge-off { background: #ffffff; color: var(--danger); }
 .mc2-img-wrap { width: 68px; height: 68px; border-radius: 10px; overflow: hidden; flex-shrink: 0; border: 1px solid var(--border); }
 .mc2-img { width: 100%; height: 100%; object-fit: cover; }
 .mc2-desc { font-size: .75rem; color: var(--text-muted); line-height: 1.4; }
@@ -1674,7 +1674,7 @@ html.dark-theme .modal-close:hover { color: #fff; }
     background: var(--tag-bg); color: var(--tag-text);
     border: 1px solid var(--tag-border);
 }
-.ing-tag-sin-stock { background: #ffebee; color: var(--danger); border-color: #ffcdd2; }
+.ing-tag-sin-stock { background: #ffffff; color: var(--danger); border-color: #ffcdd2; }
 .mc2-actions { display: flex; gap: .4rem; justify-content: flex-end; padding-top: .4rem; border-top: 1px solid var(--border); }
 
 /* Inventario card v2 */
@@ -1772,7 +1772,7 @@ html.dark-theme .modal-close:hover { color: #fff; }
     position: absolute; top: .6rem; right: .6rem;
     width: 28px; height: 28px;
     border-radius: 8px; border: none; cursor: pointer;
-    background: #ffebee; color: var(--danger);
+    background: #ffffff; color: var(--danger);
     display: flex; align-items: center; justify-content: center;
     font-size: .75rem; transition: var(--transition);
 }
@@ -1830,9 +1830,9 @@ html.dark-theme .tabs-chevron-left, html.dark-theme .tabs-chevron-right { border
     transition: var(--transition);
     min-width: 72px;
 }
-.btn-toggle-on  { background: #ffebee; color: var(--danger); border: 1px solid #ffcdd2; }
+.btn-toggle-on  { background: #ffffff; color: var(--danger); border: 1px solid #ffcdd2; }
 .btn-toggle-on:hover  { background: var(--danger); color: #fff; }
-.btn-toggle-off { background: #e8f5e9; color: var(--success); border: 1px solid #c8e6c9; }
+.btn-toggle-off { background: #ffffff; color: var(--success); border: 1px solid #c8e6c9; }
 .btn-toggle-off:hover { background: var(--success); color: #fff; }
 .dark-theme .btn-toggle-on  { background: rgba(239,68,68,.18); color: #ff6b6b; border-color: rgba(239,68,68,.3); }
 .dark-theme .btn-toggle-on:hover  { background: var(--danger); color: #fff; }
@@ -1859,7 +1859,7 @@ html.dark-theme .tabs-chevron-left, html.dark-theme .tabs-chevron-right { border
 .inv-list-search {
     padding: .6rem .75rem;
     border-bottom: 1px solid var(--border);
-    background: #fafafa;
+    background: #ffffff;
 }
 .inv-list-search input {
     width: 100%; padding: .4rem .7rem;
@@ -1921,7 +1921,7 @@ html.dark-theme .tabs-chevron-left, html.dark-theme .tabs-chevron-right { border
     color: var(--text-muted); font-size: .88rem;
 }
 .inv-detail-close {
-    background: #f5f5f5; border: none; border-radius: 8px;
+    background: #ffffff; border: none; border-radius: 8px;
     width: 28px; height: 28px; cursor: pointer; display: flex;
     align-items: center; justify-content: center;
     font-size: .8rem; color: var(--text-muted);
@@ -1971,7 +1971,7 @@ html.dark-theme .tabs-chevron-left, html.dark-theme .tabs-chevron-right { border
     opacity: .55;
     filter: grayscale(.7);
     border-top-color: var(--text-muted) !important;
-    background: #f5f5f5;
+    background: #ffffff;
 }
 .menu-card-v2.no-disponible .mc2-nombre { color: var(--text-muted); }
 .menu-card-v2.no-disponible .mc2-precio { color: var(--text-muted) !important; }
@@ -1997,8 +1997,8 @@ a { color: var(--primary); }
 .mesonero-card .usuario-rol { color: var(--text-dark); }
 
 /* delivery-estado badges adapt */
-.delivery-estado.activo   { color: #2e7d32; background: #e8f5e9; padding: 2px 8px; border-radius: 20px; font-size: .72rem; font-weight: 700; }
-.delivery-estado.inactivo { color: #757575; background: #f5f5f5; padding: 2px 8px; border-radius: 20px; font-size: .72rem; font-weight: 700; }
+.delivery-estado.activo   { color: #2e7d32; background: #ffffff; padding: 2px 8px; border-radius: 20px; font-size: .72rem; font-weight: 700; }
+.delivery-estado.inactivo { color: #757575; background: #ffffff; padding: 2px 8px; border-radius: 20px; font-size: .72rem; font-weight: 700; }
 .dark-theme .delivery-estado.activo   { color: #69f0ae; background: rgba(46,125,50,.3); }
 .dark-theme .delivery-estado.inactivo { color: #a0a0b0; background: rgba(255,255,255,.08); }
 
@@ -2037,7 +2037,7 @@ a { color: var(--primary); }
 
 /* Mesonero/Usuario badge adapta al tema */
 .usuario-rol.inactivo-badge { background: var(--table-header); color: var(--text-muted); }
-.usuario-rol.cajero { background: #e3f2fd; color: #1565c0; }
+.usuario-rol.cajero { background: #ffffff; color: #1565c0; }
 .dark-theme .usuario-rol.cajero { background: rgba(21,101,192,.25); color: #64b5f6; }
 
 /* Reportes date inputs */
@@ -2597,8 +2597,8 @@ html.dark-theme .mesa-admin-btn {
     border-radius: 20px;
     margin-left: 6px;
 }
-.usuario-card-v2 .usuario-rol.admin { background: #fff3e0; color: var(--warning); }
-.usuario-card-v2 .usuario-rol.cajero { background: #e3f2fd; color: var(--info); }
+.usuario-card-v2 .usuario-rol.admin { background: #ffffff; color: var(--warning); }
+.usuario-card-v2 .usuario-rol.cajero { background: #ffffff; color: var(--info); }
 
 /* ── Dashboard 4 cols + col-mini apilado ─────────────────────────────────── */
 .dashboard-col-mini { display: flex; flex-direction: column; gap: .6rem; }
@@ -2941,12 +2941,12 @@ html.dark-theme #stockCalculadoWrap {
 }
 
 .status-activo {
-    background: #e8f5e9;
+    background: #ffffff;
     color: #2e7d32;
 }
 
 .status-inactivo {
-    background: #f5f5f5;
+    background: #ffffff;
     color: #757575;
 }
 
