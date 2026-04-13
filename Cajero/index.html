@@ -60,6 +60,11 @@
 @media (max-width: 768px) {
     .tasa-widget { min-width: 110px; padding: 6px 10px; }
     .tasa-widget-input { width: 72px; font-size: 1rem; }
+    .header-right { gap: 8px; flex-wrap: nowrap; }
+    .header-right #usernameDisplay { font-size: 0.8rem; }
+    .header-right .theme-toggle { width: 36px; height: 36px; font-size: 1rem; margin: 0 3px; }
+    .header-right .btn { padding: 8px 12px !important; font-size: 0.8rem !important; }
+    .header-right .btn i { font-size: 0.9rem; }
 }
 </style></head>
 <body>
@@ -92,10 +97,10 @@
         </div>
     </div>
     <div class="header-right">
+        <span id="usernameDisplay" style="color:#fff;font-weight:600;font-size:0.9rem;display:flex;align-items:center;gap:8px;white-space:nowrap"><i class="fas fa-user-circle"></i> <span>Usuario</span></span>
         <button class="theme-toggle" id="themeToggle" onclick="toggleTema()" data-tooltip="Cambiar tema"><i class="fas fa-moon"></i></button>
-        <button class="btn btn-primary" onclick="window.abrirSelectorMesa()" style="padding:12px 25px" data-tooltip="Ver menú del cliente"><i class="fas fa-utensils"></i> Menú Cliente</button>
-        <button class="btn btn-secondary" onclick="window.cerrarSesion()" style="padding:12px 25px" data-tooltip="Cerrar sesión"><i class="fas fa-sign-out-alt"></i> Salir</button>
-        <span id="usernameDisplay" style="color:#fff;font-weight:600;font-size:1rem;display:flex;align-items:center;gap:8px"><i class="fas fa-user-circle"></i> <span>Cargando...</span></span>
+        <button class="btn btn-primary" onclick="window.abrirSelectorMesa()" style="padding:10px 15px;font-size:0.85rem" data-tooltip="Ver menú del cliente"><i class="fas fa-utensils"></i> <span style="display:none;">Menú</span></button>
+        <button class="btn btn-secondary" onclick="window.cerrarSesion()" style="padding:10px 15px;font-size:0.85rem" data-tooltip="Cerrar sesión"><i class="fas fa-sign-out-alt"></i> <span style="display:none;">Salir</span></button>
     </div>
 </div>
 <div class="nav-tabs"><button class="nav-tab active" onclick="window.showSection('pedidos')" data-tooltip="Ver pedidos del día"><i class="fas fa-clipboard-list"></i> Pedidos</button><button class="nav-tab" onclick="window.showSection('menu')" data-tooltip="Ver menú actual"><i class="fas fa-utensils"></i> Ver Menú</button><button class="nav-tab" onclick="window.showSection('propinas')" data-tooltip="Gestionar propinas"><i class="fas fa-hand-holding-heart"></i> Propinas</button><button class="nav-tab" onclick="window.showSection('deliverys')" data-tooltip="Estadísticas de deliverys"><i class="fas fa-motorcycle"></i> Deliverys</button></div>
@@ -223,7 +228,7 @@ window.hacerLogin = async function() {
         }
     }
 };
-window.restaurarSesion=async function(){const token=sessionStorage.getItem('saki_jwt_token'),userData=sessionStorage.getItem('saki_user');if(token&&userData){try{window.jwtToken=token;window.currentUser=JSON.parse(userData);window.supabaseClient=window.inicializarSupabaseCliente(window.jwtToken);const usernameDisplay=document.getElementById('usernameDisplay');if(usernameDisplay&&window.currentUser){usernameDisplay.innerHTML='<i class="fas fa-user-circle"></i> <span>'+window.currentUser.nombre+'</span>'}else if(usernameDisplay){usernameDisplay.innerHTML='<i class="fas fa-user-circle"></i> <span>Usuario</span>'};await window.cargarDatosIniciales();window.mostrarPanel();return true}catch(e){console.error('Error restaurando sesión:',e);window.cerrarSesion()}}return false};
+window.restaurarSesion=async function(){const token=sessionStorage.getItem('saki_jwt_token'),userData=sessionStorage.getItem('saki_user');if(token&&userData){try{window.jwtToken=token;window.currentUser=JSON.parse(userData);window.supabaseClient=window.inicializarSupabaseCliente(window.jwtToken);const usernameDisplay=document.getElementById('usernameDisplay');if(usernameDisplay&&window.currentUser){usernameDisplay.innerHTML='<i class="fas fa-user-circle"></i> <span>'+window.currentUser.nombre+'</span>'}else if(usernameDisplay){usernameDisplay.innerHTML='<i class="fas fa-user-circle"></i> <span>Usuario</span>'};document.getElementById('loginContainer').classList.add('hidden');document.getElementById('panelContainer').classList.remove('hidden');await window.cargarDatosIniciales();window.setupEventListeners();window.setupRealtimeSubscriptions();window.setupLogoutListener();setTimeout(()=>window.verificarYControlarAlarma(),100);return true}catch(e){console.error('Error restaurando sesión:',e);window.cerrarSesion()}}return false};
 window.forzarCierreSesionAnterior=async function(){const _flBtn=document.getElementById('confirmForceLogoutBtn');if(_flBtn&&_flBtn.disabled)return;if(_flBtn){_flBtn.disabled=true;_flBtn.innerHTML='<i class="fas fa-spinner fa-spin"></i>';}window.cerrarModal('confirmLogoutModal');if(!window.pendingLoginUser){if(_flBtn){_flBtn.disabled=false;_flBtn.innerHTML='Sí, cerrar anterior';}return;}try{const channel=window.supabaseClient.channel(`user_${window.pendingLoginUser.id}`);await channel.subscribe((status)=>{if(status==='SUBSCRIBED'){channel.send({type:'broadcast',event:'force_logout',payload:{userId:window.pendingLoginUser.id}})}});setTimeout(()=>{channel.unsubscribe()},500)}catch(e){console.error('Error notificando cierre de sesión:',e)}const oldSessionKey=`saki_session_${window.pendingLoginUser.id}`;sessionStorage.removeItem(oldSessionKey);await window.procesarLoginExitoso(window.pendingLoginUser);window.pendingLoginUser=null;if(_flBtn){_flBtn.disabled=false;_flBtn.innerHTML='Sí, cerrar anterior';}};
 window.cerrarSesion=function(){sessionStorage.removeItem('saki_jwt_token');sessionStorage.removeItem('saki_user');window.currentUser=null;window.jwtToken=null;window.detenerAlarma();window.mostrarLogin();window.supabaseClient=window.inicializarSupabaseCliente()};
 window.setupLogoutListener=function(){if(!window.currentUser)return;const channel=window.supabaseClient.channel(`user_${window.currentUser.id}`);channel.on('broadcast',{event:'force_logout'},(payload)=>{if(payload.payload.userId===window.currentUser?.id){window.mostrarToast('🔄 Tu sesión fue cerrada desde otro dispositivo','warning');window.cerrarSesion()}}).subscribe()};
