@@ -3,15 +3,14 @@
 __pycache__/
 *.o
 *.obj
+dist/
+build/
 *.class
 *.exe
 *.dll
 *.so
 *.a
 *.out
-dist/
-build/
-target/
 
 # Dependencies
 .venv/
@@ -19,12 +18,8 @@ venv/
 node_modules/
 .mypy_cache/
 .pytest_cache/
-.coverage
-coverage/
-htmlcov/
+target/
 .gradle/
-julia-*/
-zig*/
 
 # Logs and temp files
 *.log
@@ -47,7 +42,12 @@ zig*/
 .DS_Store
 Thumbs.db
 
-# Common compressed files
+# Coverage
+coverage/
+htmlcov/
+.coverage
+
+# Compressed files
 *.zip
 *.gz
 *.tar
