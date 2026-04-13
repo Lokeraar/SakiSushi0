@@ -415,27 +415,27 @@ html:not(.dark-theme) .login-container::before {
     content: '';
     position: absolute;
     inset: 0;
-    background: rgba(255, 255, 255, 0.85);
+    background: rgba(26, 26, 46, 0.85);
     backdrop-filter: blur(2px);
 }
 html:not(.dark-theme) .login-box {
-    background: #ffffff;
-    border: 1px solid #d0d0d0;
-    backdrop-filter: none;
-    box-shadow: 0 4px 24px rgba(0,0,0,0.12);
+    background: rgba(255,255,255,.05);
+    border: 1px solid rgba(255,255,255,.1);
+    backdrop-filter: blur(20px);
+    box-shadow: var(--shadow-lg);
 }
 html:not(.dark-theme) .login-box h2 {
-    color: #000000;
+    color: #fff;
 }
 html:not(.dark-theme) .login-form input {
-    border: 1px solid #cccccc;
-    background: #ffffff;
-    color: #000000;
+    border: 1px solid rgba(255,255,255,.2);
+    background: rgba(255,255,255,.1);
+    color: #fff;
 }
-html:not(.dark-theme) .login-form input::placeholder { color: #666666; }
-html:not(.dark-theme) .login-form input:focus { border-color: var(--primary); background: #fafafa; }
-html:not(.dark-theme) .recovery-link a { color: #666666; }
-html:not(.dark-theme) .recovery-link a:hover { color: var(--primary); }
+html:not(.dark-theme) .login-form input::placeholder { color: rgba(255,255,255,.6); }
+html:not(.dark-theme) .login-form input:focus { border-color: var(--primary); background: rgba(255,255,255,.15); }
+html:not(.dark-theme) .recovery-link a { color: rgba(255,255,255,.8); }
+html:not(.dark-theme) .recovery-link a:hover { color: var(--accent); }
 
 .theme-toggle-input {
     position: relative;
