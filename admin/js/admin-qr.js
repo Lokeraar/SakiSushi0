@@ -120,4 +120,40 @@
         const closeBtn = document.getElementById('qrModalCloseBtn');
         if (closeBtn) closeBtn.onclick = () => window.cerrarModal('qrAmpliadoModal');
     };
+
+    // ==================== SELECTOR DE MESAS PARA ADMIN ====================
+    window.abrirSelectorMesaAdmin = async function() {
+        try {
+            // Cargar mesas desde codigos_qr
+            const { data, error } = await window.supabaseClient.from('codigos_qr').select('*').order('nombre');
+            if (error) throw error;
+            
+            const mesas = data || [];
+            const modal = document.getElementById('adminMesaModal');
+            const mesaList = document.getElementById('adminMesaList');
+            
+            if (!mesas.length) {
+                mesaList.innerHTML = '<p style="color:var(--text-muted);text-align:center;padding:2rem"><i class="fas fa-info-circle" style="font-size:2rem;margin-bottom:1rem;display:block"></i>No hay mesas registradas</p>';
+            } else {
+                mesaList.innerHTML = mesas.map(m => `
+                    <button class="btn-primary" onclick="window.seleccionarMesaAdmin('${m.nombre.replace(/'/g, "\\'")}')" style="padding:1rem;display:flex;flex-direction:column;align-items:center;gap:.5rem;cursor:pointer;transition:all .3s ease;border:none;border-radius:12px;background:var(--card-bg);color:var(--text-dark);font-weight:600" onmouseover="this.style.background='var(--primary)';this.style.color='#fff'" onmouseout="this.style.background='var(--card-bg)';this.style.color='var(--text-dark)'">
+                        <i class="fas fa-chair" style="font-size:1.5rem;color:var(--accent)"></i>
+                        <span>${m.nombre}</span>
+                    </button>
+                `).join('');
+            }
+            
+            modal.classList.add('active');
+        } catch (e) {
+            console.error('Error abriendo selector de mesas:', e);
+            window.mostrarToast('❌ Error al cargar mesas', 'error');
+        }
+    };
+    
+    window.seleccionarMesaAdmin = function(mesaNombre) {
+        // Redirigir a la página del cliente con la mesa específica
+        const url = `${window.location.origin}/SakiSushi0/Cliente/index.html?mesa=${encodeURIComponent(mesaNombre)}`;
+        window.open(url, '_blank');
+        window.cerrarModal('adminMesaModal');
+    };
 })();
