@@ -263,6 +263,8 @@
         window.limpiarImagenPreview();
         window.cargarCategoriasSelect();
         window.platilloEditandoId = null;
+        const deleteBtn = document.getElementById('deletePlatilloBtn');
+        if (deleteBtn) deleteBtn.style.display = 'none';
         document.getElementById('platilloModal').classList.add('active');
     };
 
@@ -452,6 +454,8 @@
                 window.agregarIngredienteRow(ingId, ingInfo.cantidad, ingInfo.unidad, ingInfo.principal || false);
             });
         }
+        const deleteBtn = document.getElementById('deletePlatilloBtn');
+        if (deleteBtn) deleteBtn.style.display = 'inline-flex';
         document.getElementById('platilloModal').classList.add('active');
     };
 
@@ -475,6 +479,25 @@
                 }
             }
         );
+    };
+
+    window._eliminarPlatilloDesdeModal = async function() {
+        const id = window.platilloEditandoId;
+        if (!id) return;
+        const platillo = window.menuItems.find(p => p.id === id);
+        if (!platillo || !confirm(`¿Eliminar el platillo "${platillo.nombre || id}"?`)) return;
+        try {
+            if (platillo.imagen && platillo.imagen.includes('imagenes-platillos')) {
+                await window.eliminarImagenPlatillo(platillo.imagen);
+            }
+            await window.supabaseClient.from('menu').delete().eq('id', id);
+            await window.cargarMenu();
+            window.cerrarModal('platilloModal');
+            window.mostrarToast('🗑️ Platillo eliminado', 'success');
+        } catch (e) {
+            console.error('Error eliminando platillo:', e);
+            window.mostrarToast('❌ Error al eliminar el platillo', 'error');
+        }
     };
 
     window.actualizarProductosActivos = function() {
