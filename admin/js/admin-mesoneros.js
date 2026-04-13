@@ -56,7 +56,7 @@
             const toggleClass = m.activo ? 'btn-toggle-on' : 'btn-toggle-off';
             const toggleTxt   = m.activo ? 'Inhabilitar' : 'Activar';
             const toggleVal   = String(!m.activo);
-            return '<div class="usuario-card-v2 mesonero-card" style="border-left-color:var(--propina)">'
+            return '<div class="card-standard mesonero-card" style="border-left-color:var(--propina)">'
                 + avatar
                 + '<div class="ucard-body">'
                 +   '<div class="ucard-top">'

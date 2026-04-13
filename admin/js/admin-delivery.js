@@ -41,7 +41,7 @@
                 var toggleTxt   = d.activo ? 'Inhabilitar' : 'Activar';
                 var toggleVal   = String(!d.activo);
                 var card = document.createElement('div');
-                card.className = 'usuario-card-v2 delivery-card';
+                card.className = 'card-standard delivery-card';
                 card.style.borderLeftColor = 'var(--delivery)';
                 card.innerHTML = avatar
                     + '<div class="ucard-body">'
