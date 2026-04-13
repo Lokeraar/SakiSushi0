@@ -463,23 +463,18 @@
         const id = window.ingredienteEditandoId;
         if (!id) return;
         const ing = (window.inventarioItems || []).find(i => i.id === id);
-        window.mostrarConfirmacionPremium(
-            'Eliminar Ingrediente',
-            `¿Estás seguro de eliminar "${ing?.nombre || id}"? Esta acción no se puede deshacer.`,
-            async () => {
-                try {
-                    const { error } = await window.supabaseClient.from('inventario').delete().eq('id', id);
-                    if (error) throw error;
-                    window.cerrarModal('ingredienteModal');
-                    window.ingredienteEditandoId = null;
-                    await window.cargarInventario();
-                    window.mostrarToast('🗑️ Ingrediente eliminado', 'success');
-                } catch(e) {
-                    console.error('Error eliminando ingrediente:', e);
-                    window.mostrarToast('❌ Error: ' + (e.message || e), 'error');
-                }
-            }
-        );
+        if (!confirm(`¿Eliminar el ingrediente "${ing?.nombre || id}"?`)) return;
+        try {
+            const { error } = await window.supabaseClient.from('inventario').delete().eq('id', id);
+            if (error) throw error;
+            window.cerrarModal('ingredienteModal');
+            window.ingredienteEditandoId = null;
+            await window.cargarInventario();
+            window.mostrarToast('🗑️ Ingrediente eliminado', 'success');
+        } catch(e) {
+            console.error('Error eliminando ingrediente:', e);
+            window.mostrarToast('❌ Error: ' + (e.message || e), 'error');
+        }
     };
 
     window.agregarStock = function(ingredienteId) {
