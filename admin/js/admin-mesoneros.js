@@ -249,11 +249,14 @@
         const total    = propinas.reduce(function(s,p){ return s+(p.monto_bs||0); }, 0);
         const cantidad = propinas.length;
         const promedio = cantidad > 0 ? total/cantidad : 0;
+        const tasa     = Number(window.configGlobal?.tasa_efectiva || window.configGlobal?.tasa_cambio || 400) || 400;
+        const totalUsd = tasa > 0 ? total / tasa : 0;
+        const promUsd  = tasa > 0 ? promedio / tasa : 0;
         var el;
-        el = document.getElementById('propinasTotal');    if(el) el.textContent = window.formatBs(total);
+        el = document.getElementById('propinasTotal');    if(el) el.textContent = window.formatUSD(totalUsd) + ' / ' + window.formatBs(total);
         el = document.getElementById('propinasCantidad'); if(el) el.textContent = String(cantidad);
-        el = document.getElementById('propinasPromedio'); if(el) el.textContent = window.formatBs(promedio);
-        el = document.getElementById('propinasHoyDashboard'); if(el) el.textContent = window.formatBs(total);
+        el = document.getElementById('propinasPromedio'); if(el) el.textContent = window.formatUSD(promUsd) + ' / ' + window.formatBs(promedio);
+        el = document.getElementById('propinasHoyDashboard'); if(el) el.textContent = window.formatUSD(totalUsd) + ' / ' + window.formatBs(total);
         const tbody = document.getElementById('propinasTableBody');
         if (tbody) {
             const ultimas5 = propinas.slice(0, 5);
