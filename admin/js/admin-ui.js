@@ -159,146 +159,16 @@
         });
     };
 
-    // Dentro de admin-ui.js, reemplazar las funciones de tema y añadir setup del header
-
-	window.toggleTheme = function() {
-		const html = document.documentElement;
-		const isDark = html.classList.toggle('dark-theme');
-		const themeSimpleIcon = document.getElementById('themeSimpleIcon');
-		if (themeSimpleIcon) {
-			themeSimpleIcon.className = isDark ? 'fas fa-moon' : 'fas fa-sun';
-		}
-		localStorage.setItem('saki_admin_theme', isDark ? 'dark' : 'light');
-	};
-
-	window.initTheme = function() {
-		const savedTheme = localStorage.getItem('saki_admin_theme');
-		const themeSimpleIcon = document.getElementById('themeSimpleIcon');
-		if (savedTheme === 'dark') {
-			document.documentElement.classList.add('dark-theme');
-			if (themeSimpleIcon) themeSimpleIcon.className = 'fas fa-moon';
-		} else {
-			document.documentElement.classList.remove('dark-theme');
-			if (themeSimpleIcon) themeSimpleIcon.className = 'fas fa-sun';
-		}
-	};
-
-	// Setup del header: reemplazar corona por logo
-	window.setupHeader = function() {
-		const headerTitle = document.querySelector('.header-left h2');
-		if (headerTitle) {
-			const originalHtml = headerTitle.innerHTML;
-			// Reemplazar ícono corona por logo
-			headerTitle.innerHTML = `<img src="https://lh3.googleusercontent.com/pw/AP1GczPrZAoWxmsOGRD9xl1hO5Q65JXuwUZzoR6gUk-cw5lVmarxQe_-lwqpA60tTKLlXfpvIjAJlKC6jFls-xETJOPkebLIIPhbGlUkknmhrRbdhMUll2UViGSUj3WmHKg2YEsZlAfxBPPTjIHhScjD0jfe=w1439-h1439-s-no-gm" alt="Saki Sushi" style="width:32px;height:32px;border-radius:50%;margin-right:8px"> Administración Saki Sushi`;
-		}
-
-	};
-	
-	// Función para configurar el toggle de tema
-	window.setupThemeToggle = function() {
-		const themeToggle = document.getElementById('themeToggle');
-		if (!themeToggle) return;
-		
-		// Cargar estado guardado
-		const temaGuardado = localStorage.getItem('saki_admin_theme') || 'light';
-		themeToggle.checked = temaGuardado === 'dark';
-		
-		// Listener para cambio de tema
-		themeToggle.addEventListener('change', (e) => {
-			const nuevoTema = e.target.checked ? 'dark' : 'light';
-			const html = document.documentElement;
-			
-			if (nuevoTema === 'dark') {
-				html.classList.add('dark-theme');
-			} else {
-				html.classList.remove('dark-theme');
-			}
-			
-			localStorage.setItem('saki_admin_theme', nuevoTema);
-		});
-	};
-	
-	// Función para configurar el header con nombre de usuario
-	window.setupHeaderUsuario = function() {
-		const usuarioDisplay = document.getElementById('nombreUsuarioDisplay');
-		if (!usuarioDisplay) return;
-		
-		const usuarioActual = JSON.parse(localStorage.getItem('usuario_saki'));
-		if (usuarioActual && usuarioActual.nombre) {
-			usuarioDisplay.textContent = usuarioActual.nombre;
-		} else {
-			usuarioDisplay.textContent = 'Invitado';
-		}
-	};
-    window.abrirSelectorMesaAdmin = async function() {
-        const list = document.getElementById('adminMesaList');
-        list.innerHTML = '<p style="color:var(--text-muted)">Cargando mesas...</p>';
-        document.getElementById('adminMesaModal').classList.add('active');
-        try {
-            const { data, error } = await window.supabaseClient.from('codigos_qr').select('*').order('nombre');
-            if (error) throw error;
-            const mesas = data || [];
-            if (!mesas.length) {
-                list.innerHTML = '<p style="color:var(--text-muted);grid-column:1/-1">No hay mesas creadas. Genera QRs en la pestaña Códigos QR.</p>';
-                return;
-            }
-            list.innerHTML = '';
-            mesas.forEach(mesa => {
-                const url = window.location.origin + '/SakiSushi0/Cliente/index.html?mesa=' + encodeURIComponent(mesa.nombre);
-                const btn = document.createElement('button');
-                btn.className = 'mesa-admin-btn';
-                btn.innerHTML = '<i class="fas fa-chair"></i><span>' + mesa.nombre + '</span>';
-                btn.addEventListener('click', function() {
-                    window.open(url, '_blank');
-                    window.cerrarModal('adminMesaModal');
-                });
-                list.appendChild(btn);
-            });
-        } catch(e) {
-            list.innerHTML = '<p style="color:var(--danger)">Error cargando mesas: ' + (e.message || e) + '</p>';
-        }
-    };
-
-    window._irAMesoneros = function() {
-        const tabs = document.querySelectorAll('.tab');
-        const panes = document.querySelectorAll('.tab-pane');
-        tabs.forEach(tab => tab.classList.remove('active'));
-        panes.forEach(pane => pane.classList.remove('active'));
-        const mesonerosTab = document.querySelector('.tab[data-tab="mesoneros"]');
-        const mesonerosPane = document.getElementById('mesonerosPane');
-        if (mesonerosTab) mesonerosTab.classList.add('active');
-        if (mesonerosPane) mesonerosPane.classList.add('active');
-        setTimeout(() => {
-            mesonerosPane?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }, 100);
-    };
-
-    // Animación para resaltar elemento (stock crítico)
-    window.resaltarElemento = function(elementoId, tipo = 'border') {
-        const el = document.getElementById(elementoId);
-        if (!el) return;
-        if (tipo === 'border') {
-            el.style.transition = 'box-shadow 0.3s, border-color 0.3s';
-            el.style.boxShadow = '0 0 0 3px var(--danger)';
-            el.style.borderColor = 'var(--danger)';
-            setTimeout(() => {
-                el.style.boxShadow = '';
-                el.style.borderColor = '';
-            }, 1500);
-        } else if (tipo === 'pulse') {
-            el.style.animation = 'pulse 0.6s ease-in-out 2';
-            setTimeout(() => { el.style.animation = ''; }, 1200);
-        }
-    };
-
     // ==================== INICIALIZACIÓN AL CARGAR LA PÁGINA ====================
     document.addEventListener('DOMContentLoaded', async () => {
-        window.initTheme();
-        window.setupThemeToggle();
         window.setupHeaderUsuario();
         
 		// Inicializar UI de login (cargar lista de administradores)
 		window.iniciarLoginUI();
+        
+        // Inicializar tema antes de mostrar cualquier cosa
+        window.initTheme();
+        
         if (await window.restaurarSesionAdmin()) {
             window.mostrarPanel();
             // Actualizar header con nombre de usuario (ya se hace en setupHeaderUsuario)
@@ -384,5 +254,73 @@
         const diff = window.calcularDiferenciaTasa();
         const valorEl = document.getElementById('diferenciaTasaValor');
         if (valorEl) valorEl.textContent = window.formatBs(diff);
+    };
+
+    // ==================== SISTEMA DE TEMAS PREMIUM ====================
+    
+    // Inicializar tema al cargar
+    window.initTheme = function() {
+        const savedTheme = localStorage.getItem('sakiSushiTheme');
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        
+        if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+            document.documentElement.classList.add('dark-theme');
+        } else {
+            document.documentElement.classList.remove('dark-theme');
+        }
+        
+        // Configurar event listener del toggle
+        const themeToggle = document.getElementById('themeToggle');
+        if (themeToggle) {
+            themeToggle.checked = document.documentElement.classList.contains('dark-theme');
+            themeToggle.addEventListener('change', window.toggleTheme);
+        }
+    };
+
+    // Cambiar tema con animación de partículas
+    window.toggleTheme = function(e) {
+        const isDark = e.target.checked;
+        const html = document.documentElement;
+        
+        // Crear efecto de partículas
+        window.createThemeParticles(e.target);
+        
+        // Aplicar tema
+        if (isDark) {
+            html.classList.add('dark-theme');
+        } else {
+            html.classList.remove('dark-theme');
+        }
+        
+        // Guardar preferencia
+        localStorage.setItem('sakiSushiTheme', isDark ? 'dark' : 'light');
+    };
+
+    // Efecto de partículas al cambiar tema
+    window.createThemeParticles = function(element) {
+        const rect = element.getBoundingClientRect();
+        const colors = ['#D32F2F', '#FF7043', '#FFB300', '#9FA8DA', '#5C6BC0'];
+        
+        for (let i = 0; i < 12; i++) {
+            setTimeout(() => {
+                const particle = document.createElement('div');
+                particle.className = 'theme-particle';
+                particle.style.left = (rect.left + rect.width / 2) + 'px';
+                particle.style.top = (rect.top + rect.height / 2) + 'px';
+                particle.style.background = colors[Math.floor(Math.random() * colors.length)];
+                
+                // Dirección aleatoria
+                const angle = (Math.PI * 2 * i) / 12;
+                const distance = 60 + Math.random() * 40;
+                const tx = Math.cos(angle) * distance;
+                const ty = Math.sin(angle) * distance;
+                
+                particle.style.transform = `translate(${tx}px, ${ty}px)`;
+                document.body.appendChild(particle);
+                
+                // Limpiar partícula después de la animación
+                setTimeout(() => particle.remove(), 600);
+            }, i * 30);
+        }
     };
 })();
