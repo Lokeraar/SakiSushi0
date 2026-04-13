@@ -345,13 +345,13 @@
                     <h2 class="section-title"><i class="fas fa-user-tie" style="color:var(--propina)"></i> Mesoneros y Propinas</h2>
                     <div class="pane-actions">
                         <input type="text" id="nuevoMesonero" placeholder="Nombre del mesonero" class="pane-input">
-                        <button class="btn-primary" onclick="window.agregarMesonero()"><i class="fas fa-plus"></i> Agregar</button>
+                        <button class="btn-delivery" onclick="window.agregarMesonero()" style="background:linear-gradient(135deg,var(--propina),#7B1FA2)"><i class="fas fa-plus"></i> Agregar</button>
                     </div>
                 </div>
-                <div class="propinas-stats">
-                    <div class="propina-card"><div class="stat-value" id="propinasTotal">Bs 0,00</div><div class="stat-label">Total del Día</div></div>
-                    <div class="propina-card"><div class="stat-value" id="propinasCantidad">0</div><div class="stat-label">Propinas Hoy</div></div>
-                    <div class="propina-card"><div class="stat-value" id="propinasPromedio">Bs 0,00</div><div class="stat-label">Promedio</div></div>
+                <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.85rem;margin-bottom:1.25rem" id="mesonerosStatsGrid">
+                    <div class="delivery-stat-card" style="border-top-color:var(--propina)"><div class="delivery-stat-label"><i class="fas fa-coins"></i> TOTAL DEL DÍA</div><div class="delivery-stat-value" id="propinasTotal">$0.00 / Bs 0,00</div></div>
+                    <div class="delivery-stat-card" style="border-top-color:var(--propina)"><div class="delivery-stat-label"><i class="fas fa-hand-holding-usd"></i> PROPINAS HOY</div><div class="delivery-stat-value" id="propinasCantidad">0</div></div>
+                    <div class="delivery-stat-card" style="border-top-color:var(--propina)"><div class="delivery-stat-label"><i class="fas fa-chart-line"></i> PROMEDIO</div><div class="delivery-stat-value" id="propinasPromedio">$0.00 / Bs 0,00</div></div>
                 </div>
                 <div id="mesonerosList" class="mesoneros-grid"></div>
                 <div class="table-section" style="margin-top:1.5rem">
