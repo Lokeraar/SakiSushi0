@@ -125,6 +125,9 @@ body {
     background: rgba(10, 10, 20, .55);
     backdrop-filter: blur(2px);
 }
+html:not(.dark-theme) .login-container::before {
+    background: rgba(255, 255, 255, 0.85);
+}
 .login-box { position: relative; z-index: 1; }
 .login-box {
     background: rgba(255,255,255,.05);
@@ -403,6 +406,36 @@ html:not(.dark-theme) .icon-sun {
     color: #FFB300;
 }
 html:not(.dark-theme) .icon-moon { opacity: 0.25; transform: scale(0.85); }
+
+/* TEMA CLARO - Login con fondo blanco y colores contrastantes */
+html:not(.dark-theme) .login-container {
+    background: url('https://iqwwoihiiyrtypyqzhgy.supabase.co/storage/v1/object/public/imagenes-platillos/Fondo%20de%20pantalla.png') center/cover no-repeat fixed;
+}
+html:not(.dark-theme) .login-container::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(2px);
+}
+html:not(.dark-theme) .login-box {
+    background: #ffffff;
+    border: 1px solid #d0d0d0;
+    backdrop-filter: none;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.12);
+}
+html:not(.dark-theme) .login-box h2 {
+    color: #000000;
+}
+html:not(.dark-theme) .login-form input {
+    border: 1px solid #cccccc;
+    background: #ffffff;
+    color: #000000;
+}
+html:not(.dark-theme) .login-form input::placeholder { color: #666666; }
+html:not(.dark-theme) .login-form input:focus { border-color: var(--primary); background: #fafafa; }
+html:not(.dark-theme) .recovery-link a { color: #666666; }
+html:not(.dark-theme) .recovery-link a:hover { color: var(--primary); }
 
 .theme-toggle-input {
     position: relative;
@@ -2454,16 +2487,17 @@ a { color: var(--primary); }
     cursor: pointer; user-select: none;
     padding: .2rem .3rem; border-radius: 50px; transition: background .2s;
 }
-.theme-toggle-wrap:hover { background: rgba(255,255,255,.08); }
+html:not(.dark-theme) .theme-toggle-wrap:hover { background: rgba(0,0,0,.06); }
+html.dark-theme .theme-toggle-wrap:hover { background: rgba(255,255,255,.08); }
 .theme-toggle-icon-sun  { font-size: .72rem; color: #FFB300; opacity: .85; }
 .theme-toggle-icon-moon { font-size: .72rem; color: #90caf9; opacity: .55; }
 html.dark-theme .theme-toggle-icon-sun  { opacity: .45; }
 html.dark-theme .theme-toggle-icon-moon { opacity: .9; }
 .theme-toggle-track {
     position: relative; width: 46px; height: 25px;
-    background: linear-gradient(135deg,#2c2c54,#1a1a2e);
-    border-radius: 50px; border: 1.5px solid rgba(255,255,255,.18);
-    box-shadow: inset 0 1px 4px rgba(0,0,0,.35);
+    background: linear-gradient(135deg,#f5f5f5,#e0e0e0);
+    border-radius: 50px; border: 1.5px solid #cccccc;
+    box-shadow: inset 0 1px 4px rgba(0,0,0,.08);
     transition: background .35s; flex-shrink: 0;
 }
 html.dark-theme .theme-toggle-track {
@@ -2472,7 +2506,7 @@ html.dark-theme .theme-toggle-track {
 }
 .theme-toggle-thumb {
     position: absolute; top: 2px; left: 2px; width: 19px; height: 19px;
-    border-radius: 50%; background: #fff; box-shadow: 0 2px 5px rgba(0,0,0,.3);
+    border-radius: 50%; background: #fff; box-shadow: 0 2px 5px rgba(0,0,0,.2);
     transition: transform .32s cubic-bezier(.34,1.56,.64,1), background .3s;
     display: flex; align-items: center; justify-content: center;
     font-size: .58rem; color: #FF9800;
