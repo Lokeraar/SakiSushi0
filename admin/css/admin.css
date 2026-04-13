@@ -989,7 +989,7 @@ html.dark-theme .dashboard-card { border-color: transparent; border-left-color: 
     display: flex;
     flex-direction: column;
     gap: 0.25rem;
-    margin-left: 0.5rem;
+    margin-left: 0.25rem;
 }
 .mesonero-card .ucard-top {
     display: flex;
@@ -1011,6 +1011,8 @@ html.dark-theme .dashboard-card { border-color: transparent; border-left-color: 
 .mesonero-card .ucard-line2 {
     display: flex;
     align-items: center;
+    flex-direction: column;
+    gap: 0.15rem;
 }
 .mesonero-card .ucard-line3 {
     display: flex;
@@ -1027,7 +1029,7 @@ html.dark-theme .dashboard-card { border-color: transparent; border-left-color: 
     font-size: .75rem;
     font-weight: 600;
 }
-.mesonero-nombre { font-weight: 700; font-size: .95rem; color: var(--text-dark); }
+.mesonero-nombre { font-weight: 700; font-size: .95rem; color: var(--text-dark); text-transform: uppercase; }
 .mesonero-acumulado { font-weight: 700; color: var(--propina); font-size: 1.1rem; }
 .mesonero-actions { display: flex; gap: .5rem; margin-top: .75rem; flex-wrap: wrap; }
 .propinas-stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }

@@ -46,8 +46,8 @@
                 ? '<div class="ucard-avatar"><img src="' + m.foto + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;cursor:pointer" onclick="window.expandirImagen(this.src)"></div>'
                 : '<div class="ucard-avatar"><div style="width:100%;height:100%;font-size:1.4rem;border-radius:50%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--propina),#7B1FA2);color:#fff">' + inicial + '</div></div>';
             const badge = m.activo
-                ? '<span class="ucard-status-inline" style="color:var(--success)"><i class="fas fa-check-circle"></i> Activo</span>'
-                : '<span class="ucard-status-inline" style="color:var(--text-muted)"><i class="fas fa-circle"></i> Inactivo</span>';
+                ? '<span class="ucard-status-inline" style="color:var(--success);margin-left:auto"><i class="fas fa-check-circle"></i> ACTIVO</span>'
+                : '<span class="ucard-status-inline" style="color:var(--text-muted);margin-left:auto"><i class="fas fa-circle"></i> INACTIVO</span>';
             const propStr = hayAcum
                 ? window.formatUSD(acumUsd) + ' | ' + window.formatBs(acum)
                 : 'Bs 0,00';
@@ -61,8 +61,8 @@
                 + '<div class="ucard-body">'
                 +   '<div class="ucard-top">'
                 +     '<div class="ucard-names">'
-                +       '<div class="ucard-line1"><span class="mesonero-nombre">' + m.nombre + '</span>' + badge + '</div>'
-                +       '<div class="ucard-line2"><span style="font-size:.78rem;color:var(--propina);font-weight:600">' + window.formatUSD(acumUsd) + ' / ' + window.formatBs(acum) + '</span></div>'
+                +       '<div class="ucard-line1"><span class="mesonero-nombre">' + m.nombre.toUpperCase() + '</span>' + badge + '</div>'
+                +       '<div class="ucard-line2"><span style="font-size:.78rem;color:var(--propina);font-weight:600">TOTAL DEL DÍA<br>' + window.formatUSD(acumUsd) + ' / ' + window.formatBs(acum) + '</span></div>'
                 +       '<div class="ucard-line3">'
                 +         '<button class="btn-sm" style="background:linear-gradient(135deg,var(--propina),#7B1FA2);color:#fff;white-space:nowrap;font-size:.75rem;padding:.35rem .6rem" onclick="window.mostrarPagoMesonero(\'' + m.id + '\')">'
                 +           '<i class="fas fa-hand-holding-usd"></i> Pagado'
