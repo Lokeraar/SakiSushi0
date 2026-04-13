@@ -2880,6 +2880,34 @@ html.dark-theme #stockCalculadoWrap {
     }
 }
 
+/* Ajustes para móviles estrechos (9:16 vertical) - mantener toggle + Cajero + Mesas en una línea */
+@media (max-width: 480px) {
+    .header-right-group.controls-group {
+        display: flex;
+        flex-wrap: nowrap;
+        justify-content: flex-end;
+        gap: 0.35rem;
+    }
+    
+    .theme-switch-wrapper {
+        padding: 0.2rem 0.35rem;
+    }
+    
+    .icon-sun, .icon-moon {
+        font-size: 0.85rem;
+    }
+    
+    .btn-header-control {
+        padding: 0.3rem 0.5rem;
+        font-size: 0.7rem;
+        min-width: auto;
+    }
+    
+    .btn-header-control i {
+        font-size: 0.85rem;
+    }
+}
+
 /* Eliminar bordes entre niveles del header */
 .htitle {
     border-bottom: none !important;
