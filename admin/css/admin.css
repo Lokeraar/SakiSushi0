@@ -901,7 +901,8 @@ html.dark-theme .dashboard-card { border-color: transparent; border-left-color: 
     display: flex;
     align-items: center;
     justify-content: center;
-    background: var(--secondary);
+    background: transparent;
+    margin-right: 0.75rem;
 }
 .delivery-card .ucard-body {
     grid-column: 2;
@@ -909,6 +910,7 @@ html.dark-theme .dashboard-card { border-color: transparent; border-left-color: 
     display: flex;
     flex-direction: column;
     gap: 0.25rem;
+    margin-left: 0.25rem;
 }
 .delivery-card .ucard-top {
     display: flex;
@@ -1353,7 +1355,8 @@ html.dark-theme .modal-close:hover { color: #fff; }
     display: flex;
     align-items: center;
     justify-content: center;
-    background: var(--secondary);
+    background: transparent;
+    margin-right: 0.75rem;
 }
 .mesonero-card .ucard-body {
     grid-column: 2;
@@ -1361,6 +1364,7 @@ html.dark-theme .modal-close:hover { color: #fff; }
     display: flex;
     flex-direction: column;
     gap: 0.25rem;
+    margin-left: 0.25rem;
 }
 .mesonero-card .ucard-top {
     display: flex;
@@ -2573,7 +2577,8 @@ html.dark-theme .mesa-admin-btn {
     display: flex;
     align-items: center;
     justify-content: center;
-    background: var(--secondary);
+    background: transparent;
+    margin-right: 0.75rem;
 }
 .usuario-card-v2 .ucard-body {
     grid-column: 2;
@@ -2581,6 +2586,7 @@ html.dark-theme .mesa-admin-btn {
     display: flex;
     flex-direction: column;
     gap: 0.25rem;
+    margin-left: 0.25rem;
 }
 .usuario-card-v2 .ucard-top {
     display: flex;
@@ -2989,13 +2995,13 @@ html.dark-theme #stockCalculadoWrap {
     width: 60px;
     height: 100%;
     min-height: 60px;
-    border-radius: 8px;
+    border-radius: 50%;
     overflow: hidden;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: var(--secondary);
-    margin-right: 0.5rem;
+    background: transparent;
+    margin-right: 0.75rem;
 }
 
 .usuario-card-v2 .ucard-avatar img,
@@ -3015,6 +3021,7 @@ html.dark-theme #stockCalculadoWrap {
     flex-direction: column;
     gap: 0.2rem;
     min-width: 0;
+    margin-left: 0.25rem;
 }
 
 /* Línea 1: Nombre + Estado (derecha) */
@@ -3136,10 +3143,13 @@ html.dark-theme .status-inactivo {
         width: 50px;
         height: 100%;
         min-height: 50px;
+        background: transparent;
+        margin-right: 0.6rem;
     }
     
     .ucard-body {
         grid-column: 2;
+        margin-left: 0.2rem;
     }
     
     .ucard-line1,
