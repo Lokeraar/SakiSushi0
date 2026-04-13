@@ -511,7 +511,13 @@
                     <!-- imagen movida al tope del formulario (tarea 3.5) -->
                 </form>
             </div>
-            <div class="modal-footer" style="display:flex; justify-content:space-between; align-items:center"><button class="btn-primary" id="deleteIngredienteBtn" type="button" style="display:none; padding:.6rem 1.2rem; border-radius:8px; background:var(--danger); color:#fff; border:none; cursor:pointer; font-size:.85rem; font-weight:600; pointer-events:auto" onclick="window._eliminarIngredienteDesdeModal()"><i class="fas fa-trash" style="pointer-events:none"></i> Eliminar</button><div style="display:flex; gap:.75rem"><button class="btn-secondary" id="cancelIngrediente" type="button" style="pointer-events:auto">Cancelar</button><button class="btn-primary" id="saveIngrediente" type="button" style="pointer-events:auto">Guardar</button></div></div>
+            <div class="modal-footer">
+                <button class="btn-primary" id="deleteIngredienteBtn" type="button" style="display:none;"><i class="fas fa-trash"></i> Eliminar</button>
+                <div style="display:flex; gap:.75rem;">
+                    <button class="btn-secondary" id="cancelIngrediente" type="button">Cancelar</button>
+                    <button class="btn-primary" id="saveIngrediente" type="button">Guardar</button>
+                </div>
+            </div>
         </div>
     </div>
 
