@@ -154,8 +154,8 @@
                 <div style="padding:1.5rem">
                     <p style="color:var(--text-dark);margin-bottom:1.5rem">${mensaje}</p>
                     <div style="display:flex;gap:.75rem;justify-content:flex-end">
-                        <button class="btn-secondary" id="confirmPremiumCancel">Cancelar</button>
-                        <button class="btn-primary" id="confirmPremiumOk">Confirmar</button>
+                        <button type="button" class="btn-secondary" id="confirmPremiumCancel">Cancelar</button>
+                        <button type="button" class="btn-primary" id="confirmPremiumOk">Confirmar</button>
                     </div>
                 </div>
             </div>
