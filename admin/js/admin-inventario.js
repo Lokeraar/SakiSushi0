@@ -421,9 +421,11 @@
         try {
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+            // Redondear stock para evitar errores de punto flotante (ej: 14.600000000000001)
+            const nuevoStock = Math.round((stockActual + agregar) * 1000) / 1000;
             const ingrediente = {
                 id, nombre,
-                stock: stockActual + agregar,
+                stock: nuevoStock,
                 reservado: 0,
                 unidad_base: unidad,
                 minimo,
@@ -446,14 +448,14 @@
             btn.disabled = false;
             btn.innerHTML = 'Guardar';
         }
-    });
+    }, { passive: false });
 
     document.getElementById('cancelIngrediente').addEventListener('click', function(e) {
         e.preventDefault();
         e.stopPropagation();
         window.cerrarModal('ingredienteModal');
         window.resetearBloqueoStock();
-    });
+    }, { passive: false });
     document.getElementById('closeIngredienteModal').addEventListener('click', function() {
         window.cerrarModal('ingredienteModal');
         window.resetearBloqueoStock();
@@ -476,6 +478,25 @@
             window.mostrarToast('❌ Error: ' + (e.message || e), 'error');
         }
     };
+    
+    // Asegurar que el botón Eliminar tenga un listener directo para Brave
+    // Usar setTimeout para asegurar que el DOM esté listo
+    setTimeout(function() {
+        const deleteBtn = document.getElementById('deleteIngredienteBtn');
+        if (deleteBtn) {
+            // Remover listeners previos clonando el nodo
+            const newDeleteBtn = deleteBtn.cloneNode(true);
+            deleteBtn.parentNode.replaceChild(newDeleteBtn, deleteBtn);
+            
+            newDeleteBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                if (typeof window._eliminarIngredienteDesdeModal === 'function') {
+                    window._eliminarIngredienteDesdeModal();
+                }
+            }, { passive: false });
+        }
+    }, 100);
 
     window.agregarStock = function(ingredienteId) {
         const ingrediente = window.inventarioItems.find(i => i.id === ingredienteId);
