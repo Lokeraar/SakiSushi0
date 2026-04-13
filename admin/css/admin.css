@@ -878,26 +878,8 @@ html.dark-theme .dashboard-card { border-color: transparent; border-left-color: 
 .usuario-info { font-size: .8rem; color: var(--text-muted); margin-top: .2rem; }
 .usuario-actions { display: flex; gap: .5rem; align-items: center; }
 
-/* ============================================
-   CLASE COMUN PARA TARJETAS UNIFICADAS
-   Para Mesoneros y Deliverys - Dimensiones forzosas
-   ============================================ */
-.card-standard {
-    display: grid !important;
-    grid-template-columns: auto 1fr auto !important;
-    grid-template-rows: repeat(3, auto) !important;
-    gap: 0.4rem 1rem !important;
-    background: var(--card-bg) !important;
-    border-radius: 14px !important;
-    padding: 0.9rem 1.1rem !important;
-    border: 1px solid var(--border) !important;
-    transition: var(--transition) !important;
-    align-items: center !important;
-    min-height: 85px !important;
-}
-
 /* Deliverys, Mesoneros, Propinas */
-.delivery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem !important; padding: 0 !important; margin: 0 !important; }
+.delivery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
 .delivery-card {
     background: var(--card-bg); border-radius: var(--radius);
     padding: 0.9rem 1.1rem; box-shadow: var(--shadow-sm);
@@ -967,15 +949,13 @@ html.dark-theme .dashboard-card { border-color: transparent; border-left-color: 
     font-size: .75rem;
     font-weight: 600;
 }
-.delivery-nombre { font-weight: 700 !important; font-size: .95rem !important; color: var(--text-dark); }
-.delivery-acumulado { font-weight: 700 !important; color: var(--delivery); font-size: 1.1rem !important; }
+.delivery-nombre { font-weight: 700; font-size: .95rem; color: var(--text-dark); }
+.delivery-acumulado { font-weight: 700; color: var(--delivery); font-size: 1.1rem; }
 .delivery-actions { display: flex; gap: .5rem; margin-top: .75rem; flex-wrap: wrap; }
 .mesoneros-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 1rem !important;
-    padding: 0 !important;
-    margin: 0 !important;
+    gap: 1rem;
 }
 /* Mesonero card - Unificada con delivery-card en dimensiones y formato */
 .mesonero-card {
@@ -992,9 +972,9 @@ html.dark-theme .dashboard-card { border-color: transparent; border-left-color: 
 .mesonero-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
 .mesonero-card .ucard-avatar {
     grid-row: 1 / span 3;
-    width: 64px !important;
-    height: 64px !important;
-    min-width: 64px !important;
+    width: 64px;
+    height: 64px;
+    min-width: 64px;
     border-radius: 50%;
     overflow: hidden;
     display: flex;
@@ -1047,8 +1027,8 @@ html.dark-theme .dashboard-card { border-color: transparent; border-left-color: 
     font-size: .75rem;
     font-weight: 600;
 }
-.mesonero-nombre { font-weight: 700; font-size: .95rem !important; color: var(--text-dark); }
-.mesonero-acumulado { font-weight: 700 !important; color: var(--propina); font-size: 1.1rem !important; }
+.mesonero-nombre { font-weight: 700; font-size: .95rem; color: var(--text-dark); }
+.mesonero-acumulado { font-weight: 700; color: var(--propina); font-size: 1.1rem; }
 .mesonero-actions { display: flex; gap: .5rem; margin-top: .75rem; flex-wrap: wrap; }
 .propinas-stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
 .propina-card {
@@ -1380,9 +1360,7 @@ html.dark-theme .modal-close:hover { color: #fff; }
 .delivery-list {
     display: grid;
     grid-template-columns: 1fr;
-    gap: 1rem !important;
-    padding: 0 !important;
-    margin: 0 !important;
+    gap: .85rem;
 }
 .delivery-item {
     background: var(--card-bg);
@@ -3058,14 +3036,13 @@ html.dark-theme .status-inactivo {
     display: flex;
     align-items: center;
     gap: 0.5rem;
-    font-size: 0.8rem !important;
+    font-size: 0.8rem;
     color: var(--text-muted);
 }
 
 .ucard-monto,
 .propinas-text {
-    font-weight: 600 !important;
-    font-size: 0.8rem !important;
+    font-weight: 600;
     color: var(--text-dark);
 }
 
