@@ -161,9 +161,7 @@
 
     // ==================== INICIALIZACIÓN AL CARGAR LA PÁGINA ====================
     document.addEventListener('DOMContentLoaded', async () => {
-        window.setupHeaderUsuario();
-        
-		// Inicializar UI de login (cargar lista de administradores)
+        // Inicializar UI de login (cargar lista de administradores)
 		window.iniciarLoginUI();
         
         // Inicializar tema antes de mostrar cualquier cosa
