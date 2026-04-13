@@ -356,43 +356,94 @@ html.dark-theme .logout-button:hover { background: rgba(255,255,255,.1); color: 
 }
 
 
-/* Theme toggle button */
-.theme-toggle {
-    display: inline-flex;
+/* Theme Toggle Premium - Estilo Moderno */
+.theme-switch-wrapper {
+    display: flex;
     align-items: center;
-    justify-content: center;
-    width: 38px;
-    height: 38px;
-    background: var(--secondary);
-    color: var(--text-dark);
+    gap: 0.5rem;
+    background: var(--card-bg);
+    padding: 0.35rem 0.5rem;
+    border-radius: 25px;
     border: 1px solid var(--border);
-    border-radius: 8px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+.theme-switch-wrapper:hover {
+    border-color: var(--accent);
+    box-shadow: 0 2px 12px rgba(255, 112, 67, 0.2);
+}
+html.dark-theme .theme-switch-wrapper:hover {
+    box-shadow: 0 2px 12px rgba(255, 179, 0, 0.25);
+}
+.icon-sun, .icon-moon {
     font-size: 1rem;
-    cursor: pointer;
-    transition: var(--transition);
+    transition: all 0.3s ease;
+    opacity: 0.4;
 }
-.theme-toggle:hover { background: var(--primary); color: #fff; border-color: var(--primary); }
-html.dark-theme .theme-toggle { background: rgba(255,255,255,.1); color: #FFB300; border-color: rgba(255,255,255,.15); }
-html.dark-theme .theme-toggle:hover { background: rgba(255,255,255,.2); }
+.icon-sun { color: #FFB300; }
+.icon-moon { color: #9FA8DA; }
+html.dark-theme .icon-sun { opacity: 0.3; }
+html.dark-theme .icon-moon { opacity: 1; filter: drop-shadow(0 0 4px rgba(159, 168, 218, 0.6)); }
+html:not(.dark-theme) .icon-sun { opacity: 1; filter: drop-shadow(0 0 4px rgba(255, 179, 0, 0.6)); }
+html:not(.dark-theme) .icon-moon { opacity: 0.3; }
 
-/* Theme toggle simple (sol/luna) */
-.theme-toggle-simple {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 38px;
-    height: 38px;
-    background: var(--secondary);
-    color: var(--text-dark);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    font-size: 1.1rem;
+.theme-toggle-input {
+    position: relative;
+    width: 52px;
+    height: 28px;
+    appearance: none;
+    -webkit-appearance: none;
+    background: linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%);
+    border-radius: 20px;
     cursor: pointer;
-    transition: var(--transition);
+    transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
 }
-.theme-toggle-simple:hover { background: var(--primary); color: #fff; border-color: var(--primary); }
-html.dark-theme .theme-toggle-simple { background: rgba(255,255,255,.1); color: #FFB300; border-color: rgba(255,255,255,.15); }
-html.dark-theme .theme-toggle-simple:hover { background: rgba(255,255,255,.2); }
+html.dark-theme .theme-toggle-input {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 255, 255, 0.1);
+}
+.theme-toggle-input::before {
+    content: '';
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #FFB300 0%, #FF7043 100%);
+    transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    box-shadow: 0 2px 6px rgba(255, 112, 67, 0.4), 0 0 0 2px rgba(255, 179, 0, 0.2);
+}
+html.dark-theme .theme-toggle-input::before {
+    background: linear-gradient(135deg, #9FA8DA 0%, #5C6BC0 100%);
+    box-shadow: 0 2px 6px rgba(92, 107, 192, 0.5), 0 0 0 2px rgba(159, 168, 218, 0.3);
+}
+.theme-toggle-input:checked::before {
+    transform: translateX(24px);
+}
+.theme-toggle-input:checked {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+}
+html:not(.dark-theme) .theme-toggle-input:checked {
+    background: linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%);
+}
+
+/* Animación de partículas al cambiar tema */
+@keyframes theme-particle {
+    0% { opacity: 1; transform: scale(0) rotate(0deg); }
+    50% { opacity: 0.8; transform: scale(1.2) rotate(180deg); }
+    100% { opacity: 0; transform: scale(0) rotate(360deg); }
+}
+.theme-particle {
+    position: fixed;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 9999;
+    animation: theme-particle 0.6s ease-out forwards;
+}
 
 /* Tasa Cards Bar (dentro del Dashboard) */
 .tasa-cards-bar {
