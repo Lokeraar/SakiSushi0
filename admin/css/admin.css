@@ -2104,12 +2104,15 @@ a { color: var(--primary); }
 
 /* Mejoras de contraste para tema oscuro en modal de ingredientes */
 .dark-theme .modal-footer .btn-secondary {
-    background: rgba(255,255,255,.1);
+    background: rgba(255,255,255,.15);
     color: #fff;
-    border: 1px solid rgba(255,255,255,.2);
+    border: 1px solid rgba(255,255,255,.25);
 }
 .dark-theme .modal-footer .btn-secondary:hover {
-    background: rgba(255,255,255,.2);
+    background: rgba(255,255,255,.25);
+    border-color: rgba(255,255,255,.4);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(255,255,255,.1);
 }
 .dark-theme #ingredienteStock:disabled,
 .dark-theme #ingredienteStock {
@@ -2121,29 +2124,36 @@ a { color: var(--primary); }
     background: #35354a !important;
 }
 .dark-theme .modal-body input,
-.dark-theme .modal-body select {
+.dark-theme .modal-body select,
+.dark-theme .modal-body textarea {
     background: #2a2a3a !important;
     color: #e0e0f0 !important;
-    border-color: rgba(255,255,255,.15) !important;
+    border-color: rgba(255,255,255,.2) !important;
 }
 .dark-theme .modal-body input:focus,
-.dark-theme .modal-body select:focus {
+.dark-theme .modal-body select:focus,
+.dark-theme .modal-body textarea:focus {
     border-color: var(--accent) !important;
     outline: none;
+    box-shadow: 0 0 0 2px rgba(100,149,237,.2);
 }
 .dark-theme .modal-body label {
-    color: #c0c0e0 !important;
+    color: #d0d0e8 !important;
+    font-weight: 600;
 }
 .dark-theme #stockLockIcon i {
     color: #a0a0c0;
 }
 .dark-theme .btn-icon.delete {
-    background: rgba(239,68,68,.2);
-    color: #ff6b6b;
+    background: rgba(239,68,68,.25);
+    color: #ff8a8a;
+    border: 1px solid rgba(239,68,68,.3);
 }
 .dark-theme .btn-icon.delete:hover {
     background: var(--danger);
     color: #fff;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(239,68,68,.3);
 }
 
 /* Botón Eliminar con tamaño completo */
@@ -2653,6 +2663,40 @@ html.dark-theme .mesa-admin-btn {
 html.dark-theme #stockCalculadoWrap {
     background: rgba(46,125,50,.18) !important;
     border-color: rgba(102,187,106,.3) !important; color: #a5d6a7 !important;
+}
+
+/* Armonía cromática completa para modal de platillos en tema oscuro */
+html.dark-theme #platilloModal .modal-body {
+    background: linear-gradient(180deg, #1e1e2f 0%, #1a1a2e 100%);
+}
+html.dark-theme #platilloModal .ingrediente-row {
+    background: rgba(255,255,255,.05);
+    border-color: rgba(255,255,255,.1);
+}
+html.dark-theme #platilloModal .ingrediente-row select,
+html.dark-theme #platilloModal .ingrediente-row input {
+    background: #2a2a3a !important;
+    color: #e0e0f0 !important;
+    border-color: rgba(255,255,255,.2) !important;
+}
+html.dark-theme #platilloModal .ingrediente-row select:focus,
+html.dark-theme #platilloModal .ingrediente-row input:focus {
+    border-color: var(--accent) !important;
+    box-shadow: 0 0 0 2px rgba(100,149,237,.2);
+}
+
+/* Botón Agregar Ingrediente - Contraste y consistencia en tema oscuro */
+.dark-theme #platilloModal .btn-secondary {
+    background: rgba(255,255,255,.15);
+    color: #fff;
+    border: 1px solid rgba(255,255,255,.25);
+    backdrop-filter: blur(4px);
+}
+.dark-theme #platilloModal .btn-secondary:hover {
+    background: rgba(255,255,255,.25);
+    border-color: rgba(255,255,255,.4);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(255,255,255,.1);
 }
 
 /* ── Animación stock crítico ─────────────────────────────────────────────── */
