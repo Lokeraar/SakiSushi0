@@ -472,6 +472,11 @@
                     <div id="stockCalculadoWrap" style="display:none;margin-top:.5rem;padding:.6rem .85rem;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;font-size:.82rem;color:#166534"><i class="fas fa-layer-group" style="margin-right:.35rem"></i><span id="stockCalculadoText">Agrega ingredientes para calcular</span></div>
                 </form>
             </div>
+            <div class="modal-footer" id="platilloModalFooter" style="display:flex;gap:10px;justify-content:flex-end;align-items:center">
+                <button type="button" class="btn-danger" id="deletePlatilloBtn" style="display:none;border:none;background:transparent;color:var(--danger);font-weight:600;cursor:pointer;padding:.6rem 1.1rem;border-radius:12px;font-size:.9rem" title="Eliminar platillo"><i class="fas fa-trash-alt" style="margin-right:.4rem"></i>Eliminar</button>
+                <button type="button" class="btn-secondary" id="cancelPlatilloBtn" style="border:2px solid rgba(255,255,255,.3);background:transparent;color:var(--text-dark);font-weight:600;cursor:pointer;padding:.6rem 1.4rem;border-radius:12px;font-size:.9rem">Cancelar</button>
+                <button type="button" class="btn-primary" id="savePlatilloBtn" style="background:var(--danger);color:#fff;border:none;font-weight:700;cursor:pointer;padding:.6rem 1.6rem;border-radius:12px;font-size:.9rem;box-shadow:0 2px 8px rgba(211,47,47,.25)">Guardar</button>
+            </div>
         </div>
     </div>
 
@@ -509,6 +514,11 @@
                     <div class="form-row"><div class="form-group"><label>Precio de Costo (USD/Bs)</label><input type="number" step="0.01" id="ingredienteCosto" placeholder="0.00"></div><div class="form-group"><label>Precio de Venta (USD/Bs)</label><input type="number" step="0.01" id="ingredienteVenta" placeholder="0.00"></div></div>
                     <!-- imagen movida al tope del formulario (tarea 3.5) -->
                 </form>
+            </div>
+            <div class="modal-footer" id="ingredienteModalFooter" style="display:flex;gap:10px;justify-content:flex-end;align-items:center">
+                <button type="button" class="btn-danger" id="deleteIngredienteBtn" style="display:none;border:none;background:transparent;color:var(--danger);font-weight:600;cursor:pointer;padding:.6rem 1.1rem;border-radius:12px;font-size:.9rem" title="Eliminar ingrediente"><i class="fas fa-trash-alt" style="margin-right:.4rem"></i>Eliminar</button>
+                <button type="button" class="btn-secondary" id="cancelIngredienteBtn" style="border:2px solid rgba(255,255,255,.3);background:transparent;color:var(--text-dark);font-weight:600;cursor:pointer;padding:.6rem 1.4rem;border-radius:12px;font-size:.9rem">Cancelar</button>
+                <button type="button" class="btn-primary" id="saveIngredienteBtn" style="background:var(--danger);color:#fff;border:none;font-weight:700;cursor:pointer;padding:.6rem 1.6rem;border-radius:12px;font-size:.9rem;box-shadow:0 2px 8px rgba(211,47,47,.25)">Guardar</button>
             </div>
         </div>
     </div>

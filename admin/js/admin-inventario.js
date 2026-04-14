@@ -861,4 +861,140 @@
     }
     
     setupIngredienteModalEvents();
+    
+    // Configurar botones del footer del modal de ingrediente
+    setTimeout(function() {
+        const saveBtn = document.getElementById('saveIngredienteBtn');
+        const cancelBtn = document.getElementById('cancelIngredienteBtn');
+        const deleteBtn = document.getElementById('deleteIngredienteBtn');
+        
+        // Botón Guardar - usando .onclick directo para evitar duplicidad en Brave
+        if (saveBtn) {
+            saveBtn.onclick = function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+                console.log('Botón Guardar Ingrediente presionado');
+                if (typeof window.guardarIngrediente === 'function') {
+                    window.guardarIngrediente();
+                }
+            };
+        }
+        
+        // Botón Cancelar
+        if (cancelBtn) {
+            cancelBtn.onclick = function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Botón Cancelar Ingrediente presionado');
+                window.cerrarModal('ingredienteModal');
+                window.ingredienteEditandoId = null;
+                removeIngredienteImage();
+            };
+        }
+        
+        // Botón Eliminar
+        if (deleteBtn) {
+            deleteBtn.onclick = function(e) {
+                console.log('Botón Eliminar Ingrediente presionado');
+                e.preventDefault();
+                e.stopPropagation();
+                if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+                if (typeof window._eliminarIngredienteDesdeModal === 'function') {
+                    window._eliminarIngredienteDesdeModal();
+                }
+            };
+        }
+    }, 100);
+    
+    // Función auxiliar para eliminar ingrediente desde el modal
+    window._eliminarIngredienteDesdeModal = async function() {
+        const id = window.ingredienteEditandoId;
+        if (!id) return;
+        const ingrediente = window.inventarioItems.find(i => i.id === id);
+        if (!ingrediente) return;
+        
+        window.mostrarConfirmacionPremium(
+            'Eliminar Ingrediente',
+            `¿Estás seguro de eliminar "${ingrediente.nombre}"? Esta acción no se puede deshacer.`,
+            async () => {
+                try {
+                    await window.supabaseClient.from('inventario').delete().eq('id', id);
+                    await window.cargarInventario();
+                    window.cerrarModal('ingredienteModal');
+                    window.ingredienteEditandoId = null;
+                    removeIngredienteImage();
+                    window.mostrarToast('🗑️ Ingrediente eliminado', 'success');
+                } catch (e) {
+                    console.error('Error eliminando ingrediente:', e);
+                    window.mostrarToast('❌ Error al eliminar ingrediente', 'error');
+                }
+            }
+        );
+    };
+    
+    // Función principal para guardar ingrediente
+    window.guardarIngrediente = async function() {
+        const nombre = document.getElementById('ingredienteNombre')?.value.trim();
+        const stockInput = document.getElementById('ingredienteStock');
+        const stock = parseFloat(stockInput?.value) || 0;
+        const unidad = document.getElementById('ingredienteUnidad')?.value || 'unidades';
+        const minimo = parseFloat(document.getElementById('ingredienteMinimo')?.value) || 0;
+        const costo = parseFloat(document.getElementById('ingredienteCosto')?.value) || 0;
+        const venta = parseFloat(document.getElementById('ingredienteVenta')?.value) || 0;
+        
+        // Validaciones
+        let hayError = false;
+        
+        if (!nombre) {
+            window.mostrarErrorInput('ingredienteNombre', 'El nombre es obligatorio');
+            hayError = true;
+        }
+        
+        if (hayError) {
+            window.mostrarToast('⚠️ Por favor corrige los errores', 'warning');
+            return;
+        }
+        
+        // Aplicar fix de decimales con toFixed(2)
+        const ingredienteData = {
+            nombre: nombre,
+            stock: parseFloat(parseFloat(stock).toFixed(3)),
+            unidad_base: unidad,
+            minimo: parseFloat(parseFloat(minimo).toFixed(3)),
+            precio_costo: parseFloat(parseFloat(costo).toFixed(2)),
+            precio_unitario: parseFloat(parseFloat(venta).toFixed(2)),
+            imagen: currentIngredienteImagenUrl || currentIngredienteImagenFile ? (currentIngredienteImagenUrl || null) : null,
+            reservado: 0
+        };
+        
+        try {
+            let error;
+            if (window.ingredienteEditandoId) {
+                // Actualizar existente
+                const { error: updError } = await window.supabaseClient.from('inventario')
+                    .update(ingredienteData)
+                    .eq('id', window.ingredienteEditandoId);
+                error = updError;
+            } else {
+                // Crear nuevo
+                const { error: insError } = await window.supabaseClient.from('inventario')
+                    .insert([ingredienteData]);
+                error = insError;
+            }
+            
+            if (error) throw error;
+            
+            // Éxito
+            window.cerrarModal('ingredienteModal');
+            window.ingredienteEditandoId = null;
+            removeIngredienteImage();
+            await window.cargarInventario();
+            window.mostrarToast(window.ingredienteEditandoId ? '✅ Ingrediente actualizado correctamente' : '✅ Ingrediente creado correctamente', 'success');
+            
+        } catch (e) {
+            console.error('Error guardando ingrediente:', e);
+            window.mostrarToast('❌ Error al guardar: ' + (e.message || e), 'error');
+        }
+    };
 })();
