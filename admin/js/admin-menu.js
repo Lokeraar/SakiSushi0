@@ -454,6 +454,10 @@
             });
         }
         
+        // Mostrar botón Eliminar en modo edición
+        const deleteBtn = document.getElementById('deletePlatilloBtn');
+        if (deleteBtn) deleteBtn.style.display = 'inline-flex';
+        
         document.getElementById('platilloModal').classList.add('active');
     };
 
@@ -506,26 +510,6 @@
             }
         );
     };
-    
-    // Asegurar que el botón Eliminar tenga un listener directo para Brave - usando onclick para evitar duplicidad
-    setTimeout(function() {
-        const deleteBtn = document.getElementById('deletePlatilloBtn');
-        if (deleteBtn) {
-            // Remover listeners previos clonando el nodo
-            const newDeleteBtn = deleteBtn.cloneNode(true);
-            deleteBtn.parentNode.replaceChild(newDeleteBtn, deleteBtn);
-            
-            newDeleteBtn.onclick = function(e) {
-                console.log('Botón Eliminar Platillo presionado');
-                e.preventDefault();
-                e.stopPropagation();
-                if (e.stopImmediatePropagation) e.stopImmediatePropagation();
-                if (typeof window._eliminarPlatilloDesdeModal === 'function') {
-                    window._eliminarPlatilloDesdeModal();
-                }
-            };
-        }
-    }, 100);
 
     window.actualizarProductosActivos = function() {
         const el = document.getElementById('productosActivos');
@@ -615,4 +599,144 @@
 
     // Inicializar eventos del modal de platillo
     setupPlatilloModalEvents();
+    
+    // Configurar botones del footer del modal de platillo
+    setTimeout(function() {
+        const saveBtn = document.getElementById('savePlatilloBtn');
+        const cancelBtn = document.getElementById('cancelPlatilloBtn');
+        const deleteBtn = document.getElementById('deletePlatilloBtn');
+        
+        // Botón Guardar - usando .onclick directo para evitar duplicidad en Brave
+        if (saveBtn) {
+            saveBtn.onclick = function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+                console.log('Botón Guardar Platillo presionado');
+                if (typeof window.guardarPlatillo === 'function') {
+                    window.guardarPlatillo();
+                }
+            };
+        }
+        
+        // Botón Cancelar
+        if (cancelBtn) {
+            cancelBtn.onclick = function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Botón Cancelar Platillo presionado');
+                window.cerrarModal('platilloModal');
+                window.limpiarImagenPreview();
+                window.platilloEditandoId = null;
+            };
+        }
+        
+        // Botón Eliminar - configurado aquí para evitar duplicidad
+        if (deleteBtn) {
+            deleteBtn.onclick = function(e) {
+                console.log('Botón Eliminar Platillo presionado');
+                e.preventDefault();
+                e.stopPropagation();
+                if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+                if (typeof window._eliminarPlatilloDesdeModal === 'function') {
+                    window._eliminarPlatilloDesdeModal();
+                }
+            };
+        }
+    }, 100);
+    
+    // Función principal para guardar platillo
+    window.guardarPlatillo = async function() {
+        const nombre = document.getElementById('platilloNombre')?.value.trim();
+        const categoria = document.getElementById('platilloCategoria')?.value.trim();
+        const subcategoria = document.getElementById('platilloSubcategoria')?.value.trim() || '';
+        const precio = parseFloat(document.getElementById('platilloPrecio')?.value) || 0;
+        const descripcion = document.getElementById('platilloDescripcion')?.value.trim() || '';
+        const disponible = document.getElementById('platilloDisponibleCheck')?.checked || false;
+        
+        // Validaciones
+        let hayError = false;
+        
+        if (!nombre) {
+            window.mostrarErrorInput('platilloNombre', 'El nombre es obligatorio');
+            hayError = true;
+        }
+        if (!categoria) {
+            window.mostrarErrorInput('platilloCategoria', 'La categoría es obligatoria');
+            hayError = true;
+        }
+        if (precio <= 0) {
+            window.mostrarErrorInput('platilloPrecio', 'El precio debe ser mayor a 0');
+            hayError = true;
+        }
+        
+        if (hayError) {
+            window.mostrarToast('⚠️ Por favor corrige los errores', 'warning');
+            return;
+        }
+        
+        // Recolectar ingredientes
+        const ingredientes = {};
+        const rows = document.querySelectorAll('#ingredientesContainer .ingrediente-row');
+        rows.forEach(row => {
+            const selIng = row.querySelector('select:not(.ing-row-unidad)');
+            const selUni = row.querySelector('select.ing-row-unidad');
+            const cantInput = row.querySelector('input[type="number"]');
+            const chkPrincipal = row.querySelector('input[type="checkbox"]');
+            
+            if (selIng && selIng.value && cantInput) {
+                const cantidad = parseFloat(cantInput.value) || 0;
+                if (cantidad > 0) {
+                    ingredientes[selIng.value] = {
+                        cantidad: cantidad,
+                        unidad: selUni?.value || 'unidades',
+                        nombre: selIng.options[selIng.selectedIndex]?.text || '',
+                        principal: chkPrincipal?.checked || false
+                    };
+                }
+            }
+        });
+        
+        // Preparar datos
+        const platilloData = {
+            nombre: nombre,
+            categoria: categoria,
+            subcategoria: subcategoria,
+            precio: parseFloat(precio.toFixed(2)),
+            descripcion: descripcion,
+            disponible: disponible,
+            ingredientes: Object.keys(ingredientes).length > 0 ? ingredientes : null,
+            imagen: currentImagenUrl || null,
+            stock: null // Se calculará automáticamente
+        };
+        
+        try {
+            let error;
+            if (window.platilloEditandoId) {
+                // Actualizar existente
+                const { error: updError } = await window.supabaseClient.from('menu')
+                    .update(platilloData)
+                    .eq('id', window.platilloEditandoId);
+                error = updError;
+            } else {
+                // Crear nuevo
+                const { error: insError } = await window.supabaseClient.from('menu')
+                    .insert([platilloData]);
+                error = insError;
+            }
+            
+            if (error) throw error;
+            
+            // Éxito
+            window.cerrarModal('platilloModal');
+            window.limpiarImagenPreview();
+            window.platilloEditandoId = null;
+            await window.cargarMenu();
+            window.mostrarToast(window.platilloEditandoId ? '✅ Platillo actualizado correctamente' : '✅ Platillo creado correctamente', 'success');
+            
+        } catch (e) {
+            console.error('Error guardando platillo:', e);
+            window.mostrarToast('❌ Error al guardar: ' + (e.message || e), 'error');
+        }
+    };
 })();
