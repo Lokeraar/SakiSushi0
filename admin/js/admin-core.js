@@ -141,21 +141,22 @@
         const initial = text.charAt(0).toUpperCase();
         return `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' fill='%23D32F2F'/%3E%3Ctext x='24' y='32' font-size='20' text-anchor='middle' fill='white' font-family='Arial'%3E${initial}%3C/text%3E%3C/svg%3E`;
     };
-	// Alerta moderna y premium para confirmar eliminaciones
-	    window.mostrarConfirmacionPremium = function(titulo, mensaje, onConfirm) {
+    // Alerta moderna y premium para confirmar eliminaciones
+    window.mostrarConfirmacionPremium = function(titulo, mensaje, onConfirm) {
         // Crear overlay
         const overlay = document.createElement('div');
-        overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.75);z-index:10001;display:flex;align-items:center;justify-content:center;padding:1rem;backdrop-filter:blur(3px)';
+        overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.85);z-index:10001;display:flex;align-items:center;justify-content:center;padding:1rem;backdrop-filter:blur(5px)';
         overlay.innerHTML = `
-            <div style="background:var(--card-bg);border-radius:16px;max-width:400px;width:100%;box-shadow:0 20px 40px rgba(0,0,0,.4);border:1px solid var(--border);overflow:hidden">
-                <div style="background:linear-gradient(135deg,var(--primary),var(--primary-dark));padding:1rem 1.5rem;color:#fff">
-                    <h3 style="margin:0;font-size:1.1rem"><i class="fas fa-exclamation-triangle"></i> ${titulo}</h3>
+            <div style="background:linear-gradient(145deg, #1a1a1a 0%, #0d0d0d 100%);border-radius:20px;max-width:420px;width:100%;box-shadow:0 25px 50px rgba(0,0,0,.5),0 0 0 1px rgba(255,255,255,.1);overflow:hidden;border:1px solid rgba(211,47,47,.3)">
+                <div style="background:linear-gradient(135deg, #D32F2F 0%, #B71C1C 100%);padding:1.25rem 1.5rem;color:#fff;text-align:center;position:relative">
+                    <div style="width:50px;height:50px;background:rgba(255,255,255,.2);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto .75rem;font-size:1.5rem"><i class="fas fa-exclamation-triangle"></i></div>
+                    <h3 style="margin:0;font-size:1.2rem;font-weight:700;text-shadow:0 2px 4px rgba(0,0,0,.3)">${titulo}</h3>
                 </div>
-                <div style="padding:1.5rem">
-                    <p style="color:var(--text-dark);margin-bottom:1.5rem">${mensaje}</p>
-                    <div style="display:flex;gap:.75rem;justify-content:flex-end">
-                        <button type="button" class="btn-secondary" id="confirmPremiumCancel">Cancelar</button>
-                        <button type="button" class="btn-primary" id="confirmPremiumOk">Confirmar</button>
+                <div style="padding:1.75rem 1.5rem">
+                    <p style="color:#e0e0e0;margin-bottom:1.75rem;font-size:.95rem;line-height:1.6;text-align:center">${mensaje}</p>
+                    <div style="display:flex;gap:.75rem;justify-content:center">
+                        <button type="button" id="confirmPremiumCancel" style="flex:1;max-width:140px;padding:.75rem 1rem;background:transparent;color:#ffffff;border:2px solid #FFB300;border-radius:12px;font-size:.9rem;font-weight:600;font-family:'Montserrat',sans-serif;cursor:pointer;transition:all 0.2s ease-in-out;box-shadow:0 4px 15px rgba(0,0,0,.3)">Cancelar</button>
+                        <button type="button" id="confirmPremiumOk" style="flex:1;max-width:140px;padding:.75rem 1rem;background:linear-gradient(135deg, #D32F2F, #B71C1C);color:#ffffff;border:none;border-radius:12px;font-size:.9rem;font-weight:600;font-family:'Montserrat',sans-serif;cursor:pointer;transition:all 0.2s ease-in-out;box-shadow:0 4px 15px rgba(211,47,47,.4)">Confirmar</button>
                     </div>
                 </div>
             </div>
@@ -163,11 +164,34 @@
         document.body.appendChild(overlay);
         const cancelBtn = overlay.querySelector('#confirmPremiumCancel');
         const okBtn = overlay.querySelector('#confirmPremiumOk');
+        
+        // Estilos hover para Cancelar
+        cancelBtn.addEventListener('mouseenter', () => {
+            cancelBtn.style.background = 'rgba(255, 179, 0, 0.1)';
+            cancelBtn.style.transform = 'translateY(-2px) scale(1.02)';
+            cancelBtn.style.boxShadow = '0 6px 20px rgba(255, 179, 0, 0.3)';
+        });
+        cancelBtn.addEventListener('mouseleave', () => {
+            cancelBtn.style.background = 'transparent';
+            cancelBtn.style.transform = 'translateY(0) scale(1)';
+            cancelBtn.style.boxShadow = '0 4px 15px rgba(0,0,0,.3)';
+        });
+        
+        // Estilos hover para Confirmar
+        okBtn.addEventListener('mouseenter', () => {
+            okBtn.style.transform = 'translateY(-2px) scale(1.02)';
+            okBtn.style.boxShadow = '0 6px 20px rgba(211, 47, 47, 0.5)';
+        });
+        okBtn.addEventListener('mouseleave', () => {
+            okBtn.style.transform = 'translateY(0) scale(1)';
+            okBtn.style.boxShadow = '0 4px 15px rgba(211,47,47,.4)';
+        });
+        
         const cleanup = () => overlay.remove();
-        cancelBtn.addEventListener('click', cleanup);
-        okBtn.addEventListener('click', () => {
+        cancelBtn.onclick = cleanup;
+        okBtn.onclick = () => {
             cleanup();
             if (onConfirm) onConfirm();
-        });
+        };
     };
 })();
