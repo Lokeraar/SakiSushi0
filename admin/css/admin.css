@@ -762,7 +762,7 @@ html.dark-theme .dashboard-card { border-color: transparent; border-left-color: 
 .modal .btn-primary *, .modal .btn-secondary *, .modal .btn-danger * {
     pointer-events: auto !important;
 }
-.btn-primary * { pointer-events: none; }
+.btn-primary * { pointer-events: auto !important; }
 .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(211,47,47,.35); }
 .btn-secondary {
     display: inline-flex; align-items: center; gap: .4rem;
@@ -773,7 +773,7 @@ html.dark-theme .dashboard-card { border-color: transparent; border-left-color: 
     cursor: pointer; transition: var(--transition);
     pointer-events: auto;
 }
-.btn-secondary * { pointer-events: none; }
+.btn-secondary * { pointer-events: auto !important; }
 .btn-secondary:hover { background: #ffffff; }
 .btn-danger {
     display: inline-flex; align-items: center; gap: .4rem;
@@ -783,7 +783,7 @@ html.dark-theme .dashboard-card { border-color: transparent; border-left-color: 
     cursor: pointer; transition: var(--transition);
     pointer-events: auto;
 }
-.btn-danger * { pointer-events: none; }
+.btn-danger * { pointer-events: auto !important; }
 
 /* Forms */
 .form-group { margin-bottom: 1rem; }
@@ -1094,9 +1094,21 @@ html.dark-theme .modal-close { color: rgba(255,255,255,.7); }
 .modal-close:hover { color: var(--text-dark); }
 html.dark-theme .modal-close:hover { color: #fff; }
 .modal-body { padding: 1.5rem; }
-.modal-footer { padding: 1rem 1.5rem; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: .75rem; position: relative; z-index: 100; }
+.modal-footer { 
+    padding: 1rem 1.5rem; 
+    border-top: 1px solid var(--border); 
+    display: flex; 
+    justify-content: flex-end; 
+    gap: .75rem; 
+    position: relative; 
+    z-index: 100;
+    width: 100%;
+}
 /* Asegurar que el footer del modal esté por encima de cualquier overlay */
 .modal-content > .modal-footer { z-index: 100; position: relative; }
+/* Fix para Brave: asegurar hitbox completa en botones del footer */
+.modal-footer button { pointer-events: auto !important; }
+.modal-footer button * { pointer-events: auto !important; }
 
 /* ============================================
    SAKI MODAL FOOTER - Estilo Premium "Saki Sushi"

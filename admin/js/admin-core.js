@@ -56,15 +56,33 @@
     
     // ==================== TOAST (MENSAJES FLOTANTES) ====================
     window.mostrarToast = function(mensaje, tipo = 'info') {
-        const toast = document.getElementById('toast');
-        if (toast) {
-            toast.textContent = mensaje;
-            toast.className = `toast show ${tipo}`;
-            setTimeout(() => toast.classList.remove('show'), 3000);
-        } else {
-            console.warn('Toast no encontrado en DOM:', mensaje);
-            alert(mensaje);
+        // Eliminar toast existente si hay alguno para evitar acumulación
+        const existingToast = document.getElementById('toast');
+        if (existingToast) {
+            existingToast.classList.remove('show');
+            // Esperar a que se oculte antes de remover del DOM
+            setTimeout(() => {
+                if (existingToast.parentNode) existingToast.remove();
+            }, 100);
         }
+        
+        // Crear nuevo elemento toast si no existe
+        let toast = document.getElementById('toast');
+        if (!toast) {
+            toast = document.createElement('div');
+            toast.id = 'toast';
+            document.body.appendChild(toast);
+        }
+        
+        toast.textContent = mensaje;
+        toast.className = `toast show ${tipo}`;
+        setTimeout(() => {
+            toast.classList.remove('show');
+            // Remover completamente del DOM después de la animación
+            setTimeout(() => {
+                if (toast.parentNode) toast.remove();
+            }, 300);
+        }, 3000);
     };
     
     // ==================== CONTROL DE PANTALLAS ====================

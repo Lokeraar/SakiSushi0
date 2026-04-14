@@ -956,12 +956,12 @@
             return;
         }
         
-        // Aplicar fix de decimales con toFixed(2)
+        // Aplicar fix de decimales con toFixed(2) para evitar errores como 14.60000000001
         const ingredienteData = {
             nombre: nombre,
-            stock: parseFloat(parseFloat(stock).toFixed(3)),
+            stock: parseFloat(parseFloat(stock).toFixed(2)),
             unidad_base: unidad,
-            minimo: parseFloat(parseFloat(minimo).toFixed(3)),
+            minimo: parseFloat(parseFloat(minimo).toFixed(2)),
             precio_costo: parseFloat(parseFloat(costo).toFixed(2)),
             precio_unitario: parseFloat(parseFloat(venta).toFixed(2)),
             imagen: currentIngredienteImagenUrl || currentIngredienteImagenFile ? (currentIngredienteImagenUrl || null) : null,
