@@ -511,7 +511,19 @@
                     <!-- imagen movida al tope del formulario (tarea 3.5) -->
                 </form>
             </div>
-            <div class="modal-footer" style="display:flex; justify-content:space-between; align-items:center; position:relative; z-index:10"><button class="btn-primary" id="deleteIngredienteBtn" type="button" style="display:none; padding:.6rem 1.2rem; border-radius:8px; background:var(--danger); color:#fff; border:none; cursor:pointer; font-size:.85rem; font-weight:600; pointer-events:auto; z-index:11; position:relative" onclick="window._eliminarIngredienteDesdeModal()"><i class="fas fa-trash" style="pointer-events:none"></i> Eliminar</button><div style="display:flex; gap:.75rem; position:relative; z-index:11"><button class="btn-secondary" id="cancelIngrediente" type="button" style="pointer-events:auto; cursor:pointer; display:inline-flex; align-items:center; justify-content:center">Cancelar</button><button class="btn-primary" id="saveIngrediente" type="button" style="pointer-events:auto; cursor:pointer; display:inline-flex; align-items:center; justify-content:center">Guardar</button></div></div>
+            <div class="modal-footer" style="display:flex; justify-content:space-between; align-items:center; position:relative; z-index:10">
+                <button class="btn-primary" id="deleteIngredienteBtn" type="button" style="display:none; padding:.6rem 1.2rem; border-radius:8px; background:var(--danger); color:#fff; border:none; cursor:pointer; font-size:.85rem; font-weight:600; pointer-events:auto; z-index:11; position:relative; display:inline-flex; align-items:center; justify-content:center">
+                    <i class="fas fa-trash" style="pointer-events:none"></i> Eliminar
+                </button>
+                <div style="display:flex; gap:.75rem; position:relative; z-index:11">
+                    <button class="btn-secondary" id="cancelIngrediente" type="button" style="pointer-events:auto; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; width:100%; max-width:120px">
+                        Cancelar
+                    </button>
+                    <button class="btn-primary" id="saveIngrediente" type="button" style="pointer-events:auto; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; width:100%; max-width:120px">
+                        Guardar
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 

@@ -755,6 +755,13 @@ html.dark-theme .dashboard-card { border-color: transparent; border-left-color: 
     cursor: pointer; transition: var(--transition);
     pointer-events: auto;
 }
+/* En modales, permitir eventos en todos los elementos del botón para Brave */
+.modal .btn-primary, .modal .btn-secondary, .modal .btn-danger {
+    pointer-events: auto !important;
+}
+.modal .btn-primary *, .modal .btn-secondary *, .modal .btn-danger * {
+    pointer-events: auto !important;
+}
 .btn-primary * { pointer-events: none; }
 .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(211,47,47,.35); }
 .btn-secondary {
@@ -1087,7 +1094,9 @@ html.dark-theme .modal-close { color: rgba(255,255,255,.7); }
 .modal-close:hover { color: var(--text-dark); }
 html.dark-theme .modal-close:hover { color: #fff; }
 .modal-body { padding: 1.5rem; }
-.modal-footer { padding: 1rem 1.5rem; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: .75rem; }
+.modal-footer { padding: 1rem 1.5rem; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: .75rem; position: relative; z-index: 100; }
+/* Asegurar que el footer del modal esté por encima de cualquier overlay */
+.modal-content > .modal-footer { z-index: 100; position: relative; }
 
 /* Image preview */
 .image-preview { display: flex; align-items: center; gap: 1rem; margin-top: .5rem; }
