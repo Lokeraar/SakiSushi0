@@ -697,12 +697,12 @@
             }
         });
         
-        // Preparar datos
+        // Preparar datos con fix de decimales para evitar errores como 14.60000000001
         const platilloData = {
             nombre: nombre,
             categoria: categoria,
             subcategoria: subcategoria,
-            precio: parseFloat(precio.toFixed(2)),
+            precio: parseFloat(parseFloat(precio).toFixed(2)),
             descripcion: descripcion,
             disponible: disponible,
             ingredientes: Object.keys(ingredientes).length > 0 ? ingredientes : null,

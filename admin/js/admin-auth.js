@@ -119,7 +119,15 @@
             
             document.getElementById('loginContainer').style.display = 'none';
             document.getElementById('panelContainer').classList.add('active');
-            window.mostrarToast('✅ Bienvenido Administrador', 'success');
+            
+            // Eliminar cualquier toast o mensaje de bienvenida previo para evitar bloqueos fantasma
+            const existingToast = document.getElementById('toast');
+            if (existingToast) {
+                existingToast.classList.remove('show');
+                setTimeout(() => {
+                    if (existingToast.parentNode) existingToast.remove();
+                }, 300);
+            }
             
             // Actualizar header con nombre del usuario en línea 2
             const headerUsuarioNombre = document.getElementById('headerUsuarioNombre');
