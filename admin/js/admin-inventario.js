@@ -440,16 +440,21 @@
         btn.disabled = true;
         btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
         
-        // Redondear stock para evitar errores de punto flotante (ej: 14.600000000000001)
-        const nuevoStock = Math.round((stockActual + agregar) * 1000) / 1000;
+        // Redondear stock y valores monetarios para evitar errores de punto flotante (ej: 14.600000000000001)
+        // Usar parseFloat().toFixed(2) para limpiar decimales infinitos
+        const nuevoStock = parseFloat((stockActual + agregar).toFixed(3));
+        const minimoClean = parseFloat(minimo.toFixed(2));
+        const costoClean = parseFloat(costo.toFixed(2));
+        const ventaClean = parseFloat(venta.toFixed(2));
+        
         const ingrediente = {
             id, nombre,
             stock: nuevoStock,
             reservado: 0,
             unidad_base: unidad,
-            minimo,
-            precio_costo: costo,
-            precio_unitario: venta,
+            minimo: minimoClean,
+            precio_costo: costoClean,
+            precio_unitario: ventaClean,
             imagen: imagenUrl || null
         };
         
