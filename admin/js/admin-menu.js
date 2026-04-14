@@ -720,16 +720,38 @@
         }
     });
 
-    document.getElementById('cancelPlatillo').addEventListener('click', () => {
-        document.getElementById('platilloModal').classList.remove('active');
-        window.platilloEditandoId = null;
-        window.limpiarImagenPreview();
-    });
-    document.getElementById('closePlatilloModal').addEventListener('click', () => {
-        document.getElementById('platilloModal').classList.remove('active');
-        window.platilloEditandoId = null;
-        window.limpiarImagenPreview();
-    });
+    // Listener para botón Cancelar - usando onclick directo para evitar duplicidad en Brave
+    const cancelPlatilloBtn = document.getElementById('cancelPlatillo');
+    if (cancelPlatilloBtn) {
+        // Remover cualquier listener previo clonando el nodo
+        const newCancelBtn = cancelPlatilloBtn.cloneNode(true);
+        cancelPlatilloBtn.parentNode.replaceChild(newCancelBtn, cancelPlatilloBtn);
+        
+        newCancelBtn.onclick = function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+            document.getElementById('platilloModal').classList.remove('active');
+            window.platilloEditandoId = null;
+            window.limpiarImagenPreview();
+        };
+    }
+    
+    // Listener para cerrar modal con X - usando onclick directo
+    const closePlatilloBtn = document.getElementById('closePlatilloModal');
+    if (closePlatilloBtn) {
+        const newCloseBtn = closePlatilloBtn.cloneNode(true);
+        closePlatilloBtn.parentNode.replaceChild(newCloseBtn, closePlatilloBtn);
+        
+        newCloseBtn.onclick = function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+            document.getElementById('platilloModal').classList.remove('active');
+            window.platilloEditandoId = null;
+            window.limpiarImagenPreview();
+        };
+    }
 
     // Inicializar eventos del modal de platillo
     setupPlatilloModalEvents();

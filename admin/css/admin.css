@@ -1098,6 +1098,157 @@ html.dark-theme .modal-close:hover { color: #fff; }
 /* Asegurar que el footer del modal esté por encima de cualquier overlay */
 .modal-content > .modal-footer { z-index: 100; position: relative; }
 
+/* ============================================
+   SAKI MODAL FOOTER - Estilo Premium "Saki Sushi"
+   Fix para Brave: Hitbox garantizada y eventos limpios
+   ============================================ */
+.saki-modal-footer {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    padding: 1rem 1.5rem !important;
+    border-top: 1px solid var(--border) !important;
+    background: #1a1a1a !important;
+}
+
+.saki-footer-actions {
+    display: flex !important;
+    gap: 0.75rem !important;
+    align-items: center !important;
+}
+
+/* Botones Saki Premium - Hitbox garantizada para Brave */
+.saki-btn {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0.7rem 1.4rem !important;
+    border-radius: 12px !important;
+    font-size: 0.875rem !important;
+    font-weight: 600 !important;
+    font-family: 'Montserrat', sans-serif !important;
+    cursor: pointer !important;
+    transition: all 0.2s ease-in-out !important;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3) !important;
+    border: none !important;
+    pointer-events: auto !important;
+    position: relative !important;
+    z-index: 100 !important;
+}
+
+.saki-btn * {
+    pointer-events: auto !important;
+}
+
+/* Botón Primario (Guardar) - Rojo Saki */
+.saki-btn-primary {
+    background: linear-gradient(135deg, #D32F2F, #B71C1C) !important;
+    color: #ffffff !important;
+}
+
+.saki-btn-primary:hover {
+    transform: translateY(-2px) scale(1.02) !important;
+    box-shadow: 0 6px 20px rgba(211, 47, 47, 0.5) !important;
+}
+
+.saki-btn-primary:active {
+    transform: translateY(0) scale(0.98) !important;
+    box-shadow: 0 2px 10px rgba(211, 47, 47, 0.3) !important;
+}
+
+/* Botón Secundario (Cancelar) - Outline Dorado/Blanco */
+.saki-btn-outline {
+    background: transparent !important;
+    color: #ffffff !important;
+    border: 2px solid #FFB300 !important;
+}
+
+.saki-btn-outline:hover {
+    background: rgba(255, 179, 0, 0.1) !important;
+    transform: translateY(-2px) scale(1.02) !important;
+    box-shadow: 0 6px 20px rgba(255, 179, 0, 0.3) !important;
+}
+
+.saki-btn-outline:active {
+    transform: translateY(0) scale(0.98) !important;
+    box-shadow: 0 2px 10px rgba(255, 179, 0, 0.2) !important;
+}
+
+/* Botón Peligro (Eliminar) - Minimalista Rojo */
+.saki-btn-danger {
+    background: transparent !important;
+    color: #ef5350 !important;
+    border: 1px solid rgba(239, 83, 80, 0.3) !important;
+    font-weight: 500 !important;
+}
+
+.saki-btn-danger:hover {
+    background: rgba(239, 83, 80, 0.1) !important;
+    border-color: #ef5350 !important;
+    transform: translateY(-1px) !important;
+    box-shadow: 0 4px 12px rgba(239, 83, 80, 0.2) !important;
+}
+
+.saki-btn-danger:active {
+    transform: translateY(0) !important;
+    box-shadow: 0 2px 8px rgba(239, 83, 80, 0.15) !important;
+}
+
+/* Modal body con fondo oscuro para contraste */
+#platilloModal .modal-body,
+#ingredienteModal .modal-body {
+    background: #1a1a1a !important;
+}
+
+#platilloModal .modal-content,
+#ingredienteModal .modal-content {
+    background: #1a1a1a !important;
+}
+
+#platilloModal .modal-header,
+#ingredienteModal .modal-header {
+    background: #1a1a1a !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+#platilloModal .modal-header h3,
+#ingredienteModal .modal-header h3 {
+    color: #ffffff !important;
+}
+
+#platilloModal .modal-header .modal-close,
+#ingredienteModal .modal-header .modal-close {
+    color: rgba(255, 255, 255, 0.7) !important;
+}
+
+#platilloModal .modal-header .modal-close:hover,
+#ingredienteModal .modal-header .modal-close:hover {
+    color: #ffffff !important;
+}
+
+/* Inputs y labels en modo oscuro para los modales */
+#platilloModal .form-group label,
+#ingredienteModal .form-group label {
+    color: rgba(255, 255, 255, 0.9) !important;
+}
+
+#platilloModal .form-group input:not([type=checkbox]):not([type=radio]),
+#platilloModal .form-group select,
+#platilloModal .form-group textarea,
+#ingredienteModal .form-group input:not([type=checkbox]):not([type=radio]),
+#ingredienteModal .form-group select,
+#ingredienteModal .form-group textarea {
+    background: #2a2a2a !important;
+    border-color: rgba(255, 255, 255, 0.2) !important;
+    color: #ffffff !important;
+}
+
+#platilloModal .form-group input::placeholder,
+#ingredienteModal .form-group input::placeholder {
+    color: rgba(255, 255, 255, 0.5) !important;
+}
+
+
 /* Image preview */
 .image-preview { display: flex; align-items: center; gap: 1rem; margin-top: .5rem; }
 .image-preview img { width: 80px; height: 80px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border); }
