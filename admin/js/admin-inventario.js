@@ -54,7 +54,7 @@
                     ${imgHtml}
                     <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${item.nombre}</span>
                 </div>
-                <span class="inv-item-badge ${estado}">${disponible} ${item.unidad_base||'u'}</span>`;
+                <span class="inv-item-badge ${estado}">${Math.round((disponible + Number.EPSILON) * 1000) / 1000} ${item.unidad_base||'u'}</span>`;
             el.addEventListener('click', function() {
                 const wasActive = item.id === window._invActiveId;
                 document.querySelectorAll('.inv-list-item').forEach(e => e.classList.remove('active'));
@@ -392,74 +392,117 @@
         }
     };
 
-    document.getElementById('saveIngrediente').addEventListener('click', async function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        const btn = this;
-        if (btn.disabled) return;
-        const esNuevo = !window.ingredienteEditandoId;
-        const id = esNuevo ? window.generarId('ing_') : window.ingredienteEditandoId;
-        const nombre = document.getElementById('ingredienteNombre').value.trim();
-        const stockActual = parseFloat(document.getElementById('ingredienteStock').value) || 0;
-        const agregar = parseFloat(document.getElementById('ingredienteAgregar').value) || 0;
-        const unidad = document.getElementById('ingredienteUnidad').value;
-        const minimo = parseFloat(document.getElementById('ingredienteMinimo').value) || 0;
-        const costo = parseFloat(document.getElementById('ingredienteCosto').value) || 0;
-        const venta = parseFloat(document.getElementById('ingredienteVenta').value) || 0;
+    // Listener para botón Guardar - usando onclick directo para evitar duplicidad
+    const saveBtn = document.getElementById('saveIngrediente');
+    if (saveBtn) {
+        // Remover cualquier listener previo
+        const newSaveBtn = saveBtn.cloneNode(true);
+        saveBtn.parentNode.replaceChild(newSaveBtn, saveBtn);
         
-        // Obtener imagen
-        let imagenUrl = '';
-        const archivoImagen = document.getElementById('ingredienteImagen').files[0];
-        const imagenUrlInput = document.getElementById('ingredienteImagenUrl').value;
-        if (archivoImagen) {
-            const resultado = await window.subirImagenPlatillo(archivoImagen, 'ingredientes');
-            if (resultado.success) imagenUrl = resultado.url;
-            else { window.mostrarToast('Error al subir la imagen: ' + resultado.error, 'error'); return; }
-        } else if (imagenUrlInput) imagenUrl = imagenUrlInput;
+        newSaveBtn.onclick = function(e) {
+            console.log('Botón Guardar presionado');
+            e.preventDefault();
+            e.stopPropagation();
+            if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+            
+            const btn = this;
+            if (btn.disabled) return;
+            const esNuevo = !window.ingredienteEditandoId;
+            const id = esNuevo ? window.generarId('ing_') : window.ingredienteEditandoId;
+            const nombre = document.getElementById('ingredienteNombre').value.trim();
+            const stockActual = parseFloat(document.getElementById('ingredienteStock').value) || 0;
+            const agregar = parseFloat(document.getElementById('ingredienteAgregar').value) || 0;
+            const unidad = document.getElementById('ingredienteUnidad').value;
+            const minimo = parseFloat(document.getElementById('ingredienteMinimo').value) || 0;
+            const costo = parseFloat(document.getElementById('ingredienteCosto').value) || 0;
+            const venta = parseFloat(document.getElementById('ingredienteVenta').value) || 0;
+            
+            // Obtener imagen
+            let imagenUrl = '';
+            const archivoImagen = document.getElementById('ingredienteImagen').files[0];
+            const imagenUrlInput = document.getElementById('ingredienteImagenUrl').value;
+            if (archivoImagen) {
+                window.subirImagenPlatillo(archivoImagen, 'ingredientes').then(resultado => {
+                    if (resultado.success) imagenUrl = resultado.url;
+                    else { window.mostrarToast('Error al subir la imagen: ' + resultado.error, 'error'); return; }
+                    guardarIngrediente(esNuevo, id, nombre, stockActual, agregar, unidad, minimo, costo, venta, imagenUrl, btn);
+                });
+            } else {
+                imagenUrl = imagenUrlInput || '';
+                guardarIngrediente(esNuevo, id, nombre, stockActual, agregar, unidad, minimo, costo, venta, imagenUrl, btn);
+            }
+        };
+    }
+    
+    function guardarIngrediente(esNuevo, id, nombre, stockActual, agregar, unidad, minimo, costo, venta, imagenUrl, btn) {
+        if (!nombre) { window.mostrarToast('Ingresa el nombre del ingrediente', 'error'); btn.disabled = false; btn.innerHTML = 'Guardar'; return; }
         
-        if (!nombre) { window.mostrarToast('Ingresa el nombre del ingrediente', 'error'); return; }
-        try {
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
-            // Redondear stock para evitar errores de punto flotante (ej: 14.600000000000001)
-            const nuevoStock = Math.round((stockActual + agregar) * 1000) / 1000;
-            const ingrediente = {
-                id, nombre,
-                stock: nuevoStock,
-                reservado: 0,
-                unidad_base: unidad,
-                minimo,
-                precio_costo: costo,
-                precio_unitario: venta,
-                imagen: imagenUrl || null
-            };
-            let error;
-            if (esNuevo) ({ error } = await window.supabaseClient.from('inventario').insert([ingrediente]));
-            else ({ error } = await window.supabaseClient.from('inventario').update(ingrediente).eq('id', id));
-            if (error) throw error;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+        
+        // Redondear stock para evitar errores de punto flotante (ej: 14.600000000000001)
+        const nuevoStock = Math.round((stockActual + agregar) * 1000) / 1000;
+        const ingrediente = {
+            id, nombre,
+            stock: nuevoStock,
+            reservado: 0,
+            unidad_base: unidad,
+            minimo,
+            precio_costo: costo,
+            precio_unitario: venta,
+            imagen: imagenUrl || null
+        };
+        
+        window.supabaseClient.from('inventario')[esNuevo ? 'insert' : 'update'](esNuevo ? [ingrediente] : ingrediente).eq('id', id).then(({ error }) => {
+            if (error) {
+                console.error('Error guardando ingrediente:', error);
+                window.mostrarToast('❌ Error: ' + (error.message || error), 'error');
+                btn.disabled = false;
+                btn.innerHTML = 'Guardar';
+                return;
+            }
             window.ingredienteEditandoId = null;
             window.cerrarModal('ingredienteModal');
-            await window.cargarInventario();
-            window.mostrarToast('✅ Ingrediente guardado', 'success');
-        } catch (e) {
-            console.error('Error guardando ingrediente:', e);
-            window.mostrarToast('❌ Error: ' + (e.message || e), 'error');
-        } finally {
+            window.cargarInventario().then(() => {
+                window.mostrarToast('✅ Ingrediente guardado', 'success');
+            });
             btn.disabled = false;
             btn.innerHTML = 'Guardar';
-        }
-    }, { passive: false });
+        });
+    }
 
-    document.getElementById('cancelIngrediente').addEventListener('click', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        window.cerrarModal('ingredienteModal');
-        window.resetearBloqueoStock();
-    }, { passive: false });
-    document.getElementById('closeIngredienteModal').addEventListener('click', function() {
-        window.cerrarModal('ingredienteModal');
-        window.resetearBloqueoStock();
-    });
+    // Listener para botón Cancelar - usando onclick directo para evitar duplicidad
+    const cancelBtn = document.getElementById('cancelIngrediente');
+    if (cancelBtn) {
+        // Remover cualquier listener previo
+        const newCancelBtn = cancelBtn.cloneNode(true);
+        cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
+        
+        newCancelBtn.onclick = function(e) {
+            console.log('Botón Cancelar presionado');
+            e.preventDefault();
+            e.stopPropagation();
+            if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+            window.cerrarModal('ingredienteModal');
+            window.resetearBloqueoStock();
+        };
+    }
+    
+    // Listener para cerrar modal con X
+    const closeBtn = document.getElementById('closeIngredienteModal');
+    if (closeBtn) {
+        const newCloseBtn = closeBtn.cloneNode(true);
+        closeBtn.parentNode.replaceChild(newCloseBtn, closeBtn);
+        
+        newCloseBtn.onclick = function(e) {
+            console.log('Botón Cerrar (X) presionado');
+            e.preventDefault();
+            e.stopPropagation();
+            if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+            window.cerrarModal('ingredienteModal');
+            window.resetearBloqueoStock();
+        };
+    }
 
     window._eliminarIngredienteDesdeModal = async function() {
         const id = window.ingredienteEditandoId;
@@ -479,8 +522,7 @@
         }
     };
     
-    // Asegurar que el botón Eliminar tenga un listener directo para Brave
-    // Usar setTimeout para asegurar que el DOM esté listo
+    // Asegurar que el botón Eliminar tenga un listener directo para Brave - usando onclick para evitar duplicidad
     setTimeout(function() {
         const deleteBtn = document.getElementById('deleteIngredienteBtn');
         if (deleteBtn) {
@@ -488,13 +530,15 @@
             const newDeleteBtn = deleteBtn.cloneNode(true);
             deleteBtn.parentNode.replaceChild(newDeleteBtn, deleteBtn);
             
-            newDeleteBtn.addEventListener('click', function(e) {
+            newDeleteBtn.onclick = function(e) {
+                console.log('Botón Eliminar presionado');
                 e.preventDefault();
                 e.stopPropagation();
+                if (e.stopImmediatePropagation) e.stopImmediatePropagation();
                 if (typeof window._eliminarIngredienteDesdeModal === 'function') {
                     window._eliminarIngredienteDesdeModal();
                 }
-            }, { passive: false });
+            };
         }
     }, 100);
 
@@ -727,12 +771,12 @@
         if (criticos.length > 0) {
             stockCriticoDiv.innerHTML = criticos.map(item => {
                 const disponible = (item.stock || 0) - (item.reservado || 0);
-                const faltantes = (item.minimo || 0) - disponible;
+                const faltantes = Math.round(((item.minimo || 0) - disponible + Number.EPSILON) * 1000) / 1000;
                 return `
                     <div class="alert-item critical">
                         <span>
                             <strong>${item.nombre}</strong><br>
-                            Stock: ${disponible} / Mínimo: ${item.minimo || 0}
+                            Stock: ${Math.round((disponible + Number.EPSILON) * 1000) / 1000} / Mínimo: ${item.minimo || 0}
                             ${faltantes > 0 ? `(Faltan ${faltantes})` : ''}
                         </span>
                         <button class="btn-small" onclick="window.agregarStock('${item.id}')" style="background:var(--primary);color:#fff;border:none;padding:.3rem .7rem;border-radius:4px;cursor:pointer">
@@ -771,7 +815,7 @@
                       onmouseout="this.style.transform='scale(1)'; this.style.background='rgba(239,68,68,.25)'">
                     <i class="fas fa-exclamation-triangle" style="font-size:.7rem"></i>
                     ${item.nombre}
-                    <span style="background:var(--danger); color:#fff; padding:0 5px; border-radius:12px; font-size:.65rem; margin-left:2px">${disponible}</span>
+                    <span style="background:var(--danger); color:#fff; padding:0 5px; border-radius:12px; font-size:.65rem; margin-left:2px">${Math.round((disponible + Number.EPSILON) * 1000) / 1000}</span>
                 </span>
             `;
         }).join('');
