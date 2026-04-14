@@ -265,6 +265,10 @@
         window.platilloEditandoId = null;
         const deleteBtn = document.getElementById('deletePlatilloBtn');
         if (deleteBtn) deleteBtn.style.display = 'none';
+        
+        // Configurar botones del modal con listeners directos para Brave
+        setupBotonesPlatilloModal(false);
+        
         document.getElementById('platilloModal').classList.add('active');
     };
 
@@ -456,6 +460,10 @@
         }
         const deleteBtn = document.getElementById('deletePlatilloBtn');
         if (deleteBtn) deleteBtn.style.display = 'inline-flex';
+        
+        // Configurar botones del modal con listeners directos para Brave
+        setupBotonesPlatilloModal(true);
+        
         document.getElementById('platilloModal').classList.add('active');
     };
 
@@ -617,4 +625,158 @@
 
     // Inicializar eventos del modal de platillo
     setupPlatilloModalEvents();
+    
+    // Función para configurar botones del modal con listeners directos (Brave Fix)
+    function setupBotonesPlatilloModal(esEdicion) {
+        // Botón Cancelar
+        const cancelBtn = document.getElementById('cancelPlatilloBtn');
+        if (cancelBtn) {
+            cancelBtn.onclick = function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                window.cerrarModal('platilloModal');
+                window.limpiarImagenPreview();
+                window.platilloEditandoId = null;
+            };
+        }
+        
+        // Botón Eliminar (solo en edición)
+        const deleteBtn = document.getElementById('deletePlatilloBtn');
+        if (deleteBtn) {
+            deleteBtn.style.display = esEdicion ? 'inline-flex' : 'none';
+            deleteBtn.onclick = function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                if (typeof window._eliminarPlatilloDesdeModal === 'function') {
+                    window._eliminarPlatilloDesdeModal();
+                }
+            };
+        }
+        
+        // Botón Guardar
+        const saveBtn = document.getElementById('savePlatilloBtn');
+        if (saveBtn) {
+            saveBtn.onclick = function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                window.guardarPlatillo();
+            };
+        }
+    }
+    
+    // Función principal de guardado con saneamiento de datos
+    window.guardarPlatillo = async function() {
+        const nombre = (document.getElementById('platilloNombre')?.value || '').trim();
+        const categoria = (document.getElementById('platilloCategoria')?.value || '').trim();
+        const subcategoria = (document.getElementById('platilloSubcategoria')?.value || '').trim();
+        const precioStr = document.getElementById('platilloPrecio')?.value || '';
+        const descripcion = (document.getElementById('platilloDescripcion')?.value || '').trim();
+        const disponibleCheck = document.getElementById('platilloDisponibleCheck')?.checked ?? true;
+        
+        // Validaciones previas
+        if (!nombre) {
+            mostrarErrorInput('platilloNombre', 'El nombre es obligatorio');
+            return;
+        }
+        if (!categoria) {
+            mostrarErrorInput('platilloCategoria', 'La categoría es obligatoria');
+            return;
+        }
+        if (!precioStr || parseFloat(precioStr) <= 0) {
+            mostrarErrorInput('platilloPrecio', 'El precio debe ser mayor a 0');
+            return;
+        }
+        
+        // Saneamiento de datos numéricos
+        const precio = parseFloat(precioStr).toFixed(2);
+        
+        // Recopilar ingredientes
+        const ingredientes = {};
+        const rows = document.querySelectorAll('#ingredientesContainer .ingrediente-row');
+        rows.forEach(row => {
+            const selIng = row.querySelector('select:not(.ing-row-unidad)');
+            const selUni = row.querySelector('select.ing-row-unidad');
+            const inputCantidad = row.querySelector('input[type="number"]');
+            const chkPrincipal = row.querySelector('.chk-principal-ing');
+            
+            if (selIng?.value && inputCantidad?.value) {
+                const cantidad = parseFloat(inputCantidad.value).toFixed(3);
+                ingredientes[selIng.value] = {
+                    nombre: selIng.options[selIng.selectedIndex]?.text || '',
+                    cantidad: parseFloat(cantidad),
+                    unidad: selUni?.value || 'unidades',
+                    principal: chkPrincipal?.checked || false
+                };
+            }
+        });
+        
+        // Determinar imagen
+        let imagenFinal = currentImagenUrl || '';
+        if (currentImagenFile) {
+            try {
+                imagenFinal = await window.subirImagenPlatillo(currentImagenFile);
+            } catch (e) {
+                console.error('Error subiendo imagen:', e);
+                window.mostrarToast('❌ Error al subir la imagen', 'error');
+                return;
+            }
+        }
+        
+        const platilloData = {
+            nombre,
+            categoria,
+            subcategoria: subcategoria || null,
+            precio: parseFloat(precio),
+            descripcion: descripcion || null,
+            disponible: disponibleCheck,
+            imagen: imagenFinal,
+            ingredientes: Object.keys(ingredientes).length > 0 ? ingredientes : null
+        };
+        
+        try {
+            let error;
+            if (window.platilloEditandoId) {
+                // Actualizar platillo existente
+                const result = await window.supabaseClient.from('menu')
+                    .update(platilloData)
+                    .eq('id', window.platilloEditandoId);
+                error = result.error;
+            } else {
+                // Crear nuevo platillo
+                const result = await window.supabaseClient.from('menu').insert([platilloData]);
+                error = result.error;
+            }
+            
+            if (error) throw error;
+            
+            // Éxito: cerrar modal, mostrar alerta y recargar
+            window.cerrarModal('platilloModal');
+            window.limpiarImagenPreview();
+            window.platilloEditandoId = null;
+            await window.cargarMenu();
+            
+            const accion = window.platilloEditandoId ? 'actualizado' : 'creado';
+            window.mostrarToast(`✅ Platillo ${accion} correctamente`, 'success');
+            
+        } catch (e) {
+            console.error('Error guardando platillo:', e);
+            window.mostrarToast('❌ Error al guardar: ' + (e.message || e), 'error');
+        }
+    };
+    
+    function mostrarErrorInput(inputId, mensaje) {
+        const input = document.getElementById(inputId);
+        if (input) {
+            input.style.borderColor = '#D32F2F';
+            input.style.boxShadow = '0 0 0 2px rgba(211, 47, 47, 0.2)';
+            setTimeout(() => {
+                input.style.borderColor = '';
+                input.style.boxShadow = '';
+            }, 2000);
+        }
+        window.mostrarToast('⚠️ ' + mensaje, 'warning');
+    }
+    
+    // Eliminar el listener antiguo de setTimeout que causaba duplicidad
+    // El botón eliminar ahora se configura en setupBotonesPlatilloModal
 })();
