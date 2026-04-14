@@ -485,20 +485,49 @@
         const id = window.platilloEditandoId;
         if (!id) return;
         const platillo = window.menuItems.find(p => p.id === id);
-        if (!platillo || !confirm(`¿Eliminar el platillo "${platillo.nombre || id}"?`)) return;
-        try {
-            if (platillo.imagen && platillo.imagen.includes('imagenes-platillos')) {
-                await window.eliminarImagenPlatillo(platillo.imagen);
+        if (!platillo) return;
+        
+        window.mostrarConfirmacionPremium(
+            'Eliminar Platillo',
+            `¿Estás seguro de eliminar "${platillo.nombre}"? Esta acción no se puede deshacer.`,
+            async () => {
+                try {
+                    if (platillo.imagen && platillo.imagen.includes('imagenes-platillos')) {
+                        await window.eliminarImagenPlatillo(platillo.imagen);
+                    }
+                    await window.supabaseClient.from('menu').delete().eq('id', id);
+                    await window.cargarMenu();
+                    window.cerrarModal('platilloModal');
+                    window.platilloEditandoId = null;
+                    window.limpiarImagenPreview();
+                    window.mostrarToast('🗑️ Platillo eliminado', 'success');
+                } catch (e) {
+                    console.error('Error eliminando platillo:', e);
+                    window.mostrarToast('❌ Error al eliminar el platillo', 'error');
+                }
             }
-            await window.supabaseClient.from('menu').delete().eq('id', id);
-            await window.cargarMenu();
-            window.cerrarModal('platilloModal');
-            window.mostrarToast('🗑️ Platillo eliminado', 'success');
-        } catch (e) {
-            console.error('Error eliminando platillo:', e);
-            window.mostrarToast('❌ Error al eliminar el platillo', 'error');
-        }
+        );
     };
+    
+    // Asegurar que el botón Eliminar tenga un listener directo para Brave - usando onclick para evitar duplicidad
+    setTimeout(function() {
+        const deleteBtn = document.getElementById('deletePlatilloBtn');
+        if (deleteBtn) {
+            // Remover listeners previos clonando el nodo
+            const newDeleteBtn = deleteBtn.cloneNode(true);
+            deleteBtn.parentNode.replaceChild(newDeleteBtn, deleteBtn);
+            
+            newDeleteBtn.onclick = function(e) {
+                console.log('Botón Eliminar Platillo presionado');
+                e.preventDefault();
+                e.stopPropagation();
+                if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+                if (typeof window._eliminarPlatilloDesdeModal === 'function') {
+                    window._eliminarPlatilloDesdeModal();
+                }
+            };
+        }
+    }, 100);
 
     window.actualizarProductosActivos = function() {
         const el = document.getElementById('productosActivos');
