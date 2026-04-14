@@ -28,14 +28,40 @@
         items.forEach(item => {
             const ingredientesEstado = [];
             let todosDisponibles = true;
+            let maxPlatillos = Infinity;
+            let hayIngredientes = false;
+            
             if (item.ingredientes) {
                 for (const [ingId, ingInfo] of Object.entries(item.ingredientes)) {
                     const ing = window.inventarioItems.find(i => i.id === ingId);
                     const disponible = ing && (ing.stock - ing.reservado) >= (ingInfo.cantidad || 0);
                     if (!disponible) todosDisponibles = false;
                     ingredientesEstado.push({ id: ingId, nombre: ingInfo.nombre || ingId, disponible });
+                    
+                    // Calcular cuántas porciones se pueden preparar con este ingrediente
+                    if (ing && ingInfo.cantidad > 0) {
+                        hayIngredientes = true;
+                        const disponibleIng = (ing.stock || 0) - (ing.reservado || 0);
+                        const necesario = window._convertirUnidad(ingInfo.cantidad, ingInfo.unidad || 'unidades', ing.unidad_base || 'unidades');
+                        if (necesario > 0) {
+                            maxPlatillos = Math.min(maxPlatillos, Math.floor(disponibleIng / necesario));
+                        } else {
+                            maxPlatillos = 0;
+                        }
+                    }
                 }
             }
+            
+            // Determinar el stock calculado (porciones disponibles)
+            let stockCalculado = 0;
+            if (!hayIngredientes) {
+                stockCalculado = 0;
+            } else if (!isFinite(maxPlatillos) || maxPlatillos < 0) {
+                stockCalculado = 0;
+            } else {
+                stockCalculado = maxPlatillos;
+            }
+            
             const disponibleFinal = item.disponible && todosDisponibles;
             const imgSrc = item.imagen || '';
             const card = document.createElement('div');
@@ -49,7 +75,7 @@
                             <span class="mc2-precio-bs">/ ${window.formatBs(window.usdToBs(item.precio || 0))}</span>
                         </div>
                         <div class="mc2-stock-line">
-                            Stock: <span class="mc2-stock-val">${item.stock || 0}</span>
+                            Stock: <span class="mc2-stock-val">${stockCalculado}</span>
                             <span class="mc2-badge ${disponibleFinal ? 'mc2-badge-ok' : 'mc2-badge-off'}">
                                 ${disponibleFinal ? 'Disponible' : 'No disponible'}
                             </span>
