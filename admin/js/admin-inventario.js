@@ -985,12 +985,13 @@
             
             if (error) throw error;
             
-            // Éxito
+            // Éxito - mensaje específico según acción
             window.cerrarModal('ingredienteModal');
             window.ingredienteEditandoId = null;
             removeIngredienteImage();
             await window.cargarInventario();
-            window.mostrarToast(window.ingredienteEditandoId ? '✅ Ingrediente actualizado correctamente' : '✅ Ingrediente creado correctamente', 'success');
+            const mensajeExito = window.ingredienteEditandoId ? 'Ingrediente editado con éxito' : 'Ingrediente creado con éxito';
+            window.mostrarToast('✅ ' + mensajeExito, 'success');
             
         } catch (e) {
             console.error('Error guardando ingrediente:', e);

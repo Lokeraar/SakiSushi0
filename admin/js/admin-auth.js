@@ -129,6 +129,24 @@
                 }, 300);
             }
             
+            // Mostrar mensaje de bienvenida con desvanecimiento y eliminación segura del DOM
+            const welcomeDiv = document.createElement('div');
+            welcomeDiv.id = 'welcomeMessage';
+            welcomeDiv.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg, var(--danger), #d32f2f);color:#fff;padding:1rem 2rem;border-radius:12px;box-shadow:0 8px 24px rgba(211,47,47,.4);z-index:9999;font-size:.95rem;font-weight:600;opacity:0;transition:opacity .4s ease;pointer-events:none';
+            welcomeDiv.innerHTML = '<i class=\"fas fa-check-circle\" style=\"margin-right:.5rem\"></i>Bienvenido, <strong>' + (adminUser.nombre || 'Administrador') + '</strong>';
+            document.body.appendChild(welcomeDiv);
+            
+            // Fade in
+            setTimeout(() => { welcomeDiv.style.opacity = '1'; }, 50);
+            
+            // Fade out y eliminación del DOM después de 3.5 segundos
+            setTimeout(() => {
+                welcomeDiv.style.opacity = '0';
+                setTimeout(() => {
+                    if (welcomeDiv.parentNode) welcomeDiv.remove();
+                }, 400); // Esperar a que termine la transición
+            }, 3500);
+            
             // Actualizar header con nombre del usuario en línea 2
             const headerUsuarioNombre = document.getElementById('headerUsuarioNombre');
             if (headerUsuarioNombre && adminUser.nombre) {

@@ -753,12 +753,14 @@
             
             if (error) throw error;
             
-            // Éxito
+            // Éxito - mensaje específico según acción
             window.cerrarModal('platilloModal');
             window.limpiarImagenPreview();
             window.platilloEditandoId = null;
-            await window.cargarMenu();
-            window.mostrarToast(window.platilloEditandoId ? '✅ Platillo actualizado correctamente' : '✅ Platillo creado correctamente', 'success');
+            await window.cargarInventario(); // Recargar inventario primero para actualizar stock
+            await window.cargarMenu(); // Luego recargar menú con el nuevo stock calculado
+            const mensajeExito = window.platilloEditandoId ? 'Platillo editado con éxito' : 'Platillo creado con éxito';
+            window.mostrarToast('✅ ' + mensajeExito, 'success');
             
         } catch (e) {
             console.error('Error guardando platillo:', e);
