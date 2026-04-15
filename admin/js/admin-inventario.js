@@ -803,7 +803,7 @@
         if (agregarInput) agregarInput.addEventListener('input', syncAgregarToCantidadComprada);
         if (cantidadComprada) cantidadComprada.readOnly = true;
         
-        // Tooltip para Unidad de Medida
+        // Tooltip para Unidad de Medida (ahora es el label de Nombre del ingrediente - form-group:nth-child(2))
         const unidadLabel = document.querySelector('#ingredienteForm .form-group:nth-child(2) label');
         if (unidadLabel) {
             unidadLabel.innerHTML = `
@@ -817,7 +817,7 @@
             `;
         }
         
-        // Tooltip para Stock Mínimo
+        // Tooltip para Stock Actual (antes Stock Mínimo - form-group:nth-child(3))
         const minimoLabel = document.querySelector('#ingredienteForm .form-group:nth-child(3) label');
         if (minimoLabel) {
             minimoLabel.innerHTML = `
