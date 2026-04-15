@@ -524,14 +524,14 @@
     <div class="modal" id="stockPasswordModal" style="z-index:9999">
         <div class="modal-content" style="max-width:400px;position:relative;z-index:10000">
             <div class="modal-header">
-                <h3><i class="fas fa-lock" style="margin-right:.5rem;color:var(--accent)"></i>Autenticación Requerida</h3>
+                <h3><i class="fas fa-lock" style="margin-right:.5rem;color:var(--accent)"></i>Desbloquear stock actual</h3>
                 <button class="modal-close" id="closeStockPasswordModal" type="button">&times;</button>
             </div>
             <div class="modal-body">
-                <p style="margin-bottom:1rem;font-size:.9rem;color:var(--text-muted)">Para modificar el stock actual, debes autenticarte con tu contraseña de administrador.</p>
+                <p style="margin-bottom:1rem;font-size:.9rem;color:var(--text-muted)">Para evitar modificaciones erróneas, este campo ha sido bloqueado, para desbloquearlo introduce tu contraseña de admin</p>
                 <div class="form-group">
                     <label for="stock-password-input">Contraseña</label>
-                    <input type="password" id="stock-password-input" placeholder="Ingresa tu contraseña" style="width:100%;padding:.6rem .8rem;border-radius:8px;border:1px solid var(--border);background:var(--card-bg);color:var(--text-dark);font-size:.95rem">
+                    <input type="password" id="stock-password-input" placeholder="Introduce tu contraseña de administrador" style="width:100%;padding:.6rem .8rem;border-radius:8px;border:1px solid var(--border);background:var(--card-bg);color:var(--text-dark);font-size:.95rem">
                 </div>
                 <div id="stock-password-error" style="display:none;margin-top:.5rem;padding:.5rem .7rem;background:rgba(220,38,38,.1);border:1px solid rgba(220,38,38,.3);border-radius:6px;color:#dc2626;font-size:.85rem"></div>
             </div>
