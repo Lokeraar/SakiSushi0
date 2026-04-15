@@ -3108,6 +3108,10 @@ html.dark-theme #platilloModal .ingrediente-row input:focus {
     opacity: 0.95;
     line-height: 1.2;
     word-break: break-word;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    flex-shrink: 1;
+    max-width: 100%;
 }
 
 /* Contenedor de botones (derecha) - NO se encoge, espacio reservado garantizado */
@@ -3115,25 +3119,25 @@ html.dark-theme #platilloModal .ingrediente-row input:focus {
     display: flex;
     flex-wrap: nowrap !important;
     align-items: center;
-    gap: 12px;
+    gap: 15px;
     margin: 0;
     padding: 0;
     flex-shrink: 0;
     min-width: fit-content;
+    justify-content: flex-end;
 }
 
 .btn-header-control {
-    padding: 0.65rem 1.2rem;
+    padding: 8px 12px;
     font-size: 0.9rem;
     flex-shrink: 0;
     white-space: nowrap;
-    min-width: auto;
+    min-width: max-content;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    aspect-ratio: 1 / 1;
-    height: 48px;
-    width: 48px;
+    height: auto;
+    width: auto;
     border-radius: 12px;
     transition: all 0.2s ease;
 }
@@ -3148,13 +3152,14 @@ html.dark-theme #platilloModal .ingrediente-row input:focus {
     align-items: center;
     gap: 0.6rem;
     cursor: pointer;
-    padding: 0.5rem 0.8rem;
+    padding: 8px 12px;
     border-radius: 12px;
     background: var(--secondary);
     border: 1px solid var(--border);
     transition: var(--transition);
-    height: 48px;
-    min-width: fit-content;
+    height: auto;
+    min-width: max-content;
+    flex-shrink: 0;
 }
 
 .theme-switch-wrapper:hover {
