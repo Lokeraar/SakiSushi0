@@ -393,6 +393,9 @@
 		}
 		
 		const nombreInput = document.getElementById('ingredienteNombre');
+		if (nombreInput) {
+			nombreInput.value = ingrediente.nombre || '';
+		}
 		const unidadSelect = document.getElementById('ingredienteUnidad');
 		if (unidadSelect) unidadSelect.value = ingrediente.unidad_base || 'unidades';
 		const minimoInput = document.getElementById('ingredienteMinimo');
