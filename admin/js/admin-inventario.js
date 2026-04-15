@@ -367,9 +367,6 @@
 		const modalTitle = document.getElementById('ingredienteModalTitle');
 		if (modalTitle) modalTitle.textContent = 'Editar Ingrediente';
 		const nombreInput = document.getElementById('ingredienteNombre');
-		if (nombreInput) nombreInput.value = ingrediente.nombre || '';
-            // NOTA: La asignación de stockInput se ha eliminado temporalmente
-            // hasta que se reconstruya el nuevo sistema de seguridad
 		const unidadSelect = document.getElementById('ingredienteUnidad');
 		if (unidadSelect) unidadSelect.value = ingrediente.unidad_base || 'unidades';
 		const minimoInput = document.getElementById('ingredienteMinimo');
@@ -649,19 +646,6 @@
             `;
         }
         
-        // Tooltip para Stock Actual (antes Stock Mínimo - form-group:nth-child(3))
-        const minimoLabel = document.querySelector('#ingredienteForm .form-group:nth-child(3) label');
-        if (minimoLabel) {
-            minimoLabel.innerHTML = `
-                Stock Actual
-                <span class="tooltip-wrap" style="position:relative; display:inline-flex; align-items:center; cursor:help; margin-left:.3rem">
-                    <span style="display:inline-flex; align-items:center; justify-content:center; width:16px; height:16px; background:var(--text-muted); color:#fff; border-radius:50%; font-size:.65rem; font-weight:700">?</span>
-                    <span class="tooltip-text" style="display:none; position:absolute; bottom:calc(100% + 6px); left:50%; transform:translateX(-50%); background:var(--toast-bg); color:var(--toast-text); padding:.5rem .75rem; border-radius:8px; font-size:.75rem; white-space:normal; width:250px; text-align:center; box-shadow:0 4px 12px rgba(0,0,0,.3); z-index:100; line-height:1.4">
-                        Cantidad actual disponible del ingrediente en inventario.
-                    </span>
-                </span>
-            `;
-        }
         
         // Tooltip para Precio de Costo
         const costoLabel = document.querySelector('#ingredienteForm .form-row .form-group:first-child label');
@@ -768,8 +752,6 @@
     // Función principal para guardar ingrediente
     window.guardarIngrediente = async function() {
         const nombre = document.getElementById('ingredienteNombre')?.value.trim();
-        // NOTA: La lectura de stockInput se ha eliminado temporalmente
-        // hasta que se reconstruya el nuevo sistema de seguridad
         const stock = 0;
         const unidad = document.getElementById('ingredienteUnidad')?.value || 'unidades';
         const minimo = parseFloat(document.getElementById('ingredienteMinimo')?.value) || 0;
