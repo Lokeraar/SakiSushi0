@@ -378,6 +378,18 @@
 			stockOriginalValue = typeof ingrediente.stock === 'number' ? ingrediente.stock : 0;
 			stockInput.value = stockOriginalValue;
 			stockInput.disabled = true; // PHASE 7: Always start disabled
+			
+			// PHASE 3: Click Behavior - Bind dynamically on each modal open (avoid duplicates)
+			stockInput.onclick = null; // Remove previous listener
+			stockInput.onclick = function() {
+				console.log('CLICK stock input detected', this.disabled);
+				
+				if (this.disabled && !stockPasswordModalOpen) {
+					pendingIngredientId = window.ingredienteEditandoId;
+					window.abrirStockPasswordModal();
+				}
+				// If enabled, do NOTHING (already editable)
+			};
 		}
 		
 		const nombreInput = document.getElementById('ingredienteNombre');
@@ -646,17 +658,7 @@
         if (agregarInput) agregarInput.addEventListener('input', syncAgregarToCantidadComprada);
         if (cantidadComprada) cantidadComprada.readOnly = true;
         
-        // PHASE 3: Click Behavior - Only if disabled, trigger password modal
-        const stockInput = document.getElementById('stock-actual-input');
-        if (stockInput) {
-            stockInput.addEventListener('click', function() {
-                if (this.disabled && !stockPasswordModalOpen) {
-                    pendingIngredientId = window.ingredienteEditandoId;
-                    window.abrirStockPasswordModal();
-                }
-                // If enabled, do NOTHING (already editable)
-            });
-        }
+        // PHASE 3: Click Behavior - REMOVED from here, now bound dynamically in editarIngrediente
         
         // Tooltip para Unidad de Medida (ahora es el label de Nombre del ingrediente - form-group:nth-child(2))
         const unidadLabel = document.querySelector('#ingredienteForm .form-group:nth-child(2) label');
@@ -864,6 +866,8 @@
     // ============================================
     
     window.abrirStockPasswordModal = function() {
+        console.log('Opening password modal...');
+        
         if (stockPasswordModalOpen) return; // Prevent multiple openings
         
         const modal = document.getElementById('stockPasswordModal');
