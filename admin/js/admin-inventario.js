@@ -659,21 +659,44 @@
                 // Si ya está desbloqueado, no hacer nada
                 if (!stockInput.hasAttribute('readonly')) return;
                 
-                // Solicitar contraseña usando SweetAlert2 si está disponible
+                // Solicitar contraseña usando SweetAlert2 con z-index forzado
                 let password = null;
                 if (window.Swal) {
                     const result = await window.Swal.fire({
                         title: 'Verificación de Seguridad',
                         html: '<p style="margin-bottom:.5rem;color:var(--text-muted)">Ingresa tu contraseña para editar el stock</p>' +
-                              '<input type="password" id="swalPasswordInput" class="swal2-input" placeholder="Contraseña" style="width:100%;padding:.5rem;border-radius:6px;border:1px solid var(--border);font-size:.9rem">',
+                              '<input type="password" id="swalPasswordInput" class="swal2-input" placeholder="Contraseña" ' +
+                              'style="width:100%;padding:.5rem;border-radius:6px;border:1px solid var(--border);font-size:.9rem" ' +
+                              'onkeydown="if(event.key===\'Enter\'){const btn=document.querySelector(\'.swal2-confirm\');if(btn)btn.click();}">',
                         showCancelButton: true,
                         confirmButtonText: 'Desbloquear',
                         cancelButtonText: 'Cancelar',
                         confirmButtonColor: 'var(--primary)',
                         cancelButtonColor: 'var(--text-muted)',
                         allowOutsideClick: false,
+                        customClass: {
+                            container: 'swal-custom-container',
+                            popup: 'swal-custom-popup'
+                        },
                         didOpen: () => {
-                            document.getElementById('swalPasswordInput').focus();
+                            const input = document.getElementById('swalPasswordInput');
+                            if (input) {
+                                input.focus();
+                                // Forzar z-index en el contenedor y popup
+                                const container = document.querySelector('.swal2-container');
+                                const popup = document.querySelector('.swal2-popup');
+                                if (container) container.style.zIndex = '10000';
+                                if (popup) popup.style.zIndex = '10001';
+                            }
+                        },
+                        willOpen: () => {
+                            // Asegurar z-index antes de abrir
+                            const style = document.createElement('style');
+                            style.textContent = `
+                                .swal2-container { z-index: 10000 !important; }
+                                .swal2-popup { z-index: 10001 !important; }
+                            `;
+                            document.head.appendChild(style);
                         }
                     });
                     if (result.isConfirmed) {
