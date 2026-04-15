@@ -310,8 +310,8 @@
     });
 
     // Cerrar modal
-    document.getElementById('cancelUsuario').addEventListener('click', () => document.getElementById('usuarioModal').classList.remove('active'));
-    document.getElementById('closeUsuarioModal').addEventListener('click', () => document.getElementById('usuarioModal').classList.remove('active'));
+    document.getElementById('cancelUsuario').addEventListener('click', () => window.cerrarModal('usuarioModal'));
+    document.getElementById('closeUsuarioModal').addEventListener('click', () => window.cerrarModal('usuarioModal'));
     
     // Configurar eventos de foto en el modal de usuario
     function setupUsuarioFotoEvents() {
