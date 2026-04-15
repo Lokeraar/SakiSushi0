@@ -938,26 +938,32 @@
             return;
         }
         
-        // PHASE 5: Auth Validation using Supabase Auth re-auth
+        // PHASE 5: Auth Validation using RPC verify_user_credentials
         try {
-            // Get current user email
-            const { data: { user } } = await window.supabaseClient.auth.getUser();
-            if (!user || !user.email) {
-                throw new Error('Usuario no autenticado');
+            // Get current user from sessionStorage
+            const adminUser = JSON.parse(sessionStorage.getItem('admin_user') || '{}');
+            
+            if (!adminUser.username) {
+                throw new Error('Usuario no identificado en sesión');
             }
             
-            // Re-authenticate with password
-            const { data, error } = await window.supabaseClient.auth.signInWithPassword({
-                email: user.email,
-                password: password
+            console.log('Verificando credenciales para usuario:', adminUser.username);
+            
+            // Call RPC to verify credentials
+            const { data, error } = await window.supabaseClient.rpc('verify_user_credentials', {
+                p_username: adminUser.username,
+                p_password: password
             });
             
             if (error) {
-                throw error;
+                console.error('Error en RPC de verificación:', error);
+                throw new Error('Error de conexión con el servidor');
             }
             
             // PHASE 6: Unlock Mechanism - Success!
-            if (data.user) {
+            if (data?.success === true) {
+                console.log('Contraseña verificada correctamente');
+                
                 const stockInput = document.getElementById('stock-actual-input');
                 if (stockInput) {
                     stockInput.readOnly = false;
@@ -966,13 +972,16 @@
                 
                 window.cerrarStockPasswordModal();
                 window.mostrarToast('🔓 Stock desbloqueado para edición', 'success');
+            } else {
+                console.log('Contraseña incorrecta');
+                throw new Error('Contraseña incorrecta');
             }
             
         } catch (error) {
             console.error('Auth error:', error);
             // PHASE 10: Error Handling
             if (errorDiv) {
-                errorDiv.textContent = 'Contraseña incorrecta. Inténtalo de nuevo.';
+                errorDiv.textContent = error.message || 'Contraseña incorrecta. Inténtalo de nuevo.';
                 errorDiv.style.display = 'block';
             }
             if (passwordInput) {
