@@ -938,66 +938,42 @@
             return;
         }
         
-        // PHASE 5: Auth Validation using RPC verify_user_credentials
         try {
-            // Get current user from sessionStorage
+            // Obtener el usuario admin actual de la sesión
             const adminUser = JSON.parse(sessionStorage.getItem('admin_user') || '{}');
             
             if (!adminUser.username) {
-                throw new Error('Usuario no identificado en sesión');
+                throw new Error('No se pudo identificar el usuario administrador');
             }
             
-            // Debug: Print current user and password length
-            console.log('Usuario actual:', adminUser.username);
-            console.log('Contraseña ingresada (longitud):', password.length);
-            
-            // Force username to lowercase
-            const usernameLower = adminUser.username.toLowerCase();
-            
-            // Call RPC to verify credentials
-            const { data, error } = await window.supabaseClient.rpc('verify_user_credentials', {
-                p_username: usernameLower,
-                p_password: password
+            // Usar el mismo endpoint de login que ya funciona
+            const response = await fetch('https://iqwwoihiiyrtypyqzhgy.supabase.co/functions/v1/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    username: adminUser.username, 
+                    password: password 
+                })
             });
             
-            // Debug: Print full RPC response
-            console.log('Respuesta RPC:', data, error);
+            const data = await response.json();
             
-            if (error) {
-                console.error('Error en RPC de verificación:', error);
-                throw new Error('Error de conexión con el servidor');
-            }
-            
-            // PHASE 6: Unlock Mechanism - Success!
-            if (data?.success === true) {
-                console.log('Contraseña verificada correctamente');
-                
+            // Validar respuesta exactamente igual que en admin-auth.js
+            if (data.success && data.user && data.user.rol === 'admin') {
+                // Contraseña correcta → desbloquear stock
                 const stockInput = document.getElementById('stock-actual-input');
                 if (stockInput) {
                     stockInput.readOnly = false;
                     stockInput.focus();
                 }
-                
                 window.cerrarStockPasswordModal();
                 window.mostrarToast('🔓 Stock desbloqueado para edición', 'success');
             } else {
-                console.log('Contraseña incorrecta. Respuesta:', data);
-                
-                // If RPC failed, try querying usuarios table directly for debugging
-                const { data: userData, error: userError } = await window.supabaseClient
-                    .from('usuarios')
-                    .select('username, password_hash')
-                    .eq('username', usernameLower)
-                    .single();
-                console.log('Usuario en BD:', userData, 'Error:', userError);
-                
-                // Show specific error from RPC or default message
-                throw new Error(data?.error || 'Contraseña incorrecta');
+                throw new Error(data.error || 'Contraseña incorrecta');
             }
             
         } catch (error) {
-            console.error('Auth error:', error);
-            // PHASE 10: Error Handling
+            console.error('Error validando contraseña:', error);
             if (errorDiv) {
                 errorDiv.textContent = error.message || 'Contraseña incorrecta. Inténtalo de nuevo.';
                 errorDiv.style.display = 'block';
@@ -1006,7 +982,6 @@
                 passwordInput.value = '';
                 passwordInput.focus();
             }
-            // Modal stays open - user can retry
         }
     };
     
