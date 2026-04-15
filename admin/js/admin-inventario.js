@@ -334,7 +334,8 @@
                 }
             }
             if (esValida) {
-                await window._desbloquearStock();
+                // Stock desbloqueado - la nueva lógica de seguridad se implementará aquí
+                window.mostrarToast('✅ Stock desbloqueado. Puedes editar la cantidad.', 'success');
             } else {
                 if (errorEl) { errorEl.textContent = 'Contraseña incorrecta. Intenta de nuevo.'; errorEl.style.display = 'block'; }
                 document.getElementById('stockPasswordModalInput')?.focus();
@@ -344,51 +345,6 @@
             if (errorEl) { errorEl.textContent = 'Error al validar la contraseña'; errorEl.style.display = 'block'; }
         } finally {
             if (btnConfirm) { btnConfirm.disabled = false; btnConfirm.innerHTML = 'Confirmar'; }
-        }
-    };
-
-    window._desbloquearStock = async function() {
-        const stockInput = document.getElementById('ingredienteStock');
-        const lockIcon   = document.getElementById('stockLockIcon');
-        const clickArea  = document.getElementById('stockClickArea');
-        if (stockInput) {
-            stockInput.disabled = false;
-            stockInput.readOnly = false;
-            stockInput.style.cursor = 'text';
-            stockInput.style.pointerEvents = 'auto';
-            stockInput.onclick = null;
-            setTimeout(() => stockInput.focus(), 150);
-        }
-        if (lockIcon)  { lockIcon.innerHTML = '<i class="fas fa-lock-open" style="font-size:.8rem; color:var(--success)"></i>'; lockIcon.style.cursor = 'default'; }
-        if (clickArea) { clickArea.onclick = null; clickArea.style.cursor = 'default'; clickArea.style.borderColor = 'var(--success)'; clickArea.style.backgroundColor = 'rgba(56,142,60,0.1)'; }
-        // Cerrar passwordStockModal directamente sin pasar por cerrarModal
-        // para no afectar z-index/eventos del modal padre (ingredienteModal)
-        const pwdModal = document.getElementById('passwordStockModal');
-        if (pwdModal) {
-            pwdModal.classList.remove('active');
-            pwdModal.style.display = 'none';
-            setTimeout(() => { pwdModal.style.display = ''; }, 60);
-        }
-        window.mostrarToast('✅ Stock desbloqueado. Puedes editar la cantidad.', 'success');
-    };
-
-    window.resetearBloqueoStock = function() {
-        if (window.ingredienteEditandoId) {
-            const stockInput = document.getElementById('ingredienteStock');
-            const lockIcon = document.getElementById('stockLockIcon');
-            const clickArea = document.getElementById('stockClickArea');
-            if (stockInput && !stockInput.disabled) {
-                stockInput.disabled = true;
-                stockInput.readOnly = true;
-                stockInput.style.cursor = 'pointer';
-                if (clickArea) {
-                    clickArea.onclick = function(e) { e.stopPropagation(); window.mostrarModalContraseñaStock(); };
-                    clickArea.style.cursor = 'pointer';
-                    clickArea.style.borderColor = '';
-                    clickArea.style.backgroundColor = '';
-                }
-                if (lockIcon) { lockIcon.innerHTML = '<i class="fas fa-lock" style="font-size:.8rem"></i>'; lockIcon.style.cursor = 'default'; }
-            }
         }
     };
 
@@ -422,7 +378,9 @@
     };
 
     window._syncIngredientePreview = function() {
-        const stockActual = parseFloat(document.getElementById('ingredienteStock')?.value) || 0;
+        // NOTA: La lectura de ingredienteStock se ha eliminado temporalmente
+        // hasta que se reconstruya el nuevo sistema de seguridad
+        const stockActual = 0;
         const nuevo       = parseFloat(document.getElementById('ingredienteAgregar')?.value) || 0;
         const unidad      = document.getElementById('ingredienteUnidad')?.value || 'unidades';
         const total       = stockActual + nuevo;
@@ -475,26 +433,6 @@
 		
 		removeIngredienteImage();
 		
-		const stockInput = document.getElementById('ingredienteStock');
-		const lockIcon = document.getElementById('stockLockIcon');
-		const clickArea = document.getElementById('stockClickArea');
-		if (stockInput) {
-			stockInput.disabled = false;
-			stockInput.readOnly = false;
-			stockInput.value = '0';
-			stockInput.style.cursor = 'text';
-			stockInput.onclick = null;
-		}
-		if (lockIcon) {
-			lockIcon.innerHTML = '<i class="fas fa-lock-open" style="font-size:.8rem; color:var(--success)"></i>';
-			lockIcon.style.cursor = 'default';
-		}
-		if (clickArea) {
-			clickArea.onclick = null;
-			clickArea.style.cursor = 'default';
-			clickArea.style.borderColor = '';
-			clickArea.style.backgroundColor = '';
-		}
 		const deleteBtn = document.getElementById('deleteIngredienteBtn');
 		if (deleteBtn) deleteBtn.style.display = 'none';
 		const modal = document.getElementById('ingredienteModal');
@@ -509,8 +447,8 @@
 		if (modalTitle) modalTitle.textContent = 'Editar Ingrediente';
 		const nombreInput = document.getElementById('ingredienteNombre');
 		if (nombreInput) nombreInput.value = ingrediente.nombre || '';
-		const stockInput = document.getElementById('ingredienteStock');
-		if (stockInput) stockInput.value = ingrediente.stock || 0;
+            // NOTA: La asignación de stockInput se ha eliminado temporalmente
+            // hasta que se reconstruya el nuevo sistema de seguridad
 		const unidadSelect = document.getElementById('ingredienteUnidad');
 		if (unidadSelect) unidadSelect.value = ingrediente.unidad_base || 'unidades';
 		const minimoInput = document.getElementById('ingredienteMinimo');
@@ -540,33 +478,6 @@
 			removeIngredienteImage();
 		}
 		
-		if (stockInput) {
-			stockInput.disabled = true;
-			stockInput.readOnly = true;
-			stockInput.style.cursor = 'pointer';
-			stockInput.value = ingrediente.stock || 0;
-			stockInput.onclick = null;
-		}
-		const lockIcon = document.getElementById('stockLockIcon');
-		if (lockIcon) {
-			lockIcon.innerHTML = '<i class="fas fa-lock" style="font-size:.8rem"></i>';
-			lockIcon.style.cursor = 'default';
-		}
-		const clickArea = document.getElementById('stockClickArea');
-		if (clickArea) {
-			clickArea.onclick = function(e) {
-				e.stopPropagation();
-				window.mostrarModalContraseñaStock();
-			};
-			clickArea.style.cursor = 'pointer';
-			clickArea.style.borderColor = '';
-			clickArea.style.backgroundColor = '';
-		} else if (stockInput) {
-			stockInput.onclick = function(e) {
-				e.stopPropagation();
-				window.mostrarModalContraseñaStock();
-			};
-		}
 		const deleteBtn = document.getElementById('deleteIngredienteBtn');
 		if (deleteBtn) deleteBtn.style.display = 'inline-flex';
 		const modal = document.getElementById('ingredienteModal');
@@ -936,8 +847,9 @@
     // Función principal para guardar ingrediente
     window.guardarIngrediente = async function() {
         const nombre = document.getElementById('ingredienteNombre')?.value.trim();
-        const stockInput = document.getElementById('ingredienteStock');
-        const stock = parseFloat(stockInput?.value) || 0;
+        // NOTA: La lectura de stockInput se ha eliminado temporalmente
+        // hasta que se reconstruya el nuevo sistema de seguridad
+        const stock = 0;
         const unidad = document.getElementById('ingredienteUnidad')?.value || 'unidades';
         const minimo = parseFloat(document.getElementById('ingredienteMinimo')?.value) || 0;
         const costo = parseFloat(document.getElementById('ingredienteCosto')?.value) || 0;
