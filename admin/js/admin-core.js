@@ -50,7 +50,7 @@
         const modal = document.getElementById(modalId);
         if (modal) modal.classList.remove('active');
         if (modalId === 'ingredienteModal') {
-            window.resetearBloqueoStock();
+            // La función resetearBloqueoStock fue eliminada, ya no es necesaria
         }
     };
     
