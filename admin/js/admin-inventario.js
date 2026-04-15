@@ -2,6 +2,11 @@
 (function() {
     let currentIngredienteImagenFile = null;
     let currentIngredienteImagenUrl = '';
+    
+    // Variables para gestión de stock con contraseña
+    let stockOriginalValue = 0;
+    let stockPasswordModalOpen = false;
+    let pendingIngredientId = null;
 
     window.cargarInventario = async function() {
         try {
@@ -366,6 +371,15 @@
 		window.ingredienteEditandoId = id;
 		const modalTitle = document.getElementById('ingredienteModalTitle');
 		if (modalTitle) modalTitle.textContent = 'Editar Ingrediente';
+		
+		// PHASE 2: Fetch Stock - Set value in input
+		const stockInput = document.getElementById('stock-actual-input');
+		if (stockInput) {
+			stockOriginalValue = typeof ingrediente.stock === 'number' ? ingrediente.stock : 0;
+			stockInput.value = stockOriginalValue;
+			stockInput.disabled = true; // PHASE 7: Always start disabled
+		}
+		
 		const nombreInput = document.getElementById('ingredienteNombre');
 		const unidadSelect = document.getElementById('ingredienteUnidad');
 		if (unidadSelect) unidadSelect.value = ingrediente.unidad_base || 'unidades';
@@ -632,6 +646,18 @@
         if (agregarInput) agregarInput.addEventListener('input', syncAgregarToCantidadComprada);
         if (cantidadComprada) cantidadComprada.readOnly = true;
         
+        // PHASE 3: Click Behavior - Only if disabled, trigger password modal
+        const stockInput = document.getElementById('stock-actual-input');
+        if (stockInput) {
+            stockInput.addEventListener('click', function() {
+                if (this.disabled && !stockPasswordModalOpen) {
+                    pendingIngredientId = window.ingredienteEditandoId;
+                    window.abrirStockPasswordModal();
+                }
+                // If enabled, do NOTHING (already editable)
+            });
+        }
+        
         // Tooltip para Unidad de Medida (ahora es el label de Nombre del ingrediente - form-group:nth-child(2))
         const unidadLabel = document.querySelector('#ingredienteForm .form-group:nth-child(2) label');
         if (unidadLabel) {
@@ -752,11 +778,21 @@
     // Función principal para guardar ingrediente
     window.guardarIngrediente = async function() {
         const nombre = document.getElementById('ingredienteNombre')?.value.trim();
-        const stock = 0;
         const unidad = document.getElementById('ingredienteUnidad')?.value || 'unidades';
         const minimo = parseFloat(document.getElementById('ingredienteMinimo')?.value) || 0;
         const costo = parseFloat(document.getElementById('ingredienteCosto')?.value) || 0;
         const venta = parseFloat(document.getElementById('ingredienteVenta')?.value) || 0;
+        
+        // PHASE 8: Save Logic - Get current stock value (may have been unlocked)
+        const stockInput = document.getElementById('stock-actual-input');
+        let newStockValue = stockOriginalValue; // Default to original
+        if (stockInput && !stockInput.disabled) {
+            // Only use new value if input was unlocked and user changed it
+            const inputValue = parseFloat(stockInput.value);
+            if (!isNaN(inputValue)) {
+                newStockValue = inputValue;
+            }
+        }
         
         // Validaciones
         let hayError = false;
@@ -771,10 +807,13 @@
             return;
         }
         
+        // PHASE 8: Compare original vs new stock - only update if changed
+        const shouldUpdateStock = newStockValue !== stockOriginalValue;
+        
         // Aplicar fix de decimales con toFixed(2) para evitar errores como 14.60000000001
         const ingredienteData = {
             nombre: nombre,
-            stock: parseFloat(parseFloat(stock).toFixed(2)),
+            stock: shouldUpdateStock ? parseFloat(parseFloat(newStockValue).toFixed(2)) : parseFloat(parseFloat(stockOriginalValue).toFixed(2)),
             unidad_base: unidad,
             minimo: parseFloat(parseFloat(minimo).toFixed(2)),
             precio_costo: parseFloat(parseFloat(costo).toFixed(2)),
@@ -801,6 +840,12 @@
             if (error) throw error;
             
             // Éxito - mensaje específico según acción
+            // PHASE 7: Reset State on save
+            const stockInput = document.getElementById('stock-actual-input');
+            if (stockInput) {
+                stockInput.disabled = true;
+            }
+            
             window.cerrarModal('ingredienteModal');
             window.ingredienteEditandoId = null;
             removeIngredienteImage();
@@ -813,4 +858,187 @@
             window.mostrarToast('❌ Error al guardar: ' + (e.message || e), 'error');
         }
     };
+    
+    // ============================================
+    // PHASE 4-6: Password Modal Functions
+    // ============================================
+    
+    window.abrirStockPasswordModal = function() {
+        if (stockPasswordModalOpen) return; // Prevent multiple openings
+        
+        const modal = document.getElementById('stockPasswordModal');
+        const passwordInput = document.getElementById('stock-password-input');
+        const errorDiv = document.getElementById('stock-password-error');
+        
+        if (!modal) {
+            console.error('stockPasswordModal not found in DOM');
+            return;
+        }
+        
+        stockPasswordModalOpen = true;
+        pendingIngredientId = window.ingredienteEditandoId;
+        
+        // Reset state
+        if (passwordInput) {
+            passwordInput.value = '';
+            passwordInput.disabled = false;
+        }
+        if (errorDiv) {
+            errorDiv.style.display = 'none';
+            errorDiv.textContent = '';
+        }
+        
+        // Show modal with animation
+        modal.classList.add('active');
+        
+        // Focus trap - PHASE 9
+        setTimeout(() => {
+            if (passwordInput) passwordInput.focus();
+        }, 100);
+    };
+    
+    window.cerrarStockPasswordModal = function() {
+        const modal = document.getElementById('stockPasswordModal');
+        const passwordInput = document.getElementById('stock-password-input');
+        
+        if (modal) {
+            modal.classList.remove('active');
+        }
+        
+        // PHASE 7: Reset state on close
+        stockPasswordModalOpen = false;
+        pendingIngredientId = null;
+        
+        if (passwordInput) {
+            passwordInput.value = '';
+            passwordInput.disabled = false;
+        }
+        
+        const errorDiv = document.getElementById('stock-password-error');
+        if (errorDiv) {
+            errorDiv.style.display = 'none';
+            errorDiv.textContent = '';
+        }
+    };
+    
+    window.validarPasswordStock = async function() {
+        const passwordInput = document.getElementById('stock-password-input');
+        const errorDiv = document.getElementById('stock-password-error');
+        const password = passwordInput?.value.trim();
+        
+        if (!password) {
+            if (errorDiv) {
+                errorDiv.textContent = 'La contraseña es requerida';
+                errorDiv.style.display = 'block';
+            }
+            return;
+        }
+        
+        // PHASE 5: Auth Validation using Supabase Auth re-auth
+        try {
+            // Get current user email
+            const { data: { user } } = await window.supabaseClient.auth.getUser();
+            if (!user || !user.email) {
+                throw new Error('Usuario no autenticado');
+            }
+            
+            // Re-authenticate with password
+            const { data, error } = await window.supabaseClient.auth.signInWithPassword({
+                email: user.email,
+                password: password
+            });
+            
+            if (error) {
+                throw error;
+            }
+            
+            // PHASE 6: Unlock Mechanism - Success!
+            if (data.user) {
+                const stockInput = document.getElementById('stock-actual-input');
+                if (stockInput) {
+                    stockInput.disabled = false;
+                    stockInput.focus();
+                }
+                
+                window.cerrarStockPasswordModal();
+                window.mostrarToast('🔓 Stock desbloqueado para edición', 'success');
+            }
+            
+        } catch (error) {
+            console.error('Auth error:', error);
+            // PHASE 10: Error Handling
+            if (errorDiv) {
+                errorDiv.textContent = 'Contraseña incorrecta. Inténtalo de nuevo.';
+                errorDiv.style.display = 'block';
+            }
+            if (passwordInput) {
+                passwordInput.value = '';
+                passwordInput.focus();
+            }
+            // Modal stays open - user can retry
+        }
+    };
+    
+    // Setup password modal event listeners
+    setTimeout(function() {
+        const confirmBtn = document.getElementById('confirmStockPasswordBtn');
+        const cancelBtn = document.getElementById('cancelStockPasswordBtn');
+        const closeBtn = document.getElementById('closeStockPasswordModal');
+        const passwordInput = document.getElementById('stock-password-input');
+        
+        // Confirm button
+        if (confirmBtn) {
+            confirmBtn.onclick = function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                window.validarPasswordStock();
+            };
+        }
+        
+        // Cancel button
+        if (cancelBtn) {
+            cancelBtn.onclick = function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                window.cerrarStockPasswordModal();
+            };
+        }
+        
+        // Close button (X)
+        if (closeBtn) {
+            closeBtn.onclick = function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                window.cerrarStockPasswordModal();
+            };
+        }
+        
+        // Enter key support
+        if (passwordInput) {
+            passwordInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    window.validarPasswordStock();
+                }
+            });
+        }
+        
+        // PHASE 7: Also reset on ingrediente modal close
+        const originalCerrarModal = window.cerrarModal;
+        window.cerrarModal = function(modalId) {
+            if (modalId === 'ingredienteModal') {
+                const stockInput = document.getElementById('stock-actual-input');
+                if (stockInput) {
+                    stockInput.disabled = true;
+                }
+                stockPasswordModalOpen = false;
+                pendingIngredientId = null;
+            }
+            if (originalCerrarModal) {
+                originalCerrarModal(modalId);
+            }
+        };
+        
+    }, 150);
+    
 })();
