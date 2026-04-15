@@ -685,7 +685,7 @@
                 
                 if (!password) return;
                 
-                // Validar contraseña contra Supabase
+                // Validar contraseña contra Supabase - consulta directa a la tabla de usuarios
                 try {
                     const userData = sessionStorage.getItem('admin_user');
                     if (!userData) {
@@ -693,15 +693,19 @@
                     }
                     const user = JSON.parse(userData);
                     
-                    // Usar la función de login para verificar contraseña
-                    const response = await fetch('https://iqwwoihiiyrtypyqzhgy.supabase.co/functions/v1/login', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ username: user.username, password: password })
-                    });
-                    const data = await response.json();
+                    // Consulta directa a la tabla users para verificar contraseña
+                    const { data: dbUser, error: queryError } = await window.supabaseClient
+                        .from('users')
+                        .select('password')
+                        .eq('username', user.username)
+                        .single();
                     
-                    if (response.ok && data.success) {
+                    if (queryError || !dbUser) {
+                        throw new Error('Usuario no encontrado');
+                    }
+                    
+                    // Comparar contraseña (asumiendo que está almacenada en texto plano o hash compatible)
+                    if (dbUser.password === password) {
                         // Contraseña correcta - desbloquear
                         stockInput.removeAttribute('readonly');
                         stockInput.style.background = '#fff';
