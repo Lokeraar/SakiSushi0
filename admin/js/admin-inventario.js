@@ -947,13 +947,21 @@
                 throw new Error('Usuario no identificado en sesión');
             }
             
-            console.log('Verificando credenciales para usuario:', adminUser.username);
+            // Debug: Print current user and password length
+            console.log('Usuario actual:', adminUser.username);
+            console.log('Contraseña ingresada (longitud):', password.length);
+            
+            // Force username to lowercase
+            const usernameLower = adminUser.username.toLowerCase();
             
             // Call RPC to verify credentials
             const { data, error } = await window.supabaseClient.rpc('verify_user_credentials', {
-                p_username: adminUser.username,
+                p_username: usernameLower,
                 p_password: password
             });
+            
+            // Debug: Print full RPC response
+            console.log('Respuesta RPC:', data, error);
             
             if (error) {
                 console.error('Error en RPC de verificación:', error);
@@ -973,8 +981,18 @@
                 window.cerrarStockPasswordModal();
                 window.mostrarToast('🔓 Stock desbloqueado para edición', 'success');
             } else {
-                console.log('Contraseña incorrecta');
-                throw new Error('Contraseña incorrecta');
+                console.log('Contraseña incorrecta. Respuesta:', data);
+                
+                // If RPC failed, try querying usuarios table directly for debugging
+                const { data: userData, error: userError } = await window.supabaseClient
+                    .from('usuarios')
+                    .select('username, password_hash')
+                    .eq('username', usernameLower)
+                    .single();
+                console.log('Usuario en BD:', userData, 'Error:', userError);
+                
+                // Show specific error from RPC or default message
+                throw new Error(data?.error || 'Contraseña incorrecta');
             }
             
         } catch (error) {
