@@ -763,6 +763,14 @@ html.dark-theme .dashboard-card { border-color: transparent; border-left-color: 
     pointer-events: auto !important;
 }
 .btn-primary * { pointer-events: auto !important; }
+html.dark-theme .btn-primary {
+    background: linear-gradient(135deg, #D32F2F, #B71C1C);
+    color: #ffffff;
+}
+html:not(.dark-theme) .btn-primary {
+    background: linear-gradient(135deg, #D32F2F, #B71C1C);
+    color: #ffffff;
+}
 .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(211,47,47,.35); }
 
 .btn-secondary {
@@ -777,7 +785,7 @@ html.dark-theme .dashboard-card { border-color: transparent; border-left-color: 
 .btn-secondary * { pointer-events: auto !important; }
 html.dark-theme .btn-secondary { 
     background: transparent; 
-    color: var(--text-dark); 
+    color: #e0e0e0; 
     border-color: rgba(255,255,255,0.3);
 }
 html:not(.dark-theme) .btn-secondary {
@@ -805,6 +813,14 @@ html.dark-theme .btn-secondary:hover {
     pointer-events: auto;
 }
 .btn-danger * { pointer-events: auto !important; }
+html.dark-theme .btn-danger {
+    background: #ef4444;
+    color: #ffffff;
+}
+html:not(.dark-theme) .btn-danger {
+    background: #ef4444;
+    color: #ffffff;
+}
 .btn-danger:hover { 
     background: #d32f2f; 
     transform: translateY(-1px);
@@ -1145,6 +1161,7 @@ html.dark-theme .modal-header {
     transition: all 0.2s ease;
 }
 html.dark-theme .modal-close { color: #e0e0e0; }
+html:not(.dark-theme) .modal-close { color: #4a4a4a; }
 .modal-close:hover { 
     color: var(--primary); 
     background: rgba(211, 47, 47, 0.15);
@@ -3123,7 +3140,7 @@ html.dark-theme #platilloModal .ingrediente-row input:focus {
     flex-wrap: nowrap !important;
     flex-direction: row;
     align-items: center;
-    gap: 15px;
+    gap: 7px;
     margin: 0;
     padding: 0;
     flex-shrink: 0;
