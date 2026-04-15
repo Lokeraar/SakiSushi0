@@ -303,14 +303,11 @@
     };
 
     window._syncIngredientePreview = function() {
-        const stockActualEl = document.getElementById('ingredienteStock');
-        const stockActual = parseFloat(stockActualEl?.value) || 0;
         const nuevo       = parseFloat(document.getElementById('ingredienteAgregar')?.value) || 0;
         const unidad      = document.getElementById('ingredienteUnidad')?.value || 'unidades';
-        const total = stockActual + nuevo;
         const sp = document.getElementById('stockTotalPreview');
         const sc = document.getElementById('stockConversionPreview');
-        if (sp) sp.textContent = (nuevo > 0 || stockActualEl) ? `Stock resultante: ${total.toFixed(3)} ${unidad}` : '';
+        if (sp) sp.textContent = nuevo > 0 ? `Stock resultante: ${nuevo.toFixed(3)} ${unidad}` : '';
         if (sc) {
             if (unidad === 'kilogramos' && nuevo > 0) sc.textContent = `= ${(nuevo * 1000).toFixed(0)} g adicionales`;
             else if (unidad === 'litros' && nuevo > 0) sc.textContent = `= ${(nuevo * 1000).toFixed(0)} ml adicionales`;
@@ -371,16 +368,8 @@
 		if (modalTitle) modalTitle.textContent = 'Editar Ingrediente';
 		const nombreInput = document.getElementById('ingredienteNombre');
 		if (nombreInput) nombreInput.value = ingrediente.nombre || '';
-		// Asignar stock actual al input bloqueado
-		const stockInput = document.getElementById('ingredienteStock');
-		if (stockInput) {
-			stockInput.value = (ingrediente.stock || 0).toFixed(2);
-			stockInput.setAttribute('readonly', '');
-			stockInput.style.background = 'rgba(0,0,0,.08)';
-			stockInput.style.cursor = 'not-allowed';
-		}
-		const lockIcon = document.getElementById('stockLockIcon');
-		if (lockIcon) lockIcon.innerHTML = '<i class="fas fa-lock" style="font-size:.9rem; color:var(--text-muted)"></i>';
+            // NOTA: La asignación de stockInput se ha eliminado temporalmente
+            // hasta que se reconstruya el nuevo sistema de seguridad
 		const unidadSelect = document.getElementById('ingredienteUnidad');
 		if (unidadSelect) unidadSelect.value = ingrediente.unidad_base || 'unidades';
 		const minimoInput = document.getElementById('ingredienteMinimo');
@@ -646,119 +635,6 @@
         if (agregarInput) agregarInput.addEventListener('input', syncAgregarToCantidadComprada);
         if (cantidadComprada) cantidadComprada.readOnly = true;
         
-        // Evento para desbloquear Stock Actual con contraseña
-        const stockClickArea = document.getElementById('stockClickArea');
-        const lockIcon = document.getElementById('stockLockIcon');
-        if (stockClickArea && lockIcon) {
-            stockClickArea.addEventListener('click', async function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                const stockInput = document.getElementById('ingredienteStock');
-                if (!stockInput) return;
-                
-                // Si ya está desbloqueado, no hacer nada
-                if (!stockInput.hasAttribute('readonly')) return;
-                
-                // Solicitar contraseña usando SweetAlert2 si está disponible
-                let password = null;
-                if (window.Swal) {
-                    const result = await window.Swal.fire({
-                        title: 'Verificación de Seguridad',
-                        html: '<p style="margin-bottom:.5rem;color:var(--text-muted)">Ingresa tu contraseña para editar el stock</p>' +
-                              '<input type="password" id="swalPasswordInput" class="swal2-input" placeholder="Contraseña" style="width:100%;padding:.5rem;border-radius:6px;border:1px solid var(--border);font-size:.9rem">',
-                        showCancelButton: true,
-                        confirmButtonText: 'Desbloquear',
-                        cancelButtonText: 'Cancelar',
-                        confirmButtonColor: 'var(--primary)',
-                        cancelButtonColor: 'var(--text-muted)',
-                        allowOutsideClick: false,
-                        didOpen: () => {
-                            document.getElementById('swalPasswordInput').focus();
-                        }
-                    });
-                    if (result.isConfirmed) {
-                        password = document.getElementById('swalPasswordInput').value;
-                    }
-                } else {
-                    password = prompt('Ingresa tu contraseña para desbloquear el campo de stock:');
-                }
-                
-                if (!password) return;
-                
-                // Validar contraseña contra Supabase - consulta directa a la tabla de usuarios
-                try {
-                    const userData = sessionStorage.getItem('admin_user');
-                    if (!userData) {
-                        throw new Error('No hay sesión activa');
-                    }
-                    const user = JSON.parse(userData);
-                    
-                    // Consulta directa a la tabla users para verificar contraseña
-                    const { data: dbUser, error: queryError } = await window.supabaseClient
-                        .from('users')
-                        .select('password')
-                        .eq('username', user.username)
-                        .single();
-                    
-                    if (queryError || !dbUser) {
-                        throw new Error('Usuario no encontrado');
-                    }
-                    
-                    // Comparar contraseña (asumiendo que está almacenada en texto plano o hash compatible)
-                    if (dbUser.password === password) {
-                        // Contraseña correcta - desbloquear
-                        stockInput.removeAttribute('readonly');
-                        stockInput.style.background = '#fff';
-                        stockInput.style.cursor = 'text';
-                        lockIcon.innerHTML = '<i class="fas fa-lock-open" style="font-size:.9rem; color:var(--success)"></i>';
-                        
-                        if (window.Swal) {
-                            window.Swal.fire({
-                                icon: 'success',
-                                title: 'Acceso concedido',
-                                toast: true,
-                                position: 'top-end',
-                                showConfirmButton: false,
-                                timer: 2000
-                            });
-                        } else {
-                            alert('Acceso concedido');
-                        }
-                    } else {
-                        // Contraseña incorrecta
-                        if (window.Swal) {
-                            window.Swal.fire({
-                                icon: 'error',
-                                title: 'Acceso denegado',
-                                text: 'Contraseña incorrecta',
-                                toast: true,
-                                position: 'top-end',
-                                showConfirmButton: false,
-                                timer: 2000
-                            });
-                        } else {
-                            alert('Contraseña incorrecta. Acceso denegado');
-                        }
-                    }
-                } catch (e) {
-                    console.error('Error validando contraseña:', e);
-                    if (window.Swal) {
-                        window.Swal.fire({
-                            icon: 'error',
-                            title: 'Error',
-                            text: 'No se pudo validar la contraseña',
-                            toast: true,
-                            position: 'top-end',
-                            showConfirmButton: false,
-                            timer: 2000
-                        });
-                    } else {
-                        alert('Error al validar contraseña');
-                    }
-                }
-            });
-        }
-        
         // Tooltip para Unidad de Medida (ahora es el label de Nombre del ingrediente - form-group:nth-child(2))
         const unidadLabel = document.querySelector('#ingredienteForm .form-group:nth-child(2) label');
         if (unidadLabel) {
@@ -768,6 +644,20 @@
                     <span style="display:inline-flex; align-items:center; justify-content:center; width:16px; height:16px; background:var(--text-muted); color:#fff; border-radius:50%; font-size:.65rem; font-weight:700">?</span>
                     <span class="tooltip-text" style="display:none; position:absolute; bottom:calc(100% + 6px); left:50%; transform:translateX(-50%); background:var(--toast-bg); color:var(--toast-text); padding:.5rem .75rem; border-radius:8px; font-size:.75rem; white-space:normal; width:260px; text-align:center; box-shadow:0 4px 12px rgba(0,0,0,.3); z-index:100; line-height:1.4">
                         ⚠️ La unidad de medida es crítica: "1 aguacate" no equivale a 500 gramos. Asegúrate de seleccionar la unidad correcta (unidades, kilogramos, litros, etc.) según corresponda.
+                    </span>
+                </span>
+            `;
+        }
+        
+        // Tooltip para Stock Actual (antes Stock Mínimo - form-group:nth-child(3))
+        const minimoLabel = document.querySelector('#ingredienteForm .form-group:nth-child(3) label');
+        if (minimoLabel) {
+            minimoLabel.innerHTML = `
+                Stock Actual
+                <span class="tooltip-wrap" style="position:relative; display:inline-flex; align-items:center; cursor:help; margin-left:.3rem">
+                    <span style="display:inline-flex; align-items:center; justify-content:center; width:16px; height:16px; background:var(--text-muted); color:#fff; border-radius:50%; font-size:.65rem; font-weight:700">?</span>
+                    <span class="tooltip-text" style="display:none; position:absolute; bottom:calc(100% + 6px); left:50%; transform:translateX(-50%); background:var(--toast-bg); color:var(--toast-text); padding:.5rem .75rem; border-radius:8px; font-size:.75rem; white-space:normal; width:250px; text-align:center; box-shadow:0 4px 12px rgba(0,0,0,.3); z-index:100; line-height:1.4">
+                        Cantidad actual disponible del ingrediente en inventario.
                     </span>
                 </span>
             `;
@@ -810,20 +700,6 @@
         const cancelBtn = document.getElementById('cancelIngredienteBtn');
         const deleteBtn = document.getElementById('deleteIngredienteBtn');
         
-        // Función para bloquear el campo de stock (auto-bloqueo)
-        function bloquearStock() {
-            const stockInput = document.getElementById('ingredienteStock');
-            const lockIcon = document.getElementById('stockLockIcon');
-            if (stockInput) {
-                stockInput.setAttribute('readonly', '');
-                stockInput.style.background = 'rgba(0,0,0,.08)';
-                stockInput.style.cursor = 'not-allowed';
-            }
-            if (lockIcon) {
-                lockIcon.innerHTML = '<i class="fas fa-lock" style="font-size:.9rem; color:var(--text-muted)"></i>';
-            }
-        }
-        
         // Botón Guardar - usando .onclick directo para evitar duplicidad en Brave
         if (saveBtn) {
             saveBtn.onclick = function(e) {
@@ -834,8 +710,6 @@
                 if (typeof window.guardarIngrediente === 'function') {
                     window.guardarIngrediente();
                 }
-                // Auto-bloquear stock después de guardar
-                setTimeout(bloquearStock, 100);
             };
         }
         
@@ -845,8 +719,6 @@
                 e.preventDefault();
                 e.stopPropagation();
                 console.log('Botón Cancelar Ingrediente presionado');
-                // Auto-bloquear stock antes de cerrar
-                bloquearStock();
                 window.cerrarModal('ingredienteModal');
                 window.ingredienteEditandoId = null;
                 removeIngredienteImage();
@@ -863,38 +735,9 @@
                 if (typeof window._eliminarIngredienteDesdeModal === 'function') {
                     window._eliminarIngredienteDesdeModal();
                 }
-                // Auto-bloquear stock después de eliminar
-                setTimeout(bloquearStock, 100);
             };
         }
     }, 100);
-    
-    // Cierre automático al cerrar el modal con la X o clic fuera
-    const modalObserver = new MutationObserver(function(mutations) {
-        mutations.forEach(function(mutation) {
-            if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
-                const modal = document.getElementById('ingredienteModal');
-                if (modal && !modal.classList.contains('active')) {
-                    // Modal cerrado - bloquear stock
-                    const stockInput = document.getElementById('ingredienteStock');
-                    const lockIcon = document.getElementById('stockLockIcon');
-                    if (stockInput) {
-                        stockInput.setAttribute('readonly', '');
-                        stockInput.style.background = 'rgba(0,0,0,.08)';
-                        stockInput.style.cursor = 'not-allowed';
-                    }
-                    if (lockIcon) {
-                        lockIcon.innerHTML = '<i class="fas fa-lock" style="font-size:.9rem; color:var(--text-muted)"></i>';
-                    }
-                }
-            }
-        });
-    });
-    
-    const modalElement = document.getElementById('ingredienteModal');
-    if (modalElement) {
-        modalObserver.observe(modalElement, { attributes: true, attributeFilter: ['class'] });
-    }
     
     // Función auxiliar para eliminar ingrediente desde el modal
     window._eliminarIngredienteDesdeModal = async function() {
@@ -925,7 +768,9 @@
     // Función principal para guardar ingrediente
     window.guardarIngrediente = async function() {
         const nombre = document.getElementById('ingredienteNombre')?.value.trim();
-        const stock = parseFloat(document.getElementById('ingredienteStock')?.value) || 0;
+        // NOTA: La lectura de stockInput se ha eliminado temporalmente
+        // hasta que se reconstruya el nuevo sistema de seguridad
+        const stock = 0;
         const unidad = document.getElementById('ingredienteUnidad')?.value || 'unidades';
         const minimo = parseFloat(document.getElementById('ingredienteMinimo')?.value) || 0;
         const costo = parseFloat(document.getElementById('ingredienteCosto')?.value) || 0;
