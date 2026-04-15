@@ -272,81 +272,6 @@
         window._syncIngredientePreview();
     }
 
-	
-
-    window.mostrarModalContraseñaStock = function() {
-        const input = document.getElementById('stockPasswordModalInput');
-        const error = document.getElementById('passwordStockError');
-        if (input) input.value = '';
-        if (error) error.style.display = 'none';
-        const modal = document.getElementById('passwordStockModal');
-        if (modal) {
-            modal.classList.add('active');
-            setTimeout(() => {
-                const inp = document.getElementById('stockPasswordModalInput');
-                if (inp) inp.focus();
-            }, 100);
-        }
-    };
-
-    window.verificarContraseñaStock = async function() {
-        const pwd = document.getElementById('stockPasswordModalInput')?.value;
-        const errorEl = document.getElementById('passwordStockError');
-        const btnConfirm = document.getElementById('confirmPasswordStockBtn');
-        
-        if (!pwd) {
-            if (errorEl) { errorEl.textContent = 'Ingresa la contraseña'; errorEl.style.display = 'block'; }
-            return;
-        }
-        if (btnConfirm) { btnConfirm.disabled = true; btnConfirm.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Validando...'; }
-        try {
-            // Obtener usuario admin actual (puede haber varios)
-            const userData = sessionStorage.getItem('admin_user');
-            let currentAdminUsername = null;
-            if (userData) {
-                try {
-                    const user = JSON.parse(userData);
-                    currentAdminUsername = user.username;
-                } catch(e) {}
-            }
-            let esValida = false;
-            // Primero verificar contra config (admin_password)
-            if (window.configGlobal?.admin_password === pwd) esValida = true;
-            // Si no, verificar contra tabla usuarios con rol admin
-            if (!esValida && currentAdminUsername) {
-                const { data: authData } = await window.supabaseClient.rpc('verify_user_credentials', {
-                    p_username: currentAdminUsername,
-                    p_password: pwd
-                });
-                if (authData && authData.success === true) esValida = true;
-            }
-            // Si aún no, verificar cualquier admin
-            if (!esValida) {
-                const { data: adminUsers } = await window.supabaseClient.from('usuarios').select('username').eq('rol', 'admin');
-                if (adminUsers && adminUsers.length) {
-                    for (const admin of adminUsers) {
-                        const { data: authData } = await window.supabaseClient.rpc('verify_user_credentials', {
-                            p_username: admin.username,
-                            p_password: pwd
-                        });
-                        if (authData && authData.success === true) { esValida = true; break; }
-                    }
-                }
-            }
-            if (esValida) {
-                // Stock desbloqueado - la nueva lógica de seguridad se implementará aquí
-                window.mostrarToast('✅ Stock desbloqueado. Puedes editar la cantidad.', 'success');
-            } else {
-                if (errorEl) { errorEl.textContent = 'Contraseña incorrecta. Intenta de nuevo.'; errorEl.style.display = 'block'; }
-                document.getElementById('stockPasswordModalInput')?.focus();
-            }
-        } catch (e) {
-            console.error('Error:', e);
-            if (errorEl) { errorEl.textContent = 'Error al validar la contraseña'; errorEl.style.display = 'block'; }
-        } finally {
-            if (btnConfirm) { btnConfirm.disabled = false; btnConfirm.innerHTML = 'Confirmar'; }
-        }
-    };
 
     window.agregarStock = function(ingredienteId) {
         const ingrediente = window.inventarioItems.find(i => i.id === ingredienteId);
@@ -378,15 +303,11 @@
     };
 
     window._syncIngredientePreview = function() {
-        // NOTA: La lectura de ingredienteStock se ha eliminado temporalmente
-        // hasta que se reconstruya el nuevo sistema de seguridad
-        const stockActual = 0;
         const nuevo       = parseFloat(document.getElementById('ingredienteAgregar')?.value) || 0;
         const unidad      = document.getElementById('ingredienteUnidad')?.value || 'unidades';
-        const total       = stockActual + nuevo;
         const sp = document.getElementById('stockTotalPreview');
         const sc = document.getElementById('stockConversionPreview');
-        if (sp) sp.textContent = nuevo > 0 ? `Stock resultante: ${total.toFixed(3)} ${unidad}` : '';
+        if (sp) sp.textContent = nuevo > 0 ? `Stock resultante: ${nuevo.toFixed(3)} ${unidad}` : '';
         if (sc) {
             if (unidad === 'kilogramos' && nuevo > 0) sc.textContent = `= ${(nuevo * 1000).toFixed(0)} g adicionales`;
             else if (unidad === 'litros' && nuevo > 0) sc.textContent = `= ${(nuevo * 1000).toFixed(0)} ml adicionales`;
