@@ -18,7 +18,7 @@
                             window._notificarAdminStockCritico && window._notificarAdminStockCritico(p.new.nombre);
                         }
                         if (p.eventType === 'UPDATE' && (p.old?.stock || 0) <= 0 && p.new.stock > 0) {
-                            await window._notificarPlatillosReactivados(p.new.id, p.new.nombre);
+                            await window.cargarInventario();
                         }
                         window.cargarInventario();
                         window.actualizarStockCriticoHeader();

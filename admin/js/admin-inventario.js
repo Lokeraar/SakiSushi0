@@ -797,15 +797,8 @@
         }
         
         // Validaciones
-        let hayError = false;
-        
         if (!nombre) {
-            window.mostrarErrorInput('ingredienteNombre', 'El nombre es obligatorio');
-            hayError = true;
-        }
-        
-        if (hayError) {
-            window.mostrarToast('⚠️ Por favor corrige los errores', 'warning');
+            window.mostrarToast('El nombre es obligatorio', 'error');
             return;
         }
         
