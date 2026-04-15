@@ -344,9 +344,9 @@
 			stockInput.value = '';
 			stockInput.readOnly = true;
 			stockInput.style.background = 'var(--secondary)';
-			// Ocultar campo Stock Actual en modo creación
-			stockInput.closest('.form-group').style.display = 'none';
 		}
+		const stockActualGroup = stockInput ? stockInput.closest('.form-group') : null;
+		if (stockActualGroup) stockActualGroup.style.display = 'none';
 		const minimoInput = document.getElementById('ingredienteMinimo');
 		if (minimoInput) minimoInput.value = '';
 		const costoInput = document.getElementById('ingredienteCosto');
@@ -381,7 +381,13 @@ window.editarIngrediente = function(id) {
                     stockInput.value = parseFloat(ingrediente.stock || 0).toFixed(2);
                     stockInput.readOnly = true;
                     stockInput.style.background = 'var(--secondary)';
+                    // Mostrar campo Stock Actual en modo edición
+                    stockInput.closest('.form-group').style.display = 'block';
                 }
+                
+                // Bloquear campo Stock Actual al abrir modal
+                window._lockStockField();
+                
                 const unidadSelect = document.getElementById('ingredienteUnidad');
                 if (unidadSelect) unidadSelect.value = ingrediente.unidad_base || 'unidades';
                 const minimoInput = document.getElementById('ingredienteMinimo');
@@ -396,9 +402,6 @@ window.editarIngrediente = function(id) {
                 if (cantidadComprada) cantidadComprada.value = '';
                 const costoTotal = document.getElementById('costoTotal');
                 if (costoTotal) costoTotal.value = '';
-                
-                // Bloquear campo Stock Actual al abrir modal
-                window._lockStockField();
                 
                 if (ingrediente.imagen) {
 			const previewDiv = document.getElementById('ingredienteImagenPreview');
@@ -867,6 +870,8 @@ window.editarIngrediente = function(id) {
                 e.preventDefault();
                 e.stopPropagation();
                 console.log('Botón Cancelar Ingrediente presionado');
+                // Bloquear campo Stock Actual al cancelar
+                window._lockStockField();
                 window.cerrarModal('ingredienteModal');
                 window.ingredienteEditandoId = null;
                 removeIngredienteImage();
