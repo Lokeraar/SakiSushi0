@@ -310,7 +310,8 @@ html.dark-theme .logout-button:hover { background: rgba(255,255,255,.1); color: 
 .header-actions-right {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: 7px;
+    margin-right: 0;
 }
 .header-slogan {
     font-size: 0.8rem;
@@ -3099,7 +3100,7 @@ html.dark-theme #platilloModal .ingrediente-row input:focus {
     gap: 0.75rem;
     flex-shrink: 1;
     min-width: 0;
-    flex: 1;
+    flex-grow: 1;
 }
 
 /* El nombre del usuario debe permitir wrap y reducir fuente si es necesario */
@@ -3121,9 +3122,9 @@ html.dark-theme #platilloModal .ingrediente-row input:focus {
 .header-level.level-2 .header-right-group.controls-group {
     display: flex;
     flex-wrap: nowrap !important;
-    flex-direction: row;
+    flex-direction: row-reverse;
     align-items: center;
-    gap: 15px;
+    gap: 7px;
     margin: 0;
     padding: 0;
     flex-shrink: 0;
