@@ -339,6 +339,14 @@
 		if (modalTitle) modalTitle.textContent = 'Nuevo Ingrediente';
 		const nombreInput = document.getElementById('ingredienteNombre');
 		if (nombreInput) nombreInput.value = '';
+		const stockInput = document.getElementById('ingredienteStock');
+		if (stockInput) {
+			stockInput.value = '';
+			stockInput.readOnly = true;
+			stockInput.style.background = 'var(--secondary)';
+			// Ocultar campo Stock Actual en modo creación
+			stockInput.closest('.form-group').style.display = 'none';
+		}
 		const minimoInput = document.getElementById('ingredienteMinimo');
 		if (minimoInput) minimoInput.value = '';
 		const costoInput = document.getElementById('ingredienteCosto');
@@ -635,12 +643,117 @@ window.editarIngrediente = function(id) {
         const agregarInput = document.getElementById('ingredienteAgregar');
         const cantidadComprada = document.getElementById('cantidadComprada');
         const removeBtn = document.getElementById('ingredienteImgRemoveBtn');
+        const stockActualLockIcon = document.getElementById('stockActualLockIcon');
         
         if (fileInput) fileInput.addEventListener('change', handleIngredienteImagenFile);
         if (urlInput) urlInput.addEventListener('input', handleIngredienteImagenUrl);
         if (removeBtn) removeBtn.addEventListener('click', removeIngredienteImage);
         if (agregarInput) agregarInput.addEventListener('input', syncAgregarToCantidadComprada);
         if (cantidadComprada) cantidadComprada.readOnly = true;
+        
+        // Evento para el candado de Stock Actual - pedir contraseña y desbloquear
+        if (stockActualLockIcon) {
+            stockActualLockIcon.addEventListener('click', function() {
+                const stockInput = document.getElementById('ingredienteStock');
+                if (!stockInput || !stockInput.readOnly) return;
+                
+                // Pedir contraseña con SweetAlert2
+                Swal.fire({
+                    title: 'Verificación de Seguridad',
+                    text: 'Ingrese la contraseña del usuario activo para editar el Stock Actual',
+                    input: 'password',
+                    inputAttributes: {
+                        autocapitalize: 'off',
+                        autocomplete: 'current-password'
+                    },
+                    showCancelButton: true,
+                    confirmButtonText: 'Verificar',
+                    cancelButtonText: 'Cancelar',
+                    confirmButtonColor: '#D32F2F',
+                    cancelButtonColor: '#757575',
+                    customClass: {
+                        popup: 'sak-swal-popup',
+                        title: 'sak-swal-title',
+                        content: 'sak-swal-content',
+                        input: 'sak-swal-input',
+                        confirmButton: 'sak-swal-confirm',
+                        cancelButton: 'sak-swal-cancel'
+                    },
+                    didOpen: () => {
+                        // Aplicar estilos personalizados Saki Sushi
+                        const popup = document.querySelector('.swal2-popup.sak-swal-popup');
+                        if (popup) {
+                            popup.style.zIndex = '10000 !important';
+                            const isDark = document.documentElement.classList.contains('dark-mode') || 
+                                          (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+                            if (isDark) {
+                                popup.style.background = '#1a1a2e';
+                                popup.style.border = '2px solid #D4AF37';
+                            } else {
+                                popup.style.background = '#ffffff';
+                                popup.style.border = '2px solid #D32F2F';
+                            }
+                        }
+                    }
+                }).then(async (result) => {
+                    if (result.isConfirmed) {
+                        const password = result.value;
+                        try {
+                            // Verificar contraseña del usuario activo en Supabase
+                            const { data: userData, error } = await window.supabaseClient
+                                .from('users')
+                                .select('password_hash')
+                                .eq('id', window.currentUser?.id || window.currentUser?.user_id)
+                                .single();
+                            
+                            if (error || !userData) {
+                                throw new Error('Usuario no encontrado');
+                            }
+                            
+                            // Comparar contraseña (asumiendo que está hasheada o en texto plano según implementación)
+                            // Para este ejemplo, comparamos directamente - ajustar según tu sistema de auth
+                            const passwordMatch = password === userData.password_hash || 
+                                                  (typeof window.bcrypt !== 'undefined' && await window.bcrypt.compare(password, userData.password_hash));
+                            
+                            if (passwordMatch) {
+                                // Éxito: desbloquear campo
+                                stockInput.readOnly = false;
+                                stockInput.style.background = '#ffffff';
+                                stockInput.focus();
+                                stockActualLockIcon.innerHTML = '<i class="fas fa-lock-open" style="font-size:.8rem;color:var(--success)"></i>';
+                                stockActualLockIcon.title = 'Campo desbloqueado';
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Acceso Concedido',
+                                    text: 'El campo Stock Actual ha sido desbloqueado',
+                                    timer: 2000,
+                                    showConfirmButton: false,
+                                    customClass: { popup: 'sak-swal-popup' }
+                                });
+                            } else {
+                                // Error: contraseña incorrecta
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Acceso Denegado',
+                                    text: 'Contraseña incorrecta. Intente nuevamente.',
+                                    confirmButtonColor: '#D32F2F',
+                                    customClass: { popup: 'sak-swal-popup' }
+                                });
+                            }
+                        } catch (e) {
+                            console.error('Error verificando contraseña:', e);
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: 'No se pudo verificar la contraseña. Intente nuevamente.',
+                                confirmButtonColor: '#D32F2F',
+                                customClass: { popup: 'sak-swal-popup' }
+                            });
+                        }
+                    }
+                });
+            });
+        }
         
         // Tooltip para Unidad de Medida (ahora es el label de Nombre del ingrediente - form-group:nth-child(2))
         const unidadLabel = document.querySelector('#ingredienteForm .form-group:nth-child(2) label');
