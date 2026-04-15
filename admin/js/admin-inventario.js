@@ -377,14 +377,14 @@
 		if (stockInput) {
 			stockOriginalValue = typeof ingrediente.stock === 'number' ? ingrediente.stock : 0;
 			stockInput.value = stockOriginalValue;
-			stockInput.disabled = true; // PHASE 7: Always start disabled
-			
+				stockInput.readOnly = true; // Use readOnly instead of disabled to allow click events
+				stockInput.disabled = false; // Ensure it's not disabled so click events work
 			// PHASE 3: Click Behavior - Bind dynamically on each modal open (avoid duplicates)
 			stockInput.onclick = null; // Remove previous listener
 			stockInput.onclick = function() {
-				console.log('CLICK stock input detected', this.disabled);
+				console.log('CLICK stock input detected', this.readOnly);
 				
-				if (this.disabled && !stockPasswordModalOpen) {
+				if (this.readOnly && !stockPasswordModalOpen) {
 					pendingIngredientId = window.ingredienteEditandoId;
 					window.abrirStockPasswordModal();
 				}
@@ -788,7 +788,7 @@
         // PHASE 8: Save Logic - Get current stock value (may have been unlocked)
         const stockInput = document.getElementById('stock-actual-input');
         let newStockValue = stockOriginalValue; // Default to original
-        if (stockInput && !stockInput.disabled) {
+        if (stockInput && !stockInput.readOnly) {
             // Only use new value if input was unlocked and user changed it
             const inputValue = parseFloat(stockInput.value);
             if (!isNaN(inputValue)) {
@@ -845,7 +845,7 @@
             // PHASE 7: Reset State on save
             const stockInput = document.getElementById('stock-actual-input');
             if (stockInput) {
-                stockInput.disabled = true;
+                stockInput.readOnly = true;
             }
             
             window.cerrarModal('ingredienteModal');
@@ -960,7 +960,7 @@
             if (data.user) {
                 const stockInput = document.getElementById('stock-actual-input');
                 if (stockInput) {
-                    stockInput.disabled = false;
+                    stockInput.readOnly = false;
                     stockInput.focus();
                 }
                 
@@ -1033,7 +1033,7 @@
             if (modalId === 'ingredienteModal') {
                 const stockInput = document.getElementById('stock-actual-input');
                 if (stockInput) {
-                    stockInput.disabled = true;
+                    stockInput.readOnly = true;
                 }
                 stockPasswordModalOpen = false;
                 pendingIngredientId = null;
