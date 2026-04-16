@@ -338,6 +338,165 @@
 		currentIngredienteImagenUrl = '';
 	}
 
+// Inicializar tooltips para los campos del modal de ingrediente
+window._inicializarTooltipsIngrediente = function() {
+// Tooltip para Nombre del ingrediente
+let nombreLabel = document.querySelector('label[for="ingredienteNombre"]');
+if (!nombreLabel) {
+nombreLabel = document.querySelector('#ingredienteModal .form-group:nth-child(4) label');
+}
+if (nombreLabel && !nombreLabel.querySelector('.tooltip-wrap')) {
+nombreLabel.innerHTML += `
+<span class="tooltip-wrap" style="position:relative; display:inline-flex; cursor:help; margin-left:.3rem">
+<span style="display:inline-flex; align-items:center; justify-content:center; width:15px; height:15px; background:#aaa; color:#fff; border-radius:50%; font-size:.65rem; font-weight:700">?</span>
+<span class="tooltip-text" style="display:none; position:absolute; bottom:calc(100% + 6px); left:50%; transform:translateX(-50%); background:var(--toast-bg); color:var(--toast-text); padding:.5rem .75rem; border-radius:8px; font-size:.75rem; white-space:normal; width:260px; text-align:center; box-shadow:0 4px 12px rgba(0,0,0,.3); z-index:100; line-height:1.4">
+Nombre descriptivo del insumo. Se usa para identificarlo en el menú y reportes.
+</span>
+</span>`;
+}
+
+// Tooltip para Stock crítico
+let minimoLabel = document.querySelector('label[for="ingredienteMinimo"]');
+if (!minimoLabel) {
+minimoLabel = document.querySelector('#ingredienteModal .form-group:nth-child(6) label');
+}
+if (minimoLabel && !minimoLabel.querySelector('.tooltip-wrap')) {
+// Verificar si ya tiene tooltip (el existente en HTML)
+if (!minimoLabel.querySelector('.tooltip-text')) {
+minimoLabel.innerHTML += `
+<span class="tooltip-wrap" style="position:relative; display:inline-flex; cursor:help; margin-left:.3rem">
+<span style="display:inline-flex; align-items:center; justify-content:center; width:15px; height:15px; background:#aaa; color:#fff; border-radius:50%; font-size:.65rem; font-weight:700">?</span>
+<span class="tooltip-text" style="display:none; position:absolute; bottom:calc(100% + 6px); left:50%; transform:translateX(-50%); background:var(--toast-bg); color:var(--toast-text); padding:.5rem .75rem; border-radius:8px; font-size:.75rem; white-space:normal; width:260px; text-align:center; box-shadow:0 4px 12px rgba(0,0,0,.3); z-index:100; line-height:1.4">
+Mínimo que debe haber. Si baja de aquí, salta una alerta.
+</span>
+</span>`;
+}
+}
+
+// Tooltip para Precio de Costo
+let costoLabel = document.querySelector('label[for="ingredienteCosto"]');
+if (!costoLabel) {
+costoLabel = document.querySelector('#ingredienteCosto')?.previousElementSibling;
+}
+if (costoLabel && !costoLabel.querySelector('.tooltip-wrap')) {
+costoLabel.innerHTML += `
+<span class="tooltip-wrap" style="position:relative; display:inline-flex; cursor:help; margin-left:.3rem">
+<span style="display:inline-flex; align-items:center; justify-content:center; width:15px; height:15px; background:#aaa; color:#fff; border-radius:50%; font-size:.65rem; font-weight:700">?</span>
+<span class="tooltip-text" style="display:none; position:absolute; bottom:calc(100% + 6px); left:50%; transform:translateX(-50%); background:var(--toast-bg); color:var(--toast-text); padding:.5rem .75rem; border-radius:8px; font-size:.75rem; white-space:normal; width:260px; text-align:center; box-shadow:0 4px 12px rgba(0,0,0,.3); z-index:100; line-height:1.4">
+Lo que pagaste al proveedor por unidad/kilo/litro.
+</span>
+</span>`;
+}
+
+// Tooltip para Precio de Venta
+let ventaLabel = document.querySelector('label[for="ingredienteVenta"]');
+if (!ventaLabel) {
+ventaLabel = document.querySelector('#ingredienteVenta')?.previousElementSibling;
+}
+if (ventaLabel && !ventaLabel.querySelector('.tooltip-wrap')) {
+ventaLabel.innerHTML += `
+<span class="tooltip-wrap" style="position:relative; display:inline-flex; cursor:help; margin-left:.3rem">
+<span style="display:inline-flex; align-items:center; justify-content:center; width:15px; height:15px; background:#aaa; color:#fff; border-radius:50%; font-size:.65rem; font-weight:700">?</span>
+<span class="tooltip-text" style="display:none; position:absolute; bottom:calc(100% + 6px); left:50%; transform:translateX(-50%); background:var(--toast-bg); color:var(--toast-text); padding:.5rem .75rem; border-radius:8px; font-size:.75rem; white-space:normal; width:260px; text-align:center; box-shadow:0 4px 12px rgba(0,0,0,.3); z-index:100; line-height:1.4">
+Precio que paga el cliente. Si lo quita al personalizar, se le descuenta.
+</span>
+</span>`;
+}
+
+// Configurar eventos hover para mostrar/ocultar tooltips
+document.querySelectorAll('#ingredienteModal .tooltip-wrap').forEach(function(wrap) {
+if (wrap._tooltipInitialized) return;
+wrap._tooltipInitialized = true;
+
+const tooltipText = wrap.querySelector('.tooltip-text');
+if (!tooltipText) return;
+
+let tipEl = null;
+
+const showTip = function() {
+if (tipEl) return;
+const rect = wrap.getBoundingClientRect();
+tipEl = document.createElement('div');
+tipEl.textContent = tooltipText.textContent.trim();
+tipEl.style.cssText = 'position:fixed;background:var(--toast-bg,#1a1a2e);color:var(--toast-text,#fff);padding:.5rem .75rem;border-radius:8px;font-size:.75rem;width:260px;text-align:center;box-shadow:0 4px 12px rgba(0,0,0,.3);z-index:99999;line-height:1.4;pointer-events:none;';
+document.body.appendChild(tipEl);
+const tw = tipEl.offsetWidth, th = tipEl.offsetHeight;
+let left = rect.left + rect.width/2 - tw/2;
+let top = rect.top - th - 10;
+if (left < 6) left = 6;
+if (left + tw > window.innerWidth - 6) left = window.innerWidth - tw - 6;
+if (top < 6) top = rect.bottom + 10;
+tipEl.style.left = left + 'px';
+tipEl.style.top = top + 'px';
+};
+
+const hideTip = function() {
+if (tipEl) {
+tipEl.remove();
+tipEl = null;
+}
+};
+
+wrap.addEventListener('mouseenter', showTip);
+wrap.addEventListener('mouseleave', hideTip);
+wrap.addEventListener('focus', showTip);
+wrap.addEventListener('blur', hideTip);
+});
+};
+
+// Validación dinámica de precio de venta vs costo
+window._inicializarValidacionPrecioIngrediente = function() {
+const costoInput = document.getElementById('ingredienteCosto');
+const ventaInput = document.getElementById('ingredienteVenta');
+
+if (!costoInput || !ventaInput) return;
+
+// Remover listeners previos para evitar duplicados
+costoInput._validacionListener?.();
+ventaInput._validacionListener?.();
+
+// Crear o actualizar elemento de mensaje de advertencia
+let warningMsg = document.getElementById('precioVentaWarning');
+if (!warningMsg) {
+warningMsg = document.createElement('span');
+warningMsg.id = 'precioVentaWarning';
+warningMsg.style.cssText = 'color:#dc2626; font-size:.75rem; display:block; margin-top:.25rem;';
+ventaInput.parentNode.insertBefore(warningMsg, ventaInput.nextSibling);
+}
+
+const validarPrecios = function() {
+const costo = parseFloat(costoInput.value) || 0;
+const venta = parseFloat(ventaInput.value) || 0;
+
+if (venta > 0 && venta < costo) {
+warningMsg.textContent = 'Atención: El precio de venta es menor al costo.';
+warningMsg.style.display = 'block';
+costoInput.style.borderColor = '#dc2626';
+ventaInput.style.borderColor = '#dc2626';
+} else {
+warningMsg.textContent = '';
+warningMsg.style.display = 'none';
+costoInput.style.borderColor = '';
+ventaInput.style.borderColor = '';
+}
+};
+
+// Agregar listeners
+costoInput.addEventListener('input', validarPrecios);
+ventaInput.addEventListener('input', validarPrecios);
+
+// Guardar referencia para poder removerlos después
+costoInput._validacionListener = function() {
+costoInput.removeEventListener('input', validarPrecios);
+};
+ventaInput._validacionListener = function() {
+ventaInput.removeEventListener('input', validarPrecios);
+};
+
+// Ejecutar validación inicial
+validarPrecios();
+};
+
 	window.abrirModalNuevoIngrediente = function() {
 		window.ingredienteEditandoId = null;
 		const modalTitle = document.getElementById('ingredienteModalTitle');
@@ -363,6 +522,12 @@
 		if (deleteBtn) deleteBtn.style.display = 'none';
 		const modal = document.getElementById('ingredienteModal');
 		if (modal) modal.classList.add('active');
+		
+		// Inicializar tooltips y validación después de mostrar el modal
+		setTimeout(function() {
+			window._inicializarTooltipsIngrediente();
+			window._inicializarValidacionPrecioIngrediente();
+		}, 50);
 	};
 
 	window.editarIngrediente = function(id) {
@@ -429,6 +594,12 @@
 		if (deleteBtn) deleteBtn.style.display = 'inline-flex';
 		const modal = document.getElementById('ingredienteModal');
 		if (modal) modal.classList.add('active');
+		
+		// Inicializar tooltips y validación después de mostrar el modal
+		setTimeout(function() {
+			window._inicializarTooltipsIngrediente();
+			window._inicializarValidacionPrecioIngrediente();
+		}, 50);
 	};
 
 	// Reemplazar eliminarIngrediente para usar confirmación premium
