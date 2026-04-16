@@ -677,6 +677,20 @@
             `;
         }
         
+        // Tooltip para Stock crítico a partir de
+        const minimoLabel = document.querySelector('#ingredienteForm .form-group:nth-child(3) label');
+        if (minimoLabel) {
+            minimoLabel.innerHTML = `
+                Stock crítico a partir de
+                <span class="tooltip-wrap" style="position:relative; display:inline-flex; align-items:center; cursor:help; margin-left:.3rem">
+                    <span style="display:inline-flex; align-items:center; justify-content:center; width:16px; height:16px; background:var(--text-muted); color:#fff; border-radius:50%; font-size:.65rem; font-weight:700">?</span>
+                    <span class="tooltip-text" style="display:none; position:absolute; bottom:calc(100% + 6px); left:50%; transform:translateX(-50%); background:var(--toast-bg); color:var(--toast-text); padding:.5rem .75rem; border-radius:8px; font-size:.75rem; white-space:normal; width:260px; text-align:center; box-shadow:0 4px 12px rgba(0,0,0,.3); z-index:100; line-height:1.4">
+                        Mínimo que debe haber. Si baja de aquí, salta una alerta.
+                    </span>
+                </span>
+            `;
+        }
+        
         
         // Tooltip para Precio de Costo
         const costoLabel = document.querySelector('#ingredienteForm .form-row .form-group:first-child label');
@@ -686,7 +700,7 @@
                 <span class="tooltip-wrap" style="position:relative; display:inline-flex; align-items:center; cursor:help; margin-left:.3rem">
                     <span style="display:inline-flex; align-items:center; justify-content:center; width:16px; height:16px; background:var(--text-muted); color:#fff; border-radius:50%; font-size:.65rem; font-weight:700">?</span>
                     <span class="tooltip-text" style="display:none; position:absolute; bottom:calc(100% + 6px); left:50%; transform:translateX(-50%); background:var(--toast-bg); color:var(--toast-text); padding:.5rem .75rem; border-radius:8px; font-size:.75rem; white-space:normal; width:220px; text-align:center; box-shadow:0 4px 12px rgba(0,0,0,.3); z-index:100; line-height:1.4">
-                        Precio de cada kilogramo / gramo / mililitro / litro / unidad, según la unidad de medida seleccionada.
+                        Lo que pagaste al proveedor.
                     </span>
                 </span>
             `;
@@ -700,7 +714,7 @@
                 <span class="tooltip-wrap" style="position:relative; display:inline-flex; align-items:center; cursor:help; margin-left:.3rem">
                     <span style="display:inline-flex; align-items:center; justify-content:center; width:16px; height:16px; background:var(--text-muted); color:#fff; border-radius:50%; font-size:.65rem; font-weight:700">?</span>
                     <span class="tooltip-text" style="display:none; position:absolute; bottom:calc(100% + 6px); left:50%; transform:translateX(-50%); background:var(--toast-bg); color:var(--toast-text); padding:.5rem .75rem; border-radius:8px; font-size:.75rem; white-space:normal; width:260px; text-align:center; box-shadow:0 4px 12px rgba(0,0,0,.3); z-index:100; line-height:1.4">
-                        Precio al que se le cobrará este ingrediente al cliente en cada platillo armado, por kilogramo / gramo / mililitro / litro / unidad, según la unidad de medida seleccionada.
+                        Precio que paga el cliente. Si lo quita al personalizar su platillo, se le descuenta.
                     </span>
                 </span>
             `;
