@@ -307,6 +307,33 @@
         }
     };
 
+    window.convertirCostoTotalBs = function() {
+        const tasaBase = window.configGlobal?.tasa_cambio || 1;
+        const costoTotalBs = parseFloat(document.getElementById('costoTotalBs').value) || 0;
+        const costoTotalInput = document.getElementById('costoTotal');
+        if (costoTotalBs > 0 && tasaBase > 0) {
+            const costoTotalUSD = costoTotalBs / tasaBase;
+            costoTotalInput.value = costoTotalUSD.toFixed(2);
+            window.calcularCostoUnitario();
+        }
+    };
+
+    // Agregar conversión inversa: cuando se modifica USD, actualizar Bs
+    window._setupConversionBidireccional = function() {
+        const costoTotalInput = document.getElementById('costoTotal');
+        if (costoTotalInput) {
+            costoTotalInput.addEventListener('input', function() {
+                const tasaBase = window.configGlobal?.tasa_cambio || 1;
+                const costoTotalUSD = parseFloat(costoTotalInput.value) || 0;
+                const costoTotalBsInput = document.getElementById('costoTotalBs');
+                if (costoTotalUSD > 0 && tasaBase > 0 && costoTotalBsInput) {
+                    const costoTotalBs = costoTotalUSD * tasaBase;
+                    costoTotalBsInput.value = costoTotalBs.toFixed(2);
+                }
+            });
+        }
+    };
+
     window._syncIngredientePreview = function() {
         const nuevo       = parseFloat(document.getElementById('ingredienteAgregar')?.value) || 0;
         const unidad      = document.getElementById('ingredienteUnidad')?.value || 'unidades';
@@ -417,10 +444,10 @@ validarPrecios();
 		const modal = document.getElementById('ingredienteModal');
 		if (modal) modal.classList.add('active');
 		
-		// Inicializar validación después de mostrar el modal
+		// Inicializar validación y conversión bidireccional después de mostrar el modal
 		setTimeout(function() {
-			
 			window._inicializarValidacionPrecioIngrediente();
+			window._setupConversionBidireccional();
 		}, 50);
 	};
 
@@ -489,10 +516,10 @@ validarPrecios();
 		const modal = document.getElementById('ingredienteModal');
 		if (modal) modal.classList.add('active');
 		
-		// Inicializar validación después de mostrar el modal
+		// Inicializar validación y conversión bidireccional después de mostrar el modal
 		setTimeout(function() {
-			
 			window._inicializarValidacionPrecioIngrediente();
+			window._setupConversionBidireccional();
 		}, 50);
 	};
 
