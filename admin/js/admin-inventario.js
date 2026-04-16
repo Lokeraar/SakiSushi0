@@ -350,27 +350,24 @@ nombreLabel.innerHTML += `
 <span class="tooltip-wrap" style="position:relative; display:inline-flex; cursor:help; margin-left:.3rem">
 <span style="display:inline-flex; align-items:center; justify-content:center; width:15px; height:15px; background:#aaa; color:#fff; border-radius:50%; font-size:.65rem; font-weight:700">?</span>
 <span class="tooltip-text" style="display:none; position:absolute; bottom:calc(100% + 6px); left:50%; transform:translateX(-50%); background:var(--toast-bg); color:var(--toast-text); padding:.5rem .75rem; border-radius:8px; font-size:.75rem; white-space:normal; width:260px; text-align:center; box-shadow:0 4px 12px rgba(0,0,0,.3); z-index:100; line-height:1.4">
-Nombre descriptivo del insumo. Se usa para identificarlo en el menú y reportes.
+Se usa para identificarlo en el menú y reportes.
 </span>
 </span>`;
 }
 
-// Tooltip para Stock crítico
-let minimoLabel = document.querySelector('label[for="ingredienteMinimo"]');
-if (!minimoLabel) {
-minimoLabel = document.querySelector('#ingredienteModal .form-group:nth-child(6) label');
+// Tooltip para Unidad de Medida
+let unidadLabel = document.querySelector('label[for="ingredienteUnidad"]');
+if (!unidadLabel) {
+unidadLabel = document.querySelector('#ingredienteModal label[for="ingredienteUnidad"]');
 }
-if (minimoLabel && !minimoLabel.querySelector('.tooltip-wrap')) {
-// Verificar si ya tiene tooltip (el existente en HTML)
-if (!minimoLabel.querySelector('.tooltip-text')) {
-minimoLabel.innerHTML += `
+if (unidadLabel && !unidadLabel.querySelector('.tooltip-wrap')) {
+unidadLabel.innerHTML += `
 <span class="tooltip-wrap" style="position:relative; display:inline-flex; cursor:help; margin-left:.3rem">
 <span style="display:inline-flex; align-items:center; justify-content:center; width:15px; height:15px; background:#aaa; color:#fff; border-radius:50%; font-size:.65rem; font-weight:700">?</span>
 <span class="tooltip-text" style="display:none; position:absolute; bottom:calc(100% + 6px); left:50%; transform:translateX(-50%); background:var(--toast-bg); color:var(--toast-text); padding:.5rem .75rem; border-radius:8px; font-size:.75rem; white-space:normal; width:260px; text-align:center; box-shadow:0 4px 12px rgba(0,0,0,.3); z-index:100; line-height:1.4">
-Mínimo que debe haber. Si baja de aquí, salta una alerta.
+Unidad en la que se mide el ingrediente (unidades, kg, litros).
 </span>
 </span>`;
-}
 }
 
 // Tooltip para Precio de Costo
@@ -834,15 +831,15 @@ validarPrecios();
         
         // PHASE 3: Click Behavior - REMOVED from here, now bound dynamically in editarIngrediente
         
-        // Tooltip para Unidad de Medida (ahora es el label de Nombre del ingrediente - form-group:nth-child(2))
-        const unidadLabel = document.querySelector('#ingredienteForm .form-group:nth-child(2) label');
-        if (unidadLabel) {
-            unidadLabel.innerHTML = `
+        // Tooltip para Nombre del ingrediente (form-group:nth-child(2))
+        const nombreLabel = document.querySelector('#ingredienteForm .form-group:nth-child(2) label');
+        if (nombreLabel) {
+            nombreLabel.innerHTML = `
                 Nombre del ingrediente
                 <span class="tooltip-wrap" style="position:relative; display:inline-flex; align-items:center; cursor:help; margin-left:.3rem">
                     <span style="display:inline-flex; align-items:center; justify-content:center; width:16px; height:16px; background:var(--text-muted); color:#fff; border-radius:50%; font-size:.65rem; font-weight:700">?</span>
                     <span class="tooltip-text" style="display:none; position:absolute; bottom:calc(100% + 6px); left:50%; transform:translateX(-50%); background:var(--toast-bg); color:var(--toast-text); padding:.5rem .75rem; border-radius:8px; font-size:.75rem; white-space:normal; width:260px; text-align:center; box-shadow:0 4px 12px rgba(0,0,0,.3); z-index:100; line-height:1.4">
-                        ⚠️ La unidad de medida es crítica: "1 aguacate" no equivale a 500 gramos. Asegúrate de seleccionar la unidad correcta (unidades, kilogramos, litros, etc.) según corresponda.
+                        Se usa para identificarlo en el menú y reportes.
                     </span>
                 </span>
             `;
@@ -857,7 +854,7 @@ validarPrecios();
                 <span class="tooltip-wrap" style="position:relative; display:inline-flex; align-items:center; cursor:help; margin-left:.3rem">
                     <span style="display:inline-flex; align-items:center; justify-content:center; width:16px; height:16px; background:var(--text-muted); color:#fff; border-radius:50%; font-size:.65rem; font-weight:700">?</span>
                     <span class="tooltip-text" style="display:none; position:absolute; bottom:calc(100% + 6px); left:50%; transform:translateX(-50%); background:var(--toast-bg); color:var(--toast-text); padding:.5rem .75rem; border-radius:8px; font-size:.75rem; white-space:normal; width:220px; text-align:center; box-shadow:0 4px 12px rgba(0,0,0,.3); z-index:100; line-height:1.4">
-                        Precio de cada kilogramo / gramo / mililitro / litro / unidad, según la unidad de medida seleccionada.
+                        Lo que pagaste al proveedor por unidad/kilo/litro.
                     </span>
                 </span>
             `;
@@ -871,7 +868,7 @@ validarPrecios();
                 <span class="tooltip-wrap" style="position:relative; display:inline-flex; align-items:center; cursor:help; margin-left:.3rem">
                     <span style="display:inline-flex; align-items:center; justify-content:center; width:16px; height:16px; background:var(--text-muted); color:#fff; border-radius:50%; font-size:.65rem; font-weight:700">?</span>
                     <span class="tooltip-text" style="display:none; position:absolute; bottom:calc(100% + 6px); left:50%; transform:translateX(-50%); background:var(--toast-bg); color:var(--toast-text); padding:.5rem .75rem; border-radius:8px; font-size:.75rem; white-space:normal; width:260px; text-align:center; box-shadow:0 4px 12px rgba(0,0,0,.3); z-index:100; line-height:1.4">
-                        Precio al que se le cobrará este ingrediente al cliente en cada platillo armado, por kilogramo / gramo / mililitro / litro / unidad, según la unidad de medida seleccionada.
+                        Precio que paga el cliente. Si lo quita al personalizar, se le descuenta.
                     </span>
                 </span>
             `;
