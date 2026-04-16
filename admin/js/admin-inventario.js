@@ -338,6 +338,59 @@
 		currentIngredienteImagenUrl = '';
 	}
 
+// Validación dinámica de precio de venta vs costo
+window._inicializarValidacionPrecioIngrediente = function() {
+const costoInput = document.getElementById('ingredienteCosto');
+const ventaInput = document.getElementById('ingredienteVenta');
+
+if (!costoInput || !ventaInput) return;
+
+// Remover listeners previos para evitar duplicados
+costoInput._validacionListener?.();
+ventaInput._validacionListener?.();
+
+// Crear o actualizar elemento de mensaje de advertencia
+let warningMsg = document.getElementById('precioVentaWarning');
+if (!warningMsg) {
+warningMsg = document.createElement('span');
+warningMsg.id = 'precioVentaWarning';
+warningMsg.style.cssText = 'color:#dc2626; font-size:.75rem; display:block; margin-top:.25rem;';
+ventaInput.parentNode.insertBefore(warningMsg, ventaInput.nextSibling);
+}
+
+const validarPrecios = function() {
+const costo = parseFloat(costoInput.value) || 0;
+const venta = parseFloat(ventaInput.value) || 0;
+
+if (venta > 0 && venta < costo) {
+warningMsg.textContent = 'Atención: El precio de venta es menor al costo.';
+warningMsg.style.display = 'block';
+costoInput.style.borderColor = '#dc2626';
+ventaInput.style.borderColor = '#dc2626';
+} else {
+warningMsg.textContent = '';
+warningMsg.style.display = 'none';
+costoInput.style.borderColor = '';
+ventaInput.style.borderColor = '';
+}
+};
+
+// Agregar listeners
+costoInput.addEventListener('input', validarPrecios);
+ventaInput.addEventListener('input', validarPrecios);
+
+// Guardar referencia para poder removerlos después
+costoInput._validacionListener = function() {
+costoInput.removeEventListener('input', validarPrecios);
+};
+ventaInput._validacionListener = function() {
+ventaInput.removeEventListener('input', validarPrecios);
+};
+
+// Ejecutar validación inicial
+validarPrecios();
+};
+
 	window.abrirModalNuevoIngrediente = function() {
 		window.ingredienteEditandoId = null;
 		const modalTitle = document.getElementById('ingredienteModalTitle');
@@ -363,6 +416,12 @@
 		if (deleteBtn) deleteBtn.style.display = 'none';
 		const modal = document.getElementById('ingredienteModal');
 		if (modal) modal.classList.add('active');
+		
+		// Inicializar validación después de mostrar el modal
+		setTimeout(function() {
+			
+			window._inicializarValidacionPrecioIngrediente();
+		}, 50);
 	};
 
 	window.editarIngrediente = function(id) {
@@ -429,6 +488,12 @@
 		if (deleteBtn) deleteBtn.style.display = 'inline-flex';
 		const modal = document.getElementById('ingredienteModal');
 		if (modal) modal.classList.add('active');
+		
+		// Inicializar validación después de mostrar el modal
+		setTimeout(function() {
+			
+			window._inicializarValidacionPrecioIngrediente();
+		}, 50);
 	};
 
 	// Reemplazar eliminarIngrediente para usar confirmación premium
@@ -647,7 +712,7 @@
         } catch (e) { console.error('Error enviando push:', e); }
     };
 
-    // Configurar eventos del modal de ingrediente (imagen, tooltips, sincronización)
+    // Configurar eventos del modal de ingrediente (imagen, sincronización)
     function setupIngredienteModalEvents() {
         const fileInput = document.getElementById('ingredienteImagen');
         const urlInput = document.getElementById('ingredienteImagenUrl');
@@ -662,49 +727,6 @@
         if (cantidadComprada) cantidadComprada.readOnly = true;
         
         // PHASE 3: Click Behavior - REMOVED from here, now bound dynamically in editarIngrediente
-        
-        // Tooltip para Unidad de Medida (ahora es el label de Nombre del ingrediente - form-group:nth-child(2))
-        const unidadLabel = document.querySelector('#ingredienteForm .form-group:nth-child(2) label');
-        if (unidadLabel) {
-            unidadLabel.innerHTML = `
-                Nombre del ingrediente
-                <span class="tooltip-wrap" style="position:relative; display:inline-flex; align-items:center; cursor:help; margin-left:.3rem">
-                    <span style="display:inline-flex; align-items:center; justify-content:center; width:16px; height:16px; background:var(--text-muted); color:#fff; border-radius:50%; font-size:.65rem; font-weight:700">?</span>
-                    <span class="tooltip-text" style="display:none; position:absolute; bottom:calc(100% + 6px); left:50%; transform:translateX(-50%); background:var(--toast-bg); color:var(--toast-text); padding:.5rem .75rem; border-radius:8px; font-size:.75rem; white-space:normal; width:260px; text-align:center; box-shadow:0 4px 12px rgba(0,0,0,.3); z-index:100; line-height:1.4">
-                        ⚠️ La unidad de medida es crítica: "1 aguacate" no equivale a 500 gramos. Asegúrate de seleccionar la unidad correcta (unidades, kilogramos, litros, etc.) según corresponda.
-                    </span>
-                </span>
-            `;
-        }
-        
-        
-        // Tooltip para Precio de Costo
-        const costoLabel = document.querySelector('#ingredienteForm .form-row .form-group:first-child label');
-        if (costoLabel) {
-            costoLabel.innerHTML = `
-                Precio de Costo (USD/Bs)
-                <span class="tooltip-wrap" style="position:relative; display:inline-flex; align-items:center; cursor:help; margin-left:.3rem">
-                    <span style="display:inline-flex; align-items:center; justify-content:center; width:16px; height:16px; background:var(--text-muted); color:#fff; border-radius:50%; font-size:.65rem; font-weight:700">?</span>
-                    <span class="tooltip-text" style="display:none; position:absolute; bottom:calc(100% + 6px); left:50%; transform:translateX(-50%); background:var(--toast-bg); color:var(--toast-text); padding:.5rem .75rem; border-radius:8px; font-size:.75rem; white-space:normal; width:220px; text-align:center; box-shadow:0 4px 12px rgba(0,0,0,.3); z-index:100; line-height:1.4">
-                        Precio de cada kilogramo / gramo / mililitro / litro / unidad, según la unidad de medida seleccionada.
-                    </span>
-                </span>
-            `;
-        }
-        
-        // Tooltip para Precio de Venta
-        const ventaLabel = document.querySelector('#ingredienteForm .form-row .form-group:last-child label');
-        if (ventaLabel) {
-            ventaLabel.innerHTML = `
-                Precio de Venta (USD/Bs)
-                <span class="tooltip-wrap" style="position:relative; display:inline-flex; align-items:center; cursor:help; margin-left:.3rem">
-                    <span style="display:inline-flex; align-items:center; justify-content:center; width:16px; height:16px; background:var(--text-muted); color:#fff; border-radius:50%; font-size:.65rem; font-weight:700">?</span>
-                    <span class="tooltip-text" style="display:none; position:absolute; bottom:calc(100% + 6px); left:50%; transform:translateX(-50%); background:var(--toast-bg); color:var(--toast-text); padding:.5rem .75rem; border-radius:8px; font-size:.75rem; white-space:normal; width:260px; text-align:center; box-shadow:0 4px 12px rgba(0,0,0,.3); z-index:100; line-height:1.4">
-                        Precio al que se le cobrará este ingrediente al cliente en cada platillo armado, por kilogramo / gramo / mililitro / litro / unidad, según la unidad de medida seleccionada.
-                    </span>
-                </span>
-            `;
-        }
     }
     
     setupIngredienteModalEvents();
