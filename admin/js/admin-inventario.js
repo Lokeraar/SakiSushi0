@@ -363,6 +363,11 @@
 		if (deleteBtn) deleteBtn.style.display = 'none';
 		const modal = document.getElementById('ingredienteModal');
 		if (modal) modal.classList.add('active');
+		
+		// Reinicializar tooltips y validación después de abrir el modal
+		setTimeout(function() {
+			setupIngredienteModalEvents();
+		}, 50);
 	};
 
 	window.editarIngrediente = function(id) {
@@ -429,6 +434,10 @@
 		if (deleteBtn) deleteBtn.style.display = 'inline-flex';
 		const modal = document.getElementById('ingredienteModal');
 		if (modal) modal.classList.add('active');
+		// Reinicializar tooltips y validación después de abrir el modal
+		setTimeout(function() {
+			setupIngredienteModalEvents();
+		}, 50);
 	};
 
 	// Reemplazar eliminarIngrediente para usar confirmación premium
@@ -663,15 +672,29 @@
         
         // PHASE 3: Click Behavior - REMOVED from here, now bound dynamically in editarIngrediente
         
-        // Tooltip para Unidad de Medida (ahora es el label de Nombre del ingrediente - form-group:nth-child(2))
-        const unidadLabel = document.querySelector('#ingredienteForm .form-group:nth-child(2) label');
-        if (unidadLabel) {
-            unidadLabel.innerHTML = `
+        // Tooltip para Nombre del ingrediente
+        const nombreLabel = document.querySelector('#ingredienteForm .form-group:nth-child(2) label');
+        if (nombreLabel) {
+            nombreLabel.innerHTML = `
                 Nombre del ingrediente
                 <span class="tooltip-wrap" style="position:relative; display:inline-flex; align-items:center; cursor:help; margin-left:.3rem">
                     <span style="display:inline-flex; align-items:center; justify-content:center; width:16px; height:16px; background:var(--text-muted); color:#fff; border-radius:50%; font-size:.65rem; font-weight:700">?</span>
                     <span class="tooltip-text" style="display:none; position:absolute; bottom:calc(100% + 6px); left:50%; transform:translateX(-50%); background:var(--toast-bg); color:var(--toast-text); padding:.5rem .75rem; border-radius:8px; font-size:.75rem; white-space:normal; width:260px; text-align:center; box-shadow:0 4px 12px rgba(0,0,0,.3); z-index:100; line-height:1.4">
-                        ⚠️ La unidad de medida es crítica: "1 aguacate" no equivale a 500 gramos. Asegúrate de seleccionar la unidad correcta (unidades, kilogramos, litros, etc.) según corresponda.
+                        Nombre descriptivo del insumo. Se usa para identificarlo en el menú y reportes.
+                    </span>
+                </span>
+            `;
+        }
+        
+        // Tooltip para Stock crítico a partir de
+        const minimoLabel = document.querySelector('#ingredienteForm .form-group:nth-child(3) label');
+        if (minimoLabel) {
+            minimoLabel.innerHTML = `
+                Stock crítico a partir de
+                <span class="tooltip-wrap" style="position:relative; display:inline-flex; align-items:center; cursor:help; margin-left:.3rem">
+                    <span style="display:inline-flex; align-items:center; justify-content:center; width:16px; height:16px; background:var(--text-muted); color:#fff; border-radius:50%; font-size:.65rem; font-weight:700">?</span>
+                    <span class="tooltip-text" style="display:none; position:absolute; bottom:calc(100% + 6px); left:50%; transform:translateX(-50%); background:var(--toast-bg); color:var(--toast-text); padding:.5rem .75rem; border-radius:8px; font-size:.75rem; white-space:normal; width:260px; text-align:center; box-shadow:0 4px 12px rgba(0,0,0,.3); z-index:100; line-height:1.4">
+                        Mínimo que debe haber. Si baja de aquí, salta una alerta.
                     </span>
                 </span>
             `;
@@ -700,6 +723,7 @@
                 <span class="tooltip-wrap" style="position:relative; display:inline-flex; align-items:center; cursor:help; margin-left:.3rem">
                     <span style="display:inline-flex; align-items:center; justify-content:center; width:16px; height:16px; background:var(--text-muted); color:#fff; border-radius:50%; font-size:.65rem; font-weight:700">?</span>
                     <span class="tooltip-text" style="display:none; position:absolute; bottom:calc(100% + 6px); left:50%; transform:translateX(-50%); background:var(--toast-bg); color:var(--toast-text); padding:.5rem .75rem; border-radius:8px; font-size:.75rem; white-space:normal; width:220px; text-align:center; box-shadow:0 4px 12px rgba(0,0,0,.3); z-index:100; line-height:1.4">
+                        Lo que pagaste al proveedor por unidad/kilo/litro.
                         Lo que pagaste al proveedor.
                     </span>
                 </span>
@@ -713,12 +737,63 @@
                 Precio de Venta (USD/Bs)
                 <span class="tooltip-wrap" style="position:relative; display:inline-flex; align-items:center; cursor:help; margin-left:.3rem">
                     <span style="display:inline-flex; align-items:center; justify-content:center; width:16px; height:16px; background:var(--text-muted); color:#fff; border-radius:50%; font-size:.65rem; font-weight:700">?</span>
-                    <span class="tooltip-text" style="display:none; position:absolute; bottom:calc(100% + 6px); left:50%; transform:translateX(-50%); background:var(--toast-bg); color:var(--toast-text); padding:.5rem .75rem; border-radius:8px; font-size:.75rem; white-space:normal; width:260px; text-align:center; box-shadow:0 4px 12px rgba(0,0,0,.3); z-index:100; line-height:1.4">
+                    <span class="tooltip-text" style="display:none; position:absolute; bottom:calc(100% + 6px); left:50%; transform:translateX(-50%); background:var(--toast-bg); color:var(--toast-text); padding:.5rem .75rem; border-radius:8px; font-size:.75rem; white-space:normal; width:260px; text-align:center; box-shadow:0 4px 12px rgba(0,0,0,.3); z-index:100; line-height:1.4">                        Precio que paga el cliente. Si lo quita al personalizar, se le descuenta.
                         Precio que paga el cliente. Si lo quita al personalizar su platillo, se le descuenta.
                     </span>
                 </span>
             `;
         }
+        
+        // Configurar eventos hover para tooltips
+        setTimeout(function() {
+            const tooltipWraps = document.querySelectorAll('.tooltip-wrap');
+            tooltipWraps.forEach(function(wrap) {
+                const tooltipText = wrap.querySelector('.tooltip-text');
+                if (!tooltipText) return;
+                
+                wrap.addEventListener('mouseenter', function() {
+                    tooltipText.style.display = 'block';
+                });
+                
+                wrap.addEventListener('mouseleave', function() {
+                    tooltipText.style.display = 'none';
+                });
+            });
+        }, 100);
+        
+        // Validación dinámica: Precio de Venta vs Precio de Costo
+        const costoInput = document.getElementById('ingredienteCosto');
+        const ventaInput = document.getElementById('ingredienteVenta');
+        
+        function validarPrecios() {
+            const costo = parseFloat(costoInput?.value) || 0;
+            const venta = parseFloat(ventaInput?.value) || 0;
+            
+            // Buscar o crear elemento de advertencia
+            let warningEl = document.getElementById('precioWarning');
+            
+            if (venta > 0 && costo > 0 && venta < costo) {
+                if (!warningEl) {
+                    warningEl = document.createElement('span');
+                    warningEl.id = 'precioWarning';
+                    warningEl.style.color = '#dc2626';
+                    warningEl.style.fontSize = '.75rem';
+                    warningEl.style.marginTop = '.25rem';
+                    warningEl.style.display = 'block';
+                    ventaInput.parentNode.appendChild(warningEl);
+                }
+                warningEl.textContent = 'Atención: El precio de venta es menor al costo.';
+                if (costoInput) costoInput.style.borderColor = '#dc2626';
+                if (ventaInput) ventaInput.style.borderColor = '#dc2626';
+            } else {
+                if (warningEl) warningEl.remove();
+                if (costoInput) costoInput.style.borderColor = '';
+                if (ventaInput) ventaInput.style.borderColor = '';
+            }
+        }
+        
+        if (costoInput) costoInput.addEventListener('input', validarPrecios);
+        if (ventaInput) ventaInput.addEventListener('input', validarPrecios);
     }
     
     setupIngredienteModalEvents();
