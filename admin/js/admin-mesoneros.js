@@ -91,7 +91,7 @@
         let acum = 0;
         try {
             const { data } = await window.supabaseClient
-                .from('propinas').select('monto_bs').eq('mesonero_id', id).eq('entregado', false);
+                .from('propinas').select('monto_bs').eq('mesonero_id', id);
             acum = (data || []).reduce((s, p) => s + (p.monto_bs || 0), 0);
         } catch(e) { console.error('Error propinas pendientes:', e); }
         if (acum <= 0) { window.mostrarToast(mesonero.nombre + ' no tiene propinas pendientes', 'info'); return; }
