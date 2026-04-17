@@ -25,36 +25,38 @@
             container.innerHTML = '<p style="color:var(--text-muted);font-size:.88rem">No hay mesoneros registrados.</p>';
             return;
         }
-        let deudas = {};
+        let acumulados = {};
         try {
+            const hoy = new Date(); hoy.setHours(0,0,0,0);
+            const manana = new Date(hoy); manana.setDate(manana.getDate()+1);
             const { data: allProp } = await window.supabaseClient
-                .from('propinas').select('mesonero_id, monto_bs, entregado');
+                .from('propinas').select('mesonero_id, monto_bs')
+                .gte('fecha', hoy.toISOString())
+                .lt('fecha', manana.toISOString());
             (allProp || []).forEach(p => {
-                if (p.entregado === false || p.monto_bs < 0) {
-                    deudas[p.mesonero_id] = (deudas[p.mesonero_id] || 0) + (p.monto_bs || 0);
-                }
+                acumulados[p.mesonero_id] = (acumulados[p.mesonero_id] || 0) + (p.monto_bs || 0);
             });
-        } catch(e) { console.error('Error obteniendo deuda pendiente:', e); }
+        } catch(e) { console.error('Error obteniendo acumulado propinas:', e); }
 
         const sorted = [...window.mesoneros].sort((a, b) => a.nombre.localeCompare(b.nombre));
         const tasa   = Number(window.configGlobal?.tasa_efectiva || window.configGlobal?.tasa_cambio || 400) || 400;
 
         container.innerHTML = sorted.map(m => {
             const inicial = m.nombre.charAt(0).toUpperCase();
-            const deuda    = deudas[m.id] || 0;
-            const hayDeuda = deuda > 0;
-            const deudaUsd = tasa > 0 ? deuda / tasa : 0;
+            const acum    = acumulados[m.id] || 0;
+            const hayAcum = acum > 0;
+            const acumUsd = tasa > 0 ? acum / tasa : 0;
             const avatar  = m.foto
                 ? '<div class="ucard-avatar"><img src="' + m.foto + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;cursor:pointer" onclick="window.expandirImagen(this.src)"></div>'
                 : '<div class="ucard-avatar"><div style="width:100%;height:100%;font-size:1.4rem;border-radius:50%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--propina),#7B1FA2);color:#fff">' + inicial + '</div></div>';
             const badge = m.activo
                 ? '<span class="ucard-status-inline" style="color:var(--success);margin-left:auto"><i class="fas fa-check-circle"></i> ACTIVO</span>'
                 : '<span class="ucard-status-inline" style="color:var(--text-muted);margin-left:auto"><i class="fas fa-circle"></i> INACTIVO</span>';
-            const deudaStr = hayDeuda
-                ? window.formatUSD(deudaUsd) + ' | ' + window.formatBs(deuda)
+            const propStr = hayAcum
+                ? window.formatUSD(acumUsd) + ' | ' + window.formatBs(acum)
                 : 'Bs 0,00';
-            const deudaColor = hayDeuda ? 'var(--propina)' : 'var(--text-muted)';
-            const deudaWeight = hayDeuda ? '700' : '400';
+            const propColor = hayAcum ? 'var(--propina)' : 'var(--text-muted)';
+            const propWeight = hayAcum ? '700' : '400';
             const toggleClass = m.activo ? 'btn-toggle-on' : 'btn-toggle-off';
             const toggleTxt   = m.activo ? 'Inhabilitar' : 'Activar';
             const toggleVal   = String(!m.activo);
@@ -64,10 +66,10 @@
                 +   '<div class="ucard-top">'
                 +     '<div class="ucard-names">'
                 +       '<div class="ucard-line1"><span class="mesonero-nombre">' + m.nombre + '</span>' + badge + '</div>'
-                +       '<div class="ucard-line2" style="display:flex;align-items:center;gap:0.5rem"><span style="font-size:.78rem;color:var(--propina);font-weight:600">Acumulado pendiente</span><span style="font-size:1.05rem;color:var(--propina);font-weight:700">' + window.formatUSD(deudaUsd) + ' / ' + window.formatBs(deuda) + '</span></div>'
+                +       '<div class="ucard-line2" style="display:flex;align-items:center;gap:0.5rem"><span style="font-size:.78rem;color:var(--propina);font-weight:600">Total Acumulado</span><span style="font-size:1.05rem;color:var(--propina);font-weight:700">' + window.formatUSD(acumUsd) + ' / ' + window.formatBs(acum) + '</span></div>'
                 +       '<div class="ucard-line3">'
                 +         '<button class="btn-sm" style="background:linear-gradient(135deg,var(--propina),#7B1FA2);color:#fff;white-space:nowrap;font-size:.75rem;padding:.35rem .6rem" onclick="window.mostrarPagoMesonero(\'' + m.id + '\')">'
-                +           '<i class="fas fa-hand-holding-usd"></i> Pagar'
+                +           '<i class="fas fa-hand-holding-usd"></i> Pagado'
                 +         '</button>'
                 +         '<button class="btn-toggle ' + toggleClass + '" style="font-size:.75rem;padding:.35rem .6rem" onclick="window.toggleMesoneroActivo(\'' + m.id + '\',' + toggleVal + ')">' + toggleTxt + '</button>'
                 +         '<div class="ucard-actions-right">'
@@ -92,12 +94,8 @@
         let acum = 0;
         try {
             const { data } = await window.supabaseClient
-                .from('propinas').select('monto_bs, entregado').eq('mesonero_id', id);
-            (data || []).forEach(p => {
-                if (p.entregado === false || p.monto_bs < 0) {
-                    acum += p.monto_bs || 0;
-                }
-            });
+                .from('propinas').select('monto_bs').eq('mesonero_id', id).eq('entregado', false);
+            acum = (data || []).reduce((s, p) => s + (p.monto_bs || 0), 0);
         } catch(e) { console.error('Error propinas pendientes:', e); }
         if (acum <= 0) { window.mostrarToast(mesonero.nombre + ' no tiene propinas pendientes', 'info'); return; }
         const tasa    = window.configGlobal?.tasa_efectiva || window.configGlobal?.tasa_cambio || 400;
@@ -150,13 +148,8 @@
             window.cerrarModal('confirmPagoDeliveryModal');
             if (btn) btn.onclick = window.confirmarPagoDelivery;
             window.mesoneroParaPago = null;
-            
-            // Limpiar caché de deudas para forzar recálculo
-            window.deudasCache = null;
-            
             await window.renderizarMesoneros();
             await window.cargarPropinas();
-            
         } catch(e) {
             console.error('Error pago propinas:', e);
             window.mostrarToast('Error: ' + (e.message || e), 'error');
