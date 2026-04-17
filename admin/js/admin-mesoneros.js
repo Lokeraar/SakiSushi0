@@ -490,4 +490,21 @@
         }
     };
 
+    // ════════════════════════════════════════
+    // SUSCRIPCIÓN REALTIME A PROPINAS
+    // ════════════════════════════════════════
+    window.inicializarRealtimePropinas = function() {
+        if (!window.supabaseClient) return;
+        
+        window.supabaseClient.channel('mesoneros-propinas')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'propinas' }, function() {
+                window.renderizarMesoneros();
+                window.cargarPropinas();
+            })
+            .subscribe();
+    };
+
+    // Inicializar suscripción al cargar el módulo
+    window.inicializarRealtimePropinas();
+
 })();
