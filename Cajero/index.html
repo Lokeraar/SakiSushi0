@@ -843,6 +843,8 @@ window.referenciaPropina=['','','','','',''];
 window.actualizarEstadisticas();
 window.renderizarPropinas();
 // Recargar desde BD en background para tener datos exactos
+// Actualizar tarjeta del mesonero en admin-mesoneros (si existe la función)
+if(window.actualizarTotalPendienteMesonero){await window.actualizarTotalPendienteMesonero(mesoneroGuardado.id);}
 window.cargarPropinas().then(function(){window.actualizarEstadisticas();window.renderizarPropinas();});
 }catch(e){console.error('Error guardando propina:',e);window.mostrarToast('❌ Error al registrar propina: '+(e.message||e),'error');}finally{if(_gpBtn){_gpBtn.disabled=false;_gpBtn.innerHTML='Guardar Propina';}}};
 window.renderizarPropinas=function(){const total=window.propinas.reduce((sum,p)=>sum+(p.monto_bs||p.monto||0),0),cantidad=window.propinas.length,promedio=cantidad>0?total/cantidad:0;document.getElementById('propinasTotal').textContent=window.formatBs(total);document.getElementById('propinasCantidad').textContent=cantidad;document.getElementById('propinasPromedio').textContent=window.formatBs(promedio);document.getElementById('propinasListCount').textContent=cantidad;document.getElementById('propinasListContainer').innerHTML=cantidad?window.propinas.map(p=>window.crearTarjetaPropina(p)).join(''):'<div class="empty-state"><i class="fas fa-hand-holding-heart"></i><p>No hay propinas hoy</p></div>'};
