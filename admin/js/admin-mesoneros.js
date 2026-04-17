@@ -440,9 +440,8 @@
                 btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
             }
 
-            // Obtener usuario autenticado de Supabase
-            const { data: { user } } = await window.supabaseClient.auth.getUser();
-            const cajeroId = user?.id || window.currentUser?.id || window.usuarioActual?.id;
+            // Obtener usuario de la sesión actual (ya disponible en la app)
+            const cajeroId = window.currentUser?.id || window.usuarioActual?.id;
 
             if (!cajeroId) {
                 throw new Error('No se pudo identificar al usuario. Por favor inicia sesión nuevamente.');
@@ -450,7 +449,7 @@
 
             if (esParcial) {
                 // Pago parcial: insertar registro negativo con entregado=true
-                const usuarioActual = window.usuarioActual?.nombre || user?.email || 'Admin';
+                const usuarioActual = window.usuarioActual?.nombre || window.currentUser?.email || 'Admin';
                 const now = new Date().toISOString();
 
                 const { error: insertError } = await window.supabaseClient
