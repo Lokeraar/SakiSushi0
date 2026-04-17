@@ -27,12 +27,10 @@
         }
         let acumulados = {};
         try {
-            const hoy = new Date(); hoy.setHours(0,0,0,0);
-            const manana = new Date(hoy); manana.setDate(manana.getDate()+1);
+            // Obtener todas las propinas pendientes (entregado = false), sin filtrar por fecha
             const { data: allProp } = await window.supabaseClient
                 .from('propinas').select('mesonero_id, monto_bs')
-                .gte('fecha', hoy.toISOString())
-                .lt('fecha', manana.toISOString());
+                .eq('entregado', false);
             (allProp || []).forEach(p => {
                 acumulados[p.mesonero_id] = (acumulados[p.mesonero_id] || 0) + (p.monto_bs || 0);
             });
