@@ -362,6 +362,37 @@ html.dark-theme .logout-button:hover { background: rgba(255,255,255,.1); color: 
     }
 }
 
+/* Estilos para tablet y desktop (> 768px) */
+@media (min-width: 769px) {
+    .level-1 {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+    .level-1 .header-left-group {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+    .level-1 .header-right-group {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    .level-2 {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 0.25rem;
+    }
+    .level-3 {
+        margin-top: 0.5rem;
+    }
+}
+
 
 /* Theme Toggle Premium - Estilo Moderno */
 .theme-switch-wrapper {
