@@ -55,7 +55,7 @@
                 ? '<button class="btn-pagado" style="background:linear-gradient(135deg,var(--propina),#7B1FA2);color:#fff;border:none;padding:.35rem .6rem;border-radius:6px;cursor:pointer;font-size:.75rem;font-weight:600;margin-top:.5rem" onclick="window.mostrarPagoMesonero(\'' + m.id + '\')"><i class="fas fa-check"></i> Pagado</button>'
                 : '<button class="btn-pagado" disabled style="background:var(--secondary);color:var(--text-muted);border:none;padding:.35rem .6rem;border-radius:6px;cursor:not-allowed;font-size:.75rem;font-weight:600;margin-top:.5rem" title="No hay propinas pendientes"><i class="fas fa-check"></i> Pagado</button>';
             
-            return '<div class="card-standard mesonero-card" style="border-left-color:var(--propina)" data-id="' + m.id + '">'
+            return '<div class="card-standard mesonero-card" style="border-left-color:var(--propina)">'
                 + avatar
                 + '<div class="ucard-body">'
                 +   '<div class="ucard-top">'
@@ -70,7 +70,7 @@
                 +       '</div>'
                 +       '<div style="margin-top:.5rem;padding:.5rem;background:var(--secondary);border-radius:8px">'
                 +         '<div style="font-size:.7rem;color:var(--text-muted);margin-bottom:.25rem">Total pendiente</div>'
-                +         '<div class="total-pendiente-valor" style="font-size:.85rem;font-weight:700;color:var(--propina)">' + window.formatBs(totalPendiente) + ' / ' + window.formatUSD(totalUsd) + '</div>'
+                +         '<div style="font-size:.85rem;font-weight:700;color:var(--propina)">' + window.formatBs(totalPendiente) + ' / ' + window.formatUSD(totalUsd) + '</div>'
                 +         btnPagado
                 +       '</div>'
                 +     '</div>'
@@ -440,16 +440,9 @@
                 btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
             }
 
-            // Obtener usuario de la sesión actual (ya disponible en la app)
-            const cajeroId = window.currentUser?.id || window.usuarioActual?.id;
-
-            if (!cajeroId) {
-                throw new Error('No se pudo identificar al usuario. Por favor inicia sesión nuevamente.');
-            }
-
             if (esParcial) {
                 // Pago parcial: insertar registro negativo con entregado=true
-                const usuarioActual = window.usuarioActual?.nombre || window.currentUser?.email || 'Admin';
+                const usuarioActual = window.usuarioActual?.nombre || 'Admin';
                 const now = new Date().toISOString();
 
                 const { error: insertError } = await window.supabaseClient
@@ -461,7 +454,6 @@
                         entregado: true,
                         metodo: 'pago_parcial',
                         cajero: usuarioActual,
-                        cajero_id: cajeroId,
                         fecha: now,
                         mesa: 'PAGO'
                     }]);
@@ -497,62 +489,5 @@
             }
         }
     };
-
-    // ════════════════════════════════════════
-    // ACTUALIZAR TOTAL PENDIENTE (para usar desde Cajero)
-    // ════════════════════════════════════════
-    window.actualizarTotalPendienteMesonero = async function(mesoneroId) {
-        // Consultar solo propinas NO entregadas de ese mesonero (todas las fechas)
-        const { data } = await window.supabaseClient
-            .from('propinas')
-            .select('monto_bs')
-            .eq('mesonero_id', mesoneroId)
-            .eq('entregado', false);
-        const total = (data || []).reduce((s, p) => s + (p.monto_bs || 0), 0);
-        // Actualizar la tarjeta específica sin recargar todas
-        const card = document.querySelector(`.mesonero-card[data-id="${mesoneroId}"]`);
-        if (card) {
-            const span = card.querySelector('.total-pendiente-valor');
-            if (span) {
-                const tasa = Number(window.configGlobal?.tasa_efectiva || window.configGlobal?.tasa_cambio || 400) || 400;
-                const totalUsd = tasa > 0 ? total / tasa : 0;
-                span.textContent = window.formatBs(total) + ' / ' + window.formatUSD(totalUsd);
-            }
-            // Actualizar botón Pagado
-            const btnPagado = card.querySelector('.btn-pagado');
-            if (btnPagado) {
-                if (total > 0) {
-                    btnPagado.disabled = false;
-                    btnPagado.style.background = 'linear-gradient(135deg,var(--propina),#7B1FA2)';
-                    btnPagado.style.color = '#fff';
-                    btnPagado.style.cursor = 'pointer';
-                    btnPagado.removeAttribute('title');
-                } else {
-                    btnPagado.disabled = true;
-                    btnPagado.style.background = 'var(--secondary)';
-                    btnPagado.style.color = 'var(--text-muted)';
-                    btnPagado.style.cursor = 'not-allowed';
-                    btnPagado.setAttribute('title', 'No hay propinas pendientes');
-                }
-            }
-        }
-    };
-
-    // ════════════════════════════════════════
-    // SUSCRIPCIÓN REALTIME A PROPINAS
-    // ════════════════════════════════════════
-    window.inicializarRealtimePropinas = function() {
-        if (!window.supabaseClient) return;
-        
-        window.supabaseClient.channel('mesoneros-propinas')
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'propinas' }, function() {
-                window.renderizarMesoneros();
-                window.cargarPropinas();
-            })
-            .subscribe();
-    };
-
-    // Inicializar suscripción al cargar el módulo
-    window.inicializarRealtimePropinas();
 
 })();
