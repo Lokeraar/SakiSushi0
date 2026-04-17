@@ -443,6 +443,7 @@
             if (esParcial) {
                 // Pago parcial: insertar registro negativo con entregado=true
                 const usuarioActual = window.usuarioActual?.nombre || 'Admin';
+                const cajeroId = window.currentUser?.id || window.usuarioActual?.id || null;
                 const now = new Date().toISOString();
 
                 const { error: insertError } = await window.supabaseClient
@@ -454,6 +455,7 @@
                         entregado: true,
                         metodo: 'pago_parcial',
                         cajero: usuarioActual,
+                        cajero_id: cajeroId,
                         fecha: now,
                         mesa: 'PAGO'
                     }]);
