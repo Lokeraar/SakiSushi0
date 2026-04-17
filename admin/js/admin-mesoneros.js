@@ -27,12 +27,9 @@
         }
         let acumulados = {};
         try {
-            const hoy = new Date(); hoy.setHours(0,0,0,0);
-            const manana = new Date(hoy); manana.setDate(manana.getDate()+1);
             const { data: allProp } = await window.supabaseClient
                 .from('propinas').select('mesonero_id, monto_bs')
-                .gte('fecha', hoy.toISOString())
-                .lt('fecha', manana.toISOString());
+                .eq('entregado', false);
             (allProp || []).forEach(p => {
                 acumulados[p.mesonero_id] = (acumulados[p.mesonero_id] || 0) + (p.monto_bs || 0);
             });
@@ -94,18 +91,18 @@
         let acum = 0;
         try {
             const { data } = await window.supabaseClient
-                .from('propinas').select('monto_bs').eq('mesonero_id', id).eq('entregado', false);
+                .from('propinas').select('monto_bs').eq('mesonero_id', id);
             acum = (data || []).reduce((s, p) => s + (p.monto_bs || 0), 0);
-        } catch(e) { console.error('Error propinas pendientes:', e); }
-        if (acum <= 0) { window.mostrarToast(mesonero.nombre + ' no tiene propinas pendientes', 'info'); return; }
+        } catch(e) { console.error('Error propinas totales:', e); }
+        if (acum <= 0) { window.mostrarToast(mesonero.nombre + ' no tiene propinas acumuladas', 'info'); return; }
         const tasa    = window.configGlobal?.tasa_efectiva || window.configGlobal?.tasa_cambio || 400;
         const acumUsd = tasa > 0 ? acum / tasa : 0;
         const body = document.getElementById('confirmPagoDeliveryBody');
-        if (body) body.innerHTML = '<p style="margin-bottom:1rem"><strong>' + mesonero.nombre + '</strong> tiene propinas pendientes: <span style="color:var(--propina);font-weight:700;font-size:1.1rem">' + window.formatUSD(acumUsd) + ' | ' + window.formatBs(acum) + '</span></p>'
+        if (body) body.innerHTML = '<p style="margin-bottom:1rem"><strong>' + mesonero.nombre + '</strong> tiene un total histórico de propinas: <span style="color:var(--propina);font-weight:700;font-size:1.1rem">' + window.formatUSD(acumUsd) + ' | ' + window.formatBs(acum) + '</span></p>'
             + '<div style="display:flex;flex-direction:column;gap:.75rem">'
             + '<label style="display:flex;align-items:flex-start;gap:.75rem;padding:.85rem 1rem;border:2px solid var(--border);border-radius:10px;cursor:pointer">'
             + '<input type="radio" name="tipoPagoMes" value="total" checked style="margin-top:3px;accent-color:var(--success)">'
-            + '<div><div style="font-weight:700;font-size:.9rem;color:var(--text-dark)">Pago total</div><div style="font-size:.78rem;color:var(--text-muted)">Marca todas sus propinas pendientes como entregadas</div></div>'
+            + '<div><div style="font-weight:700;font-size:.9rem;color:var(--text-dark)">Pago total</div><div style="font-size:.78rem;color:var(--text-muted)">Marca todas sus propinas como entregadas</div></div>'
             + '<span style="margin-left:auto;font-weight:800;color:var(--success)">' + window.formatBs(acum) + '</span></label>'
             + '<label style="display:flex;align-items:flex-start;gap:.75rem;padding:.85rem 1rem;border:2px solid var(--border);border-radius:10px;cursor:pointer">'
             + '<input type="radio" name="tipoPagoMes" value="parcial" style="margin-top:3px;accent-color:var(--warning)">'
@@ -141,7 +138,7 @@
             } else {
                 const { error } = await window.supabaseClient.from('propinas')
                     .update({ entregado: true })
-                    .eq('mesonero_id', window.mesoneroParaPago).eq('entregado', false);
+                    .eq('mesonero_id', window.mesoneroParaPago);
                 if (error) throw error;
                 window.mostrarToast('Propinas pagadas a ' + (mesonero ? mesonero.nombre : ''), 'success');
             }
