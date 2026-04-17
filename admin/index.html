@@ -78,23 +78,14 @@
     <!-- PANEL PRINCIPAL -->
     <div class="panel-container" id="panelContainer">
         <header class="header">
-            <!-- Nivel 1: Logo + Título a la izquierda, Salir a la derecha -->
+            <!-- Nivel 1: Logo + Título + Usuario a la izquierda, Controles a la derecha -->
             <div class="header-level level-1">
                 <div class="header-left-group">
                     <img src="https://lh3.googleusercontent.com/pw/AP1GczPrZAoWxmsOGRD9xl1hO5Q65JXuwUZzoR6gUk-cw5lVmarxQe_-lwqpA60tTKLlXfpvIjAJlKC6jFls-xETJOPkebLIIPhbGlUkknmhrRbdhMUll2UViGSUj3WmHKg2YEsZlAfxBPPTjIHhScjD0jfe=w1439-h1439-s-no-gm" alt="Logo Saki Sushi" class="header-logo-img">
                     <h2 class="header-title-text">Administración Saki Sushi -</h2>
-                </div>
-                <div class="header-right-group">
-                    <button class="logout-button" id="logoutButton"><i class="fas fa-sign-out-alt"></i> Salir</button>
-                </div>
-            </div>
-            
-            <!-- Nivel 2: Usuario actual a la izquierda, Toggle Theme + Cajero + Mesas a la derecha -->
-            <div class="header-level level-2">
-                <div class="header-left-group">
                     <span class="header-user-name" id="headerUsuarioNombre">Cargando...</span>
                 </div>
-                <div class="header-right-group controls-group">
+                <div class="header-right-group">
                     <button class="nav-button btn-header-control" onclick="window.abrirSelectorMesaAdmin()"><i class="fas fa-utensils"></i> Mesas</button>
                     <a href="../Cajero/index.html" target="_blank" class="nav-button btn-header-control"><i class="fas fa-cash-register"></i> Cajero</a>
                     <label class="theme-switch-wrapper" title="Cambiar tema claro/oscuro">
@@ -102,11 +93,12 @@
                         <input type="checkbox" id="themeToggle" class="theme-toggle-input">
                         <span class="icon-moon">🌙</span>
                     </label>
+                    <button class="logout-button" id="logoutButton"><i class="fas fa-sign-out-alt"></i> Salir</button>
                 </div>
             </div>
             
-            <!-- Nivel 3: Eslogan a la izquierda, Seleccionar Sucursal a la derecha -->
-            <div class="header-level level-3">
+            <!-- Nivel 2: Eslogan a la izquierda, Seleccionar Sucursal a la derecha -->
+            <div class="header-level level-2">
                 <div class="header-left-group">
                     <span class="header-slogan-text">Adictos al universo Saki</span>
                 </div>
@@ -116,9 +108,12 @@
                 </div>
             </div>
             
-            <div id="stockCriticoHeader" style="width:100%; margin-top:.5rem; padding:.4rem .8rem; background:rgba(0,0,0,.2); border-radius:8px; display:flex; align-items:center; gap:.8rem; flex-wrap:wrap; font-size:.75rem">
-                <span style="font-weight:700; color:var(--danger); white-space:nowrap"><i class="fas fa-exclamation-triangle"></i> STOCK CRÍTICO:</span>
-                <div id="stockCriticoTags" style="display:flex; flex-wrap:wrap; gap:.4rem; flex:1; min-width:0"></div>
+            <!-- Nivel 3: Stock crítico -->
+            <div class="header-level level-3">
+                <div id="stockCriticoHeader" style="width:100%; padding:.4rem .8rem; background:rgba(0,0,0,.2); border-radius:8px; display:flex; align-items:center; gap:.8rem; flex-wrap:wrap; font-size:.75rem">
+                    <span style="font-weight:700; color:var(--danger); white-space:nowrap"><i class="fas fa-exclamation-triangle"></i> STOCK CRÍTICO:</span>
+                    <div id="stockCriticoTags" style="display:flex; flex-wrap:wrap; gap:.4rem; flex:1; min-width:0"></div>
+                </div>
             </div>
         </header>
 
