@@ -64,7 +64,7 @@
                 +   '<div class="ucard-top">'
                 +     '<div class="ucard-names">'
                 +       '<div class="ucard-line1"><span class="mesonero-nombre">' + m.nombre + '</span>' + badge + '</div>'
-                +       '<div class="ucard-line2" style="display:flex;align-items:center;gap:0.5rem"><span style="font-size:.78rem;color:var(--propina);font-weight:600">Deuda Pendiente</span><span style="font-size:1.05rem;color:var(--propina);font-weight:700">' + window.formatUSD(deudaUsd) + ' / ' + window.formatBs(deuda) + '</span></div>'
+                +       '<div class="ucard-line2" style="display:flex;align-items:center;gap:0.5rem"><span style="font-size:.78rem;color:var(--propina);font-weight:600">Acumulado pendiente</span><span style="font-size:1.05rem;color:var(--propina);font-weight:700">' + window.formatUSD(deudaUsd) + ' / ' + window.formatBs(deuda) + '</span></div>'
                 +       '<div class="ucard-line3">'
                 +         '<button class="btn-sm" style="background:linear-gradient(135deg,var(--propina),#7B1FA2);color:#fff;white-space:nowrap;font-size:.75rem;padding:.35rem .6rem" onclick="window.mostrarPagoMesonero(\'' + m.id + '\')">'
                 +           '<i class="fas fa-hand-holding-usd"></i> Pagar'
@@ -150,8 +150,15 @@
             window.cerrarModal('confirmPagoDeliveryModal');
             if (btn) btn.onclick = window.confirmarPagoDelivery;
             window.mesoneroParaPago = null;
+            
+            // Limpiar caché de deudas para forzar recálculo
+            window.deudasCache = null;
+            
             await window.renderizarMesoneros();
             await window.cargarPropinas();
+            
+            // Fallback: recargar página si no se actualiza correctamente
+            setTimeout(() => { window.location.reload(); }, 500);
         } catch(e) {
             console.error('Error pago propinas:', e);
             window.mostrarToast('Error: ' + (e.message || e), 'error');
