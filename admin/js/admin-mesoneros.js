@@ -28,10 +28,11 @@
         let deudas = {};
         try {
             const { data: allProp } = await window.supabaseClient
-                .from('propinas').select('mesonero_id, monto_bs')
-                .eq('entregado', false);
+                .from('propinas').select('mesonero_id, monto_bs, entregado');
             (allProp || []).forEach(p => {
-                deudas[p.mesonero_id] = (deudas[p.mesonero_id] || 0) + (p.monto_bs || 0);
+                if (p.entregado === false || p.monto_bs < 0) {
+                    deudas[p.mesonero_id] = (deudas[p.mesonero_id] || 0) + (p.monto_bs || 0);
+                }
             });
         } catch(e) { console.error('Error obteniendo deuda pendiente:', e); }
 
@@ -91,8 +92,12 @@
         let acum = 0;
         try {
             const { data } = await window.supabaseClient
-                .from('propinas').select('monto_bs').eq('mesonero_id', id);
-            acum = (data || []).reduce((s, p) => s + (p.monto_bs || 0), 0);
+                .from('propinas').select('monto_bs, entregado').eq('mesonero_id', id);
+            (data || []).forEach(p => {
+                if (p.entregado === false || p.monto_bs < 0) {
+                    acum += p.monto_bs || 0;
+                }
+            });
         } catch(e) { console.error('Error propinas pendientes:', e); }
         if (acum <= 0) { window.mostrarToast(mesonero.nombre + ' no tiene propinas pendientes', 'info'); return; }
         const tasa    = window.configGlobal?.tasa_efectiva || window.configGlobal?.tasa_cambio || 400;
