@@ -157,8 +157,6 @@
             await window.renderizarMesoneros();
             await window.cargarPropinas();
             
-            // Fallback: recargar página si no se actualiza correctamente
-            setTimeout(() => { window.location.reload(); }, 500);
         } catch(e) {
             console.error('Error pago propinas:', e);
             window.mostrarToast('Error: ' + (e.message || e), 'error');
