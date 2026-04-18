@@ -1102,6 +1102,48 @@ html.dark-theme .btn-secondary:hover {
 .mesonero-nombre { font-weight: 700; font-size: .95rem; color: var(--text-dark); }
 .mesonero-acumulado { font-weight: 700; color: var(--propina); font-size: 1.1rem; }
 .mesonero-actions { display: flex; gap: .5rem; margin-top: .75rem; flex-wrap: wrap; }
+
+/* Mesonero card responsivo para móviles */
+@media (max-width: 640px) {
+    .mesonero-card {
+        grid-template-columns: auto 1fr;
+        gap: 0.75rem;
+        padding: 0.75rem;
+    }
+    .mesonero-card .ucard-avatar {
+        grid-row: 1 / span 3;
+        width: 56px;
+        height: 56px;
+        min-width: 56px;
+        margin-right: 0.5rem;
+    }
+    .mesonero-card .ucard-line2 {
+        flex-wrap: wrap;
+        gap: 0.35rem;
+    }
+    .mesonero-card .ucard-line3 {
+        flex-wrap: wrap;
+        gap: 0.35rem;
+    }
+    .mesonero-card .btn-toggle,
+    .mesonero-card .btn-pagado-mesonero {
+        flex: 1 0 calc(50% - 0.25rem);
+        font-size: 0.7rem !important;
+        padding: 0.3rem 0.5rem !important;
+    }
+    .mesonero-card .ucard-actions-right {
+        margin-left: auto;
+        display: flex;
+        gap: 0.25rem;
+    }
+    .mesonero-card .ucard-status-inline {
+        font-size: 0.7rem;
+    }
+    .mesonero-pendiente {
+        font-size: 0.85rem !important;
+    }
+}
+
 .propinas-stats { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
 .propina-card {
     background: var(--card-bg); border-radius: var(--radius);
