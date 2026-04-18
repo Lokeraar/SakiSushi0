@@ -396,10 +396,10 @@
         }
 
         try {
-            // 1. Obtener propinas pendientes ordenadas por fecha (FIFO)
+            // 1. Obtener propinas pendientes en orden FIFO
             const { data: pendientes, error: errConsulta } = await window.supabaseClient
                 .from('propinas')
-                .select('id, monto_bs')
+                .select('id, monto_bs, mesa, metodo, monto_original, moneda_original, tasa_aplicada, referencia, cajero, fecha')
                 .eq('mesonero_id', mesoneroParaPagoId)
                 .eq('entregado', false)
                 .order('fecha', { ascending: true });
@@ -407,54 +407,78 @@
             if (errConsulta) throw errConsulta;
 
             let restoPorPagar = monto;
-            const idsAMarcar = [];
+            let pagoCompletado = false;
 
             for (const prop of pendientes || []) {
                 if (restoPorPagar <= 0) break;
-                idsAMarcar.push(prop.id);
-                restoPorPagar -= prop.monto_bs;
-            }
-
-            // 2. Si hay excedente (pago mayor al pendiente), crear crédito a favor ANTES de marcar entregadas
-            if (restoPorPagar < 0) {
-                const excedenteNegativo = -Math.abs(restoPorPagar);
-                const cajeroNombre = (window.usuarioActual && window.usuarioActual.nombre) || 'Administrador';
-                const ahora = new Date().toISOString();
                 
-                // Insertar crédito (sin cajero_id, solo cajero)
-                const { error: errCredito } = await window.supabaseClient
-                    .from('propinas')
-                    .insert([{
+                const montoPropina = prop.monto_bs;
+                if (restoPorPagar >= montoPropina) {
+                    // Caso 1: Pagar la propina completa
+                    const { error: errUpd } = await window.supabaseClient
+                        .from('propinas')
+                        .update({ entregado: true })
+                        .eq('id', prop.id);
+                    if (errUpd) throw errUpd;
+                    restoPorPagar -= montoPropina;
+                } else {
+                    // Caso 2: Pago parcial sobre esta propina
+                    const montoPagado = restoPorPagar;
+                    const montoRestante = montoPropina - montoPagado;
+                    
+                    // 2a. Reducir la propina original al monto restante (sigue pendiente)
+                    const { error: errUpdate } = await window.supabaseClient
+                        .from('propinas')
+                        .update({ monto_bs: montoRestante })
+                        .eq('id', prop.id);
+                    if (errUpdate) throw errUpdate;
+                    
+                    // 2b. Crear un NUEVO REGISTRO en la tabla 'propinas' con el monto pagado y marcado como entregado
+                    const cajeroNombre = (window.usuarioActual && window.usuarioActual.nombre) || 'Administrador';
+                    const ahora = new Date().toISOString();
+                    
+                    // Calcular monto_original proporcional si existe
+                    let nuevoMontoOriginal = 0;
+                    if (prop.monto_original && prop.monto_original > 0) {
+                        nuevoMontoOriginal = (prop.monto_original * montoPagado) / montoPropina;
+                    }
+                    
+                    const nuevaPropina = {
                         mesonero_id: mesoneroParaPagoId,
-                        mesa: 'Crédito a favor',
-                        metodo: 'pago_interno',
-                        monto_original: 0,
-                        moneda_original: 'Bs',
-                        tasa_aplicada: null,
-                        monto_bs: excedenteNegativo,
-                        referencia: null,
+                        mesa: prop.mesa || 'General',
+                        metodo: prop.metodo,
+                        monto_original: parseFloat(nuevoMontoOriginal.toFixed(2)),
+                        moneda_original: prop.moneda_original || 'Bs',
+                        tasa_aplicada: prop.tasa_aplicada || null,
+                        monto_bs: parseFloat(montoPagado.toFixed(2)),
+                        referencia: prop.referencia || null,
                         cajero: cajeroNombre,
                         fecha: ahora,
-                        entregado: false
-                    }]);
-                if (errCredito) throw errCredito;
+                        entregado: true   // Importante: esta porción ya está pagada
+                    };
+                    
+                    const { error: errInsert } = await window.supabaseClient
+                        .from('propinas')
+                        .insert([nuevaPropina]);
+                    if (errInsert) throw errInsert;
+                    
+                    restoPorPagar = 0;
+                    pagoCompletado = true;
+                    break;
+                }
             }
 
-            // 3. Marcar como entregadas las propinas que se pagan (solo si hay ids)
-            if (idsAMarcar.length > 0) {
-                const { error: errUpdate } = await window.supabaseClient
-                    .from('propinas')
-                    .update({ entregado: true })
-                    .in('id', idsAMarcar);
-                if (errUpdate) throw errUpdate;
+            // Si después del bucle aún queda resto por pagar (por error lógico), abortar
+            if (restoPorPagar > 0) {
+                throw new Error('No se pudo cubrir el monto total. Verifique los datos.');
             }
 
             window.cerrarModalPago();
-            // Refrescar acumulados y tabla de propinas
             await window.actualizarAcumuladosPendientes();
             await window.cargarPropinas();
             window.renderizarPropinas();
             window.mostrarToast('Pago parcial registrado: ' + window.formatBs(monto), 'success');
+            
         } catch(e) {
             console.error('Error pago parcial:', e);
             let msg = e.message || e;
