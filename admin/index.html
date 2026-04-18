@@ -609,39 +609,6 @@
         </div>
     </div>
 
-    <!-- MODAL PAGO PROPINAS MESONEROS -->
-    <div class="modal" id="pagoMesoneroModal">
-        <div class="modal-content">
-            <div class="modal-header" style="background:linear-gradient(135deg,var(--propina),#7B1FA2)"><h3><i class="fas fa-hand-holding-heart"></i> <span id="pagoMesoneroTitulo">Pago de Propinas</span></h3><button class="modal-close" onclick="window.cerrarModal('pagoMesoneroModal')">&times;</button></div>
-            <div class="modal-body">
-                <div id="pagoMesoneroBody">
-                    <div style="text-align:center;margin-bottom:1.5rem">
-                        <div style="font-size:.85rem;color:var(--text-muted);margin-bottom:.5rem">Total Pendiente</div>
-                        <div style="font-size:1.5rem;font-weight:700;color:var(--propina)" id="pagoMesoneroTotal">Bs 0 / $0.00</div>
-                    </div>
-                    <div style="margin-bottom:1rem">
-                        <label style="display:flex;align-items:center;gap:.5rem;cursor:pointer;padding:.5rem;border-radius:8px;background:var(--secondary);margin-bottom:.5rem">
-                            <input type="radio" name="tipoPagoMesonero" value="total" checked onchange="window.togglePagoParcial(false)">
-                            <span style="font-weight:600;font-size:.9rem">Pago Total</span>
-                        </label>
-                        <label style="display:flex;align-items:center;gap:.5rem;cursor:pointer;padding:.5rem;border-radius:8px;background:var(--secondary)">
-                            <input type="radio" name="tipoPagoMesonero" value="parcial" onchange="window.togglePagoParcial(true)">
-                            <span style="font-weight:600;font-size:.9rem">Pago Parcial</span>
-                        </label>
-                    </div>
-                    <div id="pagoParcialContainer" style="display:none;margin-bottom:1rem">
-                        <label style="display:block;font-size:.75rem;color:var(--text-muted);margin-bottom:.35rem">Monto a pagar (Bs)</label>
-                        <input type="number" id="pagoParcialMonto" placeholder="Ingrese monto en Bs" style="width:100%;padding:.6rem;border:1px solid var(--border);border-radius:8px;font-family:Montserrat,sans-serif;font-size:.9rem" step="0.01" min="0">
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn-secondary" onclick="window.cerrarModal('pagoMesoneroModal')">Cancelar</button>
-                <button class="btn-primary" id="confirmPagoMesoneroBtn" onclick="window.confirmarPagoMesonero()" style="background:linear-gradient(135deg,var(--propina),#7B1FA2)">Confirmar Pago</button>
-            </div>
-        </div>
-    </div>
-
     <!-- MODAL QR AMPLIADO -->
     <div class="modal" id="qrAmpliadoModal">
         <div class="modal-content" style="max-width:400px">
