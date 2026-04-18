@@ -3,6 +3,7 @@
     'use strict';
     let currentMesoneroFotoFile = null;
     let currentMesoneroFotoUrl  = '';
+    let propinasChannel = null; // Canal para suscripción realtime de propinas
 
     // ════════════════════════════════════════
     // CARGAR / RENDERIZAR
@@ -15,6 +16,9 @@
             window.mesoneros = data || [];
             await window.renderizarMesoneros();
             window.cargarPropinas();
+            
+            // Suscribirse a cambios en tiempo real en la tabla propinas
+            window.iniciarSuscripcionPropinas();
         } catch(e) { console.error('Error cargando mesoneros:', e); }
     };
 
@@ -55,7 +59,7 @@
                 ? '<button class="btn-pagado" style="background:linear-gradient(135deg,var(--propina),#7B1FA2);color:#fff;border:none;padding:.35rem .6rem;border-radius:6px;cursor:pointer;font-size:.75rem;font-weight:600;margin-top:.5rem" onclick="window.mostrarPagoMesonero(\'' + m.id + '\')"><i class="fas fa-check"></i> Pagado</button>'
                 : '<button class="btn-pagado" disabled style="background:var(--secondary);color:var(--text-muted);border:none;padding:.35rem .6rem;border-radius:6px;cursor:not-allowed;font-size:.75rem;font-weight:600;margin-top:.5rem" title="No hay propinas pendientes"><i class="fas fa-check"></i> Pagado</button>';
             
-            return '<div class="card-standard mesonero-card" style="border-left-color:var(--propina)">'
+            return '<div class="card-standard mesonero-card" data-mesonero-id="' + m.id + '" style="border-left-color:var(--propina)">'
                 + avatar
                 + '<div class="ucard-body">'
                 +   '<div class="ucard-top">'
@@ -189,6 +193,130 @@
             } else {
                 tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:1rem;color:var(--text-muted)">Sin propinas hoy</td></tr>';
             }
+        }
+    };
+
+    // ════════════════════════════════════════
+    // SUSCRIPCIÓN REALTIME PARA PROPINAS
+    // ════════════════════════════════════════
+    window.iniciarSuscripcionPropinas = function() {
+        // Cancelar suscripción anterior si existe
+        if (propinasChannel) {
+            window.supabaseClient.removeChannel(propinasChannel);
+            propinasChannel = null;
+        }
+
+        // Crear nueva suscripción
+        propinasChannel = window.supabaseClient.channel('propinas-realtime-mesoneros')
+            .on('postgres_changes', 
+                { 
+                    event: '*', 
+                    schema: 'public', 
+                    table: 'propinas' 
+                },
+                async function(payload) {
+                    console.log('Cambio en propinas:', payload);
+                    await window.actualizarAcumuladosPropinas();
+                }
+            )
+            .subscribe();
+    };
+
+    window.actualizarAcumuladosPropinas = async function() {
+        try {
+            // Obtener suma de propinas pendientes agrupadas por mesonero
+            const { data: propinasPendientes, error } = await window.supabaseClient
+                .from('propinas')
+                .select('mesonero_id, monto_bs')
+                .eq('entregado', false);
+
+            if (error) throw error;
+
+            // Agrupar por mesonero_id
+            const acumuladosPorMesonero = {};
+            (propinasPendientes || []).forEach(p => {
+                const mid = p.mesonero_id;
+                if (!acumuladosPorMesonero[mid]) {
+                    acumuladosPorMesonero[mid] = 0;
+                }
+                acumuladosPorMesonero[mid] += (p.monto_bs || 0);
+            });
+
+            // Actualizar cada tarjeta de mesonero en el DOM
+            const tarjetasMesoneros = document.querySelectorAll('.mesonero-card');
+            tarjetasMesoneros.forEach(card => {
+                // Obtener ID del mesonero desde data-mesonero-id
+                const mesoneroId = card.dataset.mesoneroId;
+                if (!mesoneroId) return;
+
+                const totalPendiente = acumuladosPorMesonero[mesoneroId] || 0;
+                const tasa = Number(window.configGlobal?.tasa_efectiva || window.configGlobal?.tasa_cambio || 400) || 400;
+                const totalUsd = tasa > 0 ? totalPendiente / tasa : 0;
+
+                // Actualizar el texto del acumulado (elemento con color var(--propina))
+                const acumuladoEl = card.querySelector('[style*="color:var(--propina)"]');
+                if (acumuladoEl) {
+                    acumuladoEl.textContent = window.formatBs(totalPendiente) + ' / ' + window.formatUSD(totalUsd);
+                }
+
+                // Actualizar botón de pagado
+                const btnPagadoContainer = card.querySelector('div[style*="background:var(--secondary)"]');
+                if (btnPagadoContainer) {
+                    const tienePendiente = totalPendiente > 0;
+                    const btnExistente = btnPagadoContainer.querySelector('.btn-pagado');
+                    
+                    if (tienePendiente) {
+                        if (!btnExistente || btnExistente.disabled) {
+                            // Crear o reemplazar botón activo
+                            const nuevoBtn = document.createElement('button');
+                            nuevoBtn.className = 'btn-pagado';
+                            nuevoBtn.style.cssText = 'background:linear-gradient(135deg,var(--propina),#7B1FA2);color:#fff;border:none;padding:.35rem .6rem;border-radius:6px;cursor:pointer;font-size:.75rem;font-weight:600;margin-top:.5rem';
+                            nuevoBtn.innerHTML = '<i class="fas fa-check"></i> Pagado';
+                            nuevoBtn.onclick = function() { window.mostrarPagoMesonero(mesoneroId); };
+                            
+                            if (btnExistente) {
+                                btnExistente.replaceWith(nuevoBtn);
+                            } else {
+                                btnPagadoContainer.appendChild(nuevoBtn);
+                            }
+                        }
+                    } else {
+                        if (btnExistente && !btnExistente.disabled) {
+                            // Deshabilitar botón
+                            btnExistente.disabled = true;
+                            btnExistente.style.background = 'var(--secondary)';
+                            btnExistente.style.color = 'var(--text-muted)';
+                            btnExistente.style.cursor = 'not-allowed';
+                            btnExistente.setAttribute('title', 'No hay propinas pendientes');
+                        }
+                    }
+                }
+            });
+
+            // Actualizar totales generales
+            const totalGeneral = Object.values(acumuladosPorMesonero).reduce((s, v) => s + v, 0);
+            const cantidadGeneral = propinasPendientes ? propinasPendientes.length : 0;
+            const promedioGeneral = cantidadGeneral > 0 ? totalGeneral / cantidadGeneral : 0;
+            const tasa = Number(window.configGlobal?.tasa_efectiva || window.configGlobal?.tasa_cambio || 400) || 400;
+            const totalUsdGeneral = tasa > 0 ? totalGeneral / tasa : 0;
+            const promUsdGeneral = tasa > 0 ? promedioGeneral / tasa : 0;
+
+            var el;
+            el = document.getElementById('propinasTotal');    if(el) el.textContent = window.formatUSD(totalUsdGeneral) + ' / ' + window.formatBs(totalGeneral);
+            el = document.getElementById('propinasCantidad'); if(el) el.textContent = String(cantidadGeneral);
+            el = document.getElementById('propinasPromedio'); if(el) el.textContent = window.formatUSD(promUsdGeneral) + ' / ' + window.formatBs(promedioGeneral);
+            el = document.getElementById('propinasHoyDashboard'); if(el) el.textContent = window.formatUSD(totalUsdGeneral) + ' / ' + window.formatBs(totalGeneral);
+
+        } catch(e) {
+            console.error('Error actualizando acumulados de propinas:', e);
+        }
+    };
+
+    window.cancelarSuscripcionPropinas = function() {
+        if (propinasChannel) {
+            window.supabaseClient.removeChannel(propinasChannel);
+            propinasChannel = null;
+            console.log('Suscripción de propinas cancelada');
         }
     };
 
@@ -473,8 +601,8 @@
             // Cerrar modal
             window.cerrarModal('pagoMesoneroModal');
 
-            // Recargar datos
-            await window.cargarMesoneros();
+            // Forzar actualización de acumulados (la suscripción realtime también lo hará, pero aseguramos actualización inmediata)
+            await window.actualizarAcumuladosPropinas();
             await window.cargarPropinas();
 
             window.mostrarToast('Pago registrado con éxito', 'success');
