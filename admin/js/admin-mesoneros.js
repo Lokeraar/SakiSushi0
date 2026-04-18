@@ -6,73 +6,89 @@
     let currentMesoneroFotoFile = null;
     let currentMesoneroFotoUrl  = '';
     let mesoneroParaPagoId      = null;
-    let realtimeChannel         = null;
+
+    // ════════════════════════════════════════
+    // ACTUALIZAR ACUMULADOS PENDIENTES
+    // ════════════════════════════════════════
+    window.actualizarAcumuladosPendientes = async function() {
+        try {
+            // Consulta todas las propinas pendientes (sin filtrar fecha)
+            const { data, error } = await window.supabaseClient
+                .from('propinas')
+                .select('mesonero_id, monto_bs')
+                .eq('entregado', false);
+
+            if (error) throw error;
+
+            // Sumar monto_bs por mesonero_id
+            const acumuladosPorMesonero = {};
+            (data || []).forEach(function(p) {
+                const mid = p.mesonero_id;
+                if (!acumuladosPorMesonero[mid]) {
+                    acumuladosPorMesonero[mid] = 0;
+                }
+                acumuladosPorMesonero[mid] += (p.monto_bs || 0);
+            });
+
+            // Actualizar en DOM: selector [data-mesonero-id] → elemento .mesonero-pendiente
+            const tarjetas = document.querySelectorAll('[data-mesonero-id]');
+            tarjetas.forEach(function(card) {
+                const mesoneroId = card.getAttribute('data-mesonero-id');
+                const pendienteEl = card.querySelector('.mesonero-pendiente');
+                const acumulado = acumuladosPorMesonero[mesoneroId] || 0;
+
+                if (pendienteEl) {
+                    const tasa = Number(window.configGlobal?.tasa_efectiva || window.configGlobal?.tasa_cambio || 400) || 400;
+                    const usd = tasa > 0 ? acumulado / tasa : 0;
+                    pendienteEl.textContent = window.formatUSD(usd) + ' / ' + window.formatBs(acumulado);
+
+                    if (acumulado > 0) {
+                        pendienteEl.style.color = 'var(--propina)';
+                        pendienteEl.style.fontWeight = '700';
+                    } else {
+                        pendienteEl.style.color = 'var(--success)';
+                        pendienteEl.style.fontWeight = '600';
+                    }
+                }
+
+                // Actualizar botón Pagado
+                const btnPagado = card.querySelector('.btn-pagado-mesonero');
+                if (btnPagado) {
+                    btnPagado.disabled = acumulado <= 0;
+                    btnPagado.style.opacity = acumulado <= 0 ? '0.5' : '1';
+                    btnPagado.style.cursor = acumulado <= 0 ? 'not-allowed' : 'pointer';
+                }
+            });
+
+            // Llamar a cargarPropinas para actualizar totales generales
+            await window.cargarPropinas();
+        } catch (e) {
+            console.error('Error actualizando acumulados:', e);
+        }
+    };
 
     // ════════════════════════════════════════
     // INICIALIZACIÓN DE REALTIME
     // ════════════════════════════════════════
     function iniciarRealtimePropinas() {
-        if (realtimeChannel) {
-            window.supabaseClient.removeChannel(realtimeChannel);
+        // Limpiar canal previo si existe
+        if (window.propinasChannel) {
+            window.supabaseClient.removeChannel(window.propinasChannel);
         }
-        realtimeChannel = window.supabaseClient.channel('propinas_changes')
-            .on('postgres_changes', 
+
+        // Crear nuevo canal para cambios en propinas
+        window.propinasChannel = window.supabaseClient.channel('propinas-mesoneros-realtime')
+            .on('postgres_changes',
                 { event: '*', schema: 'public', table: 'propinas' },
                 async function(payload) {
                     console.log('Cambio en propinas:', payload);
-                    await recalcularAcumuladosTodos();
+                    // Actualizar acumulados con pequeño delay para permitir commit
+                    setTimeout(function() {
+                        window.actualizarAcumuladosPendientes();
+                    }, 300);
                 }
             )
             .subscribe();
-    }
-
-    // ════════════════════════════════════════
-    // CÁLCULO DE ACUMULADOS PENDIENTES
-    // ════════════════════════════════════════
-    async function calcularAcumuladoPendiente(mesoneroId) {
-        try {
-            const { data, error } = await window.supabaseClient
-                .from('propinas')
-                .select('monto_bs')
-                .eq('mesonero_id', mesoneroId)
-                .eq('entregado', false);
-            if (error) throw error;
-            return (data || []).reduce((sum, p) => sum + (p.monto_bs || 0), 0);
-        } catch (e) {
-            console.error('Error calculando acumulado:', e);
-            return 0;
-        }
-    }
-
-    async function recalcularAcumuladosTodos() {
-        const mesoneros = window.mesoneros || [];
-        for (const m of mesoneros) {
-            const acumulado = await calcularAcumuladoPendiente(m.id);
-            actualizarAcumuladoEnDOM(m.id, acumulado);
-        }
-        await cargarPropinas();
-    }
-
-    function actualizarAcumuladoEnDOM(mesoneroId, monto) {
-        const el = document.getElementById('acumulado-' + mesoneroId);
-        if (el) {
-            const tasa = Number(window.configGlobal?.tasa_efectiva || window.configGlobal?.tasa_cambio || 400) || 400;
-            const usd = tasa > 0 ? monto / tasa : 0;
-            el.textContent = window.formatUSD(usd) + ' / ' + window.formatBs(monto);
-            if (monto > 0) {
-                el.style.color = 'var(--propina)';
-                el.style.fontWeight = '700';
-            } else {
-                el.style.color = 'var(--success)';
-                el.style.fontWeight = '600';
-            }
-        }
-        const btnPagado = document.getElementById('btn-pagado-' + mesoneroId);
-        if (btnPagado) {
-            btnPagado.disabled = monto <= 0;
-            btnPagado.style.opacity = monto <= 0 ? '0.5' : '1';
-            btnPagado.style.cursor = monto <= 0 ? 'not-allowed' : 'pointer';
-        }
     }
 
     // ════════════════════════════════════════
@@ -120,7 +136,7 @@
             const toggleTxt   = m.activo ? 'Inhabilitar' : 'Activar';
             const toggleVal   = String(!m.activo);
 
-            html += '<div class="card-standard mesonero-card" id="mesonero-card-' + m.id + '" style="border-left-color:var(--propina)">'
+            html += '<div class="card-standard mesonero-card" data-mesonero-id="' + m.id + '" id="mesonero-card-' + m.id + '" style="border-left-color:var(--propina)">'
                 + avatar
                 + '<div class="ucard-body">'
                 +   '<div class="ucard-top">'
@@ -128,11 +144,11 @@
                 +       '<div class="ucard-line1"><span class="mesonero-nombre">' + m.nombre + '</span>' + badge + '</div>'
                 +       '<div class="ucard-line2" style="margin-top:.5rem;display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">'
                 +         '<span style="font-size:.75rem;color:var(--text-muted)">Pendiente:</span>'
-                +         '<span id="acumulado-' + m.id + '" class="mesonero-acumulado" style="font-size:.95rem">Calculando...</span>'
+                +         '<span class="mesonero-pendiente" style="font-size:.95rem">Calculando...</span>'
                 +       '</div>'
                 +       '<div class="ucard-line3" style="margin-top:.5rem">'
                 +         '<button class="btn-toggle ' + toggleClass + '" style="font-size:.75rem;padding:.35rem .6rem" onclick="window.toggleMesoneroActivo(\'' + m.id + '\',' + toggleVal + ')">' + toggleTxt + '</button>'
-                +         '<button id="btn-pagado-' + m.id + '" class="btn-primary" style="font-size:.75rem;padding:.35rem .75rem;margin-left:.5rem" onclick="window.abrirModalPago(\'' + m.id + '\')" title="Registrar pago">'
+                +         '<button class="btn-primary btn-pagado-mesonero" style="font-size:.75rem;padding:.35rem .75rem;margin-left:.5rem" onclick="window.abrirModalPago(\'' + m.id + '\')" title="Registrar pago">'
                 +           '<i class="fas fa-hand-holding-usd"></i> Pagado'
                 +         '</button>'
                 +         '<div class="ucard-actions-right">'
@@ -146,9 +162,11 @@
                 + '</div>';
         }
         container.innerHTML = html;
-        
-        // Calcular acumulados después de renderizar
-        setTimeout(recalcularAcumuladosTodos, 100);
+
+        // Actualizar acumulados pendientes usando la nueva función
+        setTimeout(function() {
+            window.actualizarAcumuladosPendientes();
+        }, 100);
     }
 
     // ════════════════════════════════════════
@@ -315,7 +333,7 @@
             if (error) throw error;
             
             window.cerrarModalPago();
-            await recalcularAcumuladosTodos();
+            await window.actualizarAcumuladosPendientes();
             window.mostrarToast('Pago total registrado', 'success');
         } catch(e) {
             console.error('Error pago total:', e);
@@ -365,7 +383,7 @@
             if (error) throw error;
 
             window.cerrarModalPago();
-            await recalcularAcumuladosTodos();
+            await window.actualizarAcumuladosPendientes();
             window.mostrarToast('Pago parcial registrado: ' + window.formatBs(monto), 'success');
         } catch(e) {
             console.error('Error pago parcial:', e);
