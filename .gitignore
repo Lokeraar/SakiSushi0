@@ -1,3 +1,17 @@
+```
+# Compiled and build artifacts
+*.pyc
+__pycache__/
+*.o
+*.obj
+dist/
+build/
+
+# Dependencies
+.venv/
+venv/
+node_modules/
+
 # Logs and temp files
 *.log
 *.tmp
@@ -6,12 +20,28 @@
 # Environment
 .env
 .env.local
+.env.*
 *.env.*
 
 # Editors
 .vscode/
 .idea/
 
+# Coverage
+.coverage
+coverage/
+htmlcov/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Python specific
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
 # Dependencies
 node_modules/
 venv/
@@ -66,4 +96,6 @@ htmlcov/
 *.tar.gz
 *.tar.bz2
 *.tar.xz
+*.tar.zst
+```
 *.tar.zst

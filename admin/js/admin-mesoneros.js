@@ -244,6 +244,28 @@
     };
 
     // ════════════════════════════════════════
+    // CALCULAR ACUMULADO PENDIENTE POR MESONERO
+    // ════════════════════════════════════════
+    async function calcularAcumuladoPendiente(mesoneroId) {
+        const { data, error } = await window.supabaseClient
+            .from('propinas')
+            .select('monto_bs')
+            .eq('mesonero_id', mesoneroId)
+            .eq('entregado', false);
+        
+        if (error) {
+            console.error('Error calculando acumulado:', error);
+            return 0;
+        }
+        
+        let total = 0;
+        (data || []).forEach(function(p) {
+            total += (p.monto_bs || 0);
+        });
+        return total;
+    }
+
+    // ════════════════════════════════════════
     // MODAL DE PAGO (TOTAL O PARCIAL)
     // ════════════════════════════════════════
     window.abrirModalPago = async function(mesoneroId) {
@@ -369,18 +391,49 @@
         }
 
         try {
-            const { error } = await window.supabaseClient
+            // 1. Obtener propinas pendientes ordenadas por fecha (FIFO)
+            const { data: pendientes, error: errConsulta } = await window.supabaseClient
                 .from('propinas')
-                .insert([{
-                    id: window.generarId('pro_'),
-                    mesonero_id: mesoneroParaPagoId,
-                    monto_bs: -monto,
-                    metodo: 'Pago Parcial',
-                    entregado: true,
-                    fecha_entrega: new Date().toISOString(),
-                    nota: 'Registro de pago parcial'
-                }]);
-            if (error) throw error;
+                .select('id, monto_bs')
+                .eq('mesonero_id', mesoneroParaPagoId)
+                .eq('entregado', false)
+                .order('fecha', { ascending: true });
+
+            if (errConsulta) throw errConsulta;
+
+            let restoPorPagar = monto;
+            const idsAMarcar = [];
+
+            for (const prop of pendientes || []) {
+                if (restoPorPagar <= 0) break;
+                idsAMarcar.push(prop.id);
+                restoPorPagar -= prop.monto_bs;
+            }
+
+            // 2. Marcar como entregadas esas propinas
+            if (idsAMarcar.length > 0) {
+                const { error: errUpdate } = await window.supabaseClient
+                    .from('propinas')
+                    .update({ entregado: true, fecha_entrega: new Date().toISOString() })
+                    .in('id', idsAMarcar);
+                if (errUpdate) throw errUpdate;
+            }
+
+            // 3. Si sobró pago (el cliente pagó más de lo pendiente), crear crédito a favor
+            if (restoPorPagar < 0) {
+                const { error: errCredito } = await window.supabaseClient
+                    .from('propinas')
+                    .insert([{
+                        id: window.generarId('pro_'),
+                        mesonero_id: mesoneroParaPagoId,
+                        monto_bs: Math.abs(restoPorPagar),
+                        metodo: 'Crédito a favor',
+                        entregado: false,
+                        fecha: new Date().toISOString(),
+                        nota: 'Excedente de pago parcial'
+                    }]);
+                if (errCredito) throw errCredito;
+            }
 
             window.cerrarModalPago();
             await window.actualizarAcumuladosPendientes();
