@@ -356,7 +356,11 @@
             if (error) throw error;
             
             window.cerrarModalPago();
+            // Refrescar acumulados y tabla de propinas
             await window.actualizarAcumuladosPendientes();
+            // Forzar recarga explícita de la tabla de propinas
+            await window.cargarPropinas();
+            window.renderizarPropinas();
             window.mostrarToast('Pago total registrado', 'success');
         } catch(e) {
             console.error('Error pago total:', e);
@@ -429,7 +433,6 @@
                 const { error: errCredito } = await window.supabaseClient
                     .from('propinas')
                     .insert([{
-                        id: window.generarId('pro_'),
                         mesonero_id: mesoneroParaPagoId,
                         mesa: 'Crédito a favor',
                         metodo: 'pago_interno',
@@ -447,14 +450,17 @@
             }
 
             window.cerrarModalPago();
+            // Refrescar acumulados y tabla de propinas
             await window.actualizarAcumuladosPendientes();
+            await window.cargarPropinas();
+            window.renderizarPropinas();
             window.mostrarToast('Pago parcial registrado: ' + window.formatBs(monto), 'success');
         } catch(e) {
             console.error('Error pago parcial:', e);
-            const errorMsg = e.message || e;
-            const details = e.details ? ' | Details: ' + e.details : '';
-            const hint = e.hint ? ' | Hint: ' + e.hint : '';
-            window.mostrarToast('Error: ' + errorMsg + details + hint, 'error');
+            let msg = e.message || e;
+            if (e.details) msg += ' - ' + e.details;
+            if (e.hint) msg += ' (Sugerencia: ' + e.hint + ')';
+            window.mostrarToast('Error: ' + msg, 'error');
         } finally {
             if (btn) {
                 btn.disabled = false;
