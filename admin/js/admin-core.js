@@ -15,6 +15,17 @@
     window.propinas = [];
     window.pedidos = [];
     
+    // Usuario actual logueado (se inicializa desde sessionStorage al cargar)
+    window.usuarioActual = null;
+    try {
+        const storedUser = sessionStorage.getItem('admin_user');
+        if (storedUser) {
+            window.usuarioActual = JSON.parse(storedUser);
+        }
+    } catch(e) {
+        console.warn('No se pudo cargar usuarioActual de sessionStorage:', e);
+    }
+    
     window.wifiSsidPersistente = localStorage.getItem('saki_wifi_ssid') || '';
     window.wifiPasswordPersistente = localStorage.getItem('saki_wifi_pwd') || '';
     window.platillosNotificados = JSON.parse(localStorage.getItem('saki_platillos_notificados') || '{}');
