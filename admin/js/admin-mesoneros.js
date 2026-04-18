@@ -22,14 +22,13 @@
 
             // Sumar monto_bs por mesonero_id, separando USD y Bs
             const acumuladoBs = {};
-            const acumuladoUSD = {}; // en Bs a tasa base
+            const acumuladoUSDCrudo = {}; // monto original en USD
             const tasaBase = Number(window.configGlobal?.tasa_cambio || 400);
             
             (data || []).forEach(function(p) {
                 const mid = p.mesonero_id;
                 if (p.moneda_original === 'USD' && p.monto_original) {
-                    const valorBs = p.monto_original * tasaBase;
-                    acumuladoUSD[mid] = (acumuladoUSD[mid] || 0) + valorBs;
+                    acumuladoUSDCrudo[mid] = (acumuladoUSDCrudo[mid] || 0) + p.monto_original;
                 } else {
                     acumuladoBs[mid] = (acumuladoBs[mid] || 0) + (p.monto_bs || 0);
                 }
@@ -37,29 +36,34 @@
 
             // Guardar en window para usar en renderizado
             window._acumuladoBs = acumuladoBs;
-            window._acumuladoUSD = acumuladoUSD;
+            window._acumuladoUSDCrudo = acumuladoUSDCrudo;
 
             // Actualizar en DOM: selector [data-mesonero-id] → elemento .mesonero-pendiente
             const tarjetas = document.querySelectorAll('[data-mesonero-id]');
             tarjetas.forEach(function(card) {
                 const mesoneroId = card.getAttribute('data-mesonero-id');
                 const pendienteEl = card.querySelector('.mesonero-pendiente');
-                const pendienteBs = acumuladoBs[mesoneroId] || 0;
-                const pendienteUSD = acumuladoUSD[mesoneroId] || 0;
-                const pendienteTotal = pendienteBs + pendienteUSD;
+                
+                const tasaEfectiva = Number(window.configGlobal?.tasa_efectiva || window.configGlobal?.tasa_cambio || 400);
+                const tasaBaseActual = Number(window.configGlobal?.tasa_cambio || 400);
+                const usdCrudo = acumuladoUSDCrudo[mesoneroId] || 0;
+                const bsTotal = acumuladoBs[mesoneroId] || 0;
+                const usdEnBs = usdCrudo * tasaBaseActual;
+                const pendienteTotal = bsTotal + usdEnBs;
+                const usdTotal = tasaEfectiva > 0 ? pendienteTotal / tasaEfectiva : 0;
 
                 if (pendienteEl) {
-                    const tasaEfectiva = Number(window.configGlobal?.tasa_efectiva || window.configGlobal?.tasa_cambio || 400);
-                    const usdTotal = tasaEfectiva > 0 ? pendienteTotal / tasaEfectiva : 0;
+                    let htmlPendiente = '<div>' + window.formatUSD(usdTotal) + ' / ' + window.formatBs(pendienteTotal) + '</div>';
                     
-                    let html = '<div>' + window.formatUSD(usdTotal) + ' / ' + window.formatBs(pendienteTotal) + '</div>';
-                    if (pendienteUSD > 0) {
-                        html += '<div style="font-size:.7rem;color:#4fc3f7;margin-top:.2rem">💵 USD en Bs (tasa base): ' + window.formatBs(pendienteUSD) + '</div>';
+                    if (usdCrudo > 0) {
+                        htmlPendiente += '<div style="font-size:.7rem;color:var(--usd-color);margin-top:2px">' +
+                            '<i class="fas fa-dollar-sign"></i> ' + usdCrudo.toFixed(2) + ' / ' + window.formatBs(usdEnBs) + '</div>';
                     }
-                    if (pendienteBs > 0) {
-                        html += '<div style="font-size:.7rem;color:var(--text-muted)">Bs: ' + window.formatBs(pendienteBs) + '</div>';
+                    if (bsTotal > 0) {
+                        htmlPendiente += '<div style="font-size:.7rem;color:var(--bs-color);margin-top:2px">' +
+                            'Bs: ' + window.formatBs(bsTotal) + '</div>';
                     }
-                    pendienteEl.innerHTML = html;
+                    pendienteEl.innerHTML = htmlPendiente;
 
                     if (pendienteTotal > 0) {
                         pendienteEl.style.color = 'var(--propina)';
