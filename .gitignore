@@ -25,6 +25,7 @@ node_modules/
 # Environment
 .env
 .env.local
+.env.*
 *.env.*
 
 # Editors
@@ -32,6 +33,39 @@ node_modules/
 .idea/
 
 # OS
+.DS_Store
+Thumbs.db
+
+# Python specific
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+# Dependencies
+node_modules/
+venv/
+.venv/
+__pycache__/
+.mypy_cache/
+.pytest_cache/
+dist/
+build/
+target/
+.gradle/
+
+# Compiled files
+*.pyc
+*.class
+*.o
+*.exe
+*.dll
+*.so
+*.a
+*.obj
+*.out
+
+# System files
 .DS_Store
 Thumbs.db
 
@@ -64,3 +98,4 @@ htmlcov/
 *.tar.xz
 *.tar.zst
 ```
+*.tar.zst
