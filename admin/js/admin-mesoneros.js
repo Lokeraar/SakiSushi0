@@ -3,7 +3,6 @@
     'use strict';
     let currentMesoneroFotoFile = null;
     let currentMesoneroFotoUrl  = '';
-    let propinasChannel = null; // Canal para suscripción realtime de propinas
 
     // ════════════════════════════════════════
     // CARGAR / RENDERIZAR
@@ -16,9 +15,6 @@
             window.mesoneros = data || [];
             await window.renderizarMesoneros();
             window.cargarPropinas();
-            
-            // Suscribirse a cambios en tiempo real en la tabla propinas
-            window.iniciarSuscripcionPropinas();
         } catch(e) { console.error('Error cargando mesoneros:', e); }
     };
 
@@ -32,7 +28,7 @@
 
         const sorted = [...window.mesoneros].sort((a, b) => a.nombre.localeCompare(b.nombre));
 
-        container.innerHTML = await Promise.all(sorted.map(async m => {
+        container.innerHTML = sorted.map(m => {
             const inicial = m.nombre.charAt(0).toUpperCase();
             const avatar  = m.foto
                 ? '<div class="ucard-avatar"><img src="' + m.foto + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;cursor:pointer" onclick="window.expandirImagen(this.src)"></div>'
@@ -43,23 +39,7 @@
             const toggleClass = m.activo ? 'btn-toggle-on' : 'btn-toggle-off';
             const toggleTxt   = m.activo ? 'Inhabilitar' : 'Activar';
             const toggleVal   = String(!m.activo);
-            
-            // Consultar propinas pendientes
-            const { data: propinasPendientes } = await window.supabaseClient
-                .from('propinas')
-                .select('monto_bs')
-                .eq('mesonero_id', m.id)
-                .eq('entregado', false);
-            const totalPendiente = (propinasPendientes || []).reduce((s, p) => s + (p.monto_bs || 0), 0);
-            const tasa = Number(window.configGlobal?.tasa_efectiva || window.configGlobal?.tasa_cambio || 400) || 400;
-            const totalUsd = tasa > 0 ? totalPendiente / tasa : 0;
-            
-            const tienePendiente = totalPendiente > 0;
-            const btnPagado = tienePendiente
-                ? '<button class="btn-pagado" style="background:linear-gradient(135deg,var(--propina),#7B1FA2);color:#fff;border:none;padding:.35rem .6rem;border-radius:6px;cursor:pointer;font-size:.75rem;font-weight:600;margin-top:.5rem" onclick="window.mostrarPagoMesonero(\'' + m.id + '\')"><i class="fas fa-check"></i> Pagado</button>'
-                : '<button class="btn-pagado" disabled style="background:var(--secondary);color:var(--text-muted);border:none;padding:.35rem .6rem;border-radius:6px;cursor:not-allowed;font-size:.75rem;font-weight:600;margin-top:.5rem" title="No hay propinas pendientes"><i class="fas fa-check"></i> Pagado</button>';
-            
-            return '<div class="card-standard mesonero-card" data-mesonero-id="' + m.id + '" style="border-left-color:var(--propina)">'
+            return '<div class="card-standard mesonero-card" style="border-left-color:var(--propina)">'
                 + avatar
                 + '<div class="ucard-body">'
                 +   '<div class="ucard-top">'
@@ -72,16 +52,11 @@
                 +           '<button class="btn-icon delete" onclick="window.eliminarMesonero(\'' + m.id + '\')" title="Eliminar"><i class="fas fa-trash"></i></button>'
                 +         '</div>'
                 +       '</div>'
-                +       '<div style="margin-top:.5rem;padding:.5rem;background:var(--secondary);border-radius:8px">'
-                +         '<div style="font-size:.7rem;color:var(--text-muted);margin-bottom:.25rem">Total pendiente</div>'
-                +         '<div style="font-size:.85rem;font-weight:700;color:var(--propina)">' + window.formatBs(totalPendiente) + ' / ' + window.formatUSD(totalUsd) + '</div>'
-                +         btnPagado
-                +       '</div>'
                 +     '</div>'
                 +   '</div>'
                 + '</div>'
                 + '</div>';
-        })).then(cards => cards.join(''));
+        }).join('');
     };
 
     // ════════════════════════════════════════
@@ -193,130 +168,6 @@
             } else {
                 tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:1rem;color:var(--text-muted)">Sin propinas hoy</td></tr>';
             }
-        }
-    };
-
-    // ════════════════════════════════════════
-    // SUSCRIPCIÓN REALTIME PARA PROPINAS
-    // ════════════════════════════════════════
-    window.iniciarSuscripcionPropinas = function() {
-        // Cancelar suscripción anterior si existe
-        if (propinasChannel) {
-            window.supabaseClient.removeChannel(propinasChannel);
-            propinasChannel = null;
-        }
-
-        // Crear nueva suscripción
-        propinasChannel = window.supabaseClient.channel('propinas-realtime-mesoneros')
-            .on('postgres_changes', 
-                { 
-                    event: '*', 
-                    schema: 'public', 
-                    table: 'propinas' 
-                },
-                async function(payload) {
-                    console.log('Cambio en propinas:', payload);
-                    await window.actualizarAcumuladosPropinas();
-                }
-            )
-            .subscribe();
-    };
-
-    window.actualizarAcumuladosPropinas = async function() {
-        try {
-            // Obtener suma de propinas pendientes agrupadas por mesonero
-            const { data: propinasPendientes, error } = await window.supabaseClient
-                .from('propinas')
-                .select('mesonero_id, monto_bs')
-                .eq('entregado', false);
-
-            if (error) throw error;
-
-            // Agrupar por mesonero_id
-            const acumuladosPorMesonero = {};
-            (propinasPendientes || []).forEach(p => {
-                const mid = p.mesonero_id;
-                if (!acumuladosPorMesonero[mid]) {
-                    acumuladosPorMesonero[mid] = 0;
-                }
-                acumuladosPorMesonero[mid] += (p.monto_bs || 0);
-            });
-
-            // Actualizar cada tarjeta de mesonero en el DOM
-            const tarjetasMesoneros = document.querySelectorAll('.mesonero-card');
-            tarjetasMesoneros.forEach(card => {
-                // Obtener ID del mesonero desde data-mesonero-id
-                const mesoneroId = card.dataset.mesoneroId;
-                if (!mesoneroId) return;
-
-                const totalPendiente = acumuladosPorMesonero[mesoneroId] || 0;
-                const tasa = Number(window.configGlobal?.tasa_efectiva || window.configGlobal?.tasa_cambio || 400) || 400;
-                const totalUsd = tasa > 0 ? totalPendiente / tasa : 0;
-
-                // Actualizar el texto del acumulado (elemento con color var(--propina))
-                const acumuladoEl = card.querySelector('[style*="color:var(--propina)"]');
-                if (acumuladoEl) {
-                    acumuladoEl.textContent = window.formatBs(totalPendiente) + ' / ' + window.formatUSD(totalUsd);
-                }
-
-                // Actualizar botón de pagado
-                const btnPagadoContainer = card.querySelector('div[style*="background:var(--secondary)"]');
-                if (btnPagadoContainer) {
-                    const tienePendiente = totalPendiente > 0;
-                    const btnExistente = btnPagadoContainer.querySelector('.btn-pagado');
-                    
-                    if (tienePendiente) {
-                        if (!btnExistente || btnExistente.disabled) {
-                            // Crear o reemplazar botón activo
-                            const nuevoBtn = document.createElement('button');
-                            nuevoBtn.className = 'btn-pagado';
-                            nuevoBtn.style.cssText = 'background:linear-gradient(135deg,var(--propina),#7B1FA2);color:#fff;border:none;padding:.35rem .6rem;border-radius:6px;cursor:pointer;font-size:.75rem;font-weight:600;margin-top:.5rem';
-                            nuevoBtn.innerHTML = '<i class="fas fa-check"></i> Pagado';
-                            nuevoBtn.onclick = function() { window.mostrarPagoMesonero(mesoneroId); };
-                            
-                            if (btnExistente) {
-                                btnExistente.replaceWith(nuevoBtn);
-                            } else {
-                                btnPagadoContainer.appendChild(nuevoBtn);
-                            }
-                        }
-                    } else {
-                        if (btnExistente && !btnExistente.disabled) {
-                            // Deshabilitar botón
-                            btnExistente.disabled = true;
-                            btnExistente.style.background = 'var(--secondary)';
-                            btnExistente.style.color = 'var(--text-muted)';
-                            btnExistente.style.cursor = 'not-allowed';
-                            btnExistente.setAttribute('title', 'No hay propinas pendientes');
-                        }
-                    }
-                }
-            });
-
-            // Actualizar totales generales
-            const totalGeneral = Object.values(acumuladosPorMesonero).reduce((s, v) => s + v, 0);
-            const cantidadGeneral = propinasPendientes ? propinasPendientes.length : 0;
-            const promedioGeneral = cantidadGeneral > 0 ? totalGeneral / cantidadGeneral : 0;
-            const tasa = Number(window.configGlobal?.tasa_efectiva || window.configGlobal?.tasa_cambio || 400) || 400;
-            const totalUsdGeneral = tasa > 0 ? totalGeneral / tasa : 0;
-            const promUsdGeneral = tasa > 0 ? promedioGeneral / tasa : 0;
-
-            var el;
-            el = document.getElementById('propinasTotal');    if(el) el.textContent = window.formatUSD(totalUsdGeneral) + ' / ' + window.formatBs(totalGeneral);
-            el = document.getElementById('propinasCantidad'); if(el) el.textContent = String(cantidadGeneral);
-            el = document.getElementById('propinasPromedio'); if(el) el.textContent = window.formatUSD(promUsdGeneral) + ' / ' + window.formatBs(promedioGeneral);
-            el = document.getElementById('propinasHoyDashboard'); if(el) el.textContent = window.formatUSD(totalUsdGeneral) + ' / ' + window.formatBs(totalGeneral);
-
-        } catch(e) {
-            console.error('Error actualizando acumulados de propinas:', e);
-        }
-    };
-
-    window.cancelarSuscripcionPropinas = function() {
-        if (propinasChannel) {
-            window.supabaseClient.removeChannel(propinasChannel);
-            propinasChannel = null;
-            console.log('Suscripción de propinas cancelada');
         }
     };
 
@@ -468,154 +319,5 @@
     if (fotoUrlInp) fotoUrlInp.addEventListener('input', handleMesoneroFotoUrl);
     var removeBtn = document.getElementById('mesoneroFotoRemoveBtn');
     if (removeBtn) removeBtn.addEventListener('click', removeMesoneroFoto);
-
-    // ════════════════════════════════════════
-    // PAGO DE PROPINAS MESONEROS
-    // ════════════════════════════════════════
-    window.mesoneroPagoActual = null;
-
-    window.togglePagoParcial = function(mostrar) {
-        const container = document.getElementById('pagoParcialContainer');
-        if (container) {
-            container.style.display = mostrar ? 'block' : 'none';
-        }
-    };
-
-    window.mostrarPagoMesonero = async function(id) {
-        const mesonero = (window.mesoneros || []).find(m => m.id === id);
-        if (!mesonero) return;
-
-        // Consultar propinas pendientes
-        const { data: propinasPendientes, error } = await window.supabaseClient
-            .from('propinas')
-            .select('monto_bs')
-            .eq('mesonero_id', id)
-            .eq('entregado', false);
-
-        if (error) {
-            console.error('Error al consultar propinas:', error);
-            window.mostrarToast('Error al cargar propinas pendientes', 'error');
-            return;
-        }
-
-        const totalPendiente = (propinasPendientes || []).reduce((s, p) => s + (p.monto_bs || 0), 0);
-
-        if (totalPendiente <= 0) {
-            window.mostrarToast('No hay propinas pendientes', 'error');
-            return;
-        }
-
-        const tasa = Number(window.configGlobal?.tasa_efectiva || window.configGlobal?.tasa_cambio || 400) || 400;
-        const totalUsd = tasa > 0 ? totalPendiente / tasa : 0;
-
-        // Guardar ID del mesonero
-        window.mesoneroPagoActual = id;
-
-        // Rellenar modal
-        const titulo = document.getElementById('pagoMesoneroTitulo');
-        if (titulo) titulo.textContent = 'Pago de Propinas - ' + mesonero.nombre;
-
-        const totalEl = document.getElementById('pagoMesoneroTotal');
-        if (totalEl) totalEl.textContent = window.formatBs(totalPendiente) + ' / ' + window.formatUSD(totalUsd);
-
-        // Resetear formulario
-        const radioTotal = document.querySelector('input[name="tipoPagoMesonero"][value="total"]');
-        if (radioTotal) radioTotal.checked = true;
-        window.togglePagoParcial(false);
-        const inputParcial = document.getElementById('pagoParcialMonto');
-        if (inputParcial) inputParcial.value = '';
-
-        // Abrir modal
-        const modal = document.getElementById('pagoMesoneroModal');
-        if (modal) modal.classList.add('active');
-    };
-
-    window.confirmarPagoMesonero = async function() {
-        if (!window.mesoneroPagoActual) {
-            window.mostrarToast('Error: No hay mesonero seleccionado', 'error');
-            return;
-        }
-
-        const radioParcial = document.querySelector('input[name="tipoPagoMesonero"][value="parcial"]');
-        const esParcial = radioParcial && radioParcial.checked;
-        const inputParcial = document.getElementById('pagoParcialMonto');
-        const montoParcial = esParcial ? parseFloat(inputParcial ? inputParcial.value : 0) : 0;
-
-        // Obtener total pendiente actual
-        const { data: propinasPendientes } = await window.supabaseClient
-            .from('propinas')
-            .select('monto_bs')
-            .eq('mesonero_id', window.mesoneroPagoActual)
-            .eq('entregado', false);
-
-        const totalPendiente = (propinasPendientes || []).reduce((s, p) => s + (p.monto_bs || 0), 0);
-
-        if (esParcial) {
-            if (isNaN(montoParcial) || montoParcial <= 0) {
-                window.mostrarToast('Ingrese un monto válido', 'error');
-                return;
-            }
-            if (montoParcial > totalPendiente) {
-                window.mostrarToast('El monto no puede ser mayor al pendiente', 'error');
-                return;
-            }
-        }
-
-        try {
-            const btn = document.getElementById('confirmPagoMesoneroBtn');
-            if (btn) {
-                btn.disabled = true;
-                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
-            }
-
-            if (esParcial) {
-                // Pago parcial: insertar registro negativo con entregado=true
-                const usuarioActual = window.usuarioActual?.nombre || 'Admin';
-                const now = new Date().toISOString();
-
-                const { error: insertError } = await window.supabaseClient
-                    .from('propinas')
-                    .insert([{
-                        id: window.generarId('pro_'),
-                        mesonero_id: window.mesoneroPagoActual,
-                        monto_bs: -montoParcial,
-                        entregado: true,
-                        metodo: 'pago_parcial',
-                        cajero: usuarioActual,
-                        fecha: now,
-                        mesa: 'PAGO'
-                    }]);
-
-                if (insertError) throw insertError;
-            } else {
-                // Pago total: marcar todas como entregadas
-                const { error: updateError } = await window.supabaseClient
-                    .from('propinas')
-                    .update({ entregado: true })
-                    .eq('mesonero_id', window.mesoneroPagoActual)
-                    .eq('entregado', false);
-
-                if (updateError) throw updateError;
-            }
-
-            // Cerrar modal
-            window.cerrarModal('pagoMesoneroModal');
-
-            // Forzar actualización de acumulados (la suscripción realtime también lo hará, pero aseguramos actualización inmediata)
-            await window.actualizarAcumuladosPropinas();
-            await window.cargarPropinas();
-
-            window.mostrarToast('Pago registrado con éxito', 'success');
-        } catch (e) {
-            console.error('Error al confirmar pago:', e);
-            window.mostrarToast('Error: ' + (e.message || e), 'error');
-        } finally {
-            const btn = document.getElementById('confirmPagoMesoneroBtn');
-            if (btn) {
-                btn.disabled = false;
-                btn.innerHTML = 'Confirmar Pago';
-            }
-        }
-    };
 
 })();
