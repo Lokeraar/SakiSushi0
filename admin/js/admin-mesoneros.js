@@ -53,7 +53,16 @@
                 const usdTotal = tasaEfectiva > 0 ? pendienteTotal / tasaEfectiva : 0;
 
                 if (pendienteEl) {
-                    let htmlPendiente = '<div>' + window.formatUSD(usdTotal) + ' / ' + window.formatBs(pendienteTotal) + '</div>';
+                    const tasaEfectiva = Number(window.configGlobal?.tasa_efectiva || window.configGlobal?.tasa_cambio || 400);
+                    const tasaBaseActual = Number(window.configGlobal?.tasa_cambio || 400);
+                    const usdCrudo = acumuladoUSDCrudo[mesoneroId] || 0;
+                    const bsTotal = acumuladoBs[mesoneroId] || 0;
+                    const usdEnBs = usdCrudo * tasaBaseActual;
+                    const pendienteTotal = bsTotal + usdEnBs;
+                    const usdTotal = tasaEfectiva > 0 ? pendienteTotal / tasaEfectiva : 0;
+
+                    let htmlPendiente = '<span style="font-size:.75rem;color:var(--text-muted);margin-right:.35rem">Pendiente:</span>' +
+                        '<span style="font-weight:700;color:var(--propina)">' + window.formatUSD(usdTotal) + ' / ' + window.formatBs(pendienteTotal) + '</span>';
                     
                     if (usdCrudo > 0) {
                         htmlPendiente += '<div style="font-size:.7rem;color:var(--usd-color);margin-top:2px">' +
@@ -148,8 +157,8 @@
         for (const m of sorted) {
             const inicial = m.nombre.charAt(0).toUpperCase();
             const avatar = m.foto
-                ? '<div class="ucard-avatar"><img src="' + m.foto + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;cursor:pointer" onclick="window.expandirImagen(this.src)"></div>'
-                : '<div class="ucard-avatar"><div style="width:100%;height:100%;font-size:1.4rem;border-radius:50%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--propina),#7B1FA2);color:#fff">' + inicial + '</div></div>';
+                ? '<div class="ucard-avatar"><img src="' + m.foto + '" style="width:100%;height:100%;object-fit:cover;border-radius:8px;cursor:pointer" onclick="window.expandirImagen(this.src)"></div>'
+                : '<div class="ucard-avatar"><div style="width:100%;height:100%;font-size:1.4rem;border-radius:8px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--propina),#7B1FA2);color:#fff">' + inicial + '</div></div>';
             
             const badge = m.activo
                 ? '<span class="ucard-status-inline" style="color:var(--success);margin-left:auto"><i class="fas fa-check-circle"></i> ACTIVO</span>'
@@ -165,15 +174,14 @@
                 +   '<div class="ucard-top">'
                 +     '<div class="ucard-names">'
                 +       '<div class="ucard-line1"><span class="mesonero-nombre">' + m.nombre + '</span>' + badge + '</div>'
-                +       '<div class="ucard-line2" style="margin-top:.5rem;display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">'
-                +         '<span style="font-size:.75rem;color:var(--text-muted)">Pendiente:</span>'
-                +         '<span class="mesonero-pendiente" style="font-size:.95rem">Calculando...</span>'
+                +       '<div class="ucard-line2" style="margin-top:.35rem;display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">'
+                +         '<span class="mesonero-pendiente" style="font-size:.9rem;font-weight:600">Calculando...</span>'
                 +       '</div>'
-                +       '<div class="ucard-line3" style="margin-top:.5rem">'
-                +         '<button class="btn-toggle ' + toggleClass + '" style="font-size:.75rem;padding:.35rem .6rem" onclick="window.toggleMesoneroActivo(\'' + m.id + '\',' + toggleVal + ')">' + toggleTxt + '</button>'
-                +         '<button class="btn-primary btn-pagado-mesonero" style="font-size:.75rem;padding:.35rem .75rem;margin-left:.5rem" onclick="window.abrirModalPago(\'' + m.id + '\')" title="Registrar pago">'
-                +           '<i class="fas fa-hand-holding-usd"></i> Pagado'
+                +       '<div class="ucard-line3" style="margin-top:.5rem;display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">'
+                +         '<button class="btn-primary btn-pagado-mesonero" style="font-size:.75rem;padding:.35rem .75rem" onclick="window.abrirModalPago(\'' + m.id + '\')" title="Registrar pago">'
+                +           '<i class="fas fa-hand-holding-usd"></i> Pagar'
                 +         '</button>'
+                +         '<button class="btn-toggle ' + toggleClass + '" style="font-size:.75rem;padding:.35rem .6rem" onclick="window.toggleMesoneroActivo(\'' + m.id + '\',' + toggleVal + ')">' + toggleTxt + '</button>'
                 +         '<div class="ucard-actions-right">'
                 +           '<button class="btn-icon edit" onclick="window.editarMesonero(\'' + m.id + '\')" title="Editar"><i class="fas fa-edit"></i></button>'
                 +           '<button class="btn-icon delete" onclick="window.eliminarMesonero(\'' + m.id + '\')" title="Eliminar"><i class="fas fa-trash"></i></button>'
