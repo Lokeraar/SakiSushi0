@@ -110,6 +110,9 @@
             sessionStorage.setItem('admin_jwt_token', window.jwtToken);
             sessionStorage.setItem('admin_user', JSON.stringify(data.user));
             
+            // Guardar usuario actual en variable global
+            window.usuarioActual = data.user;
+            
             // Guardar este admin en recientes (con foto actualizada si la tiene)
             const adminUser = data.user;
             if (adminUser.foto === undefined && selectedAdmin.foto) adminUser.foto = selectedAdmin.foto;

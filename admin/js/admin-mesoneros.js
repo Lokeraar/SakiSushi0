@@ -347,9 +347,10 @@
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
         }
         try {
+            // Marcar todas las propinas pendientes como entregadas (sin fecha_entrega)
             const { error } = await window.supabaseClient
                 .from('propinas')
-                .update({ entregado: true, fecha_entrega: new Date().toISOString() })
+                .update({ entregado: true })
                 .eq('mesonero_id', mesoneroParaPagoId)
                 .eq('entregado', false);
             if (error) throw error;
@@ -410,27 +411,37 @@
                 restoPorPagar -= prop.monto_bs;
             }
 
-            // 2. Marcar como entregadas esas propinas
+            // 2. Marcar como entregadas esas propinas (sin fecha_entrega)
             if (idsAMarcar.length > 0) {
                 const { error: errUpdate } = await window.supabaseClient
                     .from('propinas')
-                    .update({ entregado: true, fecha_entrega: new Date().toISOString() })
+                    .update({ entregado: true })
                     .in('id', idsAMarcar);
                 if (errUpdate) throw errUpdate;
             }
 
             // 3. Si sobró pago (el cliente pagó más de lo pendiente), crear crédito a favor
             if (restoPorPagar < 0) {
+                const cajeroNombre = window.usuarioActual?.nombre || 'Sistema';
+                const cajeroId = window.usuarioActual?.id || null;
+                const excedenteNegativo = -Math.abs(restoPorPagar);
+                
                 const { error: errCredito } = await window.supabaseClient
                     .from('propinas')
                     .insert([{
                         id: window.generarId('pro_'),
                         mesonero_id: mesoneroParaPagoId,
-                        monto_bs: Math.abs(restoPorPagar),
-                        metodo: 'Crédito a favor',
-                        entregado: false,
+                        mesa: 'Crédito a favor',
+                        metodo: 'pago_interno',
+                        monto_original: 0,
+                        moneda_original: 'Bs',
+                        tasa_aplicada: null,
+                        monto_bs: excedenteNegativo,
+                        referencia: null,
+                        cajero: cajeroNombre,
                         fecha: new Date().toISOString(),
-                        nota: 'Excedente de pago parcial'
+                        entregado: false,
+                        cajero_id: cajeroId
                     }]);
                 if (errCredito) throw errCredito;
             }
@@ -440,7 +451,10 @@
             window.mostrarToast('Pago parcial registrado: ' + window.formatBs(monto), 'success');
         } catch(e) {
             console.error('Error pago parcial:', e);
-            window.mostrarToast('Error: ' + (e.message || e), 'error');
+            const errorMsg = e.message || e;
+            const details = e.details ? ' | Details: ' + e.details : '';
+            const hint = e.hint ? ' | Hint: ' + e.hint : '';
+            window.mostrarToast('Error: ' + errorMsg + details + hint, 'error');
         } finally {
             if (btn) {
                 btn.disabled = false;
