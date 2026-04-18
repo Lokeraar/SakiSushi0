@@ -415,21 +415,13 @@
                 restoPorPagar -= prop.monto_bs;
             }
 
-            // 2. Marcar como entregadas esas propinas (sin fecha_entrega)
-            if (idsAMarcar.length > 0) {
-                const { error: errUpdate } = await window.supabaseClient
-                    .from('propinas')
-                    .update({ entregado: true })
-                    .in('id', idsAMarcar);
-                if (errUpdate) throw errUpdate;
-            }
-
-            // 3. Si sobró pago (el cliente pagó más de lo pendiente), crear crédito a favor
+            // 2. Si hay excedente (pago mayor al pendiente), crear crédito a favor ANTES de marcar entregadas
             if (restoPorPagar < 0) {
-                const cajeroNombre = window.usuarioActual?.nombre || 'Sistema';
-                const cajeroId = window.usuarioActual?.id || null;
                 const excedenteNegativo = -Math.abs(restoPorPagar);
+                const cajeroNombre = (window.usuarioActual && window.usuarioActual.nombre) || 'Administrador';
+                const ahora = new Date().toISOString();
                 
+                // Insertar crédito (sin cajero_id, solo cajero)
                 const { error: errCredito } = await window.supabaseClient
                     .from('propinas')
                     .insert([{
@@ -442,11 +434,19 @@
                         monto_bs: excedenteNegativo,
                         referencia: null,
                         cajero: cajeroNombre,
-                        fecha: new Date().toISOString(),
-                        entregado: false,
-                        cajero_id: cajeroId
+                        fecha: ahora,
+                        entregado: false
                     }]);
                 if (errCredito) throw errCredito;
+            }
+
+            // 3. Marcar como entregadas las propinas que se pagan (solo si hay ids)
+            if (idsAMarcar.length > 0) {
+                const { error: errUpdate } = await window.supabaseClient
+                    .from('propinas')
+                    .update({ entregado: true })
+                    .in('id', idsAMarcar);
+                if (errUpdate) throw errUpdate;
             }
 
             window.cerrarModalPago();
