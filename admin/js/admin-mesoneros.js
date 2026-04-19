@@ -325,7 +325,7 @@
             +   '</div>'
             +   '<div class="form-group" style="margin-bottom:1rem;text-align:left">'
             +     '<label style="display:block;font-size:.85rem;font-weight:600;margin-bottom:.5rem">Método de pago al mesonero</label>'
-            +     '<select id="pagoMetodo" class="tcb-input" style="width:100%;padding:.6rem;border-radius:8px;border:1px solid var(--border);background:var(--card-bg);color:var(--text)">'
+            +     '<select id="pagoMetodo" class="tcb-input" style="width:100%;padding:.6rem;border-radius:8px;border:1px solid var(--border);background:var(--card-bg);color:var(--text)" onchange="window.actualizarLabelMontoPago()">'
             +       '<option value="efectivo_bs">Efectivo Bs</option>'
             +       '<option value="efectivo_usd">Efectivo USD</option>'
             +       '<option value="pago_movil">Pago Móvil</option>'
@@ -341,7 +341,7 @@
             +     '</button>'
             +   '</div>'
             +   '<div id="pagoParcialSection" style="display:none;background:var(--secondary);padding:1rem;border-radius:8px;border:1px solid var(--border);margin-bottom:1.5rem">'
-            +     '<label style="display:block;font-size:.85rem;font-weight:600;margin-bottom:.5rem;color:var(--text-muted)">Monto a pagar (BS)</label>'
+            +     '<label id="pagoParcialLabel" style="display:block;font-size:.85rem;font-weight:600;margin-bottom:.5rem;color:var(--text-muted)">Monto a pagar (BS)</label>'
             +     '<input type="number" id="pagoParcialMonto" step="0.01" min="0.01" max="' + acumulado + '" style="width:100%;padding:.75rem;border:1px solid var(--border);border-radius:8px;font-size:1rem;font-family:Montserrat,sans-serif" placeholder="Ej: 50.00">'
             +     '<p style="font-size:.75rem;color:var(--text-muted);margin-top:.5rem"><i class="fas fa-info-circle"></i> El monto restante permanecerá como pendiente</p>'
             +   '</div>'
@@ -355,12 +355,37 @@
 
         const modal = document.getElementById('pagoModal');
         if (modal) modal.classList.add('active');
+        
+        // Inicializar label correcto
+        setTimeout(function() {
+            window.actualizarLabelMontoPago();
+        }, 50);
     };
 
     window.cerrarModalPago = function() {
         const modal = document.getElementById('pagoModal');
         if (modal) modal.classList.remove('active');
         mesoneroParaPagoId = null;
+    };
+
+    // Actualizar label del monto según método seleccionado
+    window.actualizarLabelMontoPago = function() {
+        const metodo = document.getElementById('pagoMetodo')?.value;
+        const label = document.getElementById('pagoParcialLabel');
+        const input = document.getElementById('pagoParcialMonto');
+        
+        if (!label || !input) return;
+        
+        if (metodo === 'efectivo_usd') {
+            label.textContent = 'Monto a pagar ($)';
+            // Actualizar placeholder y step para dólares
+            input.placeholder = 'Ej: 10.00';
+            input.step = '0.01';
+        } else {
+            label.textContent = 'Monto a pagar (BS)';
+            input.placeholder = 'Ej: 50.00';
+            input.step = '0.01';
+        }
     };
 
     window.togglePagoParcial = function() {
@@ -394,10 +419,10 @@
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
         }
         try {
-            // Obtener todas las propinas pendientes del mesonero
+            // Obtener todas las propinas pendientes del mesonero con información completa
             const { data: pendientes, error: errGet } = await window.supabaseClient
                 .from('propinas')
-                .select('id, monto_bs')
+                .select('id, monto_bs, monto_original, moneda_original')
                 .eq('mesonero_id', mesoneroParaPagoId)
                 .eq('entregado', false);
             if (errGet) throw errGet;
@@ -408,6 +433,19 @@
                 return;
             }
             
+            // Calcular totales separados de USD y Bs
+            const tasaBase = Number(window.configGlobal?.tasa_cambio || 400);
+            let totalUSDCrudo = 0;
+            let totalBsCrudo = 0;
+            
+            (pendientes || []).forEach(function(p) {
+                if (p.moneda_original === 'USD' && p.monto_original) {
+                    totalUSDCrudo += p.monto_original;
+                } else {
+                    totalBsCrudo += (p.monto_bs || 0);
+                }
+            });
+            
             // Poner a cero todas las propinas pendientes (para que no sumen)
             for (const prop of pendientes) {
                 await window.supabaseClient.from('propinas').update({ monto_bs: 0 }).eq('id', prop.id);
@@ -416,13 +454,26 @@
             // Crear una nueva propina que representa el pago total al mesonero
             const cajeroNombre = (window.usuarioActual && window.usuarioActual.nombre) || 'Administrador';
             const ahora = new Date().toISOString();
+            
+            // Si el método es efectivo_usd, registrar el monto en USD
+            let nuevoMontoOriginal = totalPagar;
+            let nuevaMonedaOriginal = 'Bs';
+            let nuevaTasaAplicada = null;
+            
+            if (metodoPago === 'efectivo_usd') {
+                // Convertir el total pagado a USD usando tasa base
+                nuevoMontoOriginal = totalPagar / tasaBase;
+                nuevaMonedaOriginal = 'USD';
+                nuevaTasaAplicada = tasaBase;
+            }
+            
             const nuevaPropina = {
                 mesonero_id: mesoneroParaPagoId,
                 mesa: 'Pago total a mesonero',
                 metodo: metodoPago,
-                monto_original: totalPagar,
-                moneda_original: 'Bs',
-                tasa_aplicada: null,
+                monto_original: parseFloat(nuevoMontoOriginal.toFixed(2)),
+                moneda_original: nuevaMonedaOriginal,
+                tasa_aplicada: nuevaTasaAplicada,
                 monto_bs: totalPagar,
                 referencia: null,
                 cajero: cajeroNombre,
@@ -437,7 +488,11 @@
             await window.actualizarAcumuladosPendientes();
             await window.cargarPropinas();
             window.renderizarPropinas();
-            window.mostrarToast('Pago total registrado: ' + window.formatBs(totalPagar), 'success');
+            
+            const montoMostrar = metodoPago === 'efectivo_usd' 
+                ? '$' + nuevoMontoOriginal.toFixed(2) + ' (a tasa base ' + tasaBase + ')'
+                : window.formatBs(totalPagar);
+            window.mostrarToast('Pago total registrado: ' + montoMostrar, 'success');
         } catch(e) {
             console.error('Error pago total:', e);
             window.mostrarToast('Error: ' + (e.message || e), 'error');
@@ -460,15 +515,25 @@
         }
         
         const input = document.getElementById('pagoParcialMonto');
-        const monto = input ? parseFloat(input.value) : 0;
+        let monto = input ? parseFloat(input.value) : 0;
         
         if (!monto || monto <= 0) {
             window.mostrarToast('Ingresa un monto válido', 'error');
             return;
         }
 
+        // Si el método es efectivo_usd, convertir el monto ingresado (en USD) a Bs usando tasa base
+        const tasaBase = Number(window.configGlobal?.tasa_cambio || 400);
+        let montoEnBs = monto;
+        let montoEsUSD = false;
+        
+        if (metodoPago === 'efectivo_usd') {
+            montoEsUSD = true;
+            montoEnBs = monto * tasaBase;
+        }
+
         const acumulado = await calcularAcumuladoPendiente(mesoneroParaPagoId);
-        if (monto > acumulado) {
+        if (montoEnBs > acumulado) {
             window.mostrarToast('El monto no puede superar el pendiente (' + window.formatBs(acumulado) + ')', 'error');
             return;
         }
@@ -480,7 +545,7 @@
         }
 
         try {
-            // 1. Obtener propinas pendientes en orden FIFO
+            // 1. Obtener propinas pendientes en orden FIFO con información completa
             const { data: pendientes, error: errConsulta } = await window.supabaseClient
                 .from('propinas')
                 .select('id, monto_bs, mesa, metodo, monto_original, moneda_original, tasa_aplicada, referencia, cajero, fecha')
@@ -490,7 +555,7 @@
 
             if (errConsulta) throw errConsulta;
 
-            let restoPorPagar = monto;
+            let restoPorPagar = montoEnBs; // Trabajar siempre en Bs internamente
             let pagoCompletado = false;
 
             for (const prop of pendientes || []) {
@@ -505,13 +570,23 @@
                     // Crear nueva propina que representa el pago
                     const cajeroNombre = (window.usuarioActual && window.usuarioActual.nombre) || 'Administrador';
                     const ahora = new Date().toISOString();
+                    
+                    // Calcular monto_original si el pago es en USD
+                    let nuevoMontoOriginal = montoPropina;
+                    let nuevaMonedaOriginal = 'Bs';
+                    if (metodoPago === 'efectivo_usd') {
+                        // Convertir el monto pagado de Bs a USD usando tasa base
+                        nuevoMontoOriginal = montoPropina / tasaBase;
+                        nuevaMonedaOriginal = 'USD';
+                    }
+                    
                     const nuevaPropinaCompleta = {
                         mesonero_id: mesoneroParaPagoId,
                         mesa: prop.mesa || 'General',
                         metodo: metodoPago,  // Usar el método seleccionado
-                        monto_original: prop.monto_original || 0,
-                        moneda_original: prop.moneda_original || 'Bs',
-                        tasa_aplicada: prop.tasa_aplicada || null,
+                        monto_original: parseFloat(nuevoMontoOriginal.toFixed(2)),
+                        moneda_original: nuevaMonedaOriginal,
+                        tasa_aplicada: metodoPago === 'efectivo_usd' ? tasaBase : null,
                         monto_bs: montoPropina,
                         referencia: prop.referencia || null,
                         cajero: cajeroNombre,
@@ -541,10 +616,17 @@
                     const cajeroNombre = (window.usuarioActual && window.usuarioActual.nombre) || 'Administrador';
                     const ahora = new Date().toISOString();
                     
-                    // Calcular monto_original proporcional si existe
+                    // Calcular monto_original proporcional
                     let nuevoMontoOriginal = 0;
-                    if (prop.monto_original && prop.monto_original > 0) {
+                    let nuevaMonedaOriginal = 'Bs';
+                    
+                    if (metodoPago === 'efectivo_usd') {
+                        // El monto pagado está en Bs, convertir a USD con tasa base
+                        nuevoMontoOriginal = montoPagado / tasaBase;
+                        nuevaMonedaOriginal = 'USD';
+                    } else if (prop.monto_original && prop.monto_original > 0) {
                         nuevoMontoOriginal = (prop.monto_original * montoPagado) / montoPropina;
+                        nuevaMonedaOriginal = prop.moneda_original || 'Bs';
                     }
                     
                     const nuevaPropina = {
@@ -552,8 +634,8 @@
                         mesa: prop.mesa || 'General',
                         metodo: metodoPago,  // Usar el método seleccionado
                         monto_original: parseFloat(nuevoMontoOriginal.toFixed(2)),
-                        moneda_original: prop.moneda_original || 'Bs',
-                        tasa_aplicada: prop.tasa_aplicada || null,
+                        moneda_original: nuevaMonedaOriginal,
+                        tasa_aplicada: metodoPago === 'efectivo_usd' ? tasaBase : null,
                         monto_bs: parseFloat(montoPagado.toFixed(2)),
                         referencia: prop.referencia || null,
                         cajero: cajeroNombre,
@@ -581,7 +663,9 @@
             await window.actualizarAcumuladosPendientes();
             await window.cargarPropinas();
             window.renderizarPropinas();
-            window.mostrarToast('Pago parcial registrado: ' + window.formatBs(monto), 'success');
+            
+            const montoMostrar = montoEsUSD ? '$' + monto.toFixed(2) : window.formatBs(montoEnBs);
+            window.mostrarToast('Pago parcial registrado: ' + montoMostrar, 'success');
             
         } catch(e) {
             console.error('Error pago parcial:', e);
