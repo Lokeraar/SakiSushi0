@@ -482,21 +482,21 @@
             if (esUSD) {
                 htmlPreview += 'Pagando $' + montoIngresado.toFixed(2) + ' (equiv. a ' + window.formatBs(montoEnBs) + ')';
             } else {
-                htmlPreview += 'Pagando ' + window.formatBs(montoEnBs);
+                htmlPreview += 'Pagando Bs ' + window.formatBs(montoEnBs);
             }
             htmlPreview += '</div>';
             
             if (pagadoDeUSD > 0) {
                 const usdPagado = pagadoDeUSD / tasaBase;
                 htmlPreview += '<div style="font-size:.75rem;color:var(--usd-color);margin-top:.25rem">';
-                htmlPreview += '<i class="fas fa-dollar-sign"></i> Descuenta: ' + window.formatBs(pagadoDeUSD);
+                htmlPreview += '<i class="fas fa-dollar-sign"></i> Descuento: ' + window.formatBs(pagadoDeUSD);
                 if (esUSD) htmlPreview += ' ($' + usdPagado.toFixed(2) + ')';
                 htmlPreview += '</div>';
             }
             
             if (pagadoDeBs > 0) {
                 htmlPreview += '<div style="font-size:.75rem;color:var(--bs-color);margin-top:.25rem">';
-                htmlPreview += 'Bs: Descuenta: ' + window.formatBs(pagadoDeBs);
+                htmlPreview += 'Bs: Descuento: ' + window.formatBs(pagadoDeBs);
                 htmlPreview += '</div>';
             }
             
