@@ -318,7 +318,7 @@
             +       '<i class="fas fa-hand-holding-heart" style="font-size:2rem;color:#fff"></i>'
             +     '</div>'
             +     '<h3 style="font-size:1.1rem;font-weight:700;margin-bottom:.5rem">Registrar Pago a ' + m.nombre + '</h3>'
-            +     '<p style="color:var(--text-muted);font-size:.85rem">Monto pendiente actual</p>'
+            +     '<p style="color:var(--text-muted);font-size:.85rem">El monto acumulado actual equivale a:</p>'
             +     '<div id="pagoMontoPendiente" style="font-size:1.5rem;font-weight:700;color:var(--propina);margin-top:.5rem">'
             +       window.formatUSD(usd) + ' / ' + window.formatBs(acumulado)
             +     '</div>'
@@ -342,8 +342,9 @@
             +   '</div>'
             +   '<div id="pagoParcialSection" style="display:none;background:var(--secondary);padding:1rem;border-radius:8px;border:1px solid var(--border);margin-bottom:1.5rem">'
             +     '<label id="pagoParcialLabel" style="display:block;font-size:.85rem;font-weight:600;margin-bottom:.5rem;color:var(--text-muted)">Monto a pagar (BS)</label>'
-            +     '<input type="number" id="pagoParcialMonto" step="0.01" min="0.01" max="' + acumulado + '" style="width:100%;padding:.75rem;border:1px solid var(--border);border-radius:8px;font-size:1rem;font-family:Montserrat,sans-serif" placeholder="Ej: 50.00">'
+            +     '<input type="number" id="pagoParcialMonto" step="0.01" min="0.01" max="' + acumulado + '" style="width:100%;padding:.75rem;border:1px solid var(--border);border-radius:8px;font-size:1rem;font-family:Montserrat,sans-serif" placeholder="Ej: 50.00" oninput="window.actualizarVistaPreviaPago()">'
             +     '<p style="font-size:.75rem;color:var(--text-muted);margin-top:.5rem"><i class="fas fa-info-circle"></i> El monto restante permanecerá como pendiente</p>'
+            +     '<div id="pagoPreviewSection" style="display:none"></div>'
             +   '</div>'
             +   '<div style="display:flex;gap:.75rem;justify-content:flex-end">'
             +     '<button class="btn-secondary" style="flex:1;padding:.75rem 1rem;font-weight:600" onclick="window.cerrarModalPago()">Cancelar</button>'
@@ -386,6 +387,139 @@
             input.placeholder = 'Ej: 50.00';
             input.step = '0.01';
         }
+        
+        // Actualizar vista previa en tiempo real
+        window.actualizarVistaPreviaPago();
+    };
+
+    // Actualizar vista previa del pago en tiempo real
+    window.actualizarVistaPreviaPago = async function() {
+        const metodo = document.getElementById('pagoMetodo')?.value;
+        const input = document.getElementById('pagoParcialMonto');
+        const previewEl = document.getElementById('pagoPreviewSection');
+        
+        if (!input || !previewEl) return;
+        
+        const montoIngresado = parseFloat(input.value) || 0;
+        if (montoIngresado <= 0) {
+            previewEl.style.display = 'none';
+            return;
+        }
+        
+        const tasaBase = Number(window.configGlobal?.tasa_cambio || 400);
+        const tasaEfectiva = Number(window.configGlobal?.tasa_efectiva || window.configGlobal?.tasa_cambio || 400);
+        
+        let montoEnBs = montoIngresado;
+        let esUSD = false;
+        
+        if (metodo === 'efectivo_usd') {
+            esUSD = true;
+            montoEnBs = montoIngresado * tasaBase;
+        }
+        
+        // Obtener acumulado desglosado
+        if (!mesoneroParaPagoId) {
+            previewEl.style.display = 'none';
+            return;
+        }
+        
+        try {
+            const { data: pendientes, error } = await window.supabaseClient
+                .from('propinas')
+                .select('monto_bs, monto_original, moneda_original')
+                .eq('mesonero_id', mesoneroParaPagoId)
+                .eq('entregado', false);
+            
+            if (error) throw error;
+            
+            let acumuladoUSDCrudo = 0;
+            let acumuladoBsCrudo = 0;
+            
+            (pendientes || []).forEach(function(p) {
+                if (p.moneda_original === 'USD' && p.monto_original) {
+                    acumuladoUSDCrudo += p.monto_original;
+                } else {
+                    acumuladoBsCrudo += (p.monto_bs || 0);
+                }
+            });
+            
+            const acumuladoUSDEnBs = acumuladoUSDCrudo * tasaBase;
+            const acumuladoTotal = acumuladoBsCrudo + acumuladoUSDEnBs;
+            
+            // Calcular cómo se distribuye el pago
+            let restoPorPagar = montoEnBs;
+            let pagadoDeUSD = 0;
+            let pagadoDeBs = 0;
+            
+            // Primero descontar de USD
+            if (restoPorPagar > 0 && acumuladoUSDEnBs > 0) {
+                if (restoPorPagar >= acumuladoUSDEnBs) {
+                    pagadoDeUSD = acumuladoUSDEnBs;
+                    restoPorPagar -= acumuladoUSDEnBs;
+                } else {
+                    pagadoDeUSD = restoPorPagar;
+                    restoPorPagar = 0;
+                }
+            }
+            
+            // Luego descontar de Bs
+            if (restoPorPagar > 0 && acumuladoBsCrudo > 0) {
+                if (restoPorPagar >= acumuladoBsCrudo) {
+                    pagadoDeBs = acumuladoBsCrudo;
+                } else {
+                    pagadoDeBs = restoPorPagar;
+                }
+            }
+            
+            // Construir mensaje de vista previa
+            let htmlPreview = '<div style="margin-top:1rem;padding:1rem;background:var(--secondary);border-radius:8px;border:1px solid var(--border)">';
+            htmlPreview += '<div style="font-size:.75rem;color:var(--text-muted);margin-bottom:.5rem">El monto acumulado actual equivale a:</div>';
+            htmlPreview += '<div style="font-size:1.1rem;font-weight:700;color:var(--propina);margin-bottom:.75rem">';
+            htmlPreview += window.formatUSD(acumuladoTotal / tasaEfectiva) + ' / ' + window.formatBs(acumuladoTotal);
+            htmlPreview += '</div>';
+            
+            htmlPreview += '<div style="font-size:.85rem;font-weight:600;margin-bottom:.5rem;color:var(--text)">';
+            if (esUSD) {
+                htmlPreview += 'Pagando $' + montoIngresado.toFixed(2) + ' (equiv. a ' + window.formatBs(montoEnBs) + ')';
+            } else {
+                htmlPreview += 'Pagando ' + window.formatBs(montoEnBs);
+            }
+            htmlPreview += '</div>';
+            
+            if (pagadoDeUSD > 0) {
+                const usdPagado = pagadoDeUSD / tasaBase;
+                htmlPreview += '<div style="font-size:.75rem;color:var(--usd-color);margin-top:.25rem">';
+                htmlPreview += '<i class="fas fa-dollar-sign"></i> Descuenta: ' + window.formatBs(pagadoDeUSD);
+                if (esUSD) htmlPreview += ' ($' + usdPagado.toFixed(2) + ')';
+                htmlPreview += '</div>';
+            }
+            
+            if (pagadoDeBs > 0) {
+                htmlPreview += '<div style="font-size:.75rem;color:var(--bs-color);margin-top:.25rem">';
+                htmlPreview += 'Bs: Descuenta: ' + window.formatBs(pagadoDeBs);
+                htmlPreview += '</div>';
+            }
+            
+            // Mostrar nuevo pendiente
+            const nuevoPendiente = acumuladoTotal - montoEnBs;
+            if (nuevoPendiente >= 0) {
+                htmlPreview += '<div style="font-size:.75rem;color:var(--text-muted);margin-top:.5rem;padding-top:.5rem;border-top:1px solid var(--border)">';
+                htmlPreview += 'Nuevo pendiente: ' + window.formatBs(nuevoPendiente);
+                if (tasaEfectiva > 0) {
+                    htmlPreview += ' (' + window.formatUSD(nuevoPendiente / tasaEfectiva) + ')';
+                }
+                htmlPreview += '</div>';
+            }
+            
+            htmlPreview += '</div>';
+            
+            previewEl.innerHTML = htmlPreview;
+            previewEl.style.display = 'block';
+            
+        } catch(e) {
+            console.error('Error actualizando vista previa:', e);
+            previewEl.style.display = 'none';
+        }
     };
 
     window.togglePagoParcial = function() {
@@ -399,7 +533,23 @@
             btnTotal.style.opacity = isHidden ? '0.5' : '1';
             btnTotal.style.pointerEvents = isHidden ? 'none' : 'auto';
             if (isHidden) {
-                document.getElementById('pagoParcialMonto')?.focus();
+                const input = document.getElementById('pagoParcialMonto');
+                if (input) {
+                    input.focus();
+                    // Limpiar vista previa al abrir
+                    const previewEl = document.getElementById('pagoPreviewSection');
+                    if (previewEl) {
+                        previewEl.style.display = 'none';
+                        previewEl.innerHTML = '';
+                    }
+                }
+            } else {
+                // Al cerrar, limpiar vista previa
+                const previewEl = document.getElementById('pagoPreviewSection');
+                if (previewEl) {
+                    previewEl.style.display = 'none';
+                    previewEl.innerHTML = '';
+                }
             }
         }
     };
