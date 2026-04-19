@@ -34,10 +34,6 @@
                 }
             });
 
-            // Guardar en window para usar en renderizado
-            window._acumuladoBs = acumuladoBs;
-            window._acumuladoUSDCrudo = acumuladoUSDCrudo;
-
             // Actualizar en DOM: selector [data-mesonero-id] → elemento .mesonero-pendiente
             const tarjetas = document.querySelectorAll('[data-mesonero-id]');
             tarjetas.forEach(function(card) {
@@ -53,14 +49,6 @@
                 const usdTotal = tasaEfectiva > 0 ? pendienteTotal / tasaEfectiva : 0;
 
                 if (pendienteEl) {
-                    const tasaEfectiva = Number(window.configGlobal?.tasa_efectiva || window.configGlobal?.tasa_cambio || 400);
-                    const tasaBaseActual = Number(window.configGlobal?.tasa_cambio || 400);
-                    const usdCrudo = acumuladoUSDCrudo[mesoneroId] || 0;
-                    const bsTotal = acumuladoBs[mesoneroId] || 0;
-                    const usdEnBs = usdCrudo * tasaBaseActual;
-                    const pendienteTotal = bsTotal + usdEnBs;
-                    const usdTotal = tasaEfectiva > 0 ? pendienteTotal / tasaEfectiva : 0;
-
                     let htmlPendiente = '<span style="font-size:.75rem;color:var(--text-muted);margin-right:.35rem">Pendiente:</span>' +
                         '<span style="font-weight:700;color:var(--propina)">' + window.formatUSD(usdTotal) + ' / ' + window.formatBs(pendienteTotal) + '</span>';
                     
@@ -114,10 +102,8 @@
                 { event: '*', schema: 'public', table: 'propinas' },
                 async function(payload) {
                     console.log('Cambio en propinas:', payload);
-                    // Actualizar acumulados con pequeño delay para permitir commit
-                    setTimeout(function() {
-                        window.actualizarAcumuladosPendientes();
-                    }, 300);
+                    // Actualizar acumulados inmediatamente sin delay
+                    window.actualizarAcumuladosPendientes();
                 }
             )
             .subscribe();
@@ -194,10 +180,8 @@
         }
         container.innerHTML = html;
 
-        // Actualizar acumulados pendientes usando la nueva función
-        setTimeout(function() {
-            window.actualizarAcumuladosPendientes();
-        }, 100);
+        // Actualizar acumulados pendientes usando await para esperar la consulta
+        await window.actualizarAcumuladosPendientes();
     }
 
     // ════════════════════════════════════════
@@ -471,32 +455,28 @@
                 }
             }
             
-            // Construir mensaje de vista previa
+            // Construir mensaje de vista previa (sin repetir el encabezado principal)
             let htmlPreview = '<div style="margin-top:1rem;padding:1rem;background:var(--secondary);border-radius:8px;border:1px solid var(--border)">';
-            htmlPreview += '<div style="font-size:.75rem;color:var(--text-muted);margin-bottom:.5rem">El monto acumulado actual equivale a:</div>';
-            htmlPreview += '<div style="font-size:1.1rem;font-weight:700;color:var(--propina);margin-bottom:.75rem">';
-            htmlPreview += window.formatUSD(acumuladoTotal / tasaEfectiva) + ' / ' + window.formatBs(acumuladoTotal);
-            htmlPreview += '</div>';
             
             htmlPreview += '<div style="font-size:.85rem;font-weight:600;margin-bottom:.5rem;color:var(--text)">';
             if (esUSD) {
                 htmlPreview += 'Pagando $' + montoIngresado.toFixed(2) + ' (equiv. a ' + window.formatBs(montoEnBs) + ')';
             } else {
-                htmlPreview += 'Pagando ' + window.formatBs(montoEnBs);
+                htmlPreview += 'Pagando Bs ' + window.formatBs(montoEnBs);
             }
             htmlPreview += '</div>';
             
             if (pagadoDeUSD > 0) {
                 const usdPagado = pagadoDeUSD / tasaBase;
                 htmlPreview += '<div style="font-size:.75rem;color:var(--usd-color);margin-top:.25rem">';
-                htmlPreview += '<i class="fas fa-dollar-sign"></i> Descuenta: ' + window.formatBs(pagadoDeUSD);
+                htmlPreview += '<i class="fas fa-dollar-sign"></i> Descuento: ' + window.formatBs(pagadoDeUSD);
                 if (esUSD) htmlPreview += ' ($' + usdPagado.toFixed(2) + ')';
                 htmlPreview += '</div>';
             }
             
             if (pagadoDeBs > 0) {
                 htmlPreview += '<div style="font-size:.75rem;color:var(--bs-color);margin-top:.25rem">';
-                htmlPreview += 'Bs: Descuenta: ' + window.formatBs(pagadoDeBs);
+                htmlPreview += 'Bs: Descuento: ' + window.formatBs(pagadoDeBs);
                 htmlPreview += '</div>';
             }
             
@@ -636,6 +616,7 @@
             
             window.cerrarModalPago();
             await window.actualizarAcumuladosPendientes();
+            await window.cargarMesoneros();
             await window.cargarPropinas();
             window.renderizarPropinas();
             
@@ -811,6 +792,7 @@
 
             window.cerrarModalPago();
             await window.actualizarAcumuladosPendientes();
+            await window.cargarMesoneros();
             await window.cargarPropinas();
             window.renderizarPropinas();
             
