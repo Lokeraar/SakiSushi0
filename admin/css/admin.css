@@ -794,6 +794,11 @@ html.dark-theme .dashboard-card { border-color: transparent; border-left-color: 
     font-size: .875rem; font-weight: 600; font-family: 'Montserrat', sans-serif;
     cursor: pointer; transition: var(--transition);
     pointer-events: auto;
+    white-space: nowrap;
+}
+.mesonero-card .btn-pagado-mesonero {
+    padding: 0.3rem 0.5rem !important;
+    font-size: 0.7rem !important;
 }
 /* En modales, permitir eventos en todos los elementos del botón para Brave */
 .modal .btn-primary, .modal .btn-secondary, .modal .btn-danger {
@@ -1092,16 +1097,25 @@ html.dark-theme .btn-secondary:hover {
 .mesonero-card .ucard-line3 {
     display: flex;
     align-items: center;
-    gap: .5rem;
-    flex-wrap: wrap;
+    gap: 0.4rem;
+    flex-wrap: nowrap;
     margin-top: auto;
     padding-top: 0.4rem;
+    overflow-x: auto;
 }
 .mesonero-card .ucard-actions-right {
     display: flex;
     gap: .35rem;
     align-items: center;
     margin-left: auto;
+}
+.mesonero-card .ucard-actions-right .btn-icon {
+    width: auto;
+    min-width: auto;
+    height: auto;
+    padding: 0.3rem 0.5rem !important;
+    font-size: 0.7rem !important;
+    flex-shrink: 0;
 }
 .mesonero-card .ucard-status-inline {
     font-size: .75rem;
@@ -1131,21 +1145,24 @@ html.dark-theme .btn-secondary:hover {
     }
     .mesonero-card .ucard-line3 {
         flex-wrap: wrap;
-        gap: 0.35rem;
+        gap: 0.3rem;
     }
-    .mesonero-card .btn-toggle,
-    .mesonero-card .btn-pagado-mesonero {
-        flex: 1 0 calc(50% - 0.25rem);
-        font-size: 0.7rem !important;
-        padding: 0.3rem 0.5rem !important;
+    .mesonero-card .btn-pagado-mesonero,
+    .mesonero-card .btn-toggle {
+        font-size: 0.65rem !important;
+        padding: 0.25rem 0.4rem !important;
     }
     .mesonero-card .ucard-actions-right {
         margin-left: auto;
         display: flex;
-        gap: 0.25rem;
+        gap: 0.15rem;
+    }
+    .mesonero-card .ucard-actions-right .btn-icon {
+        padding: 0.25rem 0.35rem !important;
+        font-size: 0.65rem !important;
     }
     .mesonero-card .ucard-status-inline {
-        font-size: 0.7rem;
+        font-size: 0.65rem;
     }
 }
 
@@ -1867,6 +1884,14 @@ html.dark-theme .ingrediente-row {
     display: inline-flex; align-items: center; justify-content: center;
     font-size: .8rem;
     transition: var(--transition);
+    flex-shrink: 0;
+}
+.mesonero-card .ucard-actions-right .btn-icon {
+    width: auto;
+    height: auto;
+    min-width: auto;
+    padding: 0.3rem 0.5rem !important;
+    font-size: 0.7rem !important;
 }
 .btn-icon.edit { background: #ffffff; color: var(--info); }
 .btn-icon.edit:hover { background: var(--info); color: #fff; }
@@ -2227,6 +2252,11 @@ html.dark-theme .tabs-chevron-left, html.dark-theme .tabs-chevron-right { border
     white-space: nowrap;
     transition: var(--transition);
     min-width: 72px;
+}
+.mesonero-card .btn-toggle {
+    padding: 0.3rem 0.5rem !important;
+    font-size: 0.7rem !important;
+    min-width: auto;
 }
 .btn-toggle-on  { background: #ffffff; color: var(--danger); border: 1px solid #ffcdd2; }
 .btn-toggle-on:hover  { background: var(--danger); color: #fff; }
