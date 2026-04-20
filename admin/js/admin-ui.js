@@ -44,6 +44,16 @@
             }
         }, 150);
     };
+    window._irAMesoneros = function() {
+        var tabs = document.querySelectorAll('.tab');
+        var panes = document.querySelectorAll('.tab-pane');
+        tabs.forEach(function(t){ t.classList.remove('active'); });
+        panes.forEach(function(p){ p.classList.remove('active'); });
+        var t = document.querySelector('.tab[data-tab="mesoneros"]');
+        var p = document.getElementById('mesonerosPane');
+        if (t) t.classList.add('active');
+        if (p) { p.classList.add('active'); p.scrollIntoView({behavior:'smooth',block:'start'}); }
+    };
         window.setupEventListeners = function() {
         // Funciones de scroll para tabs con doble chevron
         window._scrollTabs = function(dir) {
