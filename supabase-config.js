@@ -19,18 +19,18 @@ window.inicializarSupabaseCliente = (jwtToken = null) => {
     if (jwtToken) {
         options.global = { headers: { Authorization: `Bearer ${jwtToken}` } };
     }
-    window.supabaseclient = window.supabase.createClient(
+    window.supabaseClient = window.supabase.createClient(
         window.SUPABASE_URL,
         window.SUPABASE_ANON_KEY,
         options
     );
     console.log(jwtToken ? 'Cliente Supabase con JWT' : 'Cliente Supabase anonimo');
-    return window.supabaseclient;
+    return window.supabaseClient;
 };
 
 // Inicializar cliente por defecto (sin token)
-if (!window.supabaseclient) {
-    window.supabaseclient = window.inicializarSupabaseCliente();
+if (!window.supabaseClient) {
+    window.supabaseClient = window.inicializarSupabaseCliente();
 }
 
 // ============================================
@@ -198,7 +198,7 @@ window.solicitarPermisoPush = async function(sessionId) {
         const p256dh = btoa(String.fromCharCode.apply(null, new Uint8Array(subscription.getKey('p256dh'))));
         const auth = btoa(String.fromCharCode.apply(null, new Uint8Array(subscription.getKey('auth'))));
         
-        const { error } = await window.supabaseclient
+        const { error } = await window.supabaseClient
             .from('push_subscriptions')
             .upsert([{
                 session_id: sessionId,
@@ -226,7 +226,7 @@ window.tienePermisoPush = function() {
 // ============================================
 window.cargarConfiguracion = async function() {
     try {
-        const { data, error } = await window.supabaseclient
+        const { data, error } = await window.supabaseClient
             .from('config')
             .select('*')
             .eq('id', 1)
@@ -256,11 +256,11 @@ window.subirImagenPlatillo = async function(archivoImagen, carpetaAdicional = ''
         const extension = archivoImagen.name.split('.').pop();
         const nombreArchivo = `${timestamp}_${random}.${extension}`;
         const ruta = carpetaAdicional ? `${carpetaAdicional}/${nombreArchivo}` : nombreArchivo;
-        const { data, error } = await window.supabaseclient.storage
+        const { data, error } = await window.supabaseClient.storage
             .from('imagenes-platillos')
             .upload(ruta, archivoImagen, { cacheControl: '3600', upsert: false, contentType: archivoImagen.type });
         if (error) throw error;
-        const { data: urlData } = window.supabaseclient.storage.from('imagenes-platillos').getPublicUrl(ruta);
+        const { data: urlData } = window.supabaseClient.storage.from('imagenes-platillos').getPublicUrl(ruta);
         return { success: true, path: ruta, url: urlData.publicUrl };
     } catch (error) {
         console.error('Error subiendo imagen:', error);
@@ -276,7 +276,7 @@ window.eliminarImagenPlatillo = async function(urlImagen) {
         if (bucketIndex === -1) return { success: true };
         const rutaRelativa = urlImagen.substring(bucketIndex + `/public/${bucketName}/`.length);
         if (!rutaRelativa) return { success: true };
-        const { error } = await window.supabaseclient.storage.from(bucketName).remove([rutaRelativa]);
+        const { error } = await window.supabaseClient.storage.from(bucketName).remove([rutaRelativa]);
         if (error) throw error;
         return { success: true };
     } catch (error) {
@@ -295,11 +295,11 @@ window.subirComprobante = async function(file, tipo, onProgress) {
         const timestamp = Date.now();
         const nombreArchivo = `${timestamp}_${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
         const ruta = `${tipo}/${nombreArchivo}`;
-        const { data, error } = await window.supabaseclient.storage
+        const { data, error } = await window.supabaseClient.storage
             .from('comprobantes')
             .upload(ruta, file, { cacheControl: '3600', upsert: false, contentType: file.type });
         if (error) throw new Error(error.message || 'Error al subir el archivo');
-        const { data: urlData } = window.supabaseclient.storage.from('comprobantes').getPublicUrl(ruta);
+        const { data: urlData } = window.supabaseClient.storage.from('comprobantes').getPublicUrl(ruta);
         if (onProgress) onProgress({ loaded: file.size, total: file.size, percent: 100 });
         return { success: true, url: urlData.publicUrl };
     } catch (error) {

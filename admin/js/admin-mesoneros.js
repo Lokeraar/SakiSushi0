@@ -13,7 +13,7 @@
     window.actualizaracumuladospendientes = async function() {
         try {
             // consulta todas las propinas pendientes (sin filtrar fecha)
-            const { data, error } = await window.supabaseclient
+            const { data, error } = await window.supabaseClient
                 .from('propinas')
                 .select('mesonero_id, monto_bs, moneda_original, monto_original')
                 .eq('entregado', false);
@@ -37,7 +37,7 @@
             // actualizar en dom: selector [data-mesonero-id] → elemento .mesonero-pendiente
             const tarjetas = document.querySelectorAll('[data-mesonero-id]');
             tarjetas.forEach(function(card) {
-                const mesoneroid = card.getattribute('data-mesonero-id');
+                const mesoneroid = card.getAttribute('data-mesonero-id');
                 const pendienteel = card.querySelector('.mesonero-pendiente');
                 
                 const tasaefectiva = Number(window.configglobal?.tasa_efectiva || window.configglobal?.tasa_cambio || 400);
@@ -90,11 +90,11 @@
     function iniciarrealtimepropinas() {
         // limpiar canal previo si existe
         if (window.propinaschannel) {
-            window.supabaseclient.removeChannel(window.propinaschannel);
+            window.supabaseClient.removeChannel(window.propinaschannel);
         }
 
         // crear nuevo canal para cambios en propinas
-        window.propinaschannel = window.supabaseclient.channel('propinas-mesoneros-realtime')
+        window.propinaschannel = window.supabaseClient.channel('propinas-mesoneros-realtime')
             .on('postgres_changes',
                 { event: '*', schema: 'public', table: 'propinas' },
                 async function(payload) {
@@ -111,7 +111,7 @@
     // ════════════════════════════════════════
     window.cargarmesoneros = async function() {
         try {
-            const { data, error } = await window.supabaseclient
+            const { data, error } = await window.supabaseClient
                 .from('mesoneros').select('*').order('nombre');
             if (error) throw error;
             window.mesoneros = data || [];
@@ -185,7 +185,7 @@
 
     window.togglemesoneroactivo = async function(id, activo) {
         try {
-            await window.supabaseclient.from('mesoneros').update({ activo }).eq('id', id);
+            await window.supabaseClient.from('mesoneros').update({ activo }).eq('id', id);
             await window.cargarmesoneros();
             window.mostrartoast('Estado actualizado', 'success');
         } catch(e) { 
@@ -200,7 +200,7 @@
         window.mostrarconfirmacionpremium( 'Eliminar Mesonero', 'Eliminar al mesonero "' + m.nombre + '"? Esta acción no se puede deshacer.',
             async function() {
                 try {
-                    await window.supabaseclient.from('mesoneros').delete().eq('id', id);
+                    await window.supabaseClient.from('mesoneros').delete().eq('id', id);
                     await window.cargarmesoneros();
                     window.mostrartoast('Mesonero eliminado', 'success');
                 } catch(e) { 
@@ -217,7 +217,7 @@
         const btn = document.querySelector('[onclick="window.agregarmesonero()"]');
         if (btn) { btn.disabled = true; btn.innerHTML = '<i class="Fas fa-spinner fa-spin"></i>'; }
         try {
-            const { error } = await window.supabaseclient.from('mesoneros')
+            const { error } = await window.supabaseClient.from('mesoneros')
                 .insert([{ id: window.generarid('mes_'), nombre, activo: true }]);
             if (error) throw error;
             if (inp) inp.value = '';
@@ -234,7 +234,7 @@
     // calcular acumulado pendiente por mesonero
     // ════════════════════════════════════════
     async function calcularacumuladopendiente(mesoneroid) {
-        const { data, error } = await window.supabaseclient
+        const { data, error } = await window.supabaseClient
             .from('propinas')
             .select('monto_bs, monto_original, moneda_original')
             .eq('mesonero_id', mesoneroid)
@@ -355,7 +355,7 @@
         }
         
         try {
-            const { data: pendientes, error } = await window.supabaseclient
+            const { data: pendientes, error } = await window.supabaseClient
                 .from('propinas')
                 .select('monto_bs, monto_original, moneda_original')
                 .eq('mesonero_id', mesoneroparapagoid)
@@ -499,7 +499,7 @@
         try {
             // obtener todas las propinas pendientes del mesonero con información completa
             // si paga en usd, solo marcar las propinas en usd; si paga en bs, solo las propinas en bs
-            let query = window.supabaseclient
+            let query = window.supabaseClient
                 .from('propinas')
                 .select('id, monto_bs, monto_original, moneda_original')
                 .eq('mesonero_id', mesoneroparapagoid)
@@ -540,7 +540,7 @@
             for (const prop of pendientes) {
                 let updatedata = { entregado: true };
                 
-                await window.supabaseclient.from('propinas').update(updatedata).eq('id', prop.id);
+                await window.supabaseClient.from('propinas').update(updatedata).eq('id', prop.id);
             }
             
             // crear una nueva propina que representa el pago total al mesonero
@@ -573,7 +573,7 @@
                 entregado: true
             };
             
-            const { error: errinsert } = await window.supabaseclient.from('propinas').insert([nuevapropina]);
+            const { error: errinsert } = await window.supabaseClient.from('propinas').insert([nuevapropina]);
             if (errinsert) throw errinsert;
             
             window.cerrarmodalpago();
@@ -634,7 +634,7 @@
         // calcular el acumulado pendiente solo del bucket correspondiente
         let acumuladodelbucket = 0;
         try {
-            let queryacumulado = window.supabaseclient
+            let queryacumulado = window.supabaseClient
                 .from('propinas')
                 .select('monto_bs, monto_original, moneda_original')
                 .eq('mesonero_id', mesoneroparapagoid)
@@ -674,7 +674,7 @@
 
         try {
             // 1. obtener propinas pendientes solo del bucket correspondiente, en orden fifo
-            let querypendientes = window.supabaseclient
+            let querypendientes = window.supabaseClient
                 .from('propinas')
                 .select('id, monto_bs, mesa, metodo, monto_original, moneda_original, tasa_aplicada, referencia, cajero, fecha')
                 .eq('mesonero_id', mesoneroparapagoid)
@@ -704,7 +704,7 @@
                     // caso 1: pagar la propina completa
                     // marcar la propina original como entregada (no modificar montos para preservar historial)
                     let updatedataoriginal = { entregado: true };
-                    await window.supabaseclient.from('propinas').update(updatedataoriginal).eq('id', prop.id);
+                    await window.supabaseClient.from('propinas').update(updatedataoriginal).eq('id', prop.id);
                     
                     // crear nueva propina que representa el pago (egreso)
                     const cajeronombre = (window.usuarioactual && window.usuarioactual.nombre) || 'Administrador';
@@ -743,7 +743,7 @@
                         entregado: true
                     };
                     
-                    const { error: errinsert } = await window.supabaseclient
+                    const { error: errinsert } = await window.supabaseClient
                         .from('propinas')
                         .insert([nuevapropinacompleta]);
                     if (errinsert) throw errinsert;
@@ -754,7 +754,7 @@
                     const montorestanteenmoneda = montopropinaenmoneda - montopagadoenmoneda;
                     
                     // 2a. marcar la propina original como entregada (no modificar montos para preservar historial)
-                    await window.supabaseclient.from('propinas').update({ entregado: true }).eq('id', prop.id);
+                    await window.supabaseClient.from('propinas').update({ entregado: true }).eq('id', prop.id);
                     
                     // 2b. crear un nuevo registro con el monto pagado (egreso)
                     const cajeronombre = (window.usuarioactual && window.usuarioactual.nombre) || 'Administrador';
@@ -788,7 +788,7 @@
                         entregado: true
                     };
                     
-                    const { error: errinsertpago } = await window.supabaseclient
+                    const { error: errinsertpago } = await window.supabaseClient
                         .from('propinas')
                         .insert([nuevapropinapago]);
                     if (errinsertpago) throw errinsertpago;
@@ -822,7 +822,7 @@
                         entregado: false
                     };
                     
-                    const { error: errinsertrestante } = await window.supabaseclient
+                    const { error: errinsertrestante } = await window.supabaseClient
                         .from('propinas')
                         .insert([nuevapropinarestante]);
                     if (errinsertrestante) throw errinsertrestante;
@@ -875,7 +875,7 @@
         try {
             const h = new Date(); h.setHours(0,0,0,0);
             const m = new Date(h); m.setDate(m.getDate()+1);
-            const { data, error } = await window.supabaseclient
+            const { data, error } = await window.supabaseClient
                 .from('propinas').select('*, mesoneros(nombre)')
                 .gte('fecha', h.toISOString()).lt('fecha', m.toISOString())
                 .order('fecha', { ascending: false });
@@ -938,7 +938,7 @@
             const m   = new Date(h); m.setDate(m.getDate()+1);
             const tasa = window.configglobal?.tasa_efectiva || window.configglobal?.tasa_cambio || 400;
             // mostrar todos los registros (sin filtrar por entregado) para historial completo
-            const { data, error } = await window.supabaseclient
+            const { data, error } = await window.supabaseClient
                 .from('propinas').select('*, mesoneros(nombre)')
                 .gte('fecha', h.toISOString()).lt('fecha', m.toISOString())
                 .order('fecha', { ascending: false });
@@ -1052,11 +1052,11 @@
                 var dataobj = { nombre: nombre, activo: activo, foto: fotourl || null };
                 var err;
                 if (id) {
-                    var r1 = await window.supabaseclient.from('mesoneros').update(dataobj).eq('id', id);
+                    var r1 = await window.supabaseClient.from('mesoneros').update(dataobj).eq('id', id);
                     err = r1.error;
                 } else {
                     dataobj.id = window.generarid('mes_');
-                    var r2 = await window.supabaseclient.from('mesoneros').insert([dataobj]);
+                    var r2 = await window.supabaseClient.from('mesoneros').insert([dataobj]);
                     err = r2.error;
                 }
                 if (err) throw err;
@@ -1080,7 +1080,7 @@
     if (removebtn) removebtn.addEventListener('click', removeMesoneroFoto);
 
     // Inicializar al cargar el módulo
-    if (window.supabaseclient) {
+    if (window.supabaseClient) {
         window.cargarmesoneros();
     }
 })();

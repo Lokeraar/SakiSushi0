@@ -10,7 +10,7 @@
 
     window.cargarinventario = async function() {
         try {
-            const { data, error } = await window.supabaseclient.from('inventario').select('*');
+            const { data, error } = await window.supabaseClient.from('inventario').select('*');
             if (error) throw error;
             window.inventarioitems = data || [];
             const inventariogrid = document.getElementById('inventarioGrid');
@@ -95,7 +95,7 @@
         const ismobile   = window.innerwidth <= 768;
         const disponible = (item.stock||0) - (item.reservado||0);
         const minimo     = item.minimo || 0;
-        const stockbase  = math.max(item.stock || 0, 0.0001);
+        const stockbase  = Math.max(item.stock || 0, 0.0001);
 
         // 4 estados
         let estado, estadolabel, estadocolor, estadograd;
@@ -113,11 +113,11 @@
             estadocolor='#43a047'; estadograd='linear-gradient(90deg,#43a047,#66bb6a)';
         }
 
-        const pct = math.min(100, math.max(0, (disponible / stockbase) * 100));
+        const pct = Math.min(100, Math.max(0, (disponible / stockbase) * 100));
         // decimales limpios: hasta milésimas (3 decimales) sin ceros extra
         const fmt = (n) => { 
             const num = parseFloat(n.toprecision(10));
-            if (isnan(num)) return '0';
+            if (isNaN(num)) return '0';
             // Mostrar hasta 3 decimales si es necesario
             const s = num.toFixed(3);
             // Eliminar ceros innecesarios después del punto decimal
@@ -531,7 +531,7 @@ validarprecios();
 			`¿Estás seguro de eliminar "${ingrediente.nombre}"? Esta acción no se puede deshacer.`,
 			async () => {
 				try {
-					await window.supabaseclient.from('Inventario').delete().eq('Id', id);
+					await window.supabaseClient.from('Inventario').delete().eq('Id', id);
 					await window.cargarInventario();
 					window.mostrarToast('🗑️ ingrediente eliminado', 'Success');
 				} catch (e) {
@@ -647,8 +647,8 @@ validarprecios();
     };
 
     window.setupstockrealtime = function() {
-        if (window.stockupdatechannel) window.supabaseclient.removeChannel(window.stockupdatechannel);
-        window.stockupdatechannel = window.supabaseclient
+        if (window.stockupdatechannel) window.supabaseClient.removeChannel(window.stockupdatechannel);
+        window.stockupdatechannel = window.supabaseClient
             .channel('stock-updates')
             .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'inventario' }, async (payload) => {
                 const index = window.inventarioitems.findindex(i => i.id === payload.new.id);
@@ -666,8 +666,8 @@ validarprecios();
 
     window.verificarynotificarstockreactivado = async function(ingredienteid, ingredientenombre) {
         for (const platillo of window.menuitems) {
-            if (!platillo.ingredientes || object.keys(platillo.ingredientes).length === 0) continue;
-            const usaingrediente = object.keys(platillo.ingredientes).some(id => id === ingredienteid);
+            if (!platillo.ingredientes || Object.keys(platillo.ingredientes).length === 0) continue;
+            const usaingrediente = Object.keys(platillo.ingredientes).some(id => id === ingredienteid);
             if (!usaingrediente) continue;
             let stockdisponible = infinity;
             for (const [ingid, inginfo] of object.entries(platillo.ingredientes)) {
@@ -675,8 +675,8 @@ validarprecios();
                 if (!ingrediente) { stockdisponible = 0; break; }
                 const stockdisp = (ingrediente.stock || 0) - (ingrediente.reservado || 0);
                 const cantidadnecesaria = inginfo.cantidad || 1;
-                const posible = math.floor(stockdisp / cantidadnecesaria);
-                stockdisponible = math.min(stockdisponible, posible);
+                const posible = Math.floor(stockdisp / cantidadnecesaria);
+                stockdisponible = Math.min(stockdisponible, posible);
             }
             const estabaagotado = window.platillosnotificados[platillo.id] === 'agotado';
             const ahoradisponible = stockdisponible > 0;
@@ -686,7 +686,7 @@ validarprecios();
                 const titulo = `🍣 ${platillo.nombre} disponible de nuevo!`;
                 const mensaje = `ya tenemos ${platillo.nombre} en stock. ¡pide ahora!`;
                 try {
-                    const { data: pedidosunicos } = await window.supabaseclient.from('pedidos').select('session_id').not('session_id', 'is', null).order('fecha', { ascending: false });
+                    const { data: pedidosunicos } = await window.supabaseClient.from('pedidos').select('session_id').not('session_id', 'is', null).order('fecha', { ascending: false });
                     const sessionids = [...new set(pedidosunicos?.map(p => p.session_id) || [])];
                     for (const sessionid of sessionids) await window.enviarnotificacionpush(titulo, mensaje, sessionid);
                     window.mostrartoast(`📢 notificación enviada: ${platillo.nombre} disponible`, 'success');
@@ -702,21 +702,21 @@ validarprecios();
         for (const platillo of window.menuitems) {
             let stockdisponible = infinity;
             let todosingredientes = true;
-            if (platillo.ingredientes && object.keys(platillo.ingredientes).length > 0) {
+            if (platillo.ingredientes && Object.keys(platillo.ingredientes).length > 0) {
                 for (const [ingid, inginfo] of object.entries(platillo.ingredientes)) {
                     const ingrediente = window.inventarioitems.find(i => i.id === ingid);
                     if (!ingrediente) { todosingredientes = false; stockdisponible = 0; break; }
                     const stockdisp = (ingrediente.stock || 0) - (ingrediente.reservado || 0);
                     const cantidadnecesaria = inginfo.cantidad || 1;
-                    const posible = math.floor(stockdisp / cantidadnecesaria);
-                    stockdisponible = math.min(stockdisponible, posible);
+                    const posible = Math.floor(stockdisp / cantidadnecesaria);
+                    stockdisponible = Math.min(stockdisponible, posible);
                 }
             } else {
                 stockdisponible = platillo.stock_maximo || 999;
             }
-            const nuevostock = todosingredientes ? math.max(0, stockdisponible) : 0;
+            const nuevostock = todosingredientes ? Math.max(0, stockdisponible) : 0;
             if (platillo.stock !== nuevostock) {
-                await window.supabaseclient.from('menu').update({ stock: nuevostock }).eq('id', platillo.id);
+                await window.supabaseClient.from('menu').update({ stock: nuevostock }).eq('id', platillo.id);
                 platillo.stock = nuevostock;
             }
         }
@@ -810,7 +810,7 @@ validarprecios();
             `¿Estás seguro de eliminar "${ingrediente.nombre}"? Esta acción no se puede deshacer.`,
             async () => {
                 try {
-                    await window.supabaseclient.from('Inventario').delete().eq('Id', id);
+                    await window.supabaseClient.from('Inventario').delete().eq('Id', id);
                     await window.cargarInventario();
                     window.cerrarModal('Ingredientemodal');
                     window.ingredienteEditandoId = null;
@@ -868,13 +868,13 @@ validarprecios();
             let error;
             if (window.ingredienteEditandoId) {
                 // Actualizar existente
-                const { error: updError } = await window.supabaseclient.from('Inventario')
+                const { error: updError } = await window.supabaseClient.from('Inventario')
                     .update(ingredienteData)
                     .eq('Id', window.ingredienteEditandoId);
                 error = updError;
             } else {
                 // Crear nuevo
-                const { error: insError } = await window.supabaseclient.from('Inventario')
+                const { error: insError } = await window.supabaseClient.from('Inventario')
                     .insert([ingredienteData]);
                 error = insError;
             }

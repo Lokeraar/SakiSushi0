@@ -2,7 +2,7 @@
 (function() {
     window.cargarconfiguracion = async function() {
         try {
-            const { data, error } = await window.supabaseclient
+            const { data, error } = await window.supabaseClient
                 .from('Config')
                 .select('*')
                 .eq('Id', 1)
@@ -89,7 +89,7 @@
                 const msday      = 24 * 60 * 60 * 1000;
                 const msperiodo  = activosemanal ? 7 * msday : msday;
                 const diffms     = finefectivo - desdedate;
-                periodos = math.max(0, math.floor(diffms / msperiodo) + 1);
+                periodos = Math.max(0, Math.floor(diffms / msperiodo) + 1);
             }
         }
 
@@ -105,7 +105,7 @@
             const _desdelog = new Date(desdeval + 'T00:00:00');
             const _msd = 24*60*60*1000;
             const _mplog = activosemanal ? 7*_msd : _msd;
-            const _diffdias = math.floor((_hoylog - _desdelog) / _msd);
+            const _diffdias = Math.floor((_hoylog - _desdelog) / _msd);
             console.log('Días transcurridos desde "Desde":', _diffdias);
             console.log('Períodos ' + (activosemanal ? 'semanales' : 'diarios') + ' completados:', periodos);
         }
@@ -114,7 +114,7 @@
         console.log('Acumulado total:', aumentoacumulado.toFixed(2) + '%');
         console.log('Tasa Base:', tasabase);
         console.log('Tasa Efectiva 💵 Bs', tasaefectiva.toFixed(2));
-        console.groupend();
+        console.groupEnd();
 
         document.getElementById('tasaEfectivaDisplay').textContent = tasaefectiva.toFixed(2);
         document.getElementById('aumentoAcumuladoDisplay').textContent = aumentoacumulado.toFixed(2) + '%';
@@ -144,7 +144,7 @@
             
             window.recalculartasaefectiva();
             
-            await window.supabaseclient.from('config').update({
+            await window.supabaseClient.from('config').update({
                 tasa_cambio:       window.configglobal.tasa_cambio,
                 aumento_diario:    window.configglobal.aumento_diario,
                 aumento_activo:    window.configglobal.aumento_activo,

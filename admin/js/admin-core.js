@@ -23,7 +23,7 @@
             window.usuarioactual = JSON.parse(storedUser);
         }
     } catch(e) {
-        console.warn('No se pudo cargar usuarioactual de sessionstorage:', e);
+        console.warn('No se pudo cargar usuarioactual de sessionStorage:', e);
     }
     
     window.wifiSsidPersistente = localStorage.getItem('saki_wifi_ssid') || '';
@@ -35,15 +35,15 @@
     window.formatbs = function(m) {
         if (m === undefined || m === null) m = 0;
         const valor = typeof m === 'number' ? m : parseFloat(m);
-        if (isnan(valor)) return 'Bs 0,00';
-        const entero = math.floor(Math.abs(valor)).toLocaleString('es-VE');
+        if (isNaN(valor)) return 'Bs 0,00';
+        const entero = Math.floor(Math.abs(valor)).toLocaleString('es-VE');
         const decimal = Math.round((Math.abs(valor) % 1) * 100).toString().padStart(2, '0');
         return (valor < 0 ? '-Bs ' : 'Bs ') + entero + ',' + decimal;
     };
     
     window.formatusd = function(m) {
         try {
-            return new intl.numberformat('en-US', { style: 'currency', currency: 'USD', minimumfractiondigits: 2 }).format(m);
+            return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 2 }).format(m);
         } catch(e) {
             return '$ ' + (m || 0).toFixed(2);
         }

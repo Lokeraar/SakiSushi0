@@ -12,7 +12,7 @@
         try {
             // esperar a que supabaseclient esté listo (puede tardar un momento)
             let intentos = 0;
-            while (!window.supabaseclient && intentos < 20) {
+            while (!window.supabaseClient && intentos < 20) {
                 await new promise(r => setTimeout(r, 100));
                 intentos++;
             }
@@ -25,7 +25,7 @@
                 admins = recent;
             } else {
                 // obtener todos los admins activos de la bd
-                const { data, error } = await window.supabaseclient.from('usuarios').select('*').eq('rol', 'admin').eq('activo', true);
+                const { data, error } = await window.supabaseClient.from('usuarios').select('*').eq('rol', 'admin').eq('activo', true);
                 if (error) throw error;
                 admins = data || [];
             }
@@ -118,7 +118,7 @@
             if (adminuser.foto === undefined && selectedadmin.foto) adminuser.foto = selectedadmin.foto;
             window.guardaradminreciente(adminuser);
             
-            window.supabaseclient = window.inicializarsupabasecliente(window.jwttoken);
+            window.supabaseClient = window.inicializarSupabaseCliente(window.jwttoken);
             
             document.getElementById('loginContainer').style.display = 'none';
             document.getElementById('panelContainer').classList.add('active');
@@ -208,14 +208,14 @@
             const user = JSON.parse(userdata);
             if (user.rol !== 'admin') return false;
             // verificar token con supabase
-            const { error } = await window.supabaseclient.from('config').select('id').limit(1).maybesingle();
+            const { error } = await window.supabaseClient.from('config').select('id').limit(1).maybesingle();
             if (error && error.message.includes('JWT')) {
                 window.cerrarsesion();
                 return false;
             }
             window.jwttoken = token;
             window.isadminauthenticated = true;
-            window.supabaseclient = window.inicializarsupabasecliente(window.jwttoken);
+            window.supabaseClient = window.inicializarSupabaseCliente(window.jwttoken);
             
             // actualizar el nombre del usuario en el header después de restaurar sesión (desktop y móvil)
             const headerusuarionombredesktop = document.getElementById('headerUsuarioNombreDesktop');
@@ -256,7 +256,7 @@
         }
         window.mostrarlogin();
         window.mostrartoast('🔓 Sesión cerrada', 'info');
-        window.supabaseclient = window.inicializarsupabasecliente();
+        window.supabaseClient = window.inicializarSupabaseCliente();
         // recargar la lista de admins (por si cambió)
         setTimeout(() => window.cargarlistaadminsrecientes(), 500);
     };
