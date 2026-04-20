@@ -358,6 +358,13 @@ html.dark-theme .logout-button:hover { background: rgba(255,255,255,.1); color: 
 
 /* Estilos para tablet y desktop (> 768px) */
 @media (min-width: 769px) {
+    .desktop-only {
+        display: flex !important;
+    }
+    .mobile-only {
+        display: none !important;
+    }
+    
     .level-1 {
         display: flex;
         justify-content: space-between;
@@ -376,12 +383,19 @@ html.dark-theme .logout-button:hover { background: rgba(255,255,255,.1); color: 
         align-items: center;
         gap: 0.5rem;
         justify-content: flex-end;
+        margin-left: auto;
     }
     .level-2 {
         display: flex;
         justify-content: space-between;
         align-items: center;
         margin-top: 0.25rem;
+    }
+    .level-2 .header-right-group {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        justify-content: flex-end;
     }
     .level-3 {
         margin-top: 0.5rem;
@@ -3104,6 +3118,7 @@ html.dark-theme #platilloModal .ingrediente-row input:focus {
         display: flex;
         align-items: center;
         width: auto;
+        margin-left: auto;
     }
     /* Asegurar que el botón Salir esté al final de la línea */
     .header-right-group .logout-button {
@@ -3151,7 +3166,7 @@ html.dark-theme #platilloModal .ingrediente-row input:focus {
 .header-right-group {
     padding-left: 0;
     padding-right: 0;
-    margin-left: 0;
+    margin-left: auto;
     margin-right: 0;
     justify-content: flex-end;
 }
@@ -3233,6 +3248,7 @@ html.dark-theme #platilloModal .ingrediente-row input:focus {
     align-items: center;
     gap: 0.75rem;
     justify-content: flex-end;
+    margin-left: auto;
 }
 
 /* El slogan debe permitir wrap y reducir fuente si es necesario */
@@ -3373,6 +3389,7 @@ html.dark-theme #platilloModal .ingrediente-row input:focus {
         align-items: center;
         gap: 0.5rem;
         justify-content: flex-end;
+        margin-left: auto;
     }
     
     /* Nivel 3 móvil: Eslogan (izq), Selector de sucursal (der) */
@@ -3394,6 +3411,7 @@ html.dark-theme #platilloModal .ingrediente-row input:focus {
         align-items: center;
         gap: 0.5rem;
         justify-content: flex-end;
+        margin-left: auto;
     }
 }
 
