@@ -3,9 +3,9 @@
     window.cargarConfiguracion = async function() {
         try {
             const { data, error } = await window.supabaseClient
-                .from('config')
+                .from('Config')
                 .select('*')
-                .eq('id', 1)
+                .eq('Id', 1)
                 .single();
             if (error) throw error;
             window.configGlobal = data || {};
@@ -16,10 +16,10 @@
             window.configGlobal.aumento_activo = window.configGlobal.aumento_activo || false;
             window.configGlobal.aumento_semanal = window.configGlobal.aumento_semanal || false;
             
-            window.configGlobal.admin_password = window.configGlobal.admin_password || 'admin123';
-            window.configGlobal.recovery_email = window.configGlobal.recovery_email || 'admin@sakisushi.com';
+            window.configGlobal.admin_password = window.configGlobal.admin_password || 'Admin123';
+            window.configGlobal.recovery_email = window.configGlobal.recovery_email || 'Admin@sakisushi.com';
             
-            console.log('⚙️ Configuración cargada. admin_password:', window.configGlobal.admin_password ? '***' : 'NO CARGADA');
+            console.log('⚙️ configuración cargada. admin_password:', window.configGlobal.admin_password ? '***' : 'No cargada');
             
         } catch (e) {
             console.error('Error cargando configuración:', e);
@@ -29,8 +29,8 @@
                 aumento_diario: 0,
                 aumento_activo: false,
                 aumento_semanal: false,
-                admin_password: 'admin123',
-                recovery_email: 'admin@sakisushi.com'
+                admin_password: 'Admin123',
+                recovery_email: 'Admin@sakisushi.com'
             };
         }
     };
@@ -43,135 +43,135 @@
     };
 
     window.actualizarTasaUI = function() {
-        document.getElementById('tasaBaseInput').value      = window.configGlobal.tasa_cambio || 400;
-        document.getElementById('aumentoDiarioInput').value = window.configGlobal.aumento_diario || 0;
-        document.getElementById('aumentoActivoToggle').checked = window.configGlobal.aumento_activo || false;
-        const semEl = document.getElementById('aumentoSemanalToggle');
+        document.getElementById('Tasabaseinput').value      = window.configGlobal.tasa_cambio || 400;
+        document.getElementById('Aumentodiarioinput').value = window.configGlobal.aumento_diario || 0;
+        document.getElementById('Aumentoactivotoggle').checked = window.configGlobal.aumento_activo || false;
+        const semEl = document.getElementById('Aumentosemanaltoggle');
         if (semEl) semEl.checked = window.configGlobal.aumento_semanal || false;
-        document.getElementById('tasaEfectivaDisplay').textContent = (window.configGlobal.tasa_efectiva || 400).toFixed(2);
-        document.getElementById('aumentoAcumuladoDisplay').textContent = (window.configGlobal.aumento_acumulado || 0).toFixed(2) + '%';
-        if (window.configGlobal.aumento_desde && document.getElementById('aumentoDesde'))
-            document.getElementById('aumentoDesde').value = window.configGlobal.aumento_desde.split('T')[0];
-        if (window.configGlobal.aumento_hasta && document.getElementById('aumentoHasta'))
-            document.getElementById('aumentoHasta').value = window.configGlobal.aumento_hasta.split('T')[0];
-        if (window.configGlobal.aumento_indefinido && document.getElementById('aumentoIndefinido'))
-            document.getElementById('aumentoIndefinido').checked = true;
-        if (typeof _actualizarLabelAumento === 'function') _actualizarLabelAumento();
+        document.getElementById('Tasaefectivadisplay').textContent = (window.configGlobal.tasa_efectiva || 400).toFixed(2);
+        document.getElementById('Aumentoacumuladodisplay').textContent = (window.configGlobal.aumento_acumulado || 0).toFixed(2) + '%';
+        if (window.configGlobal.aumento_desde && document.getElementById('Aumentodesde'))
+            document.getElementById('Aumentodesde').value = window.configGlobal.aumento_desde.split('T')[0];
+        if (window.configGlobal.aumento_hasta && document.getElementById('Aumentohasta'))
+            document.getElementById('Aumentohasta').value = window.configGlobal.aumento_hasta.split('T')[0];
+        if (window.configGlobal.aumento_indefinido && document.getElementById('Aumentoindefinido'))
+            document.getElementById('Aumentoindefinido').checked = true;
+        if (typeof _actualizarLabelAumento === 'Function') _actualizarLabelAumento();
     };
 
     window.actualizarMenuTasaBanner = window.actualizarTasaUI;
 
     window.recalcularTasaEfectiva = function() {
-        const tasaBaseInput = document.getElementById('tasaBaseInput');
+        const tasaBaseInput = document.getElementById('Tasabaseinput');
         if (tasaBaseInput && window.configGlobal) {
             window.configGlobal.tasa_cambio = parseFloat(tasaBaseInput.value) || 0;
         }
-        const tasaBase     = parseFloat(document.getElementById('tasaBaseInput').value) || 0;
-        const aumentoPct   = parseFloat(document.getElementById('aumentoDiarioInput').value) || 0;
-        const activoDiario  = document.getElementById('aumentoActivoToggle').checked;
-        const activoSemanal = document.getElementById('aumentoSemanalToggle') &&
-                              document.getElementById('aumentoSemanalToggle').checked;
+        const tasaBase     = parseFloat(document.getElementById('Tasabaseinput').value) || 0;
+        const aumentoPct   = parseFloat(document.getElementById('Aumentodiarioinput').value) || 0;
+        const activoDiario  = document.getElementById('Aumentoactivotoggle').checked;
+        const activoSemanal = document.getElementById('Aumentosemanaltoggle') &&
+                              document.getElementById('Aumentosemanaltoggle').checked;
         const estaActivo   = activoDiario || activoSemanal;
-        const indefinido   = document.getElementById('aumentoIndefinido') &&
-                             document.getElementById('aumentoIndefinido').checked;
-        const desdeVal     = document.getElementById('aumentoDesde')?.value || '';
-        const hastaVal     = !indefinido ? (document.getElementById('aumentoHasta')?.value || '') : '';
+        const indefinido   = document.getElementById('Aumentoindefinido') &&
+                             document.getElementById('Aumentoindefinido').checked;
+        const desdeVal     = document.getElementById('Aumentodesde')?.value || '';
+        const hastaval     = !indefinido ? (document.getelementbyid('aumentoHasta')?.value || '') : '';
 
         let periodos = 0;
 
-        if (estaActivo && desdeVal) {
-            const hoy        = new Date(); hoy.setHours(0,0,0,0);
-            const desdeDate  = new Date(desdeVal + 'T00:00:00');
-            const hastaDate  = hastaVal ? new Date(hastaVal + 'T00:00:00') : null;
+        if (estaactivo && desdeval) {
+            const hoy        = new date(); hoy.sethours(0,0,0,0);
+            const desdedate  = new date(desdeval + 'T00:00:00');
+            const hastadate  = hastaval ? new date(hastaval + 'T00:00:00') : null;
 
-            if (desdeDate <= hoy) {
-                const finEfectivo = hastaDate && hastaDate < hoy ? hastaDate : hoy;
-                const msDay      = 24 * 60 * 60 * 1000;
-                const msPeriodo  = activoSemanal ? 7 * msDay : msDay;
-                const diffMs     = finEfectivo - desdeDate;
-                periodos = Math.max(0, Math.floor(diffMs / msPeriodo) + 1);
+            if (desdedate <= hoy) {
+                const finefectivo = hastadate && hastadate < hoy ? hastadate : hoy;
+                const msday      = 24 * 60 * 60 * 1000;
+                const msperiodo  = activosemanal ? 7 * msday : msday;
+                const diffms     = finefectivo - desdedate;
+                periodos = math.max(0, math.floor(diffms / msperiodo) + 1);
             }
         }
 
-        const aumentoAcumulado = periodos * aumentoPct;
-        const tasaEfectiva     = tasaBase * (1 + aumentoAcumulado / 100);
+        const aumentoacumulado = periodos * aumentopct;
+        const tasaefectiva     = tasabase * (1 + aumentoacumulado / 100);
 
         console.group('%c🔄 Saki Sushi — Cálculo de Tasa', 'color:#FF9800;font-weight:700');
-        console.log('Modo activo:', estaActivo ? (activoSemanal ? 'SEMANAL' : 'DIARIO') : 'DESACTIVADO');
-        console.log('Fecha inicio (Desde):', desdeVal || '—');
-        console.log('Fecha fin   (Hasta): ', hastaVal || (indefinido ? 'Indefinido' : '—'));
-        if (estaActivo && desdeVal) {
-            const _hoyLog = new Date(); _hoyLog.setHours(0,0,0,0);
-            const _desdeLog = new Date(desdeVal + 'T00:00:00');
-            const _msD = 24*60*60*1000;
-            const _mpLog = activoSemanal ? 7*_msD : _msD;
-            const _diffDias = Math.floor((_hoyLog - _desdeLog) / _msD);
-            console.log('Días transcurridos desde "Desde":', _diffDias);
-            console.log('Períodos ' + (activoSemanal ? 'semanales' : 'diarios') + ' completados:', periodos);
+        console.log('Modo activo:', estaactivo ? (activosemanal ? 'SEMANAL' : 'DIARIO') : 'DESACTIVADO');
+        console.log('Fecha inicio (Desde):', desdeval || '—');
+        console.log('Fecha fin   (Hasta): ', hastaval || (indefinido ? 'Indefinido' : '—'));
+        if (estaactivo && desdeval) {
+            const _hoylog = new date(); _hoylog.sethours(0,0,0,0);
+            const _desdelog = new date(desdeval + 'T00:00:00');
+            const _msd = 24*60*60*1000;
+            const _mplog = activosemanal ? 7*_msd : _msd;
+            const _diffdias = math.floor((_hoylog - _desdelog) / _msd);
+            console.log('Días transcurridos desde "Desde":', _diffdias);
+            console.log('Períodos ' + (activosemanal ? 'semanales' : 'diarios') + ' completados:', periodos);
         }
-        console.log('Porcentaje por período:', aumentoPct + '%');
+        console.log('Porcentaje por período:', aumentopct + '%');
         console.log('Períodos aplicados:', periodos);
-        console.log('Acumulado total:', aumentoAcumulado.toFixed(2) + '%');
-        console.log('Tasa Base:', tasaBase);
-        console.log('Tasa Efectiva 💵 Bs', tasaEfectiva.toFixed(2));
-        console.groupEnd();
+        console.log('Acumulado total:', aumentoacumulado.tofixed(2) + '%');
+        console.log('Tasa Base:', tasabase);
+        console.log('Tasa Efectiva 💵 Bs', tasaefectiva.tofixed(2));
+        console.groupend();
 
-        document.getElementById('tasaEfectivaDisplay').textContent = tasaEfectiva.toFixed(2);
-        document.getElementById('aumentoAcumuladoDisplay').textContent = aumentoAcumulado.toFixed(2) + '%';
-        if (document.getElementById('tasaEfectivaCard'))
-            document.getElementById('tasaEfectivaCard').textContent = 'Bs. ' + tasaEfectiva.toFixed(2);
+        document.getelementbyid('tasaEfectivaDisplay').textcontent = tasaefectiva.tofixed(2);
+        document.getelementbyid('aumentoAcumuladoDisplay').textcontent = aumentoacumulado.tofixed(2) + '%';
+        if (document.getelementbyid('tasaEfectivaCard'))
+            document.getelementbyid('tasaEfectivaCard').textcontent = 'Bs. ' + tasaefectiva.tofixed(2);
 
-        window.configGlobal.tasa_cambio       = tasaBase;
-        window.configGlobal.aumento_diario    = aumentoPct;
-        window.configGlobal.aumento_activo    = activoDiario;
-        window.configGlobal.aumento_semanal   = activoSemanal;
-        window.configGlobal.aumento_acumulado = aumentoAcumulado;
-        window.configGlobal.tasa_efectiva     = tasaEfectiva;
+        window.configglobal.tasa_cambio       = tasabase;
+        window.configglobal.aumento_diario    = aumentopct;
+        window.configglobal.aumento_activo    = activodiario;
+        window.configglobal.aumento_semanal   = activosemanal;
+        window.configglobal.aumento_acumulado = aumentoacumulado;
+        window.configglobal.tasa_efectiva     = tasaefectiva;
     };
 
-    window.guardarConfiguracion = async function() {
+    window.guardarconfiguracion = async function() {
         try {
-            const tasaBase = parseFloat(document.getElementById('tasaBaseInput').value) || 0;
-            const aumentoPct = parseFloat(document.getElementById('aumentoDiarioInput').value) || 0;
-            const activoDiario = document.getElementById('aumentoActivoToggle').checked;
-            const activoSemanal = document.getElementById('aumentoSemanalToggle')?.checked || false;
-            const indefinido = document.getElementById('aumentoIndefinido')?.checked || false;
+            const tasabase = parsefloat(document.getelementbyid('tasaBaseInput').value) || 0;
+            const aumentopct = parsefloat(document.getelementbyid('aumentoDiarioInput').value) || 0;
+            const activodiario = document.getelementbyid('aumentoActivoToggle').checked;
+            const activosemanal = document.getelementbyid('aumentoSemanalToggle')?.checked || false;
+            const indefinido = document.getelementbyid('aumentoIndefinido')?.checked || false;
             
-            window.configGlobal.tasa_cambio = tasaBase;
-            window.configGlobal.aumento_diario = aumentoPct;
-            window.configGlobal.aumento_activo = activoDiario;
-            window.configGlobal.aumento_semanal = activoSemanal;
+            window.configglobal.tasa_cambio = tasabase;
+            window.configglobal.aumento_diario = aumentopct;
+            window.configglobal.aumento_activo = activodiario;
+            window.configglobal.aumento_semanal = activosemanal;
             
-            window.recalcularTasaEfectiva();
+            window.recalculartasaefectiva();
             
-            await window.supabaseClient.from('config').update({
-                tasa_cambio:       window.configGlobal.tasa_cambio,
-                aumento_diario:    window.configGlobal.aumento_diario,
-                aumento_activo:    window.configGlobal.aumento_activo,
-                aumento_semanal:   window.configGlobal.aumento_semanal || false,
-                aumento_detenido:  window.configGlobal.aumento_detenido,
-                aumento_acumulado: window.configGlobal.aumento_acumulado,
-                tasa_efectiva:     window.configGlobal.tasa_efectiva,
-                aumento_desde:     (document.getElementById('aumentoDesde') && document.getElementById('aumentoDesde').value) || null,
-                aumento_hasta:     (!document.getElementById('aumentoIndefinido')?.checked && document.getElementById('aumentoHasta')?.value) || null,
-                aumento_indefinido: document.getElementById('aumentoIndefinido')?.checked || false,
-                ultima_actualizacion: new Date().toISOString()
+            await window.supabaseclient.from('config').update({
+                tasa_cambio:       window.configglobal.tasa_cambio,
+                aumento_diario:    window.configglobal.aumento_diario,
+                aumento_activo:    window.configglobal.aumento_activo,
+                aumento_semanal:   window.configglobal.aumento_semanal || false,
+                aumento_detenido:  window.configglobal.aumento_detenido,
+                aumento_acumulado: window.configglobal.aumento_acumulado,
+                tasa_efectiva:     window.configglobal.tasa_efectiva,
+                aumento_desde:     (document.getelementbyid('aumentoDesde') && document.getelementbyid('aumentoDesde').value) || null,
+                aumento_hasta:     (!document.getelementbyid('aumentoIndefinido')?.checked && document.getelementbyid('aumentoHasta')?.value) || null,
+                aumento_indefinido: document.getelementbyid('aumentoIndefinido')?.checked || false,
+                ultima_actualizacion: new date().toisostring()
             }).eq('id', 1);
             
-            window.renderizarMenu(document.getElementById('menuBuscador')?.value || '');
-            await window._actualizarVentasHoyNeto();
-            await window._actualizarDeliverysHoy();
+            window.renderizarmenu(document.getelementbyid('menuBuscador')?.value || '');
+            await window._actualizarventashoyneto();
+            await window._actualizardeliveryshoy();
             
-            const tasaDisplay = document.getElementById('tasaEfectivaDisplay');
-            if (tasaDisplay) {
-                tasaDisplay.textContent = (window.configGlobal.tasa_efectiva || 0).toFixed(2);
+            const tasadisplay = document.getelementbyid('tasaEfectivaDisplay');
+            if (tasadisplay) {
+                tasadisplay.textcontent = (window.configglobal.tasa_efectiva || 0).tofixed(2);
             }
             
-            window.mostrarToast(`💱 Configuración guardada. Nueva tasa efectiva: Bs ${(window.configGlobal.tasa_efectiva || 0).toFixed(2)} por USD`, 'success');
+            window.mostrartoast(`💱 configuración guardada. nueva tasa efectiva: bs ${(window.configglobal.tasa_efectiva || 0).tofixed(2)} por usd`, 'success');
             
         } catch (e) { 
             console.error('Error guardando configuración:', e); 
-            window.mostrarToast('❌ Error al guardar la configuración', 'error'); 
+            window.mostrartoast('❌ Error al guardar la configuración', 'error'); 
         }
     };
 })();

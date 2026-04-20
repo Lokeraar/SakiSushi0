@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Saki Sushi - Panel Administración</title>
+    <title>Saki Sushi - Panel administración</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
@@ -31,7 +31,7 @@
     <!-- Aviso de salida (se mantiene igual) -->
     <div id="_salidaAviso" style="display:none;position:fixed;inset:0;z-index:9999;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.55);padding:1rem">
         <div style="background:linear-gradient(135deg,#1a1a2e,#16213e);border:1px solid rgba(255,255,255,.12);border-radius:16px;padding:1.4rem 1.2rem;width:100%;max-width:400px;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,.5)">
-            <p style="color:#fff;font-size:1rem;font-weight:600;margin-bottom:1.2rem">¿Seguro que deseas salir?</p>
+            <p style="color:#fff;font-size:1rem;font-weight:600;margin-bottom:1.2rem">¿seguro que deseas salir?</p>
             <div style="display:flex;gap:.8rem">
                 <button id="_salidaNo" style="flex:1;padding:.75rem;border-radius:10px;border:2px solid rgba(255,255,255,.2);background:transparent;color:#fff;font-weight:600;cursor:pointer;font-size:.95rem">Cancelar</button>
                 <button id="_salidaSi" style="flex:1;padding:.75rem;border-radius:10px;border:none;background:linear-gradient(135deg,#D32F2F,#b71c1c);color:#fff;font-weight:600;cursor:pointer;font-size:.95rem">Salir</button>
@@ -66,10 +66,10 @@
                         <span id="selectedAdminNombre"></span>
                     </div>
                     <form class="login-form" id="loginForm" onsubmit="event.preventDefault(); window.hacerLogin()">
-                        <input type="password" id="adminPassword" placeholder="Contraseña de Administrador" required autocomplete="current-password">
+                        <input type="password" id="adminPassword" placeholder="Contraseña de administrador" required autocomplete="current-password">
                         <button type="submit">Ingresar</button>
                     </form>
-                    <div class="recovery-link"><a href="#" id="recoveryLink">¿Olvidaste la contraseña?</a></div>
+                    <div class="recovery-link"><a href="#" id="recoveryLink">¿olvidaste la contraseña?</a></div>
                 </div>
             </div>
         </div>
@@ -112,12 +112,12 @@
             <!-- Nivel 2 Desktop: Eslogan (izq), Seleccionar sucursal + Select (der) -->
             <div class="header-level level-2 desktop-only">
                 <div class="header-left-group">
-                    <span class="header-slogan-text" id="headerSloganDesktop">Adictos al universo Saki</span>
+                    <span class="header-slogan-text" id="headerSloganDesktop">Adictos al universo saki</span>
                 </div>
                 <div class="header-right-group">
                     <span class="sucursal-label">Seleccionar sucursal</span>
                     <select class="sucursal-select" id="sucursalSelectDesktop">
-                        <option value="">-- Sucursal --</option>
+                        <option value="">-- sucursal --</option>
                     </select>
                 </div>
             </div>
@@ -138,7 +138,7 @@
             <!-- Nivel 3 Desktop: Stock crítico -->
             <div class="header-level level-3 desktop-only">
                 <div id="stockCriticoHeader" style="width:100%; padding:.4rem .8rem; background:rgba(0,0,0,.2); border-radius:8px; display:flex; align-items:center; gap:.8rem; flex-wrap:wrap; font-size:.75rem">
-                    <span style="font-weight:700; color:var(--danger); white-space:nowrap"><i class="fas fa-exclamation-triangle"></i> STOCK CRÍTICO:</span>
+                    <span style="font-weight:700; color:var(--danger); white-space:nowrap"><i class="fas fa-exclamation-triangle"></i> Stock crítico:</span>
                     <div id="stockCriticoTags" style="display:flex; flex-wrap:wrap; gap:.4rem; flex:1; min-width:0"></div>
                 </div>
             </div>
@@ -146,12 +146,12 @@
             <!-- Nivel 3 Móvil: Eslogan (izq), Seleccionar sucursal + Select (der) -->
             <div class="header-level level-3 mobile-only">
                 <div class="header-left-group">
-                    <span class="header-slogan-text">Adictos al universo Saki</span>
+                    <span class="header-slogan-text">Adictos al universo saki</span>
                 </div>
                 <div class="header-right-group">
                     <span class="sucursal-label">Seleccionar sucursal</span>
                     <select class="sucursal-select" id="sucursalSelectMobile">
-                        <option value="">-- Sucursal --</option>
+                        <option value="">-- sucursal --</option>
                     </select>
                 </div>
             </div>
@@ -163,7 +163,7 @@
             </button>
             <div class="tabs" id="tabsContainer">
                 <div class="tab active" data-tab="dashboard">Inicio</div>
-                <div class="tab" data-tab="menu">Menú y Precios</div>
+                <div class="tab" data-tab="menu">Menú y precios</div>
                 <div class="tab" data-tab="inventario">Inventario</div>
                 <div class="tab" data-tab="usuarios">Usuarios</div>
                 <div class="tab" data-tab="deliverys">Deliverys</div>
@@ -186,24 +186,24 @@
                 <div class="tasa-cards-bar" id="tasaBar">
                     <div class="tcb-cards">
                         <div class="tcb-card tcb-card-base">
-                            <div class="tcb-label">Tasa Base:</div>
+                            <div class="tcb-label">Tasa base:</div>
                             <input type="number" step="0.01" id="tasaBaseInput" class="tcb-input" oninput="window.recalcularTasaEfectiva && window.recalcularTasaEfectiva()">
                             <div class="tcb-sublabel">Bs. por $1</div>
                         </div>
                         <div class="tcb-card tcb-card-pct">
-                            <div class="tcb-label" id="labelAumentoPct">Aumento Diario %:</div>
+                            <div class="tcb-label" id="labelAumentoPct">Aumento diario %:</div>
                             <input type="number" step="0.1" id="aumentoDiarioInput" class="tcb-input" oninput="window.recalcularTasaEfectiva && window.recalcularTasaEfectiva()">
-                            <div class="tcb-sublabel">por periodo</div>
+                            <div class="tcb-sublabel">Por periodo</div>
                         </div>
                         <div class="tcb-card tcb-card-efectiva">
-                            <div class="tcb-label">Tasa Efectiva:</div>
+                            <div class="tcb-label">Tasa efectiva:</div>
                             <div class="tcb-value-big" id="tasaEfectivaDisplay">400.00</div>
                             <div class="tcb-sublabel">Bs. por $1 hoy</div>
                         </div>
                         <div class="tcb-card tcb-card-acum">
                             <div class="tcb-label">Acumulado:</div>
                             <div class="tcb-value-big tcb-acum-val" id="aumentoAcumuladoDisplay">0%</div>
-                            <div class="tcb-sublabel">aumento total</div>
+                            <div class="tcb-sublabel">Aumento total</div>
                         </div>
                     </div>
                     <div class="tcb-controls">
@@ -233,7 +233,7 @@
                                 <label class="toggle-switch"><input type="checkbox" id="aumentoIndefinido"><span class="toggle-slider"></span></label>
                                 <span class="tooltip-wrap" style="position:relative;display:inline-flex;align-items:center;cursor:help;margin-left:.3rem">
                                     <span style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;background:var(--text-muted);color:#fff;border-radius:50%;font-size:.6rem;font-weight:700">?</span>
-                                    <span class="tooltip-text" style="display:none;position:absolute;bottom:calc(100%+6px);left:50%;transform:translateX(-50%);background:var(--toast-bg);color:var(--toast-text);padding:.5rem .75rem;border-radius:8px;font-size:.72rem;width:210px;text-align:center;box-shadow:0 4px 12px rgba(0,0,0,.35);z-index:100;line-height:1.4">Activa esto si quieres que el aumento siga sin limite de tiempo. Si lo dejas sin marcar, el aumento se detiene en la fecha "Hasta".</span>
+                                    <span class="tooltip-text" style="display:none;position:absolute;bottom:calc(100%+6px);left:50%;transform:translateX(-50%);background:var(--toast-bg);color:var(--toast-text);padding:.5rem .75rem;border-radius:8px;font-size:.72rem;width:210px;text-align:center;box-shadow:0 4px 12px rgba(0,0,0,.35);z-index:100;line-height:1.4">Activa esto si quieres que el aumento siga sin límite de tiempo. Si lo dejas sin marcar, el aumento se detiene en la fecha "hasta".</span>
                                 </span>
                             </div>
                         </div>
@@ -248,14 +248,14 @@
                         <div class="card-value" id="ventasHoy">$0.00</div>
                         <div style="font-size:.72rem;color:var(--text-muted);margin-top:.25rem">Toca para ver desglose</div>
                     </div>
-                    <div class="dashboard-card" style="cursor:pointer" onclick="window.irADeliverys&&window.irADeliverys()" title="Ver módulo Deliverys"><div class="card-title">Deliverys Hoy <i class="fas fa-external-link-alt" style="font-size:.55rem;opacity:.6;margin-left:.25rem"></i></div><div class="card-value" id="deliverysHoyDashboard">$0.00 / Bs 0,00</div><div style="font-size:.72rem;color:var(--text-muted);margin-top:.25rem">Toca para ver detalle</div></div>
+                    <div class="dashboard-card" style="cursor:pointer" onclick="window.irADeliverys&&window.irADeliverys()" title="Ver módulo Deliverys"><div class="card-title">Deliverys Hoy <i class="fas fa-external-link-alt" style="font-size:.55rem;opacity:.6;margin-left:.25rem"></i></div><div class="card-value" id="deliverysHoyDashboard">$0.00 / bs 0,00</div><div style="font-size:.72rem;color:var(--text-muted);margin-top:.25rem">Toca para ver detalle</div></div>
                     <div class="dashboard-col-mini">
                         <div class="dashboard-card dashboard-card-sm" style="cursor:pointer" onclick="window.irAMenu()" title="Ver menú">
-                            <div class="card-title">Productos Activos</div>
+                            <div class="card-title">Productos activos</div>
                             <div class="card-value" id="productosActivos">0</div>
                         </div>
                         <div class="dashboard-card dashboard-card-sm" style="cursor:pointer" onclick="window.irAStockCritico&&window.irAStockCritico()" title="Stock crítico">
-                            <div class="card-title">Alertas Stock</div>
+                            <div class="card-title">Alertas stock</div>
                             <div class="card-value" id="alertasStock">0</div>
                         </div>
                     </div>
@@ -267,15 +267,13 @@
                     <div class="dashboard-card" id="diferenciaTasaCard" style="cursor:pointer" onclick="window.mostrarToast('Diferencia acumulada a favor del restaurante por aumento de tasa', 'info')">
                         <div class="card-title">Acumulado Dif. Tasa Base y Efectiva <span class="tooltip-wrap" style="position:relative; display:inline-flex; cursor:help; margin-left:.3rem">
                             <span style="display:inline-flex; align-items:center; justify-content:center; width:16px; height:16px; background:var(--text-muted); color:#fff; border-radius:50%; font-size:.65rem; font-weight:700">?</span>
-                            <span class="tooltip-text" style="display:none; position:absolute; bottom:calc(100% + 6px); left:50%; transform:translateX(-50%); background:var(--toast-bg); color:var(--toast-text); padding:.5rem .75rem; border-radius:8px; font-size:.75rem; white-space:normal; width:250px; text-align:center; box-shadow:0 4px 12px rgba(0,0,0,.3); z-index:100; line-height:1.4">
-                                Es la ganancia extra generada por la diferencia entre la tasa base y la tasa efectiva aplicada a los pedidos cobrados. Esta diferencia queda a favor del restaurante.
-                            </span>
+                            <span class="tooltip-text" style="display:none; position:absolute; bottom:calc(100% + 6px); left:50%; transform:translateX(-50%); background:var(--toast-bg); color:var(--toast-text); padding:.5rem .75rem; border-radius:8px; font-size:.75rem; white-space:normal; width:250px; text-align:center; box-shadow:0 4px 12px rgba(0,0,0,.3); z-index:100; line-height:1.4">Es la ganancia extra generada por la diferencia entre la tasa base y la tasa efectiva aplicada a los pedidos cobrados. Esta diferencia queda a favor del restaurante. </span>
                         </span></div>
                         <div class="card-value" id="diferenciaTasaValor">Bs 0,00</div>
                     </div>
                 </div>
                 <div class="dashboard-lower-grid">
-                    <div class="alert-list lower-stock"><h3>Stock Crítico</h3><div id="stockCritico"></div></div>
+                    <div class="alert-list lower-stock"><h3>Stock crítico</h3><div id="stockCritico"></div></div>
                     <div class="alert-list lower-pedidos">
                         <h3 style="display:flex; align-items:center; gap:.5rem; margin-bottom:1rem; padding-bottom:.5rem; border-bottom:2px solid var(--border)">
                             <i class="fas fa-clock" style="color:var(--accent)"></i> Pedidos Recientes
@@ -346,9 +344,9 @@
                     </div>
                 </div>
                 <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.85rem;margin-bottom:1.25rem" id="deliveryStatsGrid">
-                    <div class="delivery-stat-card"><div class="delivery-stat-label"><i class="fas fa-coins"></i> Total acumulado</div><div class="delivery-stat-value" id="deliverysTotalCard">$0.00 / Bs 0,00</div></div>
+                    <div class="delivery-stat-card"><div class="delivery-stat-label"><i class="fas fa-coins"></i> Total acumulado</div><div class="delivery-stat-value" id="deliverysTotalCard">$0.00 / bs 0,00</div></div>
                     <div class="delivery-stat-card"><div class="delivery-stat-label"><i class="fas fa-motorcycle"></i> Envíos hoy</div><div class="delivery-stat-value" id="deliverysCountCard">0</div></div>
-                    <div class="delivery-stat-card"><div class="delivery-stat-label"><i class="fas fa-chart-line"></i> Promedio</div><div class="delivery-stat-value" id="deliverysPromedioCard">$0.00 / Bs 0,00</div></div>
+                    <div class="delivery-stat-card"><div class="delivery-stat-label"><i class="fas fa-chart-line"></i> Promedio</div><div class="delivery-stat-value" id="deliverysPromedioCard">$0.00 / bs 0,00</div></div>
                 </div>
                 <div class="delivery-list" id="deliverysGrid" style="display:grid"></div>
                 <div id="ultimosViajesSection" style="margin-top:2rem">
@@ -384,14 +382,14 @@
                     </div>
                 </div>
                 <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:.85rem;margin-bottom:1.25rem" id="mesonerosStatsGrid">
-                    <div class="delivery-stat-card" style="border-top-color:var(--propina)"><div class="delivery-stat-label"><i class="fas fa-coins"></i> TOTAL ACUMULADO</div><div class="delivery-stat-value" id="propinasTotal">$0.00 / Bs 0,00</div></div>
+                    <div class="delivery-stat-card" style="border-top-color:var(--propina)"><div class="delivery-stat-label"><i class="fas fa-coins"></i> Total acumulado</div><div class="delivery-stat-value" id="propinasTotal">$0.00 / bs 0,00</div></div>
                     <div class="delivery-stat-card" style="border-top-color:var(--propina)"><div class="delivery-stat-label"><i class="fas fa-hand-holding-usd"></i> PROPINAS HOY</div><div class="delivery-stat-value" id="propinasCantidad">0</div></div>
-                    <div class="delivery-stat-card" style="border-top-color:var(--propina)"><div class="delivery-stat-label"><i class="fas fa-chart-line"></i> PROMEDIO</div><div class="delivery-stat-value" id="propinasPromedio">$0.00 / Bs 0,00</div></div>
+                    <div class="delivery-stat-card" style="border-top-color:var(--propina)"><div class="delivery-stat-label"><i class="fas fa-chart-line"></i> Promedio</div><div class="delivery-stat-value" id="propinasPromedio">$0.00 / bs 0,00</div></div>
                 </div>
                 <div id="mesonerosList" class="mesoneros-grid"></div>
                 <div class="table-section" style="margin-top:1.5rem">
                     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:.85rem">
-                        <h3 class="table-section-title" style="margin:0">Últimas 5 Propinas</h3>
+                        <h3 class="table-section-title" style="margin:0">Últimas 5 propinas</h3>
                         <button class="btn-secondary" onclick="window.verHistorialPropinaHoy&&window.verHistorialPropinaHoy()" style="font-size:.78rem;padding:.4rem .9rem;display:flex;align-items:center;gap:.4rem">
                             <i class="fas fa-list"></i> Registro
                         </button>
@@ -413,15 +411,15 @@
                 <div class="config-grid">
                     <div class="config-section">
                         <h3><i class="fas fa-lock" style="color:var(--primary);margin-right:.4rem"></i>Cambiar Contraseña</h3>
-                        <div class="form-group"><label>Contraseña Actual</label><input type="password" id="currentPassword" placeholder="Ingresa tu contraseña actual"></div>
-                        <div class="form-group"><label>Nueva Contraseña</label><input type="password" id="newPassword" placeholder="Mínimo 4 caracteres"></div>
-                        <div class="form-group"><label>Confirmar Nueva Contraseña</label><input type="password" id="confirmPassword" placeholder="Repite la nueva contraseña"></div>
+                        <div class="form-group"><label>Contraseña actual</label><input type="password" id="currentPassword" placeholder="Ingresa tu contraseña actual"></div>
+                        <div class="form-group"><label>Nueva contraseña</label><input type="password" id="newPassword" placeholder="Mínimo 4 caracteres"></div>
+                        <div class="form-group"><label>Confirmar nueva contraseña</label><input type="password" id="confirmPassword" placeholder="Repite la nueva contraseña"></div>
                         <div id="passwordChangeError" style="display:none; color:var(--danger); font-size:.8rem; margin-top:.5rem; text-align:center"><i class="fas fa-exclamation-circle"></i> Error al cambiar la contraseña</div>
                         <button class="btn-primary" onclick="window.cambiarPassword()" style="margin-top:.5rem"><i class="fas fa-save"></i> Guardar contraseña</button>
                     </div>
                     <div class="config-section">
                         <h3><i class="fas fa-envelope" style="color:var(--info);margin-right:.4rem"></i>Correo de Recuperación</h3>
-                        <div class="form-group"><label>Correo Electrónico</label><input type="email" id="recoveryEmail" value="admin@sakisushi.com"></div>
+                        <div class="form-group"><label>Correo electrónico</label><input type="email" id="recoveryEmail" value="admin@sakisushi.com"></div>
                         <button class="btn-primary" onclick="window.guardarRecoveryEmail()"><i class="fas fa-save"></i> Guardar correo</button>
                     </div>
                 </div>
@@ -434,12 +432,12 @@
                 </div>
                 <div class="qr-generator-card">
                     <div class="qr-generator-grid">
-                        <div class="form-group"><label>Nombre de la Mesa</label><input type="text" id="qrNombreMesa" placeholder="Ej: Mesa 1" style="width:100%"></div>
-                        <div class="form-group"><label>Red WiFi (SSID)</label><input type="text" id="qrWifiSsid" placeholder="Ej: SakiSushi_WiFi" style="width:100%" oninput="window.guardarWifiPersistente()"></div>
-                        <div class="form-group"><label>Contraseña WiFi</label><input type="text" id="qrWifiPassword" placeholder="Contraseña del WiFi" style="width:100%" oninput="window.guardarWifiPersistente()"></div>
+                        <div class="form-group"><label>Nombre de la mesa</label><input type="text" id="qrNombreMesa" placeholder="Ej: mesa 1" style="width:100%"></div>
+                        <div class="form-group"><label>Red wifi (ssid)</label><input type="text" id="qrWifiSsid" placeholder="Ej: sakisushi_wifi" style="width:100%" oninput="window.guardarWifiPersistente()"></div>
+                        <div class="form-group"><label>Contraseña wifi</label><input type="text" id="qrWifiPassword" placeholder="Contraseña del wifi" style="width:100%" oninput="window.guardarWifiPersistente()"></div>
                         <div class="form-group" style="align-self:flex-end"><button class="btn-primary" onclick="window.generarQR()" style="width:100%"><i class="fas fa-qrcode"></i> Generar QR</button></div>
                     </div>
-                    <div class="qr-wifi-hint"><i class="fas fa-info-circle" style="color:var(--accent)"></i><span>El QR lleva al cliente directo al menú de esa mesa. Si agregas los datos de WiFi, el QR también conecta automáticamente al escanear.</span></div>
+                    <div class="qr-wifi-hint"><i class="fas fa-info-circle" style="color:var(--accent)"></i><span>El qr lleva al cliente directo al menú de esa mesa. si agregas los datos de wifi, el qr también conecta automáticamente al escanear.</span></div>
                 </div>
                 <div class="qr-grid" id="qrGrid"></div>
             </div>
@@ -463,19 +461,19 @@
                     </div>
                 </div>
                 <div class="dashboard-grid">
-                    <div class="dashboard-card"><div class="card-title">Ventas Día</div><div class="card-value" id="ventasDia">$0.00</div></div>
-                    <div class="dashboard-card"><div class="card-title">Ventas Semana</div><div class="card-value" id="ventasSemana">$0.00</div></div>
-                    <div class="dashboard-card"><div class="card-title">Ticket Promedio</div><div class="card-value" id="ticketPromedio">$0.00</div></div>
-                    <div class="dashboard-card"><div class="card-title">Platillo Top</div><div class="card-value" id="platilloTop">-</div></div>
+                    <div class="dashboard-card"><div class="card-title">Ventas día</div><div class="card-value" id="ventasDia">$0.00</div></div>
+                    <div class="dashboard-card"><div class="card-title">Ventas semana</div><div class="card-value" id="ventasSemana">$0.00</div></div>
+                    <div class="dashboard-card"><div class="card-title">Ticket promedio</div><div class="card-value" id="ticketPromedio">$0.00</div></div>
+                    <div class="dashboard-card"><div class="card-title">Platillo top</div><div class="card-value" id="platilloTop">-</div></div>
                 </div>
                 <div class="charts-grid">
-                    <div class="chart-container"><h3>Ventas Últimos 7 Días</h3><div class="chart-wrapper"><canvas id="ventasChart"></canvas></div></div>
-                    <div class="chart-container"><h3>Ventas por Categoría</h3><div class="chart-wrapper"><canvas id="categoriasChart"></canvas></div></div>
-                    <div class="chart-container"><h3>Métodos de Pago</h3><div class="chart-wrapper"><canvas id="pagosChart"></canvas></div></div>
-                    <div class="chart-container"><h3>Ventas por Hora</h3><div class="chart-wrapper"><canvas id="horaChart"></canvas></div></div>
+                    <div class="chart-container"><h3>Ventas últimos 7 días</h3><div class="chart-wrapper"><canvas id="ventasChart"></canvas></div></div>
+                    <div class="chart-container"><h3>Ventas por categoría</h3><div class="chart-wrapper"><canvas id="categoriasChart"></canvas></div></div>
+                    <div class="chart-container"><h3>Métodos de pago</h3><div class="chart-wrapper"><canvas id="pagosChart"></canvas></div></div>
+                    <div class="chart-container"><h3>Ventas por hora</h3><div class="chart-wrapper"><canvas id="horaChart"></canvas></div></div>
                 </div>
                 <div class="table-responsive" style="margin-top:2rem">
-                    <h3 style="margin-bottom:1rem;font-weight:700">Detalle de Ventas</h3>
+                    <h3 style="margin-bottom:1rem;font-weight:700">Detalle de ventas</h3>
                     <table class="data-table" id="ventasTable"><thead><tr><th>Fecha</th><th>Pedido</th><th>Total</th><th>Items</th><th>Método</th><th>Tipo</th></tr></thead><tbody id="ventasTableBody"></tbody></table>
                 </div>
             </div>
@@ -487,10 +485,10 @@
     <!-- MODAL PLATILLO -->
     <div class="modal" id="platilloModal">
         <div class="modal-content" style="max-width:600px">
-            <div class="modal-header"><h3 id="platilloModalTitle">Nuevo Platillo</h3><button class="modal-close" onclick="window.cerrarModal('platilloModal')" title="Cerrar">&times;</button></div>
+            <div class="modal-header"><h3 id="platilloModalTitle">Nuevo platillo</h3><button class="modal-close" onclick="window.cerrarModal('platilloModal')" title="Cerrar">&times;</button></div>
             <div class="modal-body">
                 <form id="platilloForm">
-                    <div class="form-group"><label>Imagen del Platillo</label>
+                    <div class="form-group"><label>Imagen del platillo</label>
                         <div style="display:flex;gap:.6rem;align-items:flex-start">
                             <div style="flex:1"><input type="file" id="platilloImagen" accept="image/*" style="margin-bottom:.3rem"><input type="url" id="platilloImagenUrl" placeholder="O pega aquí el link de la imagen" oninput="window._previewPlatilloUrl(this.value)"></div>
                             <div id="imagenPreview" class="image-preview" style="display:none;width:80px;height:80px;flex-shrink:0;position:relative">
@@ -499,11 +497,11 @@
                             </div>
                         </div>
                     </div>
-                    <div class="form-row"><div class="form-group"><label>Nombre del Platillo</label><input type="text" id="platilloNombre" required placeholder="Ej: California Roll"></div><div class="form-group"><label>Categoría</label><select id="platilloCategoria" required onchange="window._onCategoriaChange()"></select></div></div>
+                    <div class="form-row"><div class="form-group"><label>Nombre del platillo</label><input type="text" id="platilloNombre" required placeholder="Ej: california roll"></div><div class="form-group"><label>Categoría</label><select id="platilloCategoria" required onchange="window._onCategoriaChange()"></select></div></div>
                     <div class="form-group" id="subcategoriaContainer" style="display:none"><label>Subcategoría</label><select id="platilloSubcategoria"><option value="">Ninguna</option></select></div>
-                    <div class="form-row" style="align-items:center"><div class="form-group"><label>Precio (USD)</label><input type="number" step="0.01" id="platilloPrecio" required placeholder="0.00" oninput="window._previewPrecioBs()"><div id="platilloPrecioBsPreview" style="font-size:.75rem;color:var(--text-muted);margin-top:.2rem"></div></div><div class="form-group" style="flex:0 0 auto"><label>Disponible</label><label style="display:flex;align-items:center;gap:.5rem;margin-top:.5rem;cursor:pointer"><input type="checkbox" id="platilloDisponibleCheck" checked style="accent-color:var(--success);width:16px;height:16px"><span id="platilloDisponibleLabel" style="font-size:.82rem;font-weight:600;color:var(--success)">Sí</span></label><select id="platilloDisponible" style="display:none"><option value="true">Sí</option><option value="false">No</option></select></div></div>
-                    <div class="form-group"><label>Descripción</label><textarea id="platilloDescripcion" rows="2" placeholder="Ej: Incluye 8 piezas de salmón..."></textarea></div>
-                    <div class="form-group"><label>Ingredientes del Platillo</label><div id="ingredientesContainer"></div><button type="button" class="btn-secondary" onclick="window.agregarIngredienteRow()" style="margin-top:.5rem"><i class="fas fa-plus"></i> Agregar Ingrediente</button></div>
+                    <div class="form-row" style="align-items:center"><div class="form-group"><label>Precio (usd)</label><input type="number" step="0.01" id="platilloPrecio" required placeholder="0.00" oninput="window._previewPrecioBs()"><div id="platilloPrecioBsPreview" style="font-size:.75rem;color:var(--text-muted);margin-top:.2rem"></div></div><div class="form-group" style="flex:0 0 auto"><label>Disponible</label><label style="display:flex;align-items:center;gap:.5rem;margin-top:.5rem;cursor:pointer"><input type="checkbox" id="platilloDisponibleCheck" checked style="accent-color:var(--success);width:16px;height:16px"><span id="platilloDisponibleLabel" style="font-size:.82rem;font-weight:600;color:var(--success)">Sí</span></label><select id="platilloDisponible" style="display:none"><option value="true">Sí</option><option value="false">No</option></select></div></div>
+                    <div class="form-group"><label>Descripción</label><textarea id="platilloDescripcion" rows="2" placeholder="Ej: incluye 8 piezas de salmón..."></textarea></div>
+                    <div class="form-group"><label>Ingredientes del platillo</label><div id="ingredientesContainer"></div><button type="button" class="btn-secondary" onclick="window.agregarIngredienteRow()" style="margin-top:.5rem"><i class="fas fa-plus"></i> Agregar Ingrediente</button></div>
                     <div id="stockCalculadoWrap" style="display:none;margin-top:.5rem;padding:.6rem .85rem;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;font-size:.82rem;color:#166534"><i class="fas fa-layer-group" style="margin-right:.35rem"></i><span id="stockCalculadoText">Agrega ingredientes para calcular</span></div>
                 </form>
             </div>
@@ -518,16 +516,16 @@
     <!-- MODAL INGREDIENTE -->
     <div class="modal" id="ingredienteModal">
         <div class="modal-content">
-            <div class="modal-header"><h3 id="ingredienteModalTitle">Nuevo Ingrediente</h3><button class="modal-close" onclick="window.cerrarModal('ingredienteModal')" title="Cerrar">&times;</button></div>
+            <div class="modal-header"><h3 id="ingredienteModalTitle">Nuevo ingrediente</h3><button class="modal-close" onclick="window.cerrarModal('ingredienteModal')" title="Cerrar">&times;</button></div>
             <div class="modal-body">
                 <form id="ingredienteForm">
                     <!-- 3.5 Imagen primero -->
                     <div class="form-group">
-                        <label>Imagen del Ingrediente (opcional)</label>
+                        <label>Imagen del ingrediente (opcional)</label>
                         <div style="display:flex;gap:.75rem;align-items:flex-start">
                             <div style="flex:1">
                                 <input type="file" id="ingredienteImagen" accept="image/*" style="margin-bottom:.3rem">
-                                <input type="url" id="ingredienteImagenUrl" placeholder="O pega la URL de la imagen" style="width:100%">
+                                <input type="url" id="ingredienteImagenUrl" placeholder="O pega la url de la imagen" style="width:100%">
                             </div>
                             <div id="ingredienteImagenPreview" class="image-preview" style="display:none;width:70px;height:70px;flex-shrink:0;position:relative">
                                 <img id="ingredientePreviewImg" style="width:100%;height:100%;object-fit:cover;border-radius:8px">
@@ -535,18 +533,18 @@
                             </div>
                         </div>
                     </div>
-                    <div class="form-group"><label style="display:flex; align-items:center; gap:.5rem">Nombre del ingrediente<span class="tooltip-icon" data-tooltip="Se usa para identificarlo en el menú y reportes">?</span></label><input type="text" id="ingredienteNombre" required placeholder="Ej: Salmón fresco"></div>
+                    <div class="form-group"><label style="display:flex; align-items:center; gap:.5rem">Nombre del ingrediente<span class="tooltip-icon" data-tooltip="Se usa para identificarlo en el menú y reportes">?</span></label><input type="text" id="ingredienteNombre" required placeholder="Ej: salmón fresco"></div>
                     <div class="form-group">
                         <label for="stock-actual-input">Stock actual</label>
                         <input type="number" id="stock-actual-input" step="0.001" disabled title="Haz clic para editar (requiere contraseña)" style="cursor:pointer">
                     </div>
-                    <div class="form-group"><div style="display:flex; gap:.75rem; align-items:flex-end"><div style="flex:1"><label>Mercancía nueva a agregar<span class="tooltip-icon" data-tooltip="Cantidad comprada hoy">?</span></label><input type="number" step="0.001" id="ingredienteAgregar" placeholder="0" oninput="window._syncIngredientePreview()"></div><div style="flex:1"><label>Unidad de Medida<span class="tooltip-icon" data-tooltip="Medida usada para calcular el ingrediente, asegúrese de usar la correcta">?</span></label><select id="ingredienteUnidad" onchange="window._syncIngredientePreview()"><option value="unidades">Unidades/Piezas</option><option value="kilogramos">Kilogramos</option><option value="litros">Litros</option></select></div></div><div id="stockTotalPreview" style="margin-top:.4rem; font-size:.82rem; color:var(--text-muted)"></div><div id="stockConversionPreview" style="margin-top:.2rem; font-size:.75rem; color:var(--text-muted)"></div></div>
+                    <div class="form-group"><div style="display:flex; gap:.75rem; align-items:flex-end"><div style="flex:1"><label>Mercancía nueva a agregar<span class="tooltip-icon" data-tooltip="Cantidad comprada hoy">?</span></label><input type="number" step="0.001" id="ingredienteAgregar" placeholder="0" oninput="window._syncIngredientePreview()"></div><div style="flex:1"><label>Unidad de Medida<span class="tooltip-icon" data-tooltip="Medida usada para calcular el ingrediente, asegúrese de usar la correcta">?</span></label><select id="ingredienteUnidad" onchange="window._syncIngredientePreview()"><option value="unidades">Unidades/piezas</option><option value="kilogramos">Kilogramos</option><option value="litros">Litros</option></select></div></div><div id="stockTotalPreview" style="margin-top:.4rem; font-size:.82rem; color:var(--text-muted)"></div><div id="stockConversionPreview" style="margin-top:.2rem; font-size:.75rem; color:var(--text-muted)"></div></div>
                     <div class="form-group"><label style="display:flex; align-items:center; gap:.4rem">Stock crítico a partir de:<span class="tooltip-icon" data-tooltip="A partir de esta cantidad te llegará una notificación indicando que queda poco">?</span><input type="number" step="0.001" id="ingredienteMinimo" placeholder="Ej: 5" style="font-size:.85rem"></label></div>
-                    <div class="form-group" style="background:var(--card-bg); border-radius:10px; padding:.85rem; border:1px solid var(--border)"><label style="font-weight:700; font-size:.8rem; text-transform:uppercase; letter-spacing:.5px; color:var(--text-muted); margin-bottom:.5rem; display:block"><i class="fas fa-calculator" style="margin-right:.3rem; color:var(--accent)"></i>Calculadora de Costo Unitario</label><div style="display:flex; gap:.75rem; align-items:flex-end"><div style="flex:1"><label style="font-size:.78rem">Costo Total Compra (USD)</label><input type="number" step="0.01" id="costoTotal" placeholder="0.00" oninput="window.calcularCostoUnitario()"></div><div style="flex:1"><label style="font-size:.78rem">Costo Total Compra (Bs)</label><input type="number" step="0.01" id="costoTotalBs" placeholder="0.00" oninput="window.convertirCostoTotalBs()"></div><div style="flex:1"><label style="font-size:.78rem">Cantidad Comprada</label><input type="number" step="0.001" id="cantidadComprada" placeholder="0" oninput="window.calcularCostoUnitario()"></div></div><div id="calcResultado" style="display:none; margin-top:.5rem; padding:.4rem .6rem; background:rgba(0,0,0,.2); border-radius:6px; border:1px solid var(--border); font-size:.82rem">Costo unitario: <strong id="calcPrecioUnitario">0.00</strong> USD<span id="calcUnidadResult" style="color:var(--text-muted)"></span></div></div>
+                    <div class="form-group" style="background:var(--card-bg); border-radius:10px; padding:.85rem; border:1px solid var(--border)"><label style="font-weight:700; font-size:.8rem; text-transform:uppercase; letter-spacing:.5px; color:var(--text-muted); margin-bottom:.5rem; display:block"><i class="fas fa-calculator" style="margin-right:.3rem; color:var(--accent)"></i>Calculadora de Costo Unitario</label><div style="display:flex; gap:.75rem; align-items:flex-end"><div style="flex:1"><label style="font-size:.78rem">Costo total compra (usd)</label><input type="number" step="0.01" id="costoTotal" placeholder="0.00" oninput="window.calcularCostoUnitario()"></div><div style="flex:1"><label style="font-size:.78rem">Costo total compra (bs)</label><input type="number" step="0.01" id="costoTotalBs" placeholder="0.00" oninput="window.convertirCostoTotalBs()"></div><div style="flex:1"><label style="font-size:.78rem">Cantidad comprada</label><input type="number" step="0.001" id="cantidadComprada" placeholder="0" oninput="window.calcularCostoUnitario()"></div></div><div id="calcResultado" style="display:none; margin-top:.5rem; padding:.4rem .6rem; background:rgba(0,0,0,.2); border-radius:6px; border:1px solid var(--border); font-size:.82rem">Costo unitario: <strong id="calcPrecioUnitario">0.00</strong> USD<span id="calcUnidadResult" style="color:var(--text-muted)"></span></div></div>
                     <div class="form-row"><div class="form-group"><label>Precio de Costo (USD/Bs)<span class="tooltip-icon" data-tooltip="Lo que pagaste al proveedor por unidad/kilo/litro">?</span></label><input type="number" step="0.01" id="ingredienteCosto" placeholder="0.00"></div><div class="form-group"><label>Precio de Venta (USD/Bs)<span class="tooltip-icon" data-tooltip="Lo que paga el cliente por este ingrediente. Si al personalizar lo quita, se le descuenta">?</span></label><input type="number" step="0.01" id="ingredienteVenta" placeholder="0.00"></div></div>
                     <!-- imagen movida al tope del formulario (tarea 3.5) -->
                 </form>
-                <p class="nota-cambio" style="font-size:.75rem; color:var(--text-muted); margin-top:.5rem; text-align:center">⚠️ Aunque el precio se coloque en divisas, es tomado al cambio en Bs en el menú del cliente.</p>
+                <p class="nota-cambio" style="font-size:.75rem; color:var(--text-muted); margin-top:.5rem; text-align:center">⚠️ aunque el precio se coloque en divisas, es tomado al cambio en bs en el menú del cliente.</p>
             </div>
             <div class="modal-footer" id="ingredienteModalFooter" style="display:flex;gap:8px;justify-content:flex-end;align-items:center;width:100%;flex-shrink:0">
                 <button type="button" class="btn-danger" id="deleteIngredienteBtn" style="display:none;border:none;background:transparent;color:var(--danger);font-weight:600;cursor:pointer;padding:.5rem .9rem;border-radius:10px;font-size:.85rem;pointer-events:auto;z-index:101;position:relative" title="Eliminar ingrediente"><i class="fas fa-trash-alt" style="margin-right:.3rem"></i>Eliminar</button>
@@ -581,16 +579,16 @@
     <!-- MODAL USUARIO -->
     <div class="modal" id="usuarioModal">
         <div class="modal-content" style="max-width:550px">
-            <div class="modal-header"><h3 id="usuarioModalTitle">Nuevo Cajero/Admin</h3><button class="modal-close" id="closeUsuarioModal">&times;</button></div>
+            <div class="modal-header"><h3 id="usuarioModalTitle">Nuevo cajero/admin</h3><button class="modal-close" id="closeUsuarioModal">&times;</button></div>
             <div class="modal-body">
                 <form id="usuarioForm">
                     <div class="form-group"><label>Foto de perfil (opcional)</label>
                         <div style="display:flex;gap:.75rem;align-items:flex-start">
-                            <div style="flex:1"><input type="file" id="usuarioFoto" accept="image/*" style="margin-bottom:.3rem"><input type="url" id="usuarioFotoUrl" placeholder="O pega la URL de la imagen" style="width:100%"></div>
+                            <div style="flex:1"><input type="file" id="usuarioFoto" accept="image/*" style="margin-bottom:.3rem"><input type="url" id="usuarioFotoUrl" placeholder="O pega la url de la imagen" style="width:100%"></div>
                             <div id="usuarioFotoPreview" class="image-preview" style="display:none;width:70px;height:70px;flex-shrink:0;position:relative"><img id="usuarioPreviewImg" style="width:100%;height:100%;object-fit:cover;border-radius:8px"><button type="button" id="usuarioFotoRemoveBtn" style="position:absolute;top:-8px;right:-8px;background:var(--danger);color:#fff;border:none;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.7rem">✕</button></div>
                         </div>
                     </div>
-                    <div class="form-group"><label>Nombre completo *</label><input type="text" id="usuarioNombre" required placeholder="Ej: María González"></div>
+                    <div class="form-group"><label>Nombre completo *</label><input type="text" id="usuarioNombre" required placeholder="Ej: maría gonzález"></div>
                     <div style="display:flex;gap:.75rem"><div class="form-group" style="flex:1"><label>Nombre de usuario *</label><input type="text" id="usuarioUsername" required placeholder="Ej: cajero3"></div><div class="form-group" style="flex:1"><label>Rol</label><select id="usuarioRol"><option value="cajero">Cajero</option><option value="admin">Administrador</option></select></div></div>
                     <div class="form-group"><label>Contraseña</label><input type="text" id="usuarioPassword" placeholder="Déjalo vacío para no cambiar" autocomplete="off"></div>
                     <div class="form-group"><label>Estado</label><select id="usuarioActivo"><option value="true">Activo</option><option value="false">Inactivo</option></select></div>
@@ -608,7 +606,7 @@
                 <form id="deliveryForm">
                     <div class="form-group"><label>Foto de perfil (opcional)</label>
                         <div style="display:flex;gap:.75rem;align-items:flex-start">
-                            <div style="flex:1"><input type="file" id="deliveryFoto" accept="image/*" style="margin-bottom:.3rem"><input type="url" id="deliveryFotoUrl" placeholder="O pega la URL de la imagen" style="width:100%"></div>
+                            <div style="flex:1"><input type="file" id="deliveryFoto" accept="image/*" style="margin-bottom:.3rem"><input type="url" id="deliveryFotoUrl" placeholder="O pega la url de la imagen" style="width:100%"></div>
                             <div id="deliveryFotoPreview" class="image-preview" style="display:none;width:70px;height:70px;flex-shrink:0;position:relative"><img id="deliveryPreviewImg" style="width:100%;height:100%;object-fit:cover;border-radius:8px"><button type="button" id="deliveryFotoRemoveBtn" style="position:absolute;top:-8px;right:-8px;background:var(--danger);color:#fff;border:none;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.7rem">✕</button></div>
                         </div>
                     </div>
@@ -628,11 +626,11 @@
                 <form id="mesoneroForm">
                     <div class="form-group"><label>Foto de perfil (opcional)</label>
                         <div style="display:flex;gap:.75rem;align-items:flex-start">
-                            <div style="flex:1"><input type="file" id="mesoneroFoto" accept="image/*" style="margin-bottom:.3rem"><input type="url" id="mesoneroFotoUrl" placeholder="O pega la URL de la imagen" style="width:100%"></div>
+                            <div style="flex:1"><input type="file" id="mesoneroFoto" accept="image/*" style="margin-bottom:.3rem"><input type="url" id="mesoneroFotoUrl" placeholder="O pega la url de la imagen" style="width:100%"></div>
                             <div id="mesoneroFotoPreview" class="image-preview" style="display:none;width:70px;height:70px;flex-shrink:0;position:relative"><img id="mesoneroPreviewImg" style="width:100%;height:100%;object-fit:cover;border-radius:8px"><button type="button" id="mesoneroFotoRemoveBtn" style="position:absolute;top:-8px;right:-8px;background:var(--danger);color:#fff;border:none;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.7rem">✕</button></div>
                         </div>
                     </div>
-                    <div class="form-group"><label>Nombre completo *</label><input type="text" id="mesoneroNombre" required placeholder="Ej: Carlos Méndez"></div>
+                    <div class="form-group"><label>Nombre completo *</label><input type="text" id="mesoneroNombre" required placeholder="Ej: carlos méndez"></div>
                     <div class="form-group"><label>Estado</label><select id="mesoneroActivo"><option value="true">Activo</option><option value="false">Inactivo</option></select></div>
                 </form>
             </div>
@@ -652,7 +650,7 @@
     <!-- MODAL QR AMPLIADO -->
     <div class="modal" id="qrAmpliadoModal">
         <div class="modal-content" style="max-width:400px">
-            <div class="modal-header"><h3>Código QR</h3><button class="modal-close" id="closeQrAmpliadoModal">&times;</button></div>
+            <div class="modal-header"><h3>Código qr</h3><button class="modal-close" id="closeQrAmpliadoModal">&times;</button></div>
             <div class="modal-body" style="text-align:center"><div id="qrAmpliado" style="width:300px;height:300px;margin:0 auto"></div><div id="qrAmpliadoInfo" style="margin-top:1rem"></div></div>
             <!-- footer QR: Eliminar + Cerrar generados por ampliarQR() -->
         </div>
