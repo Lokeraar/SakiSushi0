@@ -264,12 +264,41 @@ window.addEventListener('beforeunload',function(e){if(!window._sakiReady){e.prev
             width: 100%;
         }
         .header-row-main {
+            order: 0;
             gap: .5rem;
         }
         .header-row-mesa {
             justify-content: center;
             padding: .3rem 0 .4rem;
             border-top: 1px solid rgba(255,255,255,.15);
+            display: none;
+        }
+        .header-row-sucursal {
+            justify-content: flex-end;
+            padding: .3rem 0 .4rem;
+            border-top: 1px solid rgba(255,255,255,.15);
+            gap: .5rem;
+            align-items: center;
+            display: none;
+        }
+        .sucursal-label {
+            font-size: .85rem;
+            white-space: nowrap;
+            opacity: .9;
+        }
+        .sucursal-select {
+            background: rgba(255,255,255,.2);
+            border: 1px solid rgba(255,255,255,.3);
+            color: white;
+            padding: .3rem .6rem;
+            border-radius: 6px;
+            font-size: .85rem;
+            cursor: pointer;
+            min-width: 150px;
+        }
+        .sucursal-select option {
+            background: var(--secondary);
+            color: white;
         }
 
         /* ═══════════════════════════════════════════════════════
@@ -278,6 +307,35 @@ window.addEventListener('beforeunload',function(e){if(!window._sakiReady){e.prev
 
         @media (max-width:992px){.header{min-height:100px;padding:.5rem}}
         @media (max-width:768px){.header{min-height:auto;padding:.5rem}}
+        /* Mobile: show sucursal row as third row */
+        @media (max-width:768px) {
+            .header-row-main {
+                order: 0;
+            }
+            .header-row-mesa.has-mesa {
+                display: flex;
+                order: 1;
+            }
+            .header-row-sucursal {
+                display: flex !important;
+                border-top: 1px solid rgba(255,255,255,.15);
+                order: 2;
+            }
+        }
+        /* Tablet/Desktop: show sucursal row as second row */
+        @media (min-width:769px) {
+            .header-row-main {
+                order: 0;
+            }
+            .header-row-sucursal {
+                display: flex !important;
+                order: 1;
+            }
+            .header-row-mesa.has-mesa {
+                display: flex;
+                order: 2;
+            }
+        }
         .header-left {
             display:flex;
             align-items:center;
@@ -2492,6 +2550,13 @@ window.addEventListener('beforeunload',function(e){if(!window._sakiReady){e.prev
                 <i class="fas fa-utensils"></i>
                 <span id="tableNumber">--</span>
             </div>
+        </div>
+        <!-- Tercera fila (móvil) / Segunda fila (tablet/escritorio): seleccionar sucursal -->
+        <div class="header-row header-row-sucursal" id="sucursalRow">
+            <span class="sucursal-label">Seleccionar sucursal</span>
+            <select class="sucursal-select" id="sucursalSelect">
+                <option value="">Seleccione...</option>
+            </select>
         </div>
     </header>
     
@@ -5344,7 +5409,7 @@ Promise.all(Object.entries(platillo.ingredientes || {}).map(async ([ingId, ingIn
 
 				if (mesaId) {
 					document.getElementById('tableNumber').textContent = mesaId;
-                        document.getElementById('mesaRow').style.display = 'flex';
+                        document.getElementById('mesaRow').classList.add('has-mesa');
 					// tableBadge now inside mesaRow (shown via mesaRow)
 					document.getElementById('confirmTableNumber').textContent = mesaId;
 					
@@ -5360,7 +5425,7 @@ Promise.all(Object.entries(platillo.ingredientes || {}).map(async ([ingId, ingIn
 					headerIcons.classList.add('left-aligned');
 				} else {
                         // Si no hay mesa, ocultar la fila de mesa
-                        document.getElementById('mesaRow').style.display = 'none';
+                        document.getElementById('mesaRow').classList.remove('has-mesa');
                 }
 			// ── Sistema de navegación con botón atrás ──────────────────────────
 			(function(){
