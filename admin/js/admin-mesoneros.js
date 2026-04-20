@@ -592,9 +592,17 @@
                 }
             });
             
-            // Actualizar todas las propinas pendientes a entregado: true y monto_bs: 0
+            // Actualizar todas las propinas pendientes a entregado: true
+            // También reducir monto_original para registros USD proporcionalmente
             for (const prop of pendientes) {
-                await window.supabaseClient.from('propinas').update({ entregado: true, monto_bs: 0 }).eq('id', prop.id);
+                let updateData = { entregado: true, monto_bs: 0 };
+                
+                // Si es registro USD, también actualizar monto_original a 0
+                if (prop.moneda_original === 'USD' && prop.monto_original) {
+                    updateData.monto_original = 0;
+                }
+                
+                await window.supabaseClient.from('propinas').update(updateData).eq('id', prop.id);
             }
             
             // Crear una nueva propina que representa el pago total al mesonero
@@ -718,8 +726,12 @@
                 // Usar epsilon check para comparar montos
                 if (restoPorPagar >= montoPropina - 0.01) {
                     // Caso 1: Pagar la propina completa
-                    // Marcar la propina original como entregada y poner monto_bs a 0
-                    await window.supabaseClient.from('propinas').update({ entregado: true, monto_bs: 0 }).eq('id', prop.id);
+                    // Marcar la propina original como entregada y poner monto_bs y monto_original a 0
+                    let updateDataOriginal = { entregado: true, monto_bs: 0 };
+                    if (prop.moneda_original === 'USD' && prop.monto_original) {
+                        updateDataOriginal.monto_original = 0;
+                    }
+                    await window.supabaseClient.from('propinas').update(updateDataOriginal).eq('id', prop.id);
                     
                     // Crear nueva propina que representa el pago
                     const cajeroNombre = (window.usuarioActual && window.usuarioActual.nombre) || 'Administrador';
@@ -759,10 +771,21 @@
                     const montoPagado = restoPorPagar;
                     const montoRestante = montoPropina - montoPagado;
                     
+                    // Calcular reducción proporcional de monto_original para la propina restante
+                    let montoOriginalRestante = 0;
+                    if (prop.monto_original && prop.monto_original > 0) {
+                        montoOriginalRestante = prop.monto_original * (montoRestante / montoPropina);
+                    }
+                    
                     // 2a. Reducir la propina original al monto restante (sigue pendiente)
+                    let updateDataParcial = { monto_bs: montoRestante };
+                    if (montoOriginalRestante > 0) {
+                        updateDataParcial.monto_original = parseFloat(montoOriginalRestante.toFixed(2));
+                    }
+                    
                     const { error: errUpdate } = await window.supabaseClient
                         .from('propinas')
-                        .update({ monto_bs: montoRestante })
+                        .update(updateDataParcial)
                         .eq('id', prop.id);
                     if (errUpdate) throw errUpdate;
                     
@@ -942,7 +965,7 @@
                 + '<th style="padding:.6rem .85rem;text-align:left;font-size:.72rem;text-transform:uppercase;color:var(--text-muted);font-weight:700">Mesonero</th>'
                 + '<th style="padding:.6rem .85rem;text-align:left;font-size:.72rem;text-transform:uppercase;color:var(--text-muted);font-weight:700">Mesa</th>'
                 + '<th style="padding:.6rem .85rem;text-align:left;font-size:.72rem;text-transform:uppercase;color:var(--text-muted);font-weight:700">Método</th>'
-                + '<th style="padding:.6rem .85rem;text-align:left;font-size:.72rem;text-transform:uppercase;color:var(--text-muted);font-weight:700">Registrado por</th>'
+                + '<th style="padding:.6rem .85rem;text-align:left;font-size:.72rem;text-transform:uppercase;color:var(--text-muted);font-weight:700">Registro</th>'
                 + '</tr></thead>'
                 + '<tbody>' + (rows || emptyRow) + '</tbody></table></div>'
                 + '<div style="padding:.85rem 1.5rem;border-top:1px solid var(--border);display:flex;justify-content:flex-end">'
