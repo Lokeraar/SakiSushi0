@@ -593,14 +593,9 @@
             });
             
             // Actualizar todas las propinas pendientes a entregado: true
-            // También reducir monto_original para registros USD proporcionalmente
+            // NO modificar monto_bs ni monto_original para preservar el historial
             for (const prop of pendientes) {
-                let updateData = { entregado: true, monto_bs: 0 };
-                
-                // Si es registro USD, también actualizar monto_original a 0
-                if (prop.moneda_original === 'USD' && prop.monto_original) {
-                    updateData.monto_original = 0;
-                }
+                let updateData = { entregado: true };
                 
                 await window.supabaseClient.from('propinas').update(updateData).eq('id', prop.id);
             }
@@ -726,11 +721,8 @@
                 // Usar epsilon check para comparar montos
                 if (restoPorPagar >= montoPropina - 0.01) {
                     // Caso 1: Pagar la propina completa
-                    // Marcar la propina original como entregada y poner monto_bs y monto_original a 0
-                    let updateDataOriginal = { entregado: true, monto_bs: 0 };
-                    if (prop.moneda_original === 'USD' && prop.monto_original) {
-                        updateDataOriginal.monto_original = 0;
-                    }
+                    // Marcar la propina original como entregada (NO modificar montos para preservar historial)
+                    let updateDataOriginal = { entregado: true };
                     await window.supabaseClient.from('propinas').update(updateDataOriginal).eq('id', prop.id);
                     
                     // Crear nueva propina que representa el pago
@@ -771,15 +763,12 @@
                     const montoPagado = restoPorPagar;
                     const montoRestante = montoPropina - montoPagado;
                     
-                    // Calcular reducción proporcional de monto_original para la propina restante
-                    let montoOriginalRestante = 0;
-                    if (prop.monto_original && prop.monto_original > 0) {
-                        montoOriginalRestante = prop.monto_original * (montoRestante / montoPropina);
-                    }
-                    
                     // 2a. Reducir la propina original al monto restante (sigue pendiente)
+                    // También reducir monto_original proporcionalmente para que el saldo USD disminuya correctamente
                     let updateDataParcial = { monto_bs: montoRestante };
-                    if (montoOriginalRestante > 0) {
+                    if (prop.monto_original && prop.monto_original > 0 && prop.moneda_original === 'USD') {
+                        // Calcular reducción proporcional de monto_original
+                        const montoOriginalRestante = prop.monto_original * (montoRestante / montoPropina);
                         updateDataParcial.monto_original = parseFloat(montoOriginalRestante.toFixed(2));
                     }
                     
@@ -907,7 +896,7 @@
                     // Determinar tipo de registro: entrada (entregado=false) o salida/pago (entregado=true)
                     var esEntrada = !p.entregado;
                     var signo = esEntrada ? '+' : '-';
-                    var colorMonto = esEntrada ? 'var(--success)' : 'var(--bs-color)';
+                    var colorMonto = esEntrada ? 'var(--success)' : 'var(--text-dark)';
                     return '<tr><td>' + hora + '</td><td>' + (p.mesoneros ? p.mesoneros.nombre : 'N/A') + '</td><td>' + (p.mesa||'N/A') + '</td><td>' + (p.metodo||'N/A') + '</td><td style="color:' + colorMonto + '">' + signo + ' ' + window.formatBs(p.monto_bs) + '</td><td>' + (p.cajero||'N/A') + '</td></tr>';
                 }).join('');
             } else {
@@ -936,10 +925,10 @@
                 // Determinar tipo de registro: entrada (entregado=false) o salida/pago (entregado=true)
                 var esEntrada = !p.entregado;
                 var signo = esEntrada ? '+' : '-';
-                var colorMonto = esEntrada ? 'var(--success)' : 'var(--bs-color)';
+                var colorMonto = esEntrada ? 'var(--success)' : 'var(--text-dark)';
                 var badgeTipo = esEntrada 
                     ? '<span style="display:inline-block;padding:2px 6px;border-radius:4px;font-size:.65rem;background:rgba(76,175,80,.15);color:var(--success);font-weight:700;margin-left:.35rem">INGRESO</span>'
-                    : '<span style="display:inline-block;padding:2px 6px;border-radius:4px;font-size:.65rem;background:rgba(244,67,54,.15);color:var(--bs-color);font-weight:700;margin-left:.35rem">PAGO</span>';
+                    : '<span style="display:inline-block;padding:2px 6px;border-radius:4px;font-size:.65rem;background:rgba(244,67,54,.15);color:var(--text-dark);font-weight:700;margin-left:.35rem">PAGO</span>';
                 return '<tr>'
                     + '<td style="padding:.55rem .85rem;border-bottom:1px solid var(--border);font-size:.78rem;color:var(--text-muted)">' + hora + '</td>'
                     + '<td style="padding:.55rem .85rem;border-bottom:1px solid var(--border);font-size:.82rem;font-weight:600">' + (p.mesoneros ? p.mesoneros.nombre : 'N/A') + '</td>'
