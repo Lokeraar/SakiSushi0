@@ -5,7 +5,7 @@
 
     window.cargarmenu = async function() {
         try {
-            const { data, error } = await window.supabaseClient.from('menu').select('*');
+            const { data, error } = await window.supabaseclient.from('menu').select('*');
             if (error) throw error;
             window.menuitems = data || [];
             window.renderizarmenu();
@@ -139,7 +139,7 @@
 
     window.toggleDisponiblePlatillo = async function(id, disponible) {
         try {
-            const { error } = await window.supabaseClient.from('Menu')
+            const { error } = await window.supabaseclient.from('Menu')
                 .update({ disponible: disponible })
                 .eq('Id', id);
             if (error) throw error;
@@ -496,7 +496,7 @@
                     if (platillo.imagen && platillo.imagen.includes('Imagenes-platillos')) {
                         await window.eliminarImagenPlatillo(platillo.imagen);
                     }
-                    await window.supabaseClient.from('Menu').delete().eq('Id', id);
+                    await window.supabaseclient.from('Menu').delete().eq('Id', id);
                     await window.cargarMenu();
                     window.mostrarToast('🗑️ platillo eliminado', 'Success');
                 } catch (e) {
@@ -521,7 +521,7 @@
                     if (platillo.imagen && platillo.imagen.includes('Imagenes-platillos')) {
                         await window.eliminarImagenPlatillo(platillo.imagen);
                     }
-                    await window.supabaseClient.from('Menu').delete().eq('Id', id);
+                    await window.supabaseclient.from('Menu').delete().eq('Id', id);
                     await window.cargarMenu();
                     window.cerrarModal('Platillomodal');
                     window.platilloEditandoId = null;
@@ -738,13 +738,13 @@
             let error;
             if (window.platilloeditandoid) {
                 // actualizar existente
-                const { error: upderror } = await window.supabaseClient.from('menu')
+                const { error: upderror } = await window.supabaseclient.from('menu')
                     .update(platillodata)
                     .eq('id', window.platilloeditandoid);
                 error = upderror;
             } else {
                 // crear nuevo
-                const { error: inserror } = await window.supabaseClient.from('menu')
+                const { error: inserror } = await window.supabaseclient.from('menu')
                     .insert([platillodata]);
                 error = inserror;
             }

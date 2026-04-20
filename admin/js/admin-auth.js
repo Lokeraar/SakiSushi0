@@ -2,7 +2,7 @@
 (function() {
     let selectedAdmin = null;
 
-    window.cargarListaAdminsRecientes = async function() {
+    window.cargarlistaadminsrecientes = async function() {
         const container = document.getElementById('Loginadminslist');
         if (!container) return;
         
@@ -12,7 +12,7 @@
         try {
             // esperar a que supabaseclient esté listo (puede tardar un momento)
             let intentos = 0;
-            while (!window.supabaseClient && intentos < 20) {
+            while (!window.supabaseclient && intentos < 20) {
                 await new promise(r => setTimeout(r, 100));
                 intentos++;
             }
@@ -25,7 +25,7 @@
                 admins = recent;
             } else {
                 // obtener todos los admins activos de la bd
-                const { data, error } = await window.supabaseClient.from('usuarios').select('*').eq('rol', 'admin').eq('activo', true);
+                const { data, error } = await window.supabaseclient.from('usuarios').select('*').eq('rol', 'admin').eq('activo', true);
                 if (error) throw error;
                 admins = data || [];
             }
@@ -36,7 +36,7 @@
             }
             
             container.innerHTML = admins.map(admin => {
-                const fotoUrl = admin.foto || window.getPlaceholderImage(admin.nombre);
+                const fotoUrl = admin.foto || window.getplaceholderimage(admin.nombre);
                 return `
                     <div class="admin-card" data-id="${admin.id}" data-username="${admin.username}" data-nombre="${admin.nombre}" data-foto="${admin.foto || ''}">
                         <img class="admin-foto" Src="${fotoUrl}" Onerror="this.src='${window.getplaceholderimage(admin.nombre)}'">
@@ -118,7 +118,7 @@
             if (adminuser.foto === undefined && selectedadmin.foto) adminuser.foto = selectedadmin.foto;
             window.guardaradminreciente(adminuser);
             
-            window.supabaseClient = window.inicializarSupabaseCliente(window.jwttoken);
+            window.supabaseclient = window.inicializarsupabasecliente(window.jwttoken);
             
             document.getElementById('loginContainer').style.display = 'none';
             document.getElementById('panelContainer').classList.add('active');
@@ -208,14 +208,14 @@
             const user = JSON.parse(userdata);
             if (user.rol !== 'admin') return false;
             // verificar token con supabase
-            const { error } = await window.supabaseClient.from('config').select('id').limit(1).maybesingle();
+            const { error } = await window.supabaseclient.from('config').select('id').limit(1).maybesingle();
             if (error && error.message.includes('JWT')) {
                 window.cerrarsesion();
                 return false;
             }
             window.jwttoken = token;
             window.isadminauthenticated = true;
-            window.supabaseClient = window.inicializarSupabaseCliente(window.jwttoken);
+            window.supabaseclient = window.inicializarsupabasecliente(window.jwttoken);
             
             // actualizar el nombre del usuario en el header después de restaurar sesión (desktop y móvil)
             const headerusuarionombredesktop = document.getElementById('headerUsuarioNombreDesktop');
@@ -256,7 +256,7 @@
         }
         window.mostrarlogin();
         window.mostrartoast('🔓 Sesión cerrada', 'info');
-        window.supabaseClient = window.inicializarSupabaseCliente();
+        window.supabaseclient = window.inicializarsupabasecliente();
         // recargar la lista de admins (por si cambió)
         setTimeout(() => window.cargarlistaadminsrecientes(), 500);
     };
@@ -279,7 +279,7 @@
         clearbtn.addEventListener('click', () => {
             if (confirm('¿Borrar el historial de administradores recientes?')) {
                 window.limpiaradminsrecientes();
-                window.cargarListaAdminsRecientes();
+                window.cargarlistaadminsrecientes();
             }
         });
     }
@@ -288,6 +288,6 @@
     window.iniciarLoginUI = async function() {
         // Esperar un poco para que supabaseClient se inicialice
         await new Promise(r => setTimeout(r, 300));
-        await window.cargarListaAdminsRecientes();
+        await window.cargarlistaadminsrecientes();
     };
 })();

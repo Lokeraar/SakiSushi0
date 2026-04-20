@@ -1,29 +1,29 @@
 // admin-config.js - Configuración de tasa de cambio y parámetros globales
 (function() {
-    window.cargarConfiguracion = async function() {
+    window.cargarconfiguracion = async function() {
         try {
-            const { data, error } = await window.supabaseClient
+            const { data, error } = await window.supabaseclient
                 .from('Config')
                 .select('*')
                 .eq('Id', 1)
                 .single();
             if (error) throw error;
-            window.configGlobal = data || {};
+            window.configglobal = data || {};
             
-            window.configGlobal.tasa_cambio = window.configGlobal.tasa_cambio || 400;
-            window.configGlobal.tasa_efectiva = window.configGlobal.tasa_efectiva || 400;
-            window.configGlobal.aumento_diario = window.configGlobal.aumento_diario || 0;
-            window.configGlobal.aumento_activo = window.configGlobal.aumento_activo || false;
-            window.configGlobal.aumento_semanal = window.configGlobal.aumento_semanal || false;
+            window.configglobal.tasa_cambio = window.configglobal.tasa_cambio || 400;
+            window.configglobal.tasa_efectiva = window.configglobal.tasa_efectiva || 400;
+            window.configglobal.aumento_diario = window.configglobal.aumento_diario || 0;
+            window.configglobal.aumento_activo = window.configglobal.aumento_activo || false;
+            window.configglobal.aumento_semanal = window.configglobal.aumento_semanal || false;
             
-            window.configGlobal.admin_password = window.configGlobal.admin_password || 'Admin123';
-            window.configGlobal.recovery_email = window.configGlobal.recovery_email || 'Admin@sakisushi.com';
+            window.configglobal.admin_password = window.configglobal.admin_password || 'Admin123';
+            window.configglobal.recovery_email = window.configglobal.recovery_email || 'Admin@sakisushi.com';
             
-            console.log('⚙️ configuración cargada. admin_password:', window.configGlobal.admin_password ? '***' : 'No cargada');
+            console.log('⚙️ configuración cargada. admin_password:', window.configglobal.admin_password ? '***' : 'No cargada');
             
         } catch (e) {
             console.error('Error cargando configuración:', e);
-            window.configGlobal = {
+            window.configglobal = {
                 tasa_cambio: 400,
                 tasa_efectiva: 400,
                 aumento_diario: 0,
@@ -35,36 +35,36 @@
         }
     };
 
-    window.cargarConfiguracionInicial = async function() {
-        await window.cargarConfiguracion();
-        window.actualizarTasaUI();
-        window.recalcularTasaEfectiva();
-        window.actualizarMenuTasaBanner();
+    window.cargarconfiguracionInicial = async function() {
+        await window.cargarconfiguracion();
+        window.actualizartasaui();
+        window.recalculartasaefectiva();
+        window.actualizarmenutasabanner();
     };
 
-    window.actualizarTasaUI = function() {
-        document.getElementById('Tasabaseinput').value      = window.configGlobal.tasa_cambio || 400;
-        document.getElementById('Aumentodiarioinput').value = window.configGlobal.aumento_diario || 0;
-        document.getElementById('Aumentoactivotoggle').checked = window.configGlobal.aumento_activo || false;
+    window.actualizartasaui = function() {
+        document.getElementById('Tasabaseinput').value      = window.configglobal.tasa_cambio || 400;
+        document.getElementById('Aumentodiarioinput').value = window.configglobal.aumento_diario || 0;
+        document.getElementById('Aumentoactivotoggle').checked = window.configglobal.aumento_activo || false;
         const semEl = document.getElementById('Aumentosemanaltoggle');
-        if (semEl) semEl.checked = window.configGlobal.aumento_semanal || false;
-        document.getElementById('Tasaefectivadisplay').textContent = (window.configGlobal.tasa_efectiva || 400).toFixed(2);
-        document.getElementById('Aumentoacumuladodisplay').textContent = (window.configGlobal.aumento_acumulado || 0).toFixed(2) + '%';
-        if (window.configGlobal.aumento_desde && document.getElementById('Aumentodesde'))
-            document.getElementById('Aumentodesde').value = window.configGlobal.aumento_desde.split('T')[0];
-        if (window.configGlobal.aumento_hasta && document.getElementById('Aumentohasta'))
-            document.getElementById('Aumentohasta').value = window.configGlobal.aumento_hasta.split('T')[0];
-        if (window.configGlobal.aumento_indefinido && document.getElementById('Aumentoindefinido'))
+        if (semEl) semEl.checked = window.configglobal.aumento_semanal || false;
+        document.getElementById('Tasaefectivadisplay').textContent = (window.configglobal.tasa_efectiva || 400).toFixed(2);
+        document.getElementById('Aumentoacumuladodisplay').textContent = (window.configglobal.aumento_acumulado || 0).toFixed(2) + '%';
+        if (window.configglobal.aumento_desde && document.getElementById('Aumentodesde'))
+            document.getElementById('Aumentodesde').value = window.configglobal.aumento_desde.split('T')[0];
+        if (window.configglobal.aumento_hasta && document.getElementById('Aumentohasta'))
+            document.getElementById('Aumentohasta').value = window.configglobal.aumento_hasta.split('T')[0];
+        if (window.configglobal.aumento_indefinido && document.getElementById('Aumentoindefinido'))
             document.getElementById('Aumentoindefinido').checked = true;
         if (typeof _actualizarLabelAumento === 'Function') _actualizarLabelAumento();
     };
 
-    window.actualizarMenuTasaBanner = window.actualizarTasaUI;
+    window.actualizarmenutasabanner = window.actualizartasaui;
 
-    window.recalcularTasaEfectiva = function() {
+    window.recalculartasaefectiva = function() {
         const tasaBaseInput = document.getElementById('Tasabaseinput');
-        if (tasaBaseInput && window.configGlobal) {
-            window.configGlobal.tasa_cambio = parseFloat(tasaBaseInput.value) || 0;
+        if (tasaBaseInput && window.configglobal) {
+            window.configglobal.tasa_cambio = parseFloat(tasaBaseInput.value) || 0;
         }
         const tasaBase     = parseFloat(document.getElementById('Tasabaseinput').value) || 0;
         const aumentoPct   = parseFloat(document.getElementById('Aumentodiarioinput').value) || 0;
@@ -144,7 +144,7 @@
             
             window.recalculartasaefectiva();
             
-            await window.supabaseClient.from('config').update({
+            await window.supabaseclient.from('config').update({
                 tasa_cambio:       window.configglobal.tasa_cambio,
                 aumento_diario:    window.configglobal.aumento_diario,
                 aumento_activo:    window.configglobal.aumento_activo,

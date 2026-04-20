@@ -29,7 +29,7 @@
         }
         
         try {
-            const { data: admindata, error: usererror } = await window.supabaseClient
+            const { data: admindata, error: usererror } = await window.supabaseclient
                 .from('usuarios')
                 .select('username')
                 .eq('rol', 'admin')
@@ -40,7 +40,7 @@
                 return;
             }
             
-            const { data: authdata, error: autherror } = await window.supabaseClient
+            const { data: authdata, error: autherror } = await window.supabaseclient
                 .rpc('verify_user_credentials', {
                     p_username: admindata.username,
                     p_password: current
@@ -51,17 +51,17 @@
                 return;
             }
             
-            const { data: hashed, error: hasherr } = await window.supabaseClient
+            const { data: hashed, error: hasherr } = await window.supabaseclient
                 .rpc('hash_password', { plain_password: nueva });
             if (hasherr) throw hasherr;
             
-            const { error: updateusererror } = await window.supabaseClient
+            const { error: updateusererror } = await window.supabaseclient
                 .from('usuarios')
                 .update({ password_hash: hashed })
                 .eq('rol', 'admin');
             if (updateusererror) throw updateusererror;
             
-            const { error: updateconfigerror } = await window.supabaseClient
+            const { error: updateconfigerror } = await window.supabaseclient
                 .from('config')
                 .update({ admin_password: nueva })
                 .eq('id', 1);
@@ -94,7 +94,7 @@
         const email = document.getElementById('recoveryEmail').value;
         if (!email || !email.includes('@')) { window.mostrartoast('Ingresa un correo válido', 'error'); return; }
         try {
-            await window.supabaseClient.from('config').update({ recovery_email: email }).eq('id', 1);
+            await window.supabaseclient.from('config').update({ recovery_email: email }).eq('id', 1);
             window.mostrartoast('✉️ Correo de recuperación guardado', 'success');
         } catch (e) { console.error('Error guardando email:', e); window.mostrartoast('❌ Error al guardar el correo', 'error'); }
     };
