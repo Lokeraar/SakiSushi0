@@ -823,65 +823,79 @@
                     const montoPagadoEnMoneda = restoPorPagar;
                     const montoRestanteEnMoneda = montoPropinaEnMoneda - montoPagadoEnMoneda;
                     
-                    // 2a. Reducir la propina original al monto restante (sigue pendiente)
-                    let updateDataParcial = {};
+                    // 2a. Marcar la propina original como entregada (NO modificar montos para preservar historial)
+                    await window.supabaseClient.from('propinas').update({ entregado: true }).eq('id', prop.id);
                     
-                    if (pagarEnUSD) {
-                        // Propina en USD: reducir monto_original y recalcular monto_bs
-                        updateDataParcial.monto_original = parseFloat(montoRestanteEnMoneda.toFixed(2));
-                        updateDataParcial.monto_bs = parseFloat((montoRestanteEnMoneda * tasaBase).toFixed(2));
-                    } else {
-                        // Propina en Bs: reducir monto_bs
-                        updateDataParcial.monto_bs = parseFloat(montoRestanteEnMoneda.toFixed(2));
-                        // Si tiene monto_original (ej. fue convertida), reducirlo proporcionalmente
-                        if (prop.monto_original && prop.monto_original > 0 && prop.moneda_original === 'USD') {
-                            const montoOriginalRestante = prop.monto_original * (montoRestanteEnMoneda / montoPropinaEnMoneda);
-                            updateDataParcial.monto_original = parseFloat(montoOriginalRestante.toFixed(2));
-                        }
-                    }
-                    
-                    const { error: errUpdate } = await window.supabaseClient
-                        .from('propinas')
-                        .update(updateDataParcial)
-                        .eq('id', prop.id);
-                    if (errUpdate) throw errUpdate;
-                    
-                    // 2b. Crear un NUEVO REGISTRO en la tabla 'propinas' con el monto pagado y marcado como entregado (EGRESO)
+                    // 2b. Crear un NUEVO REGISTRO con el monto pagado (EGRESO)
                     const cajeroNombre = (window.usuarioActual && window.usuarioActual.nombre) || 'Administrador';
                     const ahora = new Date().toISOString();
                     
-                    let nuevoMontoOriginal = 0;
-                    let nuevaMonedaOriginal = 'Bs';
-                    let nuevoMontoBs = 0;
+                    let nuevoMontoOriginalPago = 0;
+                    let nuevaMonedaOriginalPago = 'Bs';
+                    let nuevoMontoBsPago = 0;
                     
                     if (pagarEnUSD) {
-                        nuevoMontoOriginal = montoPagadoEnMoneda;
-                        nuevaMonedaOriginal = 'USD';
-                        nuevoMontoBs = montoPagadoEnMoneda * tasaBase;
+                        nuevoMontoOriginalPago = montoPagadoEnMoneda;
+                        nuevaMonedaOriginalPago = 'USD';
+                        nuevoMontoBsPago = montoPagadoEnMoneda * tasaBase;
                     } else {
-                        nuevoMontoBs = montoPagadoEnMoneda;
-                        nuevoMontoOriginal = montoPagadoEnMoneda;
-                        nuevaMonedaOriginal = 'Bs';
+                        nuevoMontoBsPago = montoPagadoEnMoneda;
+                        nuevoMontoOriginalPago = montoPagadoEnMoneda;
+                        nuevaMonedaOriginalPago = 'Bs';
                     }
                     
-                    const nuevaPropina = {
+                    const nuevaPropinaPago = {
                         mesonero_id: mesoneroParaPagoId,
                         mesa: prop.mesa || 'General',
                         metodo: metodoPago,
-                        monto_original: parseFloat(nuevoMontoOriginal.toFixed(2)),
-                        moneda_original: nuevaMonedaOriginal,
+                        monto_original: parseFloat(nuevoMontoOriginalPago.toFixed(2)),
+                        moneda_original: nuevaMonedaOriginalPago,
                         tasa_aplicada: pagarEnUSD ? tasaBase : null,
-                        monto_bs: parseFloat(nuevoMontoBs.toFixed(2)),
+                        monto_bs: parseFloat(nuevoMontoBsPago.toFixed(2)),
                         referencia: 'EGRESO',
                         cajero: cajeroNombre,
                         fecha: ahora,
                         entregado: true
                     };
                     
-                    const { error: errInsert } = await window.supabaseClient
+                    const { error: errInsertPago } = await window.supabaseClient
                         .from('propinas')
-                        .insert([nuevaPropina]);
-                    if (errInsert) throw errInsert;
+                        .insert([nuevaPropinaPago]);
+                    if (errInsertPago) throw errInsertPago;
+                    
+                    // 2c. Crear otro NUEVO REGISTRO con el monto restante (pendiente, entregado: false)
+                    let nuevoMontoOriginalRestante = 0;
+                    let nuevaMonedaOriginalRestante = 'Bs';
+                    let nuevoMontoBsRestante = 0;
+                    
+                    if (pagarEnUSD) {
+                        nuevoMontoOriginalRestante = montoRestanteEnMoneda;
+                        nuevaMonedaOriginalRestante = 'USD';
+                        nuevoMontoBsRestante = montoRestanteEnMoneda * tasaBase;
+                    } else {
+                        nuevoMontoBsRestante = montoRestanteEnMoneda;
+                        nuevoMontoOriginalRestante = montoRestanteEnMoneda;
+                        nuevaMonedaOriginalRestante = 'Bs';
+                    }
+                    
+                    const nuevaPropinaRestante = {
+                        mesonero_id: mesoneroParaPagoId,
+                        mesa: prop.mesa || 'General',
+                        metodo: prop.metodo,
+                        monto_original: parseFloat(nuevoMontoOriginalRestante.toFixed(2)),
+                        moneda_original: nuevaMonedaOriginalRestante,
+                        tasa_aplicada: prop.tasa_aplicada,
+                        monto_bs: parseFloat(nuevoMontoBsRestante.toFixed(2)),
+                        referencia: prop.referencia,
+                        cajero: prop.cajero,
+                        fecha: prop.fecha,
+                        entregado: false
+                    };
+                    
+                    const { error: errInsertRestante } = await window.supabaseClient
+                        .from('propinas')
+                        .insert([nuevaPropinaRestante]);
+                    if (errInsertRestante) throw errInsertRestante;
                     
                     restoPorPagar = 0;
                     pagoCompletado = true;
@@ -1031,7 +1045,7 @@
             ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:10001;display:flex;align-items:center;justify-content:center;padding:1rem;backdrop-filter:blur(3px)';
             ov.innerHTML = '<div style="background:var(--card-bg);border-radius:16px;max-width:680px;width:100%;max-height:85vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 20px 40px rgba(0,0,0,.4)">'
                 + '<div style="background:linear-gradient(135deg,var(--propina),#7B1FA2);padding:1rem 1.5rem;color:#fff;display:flex;justify-content:space-between;align-items:center">'
-                +   '<div><div style="font-weight:700;font-size:1rem"><i class="fas fa-hand-holding-heart"></i> Historial de Propinas — Hoy</div>'
+                +   '<div><div style="font-weight:700;font-size:1rem"><i class="fas fa-hand-holding-heart"></i> Registro</div>'
                 +   '<div style="font-size:.75rem;opacity:.8;margin-top:2px">' + totLine + '</div></div>'
                 +   '<button onclick="this.closest(\'[style*=position]\').remove()" style="background:rgba(255,255,255,.2);border:none;color:#fff;border-radius:50%;width:30px;height:30px;cursor:pointer;font-size:1rem;font-weight:700;display:flex;align-items:center;justify-content:center">&#x2715;</button>'
                 + '</div>'
