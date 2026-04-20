@@ -389,6 +389,7 @@ html.dark-theme .logout-button:hover { background: rgba(255,255,255,.1); color: 
         display: flex;
         align-items: center;
         gap: 0.5rem;
+        justify-content: flex-end;
     }
     .level-2 {
         display: flex;
@@ -3112,32 +3113,23 @@ html.dark-theme #platilloModal .ingrediente-row input:focus {
         width: 100%;
         justify-content: flex-end;
     }
-    .header-row-sucursal {
+    .header-right-group {
         order: 2;
         display: flex;
-        justify-content: space-between;
         align-items: center;
-        width: 100%;
+        width: auto;
     }
-    .logout-button {
-        order: 3;
-        margin-left: auto;
-    }
-    /* Asegurar que el botón Salir esté al final de la línea de sucursal */
-    .header-row-sucursal .logout-button {
+    /* Asegurar que el botón Salir esté al final de la línea */
+    .header-right-group .logout-button {
         margin-left: auto;
     }
 }
 @media (max-width: 768px) {
     .header-level.level-1 {
-        position: relative !important;
+        flex-wrap: wrap;
+        justify-content: space-between;
     }
-    .header-level.level-1 .logout-button {
-        position: static !important;
-        right: auto !important;
-        top: auto !important;
-        transform: none !important;
-        order: 3;
+    .header-right-group .logout-button {
         margin-left: auto;
     }
 }
@@ -3150,7 +3142,6 @@ html.dark-theme #platilloModal .ingrediente-row input:focus {
     align-items: center;
     width: 100%;
     padding: 0.4rem 0;
-    position: relative !important;
 }
 
 .header-left-group, .header-right-group {
@@ -3165,16 +3156,12 @@ html.dark-theme #platilloModal .ingrediente-row input:focus {
     padding-right: 0;
     margin-left: 0;
     margin-right: 0;
+    justify-content: flex-end;
 }
 
-/* Botón Salir posicionado absolutamente en la esquina superior derecha */
-.header-level.level-1 .logout-button {
-    position: absolute !important;
-    right: 20px !important;
-    top: 50% !important;
-    transform: translateY(-50%) !important;
-    margin: 0 !important;
-    z-index: 10;
+/* Botón Salir alineado a la derecha dentro del header-right-group */
+.header-right-group .logout-button {
+    margin-left: auto;
 }
 
 .header-logo-img {
