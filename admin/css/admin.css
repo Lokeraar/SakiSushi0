@@ -3032,15 +3032,16 @@ html.dark-theme .mesa-admin-btn {
 
 /* ── Delivery stats cards ─────────────────────────────────────────────────── */
 #deliveryStatsGrid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 0.85rem;
+    display: grid !important;
+    grid-template-columns: repeat(3, 1fr) !important;
+    gap: 1rem !important;
+    width: 100% !important;
 }
 .delivery-stat-card {
     background: var(--card-bg); border-radius: 12px;
     padding: .95rem 1.1rem; box-shadow: var(--shadow-sm);
     border: 1px solid var(--border); border-top: 3px solid var(--delivery);
-    width: auto;
+    width: 100% !important;
 }
 .delivery-stat-label {
     font-size: .72rem; font-weight: 700; text-transform: uppercase;
@@ -3127,11 +3128,17 @@ html.dark-theme #platilloModal .ingrediente-row input:focus {
         margin-left: auto;
     }
 }
-/* Mover el botón Salir dentro de la fila de sucursal en móvil */
 @media (max-width: 768px) {
-    .header .logout-button {
-        position: static;
-        order: 2;
+    .header-level.level-1 {
+        position: relative !important;
+    }
+    .header-level.level-1 .logout-button {
+        position: static !important;
+        right: auto !important;
+        top: auto !important;
+        transform: none !important;
+        order: 3;
+        margin-left: auto;
     }
 }
 /* ============================================
@@ -3143,7 +3150,7 @@ html.dark-theme #platilloModal .ingrediente-row input:focus {
     align-items: center;
     width: 100%;
     padding: 0.4rem 0;
-    position: relative;
+    position: relative !important;
 }
 
 .header-left-group, .header-right-group {
@@ -3162,10 +3169,11 @@ html.dark-theme #platilloModal .ingrediente-row input:focus {
 
 /* Botón Salir posicionado absolutamente en la esquina superior derecha */
 .header-level.level-1 .logout-button {
-    position: absolute;
-    right: 1rem;
-    top: 50%;
-    transform: translateY(-50%);
+    position: absolute !important;
+    right: 20px !important;
+    top: 50% !important;
+    transform: translateY(-50%) !important;
+    margin: 0 !important;
 }
 
 .header-logo-img {
