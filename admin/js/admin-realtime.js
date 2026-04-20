@@ -2,19 +2,19 @@
 (function() {
     window.setupRealtimeSubscriptions = function() {
         try {
-            window.supabaseclient
+            window.supabaseClient
                 .channel('admin-menu')
-                .on('postgres_changes', { event: '*', schema: 'Public', table: 'Menu' },
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'menu' },
                     () => { window.cargarMenu(); })
                 .subscribe();
 
-            window.supabaseclient
+            window.supabaseClient
                 .channel('admin-inventario')
-                .on('postgres_changes', { event: '*', schema: 'Public', table: 'Inventario' },
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'inventario' },
                     async (p) => {
                         if (p.eventType === 'UPDATE' && p.new.stock <= p.new.minimo) {
                             window.verificarStockCritico();
-                            window.mostrartoast(`⚠️ Stock crítico: ${p.new.nombre}`, 'Warning');
+                            window.mostrarToast(`⚠️ Stock crítico: ${p.new.nombre}`, 'warning');
                             window._notificarAdminStockCritico && window._notificarAdminStockCritico(p.new.nombre);
                         }
                         if (p.eventType === 'UPDATE' && (p.old?.stock || 0) <= 0 && p.new.stock > 0) {
@@ -25,55 +25,55 @@
                     })
                 .subscribe();
 
-            window.supabaseclient
+            window.supabaseClient
                 .channel('admin-usuarios')
-                .on('postgres_changes', { event: '*', schema: 'Public', table: 'Usuarios' },
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'usuarios' },
                     () => { window.cargarUsuarios(); })
                 .subscribe();
 
-            window.supabaseclient
+            window.supabaseClient
                 .channel('admin-qr')
-                .on('postgres_changes', { event: '*', schema: 'Public', table: 'codigos_qr' },
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'codigos_qr' },
                     () => { window.cargarQRs(); })
                 .subscribe();
 
-            window.supabaseclient
+            window.supabaseClient
                 .channel('admin-pedidos')
-                .on('postgres_changes', { event: '*', schema: 'Public', table: 'Pedidos' },
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'pedidos' },
                     () => {
                         window.cargarPedidosRecientes();
-                        const rPane = document.getElementById('Reportespane');
-                        if (rPane && rPane.classList.contains('Active')) window.cargarReportes();
+                        const rPane = document.getElementById('reportesPane');
+                        if (rPane && rPane.classList.contains('active')) window.cargarReportes();
                     })
                 .subscribe();
 
-            window.supabaseclient
+            window.supabaseClient
                 .channel('admin-mesoneros')
-                .on('postgres_changes', { event: '*', schema: 'Public', table: 'Mesoneros' },
-                    () => { window.cargarmesoneros(); })
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'mesoneros' },
+                    () => { window.cargarMesoneros(); })
                 .subscribe();
 
-            window.supabaseclient
+            window.supabaseClient
                 .channel('admin-deliverys')
-                .on('postgres_changes', { event: '*', schema: 'Public', table: 'Deliverys' },
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'deliverys' },
                     () => { window.cargarDeliverys(); })
                 .subscribe();
 
-            window.supabaseclient
+            window.supabaseClient
                 .channel('admin-propinas')
-                .on('postgres_changes', { event: '*', schema: 'Public', table: 'Propinas' },
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'propinas' },
                     () => { window.cargarPropinas(); })
                 .subscribe();
 
-            window.supabaseclient
+            window.supabaseClient
                 .channel('admin-config')
-                .on('postgres_changes', { event: 'UPDATE', schema: 'Public', table: 'Config' },
+                .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'config' },
                     (p) => {
-                        window.configglobal = { ...window.configglobal, ...p.new };
-                        const bi = document.getElementById('Tasabaseinput');
+                        window.configGlobal = { ...window.configGlobal, ...p.new };
+                        const bi = document.getElementById('tasaBaseInput');
                         if (bi && p.new.tasa_cambio) bi.value = parseFloat(p.new.tasa_cambio).toFixed(2);
                         window.recalcularTasaEfectiva && window.recalcularTasaEfectiva();
-                        window.mostrartoast('💱 tasa actualizada desde cajero: bs ' + parseFloat(p.new.tasa_cambio||0).toFixed(2), 'Info');
+                        window.mostrarToast('💱 Tasa actualizada desde cajero: Bs ' + parseFloat(p.new.tasa_cambio||0).toFixed(2), 'info');
                     })
                 .subscribe();
 
@@ -82,28 +82,28 @@
 
     window._notificarAdminStockCritico = async function(ingredienteNombre) {
         try {
-            const { data: subs } = await window.supabaseclient
+            const { data: subs } = await window.supabaseClient
                 .from('push_subscriptions')
                 .select('session_id')
-                .in('Rol', ['Admin', 'Cajero']);
+                .in('rol', ['admin', 'cajero']);
             if (!subs || !subs.length) return;
             const sessions = [...new Set(subs.map(s => s.session_id).filter(Boolean))];
             for (const sid of sessions) {
-                await window.supabaseclient.from('Notificaciones').insert([{
+                await window.supabaseClient.from('notificaciones').insert([{
                     pedido_id: null, tipo: 'stock_critico',
-                    titulo: '⚠️ stock crítico',
-                    mensaje: `El ingrediente "${ingredientenombre}" está por debajo del mínimo. Revisa el inventario.`,
+                    titulo: '⚠️ Stock crítico',
+                    mensaje: `El ingrediente "${ingredienteNombre}" está por debajo del mínimo. Revisa el inventario.`,
                     session_id: sid, leida: false
                 }]);
             }
-            window.mostrartoast(`🔔 Alerta enviada: stock crítico en ${ingredienteNombre}`, 'Warning');
+            window.mostrarToast(`🔔 Alerta enviada: stock crítico en ${ingredienteNombre}`, 'warning');
         } catch (e) { console.error('Error notificando stock crítico:', e); }
     };
 
     window._registrarPushAdmin = async function() {
-        if (!('Notification' in window) || !('Serviceworker' in navigator)) return;
-        if (location.protocol !== 'https:' && location.hostname !== 'Localhost') return;
-        if (Notification.permission === 'Denied') return;
+        if (!('Notification' in window) || !('serviceWorker' in navigator)) return;
+        if (location.protocol !== 'https:' && location.hostname !== 'localhost') return;
+        if (Notification.permission === 'denied') return;
 
         let sid = localStorage.getItem('saki_admin_session_id');
         if (!sid) {
@@ -127,25 +127,25 @@
                     })(vapid);
                     sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: key });
                 }
-                const p256dh = btoa(String.fromCharCode.apply(null, new Uint8Array(sub.getKey('P256dh'))));
-                const auth   = btoa(String.fromCharCode.apply(null, new Uint8Array(sub.getKey('Auth'))));
-                await window.supabaseclient.from('push_subscriptions').upsert([{
+                const p256dh = btoa(String.fromCharCode.apply(null, new Uint8Array(sub.getKey('p256dh'))));
+                const auth   = btoa(String.fromCharCode.apply(null, new Uint8Array(sub.getKey('auth'))));
+                await window.supabaseClient.from('push_subscriptions').upsert([{
                     session_id: sid,
                     endpoint:   sub.endpoint,
                     p256dh, auth,
-                    rol: 'Admin',
+                    rol: 'admin',
                     user_agent: navigator.userAgent
-                }], { onConflict: 'Endpoint' });
-                console.log('📢 push admin registrado:', sid);
-            } catch (e) { console.warn('⚠️ push admin no disponible:', e.message); }
+                }], { onConflict: 'endpoint' });
+                console.log('📢 Push admin registrado:', sid);
+            } catch (e) { console.warn('⚠️ Push admin no disponible:', e.message); }
         };
 
-        if (Notification.permission === 'Granted') {
+        if (Notification.permission === 'granted') {
             await _registrar();
         } else {
             setTimeout(async () => {
                 const perm = await Notification.requestPermission();
-                if (perm === 'Granted') await _registrar();
+                if (perm === 'granted') await _registrar();
             }, 3000);
         }
     };
