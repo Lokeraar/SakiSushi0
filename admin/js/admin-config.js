@@ -35,7 +35,7 @@
         }
     };
 
-    window.cargarconfiguracionInicial = async function() {
+    window.cargarconfiguracioninicial = async function() {
         await window.cargarconfiguracion();
         window.actualizartasaui();
         window.recalculartasaefectiva();

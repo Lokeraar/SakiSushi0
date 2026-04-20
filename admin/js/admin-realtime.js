@@ -14,7 +14,7 @@
                     async (p) => {
                         if (p.eventType === 'UPDATE' && p.new.stock <= p.new.minimo) {
                             window.verificarStockCritico();
-                            window.mostrarToast(`⚠️ Stock crítico: ${p.new.nombre}`, 'Warning');
+                            window.mostrartoast(`⚠️ Stock crítico: ${p.new.nombre}`, 'Warning');
                             window._notificarAdminStockCritico && window._notificarAdminStockCritico(p.new.nombre);
                         }
                         if (p.eventType === 'UPDATE' && (p.old?.stock || 0) <= 0 && p.new.stock > 0) {
@@ -73,7 +73,7 @@
                         const bi = document.getElementById('Tasabaseinput');
                         if (bi && p.new.tasa_cambio) bi.value = parseFloat(p.new.tasa_cambio).toFixed(2);
                         window.recalcularTasaEfectiva && window.recalcularTasaEfectiva();
-                        window.mostrarToast('💱 tasa actualizada desde cajero: bs ' + parseFloat(p.new.tasa_cambio||0).toFixed(2), 'Info');
+                        window.mostrartoast('💱 tasa actualizada desde cajero: bs ' + parseFloat(p.new.tasa_cambio||0).toFixed(2), 'Info');
                     })
                 .subscribe();
 
@@ -96,7 +96,7 @@
                     session_id: sid, leida: false
                 }]);
             }
-            window.mostrarToast(`🔔 Alerta enviada: stock crítico en ${ingredienteNombre}`, 'Warning');
+            window.mostrartoast(`🔔 Alerta enviada: stock crítico en ${ingredienteNombre}`, 'Warning');
         } catch (e) { console.error('Error notificando stock crítico:', e); }
     };
 

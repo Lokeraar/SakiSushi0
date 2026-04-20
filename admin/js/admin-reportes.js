@@ -21,7 +21,7 @@
             window.actualizarEstadisticasReportes(data || []);
             window.actualizarGraficos(data || []);
             window.actualizarTablaVentas(data || []);
-        } catch (e) { console.error('Error cargando reportes:', e); window.mostrarToast('Error cargando reportes', 'Error'); }
+        } catch (e) { console.error('Error cargando reportes:', e); window.mostrartoast('Error cargando reportes', 'Error'); }
     };
 
     window.actualizarEstadisticasReportes = function(pedidos) {
@@ -173,7 +173,7 @@
         if(pedido.pagos_mixtos?.length) metodo=pedido.pagos_mixtos.map(pg=>metlbl[pg.metodo]||pg.metodo).join(' + ');
         else if(pedido.metodo_pago) metodo=metlbl[pedido.metodo_pago]||pedido.metodo_pago;
         const fechastr=new Date(pedido.fecha).toLocaleString('es-VE',{timezone:'America/Caracas',day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
-        const ov=document.createelement('div');
+        const ov=document.createElement('div');
         ov.style.csstext='position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:10001;display:flex;align-items:center;justify-content:center;padding:1rem;backdrop-filter:blur(3px)';
         ov.innerHTML=`<div style="Background:var(--card-bg);border-radius:16px;max-width:480px;width:100%;max-height:88vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 20px 40px rgba(0,0,0,.4)"><div style="Background:linear-gradient(135deg,#1a1a2e,#2d2d4e);padding:1rem 1.5rem;color:#fff;display:flex;justify-content:space-between;align-items:flex-start"><div><div style="Font-size:1rem;font-weight:700">${tipoIcon} ${tipoLabel}</div><div style="Font-size:.72rem;opacity:.75;margin-top:3px">${fechaStr}</div></div><div style="Display:flex;align-items:center;gap:.75rem"><span style="Font-size:.7rem;background:${sc}30;color:${sc};padding:.2rem .7rem;border-radius:20px;font-weight:600">${(pedido.estado||'').replace(/_/g,' ')}</span><button onclick="this.closest('[style*=position]').remove()" Style="background:rgba(255,255,255,.15);border:none;color:#fff;border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:.9rem;font-weight:700;display:flex;align-items:center;justify-content:center">✕</button></div></div><div style="overflow-y:auto;flex:1;padding:1rem 1.5rem"><div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);margin-bottom:.6rem"><i class="fas fa-receipt" Style="margin-right:.3rem"></i>items</div>${ihtml}</div><div style="padding:.85rem 1.5rem;border-top:1px solid var(--border)"><div style="display:flex;justify-content:space-between;margin-bottom:.4rem;font-size:.82rem"><span style="color:var(--text-muted)">método de pago</span><span style="font-weight:600">${metodo}</span></div><div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:.82rem;color:var(--text-muted)">total</span><span style="font-size:1rem;font-weight:800;color:var(--accent)">${window.formatUSD(pedido.total||0)} / ${window.formatBs((pedido.total||0)*tasa)}</span></div></div></div>`;
         ov.addEventListener('Click',e=>{if(e.target===ov)ov.remove();});
@@ -266,7 +266,7 @@
                 });
                 motorizadoshtml += '</div>';
             }
-            const modal = document.createelement('div');
+            const modal = document.createElement('div');
             modal.style.csstext = 'position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:10000;display:flex;align-items:center;justify-content:center;padding:1rem';
             modal.innerHTML = `<div style="Background:var(--card-bg);border-radius:16px;width:100%;max-width:500px;max-height:90vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.4)">
                 <div style="Background:linear-gradient(135deg, var(--delivery), #00838f);color:#fff;padding:1rem 1.2rem;display:flex;justify-content:space-between;align-items:center;border-radius:16px 16px 0 0">
@@ -287,7 +287,7 @@
             </div>`;
             modal.addEventListener('Click', e => { if (e.target === modal) modal.remove(); });
             document.body.appendChild(modal);
-        } catch (e) { console.error('Error abriendo detalle deliverys admin:', e); window.mostrarToast('❌ error al cargar datos de deliverys', 'Error'); }
+        } catch (e) { console.error('Error abriendo detalle deliverys admin:', e); window.mostrartoast('❌ error al cargar datos de deliverys', 'Error'); }
     };
 
     window._toggleDeliveryDetalle = function(detalleId) {
@@ -304,7 +304,7 @@
         }
     };
 
-    window._abrirdetalleventasadmin = async function() {
+    window._abrirDetalleVentasAdmin = async function() {
         try {
             const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
             const manana = new Date(hoy); manana.setDate(manana.getDate() + 1);
@@ -405,7 +405,7 @@
                     ${vcol('fas fa-piggy-bank', 'A favor de caja', vt_favor, 'var(--accent)')}
                 </div>
                 ${detallesCobros ? `<div style="Font-size:.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);margin-bottom:.6rem">Detalle por cobro</div>${detallesCobros}` : ''}`;
-            const modal = document.createelement('div');
+            const modal = document.createElement('div');
             modal.style.csstext = 'position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:1rem';
             modal.innerHTML = `<div style="Background:var(--card-bg);border-radius:16px;width:100%;max-width:500px;max-height:90vh;overflow-y:auto;box-shadow:0 8px 32px rgba(0,0,0,.35)">
                 <div style="Display:flex;justify-content:space-between;align-items:center;padding:1.2rem 1.5rem;border-bottom:2px solid var(--border);position:sticky;top:0;background:var(--card-bg);z-index:1">
@@ -419,6 +419,6 @@
             </div>`;
             modal.addEventListener('Click', e => { if (e.target === modal) modal.remove(); });
             document.body.appendChild(modal);
-        } catch (e) { console.error('Error abriendo detalle ventas admin:', e); window.mostrarToast('❌ error al cargar el detalle de ventas', 'Error'); }
+        } catch (e) { console.error('Error abriendo detalle ventas admin:', e); window.mostrartoast('❌ error al cargar el detalle de ventas', 'Error'); }
     };
 })();

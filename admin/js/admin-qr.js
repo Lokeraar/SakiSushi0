@@ -10,7 +10,7 @@
             const _pwd  = localStorage.getItem('saki_wifi_pwd');
             if (_ssid) { const el = document.getElementById('Qrwifissid'); if (el) el.value = _ssid; }
             if (_pwd)  { const el = document.getElementById('Qrwifipassword'); if (el) el.value = _pwd; }
-        } catch (e) { console.error('Error cargando qrs:', e); window.mostrarToast('Error cargando qrs', 'Error'); }
+        } catch (e) { console.error('Error cargando qrs:', e); window.mostrartoast('Error cargando qrs', 'Error'); }
     };
 
     window.renderizarQRs = function() {
@@ -25,17 +25,17 @@
             if (_pwd)  params.set('wifi_pwd', _pwd);
             const qrtext = window.location.origin + '/SakiSushi0/Cliente/index.html?' + params.toString();
             const qrid   = 'qr-' + qr.id;
-            const card = document.createelement('div');
+            const card = document.createElement('div');
             card.classname = 'qr-card-v2';
             card.title = 'Toca para ampliar';
             card.style.cursor = 'pointer';
-            const qrdiv = document.createelement('div');
+            const qrdiv = document.createElement('div');
             qrdiv.id = qrid;
             qrdiv.classname = 'qr-img-box';
-            const nombre = document.createelement('div');
+            const nombre = document.createElement('div');
             nombre.classname = 'qr-nombre-v2';
             nombre.textContent = (_ssid ? '📶 ' : '') + qr.nombre;
-            const btndel = document.createelement('button');
+            const btndel = document.createElement('button');
             btndel.classname = 'btn-icon delete qr-del-btn';
             btndel.title = 'Eliminar QR';
             btndel.innerHTML = '<i class="Fas fa-trash"></i>';

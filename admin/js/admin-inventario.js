@@ -49,7 +49,7 @@
             else if (disponible <= minimo * 1.5) estado = 'bajo';
             else estado = 'ok';
             
-            const el = document.createelement('div');
+            const el = document.createElement('div');
             el.classname = 'inv-list-item' + (item.id === window._invactiveid ? ' active' : '');
             el.id = 'invItem_' + item.id;
             // Mostrar imagen pequeña si existe
@@ -379,7 +379,7 @@ ventainput._validacionlistener?.();
 // crear o actualizar elemento de mensaje de advertencia
 let warningmsg = document.getElementById('precioVentaWarning');
 if (!warningmsg) {
-warningmsg = document.createelement('span');
+warningmsg = document.createElement('span');
 warningmsg.id = 'precioVentaWarning';
 warningmsg.style.csstext = 'color:#dc2626; font-size:.75rem; display:block; margin-top:.25rem;';
 ventainput.parentnode.insertbefore(warningmsg, ventainput.nextsibling);
@@ -533,10 +533,10 @@ validarprecios();
 				try {
 					await window.supabaseClient.from('Inventario').delete().eq('Id', id);
 					await window.cargarInventario();
-					window.mostrarToast('🗑️ ingrediente eliminado', 'Success');
+					window.mostrartoast('🗑️ ingrediente eliminado', 'Success');
 				} catch (e) {
 					console.error('Error eliminando ingrediente:', e);
-					window.mostrarToast('❌ error al eliminar ingrediente', 'Error');
+					window.mostrartoast('❌ error al eliminar ingrediente', 'Error');
 				}
 			}
 		);
@@ -815,10 +815,10 @@ validarprecios();
                     window.cerrarModal('Ingredientemodal');
                     window.ingredienteEditandoId = null;
                     removeIngredienteImage();
-                    window.mostrarToast('🗑️ ingrediente eliminado', 'Success');
+                    window.mostrartoast('🗑️ ingrediente eliminado', 'Success');
                 } catch (e) {
                     console.error('Error eliminando ingrediente:', e);
-                    window.mostrarToast('❌ error al eliminar ingrediente', 'Error');
+                    window.mostrartoast('❌ error al eliminar ingrediente', 'Error');
                 }
             }
         );
@@ -845,7 +845,7 @@ validarprecios();
         
         // Validaciones
         if (!nombre) {
-            window.mostrarToast('El nombre es obligatorio', 'Error');
+            window.mostrartoast('El nombre es obligatorio', 'Error');
             return;
         }
         
@@ -893,11 +893,11 @@ validarprecios();
             removeIngredienteImage();
             await window.cargarInventario();
             const mensajeExito = window.ingredienteEditandoId ? 'Ingrediente editado con éxito' : 'Ingrediente creado con éxito';
-            window.mostrarToast('✅ ' + mensajeExito, 'Success');
+            window.mostrartoast('✅ ' + mensajeExito, 'Success');
             
         } catch (e) {
             console.error('Error guardando ingrediente:', e);
-            window.mostrarToast('❌ error al guardar: ' + (e.message || e), 'Error');
+            window.mostrartoast('❌ error al guardar: ' + (e.message || e), 'Error');
         }
     };
     

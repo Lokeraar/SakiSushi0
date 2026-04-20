@@ -80,7 +80,7 @@
         // crear nuevo elemento toast si no existe
         let toast = document.getElementById('toast');
         if (!toast) {
-            toast = document.createelement('div');
+            toast = document.createElement('div');
             toast.id = 'toast';
             document.body.appendchild(toast);
         }
@@ -173,7 +173,7 @@
     // alerta moderna y premium para confirmar eliminaciones
     window.mostrarconfirmacionpremium = function(titulo, mensaje, onconfirm) {
         // crear overlay
-        const overlay = document.createelement('div');
+        const overlay = document.createElement('div');
         overlay.style.csstext = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.85);z-index:10001;display:flex;align-items:center;justify-content:center;padding:1rem;backdrop-filter:blur(5px)';
         overlay.innerHTML = `
             <div style="Background:linear-gradient(145deg, #1a1a1a 0%, #0d0d0d 100%);border-radius:20px;max-width:420px;width:100%;box-shadow:0 25px 50px rgba(0,0,0,.5),0 0 0 1px rgba(255,255,255,.1);overflow:hidden;border:1px solid rgba(211,47,47,.3)">
