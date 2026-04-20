@@ -8,7 +8,7 @@
         var t = document.querySelector('.tab[data-tab="Deliverys"]');
         var p = document.getElementById('deliverysPane');
         if (t) t.classList.add('active');
-        if (p) { p.classList.add('active'); p.scrollintoview({behavior:'smooth',block:'start'}); }
+        if (p) { p.classList.add('active'); p.scrollIntoView({behavior:'smooth',block:'start'}); }
     };
     window.iramenu = function() {
         var tabs = document.querySelectorAll('.tab');
@@ -18,7 +18,7 @@
         var t = document.querySelector('.tab[data-tab="Menu"]');
         var p = document.getElementById('menuPane');
         if (t) t.classList.add('active');
-        if (p) { p.classList.add('active'); p.scrollintoview({behavior:'smooth',block:'start'}); }
+        if (p) { p.classList.add('active'); p.scrollIntoView({behavior:'smooth',block:'start'}); }
     };
     window.irastockcritico = function() {
         var tabs = document.querySelectorAll('.tab');
@@ -31,7 +31,7 @@
         if (p) p.classList.add('active');
         setTimeout(function(){
             var el = document.getElementById('stockCritico'); if (!el) return;
-            el.scrollintoview({behavior:'smooth',block:'center'});
+            el.scrollIntoView({behavior:'smooth',block:'center'});
             var par = el.closest('.lower-stock') || el.parentelement;
             if (par) {
                 var n = 0;
@@ -46,7 +46,7 @@
     };
         window.setupeventlisteners = function() {
         // funciones de scroll para tabs con doble chevron
-        window._scrolltabs = function(dir) {
+        window._scrollTabs = function(dir) {
             const c = document.getElementById('tabsContainer');
             if (!c) return;
             c.scrollby({ left: dir * 180, behavior: 'smooth' });
@@ -242,7 +242,7 @@
         if (!dashboardgrid) return;
         // verificar si ya existe
         if (document.getElementById('diferenciaTasaCard')) return;
-        const card = document.createelement('div');
+        const card = document.createElement('div');
         card.classname = 'dashboard-card';
         card.id = 'diferenciaTasaCard';
         card.style.cursor = 'pointer';

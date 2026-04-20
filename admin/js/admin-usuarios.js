@@ -216,10 +216,10 @@
 				try {
 					await window.supabaseClient.from('Usuarios').delete().eq('Id', userId);
 					await window.cargarUsuarios();
-					window.mostrarToast('🗑️ usuario eliminado', 'Success');
+					window.mostrartoast('🗑️ usuario eliminado', 'Success');
 				} catch (e) {
 					console.error('Error eliminando usuario:', e);
-					window.mostrarToast('❌ error al eliminar usuario', 'Error');
+					window.mostrartoast('❌ error al eliminar usuario', 'Error');
 				}
 			}
 		);

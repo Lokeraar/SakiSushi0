@@ -64,7 +64,7 @@
             
             const disponiblefinal = item.disponible && todosdisponibles;
             const imgsrc = item.imagen || '';
-            const card = document.createelement('div');
+            const card = document.createElement('div');
             card.classname = 'menu-card-v2' + (item.disponible ? '' : ' no-disponible');
             card.innerHTML = `
                 <div class="Mc2-header">
@@ -147,16 +147,16 @@
             if (item) item.disponible = disponible;
             window.renderizarMenu(document.getElementById('Menubuscador')?.value || '');
             if (disponible) {
-                window.mostrarToast(`✅ Platillo "${item?.nombre}" ahora está DISPONIBLE en el menú del cliente`, 'Success');
+                window.mostrartoast(`✅ Platillo "${item?.nombre}" ahora está DISPONIBLE en el menú del cliente`, 'Success');
             } else {
-                window.mostrarToast(`⚠️ Platillo "${item?.nombre}" ahora está NO DISPONIBLE (se mostrará como AGOTADO en el menú del cliente)`, 'Warning');
+                window.mostrartoast(`⚠️ Platillo "${item?.nombre}" ahora está NO DISPONIBLE (se mostrará como AGOTADO en el menú del cliente)`, 'Warning');
             }
         } catch(e) {
             console.error('Error toggle disponible:', e);
             if (e.message && e.message.includes('Permission denied')) {
-                window.mostrarToast('⚠️ no se pudo cambiar el estado. contacta al administrador del sistema.', 'Error');
+                window.mostrartoast('⚠️ no se pudo cambiar el estado. contacta al administrador del sistema.', 'Error');
             } else {
-                window.mostrarToast('❌ error: ' + (e.message || e), 'Error');
+                window.mostrartoast('❌ error: ' + (e.message || e), 'Error');
             }
         }
     };
@@ -296,7 +296,7 @@
         const select = document.getElementById('platilloCategoria');
         select.innerHTML = '<option value="">Seleccionar</option>';
         Object.keys(window.categoriasmenu || {}).forEach(cat => {
-            const opt = document.createelement('option');
+            const opt = document.createElement('option');
             opt.value = cat;
             opt.textContent = cat;
             select.appendchild(opt);
@@ -309,7 +309,7 @@
         select.innerHTML = '<option value="">Ninguna</option>';
         if (categoria && window.categoriasmenu && window.categoriasmenu[categoria]) {
             window.categoriasmenu[categoria].forEach(sub => {
-                const opt = document.createelement('option');
+                const opt = document.createElement('option');
                 opt.value = sub;
                 opt.textContent = sub;
                 select.appendchild(opt);
@@ -327,14 +327,14 @@
         }
         unidad = unidad || 'unidades';
         const container = document.getElementById('ingredientesContainer');
-        const row = document.createelement('div');
+        const row = document.createElement('div');
         row.classname = 'ingrediente-row';
         row.style.csstext = 'display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:.4rem;align-items:center;margin-bottom:.4rem';
 
-        const select = document.createelement('select');
+        const select = document.createElement('select');
         select.style.csstext = 'font-family:Montserrat,sans-serif;font-size:.82rem';
         // opción vacía
-        const optblank = document.createelement('option');
+        const optblank = document.createElement('option');
         optblank.value = ''; optblank.textContent = 'Seleccionar ingrediente';
         select.appendChild(optBlank);
         // Opción "Otro" PRIMERO
@@ -498,10 +498,10 @@
                     }
                     await window.supabaseClient.from('Menu').delete().eq('Id', id);
                     await window.cargarMenu();
-                    window.mostrarToast('🗑️ platillo eliminado', 'Success');
+                    window.mostrartoast('🗑️ platillo eliminado', 'Success');
                 } catch (e) {
                     console.error('Error eliminando platillo:', e);
-                    window.mostrarToast('❌ error al eliminar el platillo', 'Error');
+                    window.mostrartoast('❌ error al eliminar el platillo', 'Error');
                 }
             }
         );
@@ -526,10 +526,10 @@
                     window.cerrarModal('Platillomodal');
                     window.platilloEditandoId = null;
                     window.limpiarImagenPreview();
-                    window.mostrarToast('🗑️ platillo eliminado', 'Success');
+                    window.mostrartoast('🗑️ platillo eliminado', 'Success');
                 } catch (e) {
                     console.error('Error eliminando platillo:', e);
-                    window.mostrarToast('❌ error al eliminar el platillo', 'Error');
+                    window.mostrartoast('❌ error al eliminar el platillo', 'Error');
                 }
             }
         );
