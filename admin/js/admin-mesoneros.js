@@ -357,6 +357,12 @@
     window.cerrarModalPago = function() {
         const modal = document.getElementById('pagoModal');
         if (modal) modal.classList.remove('active');
+        // Limpiar la vista previa al cerrar
+        const previewEl = document.getElementById('pagoPreviewSection');
+        if (previewEl) {
+            previewEl.innerHTML = '';
+            previewEl.style.display = 'none';
+        }
         mesoneroParaPagoId = null;
     };
 
@@ -586,9 +592,9 @@
                 }
             });
             
-            // Poner a cero todas las propinas pendientes (para que no sumen)
+            // Actualizar todas las propinas pendientes a entregado: true y monto_bs: 0
             for (const prop of pendientes) {
-                await window.supabaseClient.from('propinas').update({ monto_bs: 0 }).eq('id', prop.id);
+                await window.supabaseClient.from('propinas').update({ entregado: true, monto_bs: 0 }).eq('id', prop.id);
             }
             
             // Crear una nueva propina que representa el pago total al mesonero
@@ -706,13 +712,14 @@
             let pagoCompletado = false;
 
             for (const prop of pendientes || []) {
-                if (restoPorPagar <= 0) break;
+                if (restoPorPagar <= 0.01) break;
                 
-                const montoPropina = prop.monto_bs;
-                if (restoPorPagar >= montoPropina) {
+                const montoPropina = prop.monto_bs || 0;
+                // Usar epsilon check para comparar montos
+                if (restoPorPagar >= montoPropina - 0.01) {
                     // Caso 1: Pagar la propina completa
-                    // Poner a cero la propina original y crear una nueva con entregado=true
-                    await window.supabaseClient.from('propinas').update({ monto_bs: 0 }).eq('id', prop.id);
+                    // Marcar la propina original como entregada y poner monto_bs a 0
+                    await window.supabaseClient.from('propinas').update({ entregado: true, monto_bs: 0 }).eq('id', prop.id);
                     
                     // Crear nueva propina que representa el pago
                     const cajeroNombre = (window.usuarioActual && window.usuarioActual.nombre) || 'Administrador';
@@ -801,8 +808,9 @@
                 }
             }
 
-            // Si después del bucle aún queda resto por pagar (por error lógico), abortar
-            if (restoPorPagar > 0) {
+            // Si después del buque aún queda resto por pagar (por error lógico), abortar
+            // Usar epsilon check para evitar errores de punto flotante
+            if (restoPorPagar > 0.01) {
                 throw new Error('No se pudo cubrir el monto total. Verifique los datos.');
             }
 
