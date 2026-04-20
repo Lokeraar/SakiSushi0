@@ -11,21 +11,21 @@
         if (p) { p.classList.add('active'); p.scrollintoview({behavior:'smooth',block:'start'}); }
     };
     window.iramenu = function() {
-        var tabs = document.queryselectorall('.tab');
-        var panes = document.queryselectorall('.tab-pane');
-        tabs.foreach(function(t){ t.classList.remove('active'); });
-        panes.foreach(function(p){ p.classList.remove('active'); });
-        var t = document.queryselector('.tab[data-tab="Menu"]');
+        var tabs = document.querySelectorAll('.tab');
+        var panes = document.querySelectorAll('.tab-pane');
+        tabs.forEach(function(t){ t.classList.remove('active'); });
+        panes.forEach(function(p){ p.classList.remove('active'); });
+        var t = document.querySelector('.tab[data-tab="Menu"]');
         var p = document.getElementById('menuPane');
         if (t) t.classList.add('active');
         if (p) { p.classList.add('active'); p.scrollintoview({behavior:'smooth',block:'start'}); }
     };
     window.irastockcritico = function() {
-        var tabs = document.queryselectorall('.tab');
-        var panes = document.queryselectorall('.tab-pane');
-        tabs.foreach(function(t){ t.classList.remove('active'); });
-        panes.foreach(function(p){ p.classList.remove('active'); });
-        var t = document.queryselector('.tab[data-tab="Dashboard"]');
+        var tabs = document.querySelectorAll('.tab');
+        var panes = document.querySelectorAll('.tab-pane');
+        tabs.forEach(function(t){ t.classList.remove('active'); });
+        panes.forEach(function(p){ p.classList.remove('active'); });
+        var t = document.querySelector('.tab[data-tab="Dashboard"]');
         var p = document.getElementById('dashboardPane');
         if (t) t.classList.add('active');
         if (p) p.classList.add('active');
@@ -75,12 +75,12 @@
         });
 
         // navegación por tabs
-        document.queryselectorall('.tab').foreach(tab => {
+        document.querySelectorAll('.tab').forEach(tab => {
             tab.addEventListener('click', () => {
                 const target = tab.dataset.tab;
-                document.queryselectorall('.tab').foreach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
                 tab.classList.add('active');
-                document.queryselectorall('.tab-pane').foreach(pane => pane.classList.remove('active'));
+                document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
                 const pane = document.getElementById(target + 'Pane');
                 if (pane) pane.classList.add('active');
                 if (target !== 'qr') {
@@ -91,7 +91,7 @@
         });
 
         // cerrar modales al hacer clic fuera
-        document.queryselectorall('.modal').foreach(modal => {
+        document.querySelectorAll('.modal').forEach(modal => {
             modal.addEventListener('click', function(e) {
                 if (e.target === this) {
                     window.cerrarmodal(this.id);
@@ -238,7 +238,7 @@
 
     // función para agregar tarjeta de diferencia de tasa al dashboard
     window.agregartarjetadiferenciatasa = function() {
-        const dashboardgrid = document.queryselector('.dashboard-grid');
+        const dashboardgrid = document.querySelector('.dashboard-grid');
         if (!dashboardgrid) return;
         // verificar si ya existe
         if (document.getElementById('diferenciaTasaCard')) return;

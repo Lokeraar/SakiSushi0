@@ -5,7 +5,7 @@
 
     window.cargarusuarios = async function() {
         try {
-            const { data, error } = await window.supabaseclient.from('usuarios').select('*').order('nombre');
+            const { data, error } = await window.supabaseClient.from('usuarios').select('*').order('nombre');
             if (error) throw error;
             window.usuarios = data || [];
             window.renderizarusuarios();
@@ -19,12 +19,12 @@
             return;
         }
         grid.innerHTML = window.usuarios.map(user => {
-            const inicial     = (user.nombre||'?').charat(0).touppercase();
+            const inicial     = (user.nombre||'?').charAt(0).toUpperCase();
             const rolbadge    = user.rol==='admin' ? '<span class="Usuario-rol admin">Admin</span>' : '<span class="Usuario-rol cajero">Cajero</span>';
             const statusbadge = user.activo
                 ? '<span class="Ucard-status-inline" style="Color:var(--success)"><i class="Fas fa-check-circle"></i> Activo</span>': '<span class="Ucard-status-inline" style="Color:var(--text-muted)"><i class="Fas fa-circle"></i> Inactivo</span>';
             const avatarInner = user.foto
-                ? `<img src="${user.foto}" style="Width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;cursor:pointer" onclick="Window.expandirimagen&&window.expandirimagen(this.src)">`
+                ? `<img src="${user.foto}" style="Width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;cursor:pointer" onclick="window.expandirimagen&&window.expandirimagen(this.src)">`
                 : `<div style="Width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:1.5rem;font-weight:700;color:#fff;background:linear-gradient(135deg,var(--primary),var(--primary-dark));border-radius:50%">${inicial}</div>`;
             return `<div class="Usuario-card-v2 usuario-card">
                 <div class="Ucard-avatar">${avatarInner}</div>
@@ -137,7 +137,7 @@
             }
         }
         try {
-            await window.supabaseclient.from('usuarios').update({ activo }).eq('id', userid);
+            await window.supabaseClient.from('usuarios').update({ activo }).eq('id', userid);
             await window.cargarusuarios();
             window.mostrartoast(`✅ usuario ${activo ? 'activado' : 'desactivado'}`, 'success');
         } catch (e) { console.error('Error actualizando usuario:', e); window.mostrartoast('❌ Error al actualizar usuario', 'error'); }
@@ -231,7 +231,7 @@
         if (btn && btn.disabled) return;
         if (btn) { btn.disabled = true; btn.innerHTML = '<i class="Fas fa-spinner fa-spin"></i> Guardando...'; }
         const nombre   = document.getElementById('usuarioNombre').value.trim();
-        const username = document.getElementById('usuarioUsername').value.trim().tolowercase();
+        const username = document.getElementById('usuarioUsername').value.trim().toLowerCase();
         const password = document.getElementById('usuarioPassword').value.trim();
         const rol = document.getElementById('usuarioRol').value;
         const activo = document.getElementById('usuarioActivo').value === 'true';
@@ -260,7 +260,7 @@
         try {
             let hashed = null;
             if (password) {
-                const { data: h, error: hasherr } = await window.supabaseclient.rpc('hash_password', { plain_password: password });
+                const { data: h, error: hasherr } = await window.supabaseClient.rpc('hash_password', { plain_password: password });
                 if (hasherr) throw hasherr;
                 hashed = h;
             }
@@ -276,9 +276,9 @@
             
             let error;
             if (window.usuarioeditandoid) {
-                ({ error } = await window.supabaseclient.from('usuarios').update(userdata).eq('id', window.usuarioeditandoid));
+                ({ error } = await window.supabaseClient.from('usuarios').update(userdata).eq('id', window.usuarioeditandoid));
             } else {
-                ({ error } = await window.supabaseclient.from('usuarios').insert([userdata]));
+                ({ error } = await window.supabaseClient.from('usuarios').insert([userdata]));
             }
             if (error) throw error;
             

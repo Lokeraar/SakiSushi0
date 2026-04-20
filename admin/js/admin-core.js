@@ -167,7 +167,7 @@
     
     // placeholder para imágenes (svg data uri)
     window.getplaceholderimage = function(text = 'Admin') {
-        const initial = text.charat(0).touppercase();
+        const initial = text.charAt(0).toUpperCase();
         return `data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' Width='48' Height='48' Viewbox='0 0 48 48'%3e%3crect width='48' Height='48' Fill='%23D32F2F'/%3E%3Ctext x='24' Y='32' Font-size='20' Text-anchor='middle' Fill='white' Font-family='Arial'%3e${initial}%3c/text%3e%3c/svg%3e`;
     };
     // alerta moderna y premium para confirmar eliminaciones

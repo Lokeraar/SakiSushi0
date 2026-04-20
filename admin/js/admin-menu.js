@@ -5,7 +5,7 @@
 
     window.cargarmenu = async function() {
         try {
-            const { data, error } = await window.supabaseclient.from('menu').select('*');
+            const { data, error } = await window.supabaseClient.from('menu').select('*');
             if (error) throw error;
             window.menuitems = data || [];
             window.renderizarmenu();
@@ -17,15 +17,15 @@
         const grid = document.getElementById('menuGrid');
         if (!grid) return;
         grid.innerHTML = '';
-        const _norm = t => (t || '').normalize('NFD').replace(/[áéíóú]/g, '').tolowercase();
-        const _base = [...window.menuitems].sort((a,b) => a.nombre.localecompare(b.nombre));
+        const _norm = t => (t || '').normalize('NFD').replace(/[áéíóú]/g, '').toLowerCase();
+        const _base = [...window.menuitems].sort((a,b) => a.nombre.localeCompare(b.nombre));
         const items = filtro ? _base.filter(item => _norm(item.nombre).includes(_norm(filtro))) : _base;
         if (!items.length) {
             grid.innerHTML = '<p style="Color:var(--text-muted);font-size:.88rem;padding:.5rem">' +
                 (filtro ? 'Sin resultados para "' + filtro + '"' : 'No hay platillos registrados.') + '</p>';
             return;
         }
-        items.foreach(item => {
+        items.forEach(item => {
             const ingredientesestado = [];
             let todosdisponibles = true;
             let maxplatillos = infinity;
@@ -295,7 +295,7 @@
     window.cargarcategoriasselect = function() {
         const select = document.getElementById('platilloCategoria');
         select.innerHTML = '<option value="">Seleccionar</option>';
-        object.keys(window.categoriasmenu || {}).foreach(cat => {
+        object.keys(window.categoriasmenu || {}).forEach(cat => {
             const opt = document.createelement('option');
             opt.value = cat;
             opt.textContent = cat;
@@ -308,7 +308,7 @@
         const select = document.getElementById('platilloSubcategoria');
         select.innerHTML = '<option value="">Ninguna</option>';
         if (categoria && window.categoriasmenu && window.categoriasmenu[categoria]) {
-            window.categoriasmenu[categoria].foreach(sub => {
+            window.categoriasmenu[categoria].forEach(sub => {
                 const opt = document.createelement('option');
                 opt.value = sub;
                 opt.textContent = sub;
@@ -474,7 +474,7 @@
         window.cargarsubcategoriasselect(platillo.categoria);
         document.getElementById('ingredientesContainer').innerHTML = '';
         if (platillo.ingredientes) {
-            object.entries(platillo.ingredientes).foreach(([ingid, inginfo]) => {
+            object.entries(platillo.ingredientes).forEach(([ingid, inginfo]) => {
                 window.agregaringredienterow(ingid, inginfo.cantidad, inginfo.unidad, inginfo.principal || false);
             });
         }
@@ -592,14 +592,14 @@
         const wrap = document.getElementById('stockCalculadoWrap');
         const txt  = document.getElementById('stockCalculadoText');
         if (!wrap || !txt) return;
-        const rows = document.queryselectorall('#ingredientesContainer .ingrediente-row');
+        const rows = document.querySelectorAll('#ingredientesContainer .ingrediente-row');
         if (!rows.length) { wrap.style.display = 'none'; return; }
         let maxplatillos = infinity;
         let hayingredientes = false;
-        rows.foreach(row => {
-            const seling = row.queryselector('select:not(.ing-row-unidad)');
-            const seluni = row.queryselector('select.ing-row-unidad');
-            const cant   = parseFloat(row.queryselector('input[type="Number"]')?.value) || 0;
+        rows.forEach(row => {
+            const seling = row.querySelector('select:not(.ing-row-unidad)');
+            const seluni = row.querySelector('select.ing-row-unidad');
+            const cant   = parseFloat(row.querySelector('input[type="Number"]')?.value) || 0;
             if (!seling?.value || !cant) return;
             hayingredientes = true;
             const inv = (window.inventarioitems || []).find(i => i.id === seling.value);
@@ -701,12 +701,12 @@
         
         // recolectar ingredientes
         const ingredientes = {};
-        const rows = document.queryselectorall('#ingredientesContainer .ingrediente-row');
-        rows.foreach(row => {
-            const seling = row.queryselector('select:not(.ing-row-unidad)');
-            const seluni = row.queryselector('select.ing-row-unidad');
-            const cantinput = row.queryselector('input[type="Number"]');
-            const chkprincipal = row.queryselector('input[type="Checkbox"]');
+        const rows = document.querySelectorAll('#ingredientesContainer .ingrediente-row');
+        rows.forEach(row => {
+            const seling = row.querySelector('select:not(.ing-row-unidad)');
+            const seluni = row.querySelector('select.ing-row-unidad');
+            const cantinput = row.querySelector('input[type="Number"]');
+            const chkprincipal = row.querySelector('input[type="Checkbox"]');
             
             if (seling && seling.value && cantinput) {
                 const cantidad = parseFloat(cantinput.value) || 0;
@@ -738,13 +738,13 @@
             let error;
             if (window.platilloeditandoid) {
                 // actualizar existente
-                const { error: upderror } = await window.supabaseclient.from('menu')
+                const { error: upderror } = await window.supabaseClient.from('menu')
                     .update(platillodata)
                     .eq('id', window.platilloeditandoid);
                 error = upderror;
             } else {
                 // crear nuevo
-                const { error: inserror } = await window.supabaseclient.from('menu')
+                const { error: inserror } = await window.supabaseClient.from('menu')
                     .insert([platillodata]);
                 error = inserror;
             }

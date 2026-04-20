@@ -21,7 +21,7 @@
             return;
         }
         
-        const btn = document.querySelector('[onclick="Window.cambiarpassword()"]');
+        const btn = document.querySelector('[onclick="window.cambiarpassword()"]');
         const originaltext = btn ? btn.innerHTML : '';
         if (btn) {
             btn.disabled = true;
@@ -29,7 +29,7 @@
         }
         
         try {
-            const { data: admindata, error: usererror } = await window.supabaseclient
+            const { data: admindata, error: usererror } = await window.supabaseClient
                 .from('usuarios')
                 .select('username')
                 .eq('rol', 'admin')
@@ -40,7 +40,7 @@
                 return;
             }
             
-            const { data: authdata, error: autherror } = await window.supabaseclient
+            const { data: authdata, error: autherror } = await window.supabaseClient
                 .rpc('verify_user_credentials', {
                     p_username: admindata.username,
                     p_password: current
@@ -51,17 +51,17 @@
                 return;
             }
             
-            const { data: hashed, error: hasherr } = await window.supabaseclient
+            const { data: hashed, error: hasherr } = await window.supabaseClient
                 .rpc('hash_password', { plain_password: nueva });
             if (hasherr) throw hasherr;
             
-            const { error: updateusererror } = await window.supabaseclient
+            const { error: updateusererror } = await window.supabaseClient
                 .from('usuarios')
                 .update({ password_hash: hashed })
                 .eq('rol', 'admin');
             if (updateusererror) throw updateusererror;
             
-            const { error: updateconfigerror } = await window.supabaseclient
+            const { error: updateconfigerror } = await window.supabaseClient
                 .from('config')
                 .update({ admin_password: nueva })
                 .eq('id', 1);
@@ -94,7 +94,7 @@
         const email = document.getElementById('recoveryEmail').value;
         if (!email || !email.includes('@')) { window.mostrartoast('Ingresa un correo válido', 'error'); return; }
         try {
-            await window.supabaseclient.from('config').update({ recovery_email: email }).eq('id', 1);
+            await window.supabaseClient.from('config').update({ recovery_email: email }).eq('id', 1);
             window.mostrartoast('✉️ Correo de recuperación guardado', 'success');
         } catch (e) { console.error('Error guardando email:', e); window.mostrartoast('❌ Error al guardar el correo', 'error'); }
     };
