@@ -37,7 +37,7 @@
                     ? '<span class="Ucard-status-inline" style="Color:var(--success)"><i class="Fas fa-check-circle"></i> Activo</span>': '<span class="Ucard-status-inline" style="Color:var(--text-muted)"><i class="Fas fa-circle"></i> Inactivo</span>';
                 var toggleclass = d.activo ? 'btn-toggle-on' : 'btn-toggle-off';
                 var toggletxt   = d.activo ? 'Inhabilitar' : 'Activar';
-                var toggleval   = string(!d.activo);
+                var toggleval   = String(!d.activo);
                 var card = document.createelement('div');
                 card.classname = 'card-standard delivery-card';
                 card.style.borderleftcolor = 'var(--delivery)';
@@ -179,7 +179,7 @@
             function _s(id,v){ var el=document.getElementById(id); if(el) el.textContent=v; }
             _s('deliverysHoyDashboard', window.formatusd(totusd)+' / '+window.formatbs(totbs));
             _s('deliverysTotalCard',    window.formatusd(totallusd)+' / '+window.formatbs(totall));
-            _s('deliverysCountCard',    string(cnt));
+            _s('deliverysCountCard',    String(cnt));
             _s('deliverysPromedioCard', window.formatusd(avgusd)+' / '+window.formatbs(avgbs));
         } catch(e) { console.error('Error stats deliverys:',e); }
     };

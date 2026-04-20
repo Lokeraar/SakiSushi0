@@ -240,7 +240,7 @@
                 motorizados.forEach(m => {
                     const monto = acumulado[m.id] || 0;
                     const haye = monto > 0;
-                    const detalleid = 'det_del_' + string(m.id).replace(/[^a-z0-9]/gi, '_');
+                    const detalleid = 'det_del_' + String(m.id).replace(/[^a-z0-9]/gi, '_');
                     motorizadosHtml += `<div style="Margin-bottom:8px">
                         <div class="Motorizado-item" style="background:rgba(0,0,0,.25);border-radius:8px;padding:12px;display:flex;justify-content:space-between;align-items:center;border-left:4px solid var(--delivery);cursor:${hayE ? 'Pointer' : 'Default'};opacity:${hayE ? '1' : '0.6'}" Onclick="${hayE ? `window._toggleDeliveryDetalle('${detalleid}')` : ''}">
                             <span class="motorizado-nombre"><i class="fas fa-motorcycle" Style="color:var(--delivery);margin-right:8px"></i>${m.nombre}</span>

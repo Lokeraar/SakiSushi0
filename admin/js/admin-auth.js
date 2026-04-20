@@ -278,7 +278,7 @@
     if (clearbtn) {
         clearbtn.addEventListener('click', () => {
             if (confirm('¿Borrar el historial de administradores recientes?')) {
-                window.limpiarAdminsRecientes();
+                window.limpiaradminsrecientes();
                 window.cargarListaAdminsRecientes();
             }
         });
