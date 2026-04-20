@@ -17,8 +17,8 @@
         const grid = document.getElementById('Qrgrid');
         if (!grid) return;
         grid.innerHTML = '';
-        const _ssid = localstorage.getitem('saki_wifi_ssid') || '';
-        const _pwd  = localstorage.getitem('saki_wifi_pwd') || '';
+        const _ssid = localStorage.getItem('saki_wifi_ssid') || '';
+        const _pwd  = localStorage.getItem('saki_wifi_pwd') || '';
         (window.qrcodes || []).foreach(qr => {
             const params = new urlsearchparams({ mesa: qr.nombre });
             if (_ssid) params.set('wifi_ssid', _ssid);
@@ -34,25 +34,25 @@
             qrdiv.classname = 'qr-img-box';
             const nombre = document.createelement('div');
             nombre.classname = 'qr-nombre-v2';
-            nombre.textcontent = (_ssid ? '📶 ' : '') + qr.nombre;
+            nombre.textContent = (_ssid ? '📶 ' : '') + qr.nombre;
             const btndel = document.createelement('button');
             btndel.classname = 'btn-icon delete qr-del-btn';
             btndel.title = 'Eliminar QR';
-            btndel.innerhtml = '<i class="Fas fa-trash"></i>';
-            btndel.addeventlistener('click', function(e) { e.stoppropagation(); window.eliminarqr(qr.id); });
+            btndel.innerHTML = '<i class="Fas fa-trash"></i>';
+            btndel.addEventListener('click', function(e) { e.stopPropagation(); window.eliminarqr(qr.id); });
             card.appendchild(qrdiv);
             card.appendchild(nombre);
             card.appendchild(btndel);
-            card.addeventlistener('click', function() { window.ampliarqr(qr.id, qr.nombre, qrtext); });
+            card.addEventListener('click', function() { window.ampliarqr(qr.id, qr.nombre, qrtext); });
             grid.appendchild(card);
-            new qrcode(document.getelementbyid(qrid), { text: qrtext, width: 140, height: 140 });
+            new qrcode(document.getElementById(qrid), { text: qrtext, width: 140, height: 140 });
         });
     };
 
     window.generarqr = async function() {
-        const nombre   = document.getelementbyid('qrNombreMesa').value.trim();
-        const ssidel   = document.getelementbyid('qrWifiSsid');
-        const pwdel    = document.getelementbyid('qrWifiPassword');
+        const nombre   = document.getElementById('qrNombreMesa').value.trim();
+        const ssidel   = document.getElementById('qrWifiSsid');
+        const pwdel    = document.getElementById('qrWifiPassword');
         const ssid     = ssidel ? ssidel.value.trim() : '';
         const password = pwdel  ? pwdel.value.trim()  : '';
         window.guardarwifipersistente();
@@ -62,7 +62,7 @@
         try {
             const { error } = await window.supabaseclient.from('codigos_qr').insert([qrdata]);
             if (error) throw error;
-            document.getelementbyid('qrNombreMesa').value = '';
+            document.getElementById('qrNombreMesa').value = '';
             await window.cargarqrs();
             window.mostrartoast('✅ QR generado', 'success');
         } catch(e) { console.error('Error generando QR:', e); window.mostrartoast('❌ Error al generar QR: ' + (e.message || e), 'error'); }
@@ -81,11 +81,11 @@
     };
 
     window.ampliarqr = function(id, nombre, url) {
-        const container = document.getelementbyid('qrAmpliado');
-        container.innerhtml = '';
+        const container = document.getElementById('qrAmpliado');
+        container.innerHTML = '';
         new qrcode(container, { text: url, width: 300, height: 300 });
         const urldisplay = url.replace(/wifi_pwd=([^&]+)/, 'wifi_pwd=***');
-        document.getelementbyid('qrAmpliadoInfo').innerHTML = `
+        document.getElementById('qrAmpliadoInfo').innerHTML = `
             <div style="Margin-top:.75rem">
                 <div style="Font-weight:800;font-size:1rem;color:var(--text-dark);margin-bottom:.4rem">${nombre}</div>
                 <div style="Font-size:.7rem;color:var(--text-muted);word-break:break-all;background:#f5f5f5;padding:.5rem .7rem;border-radius:8px;border:1px solid var(--border);line-height:1.5;text-align:left">${urlDisplay}</div>
@@ -141,7 +141,7 @@
                 `).join('');
             }
             
-            modal.classlist.add('active');
+            modal.classList.add('active');
         } catch (e) {
             console.error('Error abriendo selector de mesas:', e);
             window.mostrartoast('❌ Error al cargar mesas', 'error');

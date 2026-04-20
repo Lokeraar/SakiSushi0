@@ -13,12 +13,12 @@
     };
 
     window.renderizarusuarios = function() {
-        const grid = document.getelementbyid('usuariosGrid');
+        const grid = document.getElementById('usuariosGrid');
         if (!window.usuarios || !window.usuarios.length) {
-            grid.innerhtml = '<p style="Color:var(--text-muted);font-size:.88rem">No hay cajeros registrados.</p>';
+            grid.innerHTML = '<p style="Color:var(--text-muted);font-size:.88rem">No hay cajeros registrados.</p>';
             return;
         }
-        grid.innerhtml = window.usuarios.map(user => {
+        grid.innerHTML = window.usuarios.map(user => {
             const inicial     = (user.nombre||'?').charat(0).touppercase();
             const rolbadge    = user.rol==='admin' ? '<span class="Usuario-rol admin">Admin</span>' : '<span class="Usuario-rol cajero">Cajero</span>';
             const statusbadge = user.activo
@@ -51,11 +51,11 @@
 
 
     function handleusuariofotofile() {
-        const fileinput = document.getelementbyid('usuarioFoto');
-        const urlinput = document.getelementbyid('usuarioFotoUrl');
-        const previewdiv = document.getelementbyid('usuarioFotoPreview');
-        const previewimg = document.getelementbyid('usuarioPreviewImg');
-        const removebtn = document.getelementbyid('usuarioFotoRemoveBtn');
+        const fileinput = document.getElementById('usuarioFoto');
+        const urlinput = document.getElementById('usuarioFotoUrl');
+        const previewdiv = document.getElementById('usuarioFotoPreview');
+        const previewimg = document.getElementById('usuarioPreviewImg');
+        const removebtn = document.getElementById('usuarioFotoRemoveBtn');
         
         if (fileinput.files && fileinput.files[0]) {
             const file = fileinput.files[0];
@@ -87,11 +87,11 @@
     }
 
     function handleusuariofotourl() {
-        const urlinput = document.getelementbyid('usuarioFotoUrl');
-        const fileinput = document.getelementbyid('usuarioFoto');
-        const previewdiv = document.getelementbyid('usuarioFotoPreview');
-        const previewimg = document.getelementbyid('usuarioPreviewImg');
-        const removebtn = document.getelementbyid('usuarioFotoRemoveBtn');
+        const urlinput = document.getElementById('usuarioFotoUrl');
+        const fileinput = document.getElementById('usuarioFoto');
+        const previewdiv = document.getElementById('usuarioFotoPreview');
+        const previewimg = document.getElementById('usuarioPreviewImg');
+        const removebtn = document.getElementById('usuarioFotoRemoveBtn');
         
         if (fileinput.files && fileinput.files[0]) return;
         
@@ -111,11 +111,11 @@
     }
 
     function removeusuariofoto() {
-        const fileinput = document.getelementbyid('usuarioFoto');
-        const urlinput = document.getelementbyid('usuarioFotoUrl');
-        const previewdiv = document.getelementbyid('usuarioFotoPreview');
-        const previewimg = document.getelementbyid('usuarioPreviewImg');
-        const removebtn = document.getelementbyid('usuarioFotoRemoveBtn');
+        const fileinput = document.getElementById('usuarioFoto');
+        const urlinput = document.getElementById('usuarioFotoUrl');
+        const previewdiv = document.getElementById('usuarioFotoPreview');
+        const previewimg = document.getElementById('usuarioPreviewImg');
+        const removebtn = document.getElementById('usuarioFotoRemoveBtn');
         
         fileinput.value = '';
         urlinput.value = '';
@@ -144,60 +144,60 @@
     };
 
     window.abrirmodalnuevousuario = function() {
-		const form = document.getelementbyid('usuarioForm');
+		const form = document.getElementById('usuarioForm');
 		if (form) form.reset();
-		const rolselect = document.getelementbyid('usuarioRol');
+		const rolselect = document.getElementById('usuarioRol');
 		if (rolselect) rolselect.value = 'cajero';
-		const activoselect = document.getelementbyid('usuarioActivo');
+		const activoselect = document.getElementById('usuarioActivo');
 		if (activoselect) activoselect.value = 'true';
 		// limpiar foto
 		currentuserfotofile = null;
 		currentuserfotourl = '';
-		const fotoinput = document.getelementbyid('usuarioFoto');
+		const fotoinput = document.getElementById('usuarioFoto');
 		if (fotoinput) fotoinput.value = '';
-		const urlinput = document.getelementbyid('usuarioFotoUrl');
+		const urlinput = document.getElementById('usuarioFotoUrl');
 		if (urlinput) urlinput.value = '';
-		const previewdiv = document.getelementbyid('usuarioFotoPreview');
+		const previewdiv = document.getElementById('usuarioFotoPreview');
 		if (previewdiv) previewdiv.style.display = 'none';
-		const modaltitle = document.getelementbyid('usuarioModalTitle');
-		if (modaltitle) modaltitle.textcontent = 'Nuevo Cajero/Admin';
+		const modaltitle = document.getElementById('usuarioModalTitle');
+		if (modaltitle) modaltitle.textContent = 'Nuevo Cajero/Admin';
 		window.usuarioeditandoid = null;
-		const modal = document.getelementbyid('usuarioModal');
-		if (modal) modal.classlist.add('active');
+		const modal = document.getElementById('usuarioModal');
+		if (modal) modal.classList.add('active');
 	};
 
 	window.editarusuario = function(id) {
 		const user = window.usuarios.find(u => u.id === id);
 		if (!user) return;
 		window.usuarioeditandoid = id;
-		const modaltitle = document.getelementbyid('usuarioModalTitle');
-		if (modaltitle) modaltitle.textcontent = 'Editar Usuario';
-		const nombreinput = document.getelementbyid('usuarioNombre');
+		const modaltitle = document.getElementById('usuarioModalTitle');
+		if (modaltitle) modaltitle.textContent = 'Editar Usuario';
+		const nombreinput = document.getElementById('usuarioNombre');
 		if (nombreinput) nombreinput.value = user.nombre || '';
-		const usernameinput = document.getelementbyid('usuarioUsername');
+		const usernameinput = document.getElementById('usuarioUsername');
 		if (usernameinput) usernameinput.value = user.username || '';
-		const rolselect = document.getelementbyid('usuarioRol');
+		const rolselect = document.getElementById('usuarioRol');
 		if (rolselect) rolselect.value = user.rol || 'cajero';
-		const activoselect = document.getelementbyid('usuarioActivo');
+		const activoselect = document.getElementById('usuarioActivo');
 		if (activoselect) activoselect.value = user.activo ? 'true' : 'false';
-		const passwordinput = document.getelementbyid('usuarioPassword');
+		const passwordinput = document.getElementById('usuarioPassword');
 		if (passwordinput) passwordinput.value = '';
 		if (user.foto) {
-			const urlinput = document.getelementbyid('usuarioFotoUrl');
+			const urlinput = document.getElementById('usuarioFotoUrl');
 			if (urlinput) urlinput.value = user.foto;
-			const previewimg = document.getelementbyid('usuarioPreviewImg');
+			const previewimg = document.getElementById('usuarioPreviewImg');
 			if (previewimg) previewimg.src = user.foto;
-			const previewdiv = document.getelementbyid('usuarioFotoPreview');
+			const previewdiv = document.getElementById('usuarioFotoPreview');
 			if (previewdiv) previewdiv.style.display = 'flex';
 			currentuserfotourl = user.foto;
 		} else {
-			const urlinput = document.getelementbyid('usuarioFotoUrl');
+			const urlinput = document.getElementById('usuarioFotoUrl');
 			if (urlinput) urlinput.value = '';
-			const previewdiv = document.getelementbyid('usuarioFotoPreview');
+			const previewdiv = document.getElementById('usuarioFotoPreview');
 			if (previewdiv) previewdiv.style.display = 'none';
 		}
-		const modal = document.getelementbyid('usuarioModal');
-		if (modal) modal.classlist.add('active');
+		const modal = document.getElementById('usuarioModal');
+		if (modal) modal.classList.add('active');
 	};
 
 	window.eliminarusuario = async function(userid) {
@@ -230,27 +230,27 @@
         const btn = document.getElementById('Saveusuario');
         if (btn && btn.disabled) return;
         if (btn) { btn.disabled = true; btn.innerHTML = '<i class="Fas fa-spinner fa-spin"></i> Guardando...'; }
-        const nombre   = document.getelementbyid('usuarioNombre').value.trim();
-        const username = document.getelementbyid('usuarioUsername').value.trim().tolowercase();
-        const password = document.getelementbyid('usuarioPassword').value.trim();
-        const rol = document.getelementbyid('usuarioRol').value;
-        const activo = document.getelementbyid('usuarioActivo').value === 'true';
+        const nombre   = document.getElementById('usuarioNombre').value.trim();
+        const username = document.getElementById('usuarioUsername').value.trim().tolowercase();
+        const password = document.getElementById('usuarioPassword').value.trim();
+        const rol = document.getElementById('usuarioRol').value;
+        const activo = document.getElementById('usuarioActivo').value === 'true';
         
         if (!nombre || !username) {
             window.mostrartoast('Completa nombre y usuario', 'error');
-            if (btn) { btn.disabled = false; btn.innerhtml = 'Guardar'; }
+            if (btn) { btn.disabled = false; btn.innerHTML = 'Guardar'; }
             return;
         }
         if (!window.usuarioeditandoid && !password) {
             window.mostrartoast('Ingresa una contraseña para el nuevo usuario', 'error');
-            if (btn) { btn.disabled = false; btn.innerhtml = 'Guardar'; }
+            if (btn) { btn.disabled = false; btn.innerHTML = 'Guardar'; }
             return;
         }
         
         // subir foto si existe
         let fotourl = '';
-        const archivofoto = document.getelementbyid('usuarioFoto').files[0];
-        const fotourlinput = document.getelementbyid('usuarioFotoUrl').value;
+        const archivofoto = document.getElementById('usuarioFoto').files[0];
+        const fotourlinput = document.getElementById('usuarioFotoUrl').value;
         if (archivofoto) {
             const resultado = await window.subirimagenplatillo(archivofoto, 'usuarios');
             if (resultado.success) fotourl = resultado.url;
@@ -293,7 +293,7 @@
                 window.guardaradminreciente(admindata);
             }
             
-            document.getelementbyid('usuarioModal').classlist.remove('active');
+            document.getElementById('usuarioModal').classList.remove('active');
             window.usuarioeditandoid = null;
             await window.cargarusuarios();
             window.mostrartoast('✅ Usuario guardado', 'success');
@@ -301,22 +301,22 @@
             console.error('Error guardando usuario:', e);
             window.mostrartoast('❌ Error: ' + (e.message || e), 'error');
         } finally {
-            if (btn) { btn.disabled = false; btn.innerhtml = 'Guardar'; }
+            if (btn) { btn.disabled = false; btn.innerHTML = 'Guardar'; }
         }
     });
 
     // cerrar modal
-    document.getelementbyid('cancelUsuario').addeventlistener('click', () => window.cerrarmodal('usuarioModal'));
-    document.getelementbyid('closeUsuarioModal').addeventlistener('click', () => window.cerrarmodal('usuarioModal'));
+    document.getElementById('cancelUsuario').addEventListener('click', () => window.cerrarmodal('usuarioModal'));
+    document.getElementById('closeUsuarioModal').addEventListener('click', () => window.cerrarmodal('usuarioModal'));
     
     // configurar eventos de foto en el modal de usuario
     function setupusuariofotoevents() {
-        const fileinput = document.getelementbyid('usuarioFoto');
-        const urlinput = document.getelementbyid('usuarioFotoUrl');
-        const removebtn = document.getelementbyid('usuarioFotoRemoveBtn');
-        if (fileinput) fileinput.addeventlistener('change', handleusuariofotofile);
-        if (urlinput) urlinput.addeventlistener('input', handleusuariofotourl);
-        if (removebtn) removebtn.addeventlistener('click', removeUsuarioFoto);
+        const fileinput = document.getElementById('usuarioFoto');
+        const urlinput = document.getElementById('usuarioFotoUrl');
+        const removebtn = document.getElementById('usuarioFotoRemoveBtn');
+        if (fileinput) fileinput.addEventListener('change', handleusuariofotofile);
+        if (urlinput) urlinput.addEventListener('input', handleusuariofotourl);
+        if (removebtn) removebtn.addEventListener('click', removeUsuarioFoto);
     }
     setupUsuarioFotoEvents();
 })();

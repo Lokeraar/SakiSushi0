@@ -52,12 +52,12 @@
                     let htmlpendiente = '<span style="Font-size:.75rem;color:var(--text-muted);margin-right:.35rem">Pendiente:</span>' + '<span style="Font-weight:700;color:var(--propina)">' + window.formatusd(usdtotal) + ' / ' + window.formatbs(pendientetotal) + '</span>';
                     
                     if (usdcrudo > 0) {
-                        htmlpendiente += '<div style="Font-size:.7rem;color:var(--usd-color);margin-top:2px">' + '<i class="Fas fa-dollar-sign"></i> ' + usdcrudo.tofixed(2) + ' / ' + window.formatbs(usdenbs) + '</div>';
+                        htmlpendiente += '<div style="Font-size:.7rem;color:var(--usd-color);margin-top:2px">' + '<i class="Fas fa-dollar-sign"></i> ' + usdcrudo.toFixed(2) + ' / ' + window.formatbs(usdenbs) + '</div>';
                     }
                     if (bstotal > 0) {
                         htmlpendiente += '<div style="Font-size:.7rem;color:var(--bs-color);margin-top:2px">' + 'Bs: ' + window.formatbs(bstotal) + '</div>';
                     }
-                    pendienteel.innerhtml = htmlpendiente;
+                    pendienteel.innerHTML = htmlpendiente;
 
                     if (pendientetotal > 0) {
                         pendienteel.style.color = 'var(--propina)';
@@ -125,12 +125,12 @@
     };
 
     async function renderizarmesonerosconacumulados() {
-        const container = document.getelementbyid('mesonerosList');
+        const container = document.getElementById('mesonerosList');
         if (!container) return;
         
         const mesoneros = window.mesoneros || [];
         if (!mesoneros.length) {
-            container.innerhtml = '<p style="Color:var(--text-muted);font-size:.88rem;text-align:center;padding:2rem">No hay mesoneros registrados.</p>';
+            container.innerHTML = '<p style="Color:var(--text-muted);font-size:.88rem;text-align:center;padding:2rem">No hay mesoneros registrados.</p>';
             return;
         }
 
@@ -152,7 +152,7 @@
             html += '<div class="Card-standard mesonero-card" data-mesonero-id="' + m.id + '" Id="mesonero-card-' + m.id + '" Style="border-left-color:var(--propina)">'+ avatar
                 + '<div class="Ucard-body">'+ '<div class="Ucard-top">'+ '<div class="Ucard-names">'+ '<div class="Ucard-line1"><span class="Mesonero-nombre">' + m.nombre + '</span>' + badge + '</div>'+ '<div class="Ucard-line2" style="Margin-top:.35rem;display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">'+ '<span class="Mesonero-pendiente" style="Font-size:.9rem;font-weight:600">Calculando...</span>'+ '</div>'+ '<div class="Ucard-line3" style="Margin-top:.5rem;display:flex;align-items:center;gap:.4rem">'+ '<button class="Btn-primary btn-pagado-mesonero" style="Font-size:.7rem;padding:.3rem .5rem" onclick="window.abrirModalPago(\'' + m.id + '\')" Title="Registrar pago">'+ '<i class="Fas fa-hand-holding-usd"></i> Pagar'+ '</button>'+ '<button class="btn-toggle ' + toggleclass + '" Style="font-size:.7rem;padding:.3rem .5rem" Onclick="window.toggleMesoneroActivo(\'' + m.id + '\',' + toggleVal + ')">' + toggletxt + '</button>'+ '<div class="Ucard-actions-right">'+ '<button class="Btn-icon edit" onclick="window.editarMesonero(\'' + m.id + '\')" Title="Editar"><i class="fas fa-edit"></i></button>'+ '<button class="Btn-icon delete" onclick="window.eliminarMesonero(\'' + m.id + '\')" Title="Eliminar"><i class="fas fa-trash"></i></button>'+ '</div>'+ '</div>'+ '</div>'+ '</div>'+ '</div>'+ '</div>';
         }
-        container.innerhtml = html;
+        container.innerHTML = html;
 
         // actualizar acumulados pendientes usando await para esperar la consulta
         await window.actualizaracumuladospendientes();
@@ -165,22 +165,22 @@
         const m = (window.mesoneros || []).find(x => x.id === id);
         if (!m) return;
         window.mesoneroeditandoid = id;
-        const mt = document.getelementbyid('mesoneroModalTitle');
-        if (mt) mt.textcontent = 'Editar Mesonero';
-        const ni = document.getelementbyid('mesoneroNombre'); if (ni) ni.value = m.nombre || '';
-        const as = document.getelementbyid('mesoneroActivo'); if (as) as.value = m.activo ? 'true' : 'false';
+        const mt = document.getElementById('mesoneroModalTitle');
+        if (mt) mt.textContent = 'Editar Mesonero';
+        const ni = document.getElementById('mesoneroNombre'); if (ni) ni.value = m.nombre || '';
+        const as = document.getElementById('mesoneroActivo'); if (as) as.value = m.activo ? 'true' : 'false';
         if (m.foto) {
-            const ui = document.getelementbyid('mesoneroFotoUrl'); if (ui) ui.value = m.foto;
-            const pi = document.getelementbyid('mesoneroPreviewImg'); if (pi) pi.src = m.foto;
-            const pd = document.getelementbyid('mesoneroFotoPreview'); if (pd) pd.style.display = 'flex';
+            const ui = document.getElementById('mesoneroFotoUrl'); if (ui) ui.value = m.foto;
+            const pi = document.getElementById('mesoneroPreviewImg'); if (pi) pi.src = m.foto;
+            const pd = document.getElementById('mesoneroFotoPreview'); if (pd) pd.style.display = 'flex';
             currentmesonerofotourl = m.foto;
         } else {
-            const ui = document.getelementbyid('mesoneroFotoUrl'); if (ui) ui.value = '';
-            const pd = document.getelementbyid('mesoneroFotoPreview'); if (pd) pd.style.display = 'none';
+            const ui = document.getElementById('mesoneroFotoUrl'); if (ui) ui.value = '';
+            const pd = document.getElementById('mesoneroFotoPreview'); if (pd) pd.style.display = 'none';
             currentmesonerofotourl = '';
         }
-        const modal = document.getelementbyid('mesoneroModal');
-        if (modal) modal.classlist.add('active');
+        const modal = document.getElementById('mesoneroModal');
+        if (modal) modal.classList.add('active');
     };
 
     window.togglemesoneroactivo = async function(id, activo) {
@@ -211,11 +211,11 @@
     };
 
     window.agregarmesonero = async function() {
-        const inp = document.getelementbyid('nuevoMesonero');
+        const inp = document.getElementById('nuevoMesonero');
         const nombre = inp ? inp.value.trim() : '';
         if (!nombre) { window.mostrartoast('Ingresa un nombre', 'error'); return; }
         const btn = document.queryselector('[onclick="Window.agregarmesonero()"]');
-        if (btn) { btn.disabled = true; btn.innerhtml = '<i class="Fas fa-spinner fa-spin"></i>'; }
+        if (btn) { btn.disabled = true; btn.innerHTML = '<i class="Fas fa-spinner fa-spin"></i>'; }
         try {
             const { error } = await window.supabaseclient.from('mesoneros')
                 .insert([{ id: window.generarid('mes_'), nombre, activo: true }]);
@@ -226,7 +226,7 @@
         } catch(e) {
             window.mostrartoast('Error: ' + (e.message || e), 'error');
         } finally {
-            if (btn) { btn.disabled = false; btn.innerhtml = '<i class="Fas fa-plus"></i> Agregar'; }
+            if (btn) { btn.disabled = false; btn.innerHTML = '<i class="Fas fa-plus"></i> Agregar'; }
         }
     };
 
@@ -273,26 +273,26 @@
         const tasa = number(window.configglobal?.tasa_efectiva || window.configglobal?.tasa_cambio || 400) || 400;
         const usd = tasa > 0 ? acumulado / tasa : 0;
 
-        const modalcontent = document.getelementbyid('pagoModalContent');
+        const modalcontent = document.getElementById('pagoModalContent');
         if (!modalcontent) return;
 
-        modalcontent.innerhtml = ''+ '<div style="Padding:1.5rem">'+ '<div style="Text-align:center;margin-bottom:1.5rem">'+ '<div style="Width:70px;height:70px;border-radius:50%;background:linear-gradient(135deg,var(--propina),#7b1fa2);display:flex;align-items:center;justify-content:center;margin:0 auto 1rem">'+ '<i class="Fas fa-hand-holding-heart" style="Font-size:2rem;color:#fff"></i>'+ '</div>'+ '<h3 style="Font-size:1.1rem;font-weight:700;margin-bottom:.5rem">Registrar Pago a ' + m.nombre + '</h3>'+ '<p style="Color:var(--text-muted);font-size:.85rem">El monto acumulado actual equivale a:</p>'+ '<div id="Pagomontopendiente" style="Font-size:1.5rem;font-weight:700;color:var(--propina);margin-top:.5rem">'+       window.formatusd(usd) + ' / ' + window.formatbs(acumulado)
+        modalcontent.innerHTML = ''+ '<div style="Padding:1.5rem">'+ '<div style="Text-align:center;margin-bottom:1.5rem">'+ '<div style="Width:70px;height:70px;border-radius:50%;background:linear-gradient(135deg,var(--propina),#7b1fa2);display:flex;align-items:center;justify-content:center;margin:0 auto 1rem">'+ '<i class="Fas fa-hand-holding-heart" style="Font-size:2rem;color:#fff"></i>'+ '</div>'+ '<h3 style="Font-size:1.1rem;font-weight:700;margin-bottom:.5rem">Registrar Pago a ' + m.nombre + '</h3>'+ '<p style="Color:var(--text-muted);font-size:.85rem">El monto acumulado actual equivale a:</p>'+ '<div id="Pagomontopendiente" style="Font-size:1.5rem;font-weight:700;color:var(--propina);margin-top:.5rem">'+       window.formatusd(usd) + ' / ' + window.formatbs(acumulado)
             + '</div>'+ '</div>'+ '<div class="Form-group" style="Margin-bottom:1rem;text-align:left">'+ '<label style="Display:block;font-size:.85rem;font-weight:600;margin-bottom:.5rem">Método de pago al mesonero</label>'+ '<select id="Pagometodo" class="Tcb-input" style="Width:100%;padding:.6rem;border-radius:8px;border:1px solid var(--border);background:var(--card-bg);color:var(--text)" onchange="Window.actualizarlabelmontopago()">'+ '<option value="efectivo_bs">Efectivo Bs</option>'+ '<option value="efectivo_usd">Efectivo USD</option>'+ '<option value="pago_movil">Pago Móvil</option>'+ '<option value="punto_venta">Punto de Venta</option>'+ '</select>'+ '</div>'+ '<div style="Display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.5rem">'+ '<button id="Btnpagototal" class="Btn-primary" style="Width:100%;padding:.75rem 1rem;font-weight:600" onclick="Window.confirmarpagototal()">'+ '<i class="Fas fa-check-double"></i> Pago Total'+ '</button>'+ '<button id="Btnpagoparcialtoggle" class="Btn-secondary" style="Width:100%;padding:.75rem 1rem;font-weight:600" onclick="Window.togglepagoparcial()">'+ '<i class="Fas fa-coins"></i> Pago Parcial'+ '</button>'+ '</div>'+ '<div id="Pagoparcialsection" style="Display:none;background:var(--secondary);padding:1rem;border-radius:8px;border:1px solid var(--border);margin-bottom:1.5rem">'+ '<label id="Pagoparciallabel" style="Display:block;font-size:.85rem;font-weight:600;margin-bottom:.5rem;color:var(--text-muted)">Monto a pagar (BS)</label>'+ '<input type="Number" id="Pagoparcialmonto" step="0.01" min="0.01" max="' + acumulado + '" Style="width:100%;padding:.75rem;border:1px solid var(--border);border-radius:8px;font-size:1rem;font-family:Montserrat,sans-serif" Placeholder="Ej: 50.00" Oninput="window.actualizarVistaPreviaPago()">'+ '<p style="Font-size:.75rem;color:var(--text-muted);margin-top:.5rem"><i class="Fas fa-info-circle"></i> El monto restante permanecerá como pendiente</p>'+ '<div id="Pagopreviewsection" style="Display:none"></div>'+ '</div>'+ '<div style="Display:flex;gap:.75rem;justify-content:flex-end">'+ '<button class="Btn-secondary" style="Flex:1;padding:.75rem 1rem;font-weight:600" onclick="Window.cerrarmodalpago()">Cancelar</button>'+ '<button id="Btnconfirmarpagoparcial" class="Btn-success" style="Flex:1;padding:.75rem 1rem;font-weight:600;display:none" onclick="Window.confirmarpagoparcial()">'+ '<i class="Fas fa-check"></i> Confirmar'+ '</button>'+ '</div>'+ '</div>';
 
-        const modal = document.getelementbyid('pagoModal');
-        if (modal) modal.classlist.add('active');
+        const modal = document.getElementById('pagoModal');
+        if (modal) modal.classList.add('active');
         
         // inicializar label correcto inmediatamente sin settimeout
         window.actualizarlabelmontopago();
     };
 
     window.cerrarmodalpago = function() {
-        const modal = document.getelementbyid('pagoModal');
-        if (modal) modal.classlist.remove('active');
+        const modal = document.getElementById('pagoModal');
+        if (modal) modal.classList.remove('active');
         // limpiar la vista previa al cerrar
-        const previewel = document.getelementbyid('pagoPreviewSection');
+        const previewel = document.getElementById('pagoPreviewSection');
         if (previewel) {
-            previewel.innerhtml = '';
+            previewel.innerHTML = '';
             previewel.style.display = 'none';
         }
         mesoneroparapagoid = null;
@@ -300,19 +300,19 @@
 
     // actualizar label del monto según método seleccionado
     window.actualizarlabelmontopago = function() {
-        const metodo = document.getelementbyid('pagoMetodo')?.value;
-        const label = document.getelementbyid('pagoParcialLabel');
-        const input = document.getelementbyid('pagoParcialMonto');
+        const metodo = document.getElementById('pagoMetodo')?.value;
+        const label = document.getElementById('pagoParcialLabel');
+        const input = document.getElementById('pagoParcialMonto');
         
         if (!label || !input) return;
         
         if (metodo === 'efectivo_usd') {
-            label.textcontent = 'Monto a pagar ($)';
+            label.textContent = 'Monto a pagar ($)';
             // actualizar placeholder y step para dólares
             input.placeholder = 'Ej: 10.00';
             input.step = '0.01';
         } else {
-            label.textcontent = 'Monto a pagar (BS)';
+            label.textContent = 'Monto a pagar (BS)';
             input.placeholder = 'Ej: 50.00';
             input.step = '0.01';
         }
@@ -323,16 +323,16 @@
 
     // actualizar vista previa del pago en tiempo real
     window.actualizarvistapreviapago = async function() {
-        const metodo = document.getelementbyid('pagoMetodo')?.value;
-        const input = document.getelementbyid('pagoParcialMonto');
-        const previewel = document.getelementbyid('pagoPreviewSection');
+        const metodo = document.getElementById('pagoMetodo')?.value;
+        const input = document.getElementById('pagoParcialMonto');
+        const previewel = document.getElementById('pagoPreviewSection');
         
         if (!input || !previewel) return;
         
-        const montoingresado = parsefloat(input.value) || 0;
+        const montoingresado = parseFloat(input.value) || 0;
         if (montoingresado <= 0) {
             previewel.style.display = 'none';
-            previewel.innerhtml = '';
+            previewel.innerHTML = '';
             return;
         }
         
@@ -350,7 +350,7 @@
         // obtener acumulado desglosado
         if (!mesoneroparapagoid) {
             previewel.style.display = 'none';
-            previewel.innerhtml = '';
+            previewel.innerHTML = '';
             return;
         }
         
@@ -407,7 +407,7 @@
             
             htmlpreview += '<div style="Font-size:.85rem;font-weight:600;margin-bottom:.5rem;color:var(--text)">';
             if (esusd) {
-                htmlpreview += 'Pagando $' + montoingresado.tofixed(2) + ' (equiv. a ' + window.formatbs(montoenbs) + ')';
+                htmlpreview += 'Pagando $' + montoingresado.toFixed(2) + ' (equiv. a ' + window.formatbs(montoenbs) + ')';
             } else {
                 htmlpreview += 'Pagando Bs ' + window.formatbs(montoenbs);
             }
@@ -417,7 +417,7 @@
                 const usdpagado = pagadodeusd / tasabase;
                 htmlpreview += '<div style="Font-size:.75rem;color:var(--usd-color);margin-top:.25rem">';
                 htmlpreview += '<i class="Fas fa-dollar-sign"></i> Descuento: ' + window.formatbs(pagadodeusd);
-                if (esusd) htmlpreview += ' ($' + usdpagado.tofixed(2) + ')';
+                if (esusd) htmlpreview += ' ($' + usdpagado.toFixed(2) + ')';
                 htmlpreview += '</div>';
             }
             
@@ -440,20 +440,20 @@
             
             htmlpreview += '</div>';
             
-            previewel.innerhtml = htmlpreview;
+            previewel.innerHTML = htmlpreview;
             previewel.style.display = 'block';
             
         } catch(e) {
             console.error('Error actualizando vista previa:', e);
             previewel.style.display = 'none';
-            previewel.innerhtml = '';
+            previewel.innerHTML = '';
         }
     };
 
     window.togglepagoparcial = function() {
-        const section = document.getelementbyid('pagoParcialSection');
-        const btnconfirmar = document.getelementbyid('btnConfirmarPagoParcial');
-        const btntotal = document.getelementbyid('btnPagoTotal');
+        const section = document.getElementById('pagoParcialSection');
+        const btnconfirmar = document.getElementById('btnConfirmarPagoParcial');
+        const btntotal = document.getElementById('btnPagoTotal');
         if (section && btnconfirmar && btntotal) {
             const ishidden = section.style.display === 'none';
             section.style.display = ishidden ? 'block' : 'none';
@@ -461,22 +461,22 @@
             btntotal.style.opacity = ishidden ? '0.5' : '1';
             btntotal.style.pointerevents = ishidden ? 'none' : 'auto';
             if (ishidden) {
-                const input = document.getelementbyid('pagoParcialMonto');
+                const input = document.getElementById('pagoParcialMonto');
                 if (input) {
                     input.focus();
                     // limpiar vista previa al abrir
-                    const previewel = document.getelementbyid('pagoPreviewSection');
+                    const previewel = document.getElementById('pagoPreviewSection');
                     if (previewel) {
                         previewel.style.display = 'none';
-                        previewel.innerhtml = '';
+                        previewel.innerHTML = '';
                     }
                 }
             } else {
                 // al cerrar, limpiar vista previa
-                const previewel = document.getelementbyid('pagoPreviewSection');
+                const previewel = document.getElementById('pagoPreviewSection');
                 if (previewel) {
                     previewel.style.display = 'none';
-                    previewel.innerhtml = '';
+                    previewel.innerHTML = '';
                 }
             }
         }
@@ -485,16 +485,16 @@
     window.confirmarpagototal = async function() {
         if (!mesoneroparapagoid) return;
         
-        const metodopago = document.getelementbyid('pagoMetodo')?.value;
+        const metodopago = document.getElementById('pagoMetodo')?.value;
         if (!metodopago) {
             window.mostrartoast('Selecciona un método de pago', 'error');
             return;
         }
         
-        const btn = document.getelementbyid('btnPagoTotal');
+        const btn = document.getElementById('btnPagoTotal');
         if (btn) {
             btn.disabled = true;
-            btn.innerhtml = '<i class="Fas fa-spinner fa-spin"></i> Procesando...';
+            btn.innerHTML = '<i class="Fas fa-spinner fa-spin"></i> Procesando...';
         }
         try {
             // obtener todas las propinas pendientes del mesonero con información completa
@@ -563,7 +563,7 @@
                 mesonero_id: mesoneroparapagoid,
                 mesa: 'Pago total a mesonero',
                 metodo: metodopago,
-                monto_original: parsefloat(nuevomontooriginal.tofixed(2)),
+                monto_original: parseFloat(nuevomontooriginal.toFixed(2)),
                 moneda_original: nuevamonedaoriginal,
                 tasa_aplicada: nuevatasaaplicada,
                 monto_bs: totalpagar,
@@ -578,9 +578,9 @@
             
             window.cerrarmodalpago();
             // limpiar vista previa antes de actualizar
-            const previeweltotal = document.getelementbyid('pagoPreviewSection');
+            const previeweltotal = document.getElementById('pagoPreviewSection');
             if (previeweltotal) {
-                previeweltotal.innerhtml = '';
+                previeweltotal.innerHTML = '';
                 previeweltotal.style.display = 'none';
             }
             await window.actualizaracumuladospendientes();
@@ -588,7 +588,7 @@
             await window.cargarpropinas();
             window.renderizarpropinas();
             
-            const montomostrar = metodopago === 'efectivo_usd' ? '$' + nuevomontooriginal.tofixed(2) + ' (a tasa base ' + tasabase + ')': window.formatbs(totalpagar);
+            const montomostrar = metodopago === 'efectivo_usd' ? '$' + nuevomontooriginal.toFixed(2) + ' (a tasa base ' + tasabase + ')': window.formatbs(totalpagar);
             window.mostrartoast('Pago total registrado: ' + montomostrar, 'success');
         } catch(e) {
             console.error('Error pago total:', e);
@@ -596,7 +596,7 @@
         } finally {
             if (btn) {
                 btn.disabled = false;
-                btn.innerhtml = '<i class="Fas fa-check-double"></i> Pago Total';
+                btn.innerHTML = '<i class="Fas fa-check-double"></i> Pago Total';
             }
         }
     };
@@ -605,14 +605,14 @@
         if (!mesoneroparapagoid) return;
         
         // obtener el método de pago seleccionado
-        const metodopago = document.getelementbyid('pagoMetodo')?.value;
+        const metodopago = document.getElementById('pagoMetodo')?.value;
         if (!metodopago) {
             window.mostrartoast('Selecciona un método de pago', 'error');
             return;
         }
         
-        const input = document.getelementbyid('pagoParcialMonto');
-        let monto = input ? parsefloat(input.value) : 0;
+        const input = document.getElementById('pagoParcialMonto');
+        let monto = input ? parseFloat(input.value) : 0;
         
         if (!monto || monto <= 0) {
             window.mostrartoast('Ingresa un monto válido', 'error');
@@ -661,15 +661,15 @@
         
         // validar que el monto no exceda el acumulado del bucket correspondiente
         if (montoenmonedaseleccionada > acumuladodelbucket + 0.01) {
-            const limitemostrar = pagarenusd ? '$' + acumuladodelbucket.tofixed(2) : window.formatbs(acumuladodelbucket);
+            const limitemostrar = pagarenusd ? '$' + acumuladodelbucket.toFixed(2) : window.formatbs(acumuladodelbucket);
             window.mostrartoast('El monto no puede superar el pendiente de este bucket (' + limitemostrar + ')', 'error');
             return;
         }
 
-        const btn = document.getelementbyid('btnConfirmarPagoParcial');
+        const btn = document.getElementById('btnConfirmarPagoParcial');
         if (btn) {
             btn.disabled = true;
-            btn.innerhtml = '<i class="Fas fa-spinner fa-spin"></i> Procesando...';
+            btn.innerHTML = '<i class="Fas fa-spinner fa-spin"></i> Procesando...';
         }
 
         try {
@@ -733,10 +733,10 @@
                         mesonero_id: mesoneroparapagoid,
                         mesa: prop.mesa || 'General',
                         metodo: metodopago,
-                        monto_original: parsefloat(nuevomontooriginal.tofixed(2)),
+                        monto_original: parseFloat(nuevomontooriginal.toFixed(2)),
                         moneda_original: nuevamonedaoriginal,
                         tasa_aplicada: pagarenusd ? tasabase : null,
-                        monto_bs: parsefloat(nuevomontobs.tofixed(2)),
+                        monto_bs: parseFloat(nuevomontobs.toFixed(2)),
                         referencia: 'EGRESO',
                         cajero: cajeronombre,
                         fecha: ahora,
@@ -778,10 +778,10 @@
                         mesonero_id: mesoneroparapagoid,
                         mesa: prop.mesa || 'General',
                         metodo: metodopago,
-                        monto_original: parsefloat(nuevomontooriginalpago.tofixed(2)),
+                        monto_original: parseFloat(nuevomontooriginalpago.toFixed(2)),
                         moneda_original: nuevamonedaoriginalpago,
                         tasa_aplicada: pagarenusd ? tasabase : null,
-                        monto_bs: parsefloat(nuevomontobspago.tofixed(2)),
+                        monto_bs: parseFloat(nuevomontobspago.toFixed(2)),
                         referencia: 'EGRESO',
                         cajero: cajeronombre,
                         fecha: ahora,
@@ -812,10 +812,10 @@
                         mesonero_id: mesoneroparapagoid,
                         mesa: prop.mesa || 'General',
                         metodo: prop.metodo,
-                        monto_original: parsefloat(nuevomontooriginalrestante.tofixed(2)),
+                        monto_original: parseFloat(nuevomontooriginalrestante.toFixed(2)),
                         moneda_original: nuevamonedaoriginalrestante,
                         tasa_aplicada: prop.tasa_aplicada,
-                        monto_bs: parsefloat(nuevomontobsrestante.tofixed(2)),
+                        monto_bs: parseFloat(nuevomontobsrestante.toFixed(2)),
                         referencia: prop.referencia,
                         cajero: prop.cajero,
                         fecha: prop.fecha,
@@ -841,9 +841,9 @@
 
             window.cerrarmodalpago();
             // limpiar vista previa antes de actualizar
-            const previewelparcial = document.getelementbyid('pagoPreviewSection');
+            const previewelparcial = document.getElementById('pagoPreviewSection');
             if (previewelparcial) {
-                previewelparcial.innerhtml = '';
+                previewelparcial.innerHTML = '';
                 previewelparcial.style.display = 'none';
             }
             await window.actualizaracumuladospendientes();
@@ -851,7 +851,7 @@
             await window.cargarpropinas();
             window.renderizarpropinas();
             
-            const montomostrar = montoesusd ? '$' + monto.tofixed(2) : window.formatbs(montoenmonedaseleccionada);
+            const montomostrar = montoesusd ? '$' + monto.toFixed(2) : window.formatbs(montoenmonedaseleccionada);
             window.mostrartoast('Pago parcial registrado: ' + montomostrar, 'success');
             
         } catch(e) {
@@ -863,7 +863,7 @@
         } finally {
             if (btn) {
                 btn.disabled = false;
-                btn.innerhtml = '<i class="Fas fa-check"></i> Confirmar';
+                btn.innerHTML = '<i class="Fas fa-check"></i> Confirmar';
             }
         }
     };
@@ -896,15 +896,15 @@
         const totalusd = tasa > 0 ? total / tasa : 0;
         const promusd  = tasa > 0 ? promedio / tasa : 0;
         var el;
-        el = document.getelementbyid('propinasTotal');    if(el) el.textcontent = window.formatusd(totalusd) + ' / ' + window.formatbs(total);
-        el = document.getelementbyid('propinasCantidad'); if(el) el.textcontent = string(cantidad);
-        el = document.getelementbyid('propinasPromedio'); if(el) el.textcontent = window.formatusd(promusd) + ' / ' + window.formatbs(promedio);
-        el = document.getelementbyid('propinasHoyDashboard'); if(el) el.textcontent = window.formatusd(totalusd) + ' / ' + window.formatbs(total);
-        const tbody = document.getelementbyid('propinasTableBody');
+        el = document.getElementById('propinasTotal');    if(el) el.textContent = window.formatusd(totalusd) + ' / ' + window.formatbs(total);
+        el = document.getElementById('propinasCantidad'); if(el) el.textContent = string(cantidad);
+        el = document.getElementById('propinasPromedio'); if(el) el.textContent = window.formatusd(promusd) + ' / ' + window.formatbs(promedio);
+        el = document.getElementById('propinasHoyDashboard'); if(el) el.textContent = window.formatusd(totalusd) + ' / ' + window.formatbs(total);
+        const tbody = document.getElementById('propinasTableBody');
         if (tbody) {
             const ultimas5 = propinas.slice(0, 5);
             if (ultimas5.length) {
-                tbody.innerhtml = ultimas5.map(function(p) {
+                tbody.innerHTML = ultimas5.map(function(p) {
                     var hora = new date(p.fecha).tolocalestring('es-VE',{timezone:'America/Caracas',hour:'2-digit',minute:'2-digit'});
                     // determinar si es pago usando referencia === 'EGRESO'Var ispago = p.referencia === 'EGRESO';
                     var signo = ispago ? '-' : '+';
@@ -915,10 +915,10 @@
                     if (p.metodo === 'efectivo_usd' && p.monto_original) {
                         if (ispago) {
                             // pago en usd: [-$ {monto_original} (-bs. {monto_bs})]
-                            displaymonto = '$' + p.monto_original.tofixed(2) + ' (-Bs. ' + p.monto_bs.tofixed(2) + ')';
+                            displaymonto = '$' + p.monto_original.toFixed(2) + ' (-Bs. ' + p.monto_bs.toFixed(2) + ')';
                         } else {
                             // ingreso en usd: [+$ {monto_original} (bs. {monto_bs})]
-                            displaymonto = '$' + p.monto_original.tofixed(2) + ' (Bs. ' + p.monto_bs.tofixed(2) + ')';
+                            displaymonto = '$' + p.monto_original.toFixed(2) + ' (Bs. ' + p.monto_bs.toFixed(2) + ')';
                         }
                     } else {
                         displaymonto = window.formatbs(p.monto_bs);
@@ -927,7 +927,7 @@
                     return '<tr><td>' + hora + '</td><td>' + (p.mesoneros ? p.mesoneros.nombre : 'N/A') + '</td><td>' + (p.mesa||'N/A') + '</td><td>' + (p.metodo||'N/A') + '</td><td style="color:' + colormonto + '">' + signo + ' ' + displaymonto + '</td><td>' + (p.cajero||'N/A') + '</td></tr>';
                 }).join('');
             } else {
-                tbody.innerhtml = '<tr><td colspan="6" style="Text-align:center;padding:1rem;color:var(--text-muted)">Sin propinas hoy</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="6" style="Text-align:center;padding:1rem;color:var(--text-muted)">Sin propinas hoy</td></tr>';
             }
         }
     };
@@ -958,10 +958,10 @@
                 if (p.metodo === 'efectivo_usd' && p.monto_original) {
                     if (ispago) {
                         // pago en usd: [-$ {monto_original} (-bs. {monto_bs})]
-                        displaymonto = '$' + p.monto_original.tofixed(2) + ' (-Bs. ' + p.monto_bs.tofixed(2) + ')';
+                        displaymonto = '$' + p.monto_original.toFixed(2) + ' (-Bs. ' + p.monto_bs.toFixed(2) + ')';
                     } else {
                         // ingreso en usd: [+$ {monto_original} (bs. {monto_bs})]
-                        displaymonto = '$' + p.monto_original.tofixed(2) + ' (Bs. ' + p.monto_bs.tofixed(2) + ')';
+                        displaymonto = '$' + p.monto_original.toFixed(2) + ' (Bs. ' + p.monto_bs.toFixed(2) + ')';
                     }
                 } else {
                     displaymonto = window.formatusd(musd) + ' | ' + window.formatbs(p.monto_bs||0);
@@ -976,8 +976,8 @@
             var emptyrow = '<tr><td colspan="5" style="Text-align:center;padding:1.5rem;color:var(--text-muted)">Sin propinas hoy</td></tr>';
             var ov = document.createelement('div');
             ov.style.csstext = 'position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:10001;display:flex;align-items:center;justify-content:center;padding:1rem;backdrop-filter:blur(3px)';
-            ov.innerhtml = '<div style="Background:var(--card-bg);border-radius:16px;max-width:680px;width:100%;max-height:85vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 20px 40px rgba(0,0,0,.4)">'+ '<div style="Background:linear-gradient(135deg,var(--propina),#7b1fa2);padding:1rem 1.5rem;color:#fff;display:flex;justify-content:space-between;align-items:center">'+ '<div><div style="Font-weight:700;font-size:1rem"><i class="Fas fa-hand-holding-heart"></i> Registro</div>'+ '<div style="Font-size:.75rem;opacity:.8;margin-top:2px">' + totline + '</div></div>'+ '<button onclick="this.closest(\'[style*=position]\').remove()" Style="background:rgba(255,255,255,.2);border:none;color:#fff;border-radius:50%;width:30px;height:30px;cursor:pointer;font-size:1rem;font-weight:700;display:flex;align-items:center;justify-content:center">&#x2715;</button>'+ '</div>'+ '<div style="Overflow-y:auto;flex:1"><table style="Width:100%;border-collapse:collapse">'+ '<thead><tr style="Background:var(--secondary)">'+ '<th style="Padding:.6rem .85rem;text-align:left;font-size:.72rem;text-transform:uppercase;color:var(--text-muted);font-weight:700">Hora</th>'+ '<th style="Padding:.6rem .85rem;text-align:left;font-size:.72rem;text-transform:uppercase;color:var(--text-muted);font-weight:700">Mesonero</th>'+ '<th style="Padding:.6rem .85rem;text-align:left;font-size:.72rem;text-transform:uppercase;color:var(--text-muted);font-weight:700">Mesa</th>'+ '<th style="Padding:.6rem .85rem;text-align:left;font-size:.72rem;text-transform:uppercase;color:var(--text-muted);font-weight:700">Método</th>'+ '<th style="Padding:.6rem .85rem;text-align:left;font-size:.72rem;text-transform:uppercase;color:var(--text-muted);font-weight:700">Registro</th>'+ '</tr></thead>'+ '<tbody>' + (rows || emptyrow) + '</tbody></table></div>'+ '<div style="Padding:.85rem 1.5rem;border-top:1px solid var(--border);display:flex;justify-content:flex-end">'+ '<button onclick="this.closest(\'[style*=position]\').remove()" Style="background:var(--primary);color:#fff;border:none;padding:.55rem 1.25rem;border-radius:8px;cursor:pointer;font-family:Montserrat,sans-serif;font-weight:600;font-size:.85rem">Cerrar</button>'+ '</div></div>';
-            ov.addeventlistener('click', function(e){ if(e.target===ov) ov.remove(); });
+            ov.innerHTML = '<div style="Background:var(--card-bg);border-radius:16px;max-width:680px;width:100%;max-height:85vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 20px 40px rgba(0,0,0,.4)">'+ '<div style="Background:linear-gradient(135deg,var(--propina),#7b1fa2);padding:1rem 1.5rem;color:#fff;display:flex;justify-content:space-between;align-items:center">'+ '<div><div style="Font-weight:700;font-size:1rem"><i class="Fas fa-hand-holding-heart"></i> Registro</div>'+ '<div style="Font-size:.75rem;opacity:.8;margin-top:2px">' + totline + '</div></div>'+ '<button onclick="this.closest(\'[style*=position]\').remove()" Style="background:rgba(255,255,255,.2);border:none;color:#fff;border-radius:50%;width:30px;height:30px;cursor:pointer;font-size:1rem;font-weight:700;display:flex;align-items:center;justify-content:center">&#x2715;</button>'+ '</div>'+ '<div style="Overflow-y:auto;flex:1"><table style="Width:100%;border-collapse:collapse">'+ '<thead><tr style="Background:var(--secondary)">'+ '<th style="Padding:.6rem .85rem;text-align:left;font-size:.72rem;text-transform:uppercase;color:var(--text-muted);font-weight:700">Hora</th>'+ '<th style="Padding:.6rem .85rem;text-align:left;font-size:.72rem;text-transform:uppercase;color:var(--text-muted);font-weight:700">Mesonero</th>'+ '<th style="Padding:.6rem .85rem;text-align:left;font-size:.72rem;text-transform:uppercase;color:var(--text-muted);font-weight:700">Mesa</th>'+ '<th style="Padding:.6rem .85rem;text-align:left;font-size:.72rem;text-transform:uppercase;color:var(--text-muted);font-weight:700">Método</th>'+ '<th style="Padding:.6rem .85rem;text-align:left;font-size:.72rem;text-transform:uppercase;color:var(--text-muted);font-weight:700">Registro</th>'+ '</tr></thead>'+ '<tbody>' + (rows || emptyrow) + '</tbody></table></div>'+ '<div style="Padding:.85rem 1.5rem;border-top:1px solid var(--border);display:flex;justify-content:flex-end">'+ '<button onclick="this.closest(\'[style*=position]\').remove()" Style="background:var(--primary);color:#fff;border:none;padding:.55rem 1.25rem;border-radius:8px;cursor:pointer;font-family:Montserrat,sans-serif;font-weight:600;font-size:.85rem">Cerrar</button>'+ '</div></div>';
+            ov.addEventListener('click', function(e){ if(e.target===ov) ov.remove(); });
             document.body.appendchild(ov);
         } catch(e) {
             console.error('Error historial propinas:', e);
@@ -989,11 +989,11 @@
     // foto mesonero
     // ════════════════════════════════════════
     function handlemesonerofotofile() {
-        var fi=document.getelementbyid('mesoneroFoto');
-        var ui=document.getelementbyid('mesoneroFotoUrl');
-        var pd=document.getelementbyid('mesoneroFotoPreview');
-        var pi=document.getelementbyid('mesoneroPreviewImg');
-        var rb=document.getelementbyid('mesoneroFotoRemoveBtn');
+        var fi=document.getElementById('mesoneroFoto');
+        var ui=document.getElementById('mesoneroFotoUrl');
+        var pd=document.getElementById('mesoneroFotoPreview');
+        var pi=document.getElementById('mesoneroPreviewImg');
+        var rb=document.getElementById('mesoneroFotoRemoveBtn');
         if (!fi||!pd) return;
         if (fi.files && fi.files[0]) {
             currentmesonerofotofile=fi.files[0]; currentmesonerofotourl='';
@@ -1004,11 +1004,11 @@
         } else { if(ui)ui.disabled=false; }
     }
     function handlemesonerofotourl() {
-        var ui=document.getelementbyid('mesoneroFotoUrl');
-        var fi=document.getelementbyid('mesoneroFoto');
-        var pd=document.getelementbyid('mesoneroFotoPreview');
-        var pi=document.getelementbyid('mesoneroPreviewImg');
-        var rb=document.getelementbyid('mesoneroFotoRemoveBtn');
+        var ui=document.getElementById('mesoneroFotoUrl');
+        var fi=document.getElementById('mesoneroFoto');
+        var pd=document.getElementById('mesoneroFotoPreview');
+        var pi=document.getElementById('mesoneroPreviewImg');
+        var rb=document.getElementById('mesoneroFotoRemoveBtn');
         if(!ui||!pd) return;
         if(fi&&fi.files&&fi.files[0]) return;
         var url=ui.value.trim();
@@ -1016,11 +1016,11 @@
         else{pd.style.display='none';if(rb)rb.style.display='none';if(pi)pi.src='';currentMesoneroFotoUrl='';}
     }
     function removemesonerofoto() {
-        var fi=document.getelementbyid('mesoneroFoto');
-        var ui=document.getelementbyid('mesoneroFotoUrl');
-        var pd=document.getelementbyid('mesoneroFotoPreview');
-        var pi=document.getelementbyid('mesoneroPreviewImg');
-        var rb=document.getelementbyid('mesoneroFotoRemoveBtn');
+        var fi=document.getElementById('mesoneroFoto');
+        var ui=document.getElementById('mesoneroFotoUrl');
+        var pd=document.getElementById('mesoneroFotoPreview');
+        var pi=document.getElementById('mesoneroPreviewImg');
+        var rb=document.getElementById('mesoneroFotoRemoveBtn');
         if(fi)fi.value=''; if(ui){ui.value='';ui.disabled=false;}
         if(pd)pd.style.display='none'; if(rb)rb.style.display='none';
         if(pi)pi.src=''; currentmesonerofotofile=null; currentmesonerofotourl='';
@@ -1029,26 +1029,26 @@
     // ════════════════════════════════════════
     // guardar mesonero
     // ════════════════════════════════════════
-    var savemesonerobtn = document.getelementbyid('saveMesonero');
+    var savemesonerobtn = document.getElementById('saveMesonero');
     if (savemesonerobtn) {
-        savemesonerobtn.addeventlistener('click', async function() {
+        savemesonerobtn.addEventListener('click', async function() {
             if (this.disabled) return;
             var id     = window.mesoneroeditandoid;
-            var nombre = (document.getelementbyid('mesoneroNombre')||{}).value;
+            var nombre = (document.getElementById('mesoneroNombre')||{}).value;
             if (nombre) nombre = nombre.trim();
-            var activoel = document.getelementbyid('mesoneroActivo');
+            var activoel = document.getElementById('mesoneroActivo');
             var activo = activoel ? activoel.value === 'true' : true;
             if (!nombre) { window.mostrartoast('Ingresa un nombre', 'error'); return; }
             var fotourl = '';
-            var archivofoto = (document.getelementbyid('mesoneroFoto')||{files:[]}).files[0];
-            var fotourlinput = ((document.getelementbyid('mesoneroFotoUrl')||{}).value)||'';
+            var archivofoto = (document.getElementById('mesoneroFoto')||{files:[]}).files[0];
+            var fotourlinput = ((document.getElementById('mesoneroFotoUrl')||{}).value)||'';
             if (archivofoto) {
                 var res = await window.subirimagenplatillo(archivofoto, 'mesoneros');
                 if (res.success) fotourl = res.url;
                 else { window.mostrartoast('Error al subir foto: '+res.error,'error'); return; }
             } else if (fotourlinput) { fotourl = fotourlinput; }
             try {
-                this.disabled=true; this.innerhtml='<i class="Fas fa-spinner fa-spin"></i>';
+                this.disabled=true; this.innerHTML='<i class="Fas fa-spinner fa-spin"></i>';
                 var dataobj = { nombre: nombre, activo: activo, foto: fotourl || null };
                 var err;
                 if (id) {
@@ -1064,20 +1064,20 @@
                 await window.cargarmesoneros();
                 window.mostrartoast('Mesonero guardado', 'success');
             } catch(e) { window.mostrartoast('Error: '+e.message,'error'); }
-            finally { this.disabled=false; this.innerhtml='Guardar'; }
+            finally { this.disabled=false; this.innerHTML='Guardar'; }
         });
     }
 
-    var closebtn = document.getelementbyid('closeMesoneroModal');
-    if (closebtn) closebtn.addeventlistener('click', function(){ window.cerrarmodal('mesoneroModal'); });
-    var cancelbtn = document.getelementbyid('cancelMesoneroEdit');
-    if (cancelbtn) cancelbtn.addeventlistener('click', function(){ window.cerrarmodal('mesoneroModal'); });
-    var fotoinput = document.getelementbyid('mesoneroFoto');
-    if (fotoinput) fotoinput.addeventlistener('change', handlemesonerofotofile);
-    var fotourlinp = document.getelementbyid('mesoneroFotoUrl');
-    if (fotourlinp) fotourlinp.addeventlistener('input', handlemesonerofotourl);
-    var removebtn = document.getelementbyid('mesoneroFotoRemoveBtn');
-    if (removebtn) removebtn.addeventlistener('click', removeMesoneroFoto);
+    var closebtn = document.getElementById('closeMesoneroModal');
+    if (closebtn) closebtn.addEventListener('click', function(){ window.cerrarmodal('mesoneroModal'); });
+    var cancelbtn = document.getElementById('cancelMesoneroEdit');
+    if (cancelbtn) cancelbtn.addEventListener('click', function(){ window.cerrarmodal('mesoneroModal'); });
+    var fotoinput = document.getElementById('mesoneroFoto');
+    if (fotoinput) fotoinput.addEventListener('change', handlemesonerofotofile);
+    var fotourlinp = document.getElementById('mesoneroFotoUrl');
+    if (fotourlinp) fotourlinp.addEventListener('input', handlemesonerofotourl);
+    var removebtn = document.getElementById('mesoneroFotoRemoveBtn');
+    if (removebtn) removebtn.addEventListener('click', removeMesoneroFoto);
 
     // Inicializar al cargar el módulo
     if (window.supabaseClient) {
