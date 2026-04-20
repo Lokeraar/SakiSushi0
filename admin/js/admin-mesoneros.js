@@ -1015,7 +1015,7 @@
         if(url){currentmesonerofotourl=url;currentmesonerofotofile=null;if(pi)pi.src=url;pd.style.display='flex';if(rb)rb.style.display='flex';}
         else{pd.style.display='none';if(rb)rb.style.display='none';if(pi)pi.src='';currentMesoneroFotoUrl='';}
     }
-    function removemesonerofoto() {
+    function removeMesoneroFoto() {
         var fi=document.getElementById('mesoneroFoto');
         var ui=document.getElementById('mesoneroFotoUrl');
         var pd=document.getElementById('mesoneroFotoPreview');

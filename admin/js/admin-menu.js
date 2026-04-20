@@ -164,17 +164,17 @@
     window.limpiarImagenPreview = function() {
         currentImagenFile = null;
         currentImagenUrl = '';
-        const fileinput = document.getElementById('platilloImagen');
-        const urlinput = document.getElementById('platilloImagenUrl');
-        const previewdiv = document.getElementById('imagenPreview');
-        const previewimg = document.getElementById('previewImg');
-        if (fileinput) fileinput.value = '';
-        if (urlinput) {
-            urlinput.value = '';
-            urlinput.disabled = false;
+        const fileInput = document.getElementById('platilloImagen');
+        const urlInput = document.getElementById('platilloImagenUrl');
+        const previewDiv = document.getElementById('imagenPreview');
+        const previewImg = document.getElementById('previewImg');
+        if (fileInput) fileInput.value = '';
+        if (urlInput) {
+            urlInput.value = '';
+            urlInput.disabled = false;
         }
-        if (previewdiv) previewdiv.style.display = 'none';
-        if (previewimg) previewimg.src = '';
+        if (previewDiv) previewDiv.style.display = 'none';
+        if (previewImg) previewImg.src = '';
         // Eliminar cualquier botón "Quitar" que pudiera quedar
         const oldQuitar = document.querySelector('#imagenPreview .btn-small, #imagenPreview button:not(.preview-remove-btn)');
         if (oldQuitar) oldQuitar.remove();
@@ -182,10 +182,10 @@
 
     // Configurar eventos del modal de platillo
     function setupPlatilloModalEvents() {
-        const fileInput = document.getElementById('Platilloimagen');
-        const urlInput = document.getElementById('Platilloimagenurl');
-        const previewDiv = document.getElementById('Imagenpreview');
-        const previewImg = document.getElementById('Previewimg');
+        const fileInput = document.getElementById('platilloImagen');
+        const urlInput = document.getElementById('platilloImagenUrl');
+        const previewDiv = document.getElementById('imagenPreview');
+        const previewImg = document.getElementById('previewImg');
         
         // Eliminar cualquier botón "Quitar" existente
         const existingQuitar = document.querySelector('#imagenPreview .btn-small, #imagenPreview button:not(.preview-remove-btn)');
@@ -194,76 +194,76 @@
         let removePreviewBtn = null;
         function updateRemoveButton() {
             if (removePreviewBtn) removePreviewBtn.remove();
-            if (previewDiv && previewDiv.style.display === 'Flex') {
-                removePreviewBtn = document.createElement('Button');
-                removePreviewBtn.innerHTML = '<i class="Fas fa-times-circle"></i>';
-                removepreviewbtn.style.csstext = 'position:absolute;top:-8px;right:-8px;background:rgba(0,0,0,.6);color:#fff;border:none;border-radius:50%;width:24px;height:24px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.8rem;z-index:10;backdrop-filter:blur(2px)';
-                removepreviewbtn.title = 'Eliminar imagen';
-                removepreviewbtn.onclick = (e) => {
-                    e.stoppropagation();
-                    window.limpiarimagenpreview();
+            if (previewDiv && previewDiv.style.display === 'flex') {
+                removePreviewBtn = document.createElement('button');
+                removePreviewBtn.innerHTML = '<i class="fas fa-times-circle"></i>';
+                removePreviewBtn.style.cssText = 'position:absolute;top:-8px;right:-8px;background:rgba(0,0,0,.6);color:#fff;border:none;border-radius:50%;width:24px;height:24px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.8rem;z-index:10;backdrop-filter:blur(2px)';
+                removePreviewBtn.title = 'Eliminar imagen';
+                removePreviewBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    window.limpiarImagenPreview();
                 };
-                previewdiv.style.position = 'relative';
-                previewdiv.appendchild(removepreviewbtn);
+                previewDiv.style.position = 'relative';
+                previewDiv.appendChild(removePreviewBtn);
             }
         }
         
-        if (fileinput) {
-            fileinput.addEventListener('change', function() {
-                if (fileinput.files && fileinput.files[0]) {
-                    const file = fileinput.files[0];
-                    currentimagenfile = file;
-                    currentimagenurl = '';
-                    if (urlinput) {
-                        urlinput.value = '';
-                        urlinput.disabled = true;
+        if (fileInput) {
+            fileInput.addEventListener('change', function() {
+                if (fileInput.files && fileInput.files[0]) {
+                    const file = fileInput.files[0];
+                    currentImagenFile = file;
+                    currentImagenUrl = '';
+                    if (urlInput) {
+                        urlInput.value = '';
+                        urlInput.disabled = true;
                     }
-                    const reader = new filereader();
+                    const reader = new FileReader();
                     reader.onload = function(e) {
-                        if (previewimg) previewimg.src = e.target.result;
-                        if (previewdiv) previewdiv.style.display = 'flex';
-                        updateremovebutton();
+                        if (previewImg) previewImg.src = e.target.result;
+                        if (previewDiv) previewDiv.style.display = 'flex';
+                        updateRemoveButton();
                     };
-                    reader.readasdataurl(file);
+                    reader.readAsDataURL(file);
                 } else {
-                    if (urlinput) urlinput.disabled = false;
-                    if (urlinput && urlinput.value.trim()) {
-                        if (previewimg) previewimg.src = urlinput.value;
-                        if (previewdiv) previewdiv.style.display = 'flex';
-                        updateremovebutton();
-                        currentimagenurl = urlinput.value;
-                        currentimagenfile = null;
+                    if (urlInput) urlInput.disabled = false;
+                    if (urlInput && urlInput.value.trim()) {
+                        if (previewImg) previewImg.src = urlInput.value;
+                        if (previewDiv) previewDiv.style.display = 'flex';
+                        updateRemoveButton();
+                        currentImagenUrl = urlInput.value;
+                        currentImagenFile = null;
                     } else {
-                        if (previewdiv) previewdiv.style.display = 'none';
-                        if (previewimg) previewimg.src = '';
+                        if (previewDiv) previewDiv.style.display = 'none';
+                        if (previewImg) previewImg.src = '';
                     }
                 }
             });
         }
         
-        if (urlinput) {
-            urlinput.addEventListener('input', function() {
-                if (fileinput && fileinput.files && fileinput.files[0]) return;
-                const url = urlinput.value.trim();
+        if (urlInput) {
+            urlInput.addEventListener('input', function() {
+                if (fileInput && fileInput.files && fileInput.files[0]) return;
+                const url = urlInput.value.trim();
                 if (url) {
-                    if (previewimg) previewimg.src = url;
-                    if (previewdiv) previewdiv.style.display = 'flex';
-                    updateremovebutton();
-                    currentimagenurl = url;
-                    currentimagenfile = null;
+                    if (previewImg) previewImg.src = url;
+                    if (previewDiv) previewDiv.style.display = 'flex';
+                    updateRemoveButton();
+                    currentImagenUrl = url;
+                    currentImagenFile = null;
                 } else {
-                    if (previewdiv) previewdiv.style.display = 'none';
-                    if (previewimg) previewimg.src = '';
+                    if (previewDiv) previewDiv.style.display = 'none';
+                    if (previewImg) previewImg.src = '';
                 }
             });
         }
         
         // expandir imagen al hacer clic en preview
-        if (previewimg) {
-            previewimg.style.cursor = 'pointer';
-            previewimg.addEventListener('click', (e) => {
-                e.stoppropagation();
-                if (previewimg.src) window.expandirimagen(previewimg.src);
+        if (previewImg) {
+            previewImg.style.cursor = 'pointer';
+            previewImg.addEventListener('click', (e) => {
+                e.stopPropagation();
+                if (previewImg.src) window.expandirImagen(previewImg.src);
             });
         }
         
@@ -285,7 +285,7 @@
         document.getElementById('Platillomodaltitle').textContent = 'Nuevo platillo';
         document.getElementById('Platilloform').reset();
         document.getElementById('Ingredientescontainer').innerHTML = '';
-        window.limpiarimagenpreview();
+        window.limpiarImagenPreview();
         window.cargarcategoriasselect();
         window.platilloeditandoid = null;
         
@@ -452,7 +452,7 @@
         if (!platillo) return;
         window.platilloeditandoid = id;
         document.getElementById('platilloModalTitle').textContent = 'Editar Platillo';
-        window.limpiarimagenpreview();
+        window.limpiarImagenPreview();
         // cargar categorías antes de llenar el formulario
         window.cargarcategoriasselect();
         document.getElementById('platilloNombre').value = platillo.nombre || '';
@@ -650,7 +650,7 @@
                 e.stoppropagation();
                 console.log('Botón Cancelar Platillo presionado');
                 window.cerrarmodal('platilloModal');
-                window.limpiarimagenpreview();
+                window.limpiarImagenPreview();
                 window.platilloeditandoid = null;
             };
         }
@@ -753,7 +753,7 @@
             
             // éxito - mensaje específico según acción
             window.cerrarmodal('platilloModal');
-            window.limpiarimagenpreview();
+            window.limpiarImagenPreview();
             window.platilloeditandoid = null;
             await window.cargarinventario(); // recargar inventario primero para actualizar stock
             await window.cargarmenu(); // luego recargar menú con el nuevo stock calculado
