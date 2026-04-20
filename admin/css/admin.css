@@ -356,49 +356,13 @@ html.dark-theme .logout-button:hover { background: rgba(255,255,255,.1); color: 
     }
 }
 
-/* Estilos para tablet y desktop (> 768px) */
+/* Estilos legacy para clases desktop-only/mobile-only (ya no se usan en el header nuevo) */
 @media (min-width: 769px) {
     .desktop-only {
         display: flex !important;
     }
     .mobile-only {
         display: none !important;
-    }
-    
-    .level-1 {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        flex-wrap: wrap;
-        gap: 1rem;
-    }
-    .level-1 .header-left-group {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        flex-wrap: wrap;
-    }
-    .level-1 .header-right-group {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        justify-content: flex-end;
-        margin-left: auto;
-    }
-    .level-2 {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-top: 0.15rem;
-    }
-    .level-2 .header-right-group {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-        justify-content: flex-end;
-    }
-    .level-3 {
-        margin-top: 0.25rem;
     }
 }
 
@@ -3125,27 +3089,17 @@ html.dark-theme #platilloModal .ingrediente-row input:focus {
         margin-left: auto;
     }
 }
-@media (max-width: 768px) {
-    .header-level.level-1 {
-        flex-wrap: wrap;
-        justify-content: space-between;
-    }
-    .header-right-group .logout-button {
-        margin-left: auto;
-    }
-}
+
 /* ============================================
-   HEADER 3 NIVELES - DOS CONFIGURACIONES (MOBILE / DESKTOP)
+   HEADER 2 CONFIGURACIONES (MOBILE / DESKTOP-TABLET)
    ============================================ */
 
-/* Desktop-only: visible only on screens > 768px */
-.desktop-only {
-    display: none !important;
-}
-
-/* Mobile-only: visible only on screens <= 768px */
-.mobile-only {
+/* Por defecto (mobile-first): mostrar header-mobile, ocultar header-desktop */
+.header-mobile {
     display: flex !important;
+}
+.header-desktop {
+    display: none !important;
 }
 
 .header-level {
@@ -3221,19 +3175,43 @@ html.dark-theme #platilloModal .ingrediente-row input:focus {
     color: var(--text-color);
 }
 
-/* Nivel 2: Eslogan a la izquierda, selector de sucursal a la derecha (desktop) */
+/* Estilos base para level-1 (se ajustan en media queries) */
+.header-level.level-1 {
+    display: flex;
+    flex-wrap: nowrap !important;
+    align-items: center;
+    justify-content: space-between !important;
+    width: 100%;
+    padding: 0.4rem 0;
+}
+
+.header-level.level-1 .header-left-group {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-shrink: 1;
+    min-width: 0;
+}
+
+.header-level.level-1 .header-right-group {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    justify-content: flex-end;
+    margin-left: auto;
+}
+
+/* Estilos base para level-2 (se ajustan en media queries) */
 .header-level.level-2 {
     display: flex;
     flex-wrap: nowrap !important;
     align-items: center;
     justify-content: space-between !important;
     width: 100%;
-    max-width: 100vw;
     padding: 0.5rem 0;
     gap: 10px;
 }
 
-/* Contenedor del slogan (izquierda) */
 .header-level.level-2 .header-left-group {
     display: flex;
     align-items: center;
@@ -3242,7 +3220,6 @@ html.dark-theme #platilloModal .ingrediente-row input:focus {
     min-width: 0;
 }
 
-/* Contenedor del selector de sucursal (derecha) */
 .header-level.level-2 .header-right-group {
     display: flex;
     align-items: center;
@@ -3251,7 +3228,6 @@ html.dark-theme #platilloModal .ingrediente-row input:focus {
     margin-left: auto;
 }
 
-/* El slogan debe permitir wrap y reducir fuente si es necesario */
 .header-level.level-2 .header-slogan-text {
     font-size: 0.85rem;
     font-style: italic;
@@ -3265,6 +3241,13 @@ html.dark-theme #platilloModal .ingrediente-row input:focus {
     flex-shrink: 1;
     max-width: 100%;
     min-width: 0;
+}
+
+/* Estilos base para level-3 (se ajustan en media queries) */
+.header-level.level-3 {
+    display: flex;
+    width: 100%;
+    padding: 0.4rem 0;
 }
 
 .btn-header-control {
@@ -3344,8 +3327,55 @@ html.dark-theme #platilloModal .ingrediente-row input:focus {
     opacity: 0.4;
 }
 
-/* Responsive móvil para header 3 niveles - DOS CONFIGURACIONES */
+/* Responsive: Mostrar header-desktop en pantallas > 768px (escritorio/tablet) */
+@media (min-width: 769px) {
+    .header-desktop {
+        display: flex !important;
+    }
+    .header-mobile {
+        display: none !important;
+    }
+    
+    .header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.5rem;
+        padding: 0.75rem 1rem;
+    }
+    
+    .header-level {
+        flex-wrap: nowrap;
+        justify-content: space-between;
+        padding: 0.4rem 0;
+    }
+    
+    /* Fila 1 desktop: Logo + título + usuario (izq), controles + salir (der) */
+    .header-level.level-1 {
+        flex-wrap: nowrap !important;
+    }
+    
+    /* Fila 2 desktop: Eslogan (izq), Selector de sucursal (der) */
+    .header-level.level-2 {
+        flex-wrap: nowrap !important;
+        justify-content: space-between !important;
+    }
+    
+    /* Fila 3 desktop: Stock crítico */
+    .header-level.level-3 {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* Responsive móvil: Mostrar header-mobile en pantallas <= 768px */
 @media (max-width: 768px) {
+    .header-mobile {
+        display: flex !important;
+    }
+    .header-desktop {
+        display: none !important;
+    }
+    
     .header {
         flex-direction: column;
         align-items: stretch;
@@ -3359,59 +3389,26 @@ html.dark-theme #platilloModal .ingrediente-row input:focus {
         padding: 0.25rem 0;
     }
     
-    /* Nivel 1 móvil: Logo + título (izq), Salir (der) */
+    /* Fila 1 móvil: Logo + título (izq), Salir (der) */
     .header-level.level-1 {
         flex-wrap: nowrap !important;
     }
     
-    .header-level.level-1 .header-left-group {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        flex-shrink: 1;
-        min-width: 0;
-    }
-    
-    /* Ocultar usuario desktop y controles en nivel 1 móvil */
-    .header-level.level-1 #headerUsuarioNombreDesktop,
-    .header-level.level-1 .controls-group {
+    /* Ocultar usuario desktop en nivel 1 móvil */
+    .header-level.level-1 #headerUsuarioNombreDesktop {
         display: none !important;
     }
     
-    /* Nivel 2 móvil: Toggle + Cajero + Mesas (alineados a la derecha) */
+    /* Fila 2 móvil: Toggle + Cajero + Mesas (alineados a la derecha) */
     .header-level.level-2 {
         flex-wrap: nowrap !important;
         justify-content: flex-end !important;
     }
     
-    .header-level.level-2 .header-right-group {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        justify-content: flex-end;
-        margin-left: auto;
-    }
-    
-    /* Nivel 3 móvil: Eslogan (izq), Selector de sucursal (der) */
+    /* Fila 3 móvil: Eslogan (izq), Selector de sucursal (der) */
     .header-level.level-3 {
         flex-wrap: nowrap !important;
         justify-content: space-between !important;
-    }
-    
-    .header-level.level-3 .header-left-group {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        flex-shrink: 1;
-        min-width: 0;
-    }
-    
-    .header-level.level-3 .header-right-group {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        justify-content: flex-end;
-        margin-left: auto;
     }
 }
 

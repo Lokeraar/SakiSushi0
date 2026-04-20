@@ -78,8 +78,9 @@
     <!-- PANEL PRINCIPAL -->
     <div class="panel-container" id="panelContainer">
         <header class="header">
-            <!-- Nivel 1 Desktop: Logo + Título + Usuario (izq), Toggle + Cajero + Mesas + Salir (der) -->
-            <div class="header-level level-1 desktop-only">
+            <!-- HEADER ESCRITORIO/TABLET (2 filas) -->
+            <!-- Fila 1 Desktop: Logo + Título + Usuario (izq), Toggle + Cajero + Mesas + Salir (der) -->
+            <div class="header-level header-desktop level-1">
                 <div class="header-left-group">
                     <img src="https://lh3.googleusercontent.com/pw/AP1GczPrZAoWxmsOGRD9xl1hO5Q65JXuwUZzoR6gUk-cw5lVmarxQe_-lwqpA60tTKLlXfpvIjAJlKC6jFls-xETJOPkebLIIPhbGlUkknmhrRbdhMUll2UViGSUj3WmHKg2YEsZlAfxBPPTjIHhScjD0jfe=w1439-h1439-s-no-gm" alt="Logo Saki Sushi" class="header-logo-img">
                     <h2 class="header-title-text">Administración Saki Sushi -</h2>
@@ -97,8 +98,22 @@
                 </div>
             </div>
             
-            <!-- Nivel 1 Móvil: Logo + Título + Usuario (izq), Salir (der) -->
-            <div class="header-level level-1 mobile-only">
+            <!-- Fila 2 Desktop: Eslogan (izq), Seleccionar sucursal + Select (der) -->
+            <div class="header-level header-desktop level-2">
+                <div class="header-left-group">
+                    <span class="header-slogan-text">Adictos al universo Saki</span>
+                </div>
+                <div class="header-right-group">
+                    <span class="sucursal-label">Seleccionar sucursal</span>
+                    <select class="sucursal-select" id="sucursalSelectDesktop">
+                        <option value="">-- Sucursal --</option>
+                    </select>
+                </div>
+            </div>
+            
+            <!-- HEADER MÓVIL (3 filas, como está actualmente) -->
+            <!-- Fila 1 Móvil: Logo + Título + Usuario (izq), Salir (der) -->
+            <div class="header-level header-mobile level-1">
                 <div class="header-left-group">
                     <img src="https://lh3.googleusercontent.com/pw/AP1GczPrZAoWxmsOGRD9xl1hO5Q65JXuwUZzoR6gUk-cw5lVmarxQe_-lwqpA60tTKLlXfpvIjAJlKC6jFls-xETJOPkebLIIPhbGlUkknmhrRbdhMUll2UViGSUj3WmHKg2YEsZlAfxBPPTjIHhScjD0jfe=w1439-h1439-s-no-gm" alt="Logo Saki Sushi" class="header-logo-img">
                     <h2 class="header-title-text">Administración Saki Sushi -</h2>
@@ -109,22 +124,9 @@
                 </div>
             </div>
             
-            <!-- Nivel 2 Desktop: Eslogan (izq), Seleccionar sucursal + Select (der) -->
-            <div class="header-level level-2 desktop-only">
-                <div class="header-left-group">
-                    <span class="header-slogan-text" id="headerSloganDesktop">Adictos al universo Saki</span>
-                </div>
+            <!-- Fila 2 Móvil: Toggle + Cajero + Mesas (alineados a la derecha) -->
+            <div class="header-level header-mobile level-2">
                 <div class="header-right-group">
-                    <span class="sucursal-label">Seleccionar sucursal</span>
-                    <select class="sucursal-select" id="sucursalSelectDesktop">
-                        <option value="">-- Sucursal --</option>
-                    </select>
-                </div>
-            </div>
-            
-            <!-- Nivel 2 Móvil: Toggle + Cajero + Mesas (alineados a la derecha) -->
-            <div class="header-level level-2 mobile-only">
-                <div class="header-right-group" style="margin-left: auto;">
                     <label class="theme-switch-wrapper" title="Cambiar tema claro/oscuro">
                         <span class="icon-sun">☀️</span>
                         <input type="checkbox" id="themeToggleMobile" class="theme-toggle-input">
@@ -135,16 +137,8 @@
                 </div>
             </div>
             
-            <!-- Nivel 3 Desktop: Stock crítico -->
-            <div class="header-level level-3 desktop-only">
-                <div id="stockCriticoHeader" style="width:100%; padding:.4rem .8rem; background:rgba(0,0,0,.2); border-radius:8px; display:flex; align-items:center; gap:.8rem; flex-wrap:wrap; font-size:.75rem">
-                    <span style="font-weight:700; color:var(--danger); white-space:nowrap"><i class="fas fa-exclamation-triangle"></i> STOCK CRÍTICO:</span>
-                    <div id="stockCriticoTags" style="display:flex; flex-wrap:wrap; gap:.4rem; flex:1; min-width:0"></div>
-                </div>
-            </div>
-            
-            <!-- Nivel 3 Móvil: Eslogan (izq), Seleccionar sucursal + Select (der) -->
-            <div class="header-level level-3 mobile-only">
+            <!-- Fila 3 Móvil: Eslogan (izq), Seleccionar sucursal + Select (der) -->
+            <div class="header-level header-mobile level-3">
                 <div class="header-left-group">
                     <span class="header-slogan-text">Adictos al universo Saki</span>
                 </div>
@@ -153,6 +147,14 @@
                     <select class="sucursal-select" id="sucursalSelectMobile">
                         <option value="">-- Sucursal --</option>
                     </select>
+                </div>
+            </div>
+            
+            <!-- Stock crítico (solo desktop, debajo del header de 2 filas) -->
+            <div class="header-level header-desktop level-3">
+                <div id="stockCriticoHeader" style="width:100%; padding:.4rem .8rem; background:rgba(0,0,0,.2); border-radius:8px; display:flex; align-items:center; gap:.8rem; flex-wrap:wrap; font-size:.75rem">
+                    <span style="font-weight:700; color:var(--danger); white-space:nowrap"><i class="fas fa-exclamation-triangle"></i> STOCK CRÍTICO:</span>
+                    <div id="stockCriticoTags" style="display:flex; flex-wrap:wrap; gap:.4rem; flex:1; min-width:0"></div>
                 </div>
             </div>
         </header>
