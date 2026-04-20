@@ -881,9 +881,11 @@
             if (ultimas5.length) {
                 tbody.innerHTML = ultimas5.map(function(p) {
                     var hora = new Date(p.fecha).toLocaleString('es-VE',{timeZone:'America/Caracas',hour:'2-digit',minute:'2-digit'});
-                    // Agregar signo + para entradas (entregado=false) y - para salidas (entregado=true)
-                    var signo = p.entregado ? '-' : '+';
-                    return '<tr><td>' + hora + '</td><td>' + (p.mesoneros ? p.mesoneros.nombre : 'N/A') + '</td><td>' + (p.mesa||'N/A') + '</td><td>' + (p.metodo||'N/A') + '</td><td style="color:' + (p.entregado ? 'var(--text-muted)' : 'var(--success)') + '">' + signo + ' ' + window.formatBs(p.monto_bs) + '</td><td>' + (p.cajero||'N/A') + '</td></tr>';
+                    // Determinar tipo de registro: entrada (entregado=false) o salida/pago (entregado=true)
+                    var esEntrada = !p.entregado;
+                    var signo = esEntrada ? '+' : '-';
+                    var colorMonto = esEntrada ? 'var(--success)' : 'var(--bs-color)';
+                    return '<tr><td>' + hora + '</td><td>' + (p.mesoneros ? p.mesoneros.nombre : 'N/A') + '</td><td>' + (p.mesa||'N/A') + '</td><td>' + (p.metodo||'N/A') + '</td><td style="color:' + colorMonto + '">' + signo + ' ' + window.formatBs(p.monto_bs) + '</td><td>' + (p.cajero||'N/A') + '</td></tr>';
                 }).join('');
             } else {
                 tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:1rem;color:var(--text-muted)">Sin propinas hoy</td></tr>';
@@ -896,6 +898,7 @@
             const h   = new Date(); h.setHours(0,0,0,0);
             const m   = new Date(h); m.setDate(m.getDate()+1);
             const tasa = window.configGlobal?.tasa_efectiva || window.configGlobal?.tasa_cambio || 400;
+            // Mostrar TODOS los registros (sin filtrar por entregado) para historial completo
             const { data, error } = await window.supabaseClient
                 .from('propinas').select('*, mesoneros(nombre)')
                 .gte('fecha', h.toISOString()).lt('fecha', m.toISOString())
@@ -907,15 +910,19 @@
             const rows = lista.map(function(p) {
                 var mUsd = tasa > 0 ? (p.monto_bs||0)/tasa : 0;
                 var hora = new Date(p.fecha).toLocaleString('es-VE',{timeZone:'America/Caracas',hour:'2-digit',minute:'2-digit'});
-                // Agregar signo + para entradas (entregado=false) y - para salidas (entregado=true)
-                var signo = p.entregado ? '-' : '+';
-                var colorMonto = p.entregado ? 'var(--text-muted)' : 'var(--success)';
+                // Determinar tipo de registro: entrada (entregado=false) o salida/pago (entregado=true)
+                var esEntrada = !p.entregado;
+                var signo = esEntrada ? '+' : '-';
+                var colorMonto = esEntrada ? 'var(--success)' : 'var(--bs-color)';
+                var badgeTipo = esEntrada 
+                    ? '<span style="display:inline-block;padding:2px 6px;border-radius:4px;font-size:.65rem;background:rgba(76,175,80,.15);color:var(--success);font-weight:700;margin-left:.35rem">INGRESO</span>'
+                    : '<span style="display:inline-block;padding:2px 6px;border-radius:4px;font-size:.65rem;background:rgba(244,67,54,.15);color:var(--bs-color);font-weight:700;margin-left:.35rem">PAGO</span>';
                 return '<tr>'
                     + '<td style="padding:.55rem .85rem;border-bottom:1px solid var(--border);font-size:.78rem;color:var(--text-muted)">' + hora + '</td>'
                     + '<td style="padding:.55rem .85rem;border-bottom:1px solid var(--border);font-size:.82rem;font-weight:600">' + (p.mesoneros ? p.mesoneros.nombre : 'N/A') + '</td>'
                     + '<td style="padding:.55rem .85rem;border-bottom:1px solid var(--border);font-size:.78rem;color:var(--text-muted)">' + (p.mesa||'N/A') + '</td>'
                     + '<td style="padding:.55rem .85rem;border-bottom:1px solid var(--border);font-size:.78rem">' + (p.metodo||'N/A') + '</td>'
-                    + '<td style="padding:.55rem .85rem;border-bottom:1px solid var(--border);font-size:.82rem;font-weight:700;color:' + colorMonto + '">' + signo + ' ' + window.formatUSD(mUsd) + ' | ' + window.formatBs(p.monto_bs||0) + '</td>'
+                    + '<td style="padding:.55rem .85rem;border-bottom:1px solid var(--border);font-size:.82rem;font-weight:700;color:' + colorMonto + '">' + signo + ' ' + window.formatUSD(mUsd) + ' | ' + window.formatBs(p.monto_bs||0) + badgeTipo + '</td>'
                     + '</tr>';
             }).join('');
             var pl = lista.length;
@@ -935,7 +942,7 @@
                 + '<th style="padding:.6rem .85rem;text-align:left;font-size:.72rem;text-transform:uppercase;color:var(--text-muted);font-weight:700">Mesonero</th>'
                 + '<th style="padding:.6rem .85rem;text-align:left;font-size:.72rem;text-transform:uppercase;color:var(--text-muted);font-weight:700">Mesa</th>'
                 + '<th style="padding:.6rem .85rem;text-align:left;font-size:.72rem;text-transform:uppercase;color:var(--text-muted);font-weight:700">Método</th>'
-                + '<th style="padding:.6rem .85rem;text-align:left;font-size:.72rem;text-transform:uppercase;color:var(--text-muted);font-weight:700">Monto</th>'
+                + '<th style="padding:.6rem .85rem;text-align:left;font-size:.72rem;text-transform:uppercase;color:var(--text-muted);font-weight:700">Registrado por</th>'
                 + '</tr></thead>'
                 + '<tbody>' + (rows || emptyRow) + '</tbody></table></div>'
                 + '<div style="padding:.85rem 1.5rem;border-top:1px solid var(--border);display:flex;justify-content:flex-end">'
