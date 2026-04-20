@@ -9,7 +9,7 @@
     // ════════════════════════════════════════
     window.cargardeliverys = async function() {
         try {
-            var r = await window.supabaseclient.from('deliverys').select('*').order('nombre');
+            var r = await window.supabaseClient.from('deliverys').select('*').order('nombre');
             if (r.error) throw r.error;
             window.deliverys = r.data || [];
             await window.renderizardeliverys();
@@ -50,7 +50,7 @@
 
     window.obteneracumuladodelivery = async function(deliveryid) {
         try {
-            var r = await window.supabaseclient.from('entregas_delivery').select('monto_bs').eq('delivery_id', deliveryid);
+            var r = await window.supabaseClient.from('entregas_delivery').select('monto_bs').eq('delivery_id', deliveryid);
             if (r.error) throw r.error;
             return (r.data || []).reduce(function(sum,e){ return sum+(e.monto_bs||0); }, 0);
         } catch(e) { return 0; }
@@ -66,7 +66,7 @@
         var btn = document.querySelector('.btn-delivery');
         if (btn) { btn.disabled=true; btn.innerHTML='<i class="Fas fa-spinner fa-spin"></i>'; }
         try {
-            var r = await window.supabaseclient.from('deliverys').insert([{ id: window.generarid('del_'), nombre: nombre, activo: true }]);
+            var r = await window.supabaseClient.from('deliverys').insert([{ id: window.generarid('del_'), nombre: nombre, activo: true }]);
             if (r.error) throw r.error;
             if (inp) inp.value = '';
             await window.cargardeliverys();
@@ -96,7 +96,7 @@
 
     window.toggledeliveryactivo = async function(id, activo) {
         try {
-            await window.supabaseclient.from('deliverys').update({ activo: activo }).eq('id', id);
+            await window.supabaseClient.from('deliverys').update({ activo: activo }).eq('id', id);
             await window.cargardeliverys();
         } catch(e) { console.error('Error toggle delivery:', e); }
     };
@@ -107,8 +107,8 @@
         window.mostrarconfirmacionpremium( 'Eliminar Motorizado', 'Eliminar al motorizado "' + d.nombre + '"? También se borrarán sus registros de entrega.',
             async function() {
                 try {
-                    await window.supabaseclient.from('entregas_delivery').delete().eq('delivery_id', id);
-                    await window.supabaseclient.from('deliverys').delete().eq('id', id);
+                    await window.supabaseClient.from('entregas_delivery').delete().eq('delivery_id', id);
+                    await window.supabaseClient.from('deliverys').delete().eq('id', id);
                     await window.cargardeliverys();
                     window.mostrartoast('Motorizado eliminado', 'success');
                 } catch(e) { window.mostrartoast('Error: '+(e.message||e),'error'); }
@@ -143,11 +143,11 @@
                 var inp = document.getElementById('montoPagoParcial');
                 var monto = parseFloat(inp ? inp.value : 0);
                 if (!monto||monto<=0) { window.mostrartoast('Ingresa un monto válido','error'); return; }
-                var r1 = await window.supabaseclient.from('entregas_delivery').insert([{ delivery_id: window.deliveryparapago, monto_bs: -monto, pedido_id: null, fecha_entrega: new Date().toISOString() }]);
+                var r1 = await window.supabaseClient.from('entregas_delivery').insert([{ delivery_id: window.deliveryparapago, monto_bs: -monto, pedido_id: null, fecha_entrega: new Date().toISOString() }]);
                 if (r1.error) throw r1.error;
                 window.mostrartoast('Pago parcial registrado','success');
             } else {
-                var r2 = await window.supabaseclient.from('entregas_delivery').delete().eq('delivery_id', window.deliveryparapago);
+                var r2 = await window.supabaseClient.from('entregas_delivery').delete().eq('delivery_id', window.deliveryparapago);
                 if (r2.error) throw r2.error;
                 window.mostrartoast('Pago total registrado. Acumulado reiniciado.','success');
             }
@@ -165,10 +165,10 @@
             var tasa = window.configglobal?.tasa_efectiva || window.configglobal?.tasa_cambio || 400;
             var hoy  = new Date(); hoy.setHours(0,0,0,0);
             var man  = new Date(hoy); man.setDate(man.getDate()+1);
-            var ra = await window.supabaseclient.from('entregas_delivery').select('monto_bs');
+            var ra = await window.supabaseClient.from('entregas_delivery').select('monto_bs');
             var totall    = (ra.data||[]).reduce(function(s,e){ return s+(e.monto_bs||0); },0);
             var totallusd = tasa>0 ? totall/tasa : 0;
-            var rh = await window.supabaseclient.from('entregas_delivery').select('monto_bs')
+            var rh = await window.supabaseClient.from('entregas_delivery').select('monto_bs')
                 .gte('fecha_entrega', hoy.toISOString()).lt('fecha_entrega', man.toISOString());
             var lista  = rh.data || [];
             var totbs  = lista.reduce(function(s,e){ return s+(e.monto_bs||0); },0);
@@ -192,7 +192,7 @@
         if (!tbody) return;
         try {
             var tasa = window.configglobal?.tasa_efectiva || window.configglobal?.tasa_cambio || 400;
-            var r = await window.supabaseclient.from('entregas_delivery')
+            var r = await window.supabaseClient.from('entregas_delivery')
                 .select('*, deliverys(nombre), pedidos(id, mesa, cliente_nombre, items)')
                 .order('fecha_entrega', { ascending: false }).limit(5);
             if (r.error) throw r.error;
@@ -226,7 +226,7 @@
             var tasa = window.configglobal?.tasa_efectiva || window.configglobal?.tasa_cambio || 400;
             var hoy  = new Date(); hoy.setHours(0,0,0,0);
             var man  = new Date(hoy); man.setDate(man.getDate()+1);
-            var r = await window.supabaseclient.from('entregas_delivery')
+            var r = await window.supabaseClient.from('entregas_delivery')
                 .select('*, deliverys(nombre), pedidos(id, mesa, cliente_nombre, items)')
                 .gte('fecha_entrega', hoy.toISOString()).lt('fecha_entrega', man.toISOString())
                 .order('fecha_entrega', { ascending: false });
@@ -318,7 +318,7 @@
             } else if(fotourlinput){fotourl=fotourlinput;}
             try {
                 this.disabled=true; this.innerHTML='<i class="Fas fa-spinner fa-spin"></i>';
-                var r=await window.supabaseclient.from('deliverys').update({nombre:nombre,activo:activo,foto:fotourl||null}).eq('id',window.deliveryeditandoid);
+                var r=await window.supabaseClient.from('deliverys').update({nombre:nombre,activo:activo,foto:fotourl||null}).eq('id',window.deliveryeditandoid);
                 if(r.error) throw r.error;
                 window.cerrarmodal('deliveryModal');
                 await window.cargardeliverys();

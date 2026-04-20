@@ -2,7 +2,7 @@
 (function() {
     window.cargarQRs = async function() {
         try {
-            const { data, error } = await window.supabaseclient.from('codigos_qr').select('*').order('Fecha', { ascending: false });
+            const { data, error } = await window.supabaseClient.from('codigos_qr').select('*').order('Fecha', { ascending: false });
             if (error) throw error;
             window.qrCodes = data || [];
             window.renderizarQRs();
@@ -60,7 +60,7 @@
         if (ssid && !password) { window.mostrartoast('Ingresa la contraseña WiFi', 'error'); return; }
         const qrdata = { id: window.generarid('QR_'), nombre: nombre, fecha: new Date().toISOString() };
         try {
-            const { error } = await window.supabaseclient.from('codigos_qr').insert([qrdata]);
+            const { error } = await window.supabaseClient.from('codigos_qr').insert([qrdata]);
             if (error) throw error;
             document.getElementById('qrNombreMesa').value = '';
             await window.cargarqrs();
@@ -72,7 +72,7 @@
         window.mostrarconfirmacionpremium( 'Eliminar QR', '¿Estás seguro de eliminar este código QR?',
             async () => {
                 try {
-                    await window.supabaseclient.from('codigos_qr').delete().eq('id', id);
+                    await window.supabaseClient.from('codigos_qr').delete().eq('id', id);
                     await window.cargarqrs();
                     window.mostrartoast('🗑️ QR eliminado', 'success');
                 } catch (e) { console.error('Error eliminando QR:', e); window.mostrartoast('❌ Error al eliminar QR', 'error'); }
@@ -123,7 +123,7 @@
     window.abrirSelectorMesaAdmin = async function() {
         try {
             // Cargar mesas desde codigos_qr
-            const { data, error } = await window.supabaseclient.from('codigos_qr').select('*').order('Nombre');
+            const { data, error } = await window.supabaseClient.from('codigos_qr').select('*').order('Nombre');
             if (error) throw error;
             
             const mesas = data || [];

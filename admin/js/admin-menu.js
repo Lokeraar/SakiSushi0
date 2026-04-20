@@ -5,7 +5,7 @@
 
     window.cargarmenu = async function() {
         try {
-            const { data, error } = await window.supabaseclient.from('menu').select('*');
+            const { data, error } = await window.supabaseClient.from('menu').select('*');
             if (error) throw error;
             window.menuitems = data || [];
             window.renderizarmenu();
@@ -44,7 +44,7 @@
                         const disponibleing = (ing.stock || 0) - (ing.reservado || 0);
                         const necesario = window._convertirunidad(inginfo.cantidad, inginfo.unidad || 'unidades', ing.unidad_base || 'unidades');
                         if (necesario > 0) {
-                            maxplatillos = math.min(maxplatillos, math.floor(disponibleing / necesario));
+                            maxplatillos = Math.min(maxplatillos, Math.floor(disponibleing / necesario));
                         } else {
                             maxplatillos = 0;
                         }
@@ -56,7 +56,7 @@
             let stockcalculado = 0;
             if (!hayingredientes) {
                 stockcalculado = 0;
-            } else if (!isfinite(maxplatillos) || maxplatillos < 0) {
+            } else if (!isFinite(maxplatillos) || maxplatillos < 0) {
                 stockcalculado = 0;
             } else {
                 stockcalculado = maxplatillos;
@@ -139,7 +139,7 @@
 
     window.toggleDisponiblePlatillo = async function(id, disponible) {
         try {
-            const { error } = await window.supabaseclient.from('Menu')
+            const { error } = await window.supabaseClient.from('Menu')
                 .update({ disponible: disponible })
                 .eq('Id', id);
             if (error) throw error;
@@ -295,7 +295,7 @@
     window.cargarcategoriasselect = function() {
         const select = document.getElementById('platilloCategoria');
         select.innerHTML = '<option value="">Seleccionar</option>';
-        object.keys(window.categoriasmenu || {}).forEach(cat => {
+        Object.keys(window.categoriasmenu || {}).forEach(cat => {
             const opt = document.createelement('option');
             opt.value = cat;
             opt.textContent = cat;
@@ -496,7 +496,7 @@
                     if (platillo.imagen && platillo.imagen.includes('Imagenes-platillos')) {
                         await window.eliminarImagenPlatillo(platillo.imagen);
                     }
-                    await window.supabaseclient.from('Menu').delete().eq('Id', id);
+                    await window.supabaseClient.from('Menu').delete().eq('Id', id);
                     await window.cargarMenu();
                     window.mostrarToast('🗑️ platillo eliminado', 'Success');
                 } catch (e) {
@@ -521,7 +521,7 @@
                     if (platillo.imagen && platillo.imagen.includes('Imagenes-platillos')) {
                         await window.eliminarImagenPlatillo(platillo.imagen);
                     }
-                    await window.supabaseclient.from('Menu').delete().eq('Id', id);
+                    await window.supabaseClient.from('Menu').delete().eq('Id', id);
                     await window.cargarMenu();
                     window.cerrarModal('Platillomodal');
                     window.platilloEditandoId = null;
@@ -607,11 +607,11 @@
                 const disponible = (inv.stock || 0) - (inv.reservado || 0);
                 const unidading  = seluni?.value || 'unidades';
                 const necesario  = window._convertirunidad(cant, unidading, inv.unidad_base || 'unidades');
-                if (necesario > 0) maxplatillos = math.min(maxplatillos, math.floor(disponible / necesario));
+                if (necesario > 0) maxplatillos = Math.min(maxplatillos, Math.floor(disponible / necesario));
             } else { maxplatillos = 0; }
         });
         if (!hayingredientes) { wrap.style.display = 'none'; return; }
-        if (!isfinite(maxplatillos) || maxplatillos < 0) maxplatillos = 0;
+        if (!isFinite(maxplatillos) || maxplatillos < 0) maxplatillos = 0;
         wrap.style.display = 'block';
         wrap.style.background = maxplatillos > 5 ? '#f0fdf4' : maxplatillos > 0 ? '#fffbeb' : '#fef2f2';
         wrap.style.bordercolor = maxplatillos > 5 ? '#bbf7d0' : maxplatillos > 0 ? '#fde68a' : '#fecaca';
@@ -729,7 +729,7 @@
             precio: parseFloat(parseFloat(precio).toFixed(2)),
             descripcion: descripcion,
             disponible: disponible,
-            ingredientes: object.keys(ingredientes).length > 0 ? ingredientes : null,
+            ingredientes: Object.keys(ingredientes).length > 0 ? ingredientes : null,
             imagen: currentimagenurl || null,
             stock: null // se calculará automáticamente
         };
@@ -738,13 +738,13 @@
             let error;
             if (window.platilloeditandoid) {
                 // actualizar existente
-                const { error: upderror } = await window.supabaseclient.from('menu')
+                const { error: upderror } = await window.supabaseClient.from('menu')
                     .update(platillodata)
                     .eq('id', window.platilloeditandoid);
                 error = upderror;
             } else {
                 // crear nuevo
-                const { error: inserror } = await window.supabaseclient.from('menu')
+                const { error: inserror } = await window.supabaseClient.from('menu')
                     .insert([platillodata]);
                 error = inserror;
             }
