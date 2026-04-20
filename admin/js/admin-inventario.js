@@ -3,41 +3,41 @@
     let currentIngredienteImagenFile = null;
     let currentIngredienteImagenUrl = '';
     
-    // variables para gestión de stock con contraseña
-    let stockoriginalvalue = 0;
-    let stockpasswordmodalopen = false;
-    let pendingingredientid = null;
+    // Variables para gestión de stock con contraseña
+    let stockOriginalValue = 0;
+    let stockPasswordModalOpen = false;
+    let pendingIngredientId = null;
 
-    window.cargarinventario = async function() {
+    window.cargarInventario = async function() {
         try {
-            const { data, error } = await window.supabaseclient.from('inventario').select('*');
+            const { data, error } = await window.supabaseClient.from('inventario').select('*');
             if (error) throw error;
-            window.inventarioitems = data || [];
-            const inventariogrid = document.getElementById('inventarioGrid');
-            if (inventariogrid) window.renderizarinventario();
-            window.actualizaralertasstock();
-            await window.cargarmenu();
-            window.actualizarstockcriticoheader();
-            if (typeof window.verificarstockcritico === 'function') await window.verificarstockcritico();
+            window.inventarioItems = data || [];
+            const inventarioGrid = document.getElementById('inventarioGrid');
+            if (inventarioGrid) window.renderizarInventario();
+            window.actualizarAlertasStock();
+            await window.cargarMenu();
+            window.actualizarStockCriticoHeader();
+            if (typeof window.verificarStockCritico === 'function') await window.verificarStockCritico();
         } catch (e) { 
             console.error('Error cargando inventario:', e); 
-            if (e.message && !e.message.includes('inventarioGrid')) window.mostrartoast('Error cargando inventario', 'error');
+            if (e.message && !e.message.includes('inventarioGrid')) window.mostrarToast('Error cargando inventario', 'error');
         }
     };
 
-    window.renderizarinventario = function(filtro) {
+    window.renderizarInventario = function(filtro) {
         const grid = document.getElementById('inventarioGrid');
         if (!grid) return;
         grid.innerHTML = '';
-        const _normi = t => (t || '').normalize('NFD').replace(/[áéíóú]/g, '').toLowerCase();
-        const _basei = [...window.inventarioitems].sort((a,b) => a.nombre.localeCompare(b.nombre));
+        const _normI = t => (t || '').normalize('NFD').replace(/[áéíóú]/g, '').toLowerCase();
+        const _baseI = [...window.inventarioItems].sort((a,b) => a.nombre.localeCompare(b.nombre));
         const items = filtro
-            ? _basei.filter(i => _normi(i.nombre).includes(_normi(filtro)))
-            : _basei;
+            ? _baseI.filter(i => _normI(i.nombre).includes(_normI(filtro)))
+            : _baseI;
         if (!items.length) {
-            grid.innerHTML = '<p style="Color:var(--text-muted);font-size:.85rem;padding:.75rem">' +
+            grid.innerHTML = '<p style="color:var(--text-muted);font-size:.85rem;padding:.75rem">' +
                 (filtro ? 'Sin resultados para "' + filtro + '"' : 'No hay ingredientes registrados.') + '</p>';
-            window.actualizarstockcriticoheader();
+            window.actualizarStockCriticoHeader();
             return;
         }
         items.forEach(item => {
@@ -50,73 +50,73 @@
             else estado = 'ok';
             
             const el = document.createElement('div');
-            el.classname = 'inv-list-item' + (item.id === window._invactiveid ? ' active' : '');
+            el.className = 'inv-list-item' + (item.id === window._invActiveId ? ' active' : '');
             el.id = 'invItem_' + item.id;
             // Mostrar imagen pequeña si existe
-            const imgHtml = item.imagen ? `<img src="${item.imagen}" style="Width:24px;height:24px;object-fit:cover;border-radius:4px;margin-right:8px">` : '';
+            const imgHtml = item.imagen ? `<img src="${item.imagen}" style="width:24px;height:24px;object-fit:cover;border-radius:4px;margin-right:8px">` : '';
             el.innerHTML = `
-                <div style="Display:flex;align-items:center;flex:1;min-width:0">
+                <div style="display:flex;align-items:center;flex:1;min-width:0">
                     ${imgHtml}
-                    <span style="Overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${item.nombre}</span>
+                    <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${item.nombre}</span>
                 </div>
-                <span class="Inv-item-badge ${estado}">${Math.round((disponible + Number.EPSILON) * 1000) / 1000} ${item.unidad_base||'U'}</span>`;
-            el.addEventListener('Click', function() {
+                <span class="inv-item-badge ${estado}">${Math.round((disponible + Number.EPSILON) * 1000) / 1000} ${item.unidad_base||'u'}</span>`;
+            el.addEventListener('click', function() {
                 const wasActive = item.id === window._invActiveId;
-                document.querySelectorAll('.inv-list-item').forEach(e => e.classList.remove('Active'));
+                document.querySelectorAll('.inv-list-item').forEach(e => e.classList.remove('active'));
                 document.querySelectorAll('.inv-mobile-detail').forEach(e => e.remove());
                 if (wasActive) {
                     window._invActiveId = null;
-                    const col = document.getElementById('Invdetailcol');
-                    if (col) col.innerHTML = '<div class="Inv-detail-empty"><i class="Fas fa-hand-point-left" style="Font-size:2rem;margin-bottom:.75rem;display:block;opacity:.3"></i>Selecciona un ingrediente de la lista para ver su detalle</div>';
+                    const col = document.getElementById('invDetailCol');
+                    if (col) col.innerHTML = '<div class="inv-detail-empty"><i class="fas fa-hand-point-left" style="font-size:2rem;margin-bottom:.75rem;display:block;opacity:.3"></i>Selecciona un ingrediente de la lista para ver su detalle</div>';
                 } else {
-                    window._invactiveid = item.id;
+                    window._invActiveId = item.id;
                     this.classList.add('active');
-                    window._invmostrardetalle(item);
+                    window._invMostrarDetalle(item);
                 }
             });
-            grid.appendchild(el);
+            grid.appendChild(el);
         });
-        if (window._invactiveid) {
-            const activeitem = items.find(i => i.id === window._invactiveid);
-            if (activeitem) {
-                const el = document.getElementById('invItem_' + window._invactiveid);
+        if (window._invActiveId) {
+            const activeItem = items.find(i => i.id === window._invActiveId);
+            if (activeItem) {
+                const el = document.getElementById('invItem_' + window._invActiveId);
                 if (el) el.classList.add('active');
-                window._invmostrardetalle(activeitem);
+                window._invMostrarDetalle(activeItem);
             } else {
-                window._invactiveid = null;
+                window._invActiveId = null;
             }
         }
-        window.actualizarstockcriticoheader();
+        window.actualizarStockCriticoHeader();
     };
 
-    window._invactiveid = null;
+    window._invActiveId = null;
 
-    window._invmostrardetalle = function(item) {
-        const ismobile   = window.innerwidth <= 768;
+    window._invMostrarDetalle = function(item) {
+        const isMobile   = window.innerWidth <= 768;
         const disponible = (item.stock||0) - (item.reservado||0);
         const minimo     = item.minimo || 0;
-        const stockbase  = Math.max(item.stock || 0, 0.0001);
+        const stockBase  = Math.max(item.stock || 0, 0.0001);
 
         // 4 estados
-        let estado, estadolabel, estadocolor, estadograd;
+        let estado, estadoLabel, estadoColor, estadoGrad;
         if (disponible <= 0) {
-            estado='agotado';  estadolabel='Agotado (= 0)';
-            estadocolor='#546e7a'; estadograd='linear-gradient(90deg,#37474f,#546e7a)';
+            estado='agotado';  estadoLabel='Agotado (= 0)';
+            estadoColor='#546e7a'; estadoGrad='linear-gradient(90deg,#37474f,#546e7a)';
         } else if (disponible <= minimo) {
-            estado='critico';  estadolabel='Crítico (≤ stock mínimo)';
-            estadocolor='#e53935'; estadograd='linear-gradient(90deg,#e53935,#ef5350)';
-        } else if ((disponible / stockbase) * 100 <= 50) {
-            estado='moderado'; estadolabel='Moderado (≤ 50%)';
-            estadocolor='#fb8c00'; estadograd='linear-gradient(90deg,#fb8c00,#ffa726)';
+            estado='critico';  estadoLabel='Crítico (≤ stock mínimo)';
+            estadoColor='#e53935'; estadoGrad='linear-gradient(90deg,#e53935,#ef5350)';
+        } else if ((disponible / stockBase) * 100 <= 50) {
+            estado='moderado'; estadoLabel='Moderado (≤ 50%)';
+            estadoColor='#fb8c00'; estadoGrad='linear-gradient(90deg,#fb8c00,#ffa726)';
         } else {
-            estado='optimo';   estadolabel='Óptimo (> 50%)';
-            estadocolor='#43a047'; estadograd='linear-gradient(90deg,#43a047,#66bb6a)';
+            estado='optimo';   estadoLabel='Óptimo (> 50%)';
+            estadoColor='#43a047'; estadoGrad='linear-gradient(90deg,#43a047,#66bb6a)';
         }
 
-        const pct = Math.min(100, Math.max(0, (disponible / stockbase) * 100));
-        // decimales limpios: hasta milésimas (3 decimales) sin ceros extra
+        const pct = Math.min(100, Math.max(0, (disponible / stockBase) * 100));
+        // Decimales limpios: hasta milésimas (3 decimales) sin ceros extra
         const fmt = (n) => { 
-            const num = parseFloat(n.toprecision(10));
+            const num = parseFloat(n.toPrecision(10));
             if (isNaN(num)) return '0';
             // Mostrar hasta 3 decimales si es necesario
             const s = num.toFixed(3);
@@ -125,56 +125,56 @@
         };
 
         const imgHtml = item.imagen
-            ? `<img src="${item.imagen}" style="Width:60px;height:60px;object-fit:cover;border-radius:8px;margin-bottom:.5rem;cursor:pointer" onclick="window.expandirImagen&&window.expandirImagen('${item.imagen.replace(/'/g,"\'")}')">`
+            ? `<img src="${item.imagen}" style="width:60px;height:60px;object-fit:cover;border-radius:8px;margin-bottom:.5rem;cursor:pointer" onclick="window.expandirImagen&&window.expandirImagen('${item.imagen.replace(/'/g,"\'")}')">`
             : '';
 
         const detailHTML = `
-            <div class="Inv-detail-card" id="invDetailCard_${item.id}">
-                <div class="Inv-detail-title">
+            <div class="inv-detail-card" id="invDetailCard_${item.id}">
+                <div class="inv-detail-title">
                     <span>${item.nombre}</span>
-                    <button class="Inv-detail-close" onclick="window._invCerrarDetalle('${item.id}')" Title="Minimizar">
+                    <button class="inv-detail-close" onclick="window._invCerrarDetalle('${item.id}')" title="Minimizar">
                         <i class="fas fa-minus"></i>
                     </button>
                 </div>
-                ${imghtml}
-                <div class="inv-stock-row" Style="margin-bottom:.4rem;display:flex;align-items:baseline;gap:.4rem;flex-wrap:wrap">
+                ${imgHtml}
+                <div class="inv-stock-row" style="margin-bottom:.4rem;display:flex;align-items:baseline;gap:.4rem;flex-wrap:wrap">
                     <span style="font-size:2.2rem;font-weight:800;color:${estadoColor};line-height:1">${fmt(disponible)}</span>
-                    <span class="inv-stock-unit" Style="font-size:.9rem">${item.unidad_base||'U'}</span>
-                    <span style="Font-size:.7rem;color:var(--text-muted);margin-left:auto;background:var(--secondary);padding:2px 8px;border-radius:20px;white-space:nowrap">
+                    <span class="inv-stock-unit" style="font-size:.9rem">${item.unidad_base||'u'}</span>
+                    <span style="font-size:.7rem;color:var(--text-muted);margin-left:auto;background:var(--secondary);padding:2px 8px;border-radius:20px;white-space:nowrap">
                         Reservado: ${fmt(item.reservado||0)}
                     </span>
                 </div>
                 <!-- Barra invertida: stock restante a la izquierda (color), consumido a la derecha (gris) -->
-                <div style="Height:10px;background:rgba(0,0,0,.08);border-radius:6px;overflow:hidden;margin-bottom:.35rem;position:relative">
-                    <div style="Position:absolute;top:0;right:0;height:100%;width:${(100-pct).toFixed(1)}%;background:rgba(0,0,0,.15);border-radius:0 6px 6px 0;"></div>
-                    <div style="Position:absolute;top:0;left:0;height:100%;width:${pct.toFixed(1)}%;background:${estadograd};border-radius:6px 0 0 6px;transition:width .55s cubic-bezier(.4,0,.2,1)"></div>
+                <div style="height:10px;background:rgba(0,0,0,.08);border-radius:6px;overflow:hidden;margin-bottom:.35rem;position:relative">
+                    <div style="position:absolute;top:0;right:0;height:100%;width:${(100-pct).toFixed(1)}%;background:rgba(0,0,0,.15);border-radius:0 6px 6px 0;"></div>
+                    <div style="position:absolute;top:0;left:0;height:100%;width:${pct.toFixed(1)}%;background:${estadoGrad};border-radius:6px 0 0 6px;transition:width .55s cubic-bezier(.4,0,.2,1)"></div>
                 </div>
-                <div style="Display:flex;align-items:center;gap:.45rem;margin-bottom:.85rem;font-size:.75rem;font-weight:700;color:${estadocolor}">
-                    <span style="Width:9px;height:9px;border-radius:50%;background:${estadocolor};display:inline-block;flex-shrink:0"></span>
+                <div style="display:flex;align-items:center;gap:.45rem;margin-bottom:.85rem;font-size:.75rem;font-weight:700;color:${estadoColor}">
+                    <span style="width:9px;height:9px;border-radius:50%;background:${estadoColor};display:inline-block;flex-shrink:0"></span>
                     ${estadoLabel}
-                    <span style="Margin-left:auto;color:var(--text-muted);font-weight:400">${pct.toFixed(0)}% del stock</span>
+                    <span style="margin-left:auto;color:var(--text-muted);font-weight:400">${pct.toFixed(0)}% del stock</span>
                 </div>
-                <div class="Inv-meta-grid" style="Grid-template-columns:1fr 1fr 1fr;gap:.75rem;margin-bottom:.85rem">
-                    <div class="Inv-meta-item">
-                        <span class="Inv-meta-label">Stock mínimo</span>
-                        <span class="Inv-meta-val" style="Color:${estadocolor}">${fmt(minimo)} ${item.unidad_base||'U'}</span>
+                <div class="inv-meta-grid" style="grid-template-columns:1fr 1fr 1fr;gap:.75rem;margin-bottom:.85rem">
+                    <div class="inv-meta-item">
+                        <span class="inv-meta-label">Stock mínimo</span>
+                        <span class="inv-meta-val" style="color:${estadoColor}">${fmt(minimo)} ${item.unidad_base||'u'}</span>
                     </div>
-                    <div class="Inv-meta-item">
-                        <span class="Inv-meta-label">Costo (USD/Bs)</span>
-                        <span class="Inv-meta-val">${window.formatUSD(item.precio_costo||0)}</span>
-                        <span class="Inv-meta-bs">${window.formatBs(window.usdToBs(item.precio_costo||0))}</span>
+                    <div class="inv-meta-item">
+                        <span class="inv-meta-label">Costo (USD/Bs)</span>
+                        <span class="inv-meta-val">${window.formatUSD(item.precio_costo||0)}</span>
+                        <span class="inv-meta-bs">${window.formatBs(window.usdToBs(item.precio_costo||0))}</span>
                     </div>
-                    <div class="Inv-meta-item">
-                        <span class="Inv-meta-label">Venta (USD/Bs)</span>
-                        <span class="Inv-meta-val">${window.formatUSD(item.precio_unitario||0)}</span>
-                        <span class="Inv-meta-bs">${window.formatBs(window.usdToBs(item.precio_unitario||0))}</span>
+                    <div class="inv-meta-item">
+                        <span class="inv-meta-label">Venta (USD/Bs)</span>
+                        <span class="inv-meta-val">${window.formatUSD(item.precio_unitario||0)}</span>
+                        <span class="inv-meta-bs">${window.formatBs(window.usdToBs(item.precio_unitario||0))}</span>
                     </div>
                 </div>
-                <div style="Display:flex;gap:.5rem;flex-wrap:wrap">
-                    <button class="Btn-icon edit" onclick="window.editarIngrediente('${item.id}')" Title="Editar ingrediente" Style="width:auto;padding:.45rem .9rem;border-radius:8px">
-                        <i class="fas fa-pen"></i> editar
+                <div style="display:flex;gap:.5rem;flex-wrap:wrap">
+                    <button class="btn-icon edit" onclick="window.editarIngrediente('${item.id}')" title="Editar ingrediente" style="width:auto;padding:.45rem .9rem;border-radius:8px">
+                        <i class="fas fa-pen"></i> Editar
                     </button>
-                    <button class="btn-icon delete" Onclick="window.eliminarIngrediente('${item.id}')" Title="Eliminar ingrediente" Style="width:auto;padding:.45rem .9rem;border-radius:8px">
+                    <button class="btn-icon delete" onclick="window.eliminarIngrediente('${item.id}')" title="Eliminar ingrediente" style="width:auto;padding:.45rem .9rem;border-radius:8px">
                         <i class="fas fa-trash"></i> Eliminar
                     </button>
                 </div>
@@ -184,13 +184,13 @@
             const el = document.getElementById('invItem_' + item.id);
             if (!el) return;
             const prev = el.nextElementSibling;
-            if (prev && prev.classList.contains('Inv-mobile-detail')) prev.remove();
-            const wrap = document.createElement('Div');
-            wrap.className = 'Inv-mobile-detail';
+            if (prev && prev.classList.contains('inv-mobile-detail')) prev.remove();
+            const wrap = document.createElement('div');
+            wrap.className = 'inv-mobile-detail';
             wrap.innerHTML = detailHTML;
-            el.insertAdjacentElement('Afterend', wrap);
+            el.insertAdjacentElement('afterend', wrap);
         } else {
-            const col = document.getElementById('Invdetailcol');
+            const col = document.getElementById('invDetailCol');
             if (!col) return;
             col.innerHTML = detailHTML;
         }
@@ -198,148 +198,148 @@
 
     window._invCerrarDetalle = function(itemId) {
         window._invActiveId = null;
-        document.querySelectorAll('.inv-list-item').forEach(el => el.classList.remove('Active'));
+        document.querySelectorAll('.inv-list-item').forEach(el => el.classList.remove('active'));
         const mDet = document.querySelector('.inv-mobile-detail');
         if (mDet) mDet.remove();
-        const col = document.getElementById('Invdetailcol');
-        if (col) col.innerHTML = '<div class="Inv-detail-empty" id="Invdetailempty"><i class="Fas fa-hand-point-left" style="Font-size:2rem;margin-bottom:.75rem;display:block;opacity:.3"></i>Selecciona un ingrediente de la lista para ver su detalle</div>';
+        const col = document.getElementById('invDetailCol');
+        if (col) col.innerHTML = '<div class="inv-detail-empty" id="invDetailEmpty"><i class="fas fa-hand-point-left" style="font-size:2rem;margin-bottom:.75rem;display:block;opacity:.3"></i>Selecciona un ingrediente de la lista para ver su detalle</div>';
     };
 
-    // funciones para imagen de ingrediente
-    function handleingredienteimagenfile() {
-        const fileinput = document.getElementById('ingredienteImagen');
-        const urlinput = document.getElementById('ingredienteImagenUrl');
-        const previewdiv = document.getElementById('ingredienteImagenPreview');
-        const previewimg = document.getElementById('ingredientePreviewImg');
-        const removebtn = document.getElementById('ingredienteImgRemoveBtn');
+    // Funciones para imagen de ingrediente
+    function handleIngredienteImagenFile() {
+        const fileInput = document.getElementById('ingredienteImagen');
+        const urlInput = document.getElementById('ingredienteImagenUrl');
+        const previewDiv = document.getElementById('ingredienteImagenPreview');
+        const previewImg = document.getElementById('ingredientePreviewImg');
+        const removeBtn = document.getElementById('ingredienteImgRemoveBtn');
         
-        if (fileinput.files && fileinput.files[0]) {
-            const file = fileinput.files[0];
-            currentingredienteimagenfile = file;
-            currentingredienteimagenurl = '';
-            urlinput.value = '';
-            urlinput.disabled = true;
-            const reader = new filereader();
+        if (fileInput.files && fileInput.files[0]) {
+            const file = fileInput.files[0];
+            currentIngredienteImagenFile = file;
+            currentIngredienteImagenUrl = '';
+            urlInput.value = '';
+            urlInput.disabled = true;
+            const reader = new FileReader();
             reader.onload = function(e) {
-                previewimg.src = e.target.result;
-                previewdiv.style.display = 'flex';
-                if (removebtn) removebtn.style.display = 'flex';
+                previewImg.src = e.target.result;
+                previewDiv.style.display = 'flex';
+                if (removeBtn) removeBtn.style.display = 'flex';
             };
-            reader.readasdataurl(file);
+            reader.readAsDataURL(file);
         } else {
-            urlinput.disabled = false;
-            if (urlinput.value.trim()) {
-                previewimg.src = urlinput.value;
-                previewdiv.style.display = 'flex';
-                if (removebtn) removebtn.style.display = 'flex';
-                currentingredienteimagenurl = urlinput.value;
-                currentingredienteimagenfile = null;
+            urlInput.disabled = false;
+            if (urlInput.value.trim()) {
+                previewImg.src = urlInput.value;
+                previewDiv.style.display = 'flex';
+                if (removeBtn) removeBtn.style.display = 'flex';
+                currentIngredienteImagenUrl = urlInput.value;
+                currentIngredienteImagenFile = null;
             } else {
-                previewdiv.style.display = 'none';
-                if (removebtn) removebtn.style.display = 'none';
-                previewimg.src = '';
+                previewDiv.style.display = 'none';
+                if (removeBtn) removeBtn.style.display = 'none';
+                previewImg.src = '';
             }
         }
     }
 
-    function handleingredienteimagenurl() {
-        const urlinput = document.getElementById('ingredienteImagenUrl');
-        const fileinput = document.getElementById('ingredienteImagen');
-        const previewdiv = document.getElementById('ingredienteImagenPreview');
-        const previewimg = document.getElementById('ingredientePreviewImg');
-        const removebtn = document.getElementById('ingredienteImgRemoveBtn');
+    function handleIngredienteImagenUrl() {
+        const urlInput = document.getElementById('ingredienteImagenUrl');
+        const fileInput = document.getElementById('ingredienteImagen');
+        const previewDiv = document.getElementById('ingredienteImagenPreview');
+        const previewImg = document.getElementById('ingredientePreviewImg');
+        const removeBtn = document.getElementById('ingredienteImgRemoveBtn');
         
-        if (fileinput.files && fileinput.files[0]) return;
+        if (fileInput.files && fileInput.files[0]) return;
         
-        const url = urlinput.value.trim();
+        const url = urlInput.value.trim();
         if (url) {
-            currentingredienteimagenurl = url;
-            currentingredienteimagenfile = null;
-            previewimg.src = url;
-            previewdiv.style.display = 'flex';
-            if (removebtn) removebtn.style.display = 'flex';
+            currentIngredienteImagenUrl = url;
+            currentIngredienteImagenFile = null;
+            previewImg.src = url;
+            previewDiv.style.display = 'flex';
+            if (removeBtn) removeBtn.style.display = 'flex';
         } else {
-            previewdiv.style.display = 'none';
-            if (removebtn) removebtn.style.display = 'none';
-            previewimg.src = '';
-            currentingredienteimagenurl = '';
+            previewDiv.style.display = 'none';
+            if (removeBtn) removeBtn.style.display = 'none';
+            previewImg.src = '';
+            currentIngredienteImagenUrl = '';
         }
     }
 
 
-    // sincronizar mercancía nueva con cantidad comprada
-    function syncagregartocantidadcomprada() {
-        const agregarinput = document.getElementById('ingredienteAgregar');
-        const cantidadcomprada = document.getElementById('cantidadComprada');
-        if (agregarinput && cantidadcomprada) {
-            cantidadcomprada.value = agregarinput.value;
+    // Sincronizar Mercancía Nueva con Cantidad Comprada
+    function syncAgregarToCantidadComprada() {
+        const agregarInput = document.getElementById('ingredienteAgregar');
+        const cantidadComprada = document.getElementById('cantidadComprada');
+        if (agregarInput && cantidadComprada) {
+            cantidadComprada.value = agregarInput.value;
         }
-        window._syncingredientepreview();
+        window._syncIngredientePreview();
     }
 
 
-    window.agregarstock = function(ingredienteid) {
-        const ingrediente = window.inventarioitems.find(i => i.id === ingredienteid);
+    window.agregarStock = function(ingredienteId) {
+        const ingrediente = window.inventarioItems.find(i => i.id === ingredienteId);
         if (ingrediente) { 
-            window.editaringrediente(ingredienteid); 
+            window.editarIngrediente(ingredienteId); 
             setTimeout(() => { 
-                const agregarinput = document.getElementById('ingredienteAgregar');
-                if (agregarinput) agregarinput.focus();
+                const agregarInput = document.getElementById('ingredienteAgregar');
+                if (agregarInput) agregarInput.focus();
             }, 500); 
         }
     };
 
-    window.calcularcostounitario = function() {
-        const costototal = parseFloat(document.getElementById('costoTotal').value) || 0;
+    window.calcularCostoUnitario = function() {
+        const costoTotal = parseFloat(document.getElementById('costoTotal').value) || 0;
         const cantidad   = parseFloat(document.getElementById('cantidadComprada').value) || 0;
-        const resdiv = document.getElementById('calcResultado');
-        const resval = document.getElementById('calcPrecioUnitario');
-        const resuni = document.getElementById('calcUnidadResult');
+        const resDiv = document.getElementById('calcResultado');
+        const resVal = document.getElementById('calcPrecioUnitario');
+        const resUni = document.getElementById('calcUnidadResult');
         const unidad = document.getElementById('ingredienteUnidad')?.value || 'unidad';
-        if (costototal > 0 && cantidad > 0) {
-            const unitario = costototal / cantidad;
+        if (costoTotal > 0 && cantidad > 0) {
+            const unitario = costoTotal / cantidad;
             document.getElementById('ingredienteCosto').value = unitario.toFixed(4);
-            if (resdiv) resdiv.style.display = 'block';
-            if (resval) resval.textContent = unitario.toFixed(4);
-            if (resuni) resuni.textContent = ' por ' + unidad;
+            if (resDiv) resDiv.style.display = 'block';
+            if (resVal) resVal.textContent = unitario.toFixed(4);
+            if (resUni) resUni.textContent = ' por ' + unidad;
         } else {
-            if (resdiv) resdiv.style.display = 'none';
+            if (resDiv) resDiv.style.display = 'none';
         }
     };
 
-    window.convertircostototalbs = function() {
-        const tasabase = window.configglobal?.tasa_cambio || 1;
-        const costototalbs = parseFloat(document.getElementById('costoTotalBs').value) || 0;
-        const costototalinput = document.getElementById('costoTotal');
-        if (costototalbs > 0 && tasabase > 0) {
-            const costototalusd = costototalbs / tasabase;
-            costototalinput.value = costototalusd.toFixed(2);
-            window.calcularcostounitario();
+    window.convertirCostoTotalBs = function() {
+        const tasaBase = window.configGlobal?.tasa_cambio || 1;
+        const costoTotalBs = parseFloat(document.getElementById('costoTotalBs').value) || 0;
+        const costoTotalInput = document.getElementById('costoTotal');
+        if (costoTotalBs > 0 && tasaBase > 0) {
+            const costoTotalUSD = costoTotalBs / tasaBase;
+            costoTotalInput.value = costoTotalUSD.toFixed(2);
+            window.calcularCostoUnitario();
         }
     };
 
-    // agregar conversión inversa: cuando se modifica usd, actualizar bs
-    window._setupconversionbidireccional = function() {
-        const costototalinput = document.getElementById('costoTotal');
-        if (costototalinput) {
-            costototalinput.addEventListener('input', function() {
-                const tasabase = window.configglobal?.tasa_cambio || 1;
-                const costototalusd = parseFloat(costototalinput.value) || 0;
-                const costototalbsinput = document.getElementById('costoTotalBs');
-                if (costototalusd > 0 && tasabase > 0 && costototalbsinput) {
-                    const costototalbs = costototalusd * tasabase;
-                    costototalbsinput.value = costototalbs.toFixed(2);
+    // Agregar conversión inversa: cuando se modifica USD, actualizar Bs
+    window._setupConversionBidireccional = function() {
+        const costoTotalInput = document.getElementById('costoTotal');
+        if (costoTotalInput) {
+            costoTotalInput.addEventListener('input', function() {
+                const tasaBase = window.configGlobal?.tasa_cambio || 1;
+                const costoTotalUSD = parseFloat(costoTotalInput.value) || 0;
+                const costoTotalBsInput = document.getElementById('costoTotalBs');
+                if (costoTotalUSD > 0 && tasaBase > 0 && costoTotalBsInput) {
+                    const costoTotalBs = costoTotalUSD * tasaBase;
+                    costoTotalBsInput.value = costoTotalBs.toFixed(2);
                 }
             });
         }
     };
 
-    window._syncingredientepreview = function() {
+    window._syncIngredientePreview = function() {
         const nuevo       = parseFloat(document.getElementById('ingredienteAgregar')?.value) || 0;
         const unidad      = document.getElementById('ingredienteUnidad')?.value || 'unidades';
         const sp = document.getElementById('stockTotalPreview');
         const sc = document.getElementById('stockConversionPreview');
-        if (sp) sp.textContent = nuevo > 0 ? `stock resultante: ${nuevo.toFixed(3)} ${unidad}` : '';
+        if (sp) sp.textContent = nuevo > 0 ? `Stock resultante: ${nuevo.toFixed(3)} ${unidad}` : '';
         if (sc) {
             if (unidad === 'kilogramos' && nuevo > 0) sc.textContent = `= ${(nuevo * 1000).toFixed(0)} g adicionales`;
             else if (unidad === 'litros' && nuevo > 0) sc.textContent = `= ${(nuevo * 1000).toFixed(0)} ml adicionales`;
@@ -347,128 +347,128 @@
         }
     };
 
-    function removeingredienteimage() {
-		const fileinput = document.getElementById('ingredienteImagen');
-		const urlinput = document.getElementById('ingredienteImagenUrl');
-		const previewdiv = document.getElementById('ingredienteImagenPreview');
-		const previewimg = document.getElementById('ingredientePreviewImg');
-		const removebtn = document.getElementById('ingredienteImgRemoveBtn');
-		if (fileinput) fileinput.value = '';
-		if (urlinput) {
-			urlinput.value = '';
-			urlinput.disabled = false;
+    function removeIngredienteImage() {
+		const fileInput = document.getElementById('ingredienteImagen');
+		const urlInput = document.getElementById('ingredienteImagenUrl');
+		const previewDiv = document.getElementById('ingredienteImagenPreview');
+		const previewImg = document.getElementById('ingredientePreviewImg');
+		const removeBtn = document.getElementById('ingredienteImgRemoveBtn');
+		if (fileInput) fileInput.value = '';
+		if (urlInput) {
+			urlInput.value = '';
+			urlInput.disabled = false;
 		}
-		if (previewdiv) previewdiv.style.display = 'none';
-		if (removebtn) removebtn.style.display = 'none';
-		if (previewimg) previewimg.src = '';
-		currentingredienteimagenfile = null;
-		currentingredienteimagenurl = '';
+		if (previewDiv) previewDiv.style.display = 'none';
+		if (removeBtn) removeBtn.style.display = 'none';
+		if (previewImg) previewImg.src = '';
+		currentIngredienteImagenFile = null;
+		currentIngredienteImagenUrl = '';
 	}
 
-// validación dinámica de precio de venta vs costo
-window._inicializarvalidacionprecioingrediente = function() {
-const costoinput = document.getElementById('ingredienteCosto');
-const ventainput = document.getElementById('ingredienteVenta');
+// Validación dinámica de precio de venta vs costo
+window._inicializarValidacionPrecioIngrediente = function() {
+const costoInput = document.getElementById('ingredienteCosto');
+const ventaInput = document.getElementById('ingredienteVenta');
 
-if (!costoinput || !ventainput) return;
+if (!costoInput || !ventaInput) return;
 
-// remover listeners previos para evitar duplicados
-costoinput._validacionlistener?.();
-ventainput._validacionlistener?.();
+// Remover listeners previos para evitar duplicados
+costoInput._validacionListener?.();
+ventaInput._validacionListener?.();
 
-// crear o actualizar elemento de mensaje de advertencia
-let warningmsg = document.getElementById('precioVentaWarning');
-if (!warningmsg) {
-warningmsg = document.createElement('span');
-warningmsg.id = 'precioVentaWarning';
-warningmsg.style.csstext = 'color:#dc2626; font-size:.75rem; display:block; margin-top:.25rem;';
-ventainput.parentnode.insertbefore(warningmsg, ventainput.nextsibling);
+// Crear o actualizar elemento de mensaje de advertencia
+let warningMsg = document.getElementById('precioVentaWarning');
+if (!warningMsg) {
+warningMsg = document.createElement('span');
+warningMsg.id = 'precioVentaWarning';
+warningMsg.style.cssText = 'color:#dc2626; font-size:.75rem; display:block; margin-top:.25rem;';
+ventaInput.parentNode.insertBefore(warningMsg, ventaInput.nextSibling);
 }
 
-const validarprecios = function() {
-const costo = parseFloat(costoinput.value) || 0;
-const venta = parseFloat(ventainput.value) || 0;
+const validarPrecios = function() {
+const costo = parseFloat(costoInput.value) || 0;
+const venta = parseFloat(ventaInput.value) || 0;
 
 if (venta > 0 && venta < costo) {
-warningmsg.textContent = 'Atención: El precio de venta es menor al costo.';
-warningmsg.style.display = 'block';
-costoinput.style.bordercolor = '#dc2626';
-ventainput.style.bordercolor = '#dc2626';
+warningMsg.textContent = 'Atención: El precio de venta es menor al costo.';
+warningMsg.style.display = 'block';
+costoInput.style.borderColor = '#dc2626';
+ventaInput.style.borderColor = '#dc2626';
 } else {
-warningmsg.textContent = '';
-warningmsg.style.display = 'none';
-costoinput.style.bordercolor = '';
-ventainput.style.bordercolor = '';
+warningMsg.textContent = '';
+warningMsg.style.display = 'none';
+costoInput.style.borderColor = '';
+ventaInput.style.borderColor = '';
 }
 };
 
-// agregar listeners
-costoinput.addEventListener('input', validarprecios);
-ventainput.addEventListener('input', validarprecios);
+// Agregar listeners
+costoInput.addEventListener('input', validarPrecios);
+ventaInput.addEventListener('input', validarPrecios);
 
-// guardar referencia para poder removerlos después
-costoinput._validacionlistener = function() {
-costoinput.removeeventlistener('input', validarprecios);
+// Guardar referencia para poder removerlos después
+costoInput._validacionListener = function() {
+costoInput.removeEventListener('input', validarPrecios);
 };
-ventainput._validacionlistener = function() {
-ventainput.removeeventlistener('input', validarprecios);
-};
-
-// ejecutar validación inicial
-validarprecios();
+ventaInput._validacionListener = function() {
+ventaInput.removeEventListener('input', validarPrecios);
 };
 
-	window.abrirmodalnuevoingrediente = function() {
-		window.ingredienteeditandoid = null;
-		const modaltitle = document.getElementById('ingredienteModalTitle');
-		if (modaltitle) modaltitle.textContent = 'Nuevo Ingrediente';
-		const nombreinput = document.getElementById('ingredienteNombre');
-		if (nombreinput) nombreinput.value = '';
-		const minimoinput = document.getElementById('ingredienteMinimo');
-		if (minimoinput) minimoinput.value = '';
-		const costoinput = document.getElementById('ingredienteCosto');
-		if (costoinput) costoinput.value = '';
-		const ventainput = document.getElementById('ingredienteVenta');
-		if (ventainput) ventainput.value = '';
-		const agregarinput = document.getElementById('ingredienteAgregar');
-		if (agregarinput) agregarinput.value = '';
-		const cantidadcomprada = document.getElementById('cantidadComprada');
-		if (cantidadcomprada) cantidadcomprada.value = '';
-		const costototal = document.getElementById('costoTotal');
-		if (costototal) costototal.value = '';
+// Ejecutar validación inicial
+validarPrecios();
+};
+
+	window.abrirModalNuevoIngrediente = function() {
+		window.ingredienteEditandoId = null;
+		const modalTitle = document.getElementById('ingredienteModalTitle');
+		if (modalTitle) modalTitle.textContent = 'Nuevo Ingrediente';
+		const nombreInput = document.getElementById('ingredienteNombre');
+		if (nombreInput) nombreInput.value = '';
+		const minimoInput = document.getElementById('ingredienteMinimo');
+		if (minimoInput) minimoInput.value = '';
+		const costoInput = document.getElementById('ingredienteCosto');
+		if (costoInput) costoInput.value = '';
+		const ventaInput = document.getElementById('ingredienteVenta');
+		if (ventaInput) ventaInput.value = '';
+		const agregarInput = document.getElementById('ingredienteAgregar');
+		if (agregarInput) agregarInput.value = '';
+		const cantidadComprada = document.getElementById('cantidadComprada');
+		if (cantidadComprada) cantidadComprada.value = '';
+		const costoTotal = document.getElementById('costoTotal');
+		if (costoTotal) costoTotal.value = '';
 		
-		removeingredienteimage();
+		removeIngredienteImage();
 		
-		const deletebtn = document.getElementById('deleteIngredienteBtn');
-		if (deletebtn) deletebtn.style.display = 'none';
+		const deleteBtn = document.getElementById('deleteIngredienteBtn');
+		if (deleteBtn) deleteBtn.style.display = 'none';
 		const modal = document.getElementById('ingredienteModal');
 		if (modal) modal.classList.add('active');
 		
-		// inicializar validación y conversión bidireccional después de mostrar el modal
+		// Inicializar validación y conversión bidireccional después de mostrar el modal
 		setTimeout(function() {
-			window._inicializarvalidacionprecioingrediente();
-			window._setupconversionbidireccional();
+			window._inicializarValidacionPrecioIngrediente();
+			window._setupConversionBidireccional();
 		}, 50);
 	};
 
-	window.editaringrediente = function(id) {
-		const ingrediente = window.inventarioitems.find(i => i.id === id);
+	window.editarIngrediente = function(id) {
+		const ingrediente = window.inventarioItems.find(i => i.id === id);
 		if (!ingrediente) return;
-		window.ingredienteeditandoid = id;
-		const modaltitle = document.getElementById('ingredienteModalTitle');
-		if (modaltitle) modaltitle.textContent = 'Editar Ingrediente';
+		window.ingredienteEditandoId = id;
+		const modalTitle = document.getElementById('ingredienteModalTitle');
+		if (modalTitle) modalTitle.textContent = 'Editar Ingrediente';
 		
-		// phase 2: fetch stock - set value in input
-		const stockinput = document.getElementById('stock-actual-input');
-		if (stockinput) {
-			stockoriginalvalue = typeof ingrediente.stock === 'number' ? ingrediente.stock : 0;
-			stockinput.value = stockoriginalvalue;
-				stockinput.readonly = true; // use readonly instead of disabled to allow click events
-				stockinput.disabled = false; // ensure it's not disabled so click events work
+		// PHASE 2: Fetch Stock - Set value in input
+		const stockInput = document.getElementById('stock-actual-input');
+		if (stockInput) {
+			stockOriginalValue = typeof ingrediente.stock === 'number' ? ingrediente.stock : 0;
+			stockInput.value = stockOriginalValue;
+				stockInput.readOnly = true; // Use readOnly instead of disabled to allow click events
+				stockInput.disabled = false; // Ensure it's not disabled so click events work
 			// PHASE 3: Click Behavior - Bind dynamically on each modal open (avoid duplicates)
 			stockInput.onclick = null; // Remove previous listener
 			stockInput.onclick = function() {
-				console.log('Click stock input detected', this.readOnly);
+				console.log('CLICK stock input detected', this.readOnly);
 				
 				if (this.readOnly && !stockPasswordModalOpen) {
 					pendingIngredientId = window.ingredienteEditandoId;
@@ -478,89 +478,90 @@ validarprecios();
 			};
 		}
 		
-		const nombreInput = document.getElementById('Ingredientenombre');
+		const nombreInput = document.getElementById('ingredienteNombre');
 		if (nombreInput) {
 			nombreInput.value = ingrediente.nombre || '';
 		}
-		const unidadselect = document.getElementById('ingredienteUnidad');
-		if (unidadselect) unidadselect.value = ingrediente.unidad_base || 'unidades';
-		const minimoinput = document.getElementById('ingredienteMinimo');
-		if (minimoinput) minimoinput.value = ingrediente.minimo || 0;
-		const costoinput = document.getElementById('ingredienteCosto');
-		if (costoinput) costoinput.value = ingrediente.precio_costo || 0;
-		const ventainput = document.getElementById('ingredienteVenta');
-		if (ventainput) ventainput.value = ingrediente.precio_unitario || 0;
-		const agregarinput = document.getElementById('ingredienteAgregar');
-		if (agregarinput) agregarinput.value = '';
-		const cantidadcomprada = document.getElementById('cantidadComprada');
-		if (cantidadcomprada) cantidadcomprada.value = '';
-		const costototal = document.getElementById('costoTotal');
-		if (costototal) costototal.value = '';
+		const unidadSelect = document.getElementById('ingredienteUnidad');
+		if (unidadSelect) unidadSelect.value = ingrediente.unidad_base || 'unidades';
+		const minimoInput = document.getElementById('ingredienteMinimo');
+		if (minimoInput) minimoInput.value = ingrediente.minimo || 0;
+		const costoInput = document.getElementById('ingredienteCosto');
+		if (costoInput) costoInput.value = ingrediente.precio_costo || 0;
+		const ventaInput = document.getElementById('ingredienteVenta');
+		if (ventaInput) ventaInput.value = ingrediente.precio_unitario || 0;
+		const agregarInput = document.getElementById('ingredienteAgregar');
+		if (agregarInput) agregarInput.value = '';
+		const cantidadComprada = document.getElementById('cantidadComprada');
+		if (cantidadComprada) cantidadComprada.value = '';
+		const costoTotal = document.getElementById('costoTotal');
+		if (costoTotal) costoTotal.value = '';
 		
 		if (ingrediente.imagen) {
-			const previewdiv = document.getElementById('ingredienteImagenPreview');
-			const previewimg = document.getElementById('ingredientePreviewImg');
-			if (previewimg) previewimg.src = ingrediente.imagen;
-			if (previewdiv) previewdiv.style.display = 'flex';
-			const urlinput = document.getElementById('ingredienteImagenUrl');
-			if (urlinput) urlinput.value = ingrediente.imagen;
-			currentingredienteimagenurl = ingrediente.imagen;
-			const removebtn = document.getElementById('ingredienteImgRemoveBtn');
-			if (removebtn) removebtn.style.display = 'flex';
+			const previewDiv = document.getElementById('ingredienteImagenPreview');
+			const previewImg = document.getElementById('ingredientePreviewImg');
+			if (previewImg) previewImg.src = ingrediente.imagen;
+			if (previewDiv) previewDiv.style.display = 'flex';
+			const urlInput = document.getElementById('ingredienteImagenUrl');
+			if (urlInput) urlInput.value = ingrediente.imagen;
+			currentIngredienteImagenUrl = ingrediente.imagen;
+			const removeBtn = document.getElementById('ingredienteImgRemoveBtn');
+			if (removeBtn) removeBtn.style.display = 'flex';
 		} else {
-			removeingredienteimage();
+			removeIngredienteImage();
 		}
 		
-		const deletebtn = document.getElementById('deleteIngredienteBtn');
-		if (deletebtn) deletebtn.style.display = 'inline-flex';
+		const deleteBtn = document.getElementById('deleteIngredienteBtn');
+		if (deleteBtn) deleteBtn.style.display = 'inline-flex';
 		const modal = document.getElementById('ingredienteModal');
 		if (modal) modal.classList.add('active');
 		
-		// inicializar validación y conversión bidireccional después de mostrar el modal
+		// Inicializar validación y conversión bidireccional después de mostrar el modal
 		setTimeout(function() {
-			window._inicializarvalidacionprecioingrediente();
-			window._setupconversionbidireccional();
+			window._inicializarValidacionPrecioIngrediente();
+			window._setupConversionBidireccional();
 		}, 50);
 	};
 
-	// reemplazar eliminaringrediente para usar confirmación premium
-	window.eliminaringrediente = async function(id) {
-		const ingrediente = window.inventarioitems.find(i => i.id === id);
+	// Reemplazar eliminarIngrediente para usar confirmación premium
+	window.eliminarIngrediente = async function(id) {
+		const ingrediente = window.inventarioItems.find(i => i.id === id);
 		if (!ingrediente) return;
-		window.mostrarconfirmacionpremium('Eliminar Ingrediente',
+		window.mostrarConfirmacionPremium(
+			'Eliminar Ingrediente',
 			`¿Estás seguro de eliminar "${ingrediente.nombre}"? Esta acción no se puede deshacer.`,
 			async () => {
 				try {
-					await window.supabaseclient.from('Inventario').delete().eq('Id', id);
+					await window.supabaseClient.from('inventario').delete().eq('id', id);
 					await window.cargarInventario();
-					window.mostrartoast('🗑️ ingrediente eliminado', 'Success');
+					window.mostrarToast('🗑️ Ingrediente eliminado', 'success');
 				} catch (e) {
 					console.error('Error eliminando ingrediente:', e);
-					window.mostrartoast('❌ error al eliminar ingrediente', 'Error');
+					window.mostrarToast('❌ Error al eliminar ingrediente', 'error');
 				}
 			}
 		);
 	};
 
     window.actualizarAlertasStock = function() {
-        document.getElementById('Alertasstock').textContent = window.inventarioItems.filter(i => i.stock <= i.minimo).length;
+        document.getElementById('alertasStock').textContent = window.inventarioItems.filter(i => i.stock <= i.minimo).length;
         // Hacer clic en la tarjeta redirige a stock crítico
         const alertCard = document.querySelector('.dashboard-card:nth-child(3)');
-        if (alertCard && !alertCard.hasAttribute('Data-listener')) {
-            alertCard.setAttribute('Data-listener', 'True');
-            alertCard.style.cursor = 'Pointer';
-            alertCard.addEventListener('Click', () => {
-                const stockCriticoDiv = document.getElementById('Stockcritico');
+        if (alertCard && !alertCard.hasAttribute('data-listener')) {
+            alertCard.setAttribute('data-listener', 'true');
+            alertCard.style.cursor = 'pointer';
+            alertCard.addEventListener('click', () => {
+                const stockCriticoDiv = document.getElementById('stockCritico');
                 if (stockCriticoDiv) {
-                    stockCriticoDiv.scrollIntoView({ behavior: 'Smooth', block: 'Center' });
-                    window.resaltarElemento('Stockcritico', 'Border');
+                    stockCriticoDiv.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    window.resaltarElemento('stockCritico', 'border');
                 }
             });
         }
     };
 
     window.verificarStockCritico = async function() {
-        const stockCriticoDiv = document.getElementById('Stockcritico');
+        const stockCriticoDiv = document.getElementById('stockCritico');
         if (!stockCriticoDiv) return;
         const criticos = (window.inventarioItems || []).filter(item => {
             const disponible = (item.stock || 0) - (item.reservado || 0);
@@ -572,13 +573,13 @@ validarprecios();
                 const disponible = (item.stock || 0) - (item.reservado || 0);
                 const faltantes = Math.round(((item.minimo || 0) - disponible + Number.EPSILON) * 1000) / 1000;
                 return `
-                    <div class="Alert-item critical">
+                    <div class="alert-item critical">
                         <span>
                             <strong>${item.nombre}</strong><br>
                             Stock: ${Math.round((disponible + Number.EPSILON) * 1000) / 1000} / Mínimo: ${item.minimo || 0}
                             ${faltantes > 0 ? `(Faltan ${faltantes})` : ''}
                         </span>
-                        <button class="Btn-small" onclick="window.agregarStock('${item.id}')" Style="background:var(--primary);color:#fff;border:none;padding:.3rem .7rem;border-radius:4px;cursor:pointer">
+                        <button class="btn-small" onclick="window.agregarStock('${item.id}')" style="background:var(--primary);color:#fff;border:none;padding:.3rem .7rem;border-radius:4px;cursor:pointer">
                             <i class="fas fa-plus"></i> Agregar
                         </button>
                     </div>
@@ -586,30 +587,33 @@ validarprecios();
             }).join('');
             document.getElementById('alertasStock').textContent = criticos.length;
         } else {
-            stockcriticodiv.innerHTML = '<p style="Color:var(--text-muted);font-size:.85rem">No hay alertas de stock</p>';
+            stockCriticoDiv.innerHTML = '<p style="color:var(--text-muted);font-size:.85rem">No hay alertas de stock</p>';
             document.getElementById('alertasStock').textContent = '0';
         }
     };
 
-    window.actualizarstockcriticoheader = function() {
+    window.actualizarStockCriticoHeader = function() {
         const container = document.getElementById('stockCriticoTags');
         if (!container) return;
-        const criticos = (window.inventarioitems || []).filter(item => {
+        const criticos = (window.inventarioItems || []).filter(item => {
             const disponible = (item.stock || 0) - (item.reservado || 0);
             const minimo = item.minimo || 0;
             return disponible <= minimo && minimo > 0;
         });
         if (criticos.length === 0) {
-            container.innerHTML = '<span style="Color:var(--text-muted)">NINGÚN INGREDIENTE EN STOCK CRÍTICO</span>';
+            container.innerHTML = '<span style="color:var(--text-muted)">NINGÚN INGREDIENTE EN STOCK CRÍTICO</span>';
             return;
         }
         container.innerHTML = criticos.map(item => {
             const disponible = (item.stock || 0) - (item.reservado || 0);
             return `
-                <span class="Stock-critico-tag" 
+                <span class="stock-critico-tag" 
                       data-ingrediente-id="${item.id}"
-                      onclick="window._irAIngrediente('${item.id}')"Style="display:inline-flex; align-items:center; gap:4px; padding:2px 8px; background:rgba(239,68,68,.25); border-radius:20px; color:var(--danger); font-weight:800; font-size:.75rem; cursor:pointer; animation:pulse 0.8s infinite; text-transform:uppercase; letter-spacing:.5px"Onmouseover="this.style.transform='Scale(1.05)'; this.style.background='Rgba(239,68,68,.4)'"Onmouseout="this.style.transform='Scale(1)'; this.style.background='Rgba(239,68,68,.25)'">
-                    <i class="fas fa-exclamation-triangle" Style="font-size:.7rem"></i>
+                      onclick="window._irAIngrediente('${item.id}')"
+                      style="display:inline-flex; align-items:center; gap:4px; padding:2px 8px; background:rgba(239,68,68,.25); border-radius:20px; color:var(--danger); font-weight:800; font-size:.75rem; cursor:pointer; animation:pulse 0.8s infinite; text-transform:uppercase; letter-spacing:.5px"
+                      onmouseover="this.style.transform='scale(1.05)'; this.style.background='rgba(239,68,68,.4)'"
+                      onmouseout="this.style.transform='scale(1)'; this.style.background='rgba(239,68,68,.25)'">
+                    <i class="fas fa-exclamation-triangle" style="font-size:.7rem"></i>
                     ${item.nombre}
                     <span style="background:var(--danger); color:#fff; padding:0 5px; border-radius:12px; font-size:.65rem; margin-left:2px">${Math.round((disponible + Number.EPSILON) * 1000) / 1000}</span>
                 </span>
@@ -617,208 +621,209 @@ validarprecios();
         }).join('');
     };
 
-    window._iraingrediente = function(ingredienteid) {
+    window._irAIngrediente = function(ingredienteId) {
         const tabs = document.querySelectorAll('.tab');
         const panes = document.querySelectorAll('.tab-pane');
         tabs.forEach(tab => tab.classList.remove('active'));
         panes.forEach(pane => pane.classList.remove('active'));
-        const inventariotab = document.querySelector('.tab[data-tab="Inventario"]');
-        const inventariopane = document.getElementById('inventarioPane');
-        if (inventariotab) inventariotab.classList.add('active');
-        if (inventariopane) inventariopane.classList.add('active');
+        const inventarioTab = document.querySelector('.tab[data-tab="inventario"]');
+        const inventarioPane = document.getElementById('inventarioPane');
+        if (inventarioTab) inventarioTab.classList.add('active');
+        if (inventarioPane) inventarioPane.classList.add('active');
         setTimeout(() => {
-            const itemelement = document.getElementById(`invitem_${ingredienteid}`);
-            if (itemelement) {
-                itemelement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                itemelement.click();
-                window.resaltarelemento(`invitem_${ingredienteid}`, 'pulse');
+            const itemElement = document.getElementById(`invItem_${ingredienteId}`);
+            if (itemElement) {
+                itemElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                itemElement.click();
+                window.resaltarElemento(`invItem_${ingredienteId}`, 'pulse');
             } else {
-                window.renderizarinventario();
+                window.renderizarInventario();
                 setTimeout(() => {
-                    const retryelement = document.getElementById(`invitem_${ingredienteid}`);
-                    if (retryelement) {
-                        retryelement.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        retryelement.click();
-                        window.resaltarelemento(`invitem_${ingredienteid}`, 'pulse');
+                    const retryElement = document.getElementById(`invItem_${ingredienteId}`);
+                    if (retryElement) {
+                        retryElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        retryElement.click();
+                        window.resaltarElemento(`invItem_${ingredienteId}`, 'pulse');
                     }
                 }, 300);
             }
         }, 200);
     };
 
-    window.setupstockrealtime = function() {
-        if (window.stockupdatechannel) window.supabaseclient.removeChannel(window.stockupdatechannel);
-        window.stockupdatechannel = window.supabaseclient
+    window.setupStockRealtime = function() {
+        if (window.stockUpdateChannel) window.supabaseClient.removeChannel(window.stockUpdateChannel);
+        window.stockUpdateChannel = window.supabaseClient
             .channel('stock-updates')
             .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'inventario' }, async (payload) => {
-                const index = window.inventarioitems.findindex(i => i.id === payload.new.id);
-                if (index !== -1) window.inventarioitems[index] = payload.new;
-                else window.inventarioitems.push(payload.new);
-                await window.verificarynotificarstockreactivado(payload.new.id, payload.new.nombre);
-                await window.recalcularstockplatillos();
+                const index = window.inventarioItems.findIndex(i => i.id === payload.new.id);
+                if (index !== -1) window.inventarioItems[index] = payload.new;
+                else window.inventarioItems.push(payload.new);
+                await window.verificarYNotificarStockReactivado(payload.new.id, payload.new.nombre);
+                await window.recalcularStockPlatillos();
                 if (payload.new.stock > 0 && payload.old?.stock <= 0) {
-                    await window.enviarnotificacionpush('📢 Stock actualizado', `el ingrediente ${payload.new.nombre} está disponible nuevamente. ¡revisa el menú!`);
+                    await window.enviarNotificacionPush('📢 Stock actualizado', `El ingrediente ${payload.new.nombre} está disponible nuevamente. ¡Revisa el menú!`);
                 }
             })
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'menu' }, async () => { await window.cargarmenu(); })
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'menu' }, async () => { await window.cargarMenu(); })
             .subscribe();
     };
 
-    window.verificarynotificarstockreactivado = async function(ingredienteid, ingredientenombre) {
-        for (const platillo of window.menuitems) {
+    window.verificarYNotificarStockReactivado = async function(ingredienteId, ingredienteNombre) {
+        for (const platillo of window.menuItems) {
             if (!platillo.ingredientes || Object.keys(platillo.ingredientes).length === 0) continue;
-            const usaingrediente = Object.keys(platillo.ingredientes).some(id => id === ingredienteid);
-            if (!usaingrediente) continue;
-            let stockdisponible = infinity;
-            for (const [ingid, inginfo] of object.entries(platillo.ingredientes)) {
-                const ingrediente = window.inventarioitems.find(i => i.id === ingid);
-                if (!ingrediente) { stockdisponible = 0; break; }
-                const stockdisp = (ingrediente.stock || 0) - (ingrediente.reservado || 0);
-                const cantidadnecesaria = inginfo.cantidad || 1;
-                const posible = Math.floor(stockdisp / cantidadnecesaria);
-                stockdisponible = Math.min(stockdisponible, posible);
+            const usaIngrediente = Object.keys(platillo.ingredientes).some(id => id === ingredienteId);
+            if (!usaIngrediente) continue;
+            let stockDisponible = Infinity;
+            for (const [ingId, ingInfo] of Object.entries(platillo.ingredientes)) {
+                const ingrediente = window.inventarioItems.find(i => i.id === ingId);
+                if (!ingrediente) { stockDisponible = 0; break; }
+                const stockDisp = (ingrediente.stock || 0) - (ingrediente.reservado || 0);
+                const cantidadNecesaria = ingInfo.cantidad || 1;
+                const posible = Math.floor(stockDisp / cantidadNecesaria);
+                stockDisponible = Math.min(stockDisponible, posible);
             }
-            const estabaagotado = window.platillosnotificados[platillo.id] === 'agotado';
-            const ahoradisponible = stockdisponible > 0;
-            if (estabaagotado && ahoradisponible) {
-                window.platillosnotificados[platillo.id] = 'disponible';
-                localStorage.setItem('saki_platillos_notificados', JSON.stringify(window.platillosnotificados));
+            const estabaAgotado = window.platillosNotificados[platillo.id] === 'agotado';
+            const ahoraDisponible = stockDisponible > 0;
+            if (estabaAgotado && ahoraDisponible) {
+                window.platillosNotificados[platillo.id] = 'disponible';
+                localStorage.setItem('saki_platillos_notificados', JSON.stringify(window.platillosNotificados));
                 const titulo = `🍣 ${platillo.nombre} disponible de nuevo!`;
-                const mensaje = `ya tenemos ${platillo.nombre} en stock. ¡pide ahora!`;
+                const mensaje = `Ya tenemos ${platillo.nombre} en stock. ¡Pide ahora!`;
                 try {
-                    const { data: pedidosunicos } = await window.supabaseclient.from('pedidos').select('session_id').not('session_id', 'is', null).order('fecha', { ascending: false });
-                    const sessionids = [...new set(pedidosunicos?.map(p => p.session_id) || [])];
-                    for (const sessionid of sessionids) await window.enviarnotificacionpush(titulo, mensaje, sessionid);
-                    window.mostrartoast(`📢 notificación enviada: ${platillo.nombre} disponible`, 'success');
+                    const { data: pedidosUnicos } = await window.supabaseClient.from('pedidos').select('session_id').not('session_id', 'is', null).order('fecha', { ascending: false });
+                    const sessionIds = [...new Set(pedidosUnicos?.map(p => p.session_id) || [])];
+                    for (const sessionId of sessionIds) await window.enviarNotificacionPush(titulo, mensaje, sessionId);
+                    window.mostrarToast(`📢 Notificación enviada: ${platillo.nombre} disponible`, 'success');
                 } catch (e) { console.error('Error enviando notificaciones masivas:', e); }
-            } else if (!ahoradisponible && !estabaagotado) {
-                window.platillosnotificados[platillo.id] = 'agotado';
-                localStorage.setItem('saki_platillos_notificados', JSON.stringify(window.platillosnotificados));
+            } else if (!ahoraDisponible && !estabaAgotado) {
+                window.platillosNotificados[platillo.id] = 'agotado';
+                localStorage.setItem('saki_platillos_notificados', JSON.stringify(window.platillosNotificados));
             }
         }
     };
 
-    window.recalcularstockplatillos = async function() {
-        for (const platillo of window.menuitems) {
-            let stockdisponible = infinity;
-            let todosingredientes = true;
+    window.recalcularStockPlatillos = async function() {
+        for (const platillo of window.menuItems) {
+            let stockDisponible = Infinity;
+            let todosIngredientes = true;
             if (platillo.ingredientes && Object.keys(platillo.ingredientes).length > 0) {
-                for (const [ingid, inginfo] of object.entries(platillo.ingredientes)) {
-                    const ingrediente = window.inventarioitems.find(i => i.id === ingid);
-                    if (!ingrediente) { todosingredientes = false; stockdisponible = 0; break; }
-                    const stockdisp = (ingrediente.stock || 0) - (ingrediente.reservado || 0);
-                    const cantidadnecesaria = inginfo.cantidad || 1;
-                    const posible = Math.floor(stockdisp / cantidadnecesaria);
-                    stockdisponible = Math.min(stockdisponible, posible);
+                for (const [ingId, ingInfo] of Object.entries(platillo.ingredientes)) {
+                    const ingrediente = window.inventarioItems.find(i => i.id === ingId);
+                    if (!ingrediente) { todosIngredientes = false; stockDisponible = 0; break; }
+                    const stockDisp = (ingrediente.stock || 0) - (ingrediente.reservado || 0);
+                    const cantidadNecesaria = ingInfo.cantidad || 1;
+                    const posible = Math.floor(stockDisp / cantidadNecesaria);
+                    stockDisponible = Math.min(stockDisponible, posible);
                 }
             } else {
-                stockdisponible = platillo.stock_maximo || 999;
+                stockDisponible = platillo.stock_maximo || 999;
             }
-            const nuevostock = todosingredientes ? Math.max(0, stockdisponible) : 0;
-            if (platillo.stock !== nuevostock) {
-                await window.supabaseclient.from('menu').update({ stock: nuevostock }).eq('id', platillo.id);
-                platillo.stock = nuevostock;
+            const nuevoStock = todosIngredientes ? Math.max(0, stockDisponible) : 0;
+            if (platillo.stock !== nuevoStock) {
+                await window.supabaseClient.from('menu').update({ stock: nuevoStock }).eq('id', platillo.id);
+                platillo.stock = nuevoStock;
             }
         }
-        window.renderizarmenu();
+        window.renderizarMenu();
     };
 
-    window.enviarnotificacionpush = async function(titulo, mensaje, sessionid = null) {
+    window.enviarNotificacionPush = async function(titulo, mensaje, sessionId = null) {
         try {
             const response = await fetch('https://iqwwoihiiyrtypyqzhgy.supabase.co/functions/v1/send-push', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': `bearer ${window.jwttoken}` },
-                body: JSON.stringify({ titulo, mensaje, session_id: sessionid })
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${window.jwtToken}` },
+                body: JSON.stringify({ titulo, mensaje, session_id: sessionId })
             });
             const result = await response.json();
             console.log('Notificaciones push enviadas:', result);
         } catch (e) { console.error('Error enviando push:', e); }
     };
 
-    // configurar eventos del modal de ingrediente (imagen, sincronización)
+    // Configurar eventos del modal de ingrediente (imagen, sincronización)
     function setupIngredienteModalEvents() {
-        const fileinput = document.getElementById('ingredienteImagen');
-        const urlinput = document.getElementById('ingredienteImagenUrl');
-        const agregarinput = document.getElementById('ingredienteAgregar');
-        const cantidadcomprada = document.getElementById('cantidadComprada');
-        const removebtn = document.getElementById('ingredienteImgRemoveBtn');
+        const fileInput = document.getElementById('ingredienteImagen');
+        const urlInput = document.getElementById('ingredienteImagenUrl');
+        const agregarInput = document.getElementById('ingredienteAgregar');
+        const cantidadComprada = document.getElementById('cantidadComprada');
+        const removeBtn = document.getElementById('ingredienteImgRemoveBtn');
         
-        if (fileinput) fileinput.addEventListener('change', handleingredienteimagenfile);
-        if (urlinput) urlinput.addEventListener('input', handleingredienteimagenurl);
-        if (removebtn) removebtn.addEventListener('click', removeingredienteimage);
-        if (agregarinput) agregarinput.addEventListener('input', syncagregartocantidadcomprada);
-        if (cantidadcomprada) cantidadcomprada.readonly = true;
+        if (fileInput) fileInput.addEventListener('change', handleIngredienteImagenFile);
+        if (urlInput) urlInput.addEventListener('input', handleIngredienteImagenUrl);
+        if (removeBtn) removeBtn.addEventListener('click', removeIngredienteImage);
+        if (agregarInput) agregarInput.addEventListener('input', syncAgregarToCantidadComprada);
+        if (cantidadComprada) cantidadComprada.readOnly = true;
         
-        // phase 3: click behavior - removed from here, now bound dynamically in editaringrediente
+        // PHASE 3: Click Behavior - REMOVED from here, now bound dynamically in editarIngrediente
     }
     
     setupIngredienteModalEvents();
     
-    // configurar botones del footer del modal de ingrediente
+    // Configurar botones del footer del modal de ingrediente
     setTimeout(function() {
-        const savebtn = document.getElementById('saveIngredienteBtn');
-        const cancelbtn = document.getElementById('cancelIngredienteBtn');
-        const deletebtn = document.getElementById('deleteIngredienteBtn');
+        const saveBtn = document.getElementById('saveIngredienteBtn');
+        const cancelBtn = document.getElementById('cancelIngredienteBtn');
+        const deleteBtn = document.getElementById('deleteIngredienteBtn');
         
-        // botón guardar - usando .onclick directo para evitar duplicidad en brave
-        if (savebtn) {
-            savebtn.onclick = function(e) {
-                e.preventdefault();
-                e.stoppropagation();
-                if (e.stopimmediatepropagation) e.stopimmediatepropagation();
+        // Botón Guardar - usando .onclick directo para evitar duplicidad en Brave
+        if (saveBtn) {
+            saveBtn.onclick = function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                if (e.stopImmediatePropagation) e.stopImmediatePropagation();
                 console.log('Botón Guardar Ingrediente presionado');
-                if (typeof window.guardaringrediente === 'function') {
-                    window.guardaringrediente();
+                if (typeof window.guardarIngrediente === 'function') {
+                    window.guardarIngrediente();
                 }
             };
         }
         
-        // botón cancelar
-        if (cancelbtn) {
-            cancelbtn.onclick = function(e) {
-                e.preventdefault();
-                e.stoppropagation();
+        // Botón Cancelar
+        if (cancelBtn) {
+            cancelBtn.onclick = function(e) {
+                e.preventDefault();
+                e.stopPropagation();
                 console.log('Botón Cancelar Ingrediente presionado');
-                window.cerrarmodal('ingredienteModal');
-                window.ingredienteeditandoid = null;
-                removeingredienteimage();
+                window.cerrarModal('ingredienteModal');
+                window.ingredienteEditandoId = null;
+                removeIngredienteImage();
             };
         }
         
-        // botón eliminar
-        if (deletebtn) {
-            deletebtn.onclick = function(e) {
+        // Botón Eliminar
+        if (deleteBtn) {
+            deleteBtn.onclick = function(e) {
                 console.log('Botón Eliminar Ingrediente presionado');
-                e.preventdefault();
-                e.stoppropagation();
-                if (e.stopimmediatepropagation) e.stopimmediatepropagation();
-                if (typeof window._eliminaringredientedesdemodal === 'function') {
-                    window._eliminaringredientedesdemodal();
+                e.preventDefault();
+                e.stopPropagation();
+                if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+                if (typeof window._eliminarIngredienteDesdeModal === 'function') {
+                    window._eliminarIngredienteDesdeModal();
                 }
             };
         }
     }, 100);
     
-    // función auxiliar para eliminar ingrediente desde el modal
-    window._eliminaringredientedesdemodal = async function() {
-        const id = window.ingredienteeditandoid;
+    // Función auxiliar para eliminar ingrediente desde el modal
+    window._eliminarIngredienteDesdeModal = async function() {
+        const id = window.ingredienteEditandoId;
         if (!id) return;
-        const ingrediente = window.inventarioitems.find(i => i.id === id);
+        const ingrediente = window.inventarioItems.find(i => i.id === id);
         if (!ingrediente) return;
         
-        window.mostrarconfirmacionpremium( 'Eliminar Ingrediente',
+        window.mostrarConfirmacionPremium(
+            'Eliminar Ingrediente',
             `¿Estás seguro de eliminar "${ingrediente.nombre}"? Esta acción no se puede deshacer.`,
             async () => {
                 try {
-                    await window.supabaseclient.from('Inventario').delete().eq('Id', id);
+                    await window.supabaseClient.from('inventario').delete().eq('id', id);
                     await window.cargarInventario();
-                    window.cerrarModal('Ingredientemodal');
+                    window.cerrarModal('ingredienteModal');
                     window.ingredienteEditandoId = null;
                     removeIngredienteImage();
-                    window.mostrartoast('🗑️ ingrediente eliminado', 'Success');
+                    window.mostrarToast('🗑️ Ingrediente eliminado', 'success');
                 } catch (e) {
                     console.error('Error eliminando ingrediente:', e);
-                    window.mostrartoast('❌ error al eliminar ingrediente', 'Error');
+                    window.mostrarToast('❌ Error al eliminar ingrediente', 'error');
                 }
             }
         );
@@ -826,14 +831,14 @@ validarprecios();
     
     // Función principal para guardar ingrediente
     window.guardarIngrediente = async function() {
-        const nombre = document.getElementById('Ingredientenombre')?.value.trim();
-        const unidad = document.getElementById('Ingredienteunidad')?.value || 'Unidades';
-        const minimo = parseFloat(document.getElementById('Ingredienteminimo')?.value) || 0;
-        const costo = parseFloat(document.getElementById('Ingredientecosto')?.value) || 0;
-        const venta = parseFloat(document.getElementById('Ingredienteventa')?.value) || 0;
+        const nombre = document.getElementById('ingredienteNombre')?.value.trim();
+        const unidad = document.getElementById('ingredienteUnidad')?.value || 'unidades';
+        const minimo = parseFloat(document.getElementById('ingredienteMinimo')?.value) || 0;
+        const costo = parseFloat(document.getElementById('ingredienteCosto')?.value) || 0;
+        const venta = parseFloat(document.getElementById('ingredienteVenta')?.value) || 0;
         
         // PHASE 8: Save Logic - Get current stock value (may have been unlocked)
-        const stockInput = document.getElementById('Stock-actual-input');
+        const stockInput = document.getElementById('stock-actual-input');
         let newStockValue = stockOriginalValue; // Default to original
         if (stockInput && !stockInput.readOnly) {
             // Only use new value if input was unlocked and user changed it
@@ -845,7 +850,7 @@ validarprecios();
         
         // Validaciones
         if (!nombre) {
-            window.mostrartoast('El nombre es obligatorio', 'Error');
+            window.mostrarToast('El nombre es obligatorio', 'error');
             return;
         }
         
@@ -868,13 +873,13 @@ validarprecios();
             let error;
             if (window.ingredienteEditandoId) {
                 // Actualizar existente
-                const { error: updError } = await window.supabaseclient.from('Inventario')
+                const { error: updError } = await window.supabaseClient.from('inventario')
                     .update(ingredienteData)
-                    .eq('Id', window.ingredienteEditandoId);
+                    .eq('id', window.ingredienteEditandoId);
                 error = updError;
             } else {
                 // Crear nuevo
-                const { error: insError } = await window.supabaseclient.from('Inventario')
+                const { error: insError } = await window.supabaseClient.from('inventario')
                     .insert([ingredienteData]);
                 error = insError;
             }
@@ -883,21 +888,21 @@ validarprecios();
             
             // Éxito - mensaje específico según acción
             // PHASE 7: Reset State on save
-            const stockInput = document.getElementById('Stock-actual-input');
+            const stockInput = document.getElementById('stock-actual-input');
             if (stockInput) {
                 stockInput.readOnly = true;
             }
             
-            window.cerrarModal('Ingredientemodal');
+            window.cerrarModal('ingredienteModal');
             window.ingredienteEditandoId = null;
             removeIngredienteImage();
             await window.cargarInventario();
             const mensajeExito = window.ingredienteEditandoId ? 'Ingrediente editado con éxito' : 'Ingrediente creado con éxito';
-            window.mostrartoast('✅ ' + mensajeExito, 'Success');
+            window.mostrarToast('✅ ' + mensajeExito, 'success');
             
         } catch (e) {
             console.error('Error guardando ingrediente:', e);
-            window.mostrartoast('❌ error al guardar: ' + (e.message || e), 'Error');
+            window.mostrarToast('❌ Error al guardar: ' + (e.message || e), 'error');
         }
     };
     
@@ -910,12 +915,12 @@ validarprecios();
         
         if (stockPasswordModalOpen) return; // Prevent multiple openings
         
-        const modal = document.getElementById('Stockpasswordmodal');
-        const passwordInput = document.getElementById('Stock-password-input');
-        const errorDiv = document.getElementById('Stock-password-error');
+        const modal = document.getElementById('stockPasswordModal');
+        const passwordInput = document.getElementById('stock-password-input');
+        const errorDiv = document.getElementById('stock-password-error');
         
         if (!modal) {
-            console.error('Stockpasswordmodal not found in dom');
+            console.error('stockPasswordModal not found in DOM');
             return;
         }
         
@@ -925,68 +930,68 @@ validarprecios();
         // Reset state
         if (passwordInput) {
             passwordInput.value = '';
-            passwordinput.disabled = false;
+            passwordInput.disabled = false;
         }
-        if (errordiv) {
-            errordiv.style.display = 'none';
-            errordiv.textContent = '';
+        if (errorDiv) {
+            errorDiv.style.display = 'none';
+            errorDiv.textContent = '';
         }
         
-        // show modal with animation
+        // Show modal with animation
         modal.classList.add('active');
         
-        // focus trap - phase 9
+        // Focus trap - PHASE 9
         setTimeout(() => {
-            if (passwordinput) passwordinput.focus();
+            if (passwordInput) passwordInput.focus();
         }, 100);
     };
     
-    window.cerrarstockpasswordmodal = function() {
+    window.cerrarStockPasswordModal = function() {
         const modal = document.getElementById('stockPasswordModal');
-        const passwordinput = document.getElementById('stock-password-input');
+        const passwordInput = document.getElementById('stock-password-input');
         
         if (modal) {
             modal.classList.remove('active');
         }
         
-        // phase 7: reset state on close
-        stockpasswordmodalopen = false;
-        pendingingredientid = null;
+        // PHASE 7: Reset state on close
+        stockPasswordModalOpen = false;
+        pendingIngredientId = null;
         
-        if (passwordinput) {
-            passwordinput.value = '';
-            passwordinput.disabled = false;
+        if (passwordInput) {
+            passwordInput.value = '';
+            passwordInput.disabled = false;
         }
         
-        const errordiv = document.getElementById('stock-password-error');
-        if (errordiv) {
-            errordiv.style.display = 'none';
-            errordiv.textContent = '';
+        const errorDiv = document.getElementById('stock-password-error');
+        if (errorDiv) {
+            errorDiv.style.display = 'none';
+            errorDiv.textContent = '';
         }
     };
     
-    window.validarpasswordstock = async function() {
-        const passwordinput = document.getElementById('stock-password-input');
-        const errordiv = document.getElementById('stock-password-error');
-        const password = passwordinput?.value.trim();
+    window.validarPasswordStock = async function() {
+        const passwordInput = document.getElementById('stock-password-input');
+        const errorDiv = document.getElementById('stock-password-error');
+        const password = passwordInput?.value.trim();
         
         if (!password) {
-            if (errordiv) {
-                errordiv.textContent = 'La contraseña es requerida';
-                errordiv.style.display = 'block';
+            if (errorDiv) {
+                errorDiv.textContent = 'La contraseña es requerida';
+                errorDiv.style.display = 'block';
             }
             return;
         }
         
         try {
-            // obtener el usuario admin actual de la sesión
-            const adminuser = JSON.parse(sessionStorage.getItem('admin_user') || '{}');
+            // Obtener el usuario admin actual de la sesión
+            const adminUser = JSON.parse(sessionStorage.getItem('admin_user') || '{}');
             
-            if (!adminuser.username) {
-                throw new error('No se pudo identificar el usuario administrador');
+            if (!adminUser.username) {
+                throw new Error('No se pudo identificar el usuario administrador');
             }
             
-            // usar el mismo endpoint de login que ya funciona
+            // Usar el mismo endpoint de login que ya funciona
             const response = await fetch('https://iqwwoihiiyrtypyqzhgy.supabase.co/functions/v1/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -1000,80 +1005,80 @@ validarprecios();
             
             // Validar respuesta exactamente igual que en admin-auth.js
             if (data.success && data.user && data.user.rol === 'admin') {
-                // contraseña correcta → desbloquear stock
-                const stockinput = document.getElementById('stock-actual-input');
-                if (stockinput) {
-                    stockinput.readonly = false;
-                    stockinput.focus();
+                // Contraseña correcta → desbloquear stock
+                const stockInput = document.getElementById('stock-actual-input');
+                if (stockInput) {
+                    stockInput.readOnly = false;
+                    stockInput.focus();
                 }
-                window.cerrarstockpasswordmodal();
-                window.mostrartoast('🔓 Stock desbloqueado para edición', 'success');
+                window.cerrarStockPasswordModal();
+                window.mostrarToast('🔓 Stock desbloqueado para edición', 'success');
             } else {
-                throw new error(data.error || 'Contraseña incorrecta');
+                throw new Error(data.error || 'Contraseña incorrecta');
             }
             
         } catch (error) {
             console.error('Error validando contraseña:', error);
-            if (errordiv) {
-                errordiv.textContent = error.message || 'Contraseña incorrecta. Inténtalo de nuevo.';
-                errordiv.style.display = 'block';
+            if (errorDiv) {
+                errorDiv.textContent = error.message || 'Contraseña incorrecta. Inténtalo de nuevo.';
+                errorDiv.style.display = 'block';
             }
-            if (passwordinput) {
-                passwordinput.value = '';
-                passwordinput.focus();
+            if (passwordInput) {
+                passwordInput.value = '';
+                passwordInput.focus();
             }
         }
     };
     
-    // setup password modal event listeners
+    // Setup password modal event listeners
     setTimeout(function() {
-        const confirmbtn = document.getElementById('confirmStockPasswordBtn');
-        const cancelbtn = document.getElementById('cancelStockPasswordBtn');
-        const closebtn = document.getElementById('closeStockPasswordModal');
-        const passwordinput = document.getElementById('stock-password-input');
+        const confirmBtn = document.getElementById('confirmStockPasswordBtn');
+        const cancelBtn = document.getElementById('cancelStockPasswordBtn');
+        const closeBtn = document.getElementById('closeStockPasswordModal');
+        const passwordInput = document.getElementById('stock-password-input');
         
-        // confirm button
-        if (confirmbtn) {
-            confirmbtn.onclick = function(e) {
-                e.preventdefault();
-                e.stoppropagation();
-                window.validarpasswordstock();
+        // Confirm button
+        if (confirmBtn) {
+            confirmBtn.onclick = function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                window.validarPasswordStock();
             };
         }
         
-        // cancel button
-        if (cancelbtn) {
-            cancelbtn.onclick = function(e) {
-                e.preventdefault();
-                e.stoppropagation();
-                window.cerrarstockpasswordmodal();
+        // Cancel button
+        if (cancelBtn) {
+            cancelBtn.onclick = function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                window.cerrarStockPasswordModal();
             };
         }
         
-        // close button (x)
-        if (closebtn) {
-            closebtn.onclick = function(e) {
-                e.preventdefault();
-                e.stoppropagation();
-                window.cerrarstockpasswordmodal();
+        // Close button (X)
+        if (closeBtn) {
+            closeBtn.onclick = function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                window.cerrarStockPasswordModal();
             };
         }
         
-        // enter key support
-        if (passwordinput) {
-            passwordinput.addEventListener('keypress', function(e) {
+        // Enter key support
+        if (passwordInput) {
+            passwordInput.addEventListener('keypress', function(e) {
                 if (e.key === 'Enter') {
-                    e.preventdefault();
-                    window.validarpasswordstock();
+                    e.preventDefault();
+                    window.validarPasswordStock();
                 }
             });
         }
         
-        // phase 7: also reset on ingrediente modal close
-        const originalcerrarmodal = window.cerrarmodal;
-        window.cerrarmodal = function(modalid) {
-            if (modalid === 'ingredienteModal') {
-                const stockinput = document.getElementById('stock-actual-input');
+        // PHASE 7: Also reset on ingrediente modal close
+        const originalCerrarModal = window.cerrarModal;
+        window.cerrarModal = function(modalId) {
+            if (modalId === 'ingredienteModal') {
+                const stockInput = document.getElementById('stock-actual-input');
                 if (stockInput) {
                     stockInput.readOnly = true;
                 }
