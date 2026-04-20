@@ -57,7 +57,106 @@
 }
 .tasa-widget-input:focus ~ .tasa-widget-icon,
 .tasa-widget-icon:hover { color: var(--accent); }
+.header {
+    background: linear-gradient(135deg, var(--primary), #B71C1C);
+    color: #fff;
+    padding: 25px 30px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+.header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 20px;
+    width: 100%;
+}
+.header-row.right-align {
+    justify-content: flex-end;
+}
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+.header-left h1 {
+    font-size: 2.5em;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 800;
+    margin-bottom: 5px;
+}
+.header-left p {
+    opacity: .9;
+    font-size: 1.1em;
+}
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+.sucursal-selector {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.sucursal-selector label {
+    font-size: 0.9rem;
+    font-weight: 500;
+    white-space: nowrap;
+}
+.sucursal-selector select {
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: 2px solid rgba(255,255,255,.3);
+    background: rgba(255,255,255,.15);
+    color: #fff;
+    font-size: 0.9rem;
+    cursor: pointer;
+    min-width: 150px;
+}
+.sucursal-selector select:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+.sucursal-selector select option {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+}
+.desktop-tablet-only {
+    display: flex;
+}
+.mobile-only {
+    display: none;
+}
 @media (max-width: 768px) {
+    .header {
+        padding: 15px 20px;
+        gap: 12px;
+    }
+    .header-row {
+        gap: 10px;
+    }
+    .header-left h1 {
+        font-size: 1.5em;
+    }
+    .header-left p {
+        font-size: 0.85em;
+    }
+    .sucursal-selector label {
+        font-size: 0.8rem;
+    }
+    .sucursal-selector select {
+        min-width: 120px;
+        padding: 6px 10px;
+        font-size: 0.85rem;
+    }
+    .desktop-tablet-only {
+        display: none;
+    }
+    .mobile-only {
+        display: flex;
+    }
     .tasa-widget { min-width: 110px; padding: 6px 10px; }
     .tasa-widget-input { width: 72px; font-size: 1rem; }
     .header-right { gap: 8px; flex-wrap: nowrap; }
@@ -81,26 +180,44 @@
 <audio id="alarmaSonido" preload="auto"><source src="https://iqwwoihiiyrtypyqzhgy.supabase.co/storage/v1/object/public/alarma/Alarm%20Clock%20Effect%20Sound%20HD%20-%20Despertador%20Efecto%20D'%20Sonido.mp3"></audio>
 <div class="login-container" id="loginContainer"><div class="login-box"><h2><i class="fas fa-cash-register"></i> Cajero Saki Sushi</h2><form class="login-form" id="loginForm" onsubmit="event.preventDefault(); window.hacerLogin()"><input type="text" id="username" placeholder="Usuario" autocomplete="username"><input type="password" id="password" placeholder="Contraseña" autocomplete="current-password"><div id="loginError" style="display:none;background:rgba(211,47,47,.12);border:1px solid var(--danger);border-radius:8px;padding:.7rem 1rem;margin-bottom:1rem;color:#c62828;font-size:.92rem;display:none;align-items:center;gap:.5rem"><i class="fas fa-exclamation-circle" style="color:var(--danger);flex-shrink:0"></i><span id="loginErrorMsg"></span></div><button type="submit" id="loginBtn">Iniciar Sesión</button></form></div></div>
 <div class="container hidden" id="panelContainer"><div class="header">
-    <div class="header-left">
-        <h1><i class="fas fa-cash-register"></i> Panel del Cajero</h1>
-        <p>Saki Sushi - Gestión de pedidos y cobros</p>
-    </div>
-    <!-- Widget tasa de hoy editable -->
-    <div class="tasa-widget" id="tasaWidget">
-        <label class="tasa-widget-label">Tasa de Hoy (Bs/$)</label>
-        <div class="tasa-widget-input-wrap">
-            <input type="number" id="cajeroTasaInput" class="tasa-widget-input"
-                placeholder="—" step="0.01" min="1"
-                title="Tasa de cambio del día. Al modificarla se actualiza en todo el sistema."
-                onchange="window._aplicarTasaCajero(this.value)">
-            <span class="tasa-widget-icon" title="Editar tasa"><i class="fas fa-pen"></i></span>
+    <div class="header-row">
+        <div class="header-left">
+            <h1><i class="fas fa-cash-register"></i> Panel del Cajero</h1>
+            <p>Saki Sushi - Gestión de pedidos y cobros</p>
+        </div>
+        <!-- Widget tasa de hoy editable -->
+        <div class="tasa-widget" id="tasaWidget">
+            <label class="tasa-widget-label">Tasa de Hoy (Bs/$)</label>
+            <div class="tasa-widget-input-wrap">
+                <input type="number" id="cajeroTasaInput" class="tasa-widget-input"
+                    placeholder="—" step="0.01" min="1"
+                    title="Tasa de cambio del día. Al modificarla se actualiza en todo el sistema."
+                    onchange="window._aplicarTasaCajero(this.value)">
+                <span class="tasa-widget-icon" title="Editar tasa"><i class="fas fa-pen"></i></span>
+            </div>
         </div>
     </div>
-    <div class="header-right">
-        <span id="usernameDisplay" style="color:#fff;font-weight:600;font-size:0.9rem;display:flex;align-items:center;gap:8px;white-space:nowrap"><i class="fas fa-user-circle"></i> <span>Usuario</span></span>
-        <button class="theme-toggle" id="themeToggle" onclick="toggleTema()" data-tooltip="Cambiar tema"><i class="fas fa-moon"></i></button>
-        <button class="btn btn-primary" onclick="window.abrirSelectorMesa()" style="padding:10px 15px;font-size:0.85rem" data-tooltip="Ver menú del cliente"><i class="fas fa-utensils"></i> <span style="display:none;">Menú</span></button>
-        <button class="btn btn-secondary" onclick="window.cerrarSesion()" style="padding:10px 15px;font-size:0.85rem" data-tooltip="Cerrar sesión"><i class="fas fa-sign-out-alt"></i> <span style="display:none;">Salir</span></button>
+    <div class="header-row">
+        <div class="sucursal-selector desktop-tablet-only">
+            <label for="sucursalSelectDesktop">Seleccionar sucursal</label>
+            <select id="sucursalSelectDesktop">
+                <option value="">-- Sucursal --</option>
+            </select>
+        </div>
+        <div class="header-right">
+            <span id="usernameDisplay" style="color:#fff;font-weight:600;font-size:0.9rem;display:flex;align-items:center;gap:8px;white-space:nowrap"><i class="fas fa-user-circle"></i> <span>Usuario</span></span>
+            <button class="theme-toggle" id="themeToggle" onclick="toggleTema()" data-tooltip="Cambiar tema"><i class="fas fa-moon"></i></button>
+            <button class="btn btn-primary" onclick="window.abrirSelectorMesa()" style="padding:10px 15px;font-size:0.85rem" data-tooltip="Ver menú del cliente"><i class="fas fa-utensils"></i> <span style="display:none;">Menú</span></button>
+            <button class="btn btn-secondary" onclick="window.cerrarSesion()" style="padding:10px 15px;font-size:0.85rem" data-tooltip="Cerrar sesión"><i class="fas fa-sign-out-alt"></i> <span style="display:none;">Salir</span></button>
+        </div>
+    </div>
+    <div class="header-row mobile-only">
+        <div class="sucursal-selector">
+            <label for="sucursalSelectMobile">Seleccionar sucursal</label>
+            <select id="sucursalSelectMobile">
+                <option value="">-- Sucursal --</option>
+            </select>
+        </div>
     </div>
 </div>
 <div class="nav-tabs"><button class="nav-tab active" onclick="window.showSection('pedidos')" data-tooltip="Ver pedidos del día"><i class="fas fa-clipboard-list"></i> Pedidos</button><button class="nav-tab" onclick="window.showSection('menu')" data-tooltip="Ver menú actual"><i class="fas fa-utensils"></i> Ver Menú</button><button class="nav-tab" onclick="window.showSection('propinas')" data-tooltip="Gestionar propinas"><i class="fas fa-hand-holding-heart"></i> Propinas</button><button class="nav-tab" onclick="window.showSection('deliverys')" data-tooltip="Estadísticas de deliverys"><i class="fas fa-motorcycle"></i> Deliverys</button></div>
