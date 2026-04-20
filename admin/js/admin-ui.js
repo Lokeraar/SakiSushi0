@@ -151,11 +151,32 @@
             if (e.target === this) window.cerrarModal('qrAmpliadoModal');
         });
 
-        // Botón logout
-        const btn = document.getElementById('logoutButton');
-        if (btn) btn.addEventListener('click', () => {
+        // Botón logout (desktop y móvil) - con aviso de confirmación
+        const btnDesktop = document.getElementById('logoutButtonDesktop');
+        const btnMobile = document.getElementById('logoutButtonMobile');
+        const salidaAviso = document.getElementById('_salidaAviso');
+        const salidaNo = document.getElementById('_salidaNo');
+        const salidaSi = document.getElementById('_salidaSi');
+        
+        const mostrarAvisoSalida = () => {
+            if (salidaAviso) salidaAviso.style.display = 'flex';
+        };
+        
+        const ocultarAvisoSalida = () => {
+            if (salidaAviso) salidaAviso.style.display = 'none';
+        };
+        
+        const ejecutarCerrarSesion = () => {
             if (typeof window.cerrarSesion === 'function') window.cerrarSesion();
             else { sessionStorage.clear(); window.location.reload(); }
+        };
+        
+        if (btnDesktop) btnDesktop.addEventListener('click', mostrarAvisoSalida);
+        if (btnMobile) btnMobile.addEventListener('click', mostrarAvisoSalida);
+        if (salidaNo) salidaNo.addEventListener('click', ocultarAvisoSalida);
+        if (salidaSi) salidaSi.addEventListener('click', () => {
+            ocultarAvisoSalida();
+            ejecutarCerrarSesion();
         });
     };
 

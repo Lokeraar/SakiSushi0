@@ -240,11 +240,6 @@
         window.isAdminAuthenticated = false;
         window.jwtToken = null;
         selectedAdmin = null;
-        // Ocultar panel principal y mostrar login
-        const mainPanel = document.getElementById('mainPanel');
-        const loginPanel = document.getElementById('loginPanel');
-        if (mainPanel)  mainPanel.style.display  = 'none';
-        if (loginPanel) loginPanel.style.display  = '';
         // Limpiar campo contraseña
         const pwdInput = document.getElementById('adminPassword');
         if (pwdInput) pwdInput.value = '';
