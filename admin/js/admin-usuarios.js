@@ -316,7 +316,7 @@
         const removeBtn = document.getElementById('usuarioFotoRemoveBtn');
         if (fileInput) fileInput.addEventListener('change', handleusuariofotofile);
         if (urlInput) urlInput.addEventListener('input', handleusuariofotourl);
-        if (removeBtn) removeBtn.addEventListener('click', removeUsuarioFoto);
+        if (removeBtn) removeBtn.addEventListener('click', removeusuariofoto);
     }
     setupUsuarioFotoEvents();
 })();
