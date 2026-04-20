@@ -23,7 +23,7 @@
             const params = new urlsearchparams({ mesa: qr.nombre });
             if (_ssid) params.set('wifi_ssid', _ssid);
             if (_pwd)  params.set('wifi_pwd', _pwd);
-            const qrtext = window.location.origin + '/SakiSushi0/Cliente/index.html?' + params.tostring();
+            const qrtext = window.location.origin + '/SakiSushi0/Cliente/index.html?' + params.toString();
             const qrid   = 'qr-' + qr.id;
             const card = document.createelement('div');
             card.classname = 'qr-card-v2';
@@ -58,7 +58,7 @@
         window.guardarwifipersistente();
         if (!nombre) { window.mostrartoast('Ingresa el nombre de la mesa', 'error'); return; }
         if (ssid && !password) { window.mostrartoast('Ingresa la contraseña WiFi', 'error'); return; }
-        const qrdata = { id: window.generarid('QR_'), nombre: nombre, fecha: new date().toisostring() };
+        const qrdata = { id: window.generarid('QR_'), nombre: nombre, fecha: new Date().toISOString() };
         try {
             const { error } = await window.supabaseclient.from('codigos_qr').insert([qrdata]);
             if (error) throw error;

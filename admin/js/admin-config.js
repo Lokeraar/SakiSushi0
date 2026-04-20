@@ -80,9 +80,9 @@
         let periodos = 0;
 
         if (estaactivo && desdeval) {
-            const hoy        = new date(); hoy.sethours(0,0,0,0);
-            const desdedate  = new date(desdeval + 'T00:00:00');
-            const hastadate  = hastaval ? new date(hastaval + 'T00:00:00') : null;
+            const hoy        = new Date(); hoy.setHours(0,0,0,0);
+            const desdedate  = new Date(desdeval + 'T00:00:00');
+            const hastadate  = hastaval ? new Date(hastaval + 'T00:00:00') : null;
 
             if (desdedate <= hoy) {
                 const finefectivo = hastadate && hastadate < hoy ? hastadate : hoy;
@@ -101,8 +101,8 @@
         console.log('Fecha inicio (Desde):', desdeval || '—');
         console.log('Fecha fin   (Hasta): ', hastaval || (indefinido ? 'Indefinido' : '—'));
         if (estaactivo && desdeval) {
-            const _hoylog = new date(); _hoylog.sethours(0,0,0,0);
-            const _desdelog = new date(desdeval + 'T00:00:00');
+            const _hoylog = new Date(); _hoylog.setHours(0,0,0,0);
+            const _desdelog = new Date(desdeval + 'T00:00:00');
             const _msd = 24*60*60*1000;
             const _mplog = activosemanal ? 7*_msd : _msd;
             const _diffdias = math.floor((_hoylog - _desdelog) / _msd);
@@ -155,7 +155,7 @@
                 aumento_desde:     (document.getElementById('aumentoDesde') && document.getElementById('aumentoDesde').value) || null,
                 aumento_hasta:     (!document.getElementById('aumentoIndefinido')?.checked && document.getElementById('aumentoHasta')?.value) || null,
                 aumento_indefinido: document.getElementById('aumentoIndefinido')?.checked || false,
-                ultima_actualizacion: new date().toisostring()
+                ultima_actualizacion: new Date().toISOString()
             }).eq('id', 1);
             
             window.renderizarmenu(document.getElementById('menuBuscador')?.value || '');

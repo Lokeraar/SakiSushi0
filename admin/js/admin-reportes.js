@@ -36,7 +36,7 @@
         let platilloTop = '-', maxCount = 0;
         for (const [n, c] of Object.entries(platillosCount)) { if (c > maxCount) { maxCount = c; platilloTop = n; } }
         
-        const tasa = window.configGlobal?.tasa_efectiva || 400;
+        const tasa = window.configglobal?.tasa_efectiva || 400;
         const _s=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
         _s('Ventasdia',      `${window.formatUSD(ventasHoy)} / ${window.formatBs(ventasHoy * tasa)}`);
         _s('Ventassemana',   `${window.formatUSD(ventasSemana)} / ${window.formatBs(ventasSemana * tasa)}`);
@@ -71,7 +71,7 @@
         if (window.charts.pagos) window.charts.pagos.destroy();
         window.charts.pagos = new Chart(document.getElementById('Pagoschart'), {
             type: 'Bar',
-            data: { labels: Object.keys(metodos).map(m => { const n = { efectivo_bs: 'Efectivo bs', efectivo_usd: 'Efectivo usd', pago_movil: 'Pago móvil', punto_venta: 'Punto de venta', mixto: 'Mixto', invitacion: 'Invitación' }; return n[m] || m; }), datasets: [{ label: 'Monto (usd)', data: Object.values(metodos).map(v => v / (window.configGlobal?.tasa_efectiva || 400)), backgroundColor: 'Var(--info)' }] }
+            data: { labels: Object.keys(metodos).map(m => { const n = { efectivo_bs: 'Efectivo bs', efectivo_usd: 'Efectivo usd', pago_movil: 'Pago móvil', punto_venta: 'Punto de venta', mixto: 'Mixto', invitacion: 'Invitación' }; return n[m] || m; }), datasets: [{ label: 'Monto (usd)', data: Object.values(metodos).map(v => v / (window.configglobal?.tasa_efectiva || 400)), backgroundColor: 'Var(--info)' }] }
         });
         
         const horas = {}; for (let i = 0; i < 24; i++) horas[i] = 0;
@@ -85,7 +85,7 @@
 
     window.actualizarTablaVentas = function(pedidos) {
         const tbody = document.getElementById('Ventastablebody');
-        const tasa = (window.configGlobal && window.configGlobal.tasa_efectiva) || window.configGlobal?.tasa_cambio || 400;
+        const tasa = (window.configglobal && window.configglobal.tasa_efectiva) || window.configglobal?.tasa_cambio || 400;
         tbody.innerHTML = pedidos.slice(0, 50).map(p => {
             const items = p.items || [];
             const totalItems = items.reduce((s, i) => s + (i.cantidad || 0), 0);
@@ -93,7 +93,7 @@
             const totalusd = p.total || 0;
             const totalbs = window.formatbs(totalusd * tasa);
             return `<tr>
-                <td>${new date(p.fecha).tolocaledatestring('es-VE', { timezone: 'America/Caracas'})}</td>
+                <td>${new Date(p.fecha).toLocaleDateString('es-VE', { timezone: 'America/Caracas'})}</td>
                 <td style="Max-width:200px;font-size:.82rem">${resumen}</td>
                 <td>${window.formatUSD(totalUSD)}<br><span style="Font-size:.75rem;color:var(--text-muted)">${totalBs}</span></td>
                 <td>${totalItems}</td>
@@ -117,8 +117,8 @@
             const pedidoscount = document.getElementById('pedidosCountBadge');
             if (pedidoscount) pedidoscount.textContent = (data || []).length;
             document.getElementById('pedidosRecientes').innerHTML = (data || []).map(p => {
-                const hora = new date(p.fecha).tolocaletimestring('es-VE', {hour:'2-digit',minute:'2-digit'});
-                const fecha = new date(p.fecha).tolocaledatestring('es-VE', {day:'2-digit',month:'2-digit'});
+                const hora = new Date(p.fecha).toLocaleTimeString('es-VE', {hour:'2-digit',minute:'2-digit'});
+                const fecha = new Date(p.fecha).toLocaleDateString('es-VE', {day:'2-digit',month:'2-digit'});
                 const items = (p.items || []).slice(0,2).map(i => `${i.cantidad||1}x ${i.nombre}`).join(', ');
                 const masitems = (p.items||[]).length > 2 ? ` +${(p.items||[]).length-2} más` : '';
                 const tipoicon = p.tipo==='delivery' ? '🛵' : p.tipo==='reserva' ? '📅' : '🍽️';
@@ -172,7 +172,7 @@
         let metodo='N/A';
         if(pedido.pagos_mixtos?.length) metodo=pedido.pagos_mixtos.map(pg=>metlbl[pg.metodo]||pg.metodo).join(' + ');
         else if(pedido.metodo_pago) metodo=metlbl[pedido.metodo_pago]||pedido.metodo_pago;
-        const fechastr=new date(pedido.fecha).tolocalestring('es-VE',{timezone:'America/Caracas',day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+        const fechastr=new Date(pedido.fecha).toLocaleString('es-VE',{timezone:'America/Caracas',day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
         const ov=document.createelement('div');
         ov.style.csstext='position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:10001;display:flex;align-items:center;justify-content:center;padding:1rem;backdrop-filter:blur(3px)';
         ov.innerHTML=`<div style="Background:var(--card-bg);border-radius:16px;max-width:480px;width:100%;max-height:88vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 20px 40px rgba(0,0,0,.4)"><div style="Background:linear-gradient(135deg,#1a1a2e,#2d2d4e);padding:1rem 1.5rem;color:#fff;display:flex;justify-content:space-between;align-items:flex-start"><div><div style="Font-size:1rem;font-weight:700">${tipoIcon} ${tipoLabel}</div><div style="Font-size:.72rem;opacity:.75;margin-top:3px">${fechaStr}</div></div><div style="Display:flex;align-items:center;gap:.75rem"><span style="Font-size:.7rem;background:${sc}30;color:${sc};padding:.2rem .7rem;border-radius:20px;font-weight:600">${(pedido.estado||'').replace(/_/g,' ')}</span><button onclick="this.closest('[style*=position]').remove()" Style="background:rgba(255,255,255,.15);border:none;color:#fff;border-radius:50%;width:28px;height:28px;cursor:pointer;font-size:.9rem;font-weight:700;display:flex;align-items:center;justify-content:center">✕</button></div></div><div style="overflow-y:auto;flex:1;padding:1rem 1.5rem"><div style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-muted);margin-bottom:.6rem"><i class="fas fa-receipt" Style="margin-right:.3rem"></i>items</div>${ihtml}</div><div style="padding:.85rem 1.5rem;border-top:1px solid var(--border)"><div style="display:flex;justify-content:space-between;margin-bottom:.4rem;font-size:.82rem"><span style="color:var(--text-muted)">método de pago</span><span style="font-weight:600">${metodo}</span></div><div style="display:flex;justify-content:space-between;align-items:center"><span style="font-size:.82rem;color:var(--text-muted)">total</span><span style="font-size:1rem;font-weight:800;color:var(--accent)">${window.formatUSD(pedido.total||0)} / ${window.formatBs((pedido.total||0)*tasa)}</span></div></div></div>`;
@@ -191,7 +191,7 @@
             const _netoCobradoPedido = (pedido) => {
                 if (!pedido) return 0;
                 if (pedido.metodo_pago === 'Invitacion') return 0;
-                const tasa = window.configGlobal?.tasa_cambio || window.configGlobal?.tasa_efectiva || 400;
+                const tasa = window.configglobal?.tasa_cambio || window.configglobal?.tasa_efectiva || 400;
                 let recibido = 0;
                 if (pedido.pagos_mixtos && pedido.pagos_mixtos.length) {
                     pedido.pagos_mixtos.forEach(pg => {
@@ -203,7 +203,7 @@
             };
             let netoBs = 0;
             pedidosData.forEach(pedido => { netoBs += _netoCobradoPedido(pedido); });
-            const tasa = window.configGlobal?.tasa_efectiva || window.configGlobal?.tasa_cambio || 400;
+            const tasa = window.configglobal?.tasa_efectiva || window.configglobal?.tasa_cambio || 400;
             const netoUSD = netoBs / tasa;
             const el = document.getElementById('Ventashoy');
             if (el) el.textContent = `${window.formatUSD(netoUSD)} / Bs ${netoBs.toFixed(2)}`;
@@ -306,9 +306,9 @@
 
     window._abrirdetalleventasadmin = async function() {
         try {
-            const hoy = new date(); hoy.sethours(0, 0, 0, 0);
-            const manana = new date(hoy); manana.setdate(manana.getdate() + 1);
-            const { data: ventashoy } = await window.supabaseclient.from('ventas').select('*').gte('fecha', hoy.toisostring()).lt('fecha', manana.toisostring());
+            const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
+            const manana = new Date(hoy); manana.setDate(manana.getDate() + 1);
+            const { data: ventashoy } = await window.supabaseclient.from('ventas').select('*').gte('fecha', hoy.toISOString()).lt('fecha', manana.toISOString());
             if (!ventashoy || ventashoy.length === 0) { window.mostrartoast('No hay ventas registradas hoy', 'info'); return; }
             const pedidoids = ventashoy.map(v => v.pedido_id);
             const { data: pedidoshoy } = await window.supabaseclient.from('pedidos').select('*').in('id', pedidoids);
@@ -363,7 +363,7 @@
             const detallescobros = ventashoy.map(v => {
                 const p = pedidoshoy.find(pd => pd.id === v.pedido_id);
                 if (!p) return '';
-                const hora = new date(p.fecha).tolocaletimestring('es-VE', { hour: '2-digit', minute: '2-digit', timezone: 'America/Caracas' });
+                const hora = new Date(p.fecha).toLocaleTimeString('es-VE', { hour: '2-digit', minute: '2-digit', timezone: 'America/Caracas' });
                 const items = (p.items || []).slice(0, 2).map(i => `${i.cantidad || 1}× ${i.nombre}`).join(', ');
                 const masitems = (p.items || []).length > 2 ? ` +${(p.items || []).length - 2} más` : '';
                 const neto = _netocobradopedido(p);

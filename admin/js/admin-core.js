@@ -36,8 +36,8 @@
         if (m === undefined || m === null) m = 0;
         const valor = typeof m === 'number' ? m : parseFloat(m);
         if (isnan(valor)) return 'Bs 0,00';
-        const entero = math.floor(math.abs(valor)).tolocalestring('es-VE');
-        const decimal = math.round((math.abs(valor) % 1) * 100).tostring().padstart(2, '0');
+        const entero = math.floor(Math.abs(valor)).toLocaleString('es-VE');
+        const decimal = Math.round((Math.abs(valor) % 1) * 100).toString().padStart(2, '0');
         return (valor < 0 ? '-Bs ' : 'Bs ') + entero + ',' + decimal;
     };
     
@@ -54,7 +54,7 @@
     };
     
     window.generarid = function(prefix = '') {
-        return `${prefix}${date.now()}_${math.random().tostring(36).substring(2, 9)}`;
+        return `${prefix}${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
     };
     
     window.cerrarmodal = function(modalid) {
@@ -155,7 +155,7 @@
             nombre: adminuser.nombre,
             username: adminuser.username,
             foto: adminuser.foto || null,
-            lastlogin: new date().toisostring()
+            lastlogin: new Date().toISOString()
         });
         recent = recent.slice(0, 5);
         localStorage.setItem('saki_recent_admins', JSON.stringify(recent));

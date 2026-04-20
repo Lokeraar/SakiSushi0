@@ -143,7 +143,7 @@
                 var inp = document.getElementById('montoPagoParcial');
                 var monto = parseFloat(inp ? inp.value : 0);
                 if (!monto||monto<=0) { window.mostrartoast('Ingresa un monto válido','error'); return; }
-                var r1 = await window.supabaseclient.from('entregas_delivery').insert([{ delivery_id: window.deliveryparapago, monto_bs: -monto, pedido_id: null, fecha_entrega: new date().toisostring() }]);
+                var r1 = await window.supabaseclient.from('entregas_delivery').insert([{ delivery_id: window.deliveryparapago, monto_bs: -monto, pedido_id: null, fecha_entrega: new Date().toISOString() }]);
                 if (r1.error) throw r1.error;
                 window.mostrartoast('Pago parcial registrado','success');
             } else {
@@ -163,13 +163,13 @@
     window._actualizardeliveryshoystats = async function() {
         try {
             var tasa = window.configglobal?.tasa_efectiva || window.configglobal?.tasa_cambio || 400;
-            var hoy  = new date(); hoy.sethours(0,0,0,0);
-            var man  = new date(hoy); man.setdate(man.getdate()+1);
+            var hoy  = new Date(); hoy.setHours(0,0,0,0);
+            var man  = new Date(hoy); man.setDate(man.getDate()+1);
             var ra = await window.supabaseclient.from('entregas_delivery').select('monto_bs');
             var totall    = (ra.data||[]).reduce(function(s,e){ return s+(e.monto_bs||0); },0);
             var totallusd = tasa>0 ? totall/tasa : 0;
             var rh = await window.supabaseclient.from('entregas_delivery').select('monto_bs')
-                .gte('fecha_entrega', hoy.toisostring()).lt('fecha_entrega', man.toisostring());
+                .gte('fecha_entrega', hoy.toISOString()).lt('fecha_entrega', man.toISOString());
             var lista  = rh.data || [];
             var totbs  = lista.reduce(function(s,e){ return s+(e.monto_bs||0); },0);
             var totusd = tasa>0 ? totbs/tasa : 0;
@@ -209,7 +209,7 @@
                 } else if (e.pedido_id) { resumen=e.pedido_id.slice(0,8); }
                 var mbs  = e.monto_bs||0;
                 var musd = tasa>0 ? mbs/tasa : 0;
-                var hora = new date(e.fecha_entrega).tolocalestring('es-VE',{timezone:'America/Caracas',hour:'2-digit',minute:'2-digit'});
+                var hora = new Date(e.fecha_entrega).toLocaleString('es-VE',{timezone:'America/Caracas',hour:'2-digit',minute:'2-digit'});
                 return '<tr>'+ '<td style="Padding:.6rem 1rem;border-bottom:1px solid var(--border);font-size:.82rem;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+resumen+'</td>'+ '<td style="Padding:.6rem 1rem;border-bottom:1px solid var(--border);font-size:.82rem;font-weight:600">'+motor+'</td>'+ '<td style="Padding:.6rem 1rem;border-bottom:1px solid var(--border);font-size:.82rem;font-weight:700;color:var(--delivery)">'+window.formatusd(musd)+'<br><span style="Font-size:.72rem;color:var(--text-muted)">'+window.formatbs(mbs)+'</span></td>'+ '<td style="Padding:.6rem 1rem;border-bottom:1px solid var(--border);font-size:.78rem;color:var(--text-muted)">'+hora+'</td>'+ '</tr>';
             }).join('');
         } catch(err) {
@@ -224,11 +224,11 @@
     window.verhistorialenvioshoy = async function() {
         try {
             var tasa = window.configglobal?.tasa_efectiva || window.configglobal?.tasa_cambio || 400;
-            var hoy  = new date(); hoy.sethours(0,0,0,0);
-            var man  = new date(hoy); man.setdate(man.getdate()+1);
+            var hoy  = new Date(); hoy.setHours(0,0,0,0);
+            var man  = new Date(hoy); man.setDate(man.getDate()+1);
             var r = await window.supabaseclient.from('entregas_delivery')
                 .select('*, deliverys(nombre), pedidos(id, mesa, cliente_nombre, items)')
-                .gte('fecha_entrega', hoy.toisostring()).lt('fecha_entrega', man.toisostring())
+                .gte('fecha_entrega', hoy.toISOString()).lt('fecha_entrega', man.toISOString())
                 .order('fecha_entrega', { ascending: false });
             var lista  = r.data || [];
             var totbs  = lista.reduce(function(s,e){ return s+(e.monto_bs||0); },0);
@@ -242,7 +242,7 @@
                     resumen=e.pedidos.items.slice(0,2).map(function(i){return (i.cantidad||1)+'x '+i.nombre;}).join(', ');
                 }
                 var mbs=e.monto_bs||0; var musd=tasa>0?mbs/tasa:0;
-                var hora=new date(e.fecha_entrega).tolocalestring('es-VE',{timezone:'America/Caracas',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+                var hora=new Date(e.fecha_entrega).toLocaleString('es-VE',{timezone:'America/Caracas',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
                 return '<tr>'+'<td style="Padding:.55rem .85rem;border-bottom:1px solid var(--border);font-size:.8rem">'+resumen+'</td>'+'<td style="Padding:.55rem .85rem;border-bottom:1px solid var(--border);font-size:.82rem;font-weight:600">'+motor+'</td>'+'<td style="Padding:.55rem .85rem;border-bottom:1px solid var(--border);font-size:.82rem;font-weight:700;color:var(--delivery)">'+window.formatusd(musd)+' / '+window.formatbs(mbs)+'</td>'+'<td style="Padding:.55rem .85rem;border-bottom:1px solid var(--border);font-size:.78rem;color:var(--text-muted)">'+hora+'</td>'+'</tr>';
             }).join('');
             var pl=lista.length;
