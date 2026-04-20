@@ -112,7 +112,7 @@
 
     window.cargarpedidosrecientes = async function() {
         try {
-            const { data, error } = await window.supabaseclient.from('pedidos').select('*').order('fecha', { ascending: false }).limit(5);
+            const { data, error } = await window.supabaseClient.from('pedidos').select('*').order('fecha', { ascending: false }).limit(5);
             if (error) throw error;
             const pedidoscount = document.getElementById('pedidosCountBadge');
             if (pedidoscount) pedidoscount.textContent = (data || []).length;
@@ -151,7 +151,7 @@
         let pedido = (window.pedidos||[]).find(p=>p.id===pedidoid);
         if (!pedido) {
             try {
-                const {data,error}=await window.supabaseclient.from('pedidos').select('*').eq('id',pedidoid).maybesingle();
+                const {data,error}=await window.supabaseClient.from('pedidos').select('*').eq('id',pedidoid).maybesingle();
                 if(error) throw error; pedido=data;
             } catch(e){ window.mostrartoast('Error al cargar pedido','error'); return; }
         }
@@ -237,7 +237,7 @@
             if (!motorizados || motorizados.length === 0) motorizadoshtml = '<div class="Empty-state"><i class="Fas fa-motorcycle"></i><p>No hay motorizados registrados</p></div>';
             else {
                 motorizadoshtml = '<div class="Motorizados-list" style="Display:flex;flex-direction:column;gap:8px">';
-                motorizados.foreach(m => {
+                motorizados.forEach(m => {
                     const monto = acumulado[m.id] || 0;
                     const haye = monto > 0;
                     const detalleid = 'det_del_' + string(m.id).replace(/[^a-z0-9]/gi, '_');
@@ -308,10 +308,10 @@
         try {
             const hoy = new date(); hoy.sethours(0, 0, 0, 0);
             const manana = new date(hoy); manana.setdate(manana.getdate() + 1);
-            const { data: ventashoy } = await window.supabaseclient.from('ventas').select('*').gte('fecha', hoy.toisostring()).lt('fecha', manana.toisostring());
+            const { data: ventashoy } = await window.supabaseClient.from('ventas').select('*').gte('fecha', hoy.toisostring()).lt('fecha', manana.toisostring());
             if (!ventashoy || ventashoy.length === 0) { window.mostrartoast('No hay ventas registradas hoy', 'info'); return; }
             const pedidoids = ventashoy.map(v => v.pedido_id);
-            const { data: pedidoshoy } = await window.supabaseclient.from('pedidos').select('*').in('id', pedidoids);
+            const { data: pedidoshoy } = await window.supabaseClient.from('pedidos').select('*').in('id', pedidoids);
             const tasa = window.configglobal?.tasa_cambio || window.configglobal?.tasa_efectiva || 400;
             const fmtbs = window.formatbs;
             const _netocobradopedido = (pedido) => {
@@ -319,7 +319,7 @@
                 if (pedido.metodo_pago === 'invitacion') return 0;
                 let recibido = 0;
                 if (pedido.pagos_mixtos && pedido.pagos_mixtos.length) {
-                    pedido.pagos_mixtos.foreach(pg => {
+                    pedido.pagos_mixtos.forEach(pg => {
                         if (pg.metodo === 'invitacion') return;
                         recibido += pg.metodo === 'efectivo_usd' ? (pg.monto || 0) * tasa : (pg.montobs || pg.monto || 0);
                     });
@@ -327,7 +327,7 @@
                 return math.max(0, recibido - (pedido.vuelto_entregado || 0));
             };
             let totalneto = 0, vt_ebs = 0, vt_eusd = 0, vt_pm = 0, vt_pv = 0, vt_cond = 0, vt_favor = 0, vt_delivery = 0, vt_inv_count = 0, vt_inv_acum = 0;
-            ventashoy.foreach(v => {
+            ventashoy.forEach(v => {
                 const p = pedidoshoy.find(pd => pd.id === v.pedido_id);
                 if (!p) return;
                 const neto = _netocobradopedido(p);
@@ -338,7 +338,7 @@
                 const pagos = p.pagos_mixtos;
                 if (pagos && pagos.length) {
                     let vueltor = p.vuelto_entregado || 0;
-                    pagos.foreach(pg => {
+                    pagos.forEach(pg => {
                         const mbs = pg.metodo === 'efectivo_usd' ? (pg.monto || 0) * tasa : (pg.montobs || pg.monto || 0);
                         if (pg.metodo === 'efectivo_bs') { const n = math.max(0, mbs - vueltor); vueltor = math.max(0, vueltor - mbs); vt_ebs += n; }
                         else if (pg.metodo === 'efectivo_usd') { const n = math.max(0, mbs - vueltor); vueltor = math.max(0, vueltor - mbs); vt_eusd += n; }

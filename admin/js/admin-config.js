@@ -144,7 +144,7 @@
             
             window.recalculartasaefectiva();
             
-            await window.supabaseclient.from('config').update({
+            await window.supabaseClient.from('config').update({
                 tasa_cambio:       window.configglobal.tasa_cambio,
                 aumento_diario:    window.configglobal.aumento_diario,
                 aumento_activo:    window.configglobal.aumento_activo,

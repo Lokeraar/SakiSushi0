@@ -10,7 +10,7 @@
 
     window.cargarinventario = async function() {
         try {
-            const { data, error } = await window.supabaseclient.from('inventario').select('*');
+            const { data, error } = await window.supabaseClient.from('inventario').select('*');
             if (error) throw error;
             window.inventarioitems = data || [];
             const inventariogrid = document.getElementById('inventarioGrid');
@@ -29,8 +29,8 @@
         const grid = document.getElementById('inventarioGrid');
         if (!grid) return;
         grid.innerHTML = '';
-        const _normi = t => (t || '').normalize('NFD').replace(/[áéíóú]/g, '').tolowercase();
-        const _basei = [...window.inventarioitems].sort((a,b) => a.nombre.localecompare(b.nombre));
+        const _normi = t => (t || '').normalize('NFD').replace(/[áéíóú]/g, '').toLowerCase();
+        const _basei = [...window.inventarioitems].sort((a,b) => a.nombre.localeCompare(b.nombre));
         const items = filtro
             ? _basei.filter(i => _normi(i.nombre).includes(_normi(filtro)))
             : _basei;
@@ -40,7 +40,7 @@
             window.actualizarstockcriticoheader();
             return;
         }
-        items.foreach(item => {
+        items.forEach(item => {
             const disponible = (item.stock||0) - (item.reservado||0);
             const minimo = item.minimo || 0;
             let estado = 'ok';
@@ -618,11 +618,11 @@ validarprecios();
     };
 
     window._iraingrediente = function(ingredienteid) {
-        const tabs = document.queryselectorall('.tab');
-        const panes = document.queryselectorall('.tab-pane');
-        tabs.foreach(tab => tab.classList.remove('active'));
-        panes.foreach(pane => pane.classList.remove('active'));
-        const inventariotab = document.queryselector('.tab[data-tab="Inventario"]');
+        const tabs = document.querySelectorAll('.tab');
+        const panes = document.querySelectorAll('.tab-pane');
+        tabs.forEach(tab => tab.classList.remove('active'));
+        panes.forEach(pane => pane.classList.remove('active'));
+        const inventariotab = document.querySelector('.tab[data-tab="Inventario"]');
         const inventariopane = document.getElementById('inventarioPane');
         if (inventariotab) inventariotab.classList.add('active');
         if (inventariopane) inventariopane.classList.add('active');
@@ -647,8 +647,8 @@ validarprecios();
     };
 
     window.setupstockrealtime = function() {
-        if (window.stockupdatechannel) window.supabaseclient.removechannel(window.stockupdatechannel);
-        window.stockupdatechannel = window.supabaseclient
+        if (window.stockupdatechannel) window.supabaseClient.removeChannel(window.stockupdatechannel);
+        window.stockupdatechannel = window.supabaseClient
             .channel('stock-updates')
             .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'inventario' }, async (payload) => {
                 const index = window.inventarioitems.findindex(i => i.id === payload.new.id);
@@ -686,7 +686,7 @@ validarprecios();
                 const titulo = `🍣 ${platillo.nombre} disponible de nuevo!`;
                 const mensaje = `ya tenemos ${platillo.nombre} en stock. ¡pide ahora!`;
                 try {
-                    const { data: pedidosunicos } = await window.supabaseclient.from('pedidos').select('session_id').not('session_id', 'is', null).order('fecha', { ascending: false });
+                    const { data: pedidosunicos } = await window.supabaseClient.from('pedidos').select('session_id').not('session_id', 'is', null).order('fecha', { ascending: false });
                     const sessionids = [...new set(pedidosunicos?.map(p => p.session_id) || [])];
                     for (const sessionid of sessionids) await window.enviarnotificacionpush(titulo, mensaje, sessionid);
                     window.mostrartoast(`📢 notificación enviada: ${platillo.nombre} disponible`, 'success');
@@ -716,7 +716,7 @@ validarprecios();
             }
             const nuevostock = todosingredientes ? math.max(0, stockdisponible) : 0;
             if (platillo.stock !== nuevostock) {
-                await window.supabaseclient.from('menu').update({ stock: nuevostock }).eq('id', platillo.id);
+                await window.supabaseClient.from('menu').update({ stock: nuevostock }).eq('id', platillo.id);
                 platillo.stock = nuevostock;
             }
         }

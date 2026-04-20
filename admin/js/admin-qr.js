@@ -19,7 +19,7 @@
         grid.innerHTML = '';
         const _ssid = localStorage.getItem('saki_wifi_ssid') || '';
         const _pwd  = localStorage.getItem('saki_wifi_pwd') || '';
-        (window.qrcodes || []).foreach(qr => {
+        (window.qrcodes || []).forEach(qr => {
             const params = new urlsearchparams({ mesa: qr.nombre });
             if (_ssid) params.set('wifi_ssid', _ssid);
             if (_pwd)  params.set('wifi_pwd', _pwd);
@@ -60,7 +60,7 @@
         if (ssid && !password) { window.mostrartoast('Ingresa la contraseña WiFi', 'error'); return; }
         const qrdata = { id: window.generarid('QR_'), nombre: nombre, fecha: new date().toisostring() };
         try {
-            const { error } = await window.supabaseclient.from('codigos_qr').insert([qrdata]);
+            const { error } = await window.supabaseClient.from('codigos_qr').insert([qrdata]);
             if (error) throw error;
             document.getElementById('qrNombreMesa').value = '';
             await window.cargarqrs();
@@ -72,7 +72,7 @@
         window.mostrarconfirmacionpremium( 'Eliminar QR', '¿Estás seguro de eliminar este código QR?',
             async () => {
                 try {
-                    await window.supabaseclient.from('codigos_qr').delete().eq('id', id);
+                    await window.supabaseClient.from('codigos_qr').delete().eq('id', id);
                     await window.cargarqrs();
                     window.mostrartoast('🗑️ QR eliminado', 'success');
                 } catch (e) { console.error('Error eliminando QR:', e); window.mostrartoast('❌ Error al eliminar QR', 'error'); }

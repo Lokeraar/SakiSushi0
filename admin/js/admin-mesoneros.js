@@ -25,7 +25,7 @@
             const acumuladousdcrudo = {}; // monto original en usd
             const tasabase = number(window.configglobal?.tasa_cambio || 400);
             
-            (data || []).foreach(function(p) {
+            (data || []).forEach(function(p) {
                 const mid = p.mesonero_id;
                 if (p.moneda_original === 'USD' && p.monto_original) {
                     acumuladousdcrudo[mid] = (acumuladousdcrudo[mid] || 0) + p.monto_original;
@@ -35,10 +35,10 @@
             });
 
             // actualizar en dom: selector [data-mesonero-id] → elemento .mesonero-pendiente
-            const tarjetas = document.queryselectorall('[data-mesonero-id]');
-            tarjetas.foreach(function(card) {
+            const tarjetas = document.querySelectorAll('[data-mesonero-id]');
+            tarjetas.forEach(function(card) {
                 const mesoneroid = card.getattribute('data-mesonero-id');
-                const pendienteel = card.queryselector('.mesonero-pendiente');
+                const pendienteel = card.querySelector('.mesonero-pendiente');
                 
                 const tasaefectiva = number(window.configglobal?.tasa_efectiva || window.configglobal?.tasa_cambio || 400);
                 const tasabaseactual = number(window.configglobal?.tasa_cambio || 400);
@@ -69,7 +69,7 @@
                 }
 
                 // actualizar botón pagado
-                const btnpagado = card.queryselector('.btn-pagado-mesonero');
+                const btnpagado = card.querySelector('.btn-pagado-mesonero');
                 if (btnpagado) {
                     btnpagado.disabled = pendientetotal <= 0;
                     btnpagado.style.opacity = pendientetotal <= 0 ? '0.5' : '1';
@@ -90,7 +90,7 @@
     function iniciarrealtimepropinas() {
         // limpiar canal previo si existe
         if (window.propinaschannel) {
-            window.supabaseClient.removechannel(window.propinaschannel);
+            window.supabaseClient.removeChannel(window.propinaschannel);
         }
 
         // crear nuevo canal para cambios en propinas
@@ -134,11 +134,11 @@
             return;
         }
 
-        const sorted = [...mesoneros].sort((a, b) => a.nombre.localecompare(b.nombre));
+        const sorted = [...mesoneros].sort((a, b) => a.nombre.localeCompare(b.nombre));
         
         let html = '';
         for (const m of sorted) {
-            const inicial = m.nombre.charat(0).touppercase();
+            const inicial = m.nombre.charAt(0).toUpperCase();
             const avatar = m.foto
                 ? '<div class="Ucard-avatar"><img src="' + m.foto + '" Style="width:100%;height:100%;object-fit:cover;border-radius:8px;cursor:pointer" Onclick="window.expandirImagen(this.src)"></div>': '<div class="Ucard-avatar"><div style="Width:100%;height:100%;font-size:1.4rem;border-radius:8px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--propina),#7b1fa2);color:#fff">' + inicial + '</div></div>';
             
@@ -214,7 +214,7 @@
         const inp = document.getElementById('nuevoMesonero');
         const nombre = inp ? inp.value.trim() : '';
         if (!nombre) { window.mostrartoast('Ingresa un nombre', 'error'); return; }
-        const btn = document.queryselector('[onclick="Window.agregarmesonero()"]');
+        const btn = document.querySelector('[onclick="window.agregarmesonero()"]');
         if (btn) { btn.disabled = true; btn.innerHTML = '<i class="Fas fa-spinner fa-spin"></i>'; }
         try {
             const { error } = await window.supabaseClient.from('mesoneros')
@@ -249,7 +249,7 @@
         let totalusdcrudo = 0;
         const tasabase = number(window.configglobal?.tasa_cambio || 400);
         
-        (data || []).foreach(function(p) {
+        (data || []).forEach(function(p) {
             if (p.moneda_original === 'USD' && p.monto_original) {
                 totalusdcrudo += p.monto_original;
             } else {
@@ -277,7 +277,7 @@
         if (!modalcontent) return;
 
         modalcontent.innerHTML = ''+ '<div style="Padding:1.5rem">'+ '<div style="Text-align:center;margin-bottom:1.5rem">'+ '<div style="Width:70px;height:70px;border-radius:50%;background:linear-gradient(135deg,var(--propina),#7b1fa2);display:flex;align-items:center;justify-content:center;margin:0 auto 1rem">'+ '<i class="Fas fa-hand-holding-heart" style="Font-size:2rem;color:#fff"></i>'+ '</div>'+ '<h3 style="Font-size:1.1rem;font-weight:700;margin-bottom:.5rem">Registrar Pago a ' + m.nombre + '</h3>'+ '<p style="Color:var(--text-muted);font-size:.85rem">El monto acumulado actual equivale a:</p>'+ '<div id="Pagomontopendiente" style="Font-size:1.5rem;font-weight:700;color:var(--propina);margin-top:.5rem">'+       window.formatusd(usd) + ' / ' + window.formatbs(acumulado)
-            + '</div>'+ '</div>'+ '<div class="Form-group" style="Margin-bottom:1rem;text-align:left">'+ '<label style="Display:block;font-size:.85rem;font-weight:600;margin-bottom:.5rem">Método de pago al mesonero</label>'+ '<select id="Pagometodo" class="Tcb-input" style="Width:100%;padding:.6rem;border-radius:8px;border:1px solid var(--border);background:var(--card-bg);color:var(--text)" onchange="Window.actualizarlabelmontopago()">'+ '<option value="efectivo_bs">Efectivo Bs</option>'+ '<option value="efectivo_usd">Efectivo USD</option>'+ '<option value="pago_movil">Pago Móvil</option>'+ '<option value="punto_venta">Punto de Venta</option>'+ '</select>'+ '</div>'+ '<div style="Display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.5rem">'+ '<button id="Btnpagototal" class="Btn-primary" style="Width:100%;padding:.75rem 1rem;font-weight:600" onclick="Window.confirmarpagototal()">'+ '<i class="Fas fa-check-double"></i> Pago Total'+ '</button>'+ '<button id="Btnpagoparcialtoggle" class="Btn-secondary" style="Width:100%;padding:.75rem 1rem;font-weight:600" onclick="Window.togglepagoparcial()">'+ '<i class="Fas fa-coins"></i> Pago Parcial'+ '</button>'+ '</div>'+ '<div id="Pagoparcialsection" style="Display:none;background:var(--secondary);padding:1rem;border-radius:8px;border:1px solid var(--border);margin-bottom:1.5rem">'+ '<label id="Pagoparciallabel" style="Display:block;font-size:.85rem;font-weight:600;margin-bottom:.5rem;color:var(--text-muted)">Monto a pagar (BS)</label>'+ '<input type="Number" id="Pagoparcialmonto" step="0.01" min="0.01" max="' + acumulado + '" Style="width:100%;padding:.75rem;border:1px solid var(--border);border-radius:8px;font-size:1rem;font-family:Montserrat,sans-serif" Placeholder="Ej: 50.00" Oninput="window.actualizarVistaPreviaPago()">'+ '<p style="Font-size:.75rem;color:var(--text-muted);margin-top:.5rem"><i class="Fas fa-info-circle"></i> El monto restante permanecerá como pendiente</p>'+ '<div id="Pagopreviewsection" style="Display:none"></div>'+ '</div>'+ '<div style="Display:flex;gap:.75rem;justify-content:flex-end">'+ '<button class="Btn-secondary" style="Flex:1;padding:.75rem 1rem;font-weight:600" onclick="Window.cerrarmodalpago()">Cancelar</button>'+ '<button id="Btnconfirmarpagoparcial" class="Btn-success" style="Flex:1;padding:.75rem 1rem;font-weight:600;display:none" onclick="Window.confirmarpagoparcial()">'+ '<i class="Fas fa-check"></i> Confirmar'+ '</button>'+ '</div>'+ '</div>';
+            + '</div>'+ '</div>'+ '<div class="Form-group" style="Margin-bottom:1rem;text-align:left">'+ '<label style="Display:block;font-size:.85rem;font-weight:600;margin-bottom:.5rem">Método de pago al mesonero</label>'+ '<select id="Pagometodo" class="Tcb-input" style="Width:100%;padding:.6rem;border-radius:8px;border:1px solid var(--border);background:var(--card-bg);color:var(--text)" onchange="window.actualizarlabelmontopago()">'+ '<option value="efectivo_bs">Efectivo Bs</option>'+ '<option value="efectivo_usd">Efectivo USD</option>'+ '<option value="pago_movil">Pago Móvil</option>'+ '<option value="punto_venta">Punto de Venta</option>'+ '</select>'+ '</div>'+ '<div style="Display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.5rem">'+ '<button id="Btnpagototal" class="Btn-primary" style="Width:100%;padding:.75rem 1rem;font-weight:600" onclick="window.confirmarpagototal()">'+ '<i class="Fas fa-check-double"></i> Pago Total'+ '</button>'+ '<button id="Btnpagoparcialtoggle" class="Btn-secondary" style="Width:100%;padding:.75rem 1rem;font-weight:600" onclick="window.togglepagoparcial()">'+ '<i class="Fas fa-coins"></i> Pago Parcial'+ '</button>'+ '</div>'+ '<div id="Pagoparcialsection" style="Display:none;background:var(--secondary);padding:1rem;border-radius:8px;border:1px solid var(--border);margin-bottom:1.5rem">'+ '<label id="Pagoparciallabel" style="Display:block;font-size:.85rem;font-weight:600;margin-bottom:.5rem;color:var(--text-muted)">Monto a pagar (BS)</label>'+ '<input type="Number" id="Pagoparcialmonto" step="0.01" min="0.01" max="' + acumulado + '" Style="width:100%;padding:.75rem;border:1px solid var(--border);border-radius:8px;font-size:1rem;font-family:Montserrat,sans-serif" Placeholder="Ej: 50.00" Oninput="window.actualizarVistaPreviaPago()">'+ '<p style="Font-size:.75rem;color:var(--text-muted);margin-top:.5rem"><i class="Fas fa-info-circle"></i> El monto restante permanecerá como pendiente</p>'+ '<div id="Pagopreviewsection" style="Display:none"></div>'+ '</div>'+ '<div style="Display:flex;gap:.75rem;justify-content:flex-end">'+ '<button class="Btn-secondary" style="Flex:1;padding:.75rem 1rem;font-weight:600" onclick="window.cerrarmodalpago()">Cancelar</button>'+ '<button id="Btnconfirmarpagoparcial" class="Btn-success" style="Flex:1;padding:.75rem 1rem;font-weight:600;display:none" onclick="window.confirmarpagoparcial()">'+ '<i class="Fas fa-check"></i> Confirmar'+ '</button>'+ '</div>'+ '</div>';
 
         const modal = document.getElementById('pagoModal');
         if (modal) modal.classList.add('active');
@@ -366,7 +366,7 @@
             let acumuladousdcrudo = 0;
             let acumuladobscrudo = 0;
             
-            (pendientes || []).foreach(function(p) {
+            (pendientes || []).forEach(function(p) {
                 if (p.moneda_original === 'USD' && p.monto_original) {
                     acumuladousdcrudo += p.monto_original;
                 } else {
@@ -527,7 +527,7 @@
             let totalusdcrudo = 0;
             let totalbscrudo = 0;
             
-            (pendientes || []).foreach(function(p) {
+            (pendientes || []).forEach(function(p) {
                 if (p.moneda_original === 'USD' && p.monto_original) {
                     totalusdcrudo += p.monto_original;
                 } else {
