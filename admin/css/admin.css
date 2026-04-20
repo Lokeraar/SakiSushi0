@@ -291,7 +291,10 @@ html.dark-theme .logout-button:hover { background: rgba(255,255,255,.1); color: 
 }
 .htitle {
     padding: 0.5rem 0;
-    border-bottom: 1px solid rgba(255,255,255,0.1);
+    border-bottom: none !important;
+}
+.header-level + .header-level {
+    border-top: none;
 }
 .hrm {
     padding: 0.35rem 0;
@@ -3134,8 +3137,19 @@ html.dark-theme #platilloModal .ingrediente-row input:focus {
     }
 }
 /* ============================================
-   HEADER 3 NIVELES - ACTUALIZADO CON DOS CONFIGURACIONES
+   HEADER 3 NIVELES - DOS CONFIGURACIONES (MOBILE / DESKTOP)
    ============================================ */
+
+/* Desktop-only: visible only on screens > 768px */
+.desktop-only {
+    display: none !important;
+}
+
+/* Mobile-only: visible only on screens <= 768px */
+.mobile-only {
+    display: flex !important;
+}
+
 .header-level {
     display: flex;
     justify-content: space-between;
@@ -3371,64 +3385,6 @@ html.dark-theme #platilloModal .ingrediente-row input:focus {
         flex-shrink: 1;
         min-width: 0;
     }
-    
-    /* Ocultar slogan desktop por defecto (se muestra en desktop via media query) */
-    #headerSloganDesktop {
-        display: none;
-    }
-    
-    /* Mostrar nombre usuario móvil por defecto (se oculta en desktop via media query) */
-    #headerUsuarioNombreMobile {
-        display: inline;
-    }
-    
-    /* Mostrar controles móviles en nivel 2 */
-    .header-level.level-2 .controls-group-mobile {
-        display: flex !important;
-        justify-content: flex-end;
-        width: auto;
-        margin-top: 0;
-        flex-wrap: nowrap !important;
-        gap: 5px;
-        flex-shrink: 0;
-        min-width: fit-content;
-    }
-    
-    /* Ocultar grupo sucursal en nivel 2 para móvil */
-    .header-level.level-2 .sucursal-group {
-        display: none;
-    }
-    
-    /* Nivel 3 móvil: ocultar stock crítico */
-    .header-level.level-3 #stockCriticoHeader {
-        display: none;
-    }
-    
-    .header-logo-img {
-        height: 38px;
-    }
-    
-    .header-title-text {
-        font-size: 1.1rem;
-    }
-}
-
-/* Desktop: mostrar elementos correctos */
-@media (min-width: 769px) {
-    /* Mostrar slogan desktop en desktop */
-    #headerSloganDesktop {
-        display: inline !important;
-    }
-    
-    /* Ocultar nombre usuario móvil en desktop */
-    #headerUsuarioNombreMobile {
-        display: none !important;
-    }
-    
-    /* Ocultar controles móviles en desktop */
-    .controls-group-mobile {
-        display: none !important;
-    }
 }
 
 /* Ajustes para móviles estrechos (9:16 vertical) */
@@ -3446,72 +3402,17 @@ html.dark-theme #platilloModal .ingrediente-row input:focus {
         font-size: 0.95rem;
     }
     
-    .header-level.level-2 {
-        flex-wrap: nowrap !important;
-        padding: 0.2rem 0;
-    }
-    
-    /* Contenedor izquierdo shrinkable en móvil */
-    .header-level.level-2 .header-left-group {
-        flex-shrink: 1;
-        min-width: 0;
-        gap: 0.4rem;
-    }
-    
-    .header-level.level-2 .header-user-name {
-        font-size: 0.75rem;
-        line-height: 1.1;
-    }
-    
-    .header-level.level-2 .header-right-group {
-        display: flex;
-        flex-wrap: nowrap !important;
-        justify-content: flex-end;
-        gap: 8px;
-        min-width: fit-content;
-        flex-shrink: 0;
-    }
-    
-    .theme-switch-wrapper {
-        padding: 6px 8px;
-        height: auto;
-        gap: 0.4rem;
-    }
-    
-    .icon-sun, .icon-moon {
-        font-size: 0.9rem;
-    }
-    
-    .btn-header-control {
-        padding: 6px 10px;
-        font-size: 0.75rem;
-        height: auto;
-        width: auto;
-        min-width: max-content;
-        flex-shrink: 0;
-    }
-    
-    .btn-header-control i {
-        font-size: 0.9rem;
-    }
-    
-    .header-sucursal-label {
-        font-size: 0.65rem;
-    }
-    
-    .btn-header-sucursal {
-        padding: 0.2rem 0.5rem;
-        font-size: 0.65rem;
+    .header-logo-img {
+        height: 35px;
     }
 }
 
-/* Eliminar bordes entre niveles del header */
-.htitle {
-    border-bottom: none !important;
-}
-
-.header-level + .header-level {
-    border-top: none;
+/* Eliminar reglas legacy obsoletas */
+.controls-group-mobile,
+#headerSloganDesktop,
+#headerUsuarioNombreMobile,
+.sucursal-group {
+    /* Estas clases ya no se usan - el header usa desktop-only/mobile-only */
 }
 
 /* ============================================
