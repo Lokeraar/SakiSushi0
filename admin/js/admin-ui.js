@@ -3,264 +3,264 @@
     window.irADeliverys = function() {
         var tabs = document.querySelectorAll('.tab');
         var panes = document.querySelectorAll('.tab-pane');
-        tabs.forEach(function(t){ t.classList.remove('active'); });
-        panes.forEach(function(p){ p.classList.remove('active'); });
-        var t = document.querySelector('.tab[data-tab="deliverys"]');
-        var p = document.getElementById('deliverysPane');
-        if (t) t.classList.add('active');
-        if (p) { p.classList.add('active'); p.scrollIntoView({behavior:'smooth',block:'start'}); }
+        tabs.forEach(function(t){ t.classList.remove('Active'); });
+        panes.forEach(function(p){ p.classList.remove('Active'); });
+        var t = document.querySelector('.tab[data-tab="Deliverys"]');
+        var p = document.getelementbyid('deliverysPane');
+        if (t) t.classlist.add('active');
+        if (p) { p.classlist.add('active'); p.scrollintoview({behavior:'smooth',block:'start'}); }
     };
-    window.irAMenu = function() {
-        var tabs = document.querySelectorAll('.tab');
-        var panes = document.querySelectorAll('.tab-pane');
-        tabs.forEach(function(t){ t.classList.remove('active'); });
-        panes.forEach(function(p){ p.classList.remove('active'); });
-        var t = document.querySelector('.tab[data-tab="menu"]');
-        var p = document.getElementById('menuPane');
-        if (t) t.classList.add('active');
-        if (p) { p.classList.add('active'); p.scrollIntoView({behavior:'smooth',block:'start'}); }
+    window.iramenu = function() {
+        var tabs = document.queryselectorall('.tab');
+        var panes = document.queryselectorall('.tab-pane');
+        tabs.foreach(function(t){ t.classlist.remove('active'); });
+        panes.foreach(function(p){ p.classlist.remove('active'); });
+        var t = document.queryselector('.tab[data-tab="Menu"]');
+        var p = document.getelementbyid('menuPane');
+        if (t) t.classlist.add('active');
+        if (p) { p.classlist.add('active'); p.scrollintoview({behavior:'smooth',block:'start'}); }
     };
-    window.irAStockCritico = function() {
-        var tabs = document.querySelectorAll('.tab');
-        var panes = document.querySelectorAll('.tab-pane');
-        tabs.forEach(function(t){ t.classList.remove('active'); });
-        panes.forEach(function(p){ p.classList.remove('active'); });
-        var t = document.querySelector('.tab[data-tab="dashboard"]');
-        var p = document.getElementById('dashboardPane');
-        if (t) t.classList.add('active');
-        if (p) p.classList.add('active');
-        setTimeout(function(){
-            var el = document.getElementById('stockCritico'); if (!el) return;
-            el.scrollIntoView({behavior:'smooth',block:'center'});
-            var par = el.closest('.lower-stock') || el.parentElement;
+    window.irastockcritico = function() {
+        var tabs = document.queryselectorall('.tab');
+        var panes = document.queryselectorall('.tab-pane');
+        tabs.foreach(function(t){ t.classlist.remove('active'); });
+        panes.foreach(function(p){ p.classlist.remove('active'); });
+        var t = document.queryselector('.tab[data-tab="Dashboard"]');
+        var p = document.getelementbyid('dashboardPane');
+        if (t) t.classlist.add('active');
+        if (p) p.classlist.add('active');
+        settimeout(function(){
+            var el = document.getelementbyid('stockCritico'); if (!el) return;
+            el.scrollintoview({behavior:'smooth',block:'center'});
+            var par = el.closest('.lower-stock') || el.parentelement;
             if (par) {
                 var n = 0;
-                var iv = setInterval(function(){
+                var iv = setinterval(function(){
                     n++;
-                    par.style.boxShadow = n%2===0 ? '0 0 0 3px #FFC107,0 0 20px rgba(255,193,7,.4)' : 'none';
-                    par.style.borderColor = n%2===0 ? '#FFC107' : '';
-                    if (n >= 6) { clearInterval(iv); par.style.boxShadow=''; par.style.borderColor=''; }
+                    par.style.boxshadow = n%2===0 ? '0 0 0 3px #FFC107,0 0 20px rgba(255,193,7,.4)' : 'none';
+                    par.style.bordercolor = n%2===0 ? '#FFC107' : '';
+                    if (n >= 6) { clearinterval(iv); par.style.boxshadow=''; par.style.bordercolor=''; }
                 }, 300);
             }
         }, 150);
     };
-        window.setupEventListeners = function() {
-        // Funciones de scroll para tabs con doble chevron
-        window._scrollTabs = function(dir) {
-            const c = document.getElementById('tabsContainer');
+        window.setupeventlisteners = function() {
+        // funciones de scroll para tabs con doble chevron
+        window._scrolltabs = function(dir) {
+            const c = document.getelementbyid('tabsContainer');
             if (!c) return;
-            c.scrollBy({ left: dir * 180, behavior: 'smooth' });
-            setTimeout(window._updateTabChevrons, 200);
+            c.scrollby({ left: dir * 180, behavior: 'smooth' });
+            settimeout(window._updatetabchevrons, 200);
         };
-        window._updateTabChevrons = function() {
-            const c = document.getElementById('tabsContainer');
-            const lBtn = document.getElementById('tabsChevronLeft');
-            const rBtn = document.getElementById('tabsChevronRight');
-            if (!c || !lBtn || !rBtn) return;
-            lBtn.style.opacity = c.scrollLeft > 4 ? '1' : '0.3';
-            lBtn.style.pointerEvents = c.scrollLeft > 4 ? 'auto' : 'none';
-            const atEnd = c.scrollLeft + c.clientWidth >= c.scrollWidth - 4;
-            rBtn.style.opacity = atEnd ? '0.3' : '1';
-            rBtn.style.pointerEvents = atEnd ? 'none' : 'auto';
+        window._updatetabchevrons = function() {
+            const c = document.getelementbyid('tabsContainer');
+            const lbtn = document.getelementbyid('tabsChevronLeft');
+            const rbtn = document.getelementbyid('tabsChevronRight');
+            if (!c || !lbtn || !rbtn) return;
+            lbtn.style.opacity = c.scrollleft > 4 ? '1' : '0.3';
+            lbtn.style.pointerevents = c.scrollleft > 4 ? 'auto' : 'none';
+            const atend = c.scrollleft + c.clientwidth >= c.scrollwidth - 4;
+            rbtn.style.opacity = atend ? '0.3' : '1';
+            rbtn.style.pointerevents = atend ? 'none' : 'auto';
         };
-        document.getElementById('tabsContainer')?.addEventListener('scroll', window._updateTabChevrons);
-        window._updateTabChevrons();
+        document.getelementbyid('tabsContainer')?.addeventlistener('scroll', window._updatetabchevrons);
+        window._updatetabchevrons();
 
-        // Checkbox de disponible en modal platillo
-        document.getElementById('platilloDisponibleCheck')?.addEventListener('change', function() {
-            const lbl = document.getElementById('platilloDisponibleLabel');
-            const sel = document.getElementById('platilloDisponible');
-            if (lbl) { lbl.textContent = this.checked ? 'Sí' : 'No'; lbl.style.color = this.checked ? 'var(--success)' : 'var(--text-muted)'; }
+        // checkbox de disponible en modal platillo
+        document.getelementbyid('platilloDisponibleCheck')?.addeventlistener('change', function() {
+            const lbl = document.getelementbyid('platilloDisponibleLabel');
+            const sel = document.getelementbyid('platilloDisponible');
+            if (lbl) { lbl.textcontent = this.checked ? 'Sí' : 'No'; lbl.style.color = this.checked ? 'var(--success)' : 'var(--text-muted)'; }
             if (sel) sel.value = this.checked ? 'true' : 'false';
         });
 
-        // Navegación por tabs
-        document.querySelectorAll('.tab').forEach(tab => {
-            tab.addEventListener('click', () => {
+        // navegación por tabs
+        document.queryselectorall('.tab').foreach(tab => {
+            tab.addeventlistener('click', () => {
                 const target = tab.dataset.tab;
-                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-                tab.classList.add('active');
-                document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
-                const pane = document.getElementById(target + 'Pane');
-                if (pane) pane.classList.add('active');
+                document.queryselectorall('.tab').foreach(t => t.classlist.remove('active'));
+                tab.classlist.add('active');
+                document.queryselectorall('.tab-pane').foreach(pane => pane.classlist.remove('active'));
+                const pane = document.getelementbyid(target + 'Pane');
+                if (pane) pane.classlist.add('active');
                 if (target !== 'qr') {
-                    const el = document.getElementById('qrNombreMesa');
+                    const el = document.getelementbyid('qrNombreMesa');
                     if (el) el.value = '';
                 }
             });
         });
 
-        // Cerrar modales al hacer clic fuera
-        document.querySelectorAll('.modal').forEach(modal => {
-            modal.addEventListener('click', function(e) {
+        // cerrar modales al hacer clic fuera
+        document.queryselectorall('.modal').foreach(modal => {
+            modal.addeventlistener('click', function(e) {
                 if (e.target === this) {
-                    window.cerrarModal(this.id);
+                    window.cerrarmodal(this.id);
                 }
             });
         });
 
-        // Guardar configuración de tasa
-        document.getElementById('saveAllButton').addEventListener('click', async () => { await window.guardarConfiguracion(); });
-        document.getElementById('tasaBaseInput').addEventListener('change', window.recalcularTasaEfectiva);
-        document.getElementById('aumentoDiarioInput').addEventListener('change', window.recalcularTasaEfectiva);
+        // guardar configuración de tasa
+        document.getelementbyid('saveAllButton').addeventlistener('click', async () => { await window.guardarconfiguracion(); });
+        document.getelementbyid('tasaBaseInput').addeventlistener('change', window.recalculartasaefectiva);
+        document.getelementbyid('aumentoDiarioInput').addeventlistener('change', window.recalculartasaefectiva);
         
-        function _mostrarFechasAumento(visible) {
-            document.getElementById('tasaFechasDiv').style.display = visible ? 'flex' : 'none';
+        function _mostrarfechasaumento(visible) {
+            document.getelementbyid('tasaFechasDiv').style.display = visible ? 'flex' : 'none';
         }
-        function _actualizarLabelAumento() {
-            const diario   = document.getElementById('aumentoActivoToggle').checked;
-            const semanal  = document.getElementById('aumentoSemanalToggle').checked;
+        function _actualizarlabelaumento() {
+            const diario   = document.getelementbyid('aumentoActivoToggle').checked;
+            const semanal  = document.getelementbyid('aumentoSemanalToggle').checked;
             const alguno   = diario || semanal;
-            const label = document.getElementById('labelAumentoPct');
-            if (label) label.textContent = semanal ? 'Aumento Semanal %:' : 'Aumento Diario %:';
-            const inputPct = document.getElementById('aumentoDiarioInput');
-            if (inputPct) {
-                inputPct.disabled = !alguno;
-                inputPct.style.opacity = alguno ? '1' : '0.4';
-                inputPct.style.cursor  = alguno ? '' : 'not-allowed';
+            const label = document.getelementbyid('labelAumentoPct');
+            if (label) label.textcontent = semanal ? 'Aumento Semanal %:' : 'Aumento Diario %:';
+            const inputpct = document.getelementbyid('aumentoDiarioInput');
+            if (inputpct) {
+                inputpct.disabled = !alguno;
+                inputpct.style.opacity = alguno ? '1' : '0.4';
+                inputpct.style.cursor  = alguno ? '' : 'not-allowed';
             }
-            _mostrarFechasAumento(alguno);
-            if (alguno && !document.getElementById('aumentoDesde').value) {
-                document.getElementById('aumentoDesde').value = new Date().toISOString().split('T')[0];
+            _mostrarfechasaumento(alguno);
+            if (alguno && !document.getelementbyid('aumentoDesde').value) {
+                document.getelementbyid('aumentoDesde').value = new date().toisostring().split('T')[0];
             }
         }
-        document.getElementById('aumentoActivoToggle').addEventListener('change', function() {
-            if (this.checked) document.getElementById('aumentoSemanalToggle').checked = false;
-            window.configGlobal.aumento_detenido = !this.checked;
-            _actualizarLabelAumento();
-            window.recalcularTasaEfectiva();
+        document.getelementbyid('aumentoActivoToggle').addeventlistener('change', function() {
+            if (this.checked) document.getelementbyid('aumentoSemanalToggle').checked = false;
+            window.configglobal.aumento_detenido = !this.checked;
+            _actualizarlabelaumento();
+            window.recalculartasaefectiva();
         });
-        document.getElementById('aumentoSemanalToggle').addEventListener('change', function() {
-            if (this.checked) document.getElementById('aumentoActivoToggle').checked = false;
-            window.configGlobal.aumento_detenido = !this.checked;
-            _actualizarLabelAumento();
-            window.recalcularTasaEfectiva();
+        document.getelementbyid('aumentoSemanalToggle').addeventlistener('change', function() {
+            if (this.checked) document.getelementbyid('aumentoActivoToggle').checked = false;
+            window.configglobal.aumento_detenido = !this.checked;
+            _actualizarlabelaumento();
+            window.recalculartasaefectiva();
         });
-        document.getElementById('aumentoIndefinido').addEventListener('change', function() {
-            document.getElementById('aumentoHasta').disabled = this.checked;
-            if (this.checked) document.getElementById('aumentoHasta').value = '';
-        });
-
-        // Modales QR
-        const _closeQrBtn  = document.getElementById('closeQrAmpliado');
-        const _closeQrX    = document.getElementById('closeQrAmpliadoModal');
-        const _qrModal     = document.getElementById('qrAmpliadoModal');
-        if (_closeQrBtn) _closeQrBtn.addEventListener('click', () => window.cerrarModal('qrAmpliadoModal'));
-        if (_closeQrX)   _closeQrX.addEventListener('click',   () => window.cerrarModal('qrAmpliadoModal'));
-        if (_qrModal) _qrModal.addEventListener('click', function(e) {
-            if (e.target === this) window.cerrarModal('qrAmpliadoModal');
+        document.getelementbyid('aumentoIndefinido').addeventlistener('change', function() {
+            document.getelementbyid('aumentoHasta').disabled = this.checked;
+            if (this.checked) document.getelementbyid('aumentoHasta').value = '';
         });
 
-        // Botón logout (desktop y móvil) - con aviso de confirmación
-        const btnDesktop = document.getElementById('logoutButtonDesktop');
-        const btnMobile = document.getElementById('logoutButtonMobile');
-        const salidaAviso = document.getElementById('_salidaAviso');
-        const salidaNo = document.getElementById('_salidaNo');
-        const salidaSi = document.getElementById('_salidaSi');
+        // modales qr
+        const _closeqrbtn  = document.getelementbyid('closeQrAmpliado');
+        const _closeqrx    = document.getelementbyid('closeQrAmpliadoModal');
+        const _qrmodal     = document.getelementbyid('qrAmpliadoModal');
+        if (_closeqrbtn) _closeqrbtn.addeventlistener('click', () => window.cerrarmodal('qrAmpliadoModal'));
+        if (_closeqrx)   _closeqrx.addeventlistener('click',   () => window.cerrarmodal('qrAmpliadoModal'));
+        if (_qrmodal) _qrmodal.addeventlistener('click', function(e) {
+            if (e.target === this) window.cerrarmodal('qrAmpliadoModal');
+        });
+
+        // botón logout (desktop y móvil) - con aviso de confirmación
+        const btndesktop = document.getelementbyid('logoutButtonDesktop');
+        const btnmobile = document.getelementbyid('logoutButtonMobile');
+        const salidaaviso = document.getelementbyid('_salidaAviso');
+        const salidano = document.getelementbyid('_salidaNo');
+        const salidasi = document.getelementbyid('_salidaSi');
         
-        const mostrarAvisoSalida = () => {
-            if (salidaAviso) salidaAviso.style.display = 'flex';
+        const mostraravisosalida = () => {
+            if (salidaaviso) salidaaviso.style.display = 'flex';
         };
         
-        const ocultarAvisoSalida = () => {
-            if (salidaAviso) salidaAviso.style.display = 'none';
+        const ocultaravisosalida = () => {
+            if (salidaaviso) salidaaviso.style.display = 'none';
         };
         
-        const ejecutarCerrarSesion = () => {
-            if (typeof window.cerrarSesion === 'function') window.cerrarSesion();
-            else { sessionStorage.clear(); window.location.reload(); }
+        const ejecutarcerrarsesion = () => {
+            if (typeof window.cerrarsesion === 'function') window.cerrarsesion();
+            else { sessionstorage.clear(); window.location.reload(); }
         };
         
-        if (btnDesktop) btnDesktop.addEventListener('click', mostrarAvisoSalida);
-        if (btnMobile) btnMobile.addEventListener('click', mostrarAvisoSalida);
-        if (salidaNo) salidaNo.addEventListener('click', ocultarAvisoSalida);
-        if (salidaSi) salidaSi.addEventListener('click', () => {
-            ocultarAvisoSalida();
-            ejecutarCerrarSesion();
+        if (btndesktop) btndesktop.addeventlistener('click', mostraravisosalida);
+        if (btnmobile) btnmobile.addeventlistener('click', mostraravisosalida);
+        if (salidano) salidano.addeventlistener('click', ocultaravisosalida);
+        if (salidasi) salidasi.addeventlistener('click', () => {
+            ocultaravisosalida();
+            ejecutarcerrarsesion();
         });
     };
 
-    // ==================== INICIALIZACIÓN AL CARGAR LA PÁGINA ====================
-    document.addEventListener('DOMContentLoaded', async () => {
-        // Inicializar UI de login (cargar lista de administradores)
-		window.iniciarLoginUI();
+    // ==================== inicialización al cargar la página ====================
+    document.addeventlistener('DOMContentLoaded', async () => {
+        // inicializar ui de login (cargar lista de administradores)
+		window.iniciarloginui();
         
-        // Inicializar tema antes de mostrar cualquier cosa
-        window.initTheme();
+        // inicializar tema antes de mostrar cualquier cosa
+        window.inittheme();
         
-        if (await window.restaurarSesionAdmin()) {
-            window.mostrarPanel();
-            // Actualizar header con nombre de usuario (ya se hace en setupHeaderUsuario)
-            setTimeout(async () => {
+        if (await window.restaurarsesionadmin()) {
+            window.mostrarpanel();
+            // actualizar header con nombre de usuario (ya se hace en setupheaderusuario)
+            settimeout(async () => {
                 try {
-                    await window.cargarConfiguracionInicial();
-                    await window.cargarMenu();
-                    await window.cargarInventario();
-                    await window.cargarUsuarios();
-                    await window.cargarQRs();
-                    await window.cargarReportes();
-                    await window.cargarPedidosRecientes();
-                    await window.cargarMesoneros();
-                    await window.cargarDeliverys();
-                    await window.cargarPropinas();
-                    window.setupEventListeners();
-                    window.setupRealtimeSubscriptions();
-                    window.setupStockRealtime();
-                    window.restaurarWifiPersistente();
-                    window._registrarPushAdmin();
+                    await window.cargarconfiguracioninicial();
+                    await window.cargarmenu();
+                    await window.cargarinventario();
+                    await window.cargarusuarios();
+                    await window.cargarqrs();
+                    await window.cargarreportes();
+                    await window.cargarpedidosrecientes();
+                    await window.cargarmesoneros();
+                    await window.cargardeliverys();
+                    await window.cargarpropinas();
+                    window.setupeventlisteners();
+                    window.setuprealtimesubscriptions();
+                    window.setupstockrealtime();
+                    window.restaurarwifipersistente();
+                    window._registrarpushadmin();
                     
-                    // Agregar tarjeta de diferencia de tasa al dashboard
-                    window.agregarTarjetaDiferenciaTasa();
+                    // agregar tarjeta de diferencia de tasa al dashboard
+                    window.agregartarjetadiferenciatasa();
                     
-                    window._verificarTasaDeHoy((tasa) => {
-                        const tasaInput = document.getElementById('tasaBaseInput');
-                        if (tasaInput) tasaInput.value = tasa;
-                        window.configGlobal.tasa_cambio = tasa;
-                        window.recalcularTasaEfectiva();
-                        window._verificarAvisoLunes();
+                    window._verificartasadehoy((tasa) => {
+                        const tasainput = document.getelementbyid('tasaBaseInput');
+                        if (tasainput) tasainput.value = tasa;
+                        window.configglobal.tasa_cambio = tasa;
+                        window.recalculartasaefectiva();
+                        window._verificaravisolunes();
                     });
-                    await window._actualizarVentasHoyNeto();
-                    await window._actualizarDeliverysHoy();
-                    setInterval(async () => { 
-                        await window._actualizarVentasHoyNeto();
-                        await window._actualizarDeliverysHoy();
-                        window.actualizarTarjetaDiferenciaTasa();
+                    await window._actualizarventashoyneto();
+                    await window._actualizardeliveryshoy();
+                    setinterval(async () => { 
+                        await window._actualizarventashoyneto();
+                        await window._actualizardeliveryshoy();
+                        window.actualizartarjetadiferenciatasa();
                     }, 60000);
                 } catch (e) { 
                     console.error('Error cargando datos:', e); 
-                    window.mostrarToast('Error cargando datos: ' + e.message, 'error'); 
+                    window.mostrartoast('Error cargando datos: ' + e.message, 'error'); 
                 }
             }, 100);
         } else {
-            window.mostrarLogin();
+            window.mostrarlogin();
         }
     });
 
-    // Función para agregar tarjeta de diferencia de tasa al dashboard
-    window.agregarTarjetaDiferenciaTasa = function() {
-        const dashboardGrid = document.querySelector('.dashboard-grid');
-        if (!dashboardGrid) return;
-        // Verificar si ya existe
-        if (document.getElementById('diferenciaTasaCard')) return;
-        const card = document.createElement('div');
-        card.className = 'dashboard-card';
+    // función para agregar tarjeta de diferencia de tasa al dashboard
+    window.agregartarjetadiferenciatasa = function() {
+        const dashboardgrid = document.queryselector('.dashboard-grid');
+        if (!dashboardgrid) return;
+        // verificar si ya existe
+        if (document.getelementbyid('diferenciaTasaCard')) return;
+        const card = document.createelement('div');
+        card.classname = 'dashboard-card';
         card.id = 'diferenciaTasaCard';
         card.style.cursor = 'pointer';
-        card.onclick = () => window.mostrarToast('Diferencia acumulada a favor del restaurante por aumento de tasa', 'info');
+        card.onclick = () => window.mostrartoast('Diferencia acumulada a favor del restaurante por aumento de tasa', 'info');
         card.innerHTML = `
-            <div class="card-title">
+            <div class="Card-title">
                 Acumulado Dif. Tasa Base y Efectiva 
-                <span class="tooltip-wrap" style="position:relative; display:inline-flex; cursor:help; margin-left:.3rem">
-                    <span style="display:inline-flex; align-items:center; justify-content:center; width:16px; height:16px; background:#aaa; color:#fff; border-radius:50%; font-size:.65rem; font-weight:700">?</span>
-                    <span class="tooltip-text" style="display:none; position:absolute; bottom:calc(100% + 6px); left:50%; transform:translateX(-50%); background:var(--toast-bg); color:var(--toast-text); padding:.5rem .75rem; border-radius:8px; font-size:.75rem; white-space:normal; width:250px; text-align:center; box-shadow:0 4px 12px rgba(0,0,0,.3); z-index:100; line-height:1.4">
+                <span class="Tooltip-wrap" style="Position:relative; display:inline-flex; cursor:help; margin-left:.3rem">
+                    <span style="Display:inline-flex; align-items:center; justify-content:center; width:16px; height:16px; background:#aaa; color:#fff; border-radius:50%; font-size:.65rem; font-weight:700">?</span>
+                    <span class="Tooltip-text" style="Display:none; position:absolute; bottom:calc(100% + 6px); left:50%; transform:translatex(-50%); background:var(--toast-bg); color:var(--toast-text); padding:.5rem .75rem; border-radius:8px; font-size:.75rem; white-space:normal; width:250px; text-align:center; box-shadow:0 4px 12px rgba(0,0,0,.3); z-index:100; line-height:1.4">
                         Es la ganancia extra generada por la diferencia entre la tasa base y la tasa efectiva aplicada a los pedidos cobrados. Esta diferencia queda a favor del restaurante.
                     </span>
                 </span>
             </div>
-            <div class="card-value" id="diferenciaTasaValor">Bs 0,00</div>
+            <div class="Card-value" id="Diferenciatasavalor">Bs 0,00</div>
         `;
         // Insertar como cuarta tarjeta (después de Deliverys Hoy)
-        const deliverysCard = document.getElementById('deliverysHoyCard');
+        const deliverysCard = document.getElementById('Deliveryshoycard');
         if (deliverysCard && deliverysCard.parentNode) {
             deliverysCard.parentNode.insertBefore(card, deliverysCard.nextSibling);
         } else {
@@ -271,7 +271,7 @@
 
     window.actualizarTarjetaDiferenciaTasa = function() {
         const diff = window.calcularDiferenciaTasa();
-        const valorEl = document.getElementById('diferenciaTasaValor');
+        const valorEl = document.getElementById('Diferenciatasavalor');
         if (valorEl) valorEl.textContent = window.formatBs(diff);
     };
 
@@ -279,22 +279,22 @@
     
     // Inicializar tema al cargar
     window.initTheme = function() {
-        const savedTheme = localStorage.getItem('sakiSushiTheme');
+        const savedTheme = localStorage.getItem('Sakisushitheme');
         const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
         
-        if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
-            document.documentElement.classList.add('dark-theme');
+        if (savedTheme === 'Dark' || (!savedTheme && prefersDark)) {
+            document.documentElement.classList.add('Dark-theme');
         } else {
-            document.documentElement.classList.remove('dark-theme');
+            document.documentElement.classList.remove('Dark-theme');
         }
         
         // Configurar event listener del toggle (desktop y móvil)
-        const themeToggle = document.getElementById('themeToggle');
-        const themeToggleMobile = document.getElementById('themeToggleMobile');
+        const themeToggle = document.getElementById('Themetoggle');
+        const themeToggleMobile = document.getElementById('Themetogglemobile');
         [themeToggle, themeToggleMobile].forEach(toggle => {
             if (toggle) {
-                toggle.checked = document.documentElement.classList.contains('dark-theme');
-                toggle.addEventListener('change', window.toggleTheme);
+                toggle.checked = document.documentElement.classList.contains('Dark-theme');
+                toggle.addEventListener('Change', window.toggleTheme);
             }
         });
     };
@@ -305,8 +305,8 @@
         const html = document.documentElement;
         
         // Sincronizar ambos toggles (desktop y móvil)
-        const themeToggle = document.getElementById('themeToggle');
-        const themeToggleMobile = document.getElementById('themeToggleMobile');
+        const themeToggle = document.getElementById('Themetoggle');
+        const themeToggleMobile = document.getElementById('Themetogglemobile');
         if (themeToggle && themeToggle !== e.target) themeToggle.checked = isDark;
         if (themeToggleMobile && themeToggleMobile !== e.target) themeToggleMobile.checked = isDark;
         
@@ -315,13 +315,13 @@
         
         // Aplicar tema
         if (isDark) {
-            html.classList.add('dark-theme');
+            html.classList.add('Dark-theme');
         } else {
-            html.classList.remove('dark-theme');
+            html.classList.remove('Dark-theme');
         }
         
         // Guardar preferencia
-        localStorage.setItem('sakiSushiTheme', isDark ? 'dark' : 'light');
+        localStorage.setItem('Sakisushitheme', isDark ? 'Dark' : 'Light');
     };
 
     // Efecto de partículas al cambiar tema
@@ -331,10 +331,10 @@
         
         for (let i = 0; i < 12; i++) {
             setTimeout(() => {
-                const particle = document.createElement('div');
-                particle.className = 'theme-particle';
-                particle.style.left = (rect.left + rect.width / 2) + 'px';
-                particle.style.top = (rect.top + rect.height / 2) + 'px';
+                const particle = document.createElement('Div');
+                particle.className = 'Theme-particle';
+                particle.style.left = (rect.left + rect.width / 2) + 'Px';
+                particle.style.top = (rect.top + rect.height / 2) + 'Px';
                 particle.style.background = colors[Math.floor(Math.random() * colors.length)];
                 
                 // Dirección aleatoria
