@@ -566,16 +566,27 @@
         }
         try {
             // Obtener todas las propinas pendientes del mesonero con información completa
-            const { data: pendientes, error: errGet } = await window.supabaseClient
+            // Si paga en USD, solo marcar las propinas en USD; si paga en Bs, solo las propinas en Bs
+            let query = window.supabaseClient
                 .from('propinas')
                 .select('id, monto_bs, monto_original, moneda_original')
                 .eq('mesonero_id', mesoneroParaPagoId)
                 .eq('entregado', false);
+            
+            // Filtrar por moneda según el método de pago
+            if (metodoPago === 'efectivo_usd') {
+                query = query.eq('moneda_original', 'USD');
+            } else {
+                // Para pagos en Bs, filtrar solo las que NO son USD
+                query = query.neq('moneda_original', 'USD');
+            }
+            
+            const { data: pendientes, error: errGet } = await query;
             if (errGet) throw errGet;
             
             const totalPagar = (pendientes || []).reduce((sum, p) => sum + (p.monto_bs || 0), 0);
             if (totalPagar <= 0) {
-                window.mostrarToast('No hay propinas pendientes', 'error');
+                window.mostrarToast('No hay propinas pendientes en esta moneda', 'error');
                 return;
             }
             
@@ -624,7 +635,7 @@
                 moneda_original: nuevaMonedaOriginal,
                 tasa_aplicada: nuevaTasaAplicada,
                 monto_bs: totalPagar,
-                referencia: null,
+                referencia: 'EGRESO',
                 cajero: cajeroNombre,
                 fecha: ahora,
                 entregado: true
@@ -678,19 +689,50 @@
             return;
         }
 
-        // Si el método es efectivo_usd, convertir el monto ingresado (en USD) a Bs usando tasa base
         const tasaBase = Number(window.configGlobal?.tasa_cambio || 400);
-        let montoEnBs = monto;
+        let montoEnMonedaSeleccionada = monto; // Monto en la moneda seleccionada (USD o Bs)
         let montoEsUSD = false;
         
         if (metodoPago === 'efectivo_usd') {
             montoEsUSD = true;
-            montoEnBs = monto * tasaBase;
+            // El usuario ingresa USD, lo trabajamos directamente en USD
         }
 
-        const acumulado = await calcularAcumuladoPendiente(mesoneroParaPagoId);
-        if (montoEnBs > acumulado) {
-            window.mostrarToast('El monto no puede superar el pendiente (' + window.formatBs(acumulado) + ')', 'error');
+        // Determinar qué bucket de moneda estamos pagando
+        const pagarEnUSD = (metodoPago === 'efectivo_usd');
+        
+        // Calcular el acumulado pendiente solo del bucket correspondiente
+        let acumuladoDelBucket = 0;
+        try {
+            let queryAcumulado = window.supabaseClient
+                .from('propinas')
+                .select('monto_bs, monto_original, moneda_original')
+                .eq('mesonero_id', mesoneroParaPagoId)
+                .eq('entregado', false);
+            
+            if (pagarEnUSD) {
+                queryAcumulado = queryAcumulado.eq('moneda_original', 'USD');
+            } else {
+                queryAcumulado = queryAcumulado.neq('moneda_original', 'USD');
+            }
+            
+            const { data: datosAcumulado } = await queryAcumulado;
+            
+            if (pagarEnUSD) {
+                // Sumar monto_original de las propinas USD
+                acumuladoDelBucket = (datosAcumulado || []).reduce((sum, p) => sum + (p.monto_original || 0), 0);
+            } else {
+                // Sumar monto_bs de las propinas en Bs
+                acumuladoDelBucket = (datosAcumulado || []).reduce((sum, p) => sum + (p.monto_bs || 0), 0);
+            }
+        } catch(e) {
+            console.error('Error calculando acumulado del bucket:', e);
+        }
+        
+        // Validar que el monto no exceda el acumulado del bucket correspondiente
+        if (montoEnMonedaSeleccionada > acumuladoDelBucket + 0.01) {
+            const limiteMostrar = pagarEnUSD ? '$' + acumuladoDelBucket.toFixed(2) : window.formatBs(acumuladoDelBucket);
+            window.mostrarToast('El monto no puede superar el pendiente de este bucket (' + limiteMostrar + ')', 'error');
             return;
         }
 
@@ -701,52 +743,71 @@
         }
 
         try {
-            // 1. Obtener propinas pendientes en orden FIFO con información completa
-            const { data: pendientes, error: errConsulta } = await window.supabaseClient
+            // 1. Obtener propinas pendientes SOLO del bucket correspondiente, en orden FIFO
+            let queryPendientes = window.supabaseClient
                 .from('propinas')
                 .select('id, monto_bs, mesa, metodo, monto_original, moneda_original, tasa_aplicada, referencia, cajero, fecha')
                 .eq('mesonero_id', mesoneroParaPagoId)
                 .eq('entregado', false)
                 .order('fecha', { ascending: true });
-
+            
+            if (pagarEnUSD) {
+                queryPendientes = queryPendientes.eq('moneda_original', 'USD');
+            } else {
+                queryPendientes = queryPendientes.neq('moneda_original', 'USD');
+            }
+            
+            const { data: pendientes, error: errConsulta } = await queryPendientes;
             if (errConsulta) throw errConsulta;
 
-            let restoPorPagar = montoEnBs; // Trabajar siempre en Bs internamente
+            let restoPorPagar = montoEnMonedaSeleccionada; // Trabajar en la moneda seleccionada
             let pagoCompletado = false;
 
             for (const prop of pendientes || []) {
                 if (restoPorPagar <= 0.01) break;
                 
-                const montoPropina = prop.monto_bs || 0;
+                // Obtener el monto en la moneda correcta según el bucket
+                const montoPropinaEnMoneda = pagarEnUSD ? (prop.monto_original || 0) : (prop.monto_bs || 0);
+                
                 // Usar epsilon check para comparar montos
-                if (restoPorPagar >= montoPropina - 0.01) {
+                if (restoPorPagar >= montoPropinaEnMoneda - 0.01) {
                     // Caso 1: Pagar la propina completa
                     // Marcar la propina original como entregada (NO modificar montos para preservar historial)
                     let updateDataOriginal = { entregado: true };
                     await window.supabaseClient.from('propinas').update(updateDataOriginal).eq('id', prop.id);
                     
-                    // Crear nueva propina que representa el pago
+                    // Crear nueva propina que representa el pago (EGRESO)
                     const cajeroNombre = (window.usuarioActual && window.usuarioActual.nombre) || 'Administrador';
                     const ahora = new Date().toISOString();
                     
-                    // Calcular monto_original si el pago es en USD
-                    let nuevoMontoOriginal = montoPropina;
+                    // Calcular los valores para el registro de pago
+                    let nuevoMontoOriginal = 0;
                     let nuevaMonedaOriginal = 'Bs';
-                    if (metodoPago === 'efectivo_usd') {
-                        // Convertir el monto pagado de Bs a USD usando tasa base
-                        nuevoMontoOriginal = montoPropina / tasaBase;
+                    let nuevoMontoBs = 0;
+                    
+                    if (pagarEnUSD) {
+                        // Pagando en USD: el monto_original es el monto pagado en USD
+                        nuevoMontoOriginal = restoPorPagar >= montoPropinaEnMoneda ? montoPropinaEnMoneda : restoPorPagar;
                         nuevaMonedaOriginal = 'USD';
+                        nuevoMontoBs = nuevoMontoOriginal * tasaBase;
+                        restoPorPagar -= montoPropinaEnMoneda;
+                    } else {
+                        // Pagando en Bs
+                        nuevoMontoBs = restoPorPagar >= montoPropinaEnMoneda ? montoPropinaEnMoneda : restoPorPagar;
+                        nuevoMontoOriginal = nuevoMontoBs;
+                        nuevaMonedaOriginal = 'Bs';
+                        restoPorPagar -= montoPropinaEnMoneda;
                     }
                     
                     const nuevaPropinaCompleta = {
                         mesonero_id: mesoneroParaPagoId,
                         mesa: prop.mesa || 'General',
-                        metodo: metodoPago,  // Usar el método seleccionado
+                        metodo: metodoPago,
                         monto_original: parseFloat(nuevoMontoOriginal.toFixed(2)),
                         moneda_original: nuevaMonedaOriginal,
-                        tasa_aplicada: metodoPago === 'efectivo_usd' ? tasaBase : null,
-                        monto_bs: montoPropina,
-                        referencia: prop.referencia || null,
+                        tasa_aplicada: pagarEnUSD ? tasaBase : null,
+                        monto_bs: parseFloat(nuevoMontoBs.toFixed(2)),
+                        referencia: 'EGRESO',
                         cajero: cajeroNombre,
                         fecha: ahora,
                         entregado: true
@@ -757,19 +818,26 @@
                         .insert([nuevaPropinaCompleta]);
                     if (errInsert) throw errInsert;
                     
-                    restoPorPagar -= montoPropina;
                 } else {
                     // Caso 2: Pago parcial sobre esta propina
-                    const montoPagado = restoPorPagar;
-                    const montoRestante = montoPropina - montoPagado;
+                    const montoPagadoEnMoneda = restoPorPagar;
+                    const montoRestanteEnMoneda = montoPropinaEnMoneda - montoPagadoEnMoneda;
                     
                     // 2a. Reducir la propina original al monto restante (sigue pendiente)
-                    // También reducir monto_original proporcionalmente para que el saldo USD disminuya correctamente
-                    let updateDataParcial = { monto_bs: montoRestante };
-                    if (prop.monto_original && prop.monto_original > 0 && prop.moneda_original === 'USD') {
-                        // Calcular reducción proporcional de monto_original
-                        const montoOriginalRestante = prop.monto_original * (montoRestante / montoPropina);
-                        updateDataParcial.monto_original = parseFloat(montoOriginalRestante.toFixed(2));
+                    let updateDataParcial = {};
+                    
+                    if (pagarEnUSD) {
+                        // Propina en USD: reducir monto_original y recalcular monto_bs
+                        updateDataParcial.monto_original = parseFloat(montoRestanteEnMoneda.toFixed(2));
+                        updateDataParcial.monto_bs = parseFloat((montoRestanteEnMoneda * tasaBase).toFixed(2));
+                    } else {
+                        // Propina en Bs: reducir monto_bs
+                        updateDataParcial.monto_bs = parseFloat(montoRestanteEnMoneda.toFixed(2));
+                        // Si tiene monto_original (ej. fue convertida), reducirlo proporcionalmente
+                        if (prop.monto_original && prop.monto_original > 0 && prop.moneda_original === 'USD') {
+                            const montoOriginalRestante = prop.monto_original * (montoRestanteEnMoneda / montoPropinaEnMoneda);
+                            updateDataParcial.monto_original = parseFloat(montoOriginalRestante.toFixed(2));
+                        }
                     }
                     
                     const { error: errUpdate } = await window.supabaseClient
@@ -778,35 +846,36 @@
                         .eq('id', prop.id);
                     if (errUpdate) throw errUpdate;
                     
-                    // 2b. Crear un NUEVO REGISTRO en la tabla 'propinas' con el monto pagado y marcado como entregado
+                    // 2b. Crear un NUEVO REGISTRO en la tabla 'propinas' con el monto pagado y marcado como entregado (EGRESO)
                     const cajeroNombre = (window.usuarioActual && window.usuarioActual.nombre) || 'Administrador';
                     const ahora = new Date().toISOString();
                     
-                    // Calcular monto_original proporcional
                     let nuevoMontoOriginal = 0;
                     let nuevaMonedaOriginal = 'Bs';
+                    let nuevoMontoBs = 0;
                     
-                    if (metodoPago === 'efectivo_usd') {
-                        // El monto pagado está en Bs, convertir a USD con tasa base
-                        nuevoMontoOriginal = montoPagado / tasaBase;
+                    if (pagarEnUSD) {
+                        nuevoMontoOriginal = montoPagadoEnMoneda;
                         nuevaMonedaOriginal = 'USD';
-                    } else if (prop.monto_original && prop.monto_original > 0) {
-                        nuevoMontoOriginal = (prop.monto_original * montoPagado) / montoPropina;
-                        nuevaMonedaOriginal = prop.moneda_original || 'Bs';
+                        nuevoMontoBs = montoPagadoEnMoneda * tasaBase;
+                    } else {
+                        nuevoMontoBs = montoPagadoEnMoneda;
+                        nuevoMontoOriginal = montoPagadoEnMoneda;
+                        nuevaMonedaOriginal = 'Bs';
                     }
                     
                     const nuevaPropina = {
                         mesonero_id: mesoneroParaPagoId,
                         mesa: prop.mesa || 'General',
-                        metodo: metodoPago,  // Usar el método seleccionado
+                        metodo: metodoPago,
                         monto_original: parseFloat(nuevoMontoOriginal.toFixed(2)),
                         moneda_original: nuevaMonedaOriginal,
-                        tasa_aplicada: metodoPago === 'efectivo_usd' ? tasaBase : null,
-                        monto_bs: parseFloat(montoPagado.toFixed(2)),
-                        referencia: prop.referencia || null,
+                        tasa_aplicada: pagarEnUSD ? tasaBase : null,
+                        monto_bs: parseFloat(nuevoMontoBs.toFixed(2)),
+                        referencia: 'EGRESO',
                         cajero: cajeroNombre,
                         fecha: ahora,
-                        entregado: true   // Importante: esta porción ya está pagada
+                        entregado: true
                     };
                     
                     const { error: errInsert } = await window.supabaseClient
@@ -820,7 +889,7 @@
                 }
             }
 
-            // Si después del buque aún queda resto por pagar (por error lógico), abortar
+            // Si después del bucle aún queda resto por pagar (por error lógico), abortar
             // Usar epsilon check para evitar errores de punto flotante
             if (restoPorPagar > 0.01) {
                 throw new Error('No se pudo cubrir el monto total. Verifique los datos.');
@@ -838,7 +907,7 @@
             await window.cargarPropinas();
             window.renderizarPropinas();
             
-            const montoMostrar = montoEsUSD ? '$' + monto.toFixed(2) : window.formatBs(montoEnBs);
+            const montoMostrar = montoEsUSD ? '$' + monto.toFixed(2) : window.formatBs(montoEnMonedaSeleccionada);
             window.mostrarToast('Pago parcial registrado: ' + montoMostrar, 'success');
             
         } catch(e) {
@@ -893,11 +962,20 @@
             if (ultimas5.length) {
                 tbody.innerHTML = ultimas5.map(function(p) {
                     var hora = new Date(p.fecha).toLocaleString('es-VE',{timeZone:'America/Caracas',hour:'2-digit',minute:'2-digit'});
-                    // Determinar tipo de registro: entrada (entregado=false) o salida/pago (entregado=true)
-                    var esEntrada = !p.entregado;
-                    var signo = esEntrada ? '+' : '-';
-                    var colorMonto = esEntrada ? 'var(--success)' : 'var(--text-dark)';
-                    return '<tr><td>' + hora + '</td><td>' + (p.mesoneros ? p.mesoneros.nombre : 'N/A') + '</td><td>' + (p.mesa||'N/A') + '</td><td>' + (p.metodo||'N/A') + '</td><td style="color:' + colorMonto + '">' + signo + ' ' + window.formatBs(p.monto_bs) + '</td><td>' + (p.cajero||'N/A') + '</td></tr>';
+                    // Determinar si es pago usando referencia === 'EGRESO'
+                    var isPago = p.referencia === 'EGRESO';
+                    var signo = isPago ? '-' : '+';
+                    var colorMonto = isPago ? 'var(--text-dark)' : 'var(--success)';
+                    
+                    // Formato especial para ingresos en efectivo_usd: [$ {monto_original} (Bs. {monto_bs})]
+                    var displayMonto = '';
+                    if (!isPago && p.metodo === 'efectivo_usd' && p.monto_original) {
+                        displayMonto = '$' + p.monto_original.toFixed(2) + ' (Bs. ' + p.monto_bs.toFixed(2) + ')';
+                    } else {
+                        displayMonto = window.formatBs(p.monto_bs);
+                    }
+                    
+                    return '<tr><td>' + hora + '</td><td>' + (p.mesoneros ? p.mesoneros.nombre : 'N/A') + '</td><td>' + (p.mesa||'N/A') + '</td><td>' + (p.metodo||'N/A') + '</td><td style="color:' + colorMonto + '">' + signo + ' ' + displayMonto + '</td><td>' + (p.cajero||'N/A') + '</td></tr>';
                 }).join('');
             } else {
                 tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:1rem;color:var(--text-muted)">Sin propinas hoy</td></tr>';
@@ -922,19 +1000,28 @@
             const rows = lista.map(function(p) {
                 var mUsd = tasa > 0 ? (p.monto_bs||0)/tasa : 0;
                 var hora = new Date(p.fecha).toLocaleString('es-VE',{timeZone:'America/Caracas',hour:'2-digit',minute:'2-digit'});
-                // Determinar tipo de registro: entrada (entregado=false) o salida/pago (entregado=true)
-                var esEntrada = !p.entregado;
-                var signo = esEntrada ? '+' : '-';
-                var colorMonto = esEntrada ? 'var(--success)' : 'var(--text-dark)';
-                var badgeTipo = esEntrada 
-                    ? '<span style="display:inline-block;padding:2px 6px;border-radius:4px;font-size:.65rem;background:rgba(76,175,80,.15);color:var(--success);font-weight:700;margin-left:.35rem">INGRESO</span>'
-                    : '<span style="display:inline-block;padding:2px 6px;border-radius:4px;font-size:.65rem;background:rgba(244,67,54,.15);color:var(--text-dark);font-weight:700;margin-left:.35rem">PAGO</span>';
+                // Determinar si es pago usando referencia === 'EGRESO'
+                var isPago = p.referencia === 'EGRESO';
+                var signo = isPago ? '-' : '+';
+                var colorMonto = isPago ? 'var(--text-dark)' : 'var(--success)';
+                
+                // Formato especial para ingresos en efectivo_usd: [$ {monto_original} (Bs. {monto_bs})]
+                var displayMonto = '';
+                if (!isPago && p.metodo === 'efectivo_usd' && p.monto_original) {
+                    displayMonto = '$' + p.monto_original.toFixed(2) + ' (Bs. ' + p.monto_bs.toFixed(2) + ')';
+                } else {
+                    displayMonto = window.formatUSD(mUsd) + ' | ' + window.formatBs(p.monto_bs||0);
+                }
+                
+                var badgeTipo = isPago 
+                    ? '<span style="display:inline-block;padding:2px 6px;border-radius:4px;font-size:.65rem;background:rgba(244,67,54,.15);color:var(--text-dark);font-weight:700;margin-left:.35rem">PAGO</span>'
+                    : '<span style="display:inline-block;padding:2px 6px;border-radius:4px;font-size:.65rem;background:rgba(76,175,80,.15);color:var(--success);font-weight:700;margin-left:.35rem">INGRESO</span>';
                 return '<tr>'
                     + '<td style="padding:.55rem .85rem;border-bottom:1px solid var(--border);font-size:.78rem;color:var(--text-muted)">' + hora + '</td>'
                     + '<td style="padding:.55rem .85rem;border-bottom:1px solid var(--border);font-size:.82rem;font-weight:600">' + (p.mesoneros ? p.mesoneros.nombre : 'N/A') + '</td>'
                     + '<td style="padding:.55rem .85rem;border-bottom:1px solid var(--border);font-size:.78rem;color:var(--text-muted)">' + (p.mesa||'N/A') + '</td>'
                     + '<td style="padding:.55rem .85rem;border-bottom:1px solid var(--border);font-size:.78rem">' + (p.metodo||'N/A') + '</td>'
-                    + '<td style="padding:.55rem .85rem;border-bottom:1px solid var(--border);font-size:.82rem;font-weight:700;color:' + colorMonto + '">' + signo + ' ' + window.formatUSD(mUsd) + ' | ' + window.formatBs(p.monto_bs||0) + badgeTipo + '</td>'
+                    + '<td style="padding:.55rem .85rem;border-bottom:1px solid var(--border);font-size:.82rem;font-weight:700;color:' + colorMonto + '">' + signo + ' ' + displayMonto + badgeTipo + '</td>'
                     + '</tr>';
             }).join('');
             var pl = lista.length;
