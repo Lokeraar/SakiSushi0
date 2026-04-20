@@ -267,18 +267,27 @@
             document.documentElement.classList.remove('dark-theme');
         }
         
-        // Configurar event listener del toggle
+        // Configurar event listener del toggle (desktop y móvil)
         const themeToggle = document.getElementById('themeToggle');
-        if (themeToggle) {
-            themeToggle.checked = document.documentElement.classList.contains('dark-theme');
-            themeToggle.addEventListener('change', window.toggleTheme);
-        }
+        const themeToggleMobile = document.getElementById('themeToggleMobile');
+        [themeToggle, themeToggleMobile].forEach(toggle => {
+            if (toggle) {
+                toggle.checked = document.documentElement.classList.contains('dark-theme');
+                toggle.addEventListener('change', window.toggleTheme);
+            }
+        });
     };
 
-    // Cambiar tema con animación de partículas
+    // Cambiar tema con animación de partículas (sincronizar ambos toggles)
     window.toggleTheme = function(e) {
         const isDark = e.target.checked;
         const html = document.documentElement;
+        
+        // Sincronizar ambos toggles (desktop y móvil)
+        const themeToggle = document.getElementById('themeToggle');
+        const themeToggleMobile = document.getElementById('themeToggleMobile');
+        if (themeToggle && themeToggle !== e.target) themeToggle.checked = isDark;
+        if (themeToggleMobile && themeToggleMobile !== e.target) themeToggleMobile.checked = isDark;
         
         // Crear efecto de partículas
         window.createThemeParticles(e.target);
