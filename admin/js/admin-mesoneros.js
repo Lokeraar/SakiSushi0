@@ -1,136 +1,139 @@
 // admin-mesoneros.js — Gestión de Mesoneros y Propinas con Realtime
 (function() {
-    'Use strict';
+    'use strict';
 
     // Variables globales de estado
     let currentMesoneroFotoFile = null;
     let currentMesoneroFotoUrl  = '';
-    let mesoneroparapagoid      = null;
+    let mesoneroParaPagoId      = null;
 
     // ════════════════════════════════════════
-    // actualizar acumulados pendientes
+    // ACTUALIZAR ACUMULADOS PENDIENTES
     // ════════════════════════════════════════
-    window.actualizaracumuladospendientes = async function() {
+    window.actualizarAcumuladosPendientes = async function() {
         try {
-            // consulta todas las propinas pendientes (sin filtrar fecha)
-            const { data, error } = await window.supabaseclient
+            // Consulta todas las propinas pendientes (sin filtrar fecha)
+            const { data, error } = await window.supabaseClient
                 .from('propinas')
                 .select('mesonero_id, monto_bs, moneda_original, monto_original')
                 .eq('entregado', false);
 
             if (error) throw error;
 
-            // sumar monto_bs por mesonero_id, separando usd y bs
-            const acumuladobs = {};
-            const acumuladousdcrudo = {}; // monto original en usd
-            const tasabase = Number(window.configglobal?.tasa_cambio || 400);
+            // Sumar monto_bs por mesonero_id, separando USD y Bs
+            const acumuladoBs = {};
+            const acumuladoUSDCrudo = {}; // monto original en USD
+            const tasaBase = Number(window.configGlobal?.tasa_cambio || 400);
             
             (data || []).forEach(function(p) {
                 const mid = p.mesonero_id;
                 if (p.moneda_original === 'USD' && p.monto_original) {
-                    acumuladousdcrudo[mid] = (acumuladousdcrudo[mid] || 0) + p.monto_original;
+                    acumuladoUSDCrudo[mid] = (acumuladoUSDCrudo[mid] || 0) + p.monto_original;
                 } else {
-                    acumuladobs[mid] = (acumuladobs[mid] || 0) + (p.monto_bs || 0);
+                    acumuladoBs[mid] = (acumuladoBs[mid] || 0) + (p.monto_bs || 0);
                 }
             });
 
-            // actualizar en dom: selector [data-mesonero-id] → elemento .mesonero-pendiente
+            // Actualizar en DOM: selector [data-mesonero-id] → elemento .mesonero-pendiente
             const tarjetas = document.querySelectorAll('[data-mesonero-id]');
             tarjetas.forEach(function(card) {
-                const mesoneroid = card.getAttribute('data-mesonero-id');
-                const pendienteel = card.querySelector('.mesonero-pendiente');
+                const mesoneroId = card.getAttribute('data-mesonero-id');
+                const pendienteEl = card.querySelector('.mesonero-pendiente');
                 
-                const tasaefectiva = Number(window.configglobal?.tasa_efectiva || window.configglobal?.tasa_cambio || 400);
-                const tasabaseactual = Number(window.configglobal?.tasa_cambio || 400);
-                const usdcrudo = acumuladousdcrudo[mesoneroid] || 0;
-                const bstotal = acumuladobs[mesoneroid] || 0;
-                const usdenbs = usdcrudo * tasabaseactual;
-                const pendientetotal = bstotal + usdenbs;
-                const usdtotal = tasaefectiva > 0 ? pendientetotal / tasaefectiva : 0;
+                const tasaEfectiva = Number(window.configGlobal?.tasa_efectiva || window.configGlobal?.tasa_cambio || 400);
+                const tasaBaseActual = Number(window.configGlobal?.tasa_cambio || 400);
+                const usdCrudo = acumuladoUSDCrudo[mesoneroId] || 0;
+                const bsTotal = acumuladoBs[mesoneroId] || 0;
+                const usdEnBs = usdCrudo * tasaBaseActual;
+                const pendienteTotal = bsTotal + usdEnBs;
+                const usdTotal = tasaEfectiva > 0 ? pendienteTotal / tasaEfectiva : 0;
 
-                if (pendienteel) {
-                    let htmlpendiente = '<span style="Font-size:.75rem;color:var(--text-muted);margin-right:.35rem">Pendiente:</span>' + '<span style="Font-weight:700;color:var(--propina)">' + window.formatusd(usdtotal) + ' / ' + window.formatbs(pendientetotal) + '</span>';
+                if (pendienteEl) {
+                    let htmlPendiente = '<span style="font-size:.75rem;color:var(--text-muted);margin-right:.35rem">Pendiente:</span>' +
+                        '<span style="font-weight:700;color:var(--propina)">' + window.formatUSD(usdTotal) + ' / ' + window.formatBs(pendienteTotal) + '</span>';
                     
-                    if (usdcrudo > 0) {
-                        htmlpendiente += '<div style="Font-size:.7rem;color:var(--usd-color);margin-top:2px">' + '<i class="Fas fa-dollar-sign"></i> ' + usdcrudo.toFixed(2) + ' / ' + window.formatbs(usdenbs) + '</div>';
+                    if (usdCrudo > 0) {
+                        htmlPendiente += '<div style="font-size:.7rem;color:var(--usd-color);margin-top:2px">' +
+                            '<i class="fas fa-dollar-sign"></i> ' + usdCrudo.toFixed(2) + ' / ' + window.formatBs(usdEnBs) + '</div>';
                     }
-                    if (bstotal > 0) {
-                        htmlpendiente += '<div style="Font-size:.7rem;color:var(--bs-color);margin-top:2px">' + 'Bs: ' + window.formatbs(bstotal) + '</div>';
+                    if (bsTotal > 0) {
+                        htmlPendiente += '<div style="font-size:.7rem;color:var(--bs-color);margin-top:2px">' +
+                            'Bs: ' + window.formatBs(bsTotal) + '</div>';
                     }
-                    pendienteel.innerHTML = htmlpendiente;
+                    pendienteEl.innerHTML = htmlPendiente;
 
-                    if (pendientetotal > 0) {
-                        pendienteel.style.color = 'var(--propina)';
-                        pendienteel.style.fontweight = '700';
+                    if (pendienteTotal > 0) {
+                        pendienteEl.style.color = 'var(--propina)';
+                        pendienteEl.style.fontWeight = '700';
                     } else {
-                        pendienteel.style.color = 'var(--success)';
-                        pendienteel.style.fontweight = '600';
+                        pendienteEl.style.color = 'var(--success)';
+                        pendienteEl.style.fontWeight = '600';
                     }
                 }
 
-                // actualizar botón pagado
-                const btnpagado = card.querySelector('.btn-pagado-mesonero');
-                if (btnpagado) {
-                    btnpagado.disabled = pendientetotal <= 0;
-                    btnpagado.style.opacity = pendientetotal <= 0 ? '0.5' : '1';
-                    btnpagado.style.cursor = pendientetotal <= 0 ? 'not-allowed' : 'pointer';
+                // Actualizar botón Pagado
+                const btnPagado = card.querySelector('.btn-pagado-mesonero');
+                if (btnPagado) {
+                    btnPagado.disabled = pendienteTotal <= 0;
+                    btnPagado.style.opacity = pendienteTotal <= 0 ? '0.5' : '1';
+                    btnPagado.style.cursor = pendienteTotal <= 0 ? 'not-allowed' : 'pointer';
                 }
             });
 
-            // llamar a cargarpropinas para actualizar totales generales
-            await window.cargarpropinas();
+            // Llamar a cargarPropinas para actualizar totales generales
+            await window.cargarPropinas();
         } catch (e) {
             console.error('Error actualizando acumulados:', e);
         }
     };
 
     // ════════════════════════════════════════
-    // inicialización de realtime
+    // INICIALIZACIÓN DE REALTIME
     // ════════════════════════════════════════
-    function iniciarrealtimepropinas() {
-        // limpiar canal previo si existe
-        if (window.propinaschannel) {
-            window.supabaseclient.removeChannel(window.propinaschannel);
+    function iniciarRealtimePropinas() {
+        // Limpiar canal previo si existe
+        if (window.propinasChannel) {
+            window.supabaseClient.removeChannel(window.propinasChannel);
         }
 
-        // crear nuevo canal para cambios en propinas
-        window.propinaschannel = window.supabaseclient.channel('propinas-mesoneros-realtime')
+        // Crear nuevo canal para cambios en propinas
+        window.propinasChannel = window.supabaseClient.channel('propinas-mesoneros-realtime')
             .on('postgres_changes',
                 { event: '*', schema: 'public', table: 'propinas' },
                 async function(payload) {
                     console.log('Cambio en propinas:', payload);
-                    // actualizar acumulados inmediatamente sin delay
-                    window.actualizaracumuladospendientes();
+                    // Actualizar acumulados inmediatamente sin delay
+                    window.actualizarAcumuladosPendientes();
                 }
             )
             .subscribe();
     }
 
     // ════════════════════════════════════════
-    // cargar / renderizar mesoneros
+    // CARGAR / RENDERIZAR MESONEROS
     // ════════════════════════════════════════
-    window.cargarmesoneros = async function() {
+    window.cargarMesoneros = async function() {
         try {
-            const { data, error } = await window.supabaseclient
+            const { data, error } = await window.supabaseClient
                 .from('mesoneros').select('*').order('nombre');
             if (error) throw error;
             window.mesoneros = data || [];
-            await renderizarmesonerosconacumulados();
-            await cargarpropinas();
-            iniciarrealtimepropinas();
+            await renderizarMesonerosConAcumulados();
+            await cargarPropinas();
+            iniciarRealtimePropinas();
         } catch(e) { 
             console.error('Error cargando mesoneros:', e); 
-            window.mostrartoast('Error al cargar mesoneros', 'error');
+            window.mostrarToast('Error al cargar mesoneros', 'error');
         }
     };
 
-    async function renderizarmesonerosconacumulados() {
+    async function renderizarMesonerosConAcumulados() {
         const container = document.getElementById('mesonerosList');
         if (!container) return;
         
         const mesoneros = window.mesoneros || [];
         if (!mesoneros.length) {
-            container.innerHTML = '<p style="Color:var(--text-muted);font-size:.88rem;text-align:center;padding:2rem">No hay mesoneros registrados.</p>';
+            container.innerHTML = '<p style="color:var(--text-muted);font-size:.88rem;text-align:center;padding:2rem">No hay mesoneros registrados.</p>';
             return;
         }
 
@@ -140,31 +143,54 @@
         for (const m of sorted) {
             const inicial = m.nombre.charAt(0).toUpperCase();
             const avatar = m.foto
-                ? '<div class="Ucard-avatar"><img src="' + m.foto + '" Style="width:100%;height:100%;object-fit:cover;border-radius:8px;cursor:pointer" Onclick="window.expandirImagen(this.src)"></div>': '<div class="Ucard-avatar"><div style="Width:100%;height:100%;font-size:1.4rem;border-radius:8px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--propina),#7b1fa2);color:#fff">' + inicial + '</div></div>';
+                ? '<div class="ucard-avatar"><img src="' + m.foto + '" style="width:100%;height:100%;object-fit:cover;border-radius:8px;cursor:pointer" onclick="window.expandirImagen(this.src)"></div>'
+                : '<div class="ucard-avatar"><div style="width:100%;height:100%;font-size:1.4rem;border-radius:8px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--propina),#7B1FA2);color:#fff">' + inicial + '</div></div>';
             
             const badge = m.activo
-                ? '<span class="Ucard-status-inline" style="Color:var(--success);margin-left:auto"><i class="Fas fa-check-circle"></i> ACTIVO</span>': '<span class="Ucard-status-inline" style="Color:var(--text-muted);margin-left:auto"><i class="Fas fa-circle"></i> INACTIVO</span>';
+                ? '<span class="ucard-status-inline" style="color:var(--success);margin-left:auto"><i class="fas fa-check-circle"></i> ACTIVO</span>'
+                : '<span class="ucard-status-inline" style="color:var(--text-muted);margin-left:auto"><i class="fas fa-circle"></i> INACTIVO</span>';
             
-            const toggleclass = m.activo ? 'btn-toggle-on' : 'btn-toggle-off';
-            const toggletxt   = m.activo ? 'Inhabilitar' : 'Activar';
-            const toggleval   = String(!m.activo);
+            const toggleClass = m.activo ? 'btn-toggle-on' : 'btn-toggle-off';
+            const toggleTxt   = m.activo ? 'Inhabilitar' : 'Activar';
+            const toggleVal   = String(!m.activo);
 
-            html += '<div class="Card-standard mesonero-card" data-mesonero-id="' + m.id + '" Id="mesonero-card-' + m.id + '" Style="border-left-color:var(--propina)">'+ avatar
-                + '<div class="Ucard-body">'+ '<div class="Ucard-top">'+ '<div class="Ucard-names">'+ '<div class="Ucard-line1"><span class="Mesonero-nombre">' + m.nombre + '</span>' + badge + '</div>'+ '<div class="Ucard-line2" style="Margin-top:.35rem;display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">'+ '<span class="Mesonero-pendiente" style="Font-size:.9rem;font-weight:600">Calculando...</span>'+ '</div>'+ '<div class="Ucard-line3" style="Margin-top:.5rem;display:flex;align-items:center;gap:.4rem">'+ '<button class="Btn-primary btn-pagado-mesonero" style="Font-size:.7rem;padding:.3rem .5rem" onclick="window.abrirModalPago(\'' + m.id + '\')" Title="Registrar pago">'+ '<i class="Fas fa-hand-holding-usd"></i> Pagar'+ '</button>'+ '<button class="btn-toggle ' + toggleclass + '" Style="font-size:.7rem;padding:.3rem .5rem" Onclick="window.toggleMesoneroActivo(\'' + m.id + '\',' + toggleval + ')">' + toggletxt + '</button>'+ '<div class="Ucard-actions-right">'+ '<button class="Btn-icon edit" onclick="window.editarMesonero(\'' + m.id + '\')" Title="Editar"><i class="fas fa-edit"></i></button>'+ '<button class="Btn-icon delete" onclick="window.eliminarMesonero(\'' + m.id + '\')" Title="Eliminar"><i class="fas fa-trash"></i></button>'+ '</div>'+ '</div>'+ '</div>'+ '</div>'+ '</div>'+ '</div>';
+            html += '<div class="card-standard mesonero-card" data-mesonero-id="' + m.id + '" id="mesonero-card-' + m.id + '" style="border-left-color:var(--propina)">'
+                + avatar
+                + '<div class="ucard-body">'
+                +   '<div class="ucard-top">'
+                +     '<div class="ucard-names">'
+                +       '<div class="ucard-line1"><span class="mesonero-nombre">' + m.nombre + '</span>' + badge + '</div>'
+                +       '<div class="ucard-line2" style="margin-top:.35rem;display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">'
+                +         '<span class="mesonero-pendiente" style="font-size:.9rem;font-weight:600">Calculando...</span>'
+                +       '</div>'
+                +       '<div class="ucard-line3" style="margin-top:.5rem;display:flex;align-items:center;gap:.4rem">'
+                +         '<button class="btn-primary btn-pagado-mesonero" style="font-size:.7rem;padding:.3rem .5rem" onclick="window.abrirModalPago(\'' + m.id + '\')" title="Registrar pago">'
+                +           '<i class="fas fa-hand-holding-usd"></i> Pagar'
+                +         '</button>'
+                +         '<button class="btn-toggle ' + toggleClass + '" style="font-size:.7rem;padding:.3rem .5rem" onclick="window.toggleMesoneroActivo(\'' + m.id + '\',' + toggleVal + ')">' + toggleTxt + '</button>'
+                +         '<div class="ucard-actions-right">'
+                +           '<button class="btn-icon edit" onclick="window.editarMesonero(\'' + m.id + '\')" title="Editar"><i class="fas fa-edit"></i></button>'
+                +           '<button class="btn-icon delete" onclick="window.eliminarMesonero(\'' + m.id + '\')" title="Eliminar"><i class="fas fa-trash"></i></button>'
+                +         '</div>'
+                +       '</div>'
+                +     '</div>'
+                +   '</div>'
+                + '</div>'
+                + '</div>';
         }
         container.innerHTML = html;
 
-        // actualizar acumulados pendientes usando await para esperar la consulta
-        await window.actualizaracumuladospendientes();
+        // Actualizar acumulados pendientes usando await para esperar la consulta
+        await window.actualizarAcumuladosPendientes();
     }
 
     // ════════════════════════════════════════
-    // gestión de mesoneros (crud)
+    // GESTIÓN DE MESONEROS (CRUD)
     // ════════════════════════════════════════
-    window.editarmesonero = function(id) {
+    window.editarMesonero = function(id) {
         const m = (window.mesoneros || []).find(x => x.id === id);
         if (!m) return;
-        window.mesoneroeditandoid = id;
+        window.mesoneroEditandoId = id;
         const mt = document.getElementById('mesoneroModalTitle');
         if (mt) mt.textContent = 'Editar Mesonero';
         const ni = document.getElementById('mesoneroNombre'); if (ni) ni.value = m.nombre || '';
@@ -173,71 +199,73 @@
             const ui = document.getElementById('mesoneroFotoUrl'); if (ui) ui.value = m.foto;
             const pi = document.getElementById('mesoneroPreviewImg'); if (pi) pi.src = m.foto;
             const pd = document.getElementById('mesoneroFotoPreview'); if (pd) pd.style.display = 'flex';
-            currentmesonerofotourl = m.foto;
+            currentMesoneroFotoUrl = m.foto;
         } else {
             const ui = document.getElementById('mesoneroFotoUrl'); if (ui) ui.value = '';
             const pd = document.getElementById('mesoneroFotoPreview'); if (pd) pd.style.display = 'none';
-            currentmesonerofotourl = '';
+            currentMesoneroFotoUrl = '';
         }
         const modal = document.getElementById('mesoneroModal');
         if (modal) modal.classList.add('active');
     };
 
-    window.togglemesoneroactivo = async function(id, activo) {
+    window.toggleMesoneroActivo = async function(id, activo) {
         try {
-            await window.supabaseclient.from('mesoneros').update({ activo }).eq('id', id);
-            await window.cargarmesoneros();
-            window.mostrartoast('Estado actualizado', 'success');
+            await window.supabaseClient.from('mesoneros').update({ activo }).eq('id', id);
+            await window.cargarMesoneros();
+            window.mostrarToast('Estado actualizado', 'success');
         } catch(e) { 
             console.error('Error toggle mesonero:', e); 
-            window.mostrartoast('Error al actualizar estado', 'error');
+            window.mostrarToast('Error al actualizar estado', 'error');
         }
     };
 
-    window.eliminarmesonero = async function(id) {
+    window.eliminarMesonero = async function(id) {
         const m = (window.mesoneros || []).find(x => x.id === id);
         if (!m) return;
-        window.mostrarconfirmacionpremium( 'Eliminar Mesonero', 'Eliminar al mesonero "' + m.nombre + '"? Esta acción no se puede deshacer.',
+        window.mostrarConfirmacionPremium(
+            'Eliminar Mesonero',
+            'Eliminar al mesonero "' + m.nombre + '"? Esta acción no se puede deshacer.',
             async function() {
                 try {
-                    await window.supabaseclient.from('mesoneros').delete().eq('id', id);
-                    await window.cargarmesoneros();
-                    window.mostrartoast('Mesonero eliminado', 'success');
+                    await window.supabaseClient.from('mesoneros').delete().eq('id', id);
+                    await window.cargarMesoneros();
+                    window.mostrarToast('Mesonero eliminado', 'success');
                 } catch(e) { 
-                    window.mostrartoast('Error: ' + (e.message || e), 'error'); 
+                    window.mostrarToast('Error: ' + (e.message || e), 'error'); 
                 }
             }
         );
     };
 
-    window.agregarmesonero = async function() {
+    window.agregarMesonero = async function() {
         const inp = document.getElementById('nuevoMesonero');
         const nombre = inp ? inp.value.trim() : '';
-        if (!nombre) { window.mostrartoast('Ingresa un nombre', 'error'); return; }
-        const btn = document.querySelector('[onclick="window.agregarmesonero()"]');
-        if (btn) { btn.disabled = true; btn.innerHTML = '<i class="Fas fa-spinner fa-spin"></i>'; }
+        if (!nombre) { window.mostrarToast('Ingresa un nombre', 'error'); return; }
+        const btn = document.querySelector('[onclick="window.agregarMesonero()"]');
+        if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>'; }
         try {
-            const { error } = await window.supabaseclient.from('mesoneros')
-                .insert([{ id: window.generarid('mes_'), nombre, activo: true }]);
+            const { error } = await window.supabaseClient.from('mesoneros')
+                .insert([{ id: window.generarId('mes_'), nombre, activo: true }]);
             if (error) throw error;
             if (inp) inp.value = '';
-            await window.cargarmesoneros();
-            window.mostrartoast('Mesonero agregado', 'success');
+            await window.cargarMesoneros();
+            window.mostrarToast('Mesonero agregado', 'success');
         } catch(e) {
-            window.mostrartoast('Error: ' + (e.message || e), 'error');
+            window.mostrarToast('Error: ' + (e.message || e), 'error');
         } finally {
-            if (btn) { btn.disabled = false; btn.innerHTML = '<i class="Fas fa-plus"></i> Agregar'; }
+            if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-plus"></i> Agregar'; }
         }
     };
 
     // ════════════════════════════════════════
-    // calcular acumulado pendiente por mesonero
+    // CALCULAR ACUMULADO PENDIENTE POR MESONERO
     // ════════════════════════════════════════
-    async function calcularacumuladopendiente(mesoneroid) {
-        const { data, error } = await window.supabaseclient
+    async function calcularAcumuladoPendiente(mesoneroId) {
+        const { data, error } = await window.supabaseClient
             .from('propinas')
             .select('monto_bs, monto_original, moneda_original')
-            .eq('mesonero_id', mesoneroid)
+            .eq('mesonero_id', mesoneroId)
             .eq('entregado', false);
         
         if (error) {
@@ -245,61 +273,101 @@
             return 0;
         }
         
-        let totalbs = 0;
-        let totalusdcrudo = 0;
-        const tasabase = Number(window.configglobal?.tasa_cambio || 400);
+        let totalBs = 0;
+        let totalUSDCrudo = 0;
+        const tasaBase = Number(window.configGlobal?.tasa_cambio || 400);
         
         (data || []).forEach(function(p) {
             if (p.moneda_original === 'USD' && p.monto_original) {
-                totalusdcrudo += p.monto_original;
+                totalUSDCrudo += p.monto_original;
             } else {
-                totalbs += (p.monto_bs || 0);
+                totalBs += (p.monto_bs || 0);
             }
         });
         
-        // retornar el total en bs (usd convertido a tasa base)
-        return totalbs + (totalusdcrudo * tasabase);
+        // Retornar el total en Bs (USD convertido a tasa base)
+        return totalBs + (totalUSDCrudo * tasaBase);
     }
 
     // ════════════════════════════════════════
-    // modal de pago (total o parcial)
+    // MODAL DE PAGO (TOTAL O PARCIAL)
     // ════════════════════════════════════════
-    window.abrirmodalpago = async function(mesoneroid) {
-        mesoneroparapagoid = mesoneroid;
-        const m = (window.mesoneros || []).find(x => x.id === mesoneroid);
+    window.abrirModalPago = async function(mesoneroId) {
+        mesoneroParaPagoId = mesoneroId;
+        const m = (window.mesoneros || []).find(x => x.id === mesoneroId);
         if (!m) return;
 
-        const acumulado = await calcularacumuladopendiente(mesoneroid);
-        const tasa = Number(window.configglobal?.tasa_efectiva || window.configglobal?.tasa_cambio || 400) || 400;
+        const acumulado = await calcularAcumuladoPendiente(mesoneroId);
+        const tasa = Number(window.configGlobal?.tasa_efectiva || window.configGlobal?.tasa_cambio || 400) || 400;
         const usd = tasa > 0 ? acumulado / tasa : 0;
 
-        const modalcontent = document.getElementById('pagoModalContent');
-        if (!modalcontent) return;
+        const modalContent = document.getElementById('pagoModalContent');
+        if (!modalContent) return;
 
-        modalcontent.innerHTML = ''+ '<div style="Padding:1.5rem">'+ '<div style="Text-align:center;margin-bottom:1.5rem">'+ '<div style="Width:70px;height:70px;border-radius:50%;background:linear-gradient(135deg,var(--propina),#7b1fa2);display:flex;align-items:center;justify-content:center;margin:0 auto 1rem">'+ '<i class="Fas fa-hand-holding-heart" style="Font-size:2rem;color:#fff"></i>'+ '</div>'+ '<h3 style="Font-size:1.1rem;font-weight:700;margin-bottom:.5rem">Registrar Pago a ' + m.nombre + '</h3>'+ '<p style="Color:var(--text-muted);font-size:.85rem">El monto acumulado actual equivale a:</p>'+ '<div id="Pagomontopendiente" style="Font-size:1.5rem;font-weight:700;color:var(--propina);margin-top:.5rem">'+       window.formatusd(usd) + ' / ' + window.formatbs(acumulado)
-            + '</div>'+ '</div>'+ '<div class="Form-group" style="Margin-bottom:1rem;text-align:left">'+ '<label style="Display:block;font-size:.85rem;font-weight:600;margin-bottom:.5rem">Método de pago al mesonero</label>'+ '<select id="Pagometodo" class="Tcb-input" style="Width:100%;padding:.6rem;border-radius:8px;border:1px solid var(--border);background:var(--card-bg);color:var(--text)" onchange="window.actualizarlabelmontopago()">'+ '<option value="efectivo_bs">Efectivo Bs</option>'+ '<option value="efectivo_usd">Efectivo USD</option>'+ '<option value="pago_movil">Pago Móvil</option>'+ '<option value="punto_venta">Punto de Venta</option>'+ '</select>'+ '</div>'+ '<div style="Display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.5rem">'+ '<button id="Btnpagototal" class="Btn-primary" style="Width:100%;padding:.75rem 1rem;font-weight:600" onclick="window.confirmarpagototal()">'+ '<i class="Fas fa-check-double"></i> Pago Total'+ '</button>'+ '<button id="Btnpagoparcialtoggle" class="Btn-secondary" style="Width:100%;padding:.75rem 1rem;font-weight:600" onclick="window.togglepagoparcial()">'+ '<i class="Fas fa-coins"></i> Pago Parcial'+ '</button>'+ '</div>'+ '<div id="Pagoparcialsection" style="Display:none;background:var(--secondary);padding:1rem;border-radius:8px;border:1px solid var(--border);margin-bottom:1.5rem">'+ '<label id="Pagoparciallabel" style="Display:block;font-size:.85rem;font-weight:600;margin-bottom:.5rem;color:var(--text-muted)">Monto a pagar (BS)</label>'+ '<input type="Number" id="Pagoparcialmonto" step="0.01" min="0.01" max="' + acumulado + '" Style="width:100%;padding:.75rem;border:1px solid var(--border);border-radius:8px;font-size:1rem;font-family:Montserrat,sans-serif" Placeholder="Ej: 50.00" Oninput="window.actualizarVistaPreviaPago()">'+ '<p style="Font-size:.75rem;color:var(--text-muted);margin-top:.5rem"><i class="Fas fa-info-circle"></i> El monto restante permanecerá como pendiente</p>'+ '<div id="Pagopreviewsection" style="Display:none"></div>'+ '</div>'+ '<div style="Display:flex;gap:.75rem;justify-content:flex-end">'+ '<button class="Btn-secondary" style="Flex:1;padding:.75rem 1rem;font-weight:600" onclick="window.cerrarmodalpago()">Cancelar</button>'+ '<button id="Btnconfirmarpagoparcial" class="Btn-success" style="Flex:1;padding:.75rem 1rem;font-weight:600;display:none" onclick="window.confirmarpagoparcial()">'+ '<i class="Fas fa-check"></i> Confirmar'+ '</button>'+ '</div>'+ '</div>';
+        modalContent.innerHTML = ''
+            + '<div style="padding:1.5rem">'
+            +   '<div style="text-align:center;margin-bottom:1.5rem">'
+            +     '<div style="width:70px;height:70px;border-radius:50%;background:linear-gradient(135deg,var(--propina),#7B1FA2);display:flex;align-items:center;justify-content:center;margin:0 auto 1rem">'
+            +       '<i class="fas fa-hand-holding-heart" style="font-size:2rem;color:#fff"></i>'
+            +     '</div>'
+            +     '<h3 style="font-size:1.1rem;font-weight:700;margin-bottom:.5rem">Registrar Pago a ' + m.nombre + '</h3>'
+            +     '<p style="color:var(--text-muted);font-size:.85rem">El monto acumulado actual equivale a:</p>'
+            +     '<div id="pagoMontoPendiente" style="font-size:1.5rem;font-weight:700;color:var(--propina);margin-top:.5rem">'
+            +       window.formatUSD(usd) + ' / ' + window.formatBs(acumulado)
+            +     '</div>'
+            +   '</div>'
+            +   '<div class="form-group" style="margin-bottom:1rem;text-align:left">'
+            +     '<label style="display:block;font-size:.85rem;font-weight:600;margin-bottom:.5rem">Método de pago al mesonero</label>'
+            +     '<select id="pagoMetodo" class="tcb-input" style="width:100%;padding:.6rem;border-radius:8px;border:1px solid var(--border);background:var(--card-bg);color:var(--text)" onchange="window.actualizarLabelMontoPago()">'
+            +       '<option value="efectivo_bs">Efectivo Bs</option>'
+            +       '<option value="efectivo_usd">Efectivo USD</option>'
+            +       '<option value="pago_movil">Pago Móvil</option>'
+            +       '<option value="punto_venta">Punto de Venta</option>'
+            +     '</select>'
+            +   '</div>'
+            +   '<div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.5rem">'
+            +     '<button id="btnPagoTotal" class="btn-primary" style="width:100%;padding:.75rem 1rem;font-weight:600" onclick="window.confirmarPagoTotal()">'
+            +       '<i class="fas fa-check-double"></i> Pago Total'
+            +     '</button>'
+            +     '<button id="btnPagoParcialToggle" class="btn-secondary" style="width:100%;padding:.75rem 1rem;font-weight:600" onclick="window.togglePagoParcial()">'
+            +       '<i class="fas fa-coins"></i> Pago Parcial'
+            +     '</button>'
+            +   '</div>'
+            +   '<div id="pagoParcialSection" style="display:none;background:var(--secondary);padding:1rem;border-radius:8px;border:1px solid var(--border);margin-bottom:1.5rem">'
+            +     '<label id="pagoParcialLabel" style="display:block;font-size:.85rem;font-weight:600;margin-bottom:.5rem;color:var(--text-muted)">Monto a pagar (BS)</label>'
+            +     '<input type="number" id="pagoParcialMonto" step="0.01" min="0.01" max="' + acumulado + '" style="width:100%;padding:.75rem;border:1px solid var(--border);border-radius:8px;font-size:1rem;font-family:Montserrat,sans-serif" placeholder="Ej: 50.00" oninput="window.actualizarVistaPreviaPago()">'
+            +     '<p style="font-size:.75rem;color:var(--text-muted);margin-top:.5rem"><i class="fas fa-info-circle"></i> El monto restante permanecerá como pendiente</p>'
+            +     '<div id="pagoPreviewSection" style="display:none"></div>'
+            +   '</div>'
+            +   '<div style="display:flex;gap:.75rem;justify-content:flex-end">'
+            +     '<button class="btn-secondary" style="flex:1;padding:.75rem 1rem;font-weight:600" onclick="window.cerrarModalPago()">Cancelar</button>'
+            +     '<button id="btnConfirmarPagoParcial" class="btn-success" style="flex:1;padding:.75rem 1rem;font-weight:600;display:none" onclick="window.confirmarPagoParcial()">'
+            +       '<i class="fas fa-check"></i> Confirmar'
+            +     '</button>'
+            +   '</div>'
+            + '</div>';
 
         const modal = document.getElementById('pagoModal');
         if (modal) modal.classList.add('active');
         
-        // inicializar label correcto inmediatamente sin settimeout
-        window.actualizarlabelmontopago();
+        // Inicializar label correcto inmediatamente sin setTimeout
+        window.actualizarLabelMontoPago();
     };
 
-    window.cerrarmodalpago = function() {
+    window.cerrarModalPago = function() {
         const modal = document.getElementById('pagoModal');
         if (modal) modal.classList.remove('active');
-        // limpiar la vista previa al cerrar
-        const previewel = document.getElementById('pagoPreviewSection');
-        if (previewel) {
-            previewel.innerHTML = '';
-            previewel.style.display = 'none';
+        // Limpiar la vista previa al cerrar
+        const previewEl = document.getElementById('pagoPreviewSection');
+        if (previewEl) {
+            previewEl.innerHTML = '';
+            previewEl.style.display = 'none';
         }
-        mesoneroparapagoid = null;
+        mesoneroParaPagoId = null;
     };
 
-    // actualizar label del monto según método seleccionado
-    window.actualizarlabelmontopago = function() {
+    // Actualizar label del monto según método seleccionado
+    window.actualizarLabelMontoPago = function() {
         const metodo = document.getElementById('pagoMetodo')?.value;
         const label = document.getElementById('pagoParcialLabel');
         const input = document.getElementById('pagoParcialMonto');
@@ -308,7 +376,7 @@
         
         if (metodo === 'efectivo_usd') {
             label.textContent = 'Monto a pagar ($)';
-            // actualizar placeholder y step para dólares
+            // Actualizar placeholder y step para dólares
             input.placeholder = 'Ej: 10.00';
             input.step = '0.01';
         } else {
@@ -317,297 +385,299 @@
             input.step = '0.01';
         }
         
-        // actualizar vista previa en tiempo real
-        window.actualizarvistapreviapago();
+        // Actualizar vista previa en tiempo real
+        window.actualizarVistaPreviaPago();
     };
 
-    // actualizar vista previa del pago en tiempo real
-    window.actualizarvistapreviapago = async function() {
+    // Actualizar vista previa del pago en tiempo real
+    window.actualizarVistaPreviaPago = async function() {
         const metodo = document.getElementById('pagoMetodo')?.value;
         const input = document.getElementById('pagoParcialMonto');
-        const previewel = document.getElementById('pagoPreviewSection');
+        const previewEl = document.getElementById('pagoPreviewSection');
         
-        if (!input || !previewel) return;
+        if (!input || !previewEl) return;
         
-        const montoingresado = parseFloat(input.value) || 0;
-        if (montoingresado <= 0) {
-            previewel.style.display = 'none';
-            previewel.innerHTML = '';
+        const montoIngresado = parseFloat(input.value) || 0;
+        if (montoIngresado <= 0) {
+            previewEl.style.display = 'none';
+            previewEl.innerHTML = '';
             return;
         }
         
-        const tasabase = Number(window.configglobal?.tasa_cambio || 400);
-        const tasaefectiva = Number(window.configglobal?.tasa_efectiva || window.configglobal?.tasa_cambio || 400);
+        const tasaBase = Number(window.configGlobal?.tasa_cambio || 400);
+        const tasaEfectiva = Number(window.configGlobal?.tasa_efectiva || window.configGlobal?.tasa_cambio || 400);
         
-        let montoenbs = montoingresado;
-        let esusd = false;
+        let montoEnBs = montoIngresado;
+        let esUSD = false;
         
         if (metodo === 'efectivo_usd') {
-            esusd = true;
-            montoenbs = montoingresado * tasabase;
+            esUSD = true;
+            montoEnBs = montoIngresado * tasaBase;
         }
         
-        // obtener acumulado desglosado
-        if (!mesoneroparapagoid) {
-            previewel.style.display = 'none';
-            previewel.innerHTML = '';
+        // Obtener acumulado desglosado
+        if (!mesoneroParaPagoId) {
+            previewEl.style.display = 'none';
+            previewEl.innerHTML = '';
             return;
         }
         
         try {
-            const { data: pendientes, error } = await window.supabaseclient
+            const { data: pendientes, error } = await window.supabaseClient
                 .from('propinas')
                 .select('monto_bs, monto_original, moneda_original')
-                .eq('mesonero_id', mesoneroparapagoid)
+                .eq('mesonero_id', mesoneroParaPagoId)
                 .eq('entregado', false);
             
             if (error) throw error;
             
-            let acumuladousdcrudo = 0;
-            let acumuladobscrudo = 0;
+            let acumuladoUSDCrudo = 0;
+            let acumuladoBsCrudo = 0;
             
             (pendientes || []).forEach(function(p) {
                 if (p.moneda_original === 'USD' && p.monto_original) {
-                    acumuladousdcrudo += p.monto_original;
+                    acumuladoUSDCrudo += p.monto_original;
                 } else {
-                    acumuladobscrudo += (p.monto_bs || 0);
+                    acumuladoBsCrudo += (p.monto_bs || 0);
                 }
             });
             
-            const acumuladousdenbs = acumuladousdcrudo * tasabase;
-            const acumuladototal = acumuladobscrudo + acumuladousdenbs;
+            const acumuladoUSDEnBs = acumuladoUSDCrudo * tasaBase;
+            const acumuladoTotal = acumuladoBsCrudo + acumuladoUSDEnBs;
             
-            // calcular cómo se distribuye el pago (misma lógica que confirmarpagoparcial)
-            let restoporpagar = montoenbs;
-            let pagadodeusd = 0;
-            let pagadodebs = 0;
+            // Calcular cómo se distribuye el pago (misma lógica que confirmarPagoParcial)
+            let restoPorPagar = montoEnBs;
+            let pagadoDeUSD = 0;
+            let pagadoDeBs = 0;
             
-            // primero descontar de usd
-            if (restoporpagar > 0 && acumuladousdenbs > 0) {
-                if (restoporpagar >= acumuladousdenbs) {
-                    pagadodeusd = acumuladousdenbs;
-                    restoporpagar -= acumuladousdenbs;
+            // Primero descontar de USD
+            if (restoPorPagar > 0 && acumuladoUSDEnBs > 0) {
+                if (restoPorPagar >= acumuladoUSDEnBs) {
+                    pagadoDeUSD = acumuladoUSDEnBs;
+                    restoPorPagar -= acumuladoUSDEnBs;
                 } else {
-                    pagadodeusd = restoporpagar;
-                    restoporpagar = 0;
+                    pagadoDeUSD = restoPorPagar;
+                    restoPorPagar = 0;
                 }
             }
             
-            // luego descontar de bs
-            if (restoporpagar > 0 && acumuladobscrudo > 0) {
-                if (restoporpagar >= acumuladobscrudo) {
-                    pagadodebs = acumuladobscrudo;
+            // Luego descontar de Bs
+            if (restoPorPagar > 0 && acumuladoBsCrudo > 0) {
+                if (restoPorPagar >= acumuladoBsCrudo) {
+                    pagadoDeBs = acumuladoBsCrudo;
                 } else {
-                    pagadodebs = restoporpagar;
+                    pagadoDeBs = restoPorPagar;
                 }
             }
             
-            // construir mensaje de vista previa (sin repetir el encabezado principal)
-            let htmlpreview = '<div style="Margin-top:1rem;padding:1rem;background:var(--secondary);border-radius:8px;border:1px solid var(--border)">';
+            // Construir mensaje de vista previa (sin repetir el encabezado principal)
+            let htmlPreview = '<div style="margin-top:1rem;padding:1rem;background:var(--secondary);border-radius:8px;border:1px solid var(--border)">';
             
-            htmlpreview += '<div style="Font-size:.85rem;font-weight:600;margin-bottom:.5rem;color:var(--text)">';
-            if (esusd) {
-                htmlpreview += 'Pagando $' + montoingresado.toFixed(2) + ' (equiv. a ' + window.formatbs(montoenbs) + ')';
+            htmlPreview += '<div style="font-size:.85rem;font-weight:600;margin-bottom:.5rem;color:var(--text)">';
+            if (esUSD) {
+                htmlPreview += 'Pagando $' + montoIngresado.toFixed(2) + ' (equiv. a ' + window.formatBs(montoEnBs) + ')';
             } else {
-                htmlpreview += 'Pagando Bs ' + window.formatbs(montoenbs);
+                htmlPreview += 'Pagando Bs ' + window.formatBs(montoEnBs);
             }
-            htmlpreview += '</div>';
+            htmlPreview += '</div>';
             
-            if (pagadodeusd > 0) {
-                const usdpagado = pagadodeusd / tasabase;
-                htmlpreview += '<div style="Font-size:.75rem;color:var(--usd-color);margin-top:.25rem">';
-                htmlpreview += '<i class="Fas fa-dollar-sign"></i> Descuento: ' + window.formatbs(pagadodeusd);
-                if (esusd) htmlpreview += ' ($' + usdpagado.toFixed(2) + ')';
-                htmlpreview += '</div>';
-            }
-            
-            if (pagadodebs > 0) {
-                htmlpreview += '<div style="Font-size:.75rem;color:var(--bs-color);margin-top:.25rem">';
-                htmlpreview += 'Bs: Descuento: ' + window.formatbs(pagadodebs);
-                htmlpreview += '</div>';
+            if (pagadoDeUSD > 0) {
+                const usdPagado = pagadoDeUSD / tasaBase;
+                htmlPreview += '<div style="font-size:.75rem;color:var(--usd-color);margin-top:.25rem">';
+                htmlPreview += '<i class="fas fa-dollar-sign"></i> Descuento: ' + window.formatBs(pagadoDeUSD);
+                if (esUSD) htmlPreview += ' ($' + usdPagado.toFixed(2) + ')';
+                htmlPreview += '</div>';
             }
             
-            // mostrar nuevo pendiente
-            const nuevopendiente = acumuladototal - montoenbs;
-            if (nuevopendiente >= 0) {
-                htmlpreview += '<div style="Font-size:.75rem;color:var(--text-muted);margin-top:.5rem;padding-top:.5rem;border-top:1px solid var(--border)">';
-                htmlpreview += 'Nuevo pendiente: ' + window.formatbs(nuevopendiente);
-                if (tasaefectiva > 0) {
-                    htmlpreview += ' (' + window.formatusd(nuevopendiente / tasaefectiva) + ')';
+            if (pagadoDeBs > 0) {
+                htmlPreview += '<div style="font-size:.75rem;color:var(--bs-color);margin-top:.25rem">';
+                htmlPreview += 'Bs: Descuento: ' + window.formatBs(pagadoDeBs);
+                htmlPreview += '</div>';
+            }
+            
+            // Mostrar nuevo pendiente
+            const nuevoPendiente = acumuladoTotal - montoEnBs;
+            if (nuevoPendiente >= 0) {
+                htmlPreview += '<div style="font-size:.75rem;color:var(--text-muted);margin-top:.5rem;padding-top:.5rem;border-top:1px solid var(--border)">';
+                htmlPreview += 'Nuevo pendiente: ' + window.formatBs(nuevoPendiente);
+                if (tasaEfectiva > 0) {
+                    htmlPreview += ' (' + window.formatUSD(nuevoPendiente / tasaEfectiva) + ')';
                 }
-                htmlpreview += '</div>';
+                htmlPreview += '</div>';
             }
             
-            htmlpreview += '</div>';
+            htmlPreview += '</div>';
             
-            previewel.innerHTML = htmlpreview;
-            previewel.style.display = 'block';
+            previewEl.innerHTML = htmlPreview;
+            previewEl.style.display = 'block';
             
         } catch(e) {
             console.error('Error actualizando vista previa:', e);
-            previewel.style.display = 'none';
-            previewel.innerHTML = '';
+            previewEl.style.display = 'none';
+            previewEl.innerHTML = '';
         }
     };
 
-    window.togglepagoparcial = function() {
+    window.togglePagoParcial = function() {
         const section = document.getElementById('pagoParcialSection');
-        const btnconfirmar = document.getElementById('btnConfirmarPagoParcial');
-        const btntotal = document.getElementById('btnPagoTotal');
-        if (section && btnconfirmar && btntotal) {
-            const ishidden = section.style.display === 'none';
-            section.style.display = ishidden ? 'block' : 'none';
-            btnconfirmar.style.display = ishidden ? 'block' : 'none';
-            btntotal.style.opacity = ishidden ? '0.5' : '1';
-            btntotal.style.pointerevents = ishidden ? 'none' : 'auto';
-            if (ishidden) {
+        const btnConfirmar = document.getElementById('btnConfirmarPagoParcial');
+        const btnTotal = document.getElementById('btnPagoTotal');
+        if (section && btnConfirmar && btnTotal) {
+            const isHidden = section.style.display === 'none';
+            section.style.display = isHidden ? 'block' : 'none';
+            btnConfirmar.style.display = isHidden ? 'block' : 'none';
+            btnTotal.style.opacity = isHidden ? '0.5' : '1';
+            btnTotal.style.pointerEvents = isHidden ? 'none' : 'auto';
+            if (isHidden) {
                 const input = document.getElementById('pagoParcialMonto');
                 if (input) {
                     input.focus();
-                    // limpiar vista previa al abrir
-                    const previewel = document.getElementById('pagoPreviewSection');
-                    if (previewel) {
-                        previewel.style.display = 'none';
-                        previewel.innerHTML = '';
+                    // Limpiar vista previa al abrir
+                    const previewEl = document.getElementById('pagoPreviewSection');
+                    if (previewEl) {
+                        previewEl.style.display = 'none';
+                        previewEl.innerHTML = '';
                     }
                 }
             } else {
-                // al cerrar, limpiar vista previa
-                const previewel = document.getElementById('pagoPreviewSection');
-                if (previewel) {
-                    previewel.style.display = 'none';
-                    previewel.innerHTML = '';
+                // Al cerrar, limpiar vista previa
+                const previewEl = document.getElementById('pagoPreviewSection');
+                if (previewEl) {
+                    previewEl.style.display = 'none';
+                    previewEl.innerHTML = '';
                 }
             }
         }
     };
 
-    window.confirmarpagototal = async function() {
-        if (!mesoneroparapagoid) return;
+    window.confirmarPagoTotal = async function() {
+        if (!mesoneroParaPagoId) return;
         
-        const metodopago = document.getElementById('pagoMetodo')?.value;
-        if (!metodopago) {
-            window.mostrartoast('Selecciona un método de pago', 'error');
+        const metodoPago = document.getElementById('pagoMetodo')?.value;
+        if (!metodoPago) {
+            window.mostrarToast('Selecciona un método de pago', 'error');
             return;
         }
         
         const btn = document.getElementById('btnPagoTotal');
         if (btn) {
             btn.disabled = true;
-            btn.innerHTML = '<i class="Fas fa-spinner fa-spin"></i> Procesando...';
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
         }
         try {
-            // obtener todas las propinas pendientes del mesonero con información completa
-            // si paga en usd, solo marcar las propinas en usd; si paga en bs, solo las propinas en bs
-            let query = window.supabaseclient
+            // Obtener todas las propinas pendientes del mesonero con información completa
+            // Si paga en USD, solo marcar las propinas en USD; si paga en Bs, solo las propinas en Bs
+            let query = window.supabaseClient
                 .from('propinas')
                 .select('id, monto_bs, monto_original, moneda_original')
-                .eq('mesonero_id', mesoneroparapagoid)
+                .eq('mesonero_id', mesoneroParaPagoId)
                 .eq('entregado', false);
             
-            // filtrar por moneda según el método de pago
-            if (metodopago === 'efectivo_usd') {
+            // Filtrar por moneda según el método de pago
+            if (metodoPago === 'efectivo_usd') {
                 query = query.eq('moneda_original', 'USD');
             } else {
-                // para pagos en bs, filtrar solo las que no son usd
+                // Para pagos en Bs, filtrar solo las que NO son USD
                 query = query.neq('moneda_original', 'USD');
             }
             
-            const { data: pendientes, error: errget } = await query;
-            if (errget) throw errget;
+            const { data: pendientes, error: errGet } = await query;
+            if (errGet) throw errGet;
             
-            const totalpagar = (pendientes || []).reduce((sum, p) => sum + (p.monto_bs || 0), 0);
-            if (totalpagar <= 0) {
-                window.mostrartoast('No hay propinas pendientes en esta moneda', 'error');
+            const totalPagar = (pendientes || []).reduce((sum, p) => sum + (p.monto_bs || 0), 0);
+            if (totalPagar <= 0) {
+                window.mostrarToast('No hay propinas pendientes en esta moneda', 'error');
                 return;
             }
             
-            // calcular totales separados de usd y bs
-            const tasabase = Number(window.configglobal?.tasa_cambio || 400);
-            let totalusdcrudo = 0;
-            let totalbscrudo = 0;
+            // Calcular totales separados de USD y Bs
+            const tasaBase = Number(window.configGlobal?.tasa_cambio || 400);
+            let totalUSDCrudo = 0;
+            let totalBsCrudo = 0;
             
             (pendientes || []).forEach(function(p) {
                 if (p.moneda_original === 'USD' && p.monto_original) {
-                    totalusdcrudo += p.monto_original;
+                    totalUSDCrudo += p.monto_original;
                 } else {
-                    totalbscrudo += (p.monto_bs || 0);
+                    totalBsCrudo += (p.monto_bs || 0);
                 }
             });
             
-            // actualizar todas las propinas pendientes a entregado: true
-            // no modificar monto_bs ni monto_original para preservar el historial
+            // Actualizar todas las propinas pendientes a entregado: true
+            // NO modificar monto_bs ni monto_original para preservar el historial
             for (const prop of pendientes) {
-                let updatedata = { entregado: true };
+                let updateData = { entregado: true };
                 
-                await window.supabaseclient.from('propinas').update(updatedata).eq('id', prop.id);
+                await window.supabaseClient.from('propinas').update(updateData).eq('id', prop.id);
             }
             
-            // crear una nueva propina que representa el pago total al mesonero
-            const cajeronombre = (window.usuarioactual && window.usuarioactual.nombre) || 'Administrador';
+            // Crear una nueva propina que representa el pago total al mesonero
+            const cajeroNombre = (window.usuarioActual && window.usuarioActual.nombre) || 'Administrador';
             const ahora = new Date().toISOString();
             
-            // si el método es efectivo_usd, registrar el monto en usd
-            let nuevomontooriginal = totalpagar;
-            let nuevamonedaoriginal = 'Bs';
-            let nuevatasaaplicada = null;
+            // Si el método es efectivo_usd, registrar el monto en USD
+            let nuevoMontoOriginal = totalPagar;
+            let nuevaMonedaOriginal = 'Bs';
+            let nuevaTasaAplicada = null;
             
-            if (metodopago === 'efectivo_usd') {
-                // convertir el total pagado a usd usando tasa base
-                nuevomontooriginal = totalpagar / tasabase;
-                nuevamonedaoriginal = 'USD';
-                nuevatasaaplicada = tasabase;
+            if (metodoPago === 'efectivo_usd') {
+                // Convertir el total pagado a USD usando tasa base
+                nuevoMontoOriginal = totalPagar / tasaBase;
+                nuevaMonedaOriginal = 'USD';
+                nuevaTasaAplicada = tasaBase;
             }
             
-            const nuevapropina = {
-                mesonero_id: mesoneroparapagoid,
+            const nuevaPropina = {
+                mesonero_id: mesoneroParaPagoId,
                 mesa: 'Pago total a mesonero',
-                metodo: metodopago,
-                monto_original: parseFloat(nuevomontooriginal.toFixed(2)),
-                moneda_original: nuevamonedaoriginal,
-                tasa_aplicada: nuevatasaaplicada,
-                monto_bs: totalpagar,
+                metodo: metodoPago,
+                monto_original: parseFloat(nuevoMontoOriginal.toFixed(2)),
+                moneda_original: nuevaMonedaOriginal,
+                tasa_aplicada: nuevaTasaAplicada,
+                monto_bs: totalPagar,
                 referencia: 'EGRESO',
-                cajero: cajeronombre,
+                cajero: cajeroNombre,
                 fecha: ahora,
                 entregado: true
             };
             
-            const { error: errinsert } = await window.supabaseclient.from('propinas').insert([nuevapropina]);
-            if (errinsert) throw errinsert;
+            const { error: errInsert } = await window.supabaseClient.from('propinas').insert([nuevaPropina]);
+            if (errInsert) throw errInsert;
             
-            window.cerrarmodalpago();
-            // limpiar vista previa antes de actualizar
-            const previeweltotal = document.getElementById('pagoPreviewSection');
-            if (previeweltotal) {
-                previeweltotal.innerHTML = '';
-                previeweltotal.style.display = 'none';
+            window.cerrarModalPago();
+            // Limpiar vista previa antes de actualizar
+            const previewElTotal = document.getElementById('pagoPreviewSection');
+            if (previewElTotal) {
+                previewElTotal.innerHTML = '';
+                previewElTotal.style.display = 'none';
             }
-            await window.actualizaracumuladospendientes();
-            await window.cargarmesoneros();
-            await window.cargarpropinas();
-            window.renderizarpropinas();
+            await window.actualizarAcumuladosPendientes();
+            await window.cargarMesoneros();
+            await window.cargarPropinas();
+            window.renderizarPropinas();
             
-            const montomostrar = metodopago === 'efectivo_usd' ? '$' + nuevomontooriginal.toFixed(2) + ' (a tasa base ' + tasabase + ')': window.formatbs(totalpagar);
-            window.mostrartoast('Pago total registrado: ' + montomostrar, 'success');
+            const montoMostrar = metodoPago === 'efectivo_usd' 
+                ? '$' + nuevoMontoOriginal.toFixed(2) + ' (a tasa base ' + tasaBase + ')'
+                : window.formatBs(totalPagar);
+            window.mostrarToast('Pago total registrado: ' + montoMostrar, 'success');
         } catch(e) {
             console.error('Error pago total:', e);
-            window.mostrartoast('Error: ' + (e.message || e), 'error');
+            window.mostrarToast('Error: ' + (e.message || e), 'error');
         } finally {
             if (btn) {
                 btn.disabled = false;
-                btn.innerHTML = '<i class="Fas fa-check-double"></i> Pago Total';
+                btn.innerHTML = '<i class="fas fa-check-double"></i> Pago Total';
             }
         }
     };
 
-    window.confirmarpagoparcial = async function() {
-        if (!mesoneroparapagoid) return;
+    window.confirmarPagoParcial = async function() {
+        if (!mesoneroParaPagoId) return;
         
-        // obtener el método de pago seleccionado
-        const metodopago = document.getElementById('pagoMetodo')?.value;
-        if (!metodopago) {
-            window.mostrartoast('Selecciona un método de pago', 'error');
+        // Obtener el método de pago seleccionado
+        const metodoPago = document.getElementById('pagoMetodo')?.value;
+        if (!metodoPago) {
+            window.mostrarToast('Selecciona un método de pago', 'error');
             return;
         }
         
@@ -615,381 +685,406 @@
         let monto = input ? parseFloat(input.value) : 0;
         
         if (!monto || monto <= 0) {
-            window.mostrartoast('Ingresa un monto válido', 'error');
+            window.mostrarToast('Ingresa un monto válido', 'error');
             return;
         }
 
-        const tasabase = Number(window.configglobal?.tasa_cambio || 400);
-        let montoenmonedaseleccionada = monto; // monto en la moneda seleccionada (usd o bs)
-        let montoesusd = false;
+        const tasaBase = Number(window.configGlobal?.tasa_cambio || 400);
+        let montoEnMonedaSeleccionada = monto; // Monto en la moneda seleccionada (USD o Bs)
+        let montoEsUSD = false;
         
-        if (metodopago === 'efectivo_usd') {
-            montoesusd = true;
-            // el usuario ingresa usd, lo trabajamos directamente en usd
+        if (metodoPago === 'efectivo_usd') {
+            montoEsUSD = true;
+            // El usuario ingresa USD, lo trabajamos directamente en USD
         }
 
-        // determinar qué bucket de moneda estamos pagando
-        const pagarenusd = (metodopago === 'efectivo_usd');
+        // Determinar qué bucket de moneda estamos pagando
+        const pagarEnUSD = (metodoPago === 'efectivo_usd');
         
-        // calcular el acumulado pendiente solo del bucket correspondiente
-        let acumuladodelbucket = 0;
+        // Calcular el acumulado pendiente solo del bucket correspondiente
+        let acumuladoDelBucket = 0;
         try {
-            let queryacumulado = window.supabaseclient
+            let queryAcumulado = window.supabaseClient
                 .from('propinas')
                 .select('monto_bs, monto_original, moneda_original')
-                .eq('mesonero_id', mesoneroparapagoid)
+                .eq('mesonero_id', mesoneroParaPagoId)
                 .eq('entregado', false);
             
-            if (pagarenusd) {
-                queryacumulado = queryacumulado.eq('moneda_original', 'USD');
+            if (pagarEnUSD) {
+                queryAcumulado = queryAcumulado.eq('moneda_original', 'USD');
             } else {
-                queryacumulado = queryacumulado.neq('moneda_original', 'USD');
+                queryAcumulado = queryAcumulado.neq('moneda_original', 'USD');
             }
             
-            const { data: datosacumulado } = await queryacumulado;
+            const { data: datosAcumulado } = await queryAcumulado;
             
-            if (pagarenusd) {
-                // sumar monto_original de las propinas usd
-                acumuladodelbucket = (datosacumulado || []).reduce((sum, p) => sum + (p.monto_original || 0), 0);
+            if (pagarEnUSD) {
+                // Sumar monto_original de las propinas USD
+                acumuladoDelBucket = (datosAcumulado || []).reduce((sum, p) => sum + (p.monto_original || 0), 0);
             } else {
-                // sumar monto_bs de las propinas en bs
-                acumuladodelbucket = (datosacumulado || []).reduce((sum, p) => sum + (p.monto_bs || 0), 0);
+                // Sumar monto_bs de las propinas en Bs
+                acumuladoDelBucket = (datosAcumulado || []).reduce((sum, p) => sum + (p.monto_bs || 0), 0);
             }
         } catch(e) {
             console.error('Error calculando acumulado del bucket:', e);
         }
         
-        // validar que el monto no exceda el acumulado del bucket correspondiente
-        if (montoenmonedaseleccionada > acumuladodelbucket + 0.01) {
-            const limitemostrar = pagarenusd ? '$' + acumuladodelbucket.toFixed(2) : window.formatbs(acumuladodelbucket);
-            window.mostrartoast('El monto no puede superar el pendiente de este bucket (' + limitemostrar + ')', 'error');
+        // Validar que el monto no exceda el acumulado del bucket correspondiente
+        if (montoEnMonedaSeleccionada > acumuladoDelBucket + 0.01) {
+            const limiteMostrar = pagarEnUSD ? '$' + acumuladoDelBucket.toFixed(2) : window.formatBs(acumuladoDelBucket);
+            window.mostrarToast('El monto no puede superar el pendiente de este bucket (' + limiteMostrar + ')', 'error');
             return;
         }
 
         const btn = document.getElementById('btnConfirmarPagoParcial');
         if (btn) {
             btn.disabled = true;
-            btn.innerHTML = '<i class="Fas fa-spinner fa-spin"></i> Procesando...';
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Procesando...';
         }
 
         try {
-            // 1. obtener propinas pendientes solo del bucket correspondiente, en orden fifo
-            let querypendientes = window.supabaseclient
+            // 1. Obtener propinas pendientes SOLO del bucket correspondiente, en orden FIFO
+            let queryPendientes = window.supabaseClient
                 .from('propinas')
                 .select('id, monto_bs, mesa, metodo, monto_original, moneda_original, tasa_aplicada, referencia, cajero, fecha')
-                .eq('mesonero_id', mesoneroparapagoid)
+                .eq('mesonero_id', mesoneroParaPagoId)
                 .eq('entregado', false)
                 .order('fecha', { ascending: true });
             
-            if (pagarenusd) {
-                querypendientes = querypendientes.eq('moneda_original', 'USD');
+            if (pagarEnUSD) {
+                queryPendientes = queryPendientes.eq('moneda_original', 'USD');
             } else {
-                querypendientes = querypendientes.neq('moneda_original', 'USD');
+                queryPendientes = queryPendientes.neq('moneda_original', 'USD');
             }
             
-            const { data: pendientes, error: errconsulta } = await querypendientes;
-            if (errconsulta) throw errconsulta;
+            const { data: pendientes, error: errConsulta } = await queryPendientes;
+            if (errConsulta) throw errConsulta;
 
-            let restoporpagar = montoenmonedaseleccionada; // trabajar en la moneda seleccionada
-            let pagocompletado = false;
+            let restoPorPagar = montoEnMonedaSeleccionada; // Trabajar en la moneda seleccionada
+            let pagoCompletado = false;
 
             for (const prop of pendientes || []) {
-                if (restoporpagar <= 0.01) break;
+                if (restoPorPagar <= 0.01) break;
                 
-                // obtener el monto en la moneda correcta según el bucket
-                const montopropinaenmoneda = pagarenusd ? (prop.monto_original || 0) : (prop.monto_bs || 0);
+                // Obtener el monto en la moneda correcta según el bucket
+                const montoPropinaEnMoneda = pagarEnUSD ? (prop.monto_original || 0) : (prop.monto_bs || 0);
                 
-                // usar epsilon check para comparar montos
-                if (restoporpagar >= montopropinaenmoneda - 0.01) {
-                    // caso 1: pagar la propina completa
-                    // marcar la propina original como entregada (no modificar montos para preservar historial)
-                    let updatedataoriginal = { entregado: true };
-                    await window.supabaseclient.from('propinas').update(updatedataoriginal).eq('id', prop.id);
+                // Usar epsilon check para comparar montos
+                if (restoPorPagar >= montoPropinaEnMoneda - 0.01) {
+                    // Caso 1: Pagar la propina completa
+                    // Marcar la propina original como entregada (NO modificar montos para preservar historial)
+                    let updateDataOriginal = { entregado: true };
+                    await window.supabaseClient.from('propinas').update(updateDataOriginal).eq('id', prop.id);
                     
-                    // crear nueva propina que representa el pago (egreso)
-                    const cajeronombre = (window.usuarioactual && window.usuarioactual.nombre) || 'Administrador';
+                    // Crear nueva propina que representa el pago (EGRESO)
+                    const cajeroNombre = (window.usuarioActual && window.usuarioActual.nombre) || 'Administrador';
                     const ahora = new Date().toISOString();
                     
-                    // calcular los valores para el registro de pago
-                    let nuevomontooriginal = 0;
-                    let nuevamonedaoriginal = 'Bs';
-                    let nuevomontobs = 0;
+                    // Calcular los valores para el registro de pago
+                    let nuevoMontoOriginal = 0;
+                    let nuevaMonedaOriginal = 'Bs';
+                    let nuevoMontoBs = 0;
                     
-                    if (pagarenusd) {
-                        // pagando en usd: el monto_original es el monto pagado en usd
-                        nuevomontooriginal = restoporpagar >= montopropinaenmoneda ? montopropinaenmoneda : restoporpagar;
-                        nuevamonedaoriginal = 'USD';
-                        nuevomontobs = nuevomontooriginal * tasabase;
-                        restoporpagar -= montopropinaenmoneda;
+                    if (pagarEnUSD) {
+                        // Pagando en USD: el monto_original es el monto pagado en USD
+                        nuevoMontoOriginal = restoPorPagar >= montoPropinaEnMoneda ? montoPropinaEnMoneda : restoPorPagar;
+                        nuevaMonedaOriginal = 'USD';
+                        nuevoMontoBs = nuevoMontoOriginal * tasaBase;
+                        restoPorPagar -= montoPropinaEnMoneda;
                     } else {
-                        // pagando en bs
-                        nuevomontobs = restoporpagar >= montopropinaenmoneda ? montopropinaenmoneda : restoporpagar;
-                        nuevomontooriginal = nuevomontobs;
-                        nuevamonedaoriginal = 'Bs';
-                        restoporpagar -= montopropinaenmoneda;
+                        // Pagando en Bs
+                        nuevoMontoBs = restoPorPagar >= montoPropinaEnMoneda ? montoPropinaEnMoneda : restoPorPagar;
+                        nuevoMontoOriginal = nuevoMontoBs;
+                        nuevaMonedaOriginal = 'Bs';
+                        restoPorPagar -= montoPropinaEnMoneda;
                     }
                     
-                    const nuevapropinacompleta = {
-                        mesonero_id: mesoneroparapagoid,
+                    const nuevaPropinaCompleta = {
+                        mesonero_id: mesoneroParaPagoId,
                         mesa: prop.mesa || 'General',
-                        metodo: metodopago,
-                        monto_original: parseFloat(nuevomontooriginal.toFixed(2)),
-                        moneda_original: nuevamonedaoriginal,
-                        tasa_aplicada: pagarenusd ? tasabase : null,
-                        monto_bs: parseFloat(nuevomontobs.toFixed(2)),
+                        metodo: metodoPago,
+                        monto_original: parseFloat(nuevoMontoOriginal.toFixed(2)),
+                        moneda_original: nuevaMonedaOriginal,
+                        tasa_aplicada: pagarEnUSD ? tasaBase : null,
+                        monto_bs: parseFloat(nuevoMontoBs.toFixed(2)),
                         referencia: 'EGRESO',
-                        cajero: cajeronombre,
+                        cajero: cajeroNombre,
                         fecha: ahora,
                         entregado: true
                     };
                     
-                    const { error: errinsert } = await window.supabaseclient
+                    const { error: errInsert } = await window.supabaseClient
                         .from('propinas')
-                        .insert([nuevapropinacompleta]);
-                    if (errinsert) throw errinsert;
+                        .insert([nuevaPropinaCompleta]);
+                    if (errInsert) throw errInsert;
                     
                 } else {
-                    // caso 2: pago parcial sobre esta propina
-                    const montopagadoenmoneda = restoporpagar;
-                    const montorestanteenmoneda = montopropinaenmoneda - montopagadoenmoneda;
+                    // Caso 2: Pago parcial sobre esta propina
+                    const montoPagadoEnMoneda = restoPorPagar;
+                    const montoRestanteEnMoneda = montoPropinaEnMoneda - montoPagadoEnMoneda;
                     
-                    // 2a. marcar la propina original como entregada (no modificar montos para preservar historial)
-                    await window.supabaseclient.from('propinas').update({ entregado: true }).eq('id', prop.id);
+                    // 2a. Marcar la propina original como entregada (NO modificar montos para preservar historial)
+                    await window.supabaseClient.from('propinas').update({ entregado: true }).eq('id', prop.id);
                     
-                    // 2b. crear un nuevo registro con el monto pagado (egreso)
-                    const cajeronombre = (window.usuarioactual && window.usuarioactual.nombre) || 'Administrador';
+                    // 2b. Crear un NUEVO REGISTRO con el monto pagado (EGRESO)
+                    const cajeroNombre = (window.usuarioActual && window.usuarioActual.nombre) || 'Administrador';
                     const ahora = new Date().toISOString();
                     
-                    let nuevomontooriginalpago = 0;
-                    let nuevamonedaoriginalpago = 'Bs';
-                    let nuevomontobspago = 0;
+                    let nuevoMontoOriginalPago = 0;
+                    let nuevaMonedaOriginalPago = 'Bs';
+                    let nuevoMontoBsPago = 0;
                     
-                    if (pagarenusd) {
-                        nuevomontooriginalpago = montopagadoenmoneda;
-                        nuevamonedaoriginalpago = 'USD';
-                        nuevomontobspago = montopagadoenmoneda * tasabase;
+                    if (pagarEnUSD) {
+                        nuevoMontoOriginalPago = montoPagadoEnMoneda;
+                        nuevaMonedaOriginalPago = 'USD';
+                        nuevoMontoBsPago = montoPagadoEnMoneda * tasaBase;
                     } else {
-                        nuevomontobspago = montopagadoenmoneda;
-                        nuevomontooriginalpago = montopagadoenmoneda;
-                        nuevamonedaoriginalpago = 'Bs';
+                        nuevoMontoBsPago = montoPagadoEnMoneda;
+                        nuevoMontoOriginalPago = montoPagadoEnMoneda;
+                        nuevaMonedaOriginalPago = 'Bs';
                     }
                     
-                    const nuevapropinapago = {
-                        mesonero_id: mesoneroparapagoid,
+                    const nuevaPropinaPago = {
+                        mesonero_id: mesoneroParaPagoId,
                         mesa: prop.mesa || 'General',
-                        metodo: metodopago,
-                        monto_original: parseFloat(nuevomontooriginalpago.toFixed(2)),
-                        moneda_original: nuevamonedaoriginalpago,
-                        tasa_aplicada: pagarenusd ? tasabase : null,
-                        monto_bs: parseFloat(nuevomontobspago.toFixed(2)),
+                        metodo: metodoPago,
+                        monto_original: parseFloat(nuevoMontoOriginalPago.toFixed(2)),
+                        moneda_original: nuevaMonedaOriginalPago,
+                        tasa_aplicada: pagarEnUSD ? tasaBase : null,
+                        monto_bs: parseFloat(nuevoMontoBsPago.toFixed(2)),
                         referencia: 'EGRESO',
-                        cajero: cajeronombre,
+                        cajero: cajeroNombre,
                         fecha: ahora,
                         entregado: true
                     };
                     
-                    const { error: errinsertpago } = await window.supabaseclient
+                    const { error: errInsertPago } = await window.supabaseClient
                         .from('propinas')
-                        .insert([nuevapropinapago]);
-                    if (errinsertpago) throw errinsertpago;
+                        .insert([nuevaPropinaPago]);
+                    if (errInsertPago) throw errInsertPago;
                     
-                    // 2c. crear otro nuevo registro con el monto restante (pendiente, entregado: false)
-                    let nuevomontooriginalrestante = 0;
-                    let nuevamonedaoriginalrestante = 'Bs';
-                    let nuevomontobsrestante = 0;
+                    // 2c. Crear otro NUEVO REGISTRO con el monto restante (pendiente, entregado: false)
+                    let nuevoMontoOriginalRestante = 0;
+                    let nuevaMonedaOriginalRestante = 'Bs';
+                    let nuevoMontoBsRestante = 0;
                     
-                    if (pagarenusd) {
-                        nuevomontooriginalrestante = montorestanteenmoneda;
-                        nuevamonedaoriginalrestante = 'USD';
-                        nuevomontobsrestante = montorestanteenmoneda * tasabase;
+                    if (pagarEnUSD) {
+                        nuevoMontoOriginalRestante = montoRestanteEnMoneda;
+                        nuevaMonedaOriginalRestante = 'USD';
+                        nuevoMontoBsRestante = montoRestanteEnMoneda * tasaBase;
                     } else {
-                        nuevomontobsrestante = montorestanteenmoneda;
-                        nuevomontooriginalrestante = montorestanteenmoneda;
-                        nuevamonedaoriginalrestante = 'Bs';
+                        nuevoMontoBsRestante = montoRestanteEnMoneda;
+                        nuevoMontoOriginalRestante = montoRestanteEnMoneda;
+                        nuevaMonedaOriginalRestante = 'Bs';
                     }
                     
-                    const nuevapropinarestante = {
-                        mesonero_id: mesoneroparapagoid,
+                    const nuevaPropinaRestante = {
+                        mesonero_id: mesoneroParaPagoId,
                         mesa: prop.mesa || 'General',
                         metodo: prop.metodo,
-                        monto_original: parseFloat(nuevomontooriginalrestante.toFixed(2)),
-                        moneda_original: nuevamonedaoriginalrestante,
+                        monto_original: parseFloat(nuevoMontoOriginalRestante.toFixed(2)),
+                        moneda_original: nuevaMonedaOriginalRestante,
                         tasa_aplicada: prop.tasa_aplicada,
-                        monto_bs: parseFloat(nuevomontobsrestante.toFixed(2)),
+                        monto_bs: parseFloat(nuevoMontoBsRestante.toFixed(2)),
                         referencia: prop.referencia,
                         cajero: prop.cajero,
                         fecha: prop.fecha,
                         entregado: false
                     };
                     
-                    const { error: errinsertrestante } = await window.supabaseclient
+                    const { error: errInsertRestante } = await window.supabaseClient
                         .from('propinas')
-                        .insert([nuevapropinarestante]);
-                    if (errinsertrestante) throw errinsertrestante;
+                        .insert([nuevaPropinaRestante]);
+                    if (errInsertRestante) throw errInsertRestante;
                     
-                    restoporpagar = 0;
-                    pagocompletado = true;
+                    restoPorPagar = 0;
+                    pagoCompletado = true;
                     break;
                 }
             }
 
-            // si después del bucle aún queda resto por pagar (por error lógico), abortar
-            // usar epsilon check para evitar errores de punto flotante
-            if (restoporpagar > 0.01) {
-                throw new error('No se pudo cubrir el monto total. Verifique los datos.');
+            // Si después del bucle aún queda resto por pagar (por error lógico), abortar
+            // Usar epsilon check para evitar errores de punto flotante
+            if (restoPorPagar > 0.01) {
+                throw new Error('No se pudo cubrir el monto total. Verifique los datos.');
             }
 
-            window.cerrarmodalpago();
-            // limpiar vista previa antes de actualizar
-            const previewelparcial = document.getElementById('pagoPreviewSection');
-            if (previewelparcial) {
-                previewelparcial.innerHTML = '';
-                previewelparcial.style.display = 'none';
+            window.cerrarModalPago();
+            // Limpiar vista previa antes de actualizar
+            const previewElParcial = document.getElementById('pagoPreviewSection');
+            if (previewElParcial) {
+                previewElParcial.innerHTML = '';
+                previewElParcial.style.display = 'none';
             }
-            await window.actualizaracumuladospendientes();
-            await window.cargarmesoneros();
-            await window.cargarpropinas();
-            window.renderizarpropinas();
+            await window.actualizarAcumuladosPendientes();
+            await window.cargarMesoneros();
+            await window.cargarPropinas();
+            window.renderizarPropinas();
             
-            const montomostrar = montoesusd ? '$' + monto.toFixed(2) : window.formatbs(montoenmonedaseleccionada);
-            window.mostrartoast('Pago parcial registrado: ' + montomostrar, 'success');
+            const montoMostrar = montoEsUSD ? '$' + monto.toFixed(2) : window.formatBs(montoEnMonedaSeleccionada);
+            window.mostrarToast('Pago parcial registrado: ' + montoMostrar, 'success');
             
         } catch(e) {
             console.error('Error pago parcial:', e);
             let msg = e.message || e;
             if (e.details) msg += ' - ' + e.details;
             if (e.hint) msg += ' (Sugerencia: ' + e.hint + ')';
-            window.mostrartoast('Error: ' + msg, 'error');
+            window.mostrarToast('Error: ' + msg, 'error');
         } finally {
             if (btn) {
                 btn.disabled = false;
-                btn.innerHTML = '<i class="Fas fa-check"></i> Confirmar';
+                btn.innerHTML = '<i class="fas fa-check"></i> Confirmar';
             }
         }
     };
 
     // ════════════════════════════════════════
-    // propinas — cargar + renderizar + historial
+    // PROPINAS — cargar + renderizar + historial
     // ════════════════════════════════════════
-    window.cargarpropinas = async function() {
+    window.cargarPropinas = async function() {
         try {
             const h = new Date(); h.setHours(0,0,0,0);
             const m = new Date(h); m.setDate(m.getDate()+1);
-            const { data, error } = await window.supabaseclient
+            const { data, error } = await window.supabaseClient
                 .from('propinas').select('*, mesoneros(nombre)')
                 .gte('fecha', h.toISOString()).lt('fecha', m.toISOString())
                 .order('fecha', { ascending: false });
             if (error) throw error;
             window.propinas = data || [];
-            window.renderizarpropinas();
+            window.renderizarPropinas();
         } catch(e) { 
             console.error('Error cargando propinas:', e); 
         }
     };
 
-    window.renderizarpropinas = function() {
+    window.renderizarPropinas = function() {
         const propinas = window.propinas || [];
         const total    = propinas.reduce(function(s,p){ return s+(p.monto_bs||0); }, 0);
         const cantidad = propinas.length;
         const promedio = cantidad > 0 ? total/cantidad : 0;
-        const tasa     = Number(window.configglobal?.tasa_efectiva || window.configglobal?.tasa_cambio || 400) || 400;
-        const totalusd = tasa > 0 ? total / tasa : 0;
-        const promusd  = tasa > 0 ? promedio / tasa : 0;
+        const tasa     = Number(window.configGlobal?.tasa_efectiva || window.configGlobal?.tasa_cambio || 400) || 400;
+        const totalUsd = tasa > 0 ? total / tasa : 0;
+        const promUsd  = tasa > 0 ? promedio / tasa : 0;
         var el;
-        el = document.getElementById('propinasTotal');    if(el) el.textContent = window.formatusd(totalusd) + ' / ' + window.formatbs(total);
+        el = document.getElementById('propinasTotal');    if(el) el.textContent = window.formatUSD(totalUsd) + ' / ' + window.formatBs(total);
         el = document.getElementById('propinasCantidad'); if(el) el.textContent = String(cantidad);
-        el = document.getElementById('propinasPromedio'); if(el) el.textContent = window.formatusd(promusd) + ' / ' + window.formatbs(promedio);
-        el = document.getElementById('propinasHoyDashboard'); if(el) el.textContent = window.formatusd(totalusd) + ' / ' + window.formatbs(total);
+        el = document.getElementById('propinasPromedio'); if(el) el.textContent = window.formatUSD(promUsd) + ' / ' + window.formatBs(promedio);
+        el = document.getElementById('propinasHoyDashboard'); if(el) el.textContent = window.formatUSD(totalUsd) + ' / ' + window.formatBs(total);
         const tbody = document.getElementById('propinasTableBody');
         if (tbody) {
             const ultimas5 = propinas.slice(0, 5);
             if (ultimas5.length) {
                 tbody.innerHTML = ultimas5.map(function(p) {
-                    var hora = new Date(p.fecha).toLocaleString('es-VE',{timezone:'America/Caracas',hour:'2-digit',minute:'2-digit'});
-                    // determinar si es pago usando referencia === 'EGRESO'
-                    var ispago = p.referencia === 'EGRESO';
-                    var signo = ispago ? '-' : '+';
-                    var colormonto = ispago ? 'var(--text-dark)' : 'var(--success)';
+                    var hora = new Date(p.fecha).toLocaleString('es-VE',{timeZone:'America/Caracas',hour:'2-digit',minute:'2-digit'});
+                    // Determinar si es pago usando referencia === 'EGRESO'
+                    var isPago = p.referencia === 'EGRESO';
+                    var signo = isPago ? '-' : '+';
+                    var colorMonto = isPago ? 'var(--text-dark)' : 'var(--success)';
                     
-                    // formato especial para efectivo_usd: mostrar monto_original y monto_bs
-                    var displaymonto = '';
+                    // Formato especial para efectivo_usd: mostrar monto_original y monto_bs
+                    var displayMonto = '';
                     if (p.metodo === 'efectivo_usd' && p.monto_original) {
-                        if (ispago) {
-                            // pago en usd: [-$ {monto_original} (-bs. {monto_bs})]
-                            displaymonto = '$' + p.monto_original.toFixed(2) + ' (-Bs. ' + p.monto_bs.toFixed(2) + ')';
+                        if (isPago) {
+                            // Pago en USD: [-$ {monto_original} (-Bs. {monto_bs})]
+                            displayMonto = '$' + p.monto_original.toFixed(2) + ' (-Bs. ' + p.monto_bs.toFixed(2) + ')';
                         } else {
-                            // ingreso en usd: [+$ {monto_original} (bs. {monto_bs})]
-                            displaymonto = '$' + p.monto_original.toFixed(2) + ' (Bs. ' + p.monto_bs.toFixed(2) + ')';
+                            // Ingreso en USD: [+$ {monto_original} (Bs. {monto_bs})]
+                            displayMonto = '$' + p.monto_original.toFixed(2) + ' (Bs. ' + p.monto_bs.toFixed(2) + ')';
                         }
                     } else {
-                        displaymonto = window.formatbs(p.monto_bs);
+                        displayMonto = window.formatBs(p.monto_bs);
                     }
                     
-                    return '<tr><td>' + hora + '</td><td>' + (p.mesoneros ? p.mesoneros.nombre : 'N/A') + '</td><td>' + (p.mesa||'N/A') + '</td><td>' + (p.metodo||'N/A') + '</td><td style="color:' + colormonto + '">' + signo + ' ' + displaymonto + '</td><td>' + (p.cajero||'N/A') + '</td></tr>';
+                    return '<tr><td>' + hora + '</td><td>' + (p.mesoneros ? p.mesoneros.nombre : 'N/A') + '</td><td>' + (p.mesa||'N/A') + '</td><td>' + (p.metodo||'N/A') + '</td><td style="color:' + colorMonto + '">' + signo + ' ' + displayMonto + '</td><td>' + (p.cajero||'N/A') + '</td></tr>';
                 }).join('');
             } else {
-                tbody.innerHTML = '<tr><td colspan="6" style="Text-align:center;padding:1rem;color:var(--text-muted)">Sin propinas hoy</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:1rem;color:var(--text-muted)">Sin propinas hoy</td></tr>';
             }
         }
     };
 
-    window.verhistorialpropinahoy = async function() {
+    window.verHistorialPropinaHoy = async function() {
         try {
             const h   = new Date(); h.setHours(0,0,0,0);
             const m   = new Date(h); m.setDate(m.getDate()+1);
-            const tasa = window.configglobal?.tasa_efectiva || window.configglobal?.tasa_cambio || 400;
-            // mostrar todos los registros (sin filtrar por entregado) para historial completo
-            const { data, error } = await window.supabaseclient
+            const tasa = window.configGlobal?.tasa_efectiva || window.configGlobal?.tasa_cambio || 400;
+            // Mostrar TODOS los registros (sin filtrar por entregado) para historial completo
+            const { data, error } = await window.supabaseClient
                 .from('propinas').select('*, mesoneros(nombre)')
                 .gte('fecha', h.toISOString()).lt('fecha', m.toISOString())
                 .order('fecha', { ascending: false });
             if (error) throw error;
             const lista  = data || [];
-            const totbs  = lista.reduce(function(s,p){ return s+(p.monto_bs||0); }, 0);
-            const totusd = tasa > 0 ? totbs/tasa : 0;
+            const totBs  = lista.reduce(function(s,p){ return s+(p.monto_bs||0); }, 0);
+            const totUsd = tasa > 0 ? totBs/tasa : 0;
             const rows = lista.map(function(p) {
-                var musd = tasa > 0 ? (p.monto_bs||0)/tasa : 0;
-                var hora = new Date(p.fecha).toLocaleString('es-VE',{timezone:'America/Caracas',hour:'2-digit',minute:'2-digit'});
-                // determinar si es pago usando referencia === 'EGRESO'Var ispago = p.referencia === 'EGRESO';
-                var signo = ispago ? '-' : '+';
-                var colormonto = ispago ? 'var(--text-dark)' : 'var(--success)';
+                var mUsd = tasa > 0 ? (p.monto_bs||0)/tasa : 0;
+                var hora = new Date(p.fecha).toLocaleString('es-VE',{timeZone:'America/Caracas',hour:'2-digit',minute:'2-digit'});
+                // Determinar si es pago usando referencia === 'EGRESO'
+                var isPago = p.referencia === 'EGRESO';
+                var signo = isPago ? '-' : '+';
+                var colorMonto = isPago ? 'var(--text-dark)' : 'var(--success)';
                 
-                // formato especial para efectivo_usd: mostrar monto_original y monto_bs
-                var displaymonto = '';
+                // Formato especial para efectivo_usd: mostrar monto_original y monto_bs
+                var displayMonto = '';
                 if (p.metodo === 'efectivo_usd' && p.monto_original) {
-                    if (ispago) {
-                        // pago en usd: [-$ {monto_original} (-bs. {monto_bs})]
-                        displaymonto = '$' + p.monto_original.toFixed(2) + ' (-Bs. ' + p.monto_bs.toFixed(2) + ')';
+                    if (isPago) {
+                        // Pago en USD: [-$ {monto_original} (-Bs. {monto_bs})]
+                        displayMonto = '$' + p.monto_original.toFixed(2) + ' (-Bs. ' + p.monto_bs.toFixed(2) + ')';
                     } else {
-                        // ingreso en usd: [+$ {monto_original} (bs. {monto_bs})]
-                        displaymonto = '$' + p.monto_original.toFixed(2) + ' (Bs. ' + p.monto_bs.toFixed(2) + ')';
+                        // Ingreso en USD: [+$ {monto_original} (Bs. {monto_bs})]
+                        displayMonto = '$' + p.monto_original.toFixed(2) + ' (Bs. ' + p.monto_bs.toFixed(2) + ')';
                     }
                 } else {
-                    displaymonto = window.formatusd(musd) + ' | ' + window.formatbs(p.monto_bs||0);
+                    displayMonto = window.formatUSD(mUsd) + ' | ' + window.formatBs(p.monto_bs||0);
                 }
                 
-                var badgetipo = ispago 
-                    ? '<span style="Display:inline-block;padding:2px 6px;border-radius:4px;font-size:.65rem;background:rgba(244,67,54,.15);color:var(--text-dark);font-weight:700;margin-left:.35rem">PAGO</span>': '<span style="Display:inline-block;padding:2px 6px;border-radius:4px;font-size:.65rem;background:rgba(76,175,80,.15);color:var(--success);font-weight:700;margin-left:.35rem">INGRESO</span>';
-                return '<tr>'+ '<td style="Padding:.55rem .85rem;border-bottom:1px solid var(--border);font-size:.78rem;color:var(--text-muted)">' + hora + '</td>'+ '<td style="Padding:.55rem .85rem;border-bottom:1px solid var(--border);font-size:.82rem;font-weight:600">' + (p.mesoneros ? p.mesoneros.nombre : 'N/A') + '</td>'+ '<td style="Padding:.55rem .85rem;border-bottom:1px solid var(--border);font-size:.78rem;color:var(--text-muted)">' + (p.mesa||'N/A') + '</td>'+ '<td style="Padding:.55rem .85rem;border-bottom:1px solid var(--border);font-size:.78rem">' + (p.metodo||'N/A') + '</td>'+ '<td style="padding:.55rem .85rem;border-bottom:1px solid var(--border);font-size:.82rem;font-weight:700;color:' + colormonto + '">' + signo + ' ' + displaymonto + badgetipo + '</td>'+ '</tr>';
+                var badgeTipo = isPago 
+                    ? '<span style="display:inline-block;padding:2px 6px;border-radius:4px;font-size:.65rem;background:rgba(244,67,54,.15);color:var(--text-dark);font-weight:700;margin-left:.35rem">PAGO</span>'
+                    : '<span style="display:inline-block;padding:2px 6px;border-radius:4px;font-size:.65rem;background:rgba(76,175,80,.15);color:var(--success);font-weight:700;margin-left:.35rem">INGRESO</span>';
+                return '<tr>'
+                    + '<td style="padding:.55rem .85rem;border-bottom:1px solid var(--border);font-size:.78rem;color:var(--text-muted)">' + hora + '</td>'
+                    + '<td style="padding:.55rem .85rem;border-bottom:1px solid var(--border);font-size:.82rem;font-weight:600">' + (p.mesoneros ? p.mesoneros.nombre : 'N/A') + '</td>'
+                    + '<td style="padding:.55rem .85rem;border-bottom:1px solid var(--border);font-size:.78rem;color:var(--text-muted)">' + (p.mesa||'N/A') + '</td>'
+                    + '<td style="padding:.55rem .85rem;border-bottom:1px solid var(--border);font-size:.78rem">' + (p.metodo||'N/A') + '</td>'
+                    + '<td style="padding:.55rem .85rem;border-bottom:1px solid var(--border);font-size:.82rem;font-weight:700;color:' + colorMonto + '">' + signo + ' ' + displayMonto + badgeTipo + '</td>'
+                    + '</tr>';
             }).join('');
             var pl = lista.length;
-            var totline = pl + ' propina' + (pl!==1?'s':'') + ' · Total: ' + window.formatusd(totusd) + ' | ' + window.formatbs(totbs);
-            var emptyrow = '<tr><td colspan="5" style="Text-align:center;padding:1.5rem;color:var(--text-muted)">Sin propinas hoy</td></tr>';
+            var totLine = pl + ' propina' + (pl!==1?'s':'') + ' · Total: ' + window.formatUSD(totUsd) + ' | ' + window.formatBs(totBs);
+            var emptyRow = '<tr><td colspan="5" style="text-align:center;padding:1.5rem;color:var(--text-muted)">Sin propinas hoy</td></tr>';
             var ov = document.createElement('div');
-            ov.style.csstext = 'position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:10001;display:flex;align-items:center;justify-content:center;padding:1rem;backdrop-filter:blur(3px)';
-            ov.innerHTML = '<div style="Background:var(--card-bg);border-radius:16px;max-width:680px;width:100%;max-height:85vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 20px 40px rgba(0,0,0,.4)">'+ '<div style="Background:linear-gradient(135deg,var(--propina),#7b1fa2);padding:1rem 1.5rem;color:#fff;display:flex;justify-content:space-between;align-items:center">'+ '<div><div style="Font-weight:700;font-size:1rem"><i class="Fas fa-hand-holding-heart"></i> Registro</div>'+ '<div style="Font-size:.75rem;opacity:.8;margin-top:2px">' + totline + '</div></div>'+ '<button onclick="this.closest(\'[style*=position]\').remove()" Style="background:rgba(255,255,255,.2);border:none;color:#fff;border-radius:50%;width:30px;height:30px;cursor:pointer;font-size:1rem;font-weight:700;display:flex;align-items:center;justify-content:center">&#x2715;</button>'+ '</div>'+ '<div style="Overflow-y:auto;flex:1"><table style="Width:100%;border-collapse:collapse">'+ '<thead><tr style="Background:var(--secondary)">'+ '<th style="Padding:.6rem .85rem;text-align:left;font-size:.72rem;text-transform:uppercase;color:var(--text-muted);font-weight:700">Hora</th>'+ '<th style="Padding:.6rem .85rem;text-align:left;font-size:.72rem;text-transform:uppercase;color:var(--text-muted);font-weight:700">Mesonero</th>'+ '<th style="Padding:.6rem .85rem;text-align:left;font-size:.72rem;text-transform:uppercase;color:var(--text-muted);font-weight:700">Mesa</th>'+ '<th style="Padding:.6rem .85rem;text-align:left;font-size:.72rem;text-transform:uppercase;color:var(--text-muted);font-weight:700">Método</th>'+ '<th style="Padding:.6rem .85rem;text-align:left;font-size:.72rem;text-transform:uppercase;color:var(--text-muted);font-weight:700">Registro</th>'+ '</tr></thead>'+ '<tbody>' + (rows || emptyrow) + '</tbody></table></div>'+ '<div style="Padding:.85rem 1.5rem;border-top:1px solid var(--border);display:flex;justify-content:flex-end">'+ '<button onclick="this.closest(\'[style*=position]\').remove()" Style="background:var(--primary);color:#fff;border:none;padding:.55rem 1.25rem;border-radius:8px;cursor:pointer;font-family:Montserrat,sans-serif;font-weight:600;font-size:.85rem">Cerrar</button>'+ '</div></div>';
+            ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:10001;display:flex;align-items:center;justify-content:center;padding:1rem;backdrop-filter:blur(3px)';
+            ov.innerHTML = '<div style="background:var(--card-bg);border-radius:16px;max-width:680px;width:100%;max-height:85vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 20px 40px rgba(0,0,0,.4)">'
+                + '<div style="background:linear-gradient(135deg,var(--propina),#7B1FA2);padding:1rem 1.5rem;color:#fff;display:flex;justify-content:space-between;align-items:center">'
+                +   '<div><div style="font-weight:700;font-size:1rem"><i class="fas fa-hand-holding-heart"></i> Registro</div>'
+                +   '<div style="font-size:.75rem;opacity:.8;margin-top:2px">' + totLine + '</div></div>'
+                +   '<button onclick="this.closest(\'[style*=position]\').remove()" style="background:rgba(255,255,255,.2);border:none;color:#fff;border-radius:50%;width:30px;height:30px;cursor:pointer;font-size:1rem;font-weight:700;display:flex;align-items:center;justify-content:center">&#x2715;</button>'
+                + '</div>'
+                + '<div style="overflow-y:auto;flex:1"><table style="width:100%;border-collapse:collapse">'
+                + '<thead><tr style="background:var(--secondary)">'
+                + '<th style="padding:.6rem .85rem;text-align:left;font-size:.72rem;text-transform:uppercase;color:var(--text-muted);font-weight:700">Hora</th>'
+                + '<th style="padding:.6rem .85rem;text-align:left;font-size:.72rem;text-transform:uppercase;color:var(--text-muted);font-weight:700">Mesonero</th>'
+                + '<th style="padding:.6rem .85rem;text-align:left;font-size:.72rem;text-transform:uppercase;color:var(--text-muted);font-weight:700">Mesa</th>'
+                + '<th style="padding:.6rem .85rem;text-align:left;font-size:.72rem;text-transform:uppercase;color:var(--text-muted);font-weight:700">Método</th>'
+                + '<th style="padding:.6rem .85rem;text-align:left;font-size:.72rem;text-transform:uppercase;color:var(--text-muted);font-weight:700">Registro</th>'
+                + '</tr></thead>'
+                + '<tbody>' + (rows || emptyRow) + '</tbody></table></div>'
+                + '<div style="padding:.85rem 1.5rem;border-top:1px solid var(--border);display:flex;justify-content:flex-end">'
+                + '<button onclick="this.closest(\'[style*=position]\').remove()" style="background:var(--primary);color:#fff;border:none;padding:.55rem 1.25rem;border-radius:8px;cursor:pointer;font-family:Montserrat,sans-serif;font-weight:600;font-size:.85rem">Cerrar</button>'
+                + '</div></div>';
             ov.addEventListener('click', function(e){ if(e.target===ov) ov.remove(); });
-            document.body.appendchild(ov);
+            document.body.appendChild(ov);
         } catch(e) {
             console.error('Error historial propinas:', e);
-            window.mostrartoast('Error al cargar historial', 'error');
+            window.mostrarToast('Error al cargar historial', 'error');
         }
     };
 
     // ════════════════════════════════════════
-    // foto mesonero
+    // FOTO MESONERO
     // ════════════════════════════════════════
-    function handlemesonerofotofile() {
+    function handleMesoneroFotoFile() {
         var fi=document.getElementById('mesoneroFoto');
         var ui=document.getElementById('mesoneroFotoUrl');
         var pd=document.getElementById('mesoneroFotoPreview');
@@ -997,14 +1092,14 @@
         var rb=document.getElementById('mesoneroFotoRemoveBtn');
         if (!fi||!pd) return;
         if (fi.files && fi.files[0]) {
-            currentmesonerofotofile=fi.files[0]; currentmesonerofotourl='';
+            currentMesoneroFotoFile=fi.files[0]; currentMesoneroFotoUrl='';
             if(ui){ui.value='';ui.disabled=true;}
             var reader=new FileReader();
             reader.onload=function(e){if(pi)pi.src=e.target.result;pd.style.display='flex';if(rb)rb.style.display='flex';};
-            reader.readasdataurl(fi.files[0]);
+            reader.readAsDataURL(fi.files[0]);
         } else { if(ui)ui.disabled=false; }
     }
-    function handlemesonerofotourl() {
+    function handleMesoneroFotoUrl() {
         var ui=document.getElementById('mesoneroFotoUrl');
         var fi=document.getElementById('mesoneroFoto');
         var pd=document.getElementById('mesoneroFotoPreview');
@@ -1013,7 +1108,7 @@
         if(!ui||!pd) return;
         if(fi&&fi.files&&fi.files[0]) return;
         var url=ui.value.trim();
-        if(url){currentmesonerofotourl=url;currentmesonerofotofile=null;if(pi)pi.src=url;pd.style.display='flex';if(rb)rb.style.display='flex';}
+        if(url){currentMesoneroFotoUrl=url;currentMesoneroFotoFile=null;if(pi)pi.src=url;pd.style.display='flex';if(rb)rb.style.display='flex';}
         else{pd.style.display='none';if(rb)rb.style.display='none';if(pi)pi.src='';currentMesoneroFotoUrl='';}
     }
     function removeMesoneroFoto() {
@@ -1024,64 +1119,64 @@
         var rb=document.getElementById('mesoneroFotoRemoveBtn');
         if(fi)fi.value=''; if(ui){ui.value='';ui.disabled=false;}
         if(pd)pd.style.display='none'; if(rb)rb.style.display='none';
-        if(pi)pi.src=''; currentmesonerofotofile=null; currentmesonerofotourl='';
+        if(pi)pi.src=''; currentMesoneroFotoFile=null; currentMesoneroFotoUrl='';
     }
 
     // ════════════════════════════════════════
-    // guardar mesonero
+    // GUARDAR MESONERO
     // ════════════════════════════════════════
-    var savemesonerobtn = document.getElementById('saveMesonero');
-    if (savemesonerobtn) {
-        savemesonerobtn.addEventListener('click', async function() {
+    var saveMesoneroBtn = document.getElementById('saveMesonero');
+    if (saveMesoneroBtn) {
+        saveMesoneroBtn.addEventListener('click', async function() {
             if (this.disabled) return;
-            var id     = window.mesoneroeditandoid;
+            var id     = window.mesoneroEditandoId;
             var nombre = (document.getElementById('mesoneroNombre')||{}).value;
             if (nombre) nombre = nombre.trim();
-            var activoel = document.getElementById('mesoneroActivo');
-            var activo = activoel ? activoel.value === 'true' : true;
-            if (!nombre) { window.mostrartoast('Ingresa un nombre', 'error'); return; }
-            var fotourl = '';
-            var archivofoto = (document.getElementById('mesoneroFoto')||{files:[]}).files[0];
-            var fotourlinput = ((document.getElementById('mesoneroFotoUrl')||{}).value)||'';
-            if (archivofoto) {
-                var res = await window.subirimagenplatillo(archivofoto, 'mesoneros');
-                if (res.success) fotourl = res.url;
-                else { window.mostrartoast('Error al subir foto: '+res.error,'error'); return; }
-            } else if (fotourlinput) { fotourl = fotourlinput; }
+            var activoEl = document.getElementById('mesoneroActivo');
+            var activo = activoEl ? activoEl.value === 'true' : true;
+            if (!nombre) { window.mostrarToast('Ingresa un nombre', 'error'); return; }
+            var fotoUrl = '';
+            var archivoFoto = (document.getElementById('mesoneroFoto')||{files:[]}).files[0];
+            var fotoUrlInput = ((document.getElementById('mesoneroFotoUrl')||{}).value)||'';
+            if (archivoFoto) {
+                var res = await window.subirImagenPlatillo(archivoFoto, 'mesoneros');
+                if (res.success) fotoUrl = res.url;
+                else { window.mostrarToast('Error al subir foto: '+res.error,'error'); return; }
+            } else if (fotoUrlInput) { fotoUrl = fotoUrlInput; }
             try {
-                this.disabled=true; this.innerHTML='<i class="Fas fa-spinner fa-spin"></i>';
-                var dataobj = { nombre: nombre, activo: activo, foto: fotourl || null };
+                this.disabled=true; this.innerHTML='<i class="fas fa-spinner fa-spin"></i>';
+                var dataObj = { nombre: nombre, activo: activo, foto: fotoUrl || null };
                 var err;
                 if (id) {
-                    var r1 = await window.supabaseclient.from('mesoneros').update(dataobj).eq('id', id);
+                    var r1 = await window.supabaseClient.from('mesoneros').update(dataObj).eq('id', id);
                     err = r1.error;
                 } else {
-                    dataobj.id = window.generarid('mes_');
-                    var r2 = await window.supabaseclient.from('mesoneros').insert([dataobj]);
+                    dataObj.id = window.generarId('mes_');
+                    var r2 = await window.supabaseClient.from('mesoneros').insert([dataObj]);
                     err = r2.error;
                 }
                 if (err) throw err;
-                window.cerrarmodal('mesoneroModal');
-                await window.cargarmesoneros();
-                window.mostrartoast('Mesonero guardado', 'success');
-            } catch(e) { window.mostrartoast('Error: '+e.message,'error'); }
+                window.cerrarModal('mesoneroModal');
+                await window.cargarMesoneros();
+                window.mostrarToast('Mesonero guardado', 'success');
+            } catch(e) { window.mostrarToast('Error: '+e.message,'error'); }
             finally { this.disabled=false; this.innerHTML='Guardar'; }
         });
     }
 
-    var closebtn = document.getElementById('closeMesoneroModal');
-    if (closebtn) closebtn.addEventListener('click', function(){ window.cerrarmodal('mesoneroModal'); });
-    var cancelbtn = document.getElementById('cancelMesoneroEdit');
-    if (cancelbtn) cancelbtn.addEventListener('click', function(){ window.cerrarmodal('mesoneroModal'); });
-    var fotoinput = document.getElementById('mesoneroFoto');
-    if (fotoinput) fotoinput.addEventListener('change', handlemesonerofotofile);
-    var fotourlinp = document.getElementById('mesoneroFotoUrl');
-    if (fotourlinp) fotourlinp.addEventListener('input', handlemesonerofotourl);
-    var removebtn = document.getElementById('mesoneroFotoRemoveBtn');
-    if (removebtn) removebtn.addEventListener('click', removeMesoneroFoto);
+    var closeBtn = document.getElementById('closeMesoneroModal');
+    if (closeBtn) closeBtn.addEventListener('click', function(){ window.cerrarModal('mesoneroModal'); });
+    var cancelBtn = document.getElementById('cancelMesoneroEdit');
+    if (cancelBtn) cancelBtn.addEventListener('click', function(){ window.cerrarModal('mesoneroModal'); });
+    var fotoInput = document.getElementById('mesoneroFoto');
+    if (fotoInput) fotoInput.addEventListener('change', handleMesoneroFotoFile);
+    var fotoUrlInp = document.getElementById('mesoneroFotoUrl');
+    if (fotoUrlInp) fotoUrlInp.addEventListener('input', handleMesoneroFotoUrl);
+    var removeBtn = document.getElementById('mesoneroFotoRemoveBtn');
+    if (removeBtn) removeBtn.addEventListener('click', removeMesoneroFoto);
 
     // Inicializar al cargar el módulo
-    if (window.supabaseclient) {
-        window.cargarmesoneros();
+    if (window.supabaseClient) {
+        window.cargarMesoneros();
     }
 })();
