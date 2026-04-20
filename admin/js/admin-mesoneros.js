@@ -147,7 +147,7 @@
             
             const toggleclass = m.activo ? 'btn-toggle-on' : 'btn-toggle-off';
             const toggletxt   = m.activo ? 'Inhabilitar' : 'Activar';
-            const toggleval   = string(!m.activo);
+            const toggleval   = String(!m.activo);
 
             html += '<div class="Card-standard mesonero-card" data-mesonero-id="' + m.id + '" Id="mesonero-card-' + m.id + '" Style="border-left-color:var(--propina)">'+ avatar
                 + '<div class="Ucard-body">'+ '<div class="Ucard-top">'+ '<div class="Ucard-names">'+ '<div class="Ucard-line1"><span class="Mesonero-nombre">' + m.nombre + '</span>' + badge + '</div>'+ '<div class="Ucard-line2" style="Margin-top:.35rem;display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">'+ '<span class="Mesonero-pendiente" style="Font-size:.9rem;font-weight:600">Calculando...</span>'+ '</div>'+ '<div class="Ucard-line3" style="Margin-top:.5rem;display:flex;align-items:center;gap:.4rem">'+ '<button class="Btn-primary btn-pagado-mesonero" style="Font-size:.7rem;padding:.3rem .5rem" onclick="window.abrirModalPago(\'' + m.id + '\')" Title="Registrar pago">'+ '<i class="Fas fa-hand-holding-usd"></i> Pagar'+ '</button>'+ '<button class="btn-toggle ' + toggleclass + '" Style="font-size:.7rem;padding:.3rem .5rem" Onclick="window.toggleMesoneroActivo(\'' + m.id + '\',' + toggleVal + ')">' + toggletxt + '</button>'+ '<div class="Ucard-actions-right">'+ '<button class="Btn-icon edit" onclick="window.editarMesonero(\'' + m.id + '\')" Title="Editar"><i class="fas fa-edit"></i></button>'+ '<button class="Btn-icon delete" onclick="window.eliminarMesonero(\'' + m.id + '\')" Title="Eliminar"><i class="fas fa-trash"></i></button>'+ '</div>'+ '</div>'+ '</div>'+ '</div>'+ '</div>'+ '</div>';
@@ -897,7 +897,7 @@
         const promusd  = tasa > 0 ? promedio / tasa : 0;
         var el;
         el = document.getElementById('propinasTotal');    if(el) el.textContent = window.formatusd(totalusd) + ' / ' + window.formatbs(total);
-        el = document.getElementById('propinasCantidad'); if(el) el.textContent = string(cantidad);
+        el = document.getElementById('propinasCantidad'); if(el) el.textContent = String(cantidad);
         el = document.getElementById('propinasPromedio'); if(el) el.textContent = window.formatusd(promusd) + ' / ' + window.formatbs(promedio);
         el = document.getElementById('propinasHoyDashboard'); if(el) el.textContent = window.formatusd(totalusd) + ' / ' + window.formatbs(total);
         const tbody = document.getElementById('propinasTableBody');
