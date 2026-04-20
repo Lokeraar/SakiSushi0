@@ -82,16 +82,16 @@
         if (!toast) {
             toast = document.createElement('div');
             toast.id = 'toast';
-            document.body.appendchild(toast);
+            document.body.appendChild(toast);
         }
         
         toast.textContent = mensaje;
-        toast.classname = `toast show ${tipo}`;
+        toast.className = `toast show ${tipo}`;
         setTimeout(() => {
             toast.classList.remove('show');
             // remover completamente del dom después de la animación
             setTimeout(() => {
-                if (toast.parentnode) toast.remove();
+                if (toast.parentNode) toast.remove();
             }, 300);
         }, 3000);
     };

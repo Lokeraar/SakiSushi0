@@ -32,7 +32,7 @@
         setTimeout(function(){
             var el = document.getElementById('stockCritico'); if (!el) return;
             el.scrollIntoView({behavior:'smooth',block:'center'});
-            var par = el.closest('.lower-stock') || el.parentelement;
+            var par = el.closest('.lower-stock') || el.parentElement;
             if (par) {
                 var n = 0;
                 var iv = setinterval(function(){
@@ -49,7 +49,7 @@
         window._scrollTabs = function(dir) {
             const c = document.getElementById('tabsContainer');
             if (!c) return;
-            c.scrollby({ left: dir * 180, behavior: 'smooth' });
+            c.scrollBy({ left: dir * 180, behavior: 'smooth' });
             setTimeout(window._updatetabchevrons, 200);
         };
         window._updatetabchevrons = function() {
@@ -57,9 +57,9 @@
             const lbtn = document.getElementById('tabsChevronLeft');
             const rbtn = document.getElementById('tabsChevronRight');
             if (!c || !lbtn || !rbtn) return;
-            lbtn.style.opacity = c.scrollleft > 4 ? '1' : '0.3';
-            lbtn.style.pointerevents = c.scrollleft > 4 ? 'auto' : 'none';
-            const atend = c.scrollleft + c.clientwidth >= c.scrollwidth - 4;
+            lbtn.style.opacity = c.scrollLeft > 4 ? '1' : '0.3';
+            lbtn.style.pointerevents = c.scrollLeft > 4 ? 'auto' : 'none';
+            const atend = c.scrollLeft + c.clientWidth >= c.scrollWidth - 4;
             rbtn.style.opacity = atend ? '0.3' : '1';
             rbtn.style.pointerevents = atend ? 'none' : 'auto';
         };

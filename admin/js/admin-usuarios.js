@@ -5,7 +5,7 @@
 
     window.cargarusuarios = async function() {
         try {
-            const { data, error } = await window.supabaseClient.from('usuarios').select('*').order('nombre');
+            const { data, error } = await window.supabaseclient.from('usuarios').select('*').order('nombre');
             if (error) throw error;
             window.usuarios = data || [];
             window.renderizarusuarios();
@@ -137,7 +137,7 @@
             }
         }
         try {
-            await window.supabaseClient.from('usuarios').update({ activo }).eq('id', userid);
+            await window.supabaseclient.from('usuarios').update({ activo }).eq('id', userid);
             await window.cargarusuarios();
             window.mostrartoast(`✅ usuario ${activo ? 'activado' : 'desactivado'}`, 'success');
         } catch (e) { console.error('Error actualizando usuario:', e); window.mostrartoast('❌ Error al actualizar usuario', 'error'); }
@@ -214,7 +214,7 @@
 			`¿Estás seguro de eliminar al usuario "${user.nombre}"? Esta acción no se puede deshacer.`,
 			async () => {
 				try {
-					await window.supabaseClient.from('Usuarios').delete().eq('Id', userId);
+					await window.supabaseclient.from('Usuarios').delete().eq('Id', userId);
 					await window.cargarUsuarios();
 					window.mostrartoast('🗑️ usuario eliminado', 'Success');
 				} catch (e) {
@@ -260,7 +260,7 @@
         try {
             let hashed = null;
             if (password) {
-                const { data: h, error: hasherr } = await window.supabaseClient.rpc('hash_password', { plain_password: password });
+                const { data: h, error: hasherr } = await window.supabaseclient.rpc('hash_password', { plain_password: password });
                 if (hasherr) throw hasherr;
                 hashed = h;
             }
@@ -276,9 +276,9 @@
             
             let error;
             if (window.usuarioeditandoid) {
-                ({ error } = await window.supabaseClient.from('usuarios').update(userdata).eq('id', window.usuarioeditandoid));
+                ({ error } = await window.supabaseclient.from('usuarios').update(userdata).eq('id', window.usuarioeditandoid));
             } else {
-                ({ error } = await window.supabaseClient.from('usuarios').insert([userdata]));
+                ({ error } = await window.supabaseclient.from('usuarios').insert([userdata]));
             }
             if (error) throw error;
             

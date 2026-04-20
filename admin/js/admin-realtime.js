@@ -2,13 +2,13 @@
 (function() {
     window.setupRealtimeSubscriptions = function() {
         try {
-            window.supabaseClient
+            window.supabaseclient
                 .channel('admin-menu')
                 .on('postgres_changes', { event: '*', schema: 'Public', table: 'Menu' },
                     () => { window.cargarMenu(); })
                 .subscribe();
 
-            window.supabaseClient
+            window.supabaseclient
                 .channel('admin-inventario')
                 .on('postgres_changes', { event: '*', schema: 'Public', table: 'Inventario' },
                     async (p) => {
@@ -25,19 +25,19 @@
                     })
                 .subscribe();
 
-            window.supabaseClient
+            window.supabaseclient
                 .channel('admin-usuarios')
                 .on('postgres_changes', { event: '*', schema: 'Public', table: 'Usuarios' },
                     () => { window.cargarUsuarios(); })
                 .subscribe();
 
-            window.supabaseClient
+            window.supabaseclient
                 .channel('admin-qr')
                 .on('postgres_changes', { event: '*', schema: 'Public', table: 'codigos_qr' },
                     () => { window.cargarQRs(); })
                 .subscribe();
 
-            window.supabaseClient
+            window.supabaseclient
                 .channel('admin-pedidos')
                 .on('postgres_changes', { event: '*', schema: 'Public', table: 'Pedidos' },
                     () => {
@@ -47,25 +47,25 @@
                     })
                 .subscribe();
 
-            window.supabaseClient
+            window.supabaseclient
                 .channel('admin-mesoneros')
                 .on('postgres_changes', { event: '*', schema: 'Public', table: 'Mesoneros' },
                     () => { window.cargarmesoneros(); })
                 .subscribe();
 
-            window.supabaseClient
+            window.supabaseclient
                 .channel('admin-deliverys')
                 .on('postgres_changes', { event: '*', schema: 'Public', table: 'Deliverys' },
                     () => { window.cargarDeliverys(); })
                 .subscribe();
 
-            window.supabaseClient
+            window.supabaseclient
                 .channel('admin-propinas')
                 .on('postgres_changes', { event: '*', schema: 'Public', table: 'Propinas' },
                     () => { window.cargarPropinas(); })
                 .subscribe();
 
-            window.supabaseClient
+            window.supabaseclient
                 .channel('admin-config')
                 .on('postgres_changes', { event: 'UPDATE', schema: 'Public', table: 'Config' },
                     (p) => {
@@ -82,14 +82,14 @@
 
     window._notificarAdminStockCritico = async function(ingredienteNombre) {
         try {
-            const { data: subs } = await window.supabaseClient
+            const { data: subs } = await window.supabaseclient
                 .from('push_subscriptions')
                 .select('session_id')
                 .in('Rol', ['Admin', 'Cajero']);
             if (!subs || !subs.length) return;
             const sessions = [...new Set(subs.map(s => s.session_id).filter(Boolean))];
             for (const sid of sessions) {
-                await window.supabaseClient.from('Notificaciones').insert([{
+                await window.supabaseclient.from('Notificaciones').insert([{
                     pedido_id: null, tipo: 'stock_critico',
                     titulo: '⚠️ stock crítico',
                     mensaje: `El ingrediente "${ingredientenombre}" está por debajo del mínimo. Revisa el inventario.`,
@@ -129,7 +129,7 @@
                 }
                 const p256dh = btoa(String.fromCharCode.apply(null, new Uint8Array(sub.getKey('P256dh'))));
                 const auth   = btoa(String.fromCharCode.apply(null, new Uint8Array(sub.getKey('Auth'))));
-                await window.supabaseClient.from('push_subscriptions').upsert([{
+                await window.supabaseclient.from('push_subscriptions').upsert([{
                     session_id: sid,
                     endpoint:   sub.endpoint,
                     p256dh, auth,
