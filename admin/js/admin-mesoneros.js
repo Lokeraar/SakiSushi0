@@ -23,7 +23,7 @@
             // sumar monto_bs por mesonero_id, separando usd y bs
             const acumuladobs = {};
             const acumuladousdcrudo = {}; // monto original en usd
-            const tasabase = number(window.configglobal?.tasa_cambio || 400);
+            const tasabase = Number(window.configglobal?.tasa_cambio || 400);
             
             (data || []).forEach(function(p) {
                 const mid = p.mesonero_id;
@@ -40,8 +40,8 @@
                 const mesoneroid = card.getattribute('data-mesonero-id');
                 const pendienteel = card.querySelector('.mesonero-pendiente');
                 
-                const tasaefectiva = number(window.configglobal?.tasa_efectiva || window.configglobal?.tasa_cambio || 400);
-                const tasabaseactual = number(window.configglobal?.tasa_cambio || 400);
+                const tasaefectiva = Number(window.configglobal?.tasa_efectiva || window.configglobal?.tasa_cambio || 400);
+                const tasabaseactual = Number(window.configglobal?.tasa_cambio || 400);
                 const usdcrudo = acumuladousdcrudo[mesoneroid] || 0;
                 const bstotal = acumuladobs[mesoneroid] || 0;
                 const usdenbs = usdcrudo * tasabaseactual;
@@ -247,7 +247,7 @@
         
         let totalbs = 0;
         let totalusdcrudo = 0;
-        const tasabase = number(window.configglobal?.tasa_cambio || 400);
+        const tasabase = Number(window.configglobal?.tasa_cambio || 400);
         
         (data || []).forEach(function(p) {
             if (p.moneda_original === 'USD' && p.monto_original) {
@@ -270,7 +270,7 @@
         if (!m) return;
 
         const acumulado = await calcularacumuladopendiente(mesoneroid);
-        const tasa = number(window.configglobal?.tasa_efectiva || window.configglobal?.tasa_cambio || 400) || 400;
+        const tasa = Number(window.configglobal?.tasa_efectiva || window.configglobal?.tasa_cambio || 400) || 400;
         const usd = tasa > 0 ? acumulado / tasa : 0;
 
         const modalcontent = document.getElementById('pagoModalContent');
@@ -336,8 +336,8 @@
             return;
         }
         
-        const tasabase = number(window.configglobal?.tasa_cambio || 400);
-        const tasaefectiva = number(window.configglobal?.tasa_efectiva || window.configglobal?.tasa_cambio || 400);
+        const tasabase = Number(window.configglobal?.tasa_cambio || 400);
+        const tasaefectiva = Number(window.configglobal?.tasa_efectiva || window.configglobal?.tasa_cambio || 400);
         
         let montoenbs = montoingresado;
         let esusd = false;
@@ -523,7 +523,7 @@
             }
             
             // calcular totales separados de usd y bs
-            const tasabase = number(window.configglobal?.tasa_cambio || 400);
+            const tasabase = Number(window.configglobal?.tasa_cambio || 400);
             let totalusdcrudo = 0;
             let totalbscrudo = 0;
             
@@ -545,7 +545,7 @@
             
             // crear una nueva propina que representa el pago total al mesonero
             const cajeronombre = (window.usuarioactual && window.usuarioactual.nombre) || 'Administrador';
-            const ahora = new date().toisostring();
+            const ahora = new Date().toISOString();
             
             // si el método es efectivo_usd, registrar el monto en usd
             let nuevomontooriginal = totalpagar;
@@ -619,7 +619,7 @@
             return;
         }
 
-        const tasabase = number(window.configglobal?.tasa_cambio || 400);
+        const tasabase = Number(window.configglobal?.tasa_cambio || 400);
         let montoenmonedaseleccionada = monto; // monto en la moneda seleccionada (usd o bs)
         let montoesusd = false;
         
@@ -708,7 +708,7 @@
                     
                     // crear nueva propina que representa el pago (egreso)
                     const cajeronombre = (window.usuarioactual && window.usuarioactual.nombre) || 'Administrador';
-                    const ahora = new date().toisostring();
+                    const ahora = new Date().toISOString();
                     
                     // calcular los valores para el registro de pago
                     let nuevomontooriginal = 0;
@@ -758,7 +758,7 @@
                     
                     // 2b. crear un nuevo registro con el monto pagado (egreso)
                     const cajeronombre = (window.usuarioactual && window.usuarioactual.nombre) || 'Administrador';
-                    const ahora = new date().toisostring();
+                    const ahora = new Date().toISOString();
                     
                     let nuevomontooriginalpago = 0;
                     let nuevamonedaoriginalpago = 'Bs';
@@ -873,11 +873,11 @@
     // ════════════════════════════════════════
     window.cargarpropinas = async function() {
         try {
-            const h = new date(); h.sethours(0,0,0,0);
-            const m = new date(h); m.setdate(m.getdate()+1);
+            const h = new Date(); h.setHours(0,0,0,0);
+            const m = new Date(h); m.setDate(m.getDate()+1);
             const { data, error } = await window.supabaseclient
                 .from('propinas').select('*, mesoneros(nombre)')
-                .gte('fecha', h.toisostring()).lt('fecha', m.toisostring())
+                .gte('fecha', h.toISOString()).lt('fecha', m.toISOString())
                 .order('fecha', { ascending: false });
             if (error) throw error;
             window.propinas = data || [];
@@ -892,7 +892,7 @@
         const total    = propinas.reduce(function(s,p){ return s+(p.monto_bs||0); }, 0);
         const cantidad = propinas.length;
         const promedio = cantidad > 0 ? total/cantidad : 0;
-        const tasa     = number(window.configglobal?.tasa_efectiva || window.configglobal?.tasa_cambio || 400) || 400;
+        const tasa     = Number(window.configglobal?.tasa_efectiva || window.configglobal?.tasa_cambio || 400) || 400;
         const totalusd = tasa > 0 ? total / tasa : 0;
         const promusd  = tasa > 0 ? promedio / tasa : 0;
         var el;
@@ -905,7 +905,7 @@
             const ultimas5 = propinas.slice(0, 5);
             if (ultimas5.length) {
                 tbody.innerHTML = ultimas5.map(function(p) {
-                    var hora = new date(p.fecha).tolocalestring('es-VE',{timezone:'America/Caracas',hour:'2-digit',minute:'2-digit'});
+                    var hora = new Date(p.fecha).toLocaleString('es-VE',{timezone:'America/Caracas',hour:'2-digit',minute:'2-digit'});
                     // determinar si es pago usando referencia === 'EGRESO'Var ispago = p.referencia === 'EGRESO';
                     var signo = ispago ? '-' : '+';
                     var colormonto = ispago ? 'var(--text-dark)' : 'var(--success)';
@@ -934,13 +934,13 @@
 
     window.verhistorialpropinahoy = async function() {
         try {
-            const h   = new date(); h.sethours(0,0,0,0);
-            const m   = new date(h); m.setdate(m.getdate()+1);
+            const h   = new Date(); h.setHours(0,0,0,0);
+            const m   = new Date(h); m.setDate(m.getDate()+1);
             const tasa = window.configglobal?.tasa_efectiva || window.configglobal?.tasa_cambio || 400;
             // mostrar todos los registros (sin filtrar por entregado) para historial completo
             const { data, error } = await window.supabaseclient
                 .from('propinas').select('*, mesoneros(nombre)')
-                .gte('fecha', h.toisostring()).lt('fecha', m.toisostring())
+                .gte('fecha', h.toISOString()).lt('fecha', m.toISOString())
                 .order('fecha', { ascending: false });
             if (error) throw error;
             const lista  = data || [];
@@ -948,7 +948,7 @@
             const totusd = tasa > 0 ? totbs/tasa : 0;
             const rows = lista.map(function(p) {
                 var musd = tasa > 0 ? (p.monto_bs||0)/tasa : 0;
-                var hora = new date(p.fecha).tolocalestring('es-VE',{timezone:'America/Caracas',hour:'2-digit',minute:'2-digit'});
+                var hora = new Date(p.fecha).toLocaleString('es-VE',{timezone:'America/Caracas',hour:'2-digit',minute:'2-digit'});
                 // determinar si es pago usando referencia === 'EGRESO'Var ispago = p.referencia === 'EGRESO';
                 var signo = ispago ? '-' : '+';
                 var colormonto = ispago ? 'var(--text-dark)' : 'var(--success)';

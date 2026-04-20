@@ -204,7 +204,7 @@
     };
 
     window._verificarAvisoLunes = function() {
-        if (!window.configGlobal || !window.configGlobal.aumento_semanal) return;
+        if (!window.configglobal || !window.configglobal.aumento_semanal) return;
 
         const hoy = new Date();
         if (hoy.getDay() !== 1) return;
@@ -267,7 +267,7 @@
 
     window._simularlunes = function() {
         console.log('%c📅 Simulando lunes para prueba de aviso semanal...', 'color:#FF9800;font-weight:700');
-        const hoy = new date().toisostring().split('T')[0];
+        const hoy = new Date().toISOString().split('T')[0];
         localStorage.removeItem('saki_aviso_lunes_' + hoy);
         const estadooriginal = window.configglobal?.aumento_semanal;
         if (window.configglobal) window.configglobal.aumento_semanal = true;

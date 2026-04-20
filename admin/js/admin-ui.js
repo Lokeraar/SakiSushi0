@@ -121,7 +121,7 @@
             }
             _mostrarfechasaumento(alguno);
             if (alguno && !document.getElementById('aumentoDesde').value) {
-                document.getElementById('aumentoDesde').value = new date().toisostring().split('T')[0];
+                document.getElementById('aumentoDesde').value = new Date().toISOString().split('T')[0];
             }
         }
         document.getElementById('aumentoActivoToggle').addEventListener('change', function() {

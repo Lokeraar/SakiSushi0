@@ -50,7 +50,7 @@
             window.supabaseclient
                 .channel('admin-mesoneros')
                 .on('postgres_changes', { event: '*', schema: 'Public', table: 'Mesoneros' },
-                    () => { window.cargarMesoneros(); })
+                    () => { window.cargarmesoneros(); })
                 .subscribe();
 
             window.supabaseclient
@@ -69,7 +69,7 @@
                 .channel('admin-config')
                 .on('postgres_changes', { event: 'UPDATE', schema: 'Public', table: 'Config' },
                     (p) => {
-                        window.configGlobal = { ...window.configGlobal, ...p.new };
+                        window.configglobal = { ...window.configglobal, ...p.new };
                         const bi = document.getElementById('Tasabaseinput');
                         if (bi && p.new.tasa_cambio) bi.value = parseFloat(p.new.tasa_cambio).toFixed(2);
                         window.recalcularTasaEfectiva && window.recalcularTasaEfectiva();
