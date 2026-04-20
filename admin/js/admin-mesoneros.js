@@ -1081,6 +1081,6 @@
 
     // Inicializar al cargar el módulo
     if (window.supabaseClient) {
-        window.cargarMesoneros();
+        window.cargarmesoneros();
     }
 })();

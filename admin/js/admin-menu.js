@@ -268,7 +268,7 @@
         }
         
         // tooltip para ingredientes
-        const ingredienteslabel = document.queryselector('#platilloForm .form-group:nth-child(7) label');
+        const ingredientesLabel = document.querySelector('#platilloForm .form-group:nth-child(7) label');
         if (ingredientesLabel) {
             ingredientesLabel.innerHTML += `
                 <span class="Tooltip-wrap" style="Position:relative; display:inline-flex; align-items:center; cursor:help; margin-left:.3rem">

@@ -310,13 +310,13 @@
     document.getElementById('closeUsuarioModal').addEventListener('click', () => window.cerrarmodal('usuarioModal'));
     
     // configurar eventos de foto en el modal de usuario
-    function setupusuariofotoevents() {
+    function setupUsuarioFotoEvents() {
         const fileInput = document.getElementById('usuarioFoto');
         const urlInput = document.getElementById('usuarioFotoUrl');
         const removeBtn = document.getElementById('usuarioFotoRemoveBtn');
-        if (fileinput) fileinput.addEventListener('change', handleusuariofotofile);
-        if (urlinput) urlInput.addEventListener('input', handleusuariofotourl);
-        if (removebtn) removeBtn.addEventListener('click', removeUsuarioFoto);
+        if (fileInput) fileInput.addEventListener('change', handleusuariofotofile);
+        if (urlInput) urlInput.addEventListener('input', handleusuariofotourl);
+        if (removeBtn) removeBtn.addEventListener('click', removeUsuarioFoto);
     }
     setupUsuarioFotoEvents();
 })();
