@@ -1,26 +1,26 @@
 // admin-core.js - Variables globales y utilidades básicas
 (function() {
-    window.isAdminAuthenticated = false;
-    window.jwtToken = null;
-    window.menuItems = [];
-    window.inventarioItems = [];
+    window.isadminauthenticated = false;
+    window.jwttoken = null;
+    window.menuitems = [];
+    window.inventarioitems = [];
     window.usuarios = [];
-    window.qrCodes = [];
+    window.qrcodes = [];
     window.charts = {};
-    window.platilloEditandoId = null;
+    window.platilloeditandoid = null;
     window.mesoneros = [];
     window.deliverys = [];
-    window.deliveryEditandoId = null;
-    window.deliveryParaPago = null;
+    window.deliveryeditandoid = null;
+    window.deliveryparapago = null;
     window.propinas = [];
     window.pedidos = [];
     
     // Usuario actual logueado (se inicializa desde sessionStorage al cargar)
-    window.usuarioActual = null;
+    window.usuarioactual = null;
     try {
         const storedUser = sessionStorage.getItem('admin_user');
         if (storedUser) {
-            window.usuarioActual = JSON.parse(storedUser);
+            window.usuarioactual = JSON.parse(storedUser);
         }
     } catch(e) {
         console.warn('No se pudo cargar usuarioactual de sessionstorage:', e);

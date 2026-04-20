@@ -13,7 +13,7 @@
         try {
             const desde = document.getElementById('Reportedesde').value;
             const hasta = document.getElementById('Reportehasta').value;
-            let query = window.supabaseClient.from('Pedidos').select('*').in('Estado', ['Cobrado', 'Entregado', 'Enviado', 'reserva_completada']);
+            let query = window.supabaseclient.from('Pedidos').select('*').in('Estado', ['Cobrado', 'Entregado', 'Enviado', 'reserva_completada']);
             if (desde) query = query.gte('Fecha', new Date(desde).toISOString());
             if (hasta) { const h = new Date(hasta); h.setDate(h.getDate() + 1); query = query.lt('Fecha', h.toISOString()); }
             const { data, error } = await query.order('Fecha', { ascending: false });
@@ -112,7 +112,7 @@
 
     window.cargarpedidosrecientes = async function() {
         try {
-            const { data, error } = await window.supabaseClient.from('pedidos').select('*').order('fecha', { ascending: false }).limit(5);
+            const { data, error } = await window.supabaseclient.from('pedidos').select('*').order('fecha', { ascending: false }).limit(5);
             if (error) throw error;
             const pedidoscount = document.getElementById('pedidosCountBadge');
             if (pedidoscount) pedidoscount.textContent = (data || []).length;
@@ -151,7 +151,7 @@
         let pedido = (window.pedidos||[]).find(p=>p.id===pedidoid);
         if (!pedido) {
             try {
-                const {data,error}=await window.supabaseClient.from('pedidos').select('*').eq('id',pedidoid).maybesingle();
+                const {data,error}=await window.supabaseclient.from('pedidos').select('*').eq('id',pedidoid).maybesingle();
                 if(error) throw error; pedido=data;
             } catch(e){ window.mostrartoast('Error al cargar pedido','error'); return; }
         }
@@ -184,10 +184,10 @@
         try {
             const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
             const manana = new Date(hoy); manana.setDate(manana.getDate() + 1);
-            const { data: ventasHoy } = await window.supabaseClient.from('Ventas').select('pedido_id').gte('Fecha', hoy.toISOString()).lt('Fecha', manana.toISOString());
+            const { data: ventasHoy } = await window.supabaseclient.from('Ventas').select('pedido_id').gte('Fecha', hoy.toISOString()).lt('Fecha', manana.toISOString());
             if (!ventasHoy || ventasHoy.length === 0) { document.getElementById('Ventashoy').textContent = '$0.00 / bs 0.00'; return; }
             const pedidoIds = ventasHoy.map(v => v.pedido_id);
-            const { data: pedidosData } = await window.supabaseClient.from('Pedidos').select('*').in('Id', pedidoIds);
+            const { data: pedidosData } = await window.supabaseclient.from('Pedidos').select('*').in('Id', pedidoIds);
             const _netoCobradoPedido = (pedido) => {
                 if (!pedido) return 0;
                 if (pedido.metodo_pago === 'Invitacion') return 0;
@@ -215,7 +215,7 @@
         try {
             const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
             const manana = new Date(hoy); manana.setDate(manana.getDate() + 1);
-            const { data: pedidosDelivery } = await window.supabaseClient.from('Pedidos').select('*').eq('Tipo', 'Delivery').eq('Estado', 'Enviado').gte('Fecha', hoy.toISOString()).lt('Fecha', manana.toISOString());
+            const { data: pedidosDelivery } = await window.supabaseclient.from('Pedidos').select('*').eq('Tipo', 'Delivery').eq('Estado', 'Enviado').gte('Fecha', hoy.toISOString()).lt('Fecha', manana.toISOString());
             let totalDeliverys = 0;
             (pedidosDelivery || []).forEach(p => { totalDeliverys += p.costo_delivery_bs || p.costoDelivery || 0; });
             const el = document.getElementById('Deliveryshoydashboard');
@@ -228,8 +228,8 @@
         try {
             const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
             const manana = new Date(hoy); manana.setDate(manana.getDate() + 1);
-            const { data: entregas } = await window.supabaseClient.from('entregas_delivery').select('*, deliverys(*)').gte('fecha_entrega', hoy.toISOString()).lt('fecha_entrega', manana.toISOString());
-            const { data: motorizados } = await window.supabaseClient.from('Deliverys').select('*').order('Nombre');
+            const { data: entregas } = await window.supabaseclient.from('entregas_delivery').select('*, deliverys(*)').gte('fecha_entrega', hoy.toISOString()).lt('fecha_entrega', manana.toISOString());
+            const { data: motorizados } = await window.supabaseclient.from('Deliverys').select('*').order('Nombre');
             const acumulado = {};
             (entregas || []).forEach(e => { acumulado[e.delivery_id] = (acumulado[e.delivery_id] || 0) + (e.monto_bs || 0); });
             const totalAcumulado = Object.values(acumulado).reduce((s, v) => s + v, 0);
@@ -308,10 +308,10 @@
         try {
             const hoy = new date(); hoy.sethours(0, 0, 0, 0);
             const manana = new date(hoy); manana.setdate(manana.getdate() + 1);
-            const { data: ventashoy } = await window.supabaseClient.from('ventas').select('*').gte('fecha', hoy.toisostring()).lt('fecha', manana.toisostring());
+            const { data: ventashoy } = await window.supabaseclient.from('ventas').select('*').gte('fecha', hoy.toisostring()).lt('fecha', manana.toisostring());
             if (!ventashoy || ventashoy.length === 0) { window.mostrartoast('No hay ventas registradas hoy', 'info'); return; }
             const pedidoids = ventashoy.map(v => v.pedido_id);
-            const { data: pedidoshoy } = await window.supabaseClient.from('pedidos').select('*').in('id', pedidoids);
+            const { data: pedidoshoy } = await window.supabaseclient.from('pedidos').select('*').in('id', pedidoids);
             const tasa = window.configglobal?.tasa_cambio || window.configglobal?.tasa_efectiva || 400;
             const fmtbs = window.formatbs;
             const _netocobradopedido = (pedido) => {
