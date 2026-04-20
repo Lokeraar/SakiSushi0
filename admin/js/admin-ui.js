@@ -186,7 +186,7 @@
 		window.iniciarLoginUI();
         
         // inicializar tema antes de mostrar cualquier cosa
-        window.inittheme();
+        window.initTheme();
         
         if (await window.restaurarsesionadmin()) {
             window.mostrarpanel();
