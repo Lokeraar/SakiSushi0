@@ -286,7 +286,7 @@
         if(url){currentdeliveryfotourl=url;currentdeliveryfotofile=null;if(pi)pi.src=url;pd.style.display='flex';if(rb)rb.style.display='flex';}
         else{pd.style.display='none';if(rb)rb.style.display='none';if(pi)pi.src='';currentDeliveryFotoUrl='';}
     }
-    function removedeliveryfoto() {
+    function removeDeliveryFoto() {
         var fi=document.getElementById('deliveryFoto');
         var ui=document.getElementById('deliveryFotoUrl');
         var pd=document.getElementById('deliveryFotoPreview');

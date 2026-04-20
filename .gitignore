@@ -1,26 +1,44 @@
 ```
+# Compiled and build artifacts
+*.pyc
+__pycache__/
+*.o
+*.obj
+*.exe
+*.dll
+*.so
+*.class
+*.out
+
 # Dependencies
 node_modules/
-
-# Build artifacts
-dist/
-build/
-*.min.js
-*.bundle.js
-
-# Logs and temp files
-*.log
-*.tmp
-
-# Environment
+venv/
+.venv/
 .env
 .env.local
-.env.*
+*.env.*
 
-# Editors
+# Build directories
+dist/
+build/
+target/
+.mypy_cache/
+.pytest_cache/
+.coverage
+coverage/
+htmlcov/
+
+# Editors and IDEs
 .vscode/
 .idea/
 *.swp
+*.swo
+*.tmp
+
+# Logs
+*.log
+
+# System files
 ```
 
 # Coverage reports
@@ -68,6 +86,7 @@ Thumbs.db
 *.tar.bz2
 *.tar.xz
 *.tar.zst
+```
 ```
 # Build directories
 dist/

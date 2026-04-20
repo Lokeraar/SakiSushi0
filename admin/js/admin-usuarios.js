@@ -51,78 +51,78 @@
 
 
     function handleusuariofotofile() {
-        const fileinput = document.getElementById('usuarioFoto');
-        const urlinput = document.getElementById('usuarioFotoUrl');
-        const previewdiv = document.getElementById('usuarioFotoPreview');
-        const previewimg = document.getElementById('usuarioPreviewImg');
-        const removebtn = document.getElementById('usuarioFotoRemoveBtn');
+        const fileInput = document.getElementById('usuarioFoto');
+        const urlInput = document.getElementById('usuarioFotoUrl');
+        const previewDiv = document.getElementById('usuarioFotoPreview');
+        const previewImg = document.getElementById('usuarioPreviewImg');
+        const removeBtn = document.getElementById('usuarioFotoRemoveBtn');
         
-        if (fileinput.files && fileinput.files[0]) {
-            const file = fileinput.files[0];
+        if (fileInput.files && fileInput.files[0]) {
+            const file = fileInput.files[0];
             currentuserfotofile = file;
             currentuserfotourl = '';
-            urlinput.value = '';
-            urlinput.disabled = true;
-            const reader = new filereader();
+            urlInput.value = '';
+            urlInput.disabled = true;
+            const reader = new FileReader();
             reader.onload = function(e) {
-                previewimg.src = e.target.result;
-                previewdiv.style.display = 'flex';
-                if (removebtn) removebtn.style.display = 'flex';
+                previewImg.src = e.target.result;
+                previewDiv.style.display = 'flex';
+                if (removebtn) removeBtn.style.display = 'flex';
             };
-            reader.readasdataurl(file);
+            reader.readAsDataURL(file);
         } else {
-            urlinput.disabled = false;
-            if (urlinput.value.trim()) {
-                previewimg.src = urlinput.value;
-                previewdiv.style.display = 'flex';
-                if (removebtn) removebtn.style.display = 'flex';
-                currentuserfotourl = urlinput.value;
+            urlInput.disabled = false;
+            if (urlInput.value.trim()) {
+                previewImg.src = urlInput.value;
+                previewDiv.style.display = 'flex';
+                if (removebtn) removeBtn.style.display = 'flex';
+                currentuserfotourl = urlInput.value;
                 currentuserfotofile = null;
             } else {
-                previewdiv.style.display = 'none';
-                if (removebtn) removebtn.style.display = 'none';
-                previewimg.src = '';
+                previewDiv.style.display = 'none';
+                if (removebtn) removeBtn.style.display = 'none';
+                previewImg.src = '';
             }
         }
     }
 
     function handleusuariofotourl() {
-        const urlinput = document.getElementById('usuarioFotoUrl');
-        const fileinput = document.getElementById('usuarioFoto');
-        const previewdiv = document.getElementById('usuarioFotoPreview');
-        const previewimg = document.getElementById('usuarioPreviewImg');
-        const removebtn = document.getElementById('usuarioFotoRemoveBtn');
+        const urlInput = document.getElementById('usuarioFotoUrl');
+        const fileInput = document.getElementById('usuarioFoto');
+        const previewDiv = document.getElementById('usuarioFotoPreview');
+        const previewImg = document.getElementById('usuarioPreviewImg');
+        const removeBtn = document.getElementById('usuarioFotoRemoveBtn');
         
-        if (fileinput.files && fileinput.files[0]) return;
+        if (fileInput.files && fileInput.files[0]) return;
         
-        const url = urlinput.value.trim();
+        const url = urlInput.value.trim();
         if (url) {
             currentuserfotourl = url;
             currentuserfotofile = null;
-            previewimg.src = url;
-            previewdiv.style.display = 'flex';
-            if (removebtn) removebtn.style.display = 'flex';
+            previewImg.src = url;
+            previewDiv.style.display = 'flex';
+            if (removebtn) removeBtn.style.display = 'flex';
         } else {
-            previewdiv.style.display = 'none';
-            if (removebtn) removebtn.style.display = 'none';
-            previewimg.src = '';
+            previewDiv.style.display = 'none';
+            if (removebtn) removeBtn.style.display = 'none';
+            previewImg.src = '';
             currentuserfotourl = '';
         }
     }
 
     function removeusuariofoto() {
-        const fileinput = document.getElementById('usuarioFoto');
-        const urlinput = document.getElementById('usuarioFotoUrl');
-        const previewdiv = document.getElementById('usuarioFotoPreview');
-        const previewimg = document.getElementById('usuarioPreviewImg');
-        const removebtn = document.getElementById('usuarioFotoRemoveBtn');
+        const fileInput = document.getElementById('usuarioFoto');
+        const urlInput = document.getElementById('usuarioFotoUrl');
+        const previewDiv = document.getElementById('usuarioFotoPreview');
+        const previewImg = document.getElementById('usuarioPreviewImg');
+        const removeBtn = document.getElementById('usuarioFotoRemoveBtn');
         
-        fileinput.value = '';
-        urlinput.value = '';
-        urlinput.disabled = false;
-        previewdiv.style.display = 'none';
-        if (removebtn) removebtn.style.display = 'none';
-        previewimg.src = '';
+        fileInput.value = '';
+        urlInput.value = '';
+        urlInput.disabled = false;
+        previewDiv.style.display = 'none';
+        if (removebtn) removeBtn.style.display = 'none';
+        previewImg.src = '';
         currentuserfotofile = null;
         currentuserfotourl = '';
     }
@@ -155,10 +155,10 @@
 		currentuserfotourl = '';
 		const fotoinput = document.getElementById('usuarioFoto');
 		if (fotoinput) fotoinput.value = '';
-		const urlinput = document.getElementById('usuarioFotoUrl');
-		if (urlinput) urlinput.value = '';
-		const previewdiv = document.getElementById('usuarioFotoPreview');
-		if (previewdiv) previewdiv.style.display = 'none';
+		const urlInput = document.getElementById('usuarioFotoUrl');
+		if (urlinput) urlInput.value = '';
+		const previewDiv = document.getElementById('usuarioFotoPreview');
+		if (previewdiv) previewDiv.style.display = 'none';
 		const modaltitle = document.getElementById('usuarioModalTitle');
 		if (modaltitle) modaltitle.textContent = 'Nuevo Cajero/Admin';
 		window.usuarioeditandoid = null;
@@ -183,18 +183,18 @@
 		const passwordinput = document.getElementById('usuarioPassword');
 		if (passwordinput) passwordinput.value = '';
 		if (user.foto) {
-			const urlinput = document.getElementById('usuarioFotoUrl');
-			if (urlinput) urlinput.value = user.foto;
-			const previewimg = document.getElementById('usuarioPreviewImg');
-			if (previewimg) previewimg.src = user.foto;
-			const previewdiv = document.getElementById('usuarioFotoPreview');
-			if (previewdiv) previewdiv.style.display = 'flex';
+			const urlInput = document.getElementById('usuarioFotoUrl');
+			if (urlinput) urlInput.value = user.foto;
+			const previewImg = document.getElementById('usuarioPreviewImg');
+			if (previewimg) previewImg.src = user.foto;
+			const previewDiv = document.getElementById('usuarioFotoPreview');
+			if (previewdiv) previewDiv.style.display = 'flex';
 			currentuserfotourl = user.foto;
 		} else {
-			const urlinput = document.getElementById('usuarioFotoUrl');
-			if (urlinput) urlinput.value = '';
-			const previewdiv = document.getElementById('usuarioFotoPreview');
-			if (previewdiv) previewdiv.style.display = 'none';
+			const urlInput = document.getElementById('usuarioFotoUrl');
+			if (urlinput) urlInput.value = '';
+			const previewDiv = document.getElementById('usuarioFotoPreview');
+			if (previewdiv) previewDiv.style.display = 'none';
 		}
 		const modal = document.getElementById('usuarioModal');
 		if (modal) modal.classList.add('active');
@@ -226,8 +226,8 @@
 	};
 
     // Guardar usuario (nuevo o edición)
-    document.getElementById('Saveusuario').addEventListener('Click', async () => {
-        const btn = document.getElementById('Saveusuario');
+    document.getElementById('saveUsuario').addEventListener('click', async () => {
+        const btn = document.getElementById('saveUsuario');
         if (btn && btn.disabled) return;
         if (btn) { btn.disabled = true; btn.innerHTML = '<i class="Fas fa-spinner fa-spin"></i> Guardando...'; }
         const nombre   = document.getElementById('usuarioNombre').value.trim();
@@ -311,12 +311,12 @@
     
     // configurar eventos de foto en el modal de usuario
     function setupusuariofotoevents() {
-        const fileinput = document.getElementById('usuarioFoto');
-        const urlinput = document.getElementById('usuarioFotoUrl');
-        const removebtn = document.getElementById('usuarioFotoRemoveBtn');
+        const fileInput = document.getElementById('usuarioFoto');
+        const urlInput = document.getElementById('usuarioFotoUrl');
+        const removeBtn = document.getElementById('usuarioFotoRemoveBtn');
         if (fileinput) fileinput.addEventListener('change', handleusuariofotofile);
-        if (urlinput) urlinput.addEventListener('input', handleusuariofotourl);
-        if (removebtn) removebtn.addEventListener('click', removeUsuarioFoto);
+        if (urlinput) urlInput.addEventListener('input', handleusuariofotourl);
+        if (removebtn) removeBtn.addEventListener('click', removeUsuarioFoto);
     }
     setupUsuarioFotoEvents();
 })();
