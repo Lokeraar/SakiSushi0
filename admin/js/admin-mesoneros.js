@@ -906,7 +906,8 @@
             if (ultimas5.length) {
                 tbody.innerHTML = ultimas5.map(function(p) {
                     var hora = new Date(p.fecha).toLocaleString('es-VE',{timezone:'America/Caracas',hour:'2-digit',minute:'2-digit'});
-                    // determinar si es pago usando referencia === 'EGRESO'Var ispago = p.referencia === 'EGRESO';
+                    // determinar si es pago usando referencia === 'EGRESO'
+                    var ispago = p.referencia === 'EGRESO';
                     var signo = ispago ? '-' : '+';
                     var colormonto = ispago ? 'var(--text-dark)' : 'var(--success)';
                     
