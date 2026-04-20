@@ -78,14 +78,14 @@
     <!-- PANEL PRINCIPAL -->
     <div class="panel-container" id="panelContainer">
         <header class="header">
-            <!-- Nivel 1: Logo + Título (izq), Salir (der) en móvil / Logo + Título + Usuario (izq), Toggle + Cajero + Mesas + Salir (der) en desktop -->
-            <div class="header-level level-1">
+            <!-- Nivel 1 Desktop: Logo + Título + Usuario (izq), Toggle + Cajero + Mesas + Salir (der) -->
+            <div class="header-level level-1 desktop-only">
                 <div class="header-left-group">
-                    <img src="https://lh3.googleusercontent.com/pw/AP1GczPrZAoWxmsOGRD9xl1hO5Q65JXuwUZzoR6gUk-cw5lVmarxQe_-lwqpA60tTKLlXfpvIjAJlKC6jFls-xETJOPkebLIIPhbGlUkknmhrRbdhMUll2UViGSUj3WmHKg2YEsZlAfxBPPTjIHhScjD0jfe=w1439-h1439-s-no-gm" alt="Logo Saki Sushi" class="header-logo-img">
+                    <img src="https://lh3.googleusercontent.com/pw/ABLVV8cQmZ9sOGRD9xl1hO5Q65JXuwUZzoR6gUk-cw5lVmarxQe_-lwqpA60tTKLlXfpvIjAJlKC6jFls-xETJOPkebLIIPhbGlUkknmhrRbdhMUll2UViGSUj3WmHKg2YEsZlAfxBPPTjIHhScjD0jfe=w1439-h1439-s-no-gm" alt="Logo Saki Sushi" class="header-logo-img">
                     <h2 class="header-title-text">Administración Saki Sushi -</h2>
                     <span class="header-user-name" id="headerUsuarioNombreDesktop">Cargando...</span>
                 </div>
-                <div class="header-right-group controls-group">
+                <div class="header-right-group">
                     <label class="theme-switch-wrapper" title="Cambiar tema claro/oscuro">
                         <span class="icon-sun">☀️</span>
                         <input type="checkbox" id="themeToggle" class="theme-toggle-input">
@@ -97,13 +97,32 @@
                 </div>
             </div>
             
-            <!-- Nivel 2: Usuario (izq - móvil) / Eslogan (izq - desktop), Toggle + Cajero + Mesas (der - móvil) / Sucursal (der - desktop) -->
-            <div class="header-level level-2">
+            <!-- Nivel 1 Móvil: Logo + Título + Usuario (izq), Salir (der) -->
+            <div class="header-level level-1 mobile-only">
                 <div class="header-left-group">
-                    <span class="header-user-name" id="headerUsuarioNombreMobile" style="display:none;">Cargando...</span>
-                    <span class="header-slogan-text" id="headerSloganDesktop" style="display:none;">Adictos al universo Saki</span>
+                    <img src="https://lh3.googleusercontent.com/pw/ABLVV8cQmZ9sOGRD9xl1hO5Q65JXuwUZzoR6gUk-cw5lVmarxQe_-lwqpA60tTKLlXfpvIjAJlKC6jFls-xETJOPkebLIIPhbGlUkknmhrRbdhMUll2UViGSUj3WmHKg2YEsZlAfxBPPTjIHhScjD0jfe=w1439-h1439-s-no-gm" alt="Logo Saki Sushi" class="header-logo-img">
+                    <h2 class="header-title-text">Administración Saki Sushi -</h2>
+                    <span class="header-user-name" id="headerUsuarioNombreMobile">Cargando...</span>
                 </div>
-                <div class="header-right-group controls-group-mobile" style="display:none;">
+                <div class="header-right-group">
+                    <button class="logout-button" id="logoutButton"><i class="fas fa-sign-out-alt"></i> Salir</button>
+                </div>
+            </div>
+            
+            <!-- Nivel 2 Desktop: Eslogan (izq), Sucursal (der) -->
+            <div class="header-level level-2 desktop-only">
+                <div class="header-left-group">
+                    <span class="header-slogan-text" id="headerSloganDesktop">Adictos al universo Saki</span>
+                </div>
+                <div class="header-right-group sucursal-group">
+                    <span class="header-sucursal-label">Seleccionar Sucursal</span>
+                    <button class="nav-button btn-header-sucursal" id="parroquiaBtn" title="Próximamente"><i class="fas fa-map-marker-alt"></i> <span id="parroquiaNombre">--</span></button>
+                </div>
+            </div>
+            
+            <!-- Nivel 2 Móvil: Toggle + Cajero + Mesas (izq), Sucursal (der) -->
+            <div class="header-level level-2 mobile-only">
+                <div class="header-left-group">
                     <label class="theme-switch-wrapper" title="Cambiar tema claro/oscuro">
                         <span class="icon-sun">☀️</span>
                         <input type="checkbox" id="themeToggleMobile" class="theme-toggle-input">
@@ -114,15 +133,26 @@
                 </div>
                 <div class="header-right-group sucursal-group">
                     <span class="header-sucursal-label">Seleccionar Sucursal</span>
-                    <button class="nav-button btn-header-sucursal" id="parroquiaBtn" title="Próximamente"><i class="fas fa-map-marker-alt"></i> <span id="parroquiaNombre">--</span></button>
+                    <button class="nav-button btn-header-sucursal" id="parroquiaBtnMobile" title="Próximamente"><i class="fas fa-map-marker-alt"></i> <span id="parroquiaNombreMobile">--</span></button>
                 </div>
             </div>
             
-            <!-- Nivel 3: Stock crítico (desktop) / Eslogan + Sucursal (móvil) -->
-            <div class="header-level level-3">
+            <!-- Nivel 3: Stock crítico (desktop) -->
+            <div class="header-level level-3 desktop-only">
                 <div id="stockCriticoHeader" style="width:100%; padding:.4rem .8rem; background:rgba(0,0,0,.2); border-radius:8px; display:flex; align-items:center; gap:.8rem; flex-wrap:wrap; font-size:.75rem">
                     <span style="font-weight:700; color:var(--danger); white-space:nowrap"><i class="fas fa-exclamation-triangle"></i> STOCK CRÍTICO:</span>
                     <div id="stockCriticoTags" style="display:flex; flex-wrap:wrap; gap:.4rem; flex:1; min-width:0"></div>
+                </div>
+            </div>
+            
+            <!-- Nivel 3 Móvil: Eslogan (izq), Sucursal (der) -->
+            <div class="header-level level-3 mobile-only">
+                <div class="header-left-group">
+                    <span class="header-slogan-text">Adictos al universo Saki</span>
+                </div>
+                <div class="header-right-group">
+                    <span class="header-sucursal-label">Seleccionar Sucursal</span>
+                    <button class="nav-button btn-header-sucursal" id="parroquiaBtnMobile2" title="Próximamente"><i class="fas fa-map-marker-alt"></i> <span id="parroquiaNombreMobile2">--</span></button>
                 </div>
             </div>
         </header>
