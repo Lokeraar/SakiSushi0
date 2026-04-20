@@ -22,10 +22,10 @@
         }
         
         const btn = document.querySelector('[onclick="Window.cambiarpassword()"]');
-        const originaltext = btn ? btn.innerhtml : '';
+        const originaltext = btn ? btn.innerHTML : '';
         if (btn) {
             btn.disabled = true;
-            btn.innerhtml = '<i class="Fas fa-spinner fa-spin"></i> Actualizando...';
+            btn.innerHTML = '<i class="Fas fa-spinner fa-spin"></i> Actualizando...';
         }
         
         try {
@@ -69,9 +69,9 @@
             
             window.configglobal.admin_password = nueva;
             
-            document.getelementbyid('currentPassword').value = '';
-            document.getelementbyid('newPassword').value = '';
-            document.getelementbyid('confirmPassword').value = '';
+            document.getElementById('currentPassword').value = '';
+            document.getElementById('newPassword').value = '';
+            document.getElementById('confirmPassword').value = '';
             
             window.mostrartoast('✅ Contraseña actualizada correctamente en todo el sistema', 'success');
             
@@ -79,19 +79,19 @@
             console.error('Error cambiando contraseña:', e);
             if (errordiv) {
                 errordiv.style.display = 'block';
-                errordiv.innerhtml = '<i class="Fas fa-exclamation-circle"></i> Error: ' + (e.message || 'Error al cambiar la contraseña');
+                errordiv.innerHTML = '<i class="Fas fa-exclamation-circle"></i> Error: ' + (e.message || 'Error al cambiar la contraseña');
             }
             window.mostrartoast('❌ Error al cambiar la contraseña: ' + (e.message || e), 'error');
         } finally {
             if (btn) {
                 btn.disabled = false;
-                btn.innerhtml = originaltext;
+                btn.innerHTML = originaltext;
             }
         }
     };
 
     window.guardarrecoveryemail = async function() {
-        const email = document.getelementbyid('recoveryEmail').value;
+        const email = document.getElementById('recoveryEmail').value;
         if (!email || !email.includes('@')) { window.mostrartoast('Ingresa un correo válido', 'error'); return; }
         try {
             await window.supabaseclient.from('config').update({ recovery_email: email }).eq('id', 1);
@@ -100,22 +100,22 @@
     };
 
     window.guardarwifipersistente = function() {
-        const ssid = document.getelementbyid('qrWifiSsid')?.value || '';
-        const password = document.getelementbyid('qrWifiPassword')?.value || '';
+        const ssid = document.getElementById('qrWifiSsid')?.value || '';
+        const password = document.getElementById('qrWifiPassword')?.value || '';
         
         if (ssid !== window.wifissidpersistente) {
             window.wifissidpersistente = ssid;
-            localstorage.setitem('saki_wifi_ssid', ssid);
+            localStorage.setItem('saki_wifi_ssid', ssid);
         }
         if (password !== window.wifipasswordpersistente) {
             window.wifipasswordpersistente = password;
-            localstorage.setitem('saki_wifi_pwd', password);
+            localStorage.setItem('saki_wifi_pwd', password);
         }
     };
 
     window.restaurarwifipersistente = function() {
-        const ssidinput = document.getelementbyid('qrWifiSsid');
-        const passwordinput = document.getelementbyid('qrWifiPassword');
+        const ssidinput = document.getElementById('qrWifiSsid');
+        const passwordinput = document.getElementById('qrWifiPassword');
         if (ssidinput && window.wifissidpersistente) ssidinput.value = window.wifissidpersistente;
         if (passwordinput && window.wifipasswordpersistente) passwordinput.value = window.wifipasswordpersistente;
     };
@@ -262,13 +262,13 @@
             }
         });
 
-        settimeout(() => { if (notif.parentnode) notif.remove(); }, 30000);
+        setTimeout(() => { if (notif.parentnode) notif.remove(); }, 30000);
     };
 
     window._simularlunes = function() {
         console.log('%c📅 Simulando lunes para prueba de aviso semanal...', 'color:#FF9800;font-weight:700');
         const hoy = new date().toisostring().split('T')[0];
-        localstorage.removeitem('saki_aviso_lunes_' + hoy);
+        localStorage.removeItem('saki_aviso_lunes_' + hoy);
         const estadooriginal = window.configglobal?.aumento_semanal;
         if (window.configglobal) window.configglobal.aumento_semanal = true;
         const _orig = date.prototype.getday;
@@ -282,18 +282,18 @@
 
     window._simularperiodosemanal = function(semanas) {
         semanas = semanas || 1;
-        const input = document.getelementbyid('aumentoDiarioInput');
-        const pct = parsefloat(input?.value) || 0;
-        const base = parsefloat(document.getelementbyid('tasaBaseInput')?.value) || 0;
+        const input = document.getElementById('aumentoDiarioInput');
+        const pct = parseFloat(input?.value) || 0;
+        const base = parseFloat(document.getElementById('tasaBaseInput')?.value) || 0;
         const acum = semanas * pct;
         const efectiva = base * (1 + acum / 100);
         console.group('%c📊 Simulación: ' + semanas + ' semana(s) de aumento semanal', 'color:#FF9800;font-weight:700');
         console.log('Tasa base:', base);
         console.log('% por semana:', pct + '%');
         console.log('Semanas simuladas:', semanas);
-        console.log('Acumulado simulado:', acum.tofixed(2) + '%');
-        console.log('Tasa efectiva simulada: Bs', efectiva.tofixed(2));
-        console.log('Diferencia vs actual: Bs', (efectiva - (window.configglobal?.tasa_efectiva || base)).tofixed(2));
+        console.log('Acumulado simulado:', acum.toFixed(2) + '%');
+        console.log('Tasa efectiva simulada: Bs', efectiva.toFixed(2));
+        console.log('Diferencia vs actual: Bs', (efectiva - (window.configglobal?.tasa_efectiva || base)).toFixed(2));
         console.groupend();
         console.log('%c💡 Tip: prueba window._simularPeriodoSemanal(3) para 3 semanas', 'color:gray');
     };

@@ -13,7 +13,7 @@
             // esperar a que supabaseclient esté listo (puede tardar un momento)
             let intentos = 0;
             while (!window.supabaseclient && intentos < 20) {
-                await new promise(r => settimeout(r, 100));
+                await new promise(r => setTimeout(r, 100));
                 intentos++;
             }
             
@@ -31,7 +31,7 @@
             }
             
             if (!admins.length) {
-                container.innerhtml = '<p style="Color:var(--text-muted);text-align:center">No hay administradores registrados</p>';
+                container.innerHTML = '<p style="Color:var(--text-muted);text-align:center">No hay administradores registrados</p>';
                 return;
             }
             
@@ -50,25 +50,25 @@
             
             // agregar evento click a cada tarjeta
             document.queryselectorall('.admin-card').foreach(card => {
-                card.addeventlistener('click', async (e) => {
+                card.addEventListener('click', async (e) => {
                     const id = card.dataset.id;
                     const username = card.dataset.username;
                     const nombre = card.dataset.nombre;
                     const foto = card.dataset.foto;
                     selectedadmin = { id, username, nombre, foto };
                     // mostrar panel de contraseña
-                    document.getelementbyid('loginSelectorPanel').classlist.add('hide');
-                    document.getelementbyid('loginPasswordPanel').classlist.add('show');
-                    document.getelementbyid('selectedAdminFoto').src = foto || window.getplaceholderimage(nombre);
-                    document.getelementbyid('selectedAdminNombre').textcontent = nombre;
+                    document.getElementById('loginSelectorPanel').classList.add('hide');
+                    document.getElementById('loginPasswordPanel').classList.add('show');
+                    document.getElementById('selectedAdminFoto').src = foto || window.getplaceholderimage(nombre);
+                    document.getElementById('selectedAdminNombre').textContent = nombre;
                     // limpiar campo contraseña
-                    document.getelementbyid('adminPassword').value = '';
-                    document.getelementbyid('adminPassword').focus();
+                    document.getElementById('adminPassword').value = '';
+                    document.getElementById('adminPassword').focus();
                 });
             });
         } catch (error) {
             console.error('Error cargando administradores:', error);
-            container.innerhtml = '<p style="Color:var(--danger);text-align:center">Error al cargar administradores. Recarga la página.</p>';
+            container.innerHTML = '<p style="Color:var(--danger);text-align:center">Error al cargar administradores. Recarga la página.</p>';
         }
     };
 
@@ -77,17 +77,17 @@
             window.mostrartoast('Selecciona un administrador primero', 'error');
             return;
         }
-        const password = document.getelementbyid('adminPassword').value;
+        const password = document.getElementById('adminPassword').value;
         if (!password) { window.mostrartoast('Ingresa la contraseña', 'error'); return; }
         
         const loginbtn = document.queryselector('#loginForm button[type="Submit"]');
-        if (loginbtn) { loginbtn.disabled = true; loginbtn.innerhtml = '<i class="Fas fa-spinner fa-spin"></i> Conectando...'; }
+        if (loginbtn) { loginbtn.disabled = true; loginbtn.innerHTML = '<i class="Fas fa-spinner fa-spin"></i> Conectando...'; }
         
         try {
             const response = await fetch('https://iqwwoihiiyrtypyqzhgy.supabase.co/functions/v1/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: json.stringify({ username: selectedadmin.username, password: password })
+                body: JSON.stringify({ username: selectedadmin.username, password: password })
             });
             const data = await response.json();
             if (!response.ok) throw new error(data.error || `error ${response.status}`);
@@ -95,20 +95,20 @@
             if (data.user.rol !== 'admin') { window.mostrartoast('Acceso denegado. Se requiere rol de administrador.', 'error'); return; }
             
             // verificar sesión duplicada
-            const existingtoken = sessionstorage.getitem('admin_jwt_token');
+            const existingtoken = sessionStorage.getItem('admin_jwt_token');
             if (existingtoken && existingtoken !== data.token) {
                 const confirmforce = confirm('Ya hay una sesión de administrador activa en otro dispositivo. ¿Deseas cerrarla y continuar con esta?');
                 if (!confirmforce) return;
-                sessionstorage.removeitem('admin_authenticated');
-                sessionstorage.removeitem('admin_jwt_token');
-                sessionstorage.removeitem('admin_user');
+                sessionStorage.removeItem('admin_authenticated');
+                sessionStorage.removeItem('admin_jwt_token');
+                sessionStorage.removeItem('admin_user');
             }
             
             window.isadminauthenticated = true;
             window.jwttoken = data.token;
-            sessionstorage.setitem('admin_authenticated', 'true');
-            sessionstorage.setitem('admin_jwt_token', window.jwttoken);
-            sessionstorage.setitem('admin_user', json.stringify(data.user));
+            sessionStorage.setItem('admin_authenticated', 'true');
+            sessionStorage.setItem('admin_jwt_token', window.jwttoken);
+            sessionStorage.setItem('admin_user', JSON.stringify(data.user));
             
             // guardar usuario actual en variable global
             window.usuarioactual = data.user;
@@ -120,14 +120,14 @@
             
             window.supabaseclient = window.inicializarsupabasecliente(window.jwttoken);
             
-            document.getelementbyid('loginContainer').style.display = 'none';
-            document.getelementbyid('panelContainer').classlist.add('active');
+            document.getElementById('loginContainer').style.display = 'none';
+            document.getElementById('panelContainer').classList.add('active');
             
             // eliminar cualquier toast o mensaje de bienvenida previo para evitar bloqueos fantasma
-            const existingtoast = document.getelementbyid('toast');
+            const existingtoast = document.getElementById('toast');
             if (existingtoast) {
-                existingtoast.classlist.remove('show');
-                settimeout(() => {
+                existingtoast.classList.remove('show');
+                setTimeout(() => {
                     if (existingtoast.parentnode) existingtoast.remove();
                 }, 300);
             }
@@ -136,29 +136,29 @@
             const welcomediv = document.createelement('div');
             welcomediv.id = 'welcomeMessage';
             welcomediv.style.csstext = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);background:linear-gradient(135deg, var(--danger), #d32f2f);color:#fff;padding:1rem 2rem;border-radius:12px;box-shadow:0 8px 24px rgba(211,47,47,.4);z-index:9999;font-size:.95rem;font-weight:600;opacity:0;transition:opacity .4s ease;pointer-events:none';
-            welcomediv.innerhtml = '<i class=\"Fas fa-check-circle\" style=\"Margin-right:.5rem\"></i>Bienvenido, <strong>' + (adminuser.nombre || 'Administrador') + '</strong>';
+            welcomediv.innerHTML = '<i class=\"Fas fa-check-circle\" style=\"Margin-right:.5rem\"></i>Bienvenido, <strong>' + (adminuser.nombre || 'Administrador') + '</strong>';
             document.body.appendchild(welcomediv);
             
             // fade in
-            settimeout(() => { welcomediv.style.opacity = '1'; }, 50);
+            setTimeout(() => { welcomediv.style.opacity = '1'; }, 50);
             
             // fade out y eliminación del dom después de 3.5 segundos
-            settimeout(() => {
+            setTimeout(() => {
                 welcomediv.style.opacity = '0';
-                settimeout(() => {
+                setTimeout(() => {
                     if (welcomediv.parentnode) welcomediv.remove();
                 }, 400); // esperar a que termine la transición
             }, 3500);
             
             // actualizar header con nombre del usuario en línea 1 (desktop) y línea 2 (móvil)
-            const headerusuarionombredesktop = document.getelementbyid('headerUsuarioNombreDesktop');
-            const headerusuarionombremobile = document.getelementbyid('headerUsuarioNombreMobile');
+            const headerusuarionombredesktop = document.getElementById('headerUsuarioNombreDesktop');
+            const headerusuarionombremobile = document.getElementById('headerUsuarioNombreMobile');
             if (adminuser.nombre) {
-                if (headerusuarionombredesktop) headerusuarionombredesktop.textcontent = adminuser.nombre;
-                if (headerusuarionombremobile) headerusuarionombremobile.textcontent = adminuser.nombre;
+                if (headerusuarionombredesktop) headerusuarionombredesktop.textContent = adminuser.nombre;
+                if (headerusuarionombremobile) headerusuarionombremobile.textContent = adminuser.nombre;
             }
             
-            settimeout(async () => {
+            setTimeout(async () => {
                 try {
                     await window.cargarconfiguracioninicial();
                     await window.cargarmenu();
@@ -177,7 +177,7 @@
                     window._registrarpushadmin();
                     window.agregartarjetadiferenciatasa();
                     window._verificartasadehoy((tasa) => {
-                        const tasainput = document.getelementbyid('tasaBaseInput');
+                        const tasainput = document.getElementById('tasaBaseInput');
                         if (tasainput) tasainput.value = tasa;
                         window.configglobal.tasa_cambio = tasa;
                         window.recalculartasaefectiva();
@@ -196,16 +196,16 @@
             console.error('❌ Error:', error);
             window.mostrartoast('❌ Error: ' + error.message, 'error');
         } finally {
-            if (loginbtn) { loginbtn.disabled = false; loginbtn.innerhtml = 'Ingresar'; }
+            if (loginbtn) { loginbtn.disabled = false; loginbtn.innerHTML = 'Ingresar'; }
         }
     };
 
     window.restaurarsesionadmin = async function() {
-        const token = sessionstorage.getitem('admin_jwt_token');
-        const userdata = sessionstorage.getitem('admin_user');
+        const token = sessionStorage.getItem('admin_jwt_token');
+        const userdata = sessionStorage.getItem('admin_user');
         if (!token || !userdata) return false;
         try {
-            const user = json.parse(userdata);
+            const user = JSON.parse(userdata);
             if (user.rol !== 'admin') return false;
             // verificar token con supabase
             const { error } = await window.supabaseclient.from('config').select('id').limit(1).maybesingle();
@@ -218,11 +218,11 @@
             window.supabaseclient = window.inicializarsupabasecliente(window.jwttoken);
             
             // actualizar el nombre del usuario en el header después de restaurar sesión (desktop y móvil)
-            const headerusuarionombredesktop = document.getelementbyid('headerUsuarioNombreDesktop');
-            const headerusuarionombremobile = document.getelementbyid('headerUsuarioNombreMobile');
+            const headerusuarionombredesktop = document.getElementById('headerUsuarioNombreDesktop');
+            const headerusuarionombremobile = document.getElementById('headerUsuarioNombreMobile');
             if (user.nombre) {
-                if (headerusuarionombredesktop) headerusuarionombredesktop.textcontent = user.nombre;
-                if (headerusuarionombremobile) headerusuarionombremobile.textcontent = user.nombre;
+                if (headerusuarionombredesktop) headerusuarionombredesktop.textContent = user.nombre;
+                if (headerusuarionombremobile) headerusuarionombremobile.textContent = user.nombre;
             }
             
             return true;
@@ -234,49 +234,49 @@
     };
 
     window.cerrarsesion = function() {
-        sessionstorage.removeitem('admin_authenticated');
-        sessionstorage.removeitem('admin_jwt_token');
-        sessionstorage.removeitem('admin_user');
+        sessionStorage.removeItem('admin_authenticated');
+        sessionStorage.removeItem('admin_jwt_token');
+        sessionStorage.removeItem('admin_user');
         window.isadminauthenticated = false;
         window.jwttoken = null;
         selectedadmin = null;
         // limpiar campo contraseña
-        const pwdinput = document.getelementbyid('adminPassword');
+        const pwdinput = document.getElementById('adminPassword');
         if (pwdinput) pwdinput.value = '';
         // volver al selector de admins
-        const selectorpanel = document.getelementbyid('loginSelectorPanel');
-        const passwordpanel = document.getelementbyid('loginPasswordPanel');
+        const selectorpanel = document.getElementById('loginSelectorPanel');
+        const passwordpanel = document.getElementById('loginPasswordPanel');
         if (selectorpanel) {
-            selectorpanel.classlist.remove('hide');
+            selectorpanel.classList.remove('hide');
             selectorpanel.style.display = 'block';
         }
         if (passwordpanel) {
-            passwordpanel.classlist.remove('show');
+            passwordpanel.classList.remove('show');
             passwordpanel.style.display = 'none';
         }
         window.mostrarlogin();
         window.mostrartoast('🔓 Sesión cerrada', 'info');
         window.supabaseclient = window.inicializarsupabasecliente();
         // recargar la lista de admins (por si cambió)
-        settimeout(() => window.cargarlistaadminsrecientes(), 500);
+        setTimeout(() => window.cargarlistaadminsrecientes(), 500);
     };
 
     // botón volver
-    const backbtn = document.getelementbyid('backToSelectorBtn');
+    const backbtn = document.getElementById('backToSelectorBtn');
     if (backbtn) {
-        backbtn.addeventlistener('click', () => {
-            document.getelementbyid('loginSelectorPanel').classlist.remove('hide');
-            document.getelementbyid('loginPasswordPanel').classlist.remove('show');
-            document.getelementbyid('loginPasswordPanel').style.display = 'none';
-            document.getelementbyid('loginSelectorPanel').style.display = 'block';
+        backbtn.addEventListener('click', () => {
+            document.getElementById('loginSelectorPanel').classList.remove('hide');
+            document.getElementById('loginPasswordPanel').classList.remove('show');
+            document.getElementById('loginPasswordPanel').style.display = 'none';
+            document.getElementById('loginSelectorPanel').style.display = 'block';
             selectedadmin = null;
         });
     }
 
     // botón limpiar historial
-    const clearbtn = document.getelementbyid('clearRecentAdminsBtn');
+    const clearbtn = document.getElementById('clearRecentAdminsBtn');
     if (clearbtn) {
-        clearbtn.addeventlistener('click', () => {
+        clearbtn.addEventListener('click', () => {
             if (confirm('¿Borrar el historial de administradores recientes?')) {
                 window.limpiarAdminsRecientes();
                 window.cargarListaAdminsRecientes();

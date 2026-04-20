@@ -6,31 +6,31 @@
         tabs.forEach(function(t){ t.classList.remove('Active'); });
         panes.forEach(function(p){ p.classList.remove('Active'); });
         var t = document.querySelector('.tab[data-tab="Deliverys"]');
-        var p = document.getelementbyid('deliverysPane');
-        if (t) t.classlist.add('active');
-        if (p) { p.classlist.add('active'); p.scrollintoview({behavior:'smooth',block:'start'}); }
+        var p = document.getElementById('deliverysPane');
+        if (t) t.classList.add('active');
+        if (p) { p.classList.add('active'); p.scrollintoview({behavior:'smooth',block:'start'}); }
     };
     window.iramenu = function() {
         var tabs = document.queryselectorall('.tab');
         var panes = document.queryselectorall('.tab-pane');
-        tabs.foreach(function(t){ t.classlist.remove('active'); });
-        panes.foreach(function(p){ p.classlist.remove('active'); });
+        tabs.foreach(function(t){ t.classList.remove('active'); });
+        panes.foreach(function(p){ p.classList.remove('active'); });
         var t = document.queryselector('.tab[data-tab="Menu"]');
-        var p = document.getelementbyid('menuPane');
-        if (t) t.classlist.add('active');
-        if (p) { p.classlist.add('active'); p.scrollintoview({behavior:'smooth',block:'start'}); }
+        var p = document.getElementById('menuPane');
+        if (t) t.classList.add('active');
+        if (p) { p.classList.add('active'); p.scrollintoview({behavior:'smooth',block:'start'}); }
     };
     window.irastockcritico = function() {
         var tabs = document.queryselectorall('.tab');
         var panes = document.queryselectorall('.tab-pane');
-        tabs.foreach(function(t){ t.classlist.remove('active'); });
-        panes.foreach(function(p){ p.classlist.remove('active'); });
+        tabs.foreach(function(t){ t.classList.remove('active'); });
+        panes.foreach(function(p){ p.classList.remove('active'); });
         var t = document.queryselector('.tab[data-tab="Dashboard"]');
-        var p = document.getelementbyid('dashboardPane');
-        if (t) t.classlist.add('active');
-        if (p) p.classlist.add('active');
-        settimeout(function(){
-            var el = document.getelementbyid('stockCritico'); if (!el) return;
+        var p = document.getElementById('dashboardPane');
+        if (t) t.classList.add('active');
+        if (p) p.classList.add('active');
+        setTimeout(function(){
+            var el = document.getElementById('stockCritico'); if (!el) return;
             el.scrollintoview({behavior:'smooth',block:'center'});
             var par = el.closest('.lower-stock') || el.parentelement;
             if (par) {
@@ -47,15 +47,15 @@
         window.setupeventlisteners = function() {
         // funciones de scroll para tabs con doble chevron
         window._scrolltabs = function(dir) {
-            const c = document.getelementbyid('tabsContainer');
+            const c = document.getElementById('tabsContainer');
             if (!c) return;
             c.scrollby({ left: dir * 180, behavior: 'smooth' });
-            settimeout(window._updatetabchevrons, 200);
+            setTimeout(window._updatetabchevrons, 200);
         };
         window._updatetabchevrons = function() {
-            const c = document.getelementbyid('tabsContainer');
-            const lbtn = document.getelementbyid('tabsChevronLeft');
-            const rbtn = document.getelementbyid('tabsChevronRight');
+            const c = document.getElementById('tabsContainer');
+            const lbtn = document.getElementById('tabsChevronLeft');
+            const rbtn = document.getElementById('tabsChevronRight');
             if (!c || !lbtn || !rbtn) return;
             lbtn.style.opacity = c.scrollleft > 4 ? '1' : '0.3';
             lbtn.style.pointerevents = c.scrollleft > 4 ? 'auto' : 'none';
@@ -63,28 +63,28 @@
             rbtn.style.opacity = atend ? '0.3' : '1';
             rbtn.style.pointerevents = atend ? 'none' : 'auto';
         };
-        document.getelementbyid('tabsContainer')?.addeventlistener('scroll', window._updatetabchevrons);
+        document.getElementById('tabsContainer')?.addEventListener('scroll', window._updatetabchevrons);
         window._updatetabchevrons();
 
         // checkbox de disponible en modal platillo
-        document.getelementbyid('platilloDisponibleCheck')?.addeventlistener('change', function() {
-            const lbl = document.getelementbyid('platilloDisponibleLabel');
-            const sel = document.getelementbyid('platilloDisponible');
-            if (lbl) { lbl.textcontent = this.checked ? 'Sí' : 'No'; lbl.style.color = this.checked ? 'var(--success)' : 'var(--text-muted)'; }
+        document.getElementById('platilloDisponibleCheck')?.addEventListener('change', function() {
+            const lbl = document.getElementById('platilloDisponibleLabel');
+            const sel = document.getElementById('platilloDisponible');
+            if (lbl) { lbl.textContent = this.checked ? 'Sí' : 'No'; lbl.style.color = this.checked ? 'var(--success)' : 'var(--text-muted)'; }
             if (sel) sel.value = this.checked ? 'true' : 'false';
         });
 
         // navegación por tabs
         document.queryselectorall('.tab').foreach(tab => {
-            tab.addeventlistener('click', () => {
+            tab.addEventListener('click', () => {
                 const target = tab.dataset.tab;
-                document.queryselectorall('.tab').foreach(t => t.classlist.remove('active'));
-                tab.classlist.add('active');
-                document.queryselectorall('.tab-pane').foreach(pane => pane.classlist.remove('active'));
-                const pane = document.getelementbyid(target + 'Pane');
-                if (pane) pane.classlist.add('active');
+                document.queryselectorall('.tab').foreach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                document.queryselectorall('.tab-pane').foreach(pane => pane.classList.remove('active'));
+                const pane = document.getElementById(target + 'Pane');
+                if (pane) pane.classList.add('active');
                 if (target !== 'qr') {
-                    const el = document.getelementbyid('qrNombreMesa');
+                    const el = document.getElementById('qrNombreMesa');
                     if (el) el.value = '';
                 }
             });
@@ -92,7 +92,7 @@
 
         // cerrar modales al hacer clic fuera
         document.queryselectorall('.modal').foreach(modal => {
-            modal.addeventlistener('click', function(e) {
+            modal.addEventListener('click', function(e) {
                 if (e.target === this) {
                     window.cerrarmodal(this.id);
                 }
@@ -100,63 +100,63 @@
         });
 
         // guardar configuración de tasa
-        document.getelementbyid('saveAllButton').addeventlistener('click', async () => { await window.guardarconfiguracion(); });
-        document.getelementbyid('tasaBaseInput').addeventlistener('change', window.recalculartasaefectiva);
-        document.getelementbyid('aumentoDiarioInput').addeventlistener('change', window.recalculartasaefectiva);
+        document.getElementById('saveAllButton').addEventListener('click', async () => { await window.guardarconfiguracion(); });
+        document.getElementById('tasaBaseInput').addEventListener('change', window.recalculartasaefectiva);
+        document.getElementById('aumentoDiarioInput').addEventListener('change', window.recalculartasaefectiva);
         
         function _mostrarfechasaumento(visible) {
-            document.getelementbyid('tasaFechasDiv').style.display = visible ? 'flex' : 'none';
+            document.getElementById('tasaFechasDiv').style.display = visible ? 'flex' : 'none';
         }
         function _actualizarlabelaumento() {
-            const diario   = document.getelementbyid('aumentoActivoToggle').checked;
-            const semanal  = document.getelementbyid('aumentoSemanalToggle').checked;
+            const diario   = document.getElementById('aumentoActivoToggle').checked;
+            const semanal  = document.getElementById('aumentoSemanalToggle').checked;
             const alguno   = diario || semanal;
-            const label = document.getelementbyid('labelAumentoPct');
-            if (label) label.textcontent = semanal ? 'Aumento Semanal %:' : 'Aumento Diario %:';
-            const inputpct = document.getelementbyid('aumentoDiarioInput');
+            const label = document.getElementById('labelAumentoPct');
+            if (label) label.textContent = semanal ? 'Aumento Semanal %:' : 'Aumento Diario %:';
+            const inputpct = document.getElementById('aumentoDiarioInput');
             if (inputpct) {
                 inputpct.disabled = !alguno;
                 inputpct.style.opacity = alguno ? '1' : '0.4';
                 inputpct.style.cursor  = alguno ? '' : 'not-allowed';
             }
             _mostrarfechasaumento(alguno);
-            if (alguno && !document.getelementbyid('aumentoDesde').value) {
-                document.getelementbyid('aumentoDesde').value = new date().toisostring().split('T')[0];
+            if (alguno && !document.getElementById('aumentoDesde').value) {
+                document.getElementById('aumentoDesde').value = new date().toisostring().split('T')[0];
             }
         }
-        document.getelementbyid('aumentoActivoToggle').addeventlistener('change', function() {
-            if (this.checked) document.getelementbyid('aumentoSemanalToggle').checked = false;
+        document.getElementById('aumentoActivoToggle').addEventListener('change', function() {
+            if (this.checked) document.getElementById('aumentoSemanalToggle').checked = false;
             window.configglobal.aumento_detenido = !this.checked;
             _actualizarlabelaumento();
             window.recalculartasaefectiva();
         });
-        document.getelementbyid('aumentoSemanalToggle').addeventlistener('change', function() {
-            if (this.checked) document.getelementbyid('aumentoActivoToggle').checked = false;
+        document.getElementById('aumentoSemanalToggle').addEventListener('change', function() {
+            if (this.checked) document.getElementById('aumentoActivoToggle').checked = false;
             window.configglobal.aumento_detenido = !this.checked;
             _actualizarlabelaumento();
             window.recalculartasaefectiva();
         });
-        document.getelementbyid('aumentoIndefinido').addeventlistener('change', function() {
-            document.getelementbyid('aumentoHasta').disabled = this.checked;
-            if (this.checked) document.getelementbyid('aumentoHasta').value = '';
+        document.getElementById('aumentoIndefinido').addEventListener('change', function() {
+            document.getElementById('aumentoHasta').disabled = this.checked;
+            if (this.checked) document.getElementById('aumentoHasta').value = '';
         });
 
         // modales qr
-        const _closeqrbtn  = document.getelementbyid('closeQrAmpliado');
-        const _closeqrx    = document.getelementbyid('closeQrAmpliadoModal');
-        const _qrmodal     = document.getelementbyid('qrAmpliadoModal');
-        if (_closeqrbtn) _closeqrbtn.addeventlistener('click', () => window.cerrarmodal('qrAmpliadoModal'));
-        if (_closeqrx)   _closeqrx.addeventlistener('click',   () => window.cerrarmodal('qrAmpliadoModal'));
-        if (_qrmodal) _qrmodal.addeventlistener('click', function(e) {
+        const _closeqrbtn  = document.getElementById('closeQrAmpliado');
+        const _closeqrx    = document.getElementById('closeQrAmpliadoModal');
+        const _qrmodal     = document.getElementById('qrAmpliadoModal');
+        if (_closeqrbtn) _closeqrbtn.addEventListener('click', () => window.cerrarmodal('qrAmpliadoModal'));
+        if (_closeqrx)   _closeqrx.addEventListener('click',   () => window.cerrarmodal('qrAmpliadoModal'));
+        if (_qrmodal) _qrmodal.addEventListener('click', function(e) {
             if (e.target === this) window.cerrarmodal('qrAmpliadoModal');
         });
 
         // botón logout (desktop y móvil) - con aviso de confirmación
-        const btndesktop = document.getelementbyid('logoutButtonDesktop');
-        const btnmobile = document.getelementbyid('logoutButtonMobile');
-        const salidaaviso = document.getelementbyid('_salidaAviso');
-        const salidano = document.getelementbyid('_salidaNo');
-        const salidasi = document.getelementbyid('_salidaSi');
+        const btndesktop = document.getElementById('logoutButtonDesktop');
+        const btnmobile = document.getElementById('logoutButtonMobile');
+        const salidaaviso = document.getElementById('_salidaAviso');
+        const salidano = document.getElementById('_salidaNo');
+        const salidasi = document.getElementById('_salidaSi');
         
         const mostraravisosalida = () => {
             if (salidaaviso) salidaaviso.style.display = 'flex';
@@ -168,20 +168,20 @@
         
         const ejecutarcerrarsesion = () => {
             if (typeof window.cerrarsesion === 'function') window.cerrarsesion();
-            else { sessionstorage.clear(); window.location.reload(); }
+            else { sessionStorage.clear(); window.location.reload(); }
         };
         
-        if (btndesktop) btndesktop.addeventlistener('click', mostraravisosalida);
-        if (btnmobile) btnmobile.addeventlistener('click', mostraravisosalida);
-        if (salidano) salidano.addeventlistener('click', ocultaravisosalida);
-        if (salidasi) salidasi.addeventlistener('click', () => {
+        if (btndesktop) btndesktop.addEventListener('click', mostraravisosalida);
+        if (btnmobile) btnmobile.addEventListener('click', mostraravisosalida);
+        if (salidano) salidano.addEventListener('click', ocultaravisosalida);
+        if (salidasi) salidasi.addEventListener('click', () => {
             ocultaravisosalida();
             ejecutarcerrarsesion();
         });
     };
 
     // ==================== inicialización al cargar la página ====================
-    document.addeventlistener('DOMContentLoaded', async () => {
+    document.addEventListener('DOMContentLoaded', async () => {
         // inicializar ui de login (cargar lista de administradores)
 		window.iniciarloginui();
         
@@ -191,7 +191,7 @@
         if (await window.restaurarsesionadmin()) {
             window.mostrarpanel();
             // actualizar header con nombre de usuario (ya se hace en setupheaderusuario)
-            settimeout(async () => {
+            setTimeout(async () => {
                 try {
                     await window.cargarconfiguracioninicial();
                     await window.cargarmenu();
@@ -213,7 +213,7 @@
                     window.agregartarjetadiferenciatasa();
                     
                     window._verificartasadehoy((tasa) => {
-                        const tasainput = document.getelementbyid('tasaBaseInput');
+                        const tasainput = document.getElementById('tasaBaseInput');
                         if (tasainput) tasainput.value = tasa;
                         window.configglobal.tasa_cambio = tasa;
                         window.recalculartasaefectiva();
@@ -241,7 +241,7 @@
         const dashboardgrid = document.queryselector('.dashboard-grid');
         if (!dashboardgrid) return;
         // verificar si ya existe
-        if (document.getelementbyid('diferenciaTasaCard')) return;
+        if (document.getElementById('diferenciaTasaCard')) return;
         const card = document.createelement('div');
         card.classname = 'dashboard-card';
         card.id = 'diferenciaTasaCard';

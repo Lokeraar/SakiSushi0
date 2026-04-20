@@ -114,9 +114,9 @@
         try {
             const { data, error } = await window.supabaseclient.from('pedidos').select('*').order('fecha', { ascending: false }).limit(5);
             if (error) throw error;
-            const pedidoscount = document.getelementbyid('pedidosCountBadge');
-            if (pedidoscount) pedidoscount.textcontent = (data || []).length;
-            document.getelementbyid('pedidosRecientes').innerhtml = (data || []).map(p => {
+            const pedidoscount = document.getElementById('pedidosCountBadge');
+            if (pedidoscount) pedidoscount.textContent = (data || []).length;
+            document.getElementById('pedidosRecientes').innerHTML = (data || []).map(p => {
                 const hora = new date(p.fecha).tolocaletimestring('es-VE', {hour:'2-digit',minute:'2-digit'});
                 const fecha = new date(p.fecha).tolocaledatestring('es-VE', {day:'2-digit',month:'2-digit'});
                 const items = (p.items || []).slice(0,2).map(i => `${i.cantidad||1}x ${i.nombre}`).join(', ');

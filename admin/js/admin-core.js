@@ -27,14 +27,14 @@
     }
     
     window.wifiSsidPersistente = localStorage.getItem('saki_wifi_ssid') || '';
-    window.wifipasswordpersistente = localstorage.getitem('saki_wifi_pwd') || '';
-    window.platillosnotificados = json.parse(localstorage.getitem('saki_platillos_notificados') || '{}');
+    window.wifipasswordpersistente = localStorage.getItem('saki_wifi_pwd') || '';
+    window.platillosnotificados = JSON.parse(localStorage.getItem('saki_platillos_notificados') || '{}');
     window.stockupdatechannel = null;
     
     // ==================== funciones de formato y utilidad ====================
     window.formatbs = function(m) {
         if (m === undefined || m === null) m = 0;
-        const valor = typeof m === 'number' ? m : parsefloat(m);
+        const valor = typeof m === 'number' ? m : parseFloat(m);
         if (isnan(valor)) return 'Bs 0,00';
         const entero = math.floor(math.abs(valor)).tolocalestring('es-VE');
         const decimal = math.round((math.abs(valor) % 1) * 100).tostring().padstart(2, '0');
@@ -45,7 +45,7 @@
         try {
             return new intl.numberformat('en-US', { style: 'currency', currency: 'USD', minimumfractiondigits: 2 }).format(m);
         } catch(e) {
-            return '$ ' + (m || 0).tofixed(2);
+            return '$ ' + (m || 0).toFixed(2);
         }
     };
     
@@ -58,8 +58,8 @@
     };
     
     window.cerrarmodal = function(modalid) {
-        const modal = document.getelementbyid(modalid);
-        if (modal) modal.classlist.remove('active');
+        const modal = document.getElementById(modalid);
+        if (modal) modal.classList.remove('active');
         if (modalid === 'ingredienteModal') {
             // la función resetearbloqueostock fue eliminada, ya no es necesaria
         }
@@ -68,29 +68,29 @@
     // ==================== toast (mensajes flotantes) ====================
     window.mostrartoast = function(mensaje, tipo = 'info') {
         // eliminar toast existente si hay alguno para evitar acumulación
-        const existingtoast = document.getelementbyid('toast');
+        const existingtoast = document.getElementById('toast');
         if (existingtoast) {
-            existingtoast.classlist.remove('show');
+            existingtoast.classList.remove('show');
             // esperar a que se oculte antes de remover del dom
-            settimeout(() => {
+            setTimeout(() => {
                 if (existingtoast.parentnode) existingtoast.remove();
             }, 100);
         }
         
         // crear nuevo elemento toast si no existe
-        let toast = document.getelementbyid('toast');
+        let toast = document.getElementById('toast');
         if (!toast) {
             toast = document.createelement('div');
             toast.id = 'toast';
             document.body.appendchild(toast);
         }
         
-        toast.textcontent = mensaje;
+        toast.textContent = mensaje;
         toast.classname = `toast show ${tipo}`;
-        settimeout(() => {
-            toast.classlist.remove('show');
+        setTimeout(() => {
+            toast.classList.remove('show');
             // remover completamente del dom después de la animación
-            settimeout(() => {
+            setTimeout(() => {
                 if (toast.parentnode) toast.remove();
             }, 300);
         }, 3000);
@@ -98,16 +98,16 @@
     
     // ==================== control de pantallas ====================
     window.mostrarlogin = function() {
-        const pwdinput = document.getelementbyid('adminPassword');
+        const pwdinput = document.getElementById('adminPassword');
         if (pwdinput) pwdinput.value = '';
-        document.getelementbyid('loginContainer').style.display = 'flex';
-        document.getelementbyid('panelContainer').classlist.remove('active');
+        document.getElementById('loginContainer').style.display = 'flex';
+        document.getElementById('panelContainer').classList.remove('active');
         window.deteneralarma();
     };
     
     window.mostrarpanel = function() {
-        document.getelementbyid('loginContainer').style.display = 'none';
-        document.getelementbyid('panelContainer').classlist.add('active');
+        document.getElementById('loginContainer').style.display = 'none';
+        document.getElementById('panelContainer').classList.add('active');
     };
     
     window.deteneralarma = function() {
@@ -138,10 +138,10 @@
     
     // ==================== gestión de administradores recientes ====================
     window.obteneradminsrecientes = function() {
-        const stored = localstorage.getitem('saki_recent_admins');
+        const stored = localStorage.getItem('saki_recent_admins');
         if (!stored) return [];
         try {
-            const admins = json.parse(stored);
+            const admins = JSON.parse(stored);
             return admins.slice(0, 5);
         } catch(e) { return []; }
     };
@@ -158,11 +158,11 @@
             lastlogin: new date().toisostring()
         });
         recent = recent.slice(0, 5);
-        localstorage.setitem('saki_recent_admins', json.stringify(recent));
+        localStorage.setItem('saki_recent_admins', JSON.stringify(recent));
     };
     
     window.limpiaradminsrecientes = function() {
-        localstorage.removeitem('saki_recent_admins');
+        localStorage.removeItem('saki_recent_admins');
     };
     
     // placeholder para imágenes (svg data uri)

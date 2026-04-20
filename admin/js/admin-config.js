@@ -75,7 +75,7 @@
         const indefinido   = document.getElementById('Aumentoindefinido') &&
                              document.getElementById('Aumentoindefinido').checked;
         const desdeVal     = document.getElementById('Aumentodesde')?.value || '';
-        const hastaval     = !indefinido ? (document.getelementbyid('aumentoHasta')?.value || '') : '';
+        const hastaval     = !indefinido ? (document.getElementById('aumentoHasta')?.value || '') : '';
 
         let periodos = 0;
 
@@ -111,15 +111,15 @@
         }
         console.log('Porcentaje por período:', aumentopct + '%');
         console.log('Períodos aplicados:', periodos);
-        console.log('Acumulado total:', aumentoacumulado.tofixed(2) + '%');
+        console.log('Acumulado total:', aumentoacumulado.toFixed(2) + '%');
         console.log('Tasa Base:', tasabase);
-        console.log('Tasa Efectiva 💵 Bs', tasaefectiva.tofixed(2));
+        console.log('Tasa Efectiva 💵 Bs', tasaefectiva.toFixed(2));
         console.groupend();
 
-        document.getelementbyid('tasaEfectivaDisplay').textcontent = tasaefectiva.tofixed(2);
-        document.getelementbyid('aumentoAcumuladoDisplay').textcontent = aumentoacumulado.tofixed(2) + '%';
-        if (document.getelementbyid('tasaEfectivaCard'))
-            document.getelementbyid('tasaEfectivaCard').textcontent = 'Bs. ' + tasaefectiva.tofixed(2);
+        document.getElementById('tasaEfectivaDisplay').textContent = tasaefectiva.toFixed(2);
+        document.getElementById('aumentoAcumuladoDisplay').textContent = aumentoacumulado.toFixed(2) + '%';
+        if (document.getElementById('tasaEfectivaCard'))
+            document.getElementById('tasaEfectivaCard').textContent = 'Bs. ' + tasaefectiva.toFixed(2);
 
         window.configglobal.tasa_cambio       = tasabase;
         window.configglobal.aumento_diario    = aumentopct;
@@ -131,11 +131,11 @@
 
     window.guardarconfiguracion = async function() {
         try {
-            const tasabase = parsefloat(document.getelementbyid('tasaBaseInput').value) || 0;
-            const aumentopct = parsefloat(document.getelementbyid('aumentoDiarioInput').value) || 0;
-            const activodiario = document.getelementbyid('aumentoActivoToggle').checked;
-            const activosemanal = document.getelementbyid('aumentoSemanalToggle')?.checked || false;
-            const indefinido = document.getelementbyid('aumentoIndefinido')?.checked || false;
+            const tasabase = parseFloat(document.getElementById('tasaBaseInput').value) || 0;
+            const aumentopct = parseFloat(document.getElementById('aumentoDiarioInput').value) || 0;
+            const activodiario = document.getElementById('aumentoActivoToggle').checked;
+            const activosemanal = document.getElementById('aumentoSemanalToggle')?.checked || false;
+            const indefinido = document.getElementById('aumentoIndefinido')?.checked || false;
             
             window.configglobal.tasa_cambio = tasabase;
             window.configglobal.aumento_diario = aumentopct;
@@ -152,22 +152,22 @@
                 aumento_detenido:  window.configglobal.aumento_detenido,
                 aumento_acumulado: window.configglobal.aumento_acumulado,
                 tasa_efectiva:     window.configglobal.tasa_efectiva,
-                aumento_desde:     (document.getelementbyid('aumentoDesde') && document.getelementbyid('aumentoDesde').value) || null,
-                aumento_hasta:     (!document.getelementbyid('aumentoIndefinido')?.checked && document.getelementbyid('aumentoHasta')?.value) || null,
-                aumento_indefinido: document.getelementbyid('aumentoIndefinido')?.checked || false,
+                aumento_desde:     (document.getElementById('aumentoDesde') && document.getElementById('aumentoDesde').value) || null,
+                aumento_hasta:     (!document.getElementById('aumentoIndefinido')?.checked && document.getElementById('aumentoHasta')?.value) || null,
+                aumento_indefinido: document.getElementById('aumentoIndefinido')?.checked || false,
                 ultima_actualizacion: new date().toisostring()
             }).eq('id', 1);
             
-            window.renderizarmenu(document.getelementbyid('menuBuscador')?.value || '');
+            window.renderizarmenu(document.getElementById('menuBuscador')?.value || '');
             await window._actualizarventashoyneto();
             await window._actualizardeliveryshoy();
             
-            const tasadisplay = document.getelementbyid('tasaEfectivaDisplay');
+            const tasadisplay = document.getElementById('tasaEfectivaDisplay');
             if (tasadisplay) {
-                tasadisplay.textcontent = (window.configglobal.tasa_efectiva || 0).tofixed(2);
+                tasadisplay.textContent = (window.configglobal.tasa_efectiva || 0).toFixed(2);
             }
             
-            window.mostrartoast(`💱 configuración guardada. nueva tasa efectiva: bs ${(window.configglobal.tasa_efectiva || 0).tofixed(2)} por usd`, 'success');
+            window.mostrartoast(`💱 configuración guardada. nueva tasa efectiva: bs ${(window.configglobal.tasa_efectiva || 0).toFixed(2)} por usd`, 'success');
             
         } catch (e) { 
             console.error('Error guardando configuración:', e); 
