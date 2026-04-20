@@ -273,33 +273,6 @@ window.addEventListener('beforeunload',function(e){if(!window._sakiReady){e.prev
             border-top: 1px solid rgba(255,255,255,.15);
             display: none;
         }
-        .header-row-sucursal {
-            justify-content: flex-end;
-            padding: .3rem 0 .4rem;
-            border-top: 1px solid rgba(255,255,255,.15);
-            gap: .5rem;
-            align-items: center;
-            display: none;
-        }
-        .sucursal-label {
-            font-size: .85rem;
-            white-space: nowrap;
-            opacity: .9;
-        }
-        .sucursal-select {
-            background: rgba(255,255,255,.2);
-            border: 1px solid rgba(255,255,255,.3);
-            color: white;
-            padding: .3rem .6rem;
-            border-radius: 6px;
-            font-size: .85rem;
-            cursor: pointer;
-            min-width: 150px;
-        }
-        .sucursal-select option {
-            background: var(--secondary);
-            color: white;
-        }
 
         /* ═══════════════════════════════════════════════════════
            RESPONSIVE / MEDIA QUERIES
@@ -307,7 +280,7 @@ window.addEventListener('beforeunload',function(e){if(!window._sakiReady){e.prev
 
         @media (max-width:992px){.header{min-height:100px;padding:.5rem}}
         @media (max-width:768px){.header{min-height:auto;padding:.5rem}}
-        /* Mobile: show sucursal row as third row */
+        /* Mobile: show mesa row as second row when has-mesa class is present */
         @media (max-width:768px) {
             .header-row-main {
                 order: 0;
@@ -316,20 +289,11 @@ window.addEventListener('beforeunload',function(e){if(!window._sakiReady){e.prev
                 display: flex;
                 order: 1;
             }
-            .header-row-sucursal {
-                display: flex !important;
-                border-top: 1px solid rgba(255,255,255,.15);
-                order: 2;
-            }
         }
-        /* Tablet/Desktop: show sucursal row as second row */
+        /* Tablet/Desktop: show mesa row as third row when has-mesa class is present */
         @media (min-width:769px) {
             .header-row-main {
                 order: 0;
-            }
-            .header-row-sucursal {
-                display: flex !important;
-                order: 1;
             }
             .header-row-mesa.has-mesa {
                 display: flex;
@@ -2550,13 +2514,6 @@ window.addEventListener('beforeunload',function(e){if(!window._sakiReady){e.prev
                 <i class="fas fa-utensils"></i>
                 <span id="tableNumber">--</span>
             </div>
-        </div>
-        <!-- Tercera fila (móvil) / Segunda fila (tablet/escritorio): seleccionar sucursal -->
-        <div class="header-row header-row-sucursal" id="sucursalRow">
-            <span class="sucursal-label">Seleccionar sucursal</span>
-            <select class="sucursal-select" id="sucursalSelect">
-                <option value="">Seleccione...</option>
-            </select>
         </div>
     </header>
     
