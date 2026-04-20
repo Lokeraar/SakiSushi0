@@ -10,7 +10,7 @@
 
     window.cargarinventario = async function() {
         try {
-            const { data, error } = await window.supabaseClient.from('inventario').select('*');
+            const { data, error } = await window.supabaseclient.from('inventario').select('*');
             if (error) throw error;
             window.inventarioitems = data || [];
             const inventariogrid = document.getElementById('inventarioGrid');
@@ -531,7 +531,7 @@ validarprecios();
 			`¿Estás seguro de eliminar "${ingrediente.nombre}"? Esta acción no se puede deshacer.`,
 			async () => {
 				try {
-					await window.supabaseClient.from('Inventario').delete().eq('Id', id);
+					await window.supabaseclient.from('Inventario').delete().eq('Id', id);
 					await window.cargarInventario();
 					window.mostrartoast('🗑️ ingrediente eliminado', 'Success');
 				} catch (e) {
@@ -629,7 +629,7 @@ validarprecios();
         setTimeout(() => {
             const itemelement = document.getElementById(`invitem_${ingredienteid}`);
             if (itemelement) {
-                itemelement.scrollintoview({ behavior: 'smooth', block: 'center' });
+                itemelement.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 itemelement.click();
                 window.resaltarelemento(`invitem_${ingredienteid}`, 'pulse');
             } else {
@@ -637,7 +637,7 @@ validarprecios();
                 setTimeout(() => {
                     const retryelement = document.getElementById(`invitem_${ingredienteid}`);
                     if (retryelement) {
-                        retryelement.scrollintoview({ behavior: 'smooth', block: 'center' });
+                        retryelement.scrollIntoView({ behavior: 'smooth', block: 'center' });
                         retryelement.click();
                         window.resaltarelemento(`invitem_${ingredienteid}`, 'pulse');
                     }
@@ -647,8 +647,8 @@ validarprecios();
     };
 
     window.setupstockrealtime = function() {
-        if (window.stockupdatechannel) window.supabaseClient.removeChannel(window.stockupdatechannel);
-        window.stockupdatechannel = window.supabaseClient
+        if (window.stockupdatechannel) window.supabaseclient.removeChannel(window.stockupdatechannel);
+        window.stockupdatechannel = window.supabaseclient
             .channel('stock-updates')
             .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'inventario' }, async (payload) => {
                 const index = window.inventarioitems.findindex(i => i.id === payload.new.id);
@@ -686,7 +686,7 @@ validarprecios();
                 const titulo = `🍣 ${platillo.nombre} disponible de nuevo!`;
                 const mensaje = `ya tenemos ${platillo.nombre} en stock. ¡pide ahora!`;
                 try {
-                    const { data: pedidosunicos } = await window.supabaseClient.from('pedidos').select('session_id').not('session_id', 'is', null).order('fecha', { ascending: false });
+                    const { data: pedidosunicos } = await window.supabaseclient.from('pedidos').select('session_id').not('session_id', 'is', null).order('fecha', { ascending: false });
                     const sessionids = [...new set(pedidosunicos?.map(p => p.session_id) || [])];
                     for (const sessionid of sessionids) await window.enviarnotificacionpush(titulo, mensaje, sessionid);
                     window.mostrartoast(`📢 notificación enviada: ${platillo.nombre} disponible`, 'success');
@@ -716,7 +716,7 @@ validarprecios();
             }
             const nuevostock = todosingredientes ? Math.max(0, stockdisponible) : 0;
             if (platillo.stock !== nuevostock) {
-                await window.supabaseClient.from('menu').update({ stock: nuevostock }).eq('id', platillo.id);
+                await window.supabaseclient.from('menu').update({ stock: nuevostock }).eq('id', platillo.id);
                 platillo.stock = nuevostock;
             }
         }
@@ -810,7 +810,7 @@ validarprecios();
             `¿Estás seguro de eliminar "${ingrediente.nombre}"? Esta acción no se puede deshacer.`,
             async () => {
                 try {
-                    await window.supabaseClient.from('Inventario').delete().eq('Id', id);
+                    await window.supabaseclient.from('Inventario').delete().eq('Id', id);
                     await window.cargarInventario();
                     window.cerrarModal('Ingredientemodal');
                     window.ingredienteEditandoId = null;
@@ -868,13 +868,13 @@ validarprecios();
             let error;
             if (window.ingredienteEditandoId) {
                 // Actualizar existente
-                const { error: updError } = await window.supabaseClient.from('Inventario')
+                const { error: updError } = await window.supabaseclient.from('Inventario')
                     .update(ingredienteData)
                     .eq('Id', window.ingredienteEditandoId);
                 error = updError;
             } else {
                 // Crear nuevo
-                const { error: insError } = await window.supabaseClient.from('Inventario')
+                const { error: insError } = await window.supabaseclient.from('Inventario')
                     .insert([ingredienteData]);
                 error = insError;
             }
