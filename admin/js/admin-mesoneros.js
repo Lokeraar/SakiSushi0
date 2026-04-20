@@ -981,10 +981,16 @@
                     var signo = isPago ? '-' : '+';
                     var colorMonto = isPago ? 'var(--text-dark)' : 'var(--success)';
                     
-                    // Formato especial para ingresos en efectivo_usd: [$ {monto_original} (Bs. {monto_bs})]
+                    // Formato especial para efectivo_usd: mostrar monto_original y monto_bs
                     var displayMonto = '';
-                    if (!isPago && p.metodo === 'efectivo_usd' && p.monto_original) {
-                        displayMonto = '$' + p.monto_original.toFixed(2) + ' (Bs. ' + p.monto_bs.toFixed(2) + ')';
+                    if (p.metodo === 'efectivo_usd' && p.monto_original) {
+                        if (isPago) {
+                            // Pago en USD: [-$ {monto_original} (-Bs. {monto_bs})]
+                            displayMonto = '$' + p.monto_original.toFixed(2) + ' (-Bs. ' + p.monto_bs.toFixed(2) + ')';
+                        } else {
+                            // Ingreso en USD: [+$ {monto_original} (Bs. {monto_bs})]
+                            displayMonto = '$' + p.monto_original.toFixed(2) + ' (Bs. ' + p.monto_bs.toFixed(2) + ')';
+                        }
                     } else {
                         displayMonto = window.formatBs(p.monto_bs);
                     }
@@ -1019,10 +1025,16 @@
                 var signo = isPago ? '-' : '+';
                 var colorMonto = isPago ? 'var(--text-dark)' : 'var(--success)';
                 
-                // Formato especial para ingresos en efectivo_usd: [$ {monto_original} (Bs. {monto_bs})]
+                // Formato especial para efectivo_usd: mostrar monto_original y monto_bs
                 var displayMonto = '';
-                if (!isPago && p.metodo === 'efectivo_usd' && p.monto_original) {
-                    displayMonto = '$' + p.monto_original.toFixed(2) + ' (Bs. ' + p.monto_bs.toFixed(2) + ')';
+                if (p.metodo === 'efectivo_usd' && p.monto_original) {
+                    if (isPago) {
+                        // Pago en USD: [-$ {monto_original} (-Bs. {monto_bs})]
+                        displayMonto = '$' + p.monto_original.toFixed(2) + ' (-Bs. ' + p.monto_bs.toFixed(2) + ')';
+                    } else {
+                        // Ingreso en USD: [+$ {monto_original} (Bs. {monto_bs})]
+                        displayMonto = '$' + p.monto_original.toFixed(2) + ' (Bs. ' + p.monto_bs.toFixed(2) + ')';
+                    }
                 } else {
                     displayMonto = window.formatUSD(mUsd) + ' | ' + window.formatBs(p.monto_bs||0);
                 }
