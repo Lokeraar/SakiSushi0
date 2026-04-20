@@ -78,37 +78,47 @@
     <!-- PANEL PRINCIPAL -->
     <div class="panel-container" id="panelContainer">
         <header class="header">
-            <!-- Nivel 1: Logo + Título + Usuario a la izquierda, Controles a la derecha -->
+            <!-- Nivel 1: Logo + Título (izq), Salir (der) en móvil / Logo + Título + Usuario (izq), Toggle + Cajero + Mesas + Salir (der) en desktop -->
             <div class="header-level level-1">
                 <div class="header-left-group">
                     <img src="https://lh3.googleusercontent.com/pw/AP1GczPrZAoWxmsOGRD9xl1hO5Q65JXuwUZzoR6gUk-cw5lVmarxQe_-lwqpA60tTKLlXfpvIjAJlKC6jFls-xETJOPkebLIIPhbGlUkknmhrRbdhMUll2UViGSUj3WmHKg2YEsZlAfxBPPTjIHhScjD0jfe=w1439-h1439-s-no-gm" alt="Logo Saki Sushi" class="header-logo-img">
                     <h2 class="header-title-text">Administración Saki Sushi -</h2>
-                    <span class="header-user-name" id="headerUsuarioNombre">Cargando...</span>
+                    <span class="header-user-name" id="headerUsuarioNombreDesktop">Cargando...</span>
                 </div>
-                <div class="header-right-group">
-                    <button class="nav-button btn-header-control" onclick="window.abrirSelectorMesaAdmin()"><i class="fas fa-utensils"></i> Mesas</button>
-                    <a href="../Cajero/index.html" target="_blank" class="nav-button btn-header-control"><i class="fas fa-cash-register"></i> Cajero</a>
+                <div class="header-right-group controls-group">
                     <label class="theme-switch-wrapper" title="Cambiar tema claro/oscuro">
                         <span class="icon-sun">☀️</span>
                         <input type="checkbox" id="themeToggle" class="theme-toggle-input">
                         <span class="icon-moon">🌙</span>
                     </label>
+                    <a href="../Cajero/index.html" target="_blank" class="nav-button btn-header-control"><i class="fas fa-cash-register"></i> Cajero</a>
+                    <button class="nav-button btn-header-control" onclick="window.abrirSelectorMesaAdmin()"><i class="fas fa-utensils"></i> Mesas</button>
                     <button class="logout-button" id="logoutButton"><i class="fas fa-sign-out-alt"></i> Salir</button>
                 </div>
             </div>
             
-            <!-- Nivel 2: Eslogan a la izquierda, Seleccionar Sucursal a la derecha -->
+            <!-- Nivel 2: Usuario (izq - móvil) / Eslogan (izq - desktop), Toggle + Cajero + Mesas (der - móvil) / Sucursal (der - desktop) -->
             <div class="header-level level-2">
                 <div class="header-left-group">
-                    <span class="header-slogan-text">Adictos al universo Saki</span>
+                    <span class="header-user-name" id="headerUsuarioNombreMobile" style="display:none;">Cargando...</span>
+                    <span class="header-slogan-text" id="headerSloganDesktop" style="display:none;">Adictos al universo Saki</span>
                 </div>
-                <div class="header-right-group">
+                <div class="header-right-group controls-group-mobile" style="display:none;">
+                    <label class="theme-switch-wrapper" title="Cambiar tema claro/oscuro">
+                        <span class="icon-sun">☀️</span>
+                        <input type="checkbox" id="themeToggleMobile" class="theme-toggle-input">
+                        <span class="icon-moon">🌙</span>
+                    </label>
+                    <a href="../Cajero/index.html" target="_blank" class="nav-button btn-header-control"><i class="fas fa-cash-register"></i> Cajero</a>
+                    <button class="nav-button btn-header-control" onclick="window.abrirSelectorMesaAdmin()"><i class="fas fa-utensils"></i> Mesas</button>
+                </div>
+                <div class="header-right-group sucursal-group">
                     <span class="header-sucursal-label">Seleccionar Sucursal</span>
                     <button class="nav-button btn-header-sucursal" id="parroquiaBtn" title="Próximamente"><i class="fas fa-map-marker-alt"></i> <span id="parroquiaNombre">--</span></button>
                 </div>
             </div>
             
-            <!-- Nivel 3: Stock crítico -->
+            <!-- Nivel 3: Stock crítico (desktop) / Eslogan + Sucursal (móvil) -->
             <div class="header-level level-3">
                 <div id="stockCriticoHeader" style="width:100%; padding:.4rem .8rem; background:rgba(0,0,0,.2); border-radius:8px; display:flex; align-items:center; gap:.8rem; flex-wrap:wrap; font-size:.75rem">
                     <span style="font-weight:700; color:var(--danger); white-space:nowrap"><i class="fas fa-exclamation-triangle"></i> STOCK CRÍTICO:</span>

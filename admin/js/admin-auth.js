@@ -150,10 +150,12 @@
                 }, 400); // Esperar a que termine la transición
             }, 3500);
             
-            // Actualizar header con nombre del usuario en línea 2
-            const headerUsuarioNombre = document.getElementById('headerUsuarioNombre');
-            if (headerUsuarioNombre && adminUser.nombre) {
-                headerUsuarioNombre.textContent = adminUser.nombre;
+            // Actualizar header con nombre del usuario en línea 1 (desktop) y línea 2 (móvil)
+            const headerUsuarioNombreDesktop = document.getElementById('headerUsuarioNombreDesktop');
+            const headerUsuarioNombreMobile = document.getElementById('headerUsuarioNombreMobile');
+            if (adminUser.nombre) {
+                if (headerUsuarioNombreDesktop) headerUsuarioNombreDesktop.textContent = adminUser.nombre;
+                if (headerUsuarioNombreMobile) headerUsuarioNombreMobile.textContent = adminUser.nombre;
             }
             
             setTimeout(async () => {
@@ -215,10 +217,12 @@
             window.isAdminAuthenticated = true;
             window.supabaseClient = window.inicializarSupabaseCliente(window.jwtToken);
             
-            // ACTUALIZAR EL NOMBRE DEL USUARIO EN EL HEADER DESPUÉS DE RESTAURAR SESIÓN
-            const headerUsuarioNombre = document.getElementById('headerUsuarioNombre');
-            if (headerUsuarioNombre && user.nombre) {
-                headerUsuarioNombre.textContent = user.nombre;
+            // ACTUALIZAR EL NOMBRE DEL USUARIO EN EL HEADER DESPUÉS DE RESTAURAR SESIÓN (desktop y móvil)
+            const headerUsuarioNombreDesktop = document.getElementById('headerUsuarioNombreDesktop');
+            const headerUsuarioNombreMobile = document.getElementById('headerUsuarioNombreMobile');
+            if (user.nombre) {
+                if (headerUsuarioNombreDesktop) headerUsuarioNombreDesktop.textContent = user.nombre;
+                if (headerUsuarioNombreMobile) headerUsuarioNombreMobile.textContent = user.nombre;
             }
             
             return true;
