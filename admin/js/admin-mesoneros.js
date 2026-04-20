@@ -264,7 +264,7 @@
     async function calcularAcumuladoPendiente(mesoneroId) {
         const { data, error } = await window.supabaseClient
             .from('propinas')
-            .select('monto_bs')
+            .select('monto_bs, monto_original, moneda_original')
             .eq('mesonero_id', mesoneroId)
             .eq('entregado', false);
         
@@ -273,11 +273,20 @@
             return 0;
         }
         
-        let total = 0;
+        let totalBs = 0;
+        let totalUSDCrudo = 0;
+        const tasaBase = Number(window.configGlobal?.tasa_cambio || 400);
+        
         (data || []).forEach(function(p) {
-            total += (p.monto_bs || 0);
+            if (p.moneda_original === 'USD' && p.monto_original) {
+                totalUSDCrudo += p.monto_original;
+            } else {
+                totalBs += (p.monto_bs || 0);
+            }
         });
-        return total;
+        
+        // Retornar el total en Bs (USD convertido a tasa base)
+        return totalBs + (totalUSDCrudo * tasaBase);
     }
 
     // ════════════════════════════════════════
@@ -341,10 +350,8 @@
         const modal = document.getElementById('pagoModal');
         if (modal) modal.classList.add('active');
         
-        // Inicializar label correcto
-        setTimeout(function() {
-            window.actualizarLabelMontoPago();
-        }, 50);
+        // Inicializar label correcto inmediatamente sin setTimeout
+        window.actualizarLabelMontoPago();
     };
 
     window.cerrarModalPago = function() {
@@ -387,6 +394,7 @@
         const montoIngresado = parseFloat(input.value) || 0;
         if (montoIngresado <= 0) {
             previewEl.style.display = 'none';
+            previewEl.innerHTML = '';
             return;
         }
         
@@ -404,6 +412,7 @@
         // Obtener acumulado desglosado
         if (!mesoneroParaPagoId) {
             previewEl.style.display = 'none';
+            previewEl.innerHTML = '';
             return;
         }
         
@@ -430,7 +439,7 @@
             const acumuladoUSDEnBs = acumuladoUSDCrudo * tasaBase;
             const acumuladoTotal = acumuladoBsCrudo + acumuladoUSDEnBs;
             
-            // Calcular cómo se distribuye el pago
+            // Calcular cómo se distribuye el pago (misma lógica que confirmarPagoParcial)
             let restoPorPagar = montoEnBs;
             let pagadoDeUSD = 0;
             let pagadoDeBs = 0;
@@ -499,6 +508,7 @@
         } catch(e) {
             console.error('Error actualizando vista previa:', e);
             previewEl.style.display = 'none';
+            previewEl.innerHTML = '';
         }
     };
 
@@ -615,6 +625,12 @@
             if (errInsert) throw errInsert;
             
             window.cerrarModalPago();
+            // Limpiar vista previa antes de actualizar
+            const previewElTotal = document.getElementById('pagoPreviewSection');
+            if (previewElTotal) {
+                previewElTotal.innerHTML = '';
+                previewElTotal.style.display = 'none';
+            }
             await window.actualizarAcumuladosPendientes();
             await window.cargarMesoneros();
             await window.cargarPropinas();
@@ -791,6 +807,12 @@
             }
 
             window.cerrarModalPago();
+            // Limpiar vista previa antes de actualizar
+            const previewElParcial = document.getElementById('pagoPreviewSection');
+            if (previewElParcial) {
+                previewElParcial.innerHTML = '';
+                previewElParcial.style.display = 'none';
+            }
             await window.actualizarAcumuladosPendientes();
             await window.cargarMesoneros();
             await window.cargarPropinas();

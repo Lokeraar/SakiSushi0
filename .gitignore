@@ -26,6 +26,23 @@ node_modules/
 .vscode/
 .idea/
 
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.py~
+
+# Node.js
+node_modules/
+
+# Build directories
+dist/
+build/
+target/
+coverage/
+htmlcov/
+
 # Original rules preserved
 *.log
 ```
@@ -64,10 +81,16 @@ htmlcov/
 *.swp
 *.swo
 
+# Dependencies
+.venv/
+venv/
+.env
+
 # System files
 .DS_Store
 Thumbs.db
 
+# Compression
 # Compressed files
 *.zip
 *.gz
@@ -87,6 +110,12 @@ Thumbs.db
 *.Z
 *.lz
 *.lzo
+
+# Cache
+.mypy_cache/
+.pytest_cache/
+.gradle/
+```
 *.tar.gz
 *.tar.bz2
 *.tar.xz
