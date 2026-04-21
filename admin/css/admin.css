@@ -527,9 +527,9 @@ html.dark-theme .theme-toggle-input:focus {
     gap: .6rem;
     margin-bottom: .6rem;
 }
-/* Responsive para tcb-cards */
+/* Responsive para tcb-cards - 4 columnas en tablet y escritorio, 2 en móvil */
 @media (max-width: 1024px) {
-    .tcb-cards { grid-template-columns: repeat(3, 1fr); }
+    .tcb-cards { grid-template-columns: repeat(4, 1fr); }
 }
 @media (max-width: 768px) {
     .tcb-cards { grid-template-columns: repeat(2, 1fr); }
@@ -2856,24 +2856,45 @@ a { color: var(--primary); }
         min-height: 75px;
         padding: 0.7rem 1rem;
     }
+    /* Usar mismo tamaño de fuente que en móvil para tablet */
+    .dashboard-grid .dashboard-card .card-title {
+        font-size: .72rem !important;
+        margin-bottom: .3rem !important;
+    }
+    .dashboard-grid .dashboard-card .card-value {
+        font-size: 1.45rem !important;
+        font-weight: 800 !important;
+    }
 }
 @media (min-width: 1024px) {
     .dashboard-grid .dashboard-card:not(.tcb-card-estrella) {
         min-height: 80px;
         padding: 0.8rem 1.2rem;
     }
+    /* Usar mismo tamaño de fuente que en móvil para escritorio */
+    .dashboard-grid .dashboard-card .card-title {
+        font-size: .72rem !important;
+        margin-bottom: .3rem !important;
+    }
+    .dashboard-grid .dashboard-card .card-value {
+        font-size: 1.45rem !important;
+        font-weight: 800 !important;
+    }
 }
-/* Reordenar tarjetas: Ventas Hoy, Deliverys Hoy, Productos+Alertas (fila doble), Diferencia Tasa, Platillo Estrella, Propinas Hoy */
-.dashboard-card:nth-child(1) { order: 1; }
-.dashboard-card:nth-child(4) { order: 2; } /* Deliverys Hoy */
-.dashboard-card:nth-child(2) { order: 3; } /* Productos Activos */
-.dashboard-card:nth-child(3) { order: 4; } /* Alertas Stock */
-/* Tarjeta diferencia de tasa */
-.dashboard-card:nth-child(5) { order: 5; }
-/* Platillo Estrella - ahora es el 6to elemento */
-.dashboard-card:nth-child(6) { order: 6; }
-/* Propinas Hoy - ahora es el 7mo elemento */
-.dashboard-card:nth-child(7) { order: 7; }
+/* Reordenar tarjetas con order: Ventas Hoy (1), Productos+Alertas (2), Diferencia Tasa (3), Deliverys+Propinas (4), Platillo Estrella (5 - última) */
+.dashboard-card:nth-child(1) { order: 1; } /* Ventas Hoy */
+.dashboard-col-mini:nth-of-type(1) { order: 2; } /* Productos Activos + Alertas Stock */
+.dashboard-card:nth-of-type(3) { order: 3; } /* Acumulado Dif. Tasa */
+.dashboard-col-mini:nth-of-type(2) { order: 4; } /* Deliverys Hoy + Propinas Hoy */
+.tcb-card-estrella { order: 5; grid-column: auto; } /* Platillo Estrella - última tarjeta */
+
+/* Platillo Estrella ocupa el espacio restante en la fila según el viewport */
+@media (min-width: 768px) and (max-width: 1023px) {
+    .tcb-card-estrella { grid-column: span 3; }
+}
+@media (min-width: 1024px) {
+    .tcb-card-estrella { grid-column: span 4; }
+}
 
 /* Animación palpitante para stock crítico al hacer clic desde alertas */
 @keyframes pulse-critico {
