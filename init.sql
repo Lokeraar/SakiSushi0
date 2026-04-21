@@ -565,8 +565,14 @@ EXCEPTION WHEN duplicate_object THEN NULL;
 END $$;
 GRANT ALL ON ventas_detalle TO anon, authenticated;
 GRANT ALL ON ventas_detalle TO PUBLIC;
+-- Conceder permisos sobre la secuencia solo si existe
 DO $$ BEGIN
-    GRANT USAGE, SELECT ON SEQUENCE ventas_detalle_id_seq TO anon, authenticated;
+    IF EXISTS (
+        SELECT 1 FROM information_schema.sequences 
+        WHERE sequence_name = 'ventas_detalle_id_seq'
+    ) THEN
+        GRANT USAGE, SELECT ON SEQUENCE ventas_detalle_id_seq TO anon, authenticated;
+    END IF;
 EXCEPTION WHEN undefined_object THEN NULL;
 END $$;
 DROP INDEX IF EXISTS idx_ventas_detalle_venta_id;
@@ -584,8 +590,10 @@ CREATE INDEX idx_ventas_detalle_fecha ON ventas_detalle(fecha);
 CREATE OR REPLACE VIEW vista_platillo_estrella AS
 WITH semana_actual AS (
     SELECT 
-        (CURRENT_DATE - EXTRACT(DOW FROM CURRENT_DATE)::INTEGER + CASE WHEN EXTRACT(DOW FROM CURRENT_DATE) = 0 THEN 6 ELSE -1 END)::DATE AS inicio_semana,
-        (CURRENT_DATE - EXTRACT(DOW FROM CURRENT_DATE)::INTEGER + CASE WHEN EXTRACT(DOW FROM CURRENT_DATE) = 0 THEN 6 ELSE -1 END + 6)::DATE + INTERVAL '23 hours 59 minutes 59 seconds' AS fin_semana
+        -- Inicio de semana: lunes de la semana actual
+        (CURRENT_DATE - ((EXTRACT(DOW FROM CURRENT_DATE)::INTEGER + 6) % 7))::DATE AS inicio_semana,
+        -- Fin de semana: domingo a las 23:59:59
+        ((CURRENT_DATE - ((EXTRACT(DOW FROM CURRENT_DATE)::INTEGER + 6) % 7) + 6)::DATE + INTERVAL '23 hours 59 minutes 59 seconds') AS fin_semana
 ),
 platillos_vendidos AS (
     SELECT 
