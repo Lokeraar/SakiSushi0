@@ -544,6 +544,69 @@ CREATE INDEX idx_ventas_metodo_pago ON ventas(metodo_pago);
 CREATE INDEX idx_ventas_tipo ON ventas(tipo);
 
 -- ============================================
+-- TABLA: ventas_detalle
+-- ============================================
+CREATE TABLE ventas_detalle (
+    id SERIAL PRIMARY KEY,
+    venta_id INTEGER REFERENCES ventas(id) ON DELETE CASCADE,
+    pedido_id TEXT REFERENCES pedidos(id) ON DELETE CASCADE,
+    platillo_id TEXT REFERENCES menu(id) ON DELETE SET NULL,
+    platillo_nombre TEXT NOT NULL,
+    cantidad INTEGER DEFAULT 1,
+    precio_unitario_usd NUMERIC(10,2) DEFAULT 0,
+    precio_unitario_bs NUMERIC(10,2) DEFAULT 0,
+    subtotal_usd NUMERIC(10,2) DEFAULT 0,
+    subtotal_bs NUMERIC(10,2) DEFAULT 0,
+    fecha TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+ALTER TABLE ventas_detalle ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Permitir todo ventas_detalle" ON ventas_detalle FOR ALL USING (true) WITH CHECK (true);
+GRANT ALL ON ventas_detalle TO anon, authenticated;
+GRANT ALL ON ventas_detalle TO PUBLIC;
+GRANT USAGE, SELECT ON SEQUENCE ventas_detalle_id_seq TO anon, authenticated;
+CREATE INDEX idx_ventas_detalle_venta_id ON ventas_detalle(venta_id);
+CREATE INDEX idx_ventas_detalle_pedido_id ON ventas_detalle(pedido_id);
+CREATE INDEX idx_ventas_detalle_platillo_id ON ventas_detalle(platillo_id);
+CREATE INDEX idx_ventas_detalle_fecha ON ventas_detalle(fecha);
+
+-- ============================================
+-- VISTA: vista_platillo_estrella (Top 5 semanal)
+-- ============================================
+CREATE OR REPLACE VIEW vista_platillo_estrella AS
+WITH semana_actual AS (
+    SELECT 
+        DATE_TRUNC('week', CURRENT_DATE - INTERVAL '3 days')::DATE AS inicio_semana,
+        DATE_TRUNC('week', CURRENT_DATE - INTERVAL '3 days')::DATE + INTERVAL '6 days' + INTERVAL '23 hours 59 minutes 59 seconds' AS fin_semana
+),
+platillos_vendidos AS (
+    SELECT 
+        vd.platillo_id,
+        vd.platillo_nombre,
+        m.imagen,
+        SUM(vd.cantidad) AS total_cantidad,
+        SUM(vd.subtotal_usd) AS total_usd,
+        SUM(vd.subtotal_bs) AS total_bs
+    FROM ventas_detalle vd
+    CROSS JOIN semana_actual sa
+    LEFT JOIN menu m ON vd.platillo_id = m.id
+    WHERE vd.fecha >= sa.inicio_semana AND vd.fecha <= sa.fin_semana
+    GROUP BY vd.platillo_id, vd.platillo_nombre, m.imagen
+)
+SELECT 
+    platillo_id,
+    platillo_nombre,
+    imagen,
+    total_cantidad,
+    total_usd,
+    total_bs,
+    ROW_NUMBER() OVER (ORDER BY total_cantidad DESC, total_usd DESC) AS posicion
+FROM platillos_vendidos
+ORDER BY total_cantidad DESC, total_usd DESC
+LIMIT 5;
+
+-- ============================================
 -- TABLA: entregas_delivery
 -- ============================================
 CREATE TABLE entregas_delivery (
