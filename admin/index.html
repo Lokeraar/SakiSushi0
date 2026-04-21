@@ -250,7 +250,6 @@
                         <div class="card-value" id="ventasHoy">$0.00</div>
                         <div style="font-size:.72rem;color:var(--text-muted);margin-top:.25rem">Toca para ver desglose</div>
                     </div>
-                    <div class="dashboard-card" style="cursor:pointer" onclick="window.irADeliverys&&window.irADeliverys()" title="Ver módulo Deliverys"><div class="card-title">Deliverys Hoy <i class="fas fa-external-link-alt" style="font-size:.55rem;opacity:.6;margin-left:.25rem"></i></div><div class="card-value" id="deliverysHoyDashboard">$0.00 / Bs 0,00</div><div style="font-size:.72rem;color:var(--text-muted);margin-top:.25rem">Toca para ver detalle</div></div>
                     <div class="dashboard-col-mini">
                         <div class="dashboard-card dashboard-card-sm" style="cursor:pointer" onclick="window.irAMenu()" title="Ver menú">
                             <div class="card-title">Productos Activos</div>
@@ -270,6 +269,16 @@
                         </span></div>
                         <div class="card-value" id="diferenciaTasaValor">Bs 0,00</div>
                     </div>
+                    <div class="dashboard-col-mini">
+                        <div class="dashboard-card dashboard-card-sm" style="cursor:pointer" onclick="window.irADeliverys&&window.irADeliverys()" title="Ver módulo Deliverys">
+                            <div class="card-title">Deliverys Hoy <i class="fas fa-external-link-alt" style="font-size:.55rem;opacity:.6;margin-left:.25rem"></i></div>
+                            <div class="card-value" id="deliverysHoyDashboard">$0.00 / Bs 0,00</div>
+                        </div>
+                        <div class="dashboard-card dashboard-card-sm" id="propinasHoyCard" style="cursor:pointer" onclick="window._irAMesoneros()" title="Ir a gestión de mesoneros y propinas">
+                            <div class="card-title">Propinas Hoy <i class="fas fa-external-link-alt" style="font-size:.6rem;opacity:.5;margin-left:.3rem"></i></div>
+                            <div class="card-value" id="propinasHoyDashboard">Bs 0,00</div>
+                        </div>
+                    </div>
                     <div class="tcb-card tcb-card-estrella dashboard-card" id="platilloEstrellaCard" style="cursor:pointer" onclick="window.verAnaliticaPlatilloEstrella()">
                         <div class="card-title" style="color: var(--gold);">Platillo Estrella</div>
                         <div class="tcb-estrella-img-wrap"><img id="platilloEstrellaImg" src="" alt="Platillo Estrella" class="tcb-estrella-img"></div>
@@ -281,11 +290,6 @@
                             <span class="tcb-estrella-stat"><i class="fas fa-coins"></i> <span id="platilloEstrellaPrecioBs">0,00</span></span>
                         </div>
                         <button class="tcb-estrella-btn"><i class="fas fa-chart-line"></i> Ver Analítica Completa</button>
-                    </div>
-                    <div class="dashboard-card" id="propinasHoyCard" style="cursor:pointer" onclick="window._irAMesoneros()" title="Ir a gestión de mesoneros y propinas">
-                        <div class="card-title">Propinas Hoy <i class="fas fa-external-link-alt" style="font-size:.6rem;opacity:.5;margin-left:.3rem"></i></div>
-                        <div class="card-value" id="propinasHoyDashboard">Bs 0,00</div>
-                        <div style="font-size:.72rem;color:var(--text-muted);margin-top:.25rem">Toca para gestionar propinas</div>
                     </div>
                 </div>
                 <div class="dashboard-lower-grid">

@@ -206,9 +206,9 @@
             const tasa = window.configGlobal?.tasa_efectiva || window.configGlobal?.tasa_cambio || 400;
             const netoUSD = netoBs / tasa;
             const el = document.getElementById('ventasHoy');
-            if (el) el.textContent = `${window.formatUSD(netoUSD)} / Bs ${netoBs.toFixed(2)}`;
+            if (el) el.textContent = `${window.formatUSD(netoUSD)} / ${window.formatBs(netoBs)}`;
             window._ventasHoyNeto = { netoBs, netoUSD, ventasHoy, pedidosData };
-        } catch (e) { console.error('Error calculando neto cobrado:', e); const el = document.getElementById('ventasHoy'); if (el) el.textContent = '$0.00 / Bs 0.00'; }
+        } catch (e) { console.error('Error calculando neto cobrado:', e); const el = document.getElementById('ventasHoy'); if (el) el.textContent = '$0.00 / Bs 0,00'; }
     };
 
     window._actualizarDeliverysHoy = async function() {
@@ -216,12 +216,14 @@
             const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
             const manana = new Date(hoy); manana.setDate(manana.getDate() + 1);
             const { data: pedidosDelivery } = await window.supabaseClient.from('pedidos').select('*').eq('tipo', 'delivery').eq('estado', 'enviado').gte('fecha', hoy.toISOString()).lt('fecha', manana.toISOString());
-            let totalDeliverys = 0;
-            (pedidosDelivery || []).forEach(p => { totalDeliverys += p.costo_delivery_bs || p.costoDelivery || 0; });
+            let totalDeliverysBs = 0;
+            (pedidosDelivery || []).forEach(p => { totalDeliverysBs += p.costo_delivery_bs || p.costoDelivery || 0; });
+            const tasa = window.configGlobal?.tasa_efectiva || window.configGlobal?.tasa_cambio || 400;
+            const totalDeliverysUsd = tasa > 0 ? totalDeliverysBs / tasa : 0;
             const el = document.getElementById('deliverysHoyDashboard');
-            if (el) el.textContent = window.formatBs(totalDeliverys);
-            window._deliverysHoyData = { totalDeliverys, pedidosDelivery };
-        } catch (e) { console.error('Error calculando deliverys hoy:', e); const el = document.getElementById('deliverysHoyDashboard'); if (el) el.textContent = 'Bs 0.00'; }
+            if (el) el.textContent = window.formatUSD(totalDeliverysUsd) + ' / ' + window.formatBs(totalDeliverysBs);
+            window._deliverysHoyData = { totalDeliverysBs, totalDeliverysUsd, pedidosDelivery };
+        } catch (e) { console.error('Error calculando deliverys hoy:', e); const el = document.getElementById('deliverysHoyDashboard'); if (el) el.textContent = '$0.00 / Bs 0,00'; }
     };
 
     window._abrirDetalleDeliverysAdmin = async function() {
