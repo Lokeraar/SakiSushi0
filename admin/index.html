@@ -26,6 +26,7 @@
     <script src="js/admin-delivery.js" defer></script>
     <script src="js/admin-qr.js" defer></script>
     <script src="js/admin-reportes.js" defer></script>
+    <script src="js/admin-platillo-estrella.js" defer></script>
 </head>
 <body>
     <!-- Aviso de salida (se mantiene igual) -->
@@ -260,11 +261,11 @@
                         <div class="tcb-estrella-titulo" id="platilloEstrellaTitulo">Cargando...</div>
                         <div class="tcb-estrella-desc" id="platilloEstrellaDesc">-</div>
                         <div class="tcb-estrella-stats">
-                            <span class="tcb-estrella-stat"><i class="fas fa-utensils"></i> <span id="platilloEstrellaOrdenes">0</span> órdenes/sem</span>
-                            <span class="tcb-estrella-stat"><i class="fas fa-dollar-sign"></i> <span id="platilloEstrellaPrecioUsd">0.00</span></span>
+                            <span class="tcb-estrella-stat"><i class="fas fa-utensils"></i> <span id="platilloEstrellaOrdenes">0</span> ventas esta semana</span>
+                            <span class="tcb-estrella-stat"><i class="fas fa-dollar-sign"></i> $<span id="platilloEstrellaPrecioUsd">0.00</span></span>
                             <span class="tcb-estrella-stat"><i class="fas fa-coins"></i> <span id="platilloEstrellaPrecioBs">0,00</span></span>
                         </div>
-                        <button class="tcb-estrella-btn"><i class="fas fa-chart-line"></i> Ver Analítica Completa</button>
+                        <button class="tcb-estrella-btn" onclick="event.stopPropagation(); window.verAnaliticaPlatilloEstrella()"><i class="fas fa-chart-line"></i> Ver analítica completa</button>
                     </div>
                     <div class="dashboard-card" id="ventasHoyCard" style="cursor:pointer" onclick="window._abrirDetalleVentasAdmin()" title="Ver detalle de ventas de hoy">
                         <div class="card-title">Ventas Hoy (Neto Cobrado) <i class="fas fa-external-link-alt" style="font-size:.6rem;opacity:.5;margin-left:.3rem"></i></div>

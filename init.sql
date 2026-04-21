@@ -579,13 +579,13 @@ CREATE INDEX idx_ventas_detalle_platillo_id ON ventas_detalle(platillo_id);
 CREATE INDEX idx_ventas_detalle_fecha ON ventas_detalle(fecha);
 
 -- ============================================
--- VISTA: vista_platillo_estrella (Top 5 semanal)
+-- VISTA: vista_platillo_estrella (Top 5 semanal - desde lunes)
 -- ============================================
 CREATE OR REPLACE VIEW vista_platillo_estrella AS
 WITH semana_actual AS (
     SELECT 
-        DATE_TRUNC('week', CURRENT_DATE - INTERVAL '3 days')::DATE AS inicio_semana,
-        DATE_TRUNC('week', CURRENT_DATE - INTERVAL '3 days')::DATE + INTERVAL '6 days' + INTERVAL '23 hours 59 minutes 59 seconds' AS fin_semana
+        (CURRENT_DATE - EXTRACT(DOW FROM CURRENT_DATE)::INTEGER + CASE WHEN EXTRACT(DOW FROM CURRENT_DATE) = 0 THEN 6 ELSE -1 END)::DATE AS inicio_semana,
+        (CURRENT_DATE - EXTRACT(DOW FROM CURRENT_DATE)::INTEGER + CASE WHEN EXTRACT(DOW FROM CURRENT_DATE) = 0 THEN 6 ELSE -1 END + 6)::DATE + INTERVAL '23 hours 59 minutes 59 seconds' AS fin_semana
 ),
 platillos_vendidos AS (
     SELECT 
