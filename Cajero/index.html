@@ -831,61 +831,22 @@ window.confirmarCobro = async function() {
         else totalFinalUSD=p.total;
     }
     try {
-        // Obtener la tasa de cambio efectiva para el registro en ventas_detalle
-        const tasaBs = window.configGlobal?.tasa_efectiva || window.tasaEfectiva || 400;
-        
-        // Variables para uso en todo el bloque try (declaradas antes del RPC)
-        let subtotalBs = 0;
-        let totalItems = 0;
-        
-        // LLAMAR A LA FUNCIÓN CONFIRMAR_COBRO_PLATILLO_ESTRELLA DE SUPABASE
-        // Esta función: crea venta, inserta en ventas_detalle con precios en $ y Bs, descuenta stock del menú
-        const { data: cobroData, error: errCobro } = await window.supabaseClient.rpc('confirmar_cobro_platillo_estrella', {
-            p_pedido_id: p.id,
-            p_metodo_pago: metodoPago,
-            p_tasa_bs: tasaBs
-        });
-        
-        if (errCobro) {
-            console.error('Error en RPC confirmar_cobro_platillo_estrella:', errCobro);
-            // Fallback al método anterior si falla la RPC
-            const updateData={estado:nuevoEstado,metodo_pago:metodoPago,pagos_mixtos:pagosData,cajero:window.currentUser&&window.currentUser.nombre?window.currentUser.nombre:'Cajero',fecha_cobro:new Date().toISOString(),a_favor_caja:montoFavor||0,condonado:montoCondonado||0,vuelto_entregado:vueltoEntregado||0,total:totalFinalUSD};
-            const {error:errP}=await window.supabaseClient.from('pedidos').update(updateData).eq('id',p.id);
-            if(esInvitacion && p.tipo==='delivery'){
-                const pidx=window.pedidos.findIndex(function(x){return x.id===p.id;});
-                if(pidx>=0) window.pedidos[pidx]._deliveryCobradoInv = cobro._invitacionDeliveryCobrar===true;
-            }
-            if(errP)throw errP;
-            totalItems=(p.items||[]).reduce(function(s,i){return s+(i.cantidad||1);},0);
-            const subtotalUSD=(p.items||[]).reduce(function(s,i){return s+(i.precioUnitarioUSD||0)*(i.cantidad||1);},0);
-            subtotalBs=esInvitacion?0:window.usdToBs(subtotalUSD);
-            const {error:errV}=await window.supabaseClient.from('ventas').insert([{pedido_id:p.id,total:esInvitacion?0:totalFinalUSD,subtotal_platillos:subtotalBs,items:totalItems,metodo_pago:metodoPago,tipo:p.tipo,fecha:new Date().toISOString()}]);
-            if(errV)throw errV;
-            const {error:errStock}=await window.supabaseClient.rpc('descontar_ingredientes_pedido',{p_pedido_id:p.id});
-            if(errStock)console.error('Error descontando stock:',errStock);
-        } else {
-            // Éxito con la nueva función - actualizar pedidos localmente
+        const updateData={estado:nuevoEstado,metodo_pago:metodoPago,pagos_mixtos:pagosData,cajero:window.currentUser&&window.currentUser.nombre?window.currentUser.nombre:'Cajero',fecha_cobro:new Date().toISOString(),a_favor_caja:montoFavor||0,condonado:montoCondonado||0,vuelto_entregado:vueltoEntregado||0,total:totalFinalUSD};
+        const {error:errP}=await window.supabaseClient.from('pedidos').update(updateData).eq('id',p.id);
+        // Guardar decisión delivery en memoria (sin columna DB extra)
+        if(esInvitacion && p.tipo==='delivery'){
             const pidx=window.pedidos.findIndex(function(x){return x.id===p.id;});
-            if(pidx>=0) {
-                window.pedidos[pidx].estado = nuevoEstado;
-                window.pedidos[pidx].metodo_pago = metodoPago;
-                window.pedidos[pidx].pagos_mixtos = pagosData;
-                window.pedidos[pidx].cajero = window.currentUser&&window.currentUser.nombre?window.currentUser.nombre:'Cajero';
-                window.pedidos[pidx].fecha_cobro = new Date().toISOString();
-                window.pedidos[pidx].a_favor_caja = montoFavor||0;
-                window.pedidos[pidx].condonado = montoCondonado||0;
-                window.pedidos[pidx].vuelto_entregado = vueltoEntregado||0;
-                window.pedidos[pidx].total = totalFinalUSD;
-                if(esInvitacion && p.tipo==='delivery') {
-                    window.pedidos[pidx]._deliveryCobradoInv = cobro._invitacionDeliveryCobrar===true;
-                }
-            }
-            // Calcular subtotalBs y totalItems para el bloque de notificaciones (éxito con RPC)
-            totalItems=(p.items||[]).reduce(function(s,i){return s+(i.cantidad||1);},0);
-            const subtotalUSD=(p.items||[]).reduce(function(s,i){return s+(i.precioUnitarioUSD||0)*(i.cantidad||1);},0);
-            subtotalBs=esInvitacion?0:window.usdToBs(subtotalUSD);
+            if(pidx>=0) window.pedidos[pidx]._deliveryCobradoInv = cobro._invitacionDeliveryCobrar===true;
         }
-        
+        if(errP)throw errP;
+        const totalItems=(p.items||[]).reduce(function(s,i){return s+(i.cantidad||1);},0);
+        const subtotalUSD=(p.items||[]).reduce(function(s,i){return s+(i.precioUnitarioUSD||0)*(i.cantidad||1);},0);
+        const subtotalBs=esInvitacion?0:window.usdToBs(subtotalUSD);  // invitación siempre 0
+        const {error:errV}=await window.supabaseClient.from('ventas').insert([{pedido_id:p.id,total:esInvitacion?0:totalFinalUSD,subtotal_platillos:subtotalBs,items:totalItems,metodo_pago:metodoPago,tipo:p.tipo,fecha:new Date().toISOString()}]);
+        if(errV)throw errV;
+        // Descontar ingredientes del stock real al confirmar el cobro
+        const {error:errStock}=await window.supabaseClient.rpc('descontar_ingredientes_pedido',{p_pedido_id:p.id});
+        if(errStock)console.error('Error descontando stock:',errStock);
         let tituloN,mensajeN;
         if(esInvitacion){tituloN='\uD83C\uDF81 Pedido por invitaci\xf3n';mensajeN='Tu pedido ha sido procesado. \xa1Disfruta!';}
         else if(p.tipo==='delivery'){tituloN='\u2705 Pago confirmado';mensajeN='Tu pedido est\xe1 en preparaci\xf3n';}
@@ -900,18 +861,9 @@ window.confirmarCobro = async function() {
         await window.recargarPedidosCompletos();
         await window.cargarMenu();
         window.renderizarPropinas();
-        
-        // Recargar el platillo estrella en el admin (si está disponible)
-        try {
-            if (window.opener && typeof window.opener.window?.recargarPlatilloEstrella === 'function') {
-                window.opener.window.recargarPlatilloEstrella();
-            }
-        } catch(e) {
-            console.log('No se pudo recargar platillo estrella en admin:', e);
-        }
     } catch(e) {
         console.error('Error en cobro:',e);
-        window.mostrarToast('\u274C Error al registrar el cobro: '+(e.message||e),'error');
+        window.mostrarToast('\u274c Error al registrar el cobro: '+(e.message||e),'error');
     } finally {
         // Restaurar el botón siempre, sin importar si hubo error
         const _ccBtn = document.getElementById('confirmCobroBtn');
