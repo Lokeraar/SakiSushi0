@@ -282,7 +282,7 @@
     window.actualizarTarjetaDiferenciaTasa = function() {
         const diff = window.calcularDiferenciaTasa();
         const valorEl = document.getElementById('diferenciaTasaValor');
-        if (valorEl) valorEl.textContent = 'Bs ' + diff.toFixed(2);
+        if (valorEl) valorEl.textContent = '$ 0,00 / Bs ' + diff.toFixed(2).replace('.', ',');
     };
 
     // ==================== SISTEMA DE TEMAS PREMIUM ====================
