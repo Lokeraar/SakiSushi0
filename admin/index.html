@@ -245,6 +245,27 @@
                     </div>
                 </div>
                 <div class="dashboard-grid">
+                    <div class="dashboard-card" id="diferenciaTasaCard" style="cursor:pointer" onclick="window.mostrarToast('Diferencia acumulada a favor del restaurante por aumento de tasa', 'info')">
+                        <div class="card-title">Acumulado Dif. Tasa Base y Efectiva <span class="tooltip-wrap" style="position:relative; display:inline-flex; cursor:help; margin-left:.3rem">
+                            <span style="display:inline-flex; align-items:center; justify-content:center; width:16px; height:16px; background:var(--text-muted); color:#fff; border-radius:50%; font-size:.65rem; font-weight:700">?</span>
+                            <span class="tooltip-text" style="display:none; position:absolute; bottom:calc(100% + 6px); left:50%; transform:translateX(-50%); background:var(--toast-bg); color:var(--toast-text); padding:.5rem .75rem; border-radius:8px; font-size:.75rem; white-space:normal; width:250px; text-align:center; box-shadow:0 4px 12px rgba(0,0,0,.3); z-index:100; line-height:1.4">
+                                Es la ganancia extra generada por la diferencia entre la tasa base y la tasa efectiva aplicada a los pedidos cobrados. Esta diferencia queda a favor del restaurante.
+                            </span>
+                        </span></div>
+                        <div class="card-value" id="diferenciaTasaValor">Bs 0,00</div>
+                    </div>
+                    <div class="tcb-card tcb-card-estrella dashboard-card" id="platilloEstrellaCard" style="cursor:pointer" onclick="window.verAnaliticaPlatilloEstrella()">
+                        <div class="card-title" style="color: var(--gold);">Platillo Estrella</div>
+                        <div class="tcb-estrella-img-wrap"><img id="platilloEstrellaImg" src="" alt="Platillo Estrella" class="tcb-estrella-img"></div>
+                        <div class="tcb-estrella-titulo" id="platilloEstrellaTitulo">Cargando...</div>
+                        <div class="tcb-estrella-desc" id="platilloEstrellaDesc">-</div>
+                        <div class="tcb-estrella-stats">
+                            <span class="tcb-estrella-stat"><i class="fas fa-utensils"></i> <span id="platilloEstrellaOrdenes">0</span> órdenes/sem</span>
+                            <span class="tcb-estrella-stat"><i class="fas fa-dollar-sign"></i> <span id="platilloEstrellaPrecioUsd">0.00</span></span>
+                            <span class="tcb-estrella-stat"><i class="fas fa-coins"></i> <span id="platilloEstrellaPrecioBs">0,00</span></span>
+                        </div>
+                        <button class="tcb-estrella-btn"><i class="fas fa-chart-line"></i> Ver Analítica Completa</button>
+                    </div>
                     <div class="dashboard-card" id="ventasHoyCard" style="cursor:pointer" onclick="window._abrirDetalleVentasAdmin()" title="Ver detalle de ventas de hoy">
                         <div class="card-title">Ventas Hoy (Neto Cobrado) <i class="fas fa-external-link-alt" style="font-size:.6rem;opacity:.5;margin-left:.3rem"></i></div>
                         <div class="card-value" id="ventasHoy">$0.00</div>
@@ -260,15 +281,6 @@
                             <div class="card-value" id="alertasStock">0</div>
                         </div>
                     </div>
-                    <div class="dashboard-card" id="diferenciaTasaCard" style="cursor:pointer" onclick="window.mostrarToast('Diferencia acumulada a favor del restaurante por aumento de tasa', 'info')">
-                        <div class="card-title">Acumulado Dif. Tasa Base y Efectiva <span class="tooltip-wrap" style="position:relative; display:inline-flex; cursor:help; margin-left:.3rem">
-                            <span style="display:inline-flex; align-items:center; justify-content:center; width:16px; height:16px; background:var(--text-muted); color:#fff; border-radius:50%; font-size:.65rem; font-weight:700">?</span>
-                            <span class="tooltip-text" style="display:none; position:absolute; bottom:calc(100% + 6px); left:50%; transform:translateX(-50%); background:var(--toast-bg); color:var(--toast-text); padding:.5rem .75rem; border-radius:8px; font-size:.75rem; white-space:normal; width:250px; text-align:center; box-shadow:0 4px 12px rgba(0,0,0,.3); z-index:100; line-height:1.4">
-                                Es la ganancia extra generada por la diferencia entre la tasa base y la tasa efectiva aplicada a los pedidos cobrados. Esta diferencia queda a favor del restaurante.
-                            </span>
-                        </span></div>
-                        <div class="card-value" id="diferenciaTasaValor">Bs 0,00</div>
-                    </div>
                     <div class="dashboard-col-mini">
                         <div class="dashboard-card dashboard-card-sm" style="cursor:pointer" onclick="window.irADeliverys&&window.irADeliverys()" title="Ver módulo Deliverys">
                             <div class="card-title">Deliverys Hoy <i class="fas fa-external-link-alt" style="font-size:.55rem;opacity:.6;margin-left:.25rem"></i></div>
@@ -278,18 +290,6 @@
                             <div class="card-title">Propinas Hoy <i class="fas fa-external-link-alt" style="font-size:.6rem;opacity:.5;margin-left:.3rem"></i></div>
                             <div class="card-value" id="propinasHoyDashboard">Bs 0,00</div>
                         </div>
-                    </div>
-                    <div class="tcb-card tcb-card-estrella dashboard-card" id="platilloEstrellaCard" style="cursor:pointer" onclick="window.verAnaliticaPlatilloEstrella()">
-                        <div class="card-title" style="color: var(--gold);">Platillo Estrella</div>
-                        <div class="tcb-estrella-img-wrap"><img id="platilloEstrellaImg" src="" alt="Platillo Estrella" class="tcb-estrella-img"></div>
-                        <div class="tcb-estrella-titulo" id="platilloEstrellaTitulo">Cargando...</div>
-                        <div class="tcb-estrella-desc" id="platilloEstrellaDesc">-</div>
-                        <div class="tcb-estrella-stats">
-                            <span class="tcb-estrella-stat"><i class="fas fa-utensils"></i> <span id="platilloEstrellaOrdenes">0</span> órdenes/sem</span>
-                            <span class="tcb-estrella-stat"><i class="fas fa-dollar-sign"></i> <span id="platilloEstrellaPrecioUsd">0.00</span></span>
-                            <span class="tcb-estrella-stat"><i class="fas fa-coins"></i> <span id="platilloEstrellaPrecioBs">0,00</span></span>
-                        </div>
-                        <button class="tcb-estrella-btn"><i class="fas fa-chart-line"></i> Ver Analítica Completa</button>
                     </div>
                 </div>
                 <div class="dashboard-lower-grid">
