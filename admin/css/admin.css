@@ -613,6 +613,14 @@ html.dark-theme .tcb-estrella-img-wrap { background: rgba(255,255,255,.05); }
     .tcb-estrella-btn { font-size: .6rem; padding: .35rem .45rem; }
 }
 
+/* Platillo Estrella en tablet y desktop - ocupa todo el ancho de la fila */
+@media (min-width: 768px) and (max-width: 1023px) {
+    .dashboard-grid .tcb-card-estrella { grid-column: 1 / -1; }
+}
+@media (min-width: 1024px) {
+    .dashboard-grid .tcb-card-estrella { grid-column: 1 / -1; }
+}
+
 .tcb-controls {
     display: flex;
     gap: .6rem;
@@ -2881,19 +2889,16 @@ a { color: var(--primary); }
         font-weight: 800 !important;
     }
 }
-/* Reordenar tarjetas con order: Ventas Hoy (1), Productos+Alertas (2), Diferencia Tasa (3), Deliverys+Propinas (4), Platillo Estrella (5 - última) */
+/* Reordenar tarjetas con order: Ventas Hoy (1), Productos+Alertas (2), Diferencia Tasa (3), Deliverys+Propinas (4), Platillo Estrella (5 - última fila completa) */
 .dashboard-card:nth-child(1) { order: 1; } /* Ventas Hoy */
 .dashboard-col-mini:nth-of-type(1) { order: 2; } /* Productos Activos + Alertas Stock */
 .dashboard-card:nth-of-type(3) { order: 3; } /* Acumulado Dif. Tasa */
 .dashboard-col-mini:nth-of-type(2) { order: 4; } /* Deliverys Hoy + Propinas Hoy */
-.tcb-card-estrella { order: 5; grid-column: auto; } /* Platillo Estrella - última tarjeta */
+.tcb-card-estrella { order: 5; } /* Platillo Estrella - ocupa fila completa */
 
-/* Platillo Estrella ocupa el espacio restante en la fila según el viewport */
-@media (min-width: 768px) and (max-width: 1023px) {
-    .tcb-card-estrella { grid-column: span 3; }
-}
-@media (min-width: 1024px) {
-    .tcb-card-estrella { grid-column: span 4; }
+/* Platillo Estrella ocupa todo el ancho en mobile también */
+@media (max-width: 767px) {
+    .tcb-card-estrella { grid-column: 1 / -1; }
 }
 
 /* Animación palpitante para stock crítico al hacer clic desde alertas */
@@ -3071,6 +3076,9 @@ html.dark-theme .mesa-admin-btn {
 .dashboard-card-sm  { padding: .85rem 1rem !important; border-radius: 10px !important; }
 .dashboard-card-sm .card-title { font-size: .72rem !important; margin-bottom: .3rem !important; }
 .dashboard-card-sm .card-value { font-size: 1.45rem !important; font-weight: 800 !important; }
+
+/* Platillo Estrella - altura completa para mostrar contenido */
+.tcb-card-estrella { min-height: auto !important; }
 
 /* Ajuste responsive para dashboard-grid con 6+ elementos */
 @media (min-width: 768px) and (max-width: 1023px) {
