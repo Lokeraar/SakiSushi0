@@ -1552,7 +1552,7 @@ html.dark-theme .ingrediente-row {
 /* Dashboard lower grid */
 .dashboard-lower-grid {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr 2fr;
     gap: 1.5rem;
 }
 .alert-list h3 {
@@ -1647,6 +1647,10 @@ html.dark-theme .ingrediente-row {
     padding: 1.4rem;
     box-shadow: var(--shadow-sm);
     border: 1px solid var(--border);
+}
+@media (min-width: 769px) {
+    .lower-stock { min-width: 0; }
+    .lower-pedidos { min-width: 0; }
 }
 .lower-stock { border-top: 3px solid var(--danger); }
 .lower-pedidos { border-top: 3px solid var(--info); }
