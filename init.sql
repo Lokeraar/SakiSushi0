@@ -31,6 +31,7 @@ DROP FUNCTION IF EXISTS verify_user_credentials CASCADE;
 DROP FUNCTION IF EXISTS validate_and_commit_order CASCADE;
 DROP FUNCTION IF EXISTS update_stock_atomic CASCADE;
 DROP FUNCTION IF EXISTS sync_recipe_ingredients CASCADE;
+DROP FUNCTION IF EXISTS hash_password CASCADE;
 
 DROP TABLE IF EXISTS push_subscriptions CASCADE;
 DROP TABLE IF EXISTS notificaciones CASCADE;
@@ -46,15 +47,6 @@ DROP TABLE IF EXISTS mesoneros CASCADE;
 DROP TABLE IF EXISTS usuarios CASCADE;
 DROP TABLE IF EXISTS config CASCADE;
 DROP TABLE IF EXISTS recipe_ingredients CASCADE;
-
--- Agregar columna foto a la tabla usuarios
-ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS foto TEXT;
-
--- Agregar columna foto a la tabla mesoneros
-ALTER TABLE mesoneros ADD COLUMN IF NOT EXISTS foto TEXT;
-
--- Agregar columna foto a la tabla deliverys
-ALTER TABLE deliverys ADD COLUMN IF NOT EXISTS foto TEXT;
 
 -- ============================================
 -- TABLA: config
@@ -116,6 +108,7 @@ CREATE TABLE usuarios (
     password_hash TEXT NOT NULL,
     rol TEXT DEFAULT 'cajero',
     activo BOOLEAN DEFAULT TRUE,
+    foto TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -198,6 +191,7 @@ CREATE TABLE mesoneros (
     id TEXT PRIMARY KEY,
     nombre TEXT NOT NULL,
     activo BOOLEAN DEFAULT TRUE,
+    foto TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -222,6 +216,7 @@ CREATE TABLE deliverys (
     id TEXT PRIMARY KEY,
     nombre TEXT NOT NULL,
     activo BOOLEAN DEFAULT TRUE,
+    foto TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -1306,12 +1301,25 @@ ALTER PUBLICATION supabase_realtime ADD TABLE deliverys;
 -- ============================================
 -- MIGRACION PARA BD YA EXISTENTE EN PRODUCCION
 -- (Si ya tienes datos y NO quieres borrar todo)
+-- Estas líneas solo aplican si ejecutas el script
+-- sobre una base de datos que ya tenía tablas creadas
+-- sin las columnas más recientes.
 -- ============================================
-ALTER TABLE config ADD COLUMN IF NOT EXISTS aumento_semanal    BOOLEAN DEFAULT FALSE;
-ALTER TABLE push_subscriptions ADD COLUMN IF NOT EXISTS rol TEXT DEFAULT 'cliente';
-ALTER TABLE config ADD COLUMN IF NOT EXISTS aumento_desde      DATE    DEFAULT NULL;
-ALTER TABLE config ADD COLUMN IF NOT EXISTS aumento_hasta      DATE    DEFAULT NULL;
-ALTER TABLE config ADD COLUMN IF NOT EXISTS aumento_indefinido BOOLEAN DEFAULT FALSE;
+-- Las columnas 'foto' en usuarios, mesoneros y deliverys
+-- ya están incluidas en la creación de tablas arriba.
+-- Si necesitas agregarlas a una BD existente, descomenta:
+-- ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS foto TEXT;
+-- ALTER TABLE mesoneros ADD COLUMN IF NOT EXISTS foto TEXT;
+-- ALTER TABLE deliverys ADD COLUMN IF NOT EXISTS foto TEXT;
+
+-- Columnas de aumento en config (ya existen en CREATE TABLE)
+-- ALTER TABLE config ADD COLUMN IF NOT EXISTS aumento_semanal    BOOLEAN DEFAULT FALSE;
+-- ALTER TABLE config ADD COLUMN IF NOT EXISTS aumento_desde      DATE    DEFAULT NULL;
+-- ALTER TABLE config ADD COLUMN IF NOT EXISTS aumento_hasta      DATE    DEFAULT NULL;
+-- ALTER TABLE config ADD COLUMN IF NOT EXISTS aumento_indefinido BOOLEAN DEFAULT FALSE;
+
+-- Columna rol en push_subscriptions (ya existe en CREATE TABLE)
+-- ALTER TABLE push_subscriptions ADD COLUMN IF NOT EXISTS rol TEXT DEFAULT 'cliente';
 
 -- ============================================
 -- VERIFICACION FINAL
