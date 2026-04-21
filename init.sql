@@ -521,7 +521,6 @@ CREATE INDEX idx_pedidos_fecha_estado ON pedidos(fecha, estado);
 -- ============================================
 CREATE TABLE ventas (
     id SERIAL PRIMARY KEY,
-    pedido_id TEXT REFERENCES pedidos(id) ON DELETE CASCADE,
     total NUMERIC(10,2) DEFAULT 0,
     subtotal_platillos NUMERIC(10,2) DEFAULT 0,
     items INTEGER DEFAULT 0,
@@ -554,7 +553,6 @@ DO $$ BEGIN
     END IF;
 EXCEPTION WHEN undefined_object THEN NULL;
 END $$;
-CREATE INDEX idx_ventas_pedido_id ON ventas(pedido_id);
 CREATE INDEX idx_ventas_metodo_pago ON ventas(metodo_pago);
 CREATE INDEX idx_ventas_tipo ON ventas(tipo);
 
@@ -564,7 +562,6 @@ CREATE INDEX idx_ventas_tipo ON ventas(tipo);
 CREATE TABLE IF NOT EXISTS ventas_detalle (
     id SERIAL PRIMARY KEY,
     venta_id INTEGER REFERENCES ventas(id) ON DELETE CASCADE,
-    pedido_id TEXT REFERENCES pedidos(id) ON DELETE CASCADE,
     platillo_id TEXT REFERENCES menu(id) ON DELETE SET NULL,
     platillo_nombre TEXT NOT NULL,
     cantidad INTEGER DEFAULT 1,
@@ -608,9 +605,28 @@ DROP INDEX IF EXISTS idx_ventas_detalle_pedido_id;
 DROP INDEX IF EXISTS idx_ventas_detalle_platillo_id;
 DROP INDEX IF EXISTS idx_ventas_detalle_fecha;
 CREATE INDEX idx_ventas_detalle_venta_id ON ventas_detalle(venta_id);
-CREATE INDEX idx_ventas_detalle_pedido_id ON ventas_detalle(pedido_id);
 CREATE INDEX idx_ventas_detalle_platillo_id ON ventas_detalle(platillo_id);
 CREATE INDEX idx_ventas_detalle_fecha ON ventas_detalle(fecha);
+
+-- Migración segura: crear índice idx_ventas_pedido_id si no existe
+DO $$ BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_indexes
+        WHERE tablename = 'ventas' AND indexname = 'idx_ventas_pedido_id'
+    ) THEN
+        CREATE INDEX idx_ventas_pedido_id ON ventas(pedido_id);
+    END IF;
+END $$;
+
+-- Migración segura: crear índice idx_ventas_detalle_pedido_id si no existe
+DO $$ BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_indexes
+        WHERE tablename = 'ventas_detalle' AND indexname = 'idx_ventas_detalle_pedido_id'
+    ) THEN
+        CREATE INDEX idx_ventas_detalle_pedido_id ON ventas_detalle(pedido_id);
+    END IF;
+END $$;
 
 -- ============================================
 -- VISTA: vista_platillo_estrella (Top 5 semanal - desde lunes)
@@ -654,12 +670,21 @@ LIMIT 5;
 -- ============================================
 CREATE TABLE entregas_delivery (
     id SERIAL PRIMARY KEY,
-    pedido_id TEXT REFERENCES pedidos(id) ON DELETE CASCADE,
     delivery_id TEXT REFERENCES deliverys(id) ON DELETE SET NULL,
     monto_bs NUMERIC(10,2) DEFAULT 0,
     fecha_entrega TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
+
+-- Migración segura: agregar columna pedido_id si no existe (para bases de datos ya creadas)
+DO $$ BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name='entregas_delivery' AND column_name='pedido_id'
+    ) THEN
+        ALTER TABLE entregas_delivery ADD COLUMN pedido_id TEXT REFERENCES pedidos(id) ON DELETE CASCADE;
+    END IF;
+END $$;
 
 ALTER TABLE entregas_delivery ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Permitir todo entregas_delivery" ON entregas_delivery FOR ALL USING (true) WITH CHECK (true);
@@ -667,7 +692,16 @@ GRANT ALL ON entregas_delivery TO anon, authenticated;
 GRANT ALL ON entregas_delivery TO PUBLIC;
 GRANT USAGE, SELECT ON SEQUENCE entregas_delivery_id_seq TO anon, authenticated;
 CREATE INDEX idx_entregas_fecha ON entregas_delivery(fecha_entrega);
-CREATE INDEX idx_entregas_pedido_id ON entregas_delivery(pedido_id);
+
+-- Migración segura: crear índice idx_entregas_pedido_id si no existe
+DO $$ BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_indexes
+        WHERE tablename = 'entregas_delivery' AND indexname = 'idx_entregas_pedido_id'
+    ) THEN
+        CREATE INDEX idx_entregas_pedido_id ON entregas_delivery(pedido_id);
+    END IF;
+END $$;
 
 -- ============================================
 -- TABLA: propinas
@@ -704,7 +738,6 @@ CREATE INDEX idx_propinas_entregado ON propinas(entregado);
 -- ============================================
 CREATE TABLE notificaciones (
     id SERIAL PRIMARY KEY,
-    pedido_id TEXT,
     tipo TEXT,
     titulo TEXT,
     mensaje TEXT,
@@ -713,6 +746,16 @@ CREATE TABLE notificaciones (
     leida BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
+
+-- Migración segura: agregar columna pedido_id si no existe (para bases de datos ya creadas)
+DO $$ BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name='notificaciones' AND column_name='pedido_id'
+    ) THEN
+        ALTER TABLE notificaciones ADD COLUMN pedido_id TEXT;
+    END IF;
+END $$;
 
 ALTER TABLE notificaciones ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Permitir todo notificaciones" ON notificaciones FOR ALL USING (true) WITH CHECK (true);
@@ -726,7 +769,16 @@ CREATE INDEX idx_notificaciones_leida ON notificaciones(leida);
 CREATE INDEX idx_notificaciones_tipo ON notificaciones(tipo);
 CREATE INDEX idx_notificaciones_session_leida ON notificaciones(session_id, leida);
 CREATE INDEX idx_notificaciones_session_fecha ON notificaciones(session_id, fecha);
-CREATE INDEX idx_notificaciones_pedido_id ON notificaciones(pedido_id);
+
+-- Migración segura: crear índice idx_notificaciones_pedido_id si no existe
+DO $$ BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_indexes
+        WHERE tablename = 'notificaciones' AND indexname = 'idx_notificaciones_pedido_id'
+    ) THEN
+        CREATE INDEX idx_notificaciones_pedido_id ON notificaciones(pedido_id);
+    END IF;
+END $$;
 
 -- ============================================
 -- TABLA: push_subscriptions
