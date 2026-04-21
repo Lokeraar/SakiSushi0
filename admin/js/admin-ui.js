@@ -222,6 +222,11 @@
                     // Agregar tarjeta de diferencia de tasa al dashboard
                     window.agregarTarjetaDiferenciaTasa();
                     
+                    // Cargar el platillo estrella desde Supabase
+                    if (typeof window.cargarPlatilloEstrella === 'function') {
+                        window.cargarPlatilloEstrella();
+                    }
+                    
                     window._verificarTasaDeHoy((tasa) => {
                         const tasaInput = document.getElementById('tasaBaseInput');
                         if (tasaInput) tasaInput.value = tasa;
