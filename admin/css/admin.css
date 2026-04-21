@@ -541,6 +541,8 @@ html.dark-theme .theme-toggle-input:focus {
 .tcb-card-efectiva { border-top-color: #4ade80; }
 .tcb-card-acum     { border-top-color: var(--warning); }
 .tcb-card-estrella { border-top-color: var(--gold); position: relative; overflow: hidden; }
+/* tcb-label cuando está dentro de dashboard-grid (Platillo Estrella) */
+.dashboard-grid .tcb-card-estrella .tcb-label { font-size: .7rem; color: var(--gold); text-transform: uppercase; letter-spacing: .6px; margin-bottom: .4rem; }
 .tcb-label {
     font-size: .65rem;
     font-weight: 700;
@@ -579,6 +581,8 @@ html.dark-theme .theme-toggle-input:focus {
 
 /* Platillo Estrella Card Styles */
 .tcb-card-estrella { display: flex; flex-direction: column; gap: .35rem; }
+/* Cuando tcb-card-estrella está dentro del dashboard-grid, ajustar estilos */
+.dashboard-grid .tcb-card-estrella { padding: 1.2rem 1rem; border-left: 4px solid var(--gold); }
 .tcb-estrella-img-wrap { width: 100%; height: 70px; border-radius: 8px; overflow: hidden; background: rgba(0,0,0,.05); margin-bottom: .2rem; }
 .tcb-estrella-img { width: 100%; height: 100%; object-fit: cover; }
 .tcb-estrella-titulo { font-size: .75rem; font-weight: 700; color: var(--text-dark); line-height: 1.2; }
@@ -589,6 +593,14 @@ html.dark-theme .theme-toggle-input:focus {
 .tcb-estrella-btn { width: 100%; padding: .4rem .5rem; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: #fff; border: none; border-radius: 6px; font-size: .65rem; font-weight: 600; cursor: pointer; transition: var(--transition); margin-top: .2rem; }
 .tcb-estrella-btn:hover { transform: translateY(-1px); box-shadow: 0 3px 10px rgba(211,47,47,.4); }
 html.dark-theme .tcb-estrella-img-wrap { background: rgba(255,255,255,.05); }
+
+/* Responsive adjustments for Platillo Estrella in dashboard */
+@media (max-width: 767px) {
+    .dashboard-grid .tcb-card-estrella { padding: 1rem .85rem; }
+    .tcb-estrella-img-wrap { height: 60px; }
+    .tcb-estrella-titulo { font-size: .7rem; }
+    .tcb-estrella-btn { font-size: .6rem; padding: .35rem .45rem; }
+}
 
 .tcb-controls {
     display: flex;
@@ -2822,10 +2834,15 @@ a { color: var(--primary); }
 }
 @media (min-width: 768px) {
     .dashboard-grid {
-        grid-template-columns: repeat(2, 1fr) !important;
+        grid-template-columns: repeat(3, 1fr) !important;
     }
 }
-/* Reordenar tarjetas: Ventas Hoy, Deliverys Hoy, Productos+Alertas (fila doble), Propinas Hoy */
+@media (min-width: 1024px) {
+    .dashboard-grid {
+        grid-template-columns: repeat(4, 1fr) !important;
+    }
+}
+/* Reordenar tarjetas: Ventas Hoy, Deliverys Hoy, Productos+Alertas (fila doble), Propinas Hoy, Diferencia Tasa, Platillo Estrella */
 .dashboard-card:nth-child(1) { order: 1; }
 .dashboard-card:nth-child(4) { order: 2; } /* Deliverys Hoy */
 .dashboard-card:nth-child(2) { order: 3; } /* Productos Activos */
@@ -2833,6 +2850,8 @@ a { color: var(--primary); }
 .dashboard-card:nth-child(5) { order: 5; } /* Propinas Hoy */
 /* Tarjeta diferencia de tasa */
 .dashboard-card:nth-child(6) { order: 6; }
+/* Platillo Estrella - ahora es el 7mo elemento */
+.dashboard-card:nth-child(7) { order: 7; }
 
 /* Animación palpitante para stock crítico al hacer clic desde alertas */
 @keyframes pulse-critico {
@@ -3009,6 +3028,14 @@ html.dark-theme .mesa-admin-btn {
 .dashboard-card-sm  { padding: .85rem 1rem !important; border-radius: 10px !important; }
 .dashboard-card-sm .card-title { font-size: .72rem !important; margin-bottom: .3rem !important; }
 .dashboard-card-sm .card-value { font-size: 1.45rem !important; font-weight: 800 !important; }
+
+/* Ajuste responsive para dashboard-grid con 6+ elementos */
+@media (min-width: 768px) and (max-width: 1023px) {
+    .dashboard-grid .dashboard-card { min-height: 140px; }
+}
+@media (min-width: 1024px) {
+    .dashboard-grid .dashboard-card { min-height: 150px; }
+}
 
 /* ── Menú grid responsivo ─────────────────────────────────────────────────── */
 .menu-grid { display: grid; grid-template-columns: 1fr; gap: 1rem; }
