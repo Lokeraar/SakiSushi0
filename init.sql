@@ -531,11 +531,29 @@ CREATE TABLE ventas (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- Migración segura: agregar columna pedido_id si no existe (para bases de datos ya creadas)
+DO $$ BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name='ventas' AND column_name='pedido_id'
+    ) THEN
+        ALTER TABLE ventas ADD COLUMN pedido_id TEXT REFERENCES pedidos(id) ON DELETE CASCADE;
+    END IF;
+END $$;
+
 ALTER TABLE ventas ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Permitir todo ventas" ON ventas FOR ALL USING (true) WITH CHECK (true);
 GRANT ALL ON ventas TO anon, authenticated;
 GRANT ALL ON ventas TO PUBLIC;
-GRANT USAGE, SELECT ON SEQUENCE ventas_id_seq TO anon, authenticated;
+DO $$ BEGIN
+    IF EXISTS (
+        SELECT 1 FROM information_schema.sequences 
+        WHERE sequence_name = 'ventas_id_seq'
+    ) THEN
+        GRANT USAGE, SELECT ON SEQUENCE ventas_id_seq TO anon, authenticated;
+    END IF;
+EXCEPTION WHEN undefined_object THEN NULL;
+END $$;
 CREATE INDEX idx_ventas_pedido_id ON ventas(pedido_id);
 CREATE INDEX idx_ventas_metodo_pago ON ventas(metodo_pago);
 CREATE INDEX idx_ventas_tipo ON ventas(tipo);
@@ -557,6 +575,16 @@ CREATE TABLE IF NOT EXISTS ventas_detalle (
     fecha TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
+
+-- Migración segura: agregar columna pedido_id si no existe (para bases de datos ya creadas)
+DO $$ BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name='ventas_detalle' AND column_name='pedido_id'
+    ) THEN
+        ALTER TABLE ventas_detalle ADD COLUMN pedido_id TEXT REFERENCES pedidos(id) ON DELETE CASCADE;
+    END IF;
+END $$;
 
 ALTER TABLE ventas_detalle ENABLE ROW LEVEL SECURITY;
 DO $$ BEGIN
