@@ -543,7 +543,7 @@ CREATE INDEX idx_ventas_tipo ON ventas(tipo);
 -- ============================================
 -- TABLA: ventas_detalle
 -- ============================================
-CREATE TABLE ventas_detalle (
+CREATE TABLE IF NOT EXISTS ventas_detalle (
     id SERIAL PRIMARY KEY,
     venta_id INTEGER REFERENCES ventas(id) ON DELETE CASCADE,
     pedido_id TEXT REFERENCES pedidos(id) ON DELETE CASCADE,
@@ -559,10 +559,20 @@ CREATE TABLE ventas_detalle (
 );
 
 ALTER TABLE ventas_detalle ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "Permitir todo ventas_detalle" ON ventas_detalle FOR ALL USING (true) WITH CHECK (true);
+DO $$ BEGIN
+    CREATE POLICY "Permitir todo ventas_detalle" ON ventas_detalle FOR ALL USING (true) WITH CHECK (true);
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 GRANT ALL ON ventas_detalle TO anon, authenticated;
 GRANT ALL ON ventas_detalle TO PUBLIC;
-GRANT USAGE, SELECT ON SEQUENCE ventas_detalle_id_seq TO anon, authenticated;
+DO $$ BEGIN
+    GRANT USAGE, SELECT ON SEQUENCE ventas_detalle_id_seq TO anon, authenticated;
+EXCEPTION WHEN undefined_object THEN NULL;
+END $$;
+DROP INDEX IF EXISTS idx_ventas_detalle_venta_id;
+DROP INDEX IF EXISTS idx_ventas_detalle_pedido_id;
+DROP INDEX IF EXISTS idx_ventas_detalle_platillo_id;
+DROP INDEX IF EXISTS idx_ventas_detalle_fecha;
 CREATE INDEX idx_ventas_detalle_venta_id ON ventas_detalle(venta_id);
 CREATE INDEX idx_ventas_detalle_pedido_id ON ventas_detalle(pedido_id);
 CREATE INDEX idx_ventas_detalle_platillo_id ON ventas_detalle(platillo_id);

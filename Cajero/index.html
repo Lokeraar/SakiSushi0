@@ -839,6 +839,29 @@ window.confirmarCobro = async function() {
             if(pidx>=0) window.pedidos[pidx]._deliveryCobradoInv = cobro._invitacionDeliveryCobrar===true;
         }
         if(errP)throw errP;
+        // Guardar cada platillo del pedido en ventas_detalle
+        const itemsDetalle = (p.items || []).map(function(item) {
+            const cantidad = item.cantidad || 1;
+            const precioUSD = parseFloat(item.precioUnitarioUSD) || 0;
+            const precioBS = esInvitacion ? 0 : window.usdToBs(precioUSD);
+            const subtotalUSD = esInvitacion ? 0 : precioUSD * cantidad;
+            const subtotalBS = esInvitacion ? 0 : precioBS * cantidad;
+            return {
+                pedido_id: p.id,
+                platillo_id: item.id || null,
+                platillo_nombre: item.nombre || 'Sin nombre',
+                cantidad: cantidad,
+                precio_unitario_usd: precioUSD,
+                precio_unitario_bs: precioBS,
+                subtotal_usd: subtotalUSD,
+                subtotal_bs: subtotalBS,
+                fecha: new Date().toISOString()
+            };
+        });
+        if (itemsDetalle.length > 0) {
+            const {error:errVD} = await window.supabaseClient.from('ventas_detalle').insert(itemsDetalle);
+            if(errVD) throw errVD;
+        }
         const totalItems=(p.items||[]).reduce(function(s,i){return s+(i.cantidad||1);},0);
         const subtotalUSD=(p.items||[]).reduce(function(s,i){return s+(i.precioUnitarioUSD||0)*(i.cantidad||1);},0);
         const subtotalBs=esInvitacion?0:window.usdToBs(subtotalUSD);  // invitación siempre 0
