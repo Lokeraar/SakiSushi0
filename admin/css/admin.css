@@ -2856,11 +2856,29 @@ a { color: var(--primary); }
         min-height: 75px;
         padding: 0.7rem 1rem;
     }
+    /* Usar mismo tamaño de fuente que en móvil para tablet */
+    .dashboard-grid .dashboard-card .card-title {
+        font-size: .72rem !important;
+        margin-bottom: .3rem !important;
+    }
+    .dashboard-grid .dashboard-card .card-value {
+        font-size: 1.45rem !important;
+        font-weight: 800 !important;
+    }
 }
 @media (min-width: 1024px) {
     .dashboard-grid .dashboard-card:not(.tcb-card-estrella) {
         min-height: 80px;
         padding: 0.8rem 1.2rem;
+    }
+    /* Usar mismo tamaño de fuente que en móvil para escritorio */
+    .dashboard-grid .dashboard-card .card-title {
+        font-size: .72rem !important;
+        margin-bottom: .3rem !important;
+    }
+    .dashboard-grid .dashboard-card .card-value {
+        font-size: 1.45rem !important;
+        font-weight: 800 !important;
     }
 }
 /* Reordenar tarjetas: Ventas Hoy, Deliverys Hoy, Productos+Alertas (fila doble), Diferencia Tasa, Platillo Estrella, Propinas Hoy */
