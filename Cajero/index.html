@@ -834,6 +834,10 @@ window.confirmarCobro = async function() {
         // Obtener la tasa de cambio efectiva para el registro en ventas_detalle
         const tasaBs = window.configGlobal?.tasa_efectiva || window.tasaEfectiva || 400;
         
+        // Variables para uso en todo el bloque try (declaradas antes del RPC)
+        let subtotalBs = 0;
+        let totalItems = 0;
+        
         // LLAMAR A LA FUNCIÓN CONFIRMAR_COBRO_PLATILLO_ESTRELLA DE SUPABASE
         // Esta función: crea venta, inserta en ventas_detalle con precios en $ y Bs, descuenta stock del menú
         const { data: cobroData, error: errCobro } = await window.supabaseClient.rpc('confirmar_cobro_platillo_estrella', {
@@ -852,9 +856,9 @@ window.confirmarCobro = async function() {
                 if(pidx>=0) window.pedidos[pidx]._deliveryCobradoInv = cobro._invitacionDeliveryCobrar===true;
             }
             if(errP)throw errP;
-            const totalItems=(p.items||[]).reduce(function(s,i){return s+(i.cantidad||1);},0);
+            totalItems=(p.items||[]).reduce(function(s,i){return s+(i.cantidad||1);},0);
             const subtotalUSD=(p.items||[]).reduce(function(s,i){return s+(i.precioUnitarioUSD||0)*(i.cantidad||1);},0);
-            const subtotalBs=esInvitacion?0:window.usdToBs(subtotalUSD);
+            subtotalBs=esInvitacion?0:window.usdToBs(subtotalUSD);
             const {error:errV}=await window.supabaseClient.from('ventas').insert([{pedido_id:p.id,total:esInvitacion?0:totalFinalUSD,subtotal_platillos:subtotalBs,items:totalItems,metodo_pago:metodoPago,tipo:p.tipo,fecha:new Date().toISOString()}]);
             if(errV)throw errV;
             const {error:errStock}=await window.supabaseClient.rpc('descontar_ingredientes_pedido',{p_pedido_id:p.id});
@@ -876,6 +880,10 @@ window.confirmarCobro = async function() {
                     window.pedidos[pidx]._deliveryCobradoInv = cobro._invitacionDeliveryCobrar===true;
                 }
             }
+            // Calcular subtotalBs y totalItems para el bloque de notificaciones (éxito con RPC)
+            totalItems=(p.items||[]).reduce(function(s,i){return s+(i.cantidad||1);},0);
+            const subtotalUSD=(p.items||[]).reduce(function(s,i){return s+(i.precioUnitarioUSD||0)*(i.cantidad||1);},0);
+            subtotalBs=esInvitacion?0:window.usdToBs(subtotalUSD);
         }
         
         let tituloN,mensajeN;
@@ -903,7 +911,7 @@ window.confirmarCobro = async function() {
         }
     } catch(e) {
         console.error('Error en cobro:',e);
-        window.mostrarToast('\u274c Error al registrar el cobro: '+(e.message||e),'error');
+        window.mostrarToast('\u274C Error al registrar el cobro: '+(e.message||e),'error');
     } finally {
         // Restaurar el botón siempre, sin importar si hubo error
         const _ccBtn = document.getElementById('confirmCobroBtn');

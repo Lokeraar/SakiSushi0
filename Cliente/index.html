@@ -4697,6 +4697,10 @@ Promise.all(Object.entries(platillo.ingredientes || {}).map(async ([ingId, ingIn
             const select = document.getElementById('parroquiaSelect'), search = document.getElementById('parroquiaSearch'), chevron = document.getElementById('parroquiaChevron');
             if (select.style.display === 'none') {
                 select.style.display = 'block'; search.style.display = 'block'; chevron.className = 'fas fa-chevron-up'; search.focus();
+                // Seleccionar automáticamente la opción actual si existe
+                if (deliveryFormData.parroquia) {
+                    select.value = deliveryFormData.parroquia;
+                }
             } else {
                 select.style.display = 'none'; search.style.display = 'none'; chevron.className = 'fas fa-chevron-down';
             }
