@@ -539,6 +539,29 @@ CREATE INDEX idx_ventas_metodo_pago ON ventas(metodo_pago);
 CREATE INDEX idx_ventas_tipo ON ventas(tipo);
 
 -- ============================================
+-- TABLA: ventas_detalle (para analítica de platillos)
+-- ============================================
+CREATE TABLE IF NOT EXISTS ventas_detalle (
+    id SERIAL PRIMARY KEY,
+    venta_id INTEGER REFERENCES ventas(id) ON DELETE CASCADE,
+    platillo_id TEXT REFERENCES menu(id) ON DELETE CASCADE,
+    cantidad INTEGER DEFAULT 1,
+    precio_usd_momento NUMERIC(10,2) DEFAULT 0,
+    precio_bs_momento NUMERIC(10,2) DEFAULT 0,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+ALTER TABLE ventas_detalle ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Permitir todo ventas_detalle" ON ventas_detalle FOR ALL USING (true) WITH CHECK (true);
+GRANT ALL ON ventas_detalle TO anon, authenticated;
+GRANT ALL ON ventas_detalle TO PUBLIC;
+GRANT USAGE, SELECT ON SEQUENCE ventas_detalle_id_seq TO anon, authenticated;
+
+CREATE INDEX idx_ventas_detalle_venta_id ON ventas_detalle(venta_id);
+CREATE INDEX idx_ventas_detalle_platillo_id ON ventas_detalle(platillo_id);
+CREATE INDEX idx_ventas_detalle_created_at ON ventas_detalle(created_at);
+
+-- ============================================
 -- TABLA: entregas_delivery
 -- ============================================
 CREATE TABLE entregas_delivery (
@@ -1242,6 +1265,175 @@ GRANT EXECUTE ON FUNCTION validate_and_commit_order TO anon, authenticated;
 GRANT EXECUTE ON FUNCTION update_stock_atomic TO anon, authenticated;
 
 -- ============================================
+-- VISTA: vista_platillo_estrella (TOP 5 con desempate)
+-- ============================================
+DROP VIEW IF EXISTS vista_platillo_estrella CASCADE;
+
+CREATE OR REPLACE VIEW vista_platillo_estrella AS
+WITH ventas_de_la_semana AS (
+    SELECT 
+        vd.platillo_id,
+        SUM(vd.cantidad) as total_unidades,
+        SUM(vd.precio_usd_momento * vd.cantidad) as total_usd,
+        SUM(vd.precio_bs_momento * vd.cantidad) as total_bs
+    FROM ventas_detalle vd
+    WHERE vd.created_at >= date_trunc('week', now()) -- Reset automático cada Lunes
+    GROUP BY vd.platillo_id
+)
+SELECT 
+    m.id,
+    m.nombre,
+    m.imagen as imagen_url,
+    m.descripcion,
+    COALESCE(vs.total_unidades, 0) as contador_ventas,
+    COALESCE(vs.total_usd, 0) as acumulado_usd,
+    COALESCE(vs.total_bs, 0) as acumulado_bs
+FROM menu m
+JOIN ventas_de_la_semana vs ON m.id = vs.platillo_id
+ORDER BY 
+    vs.total_unidades DESC,  -- Criterio 1: Más unidades
+    vs.total_usd DESC        -- Criterio 2 (Desempate): Más dinero
+LIMIT 5; -- Devuelve el Top 5
+
+-- ============================================
+-- FUNCIÓN RPC: confirmar_cobro_platillo_estrella
+-- Crea la venta, inserta en ventas_detalle con precios en $ y Bs, descuenta stock
+-- ============================================
+CREATE OR REPLACE FUNCTION confirmar_cobro_platillo_estrella(
+    p_pedido_id TEXT,
+    p_metodo_pago TEXT,
+    p_tasa_bs NUMERIC DEFAULT 400
+)
+RETURNS JSONB
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_pedido RECORD;
+    v_venta_id INTEGER;
+    v_item JSONB;
+    v_precio_usd NUMERIC;
+    v_precio_bs NUMERIC;
+    v_cantidad INTEGER;
+    v_platillo_id TEXT;
+BEGIN
+    -- Obtener datos del pedido
+    SELECT * INTO v_pedido
+    FROM pedidos
+    WHERE id = p_pedido_id;
+    
+    IF v_pedido IS NULL THEN
+        RETURN jsonb_build_object('success', false, 'error', 'Pedido no encontrado');
+    END IF;
+    
+    -- Crear registro en ventas
+    INSERT INTO ventas (
+        pedido_id,
+        total,
+        subtotal_platillos,
+        items,
+        metodo_pago,
+        tipo,
+        fecha
+    ) VALUES (
+        p_pedido_id,
+        v_pedido.total,
+        v_pedido.subtotal_platillos_bs,
+        v_pedido.items_count,
+        p_metodo_pago,
+        v_pedido.tipo,
+        NOW()
+    )
+    RETURNING id INTO v_venta_id;
+    
+    -- Insertar cada item del pedido en ventas_detalle
+    FOR v_item IN SELECT * FROM jsonb_array_elements(v_pedido.items::jsonb)
+    LOOP
+        v_platillo_id := v_item->>'dish_id';
+        v_cantidad := (v_item->>'cantidad')::INTEGER;
+        v_precio_usd := (v_item->>'precioUnitarioUSD')::NUMERIC;
+        v_precio_bs := v_precio_usd * p_tasa_bs;
+        
+        INSERT INTO ventas_detalle (
+            venta_id,
+            platillo_id,
+            cantidad,
+            precio_usd_momento,
+            precio_bs_momento
+        ) VALUES (
+            v_venta_id,
+            v_platillo_id,
+            v_cantidad,
+            v_precio_usd,
+            v_precio_bs
+        );
+    END LOOP;
+    
+    -- Descontar ingredientes usando la función existente
+    PERFORM descontar_ingredientes_pedido(p_pedido_id => p_pedido_id);
+    
+    -- Actualizar estado del pedido
+    UPDATE pedidos SET
+        estado = CASE 
+            WHEN tipo = 'delivery' THEN 'en_camino'
+            WHEN tipo = 'reserva' THEN 'reserva_pendiente'
+            ELSE 'en_cocina'
+        END,
+        metodo_pago = p_metodo_pago,
+        fecha_cobro = NOW()
+    WHERE id = p_pedido_id;
+    
+    RETURN jsonb_build_object('success', true, 'venta_id', v_venta_id);
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION confirmar_cobro_platillo_estrella TO anon, authenticated;
+
+-- ============================================
+-- FUNCIÓN AUXILIAR: descontar_ingredientes_pedido
+-- ============================================
+CREATE OR REPLACE FUNCTION descontar_ingredientes_pedido(p_pedido_id TEXT)
+RETURNS BOOLEAN
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    v_pedido RECORD;
+    v_item JSONB;
+    v_ingrediente RECORD;
+    v_dish_id TEXT;
+    v_cantidad INTEGER;
+BEGIN
+    SELECT * INTO v_pedido FROM pedidos WHERE id = p_pedido_id;
+    
+    IF v_pedido IS NULL THEN
+        RETURN false;
+    END IF;
+    
+    -- Por cada item del pedido
+    FOR v_item IN SELECT * FROM jsonb_array_elements(v_pedido.items::jsonb)
+    LOOP
+        v_dish_id := v_item->>'dish_id';
+        v_cantidad := (v_item->>'cantidad')::INTEGER;
+        
+        -- Obtener ingredientes de recipe_ingredients
+        FOR v_ingrediente IN
+            SELECT ri.ingredient_id, ri.quantity_required
+            FROM recipe_ingredients ri
+            WHERE ri.dish_id = v_dish_id
+        LOOP
+            -- Descontar del inventario
+            UPDATE inventario
+            SET stock = stock - (v_ingrediente.quantity_required * v_cantidad)
+            WHERE id = v_ingrediente.ingredient_id;
+        END LOOP;
+    END LOOP;
+    
+    RETURN true;
+END;
+$$;
+
+GRANT EXECUTE ON FUNCTION descontar_ingredientes_pedido TO anon, authenticated;
+
+-- ============================================
 -- CONFIGURACIÓN DE STORAGE
 -- ============================================
 INSERT INTO storage.buckets (id, name, public) VALUES
@@ -1291,6 +1483,7 @@ ALTER DATABASE postgres SET timezone TO 'America/Caracas';
 ALTER PUBLICATION supabase_realtime ADD TABLE pedidos;
 ALTER PUBLICATION supabase_realtime ADD TABLE notificaciones;
 ALTER PUBLICATION supabase_realtime ADD TABLE ventas;
+ALTER PUBLICATION supabase_realtime ADD TABLE ventas_detalle;
 ALTER PUBLICATION supabase_realtime ADD TABLE propinas;
 ALTER PUBLICATION supabase_realtime ADD TABLE inventario;
 ALTER PUBLICATION supabase_realtime ADD TABLE menu;
@@ -1328,5 +1521,8 @@ SELECT '✅ SCRIPT COMPLETADO EXITOSAMENTE' as mensaje;
 SELECT '✅ NOTIFICACIONES AUTOMÁTICAS ACTIVADAS' as notificaciones;
 SELECT '✅ FUNCIÓN verify_user_credentials CREADA' as auth;
 SELECT '✅ FUNCIONES ATOMICAS validate_and_commit_order y update_stock_atomic CREADAS' as atomic;
+SELECT '✅ VISTA vista_platillo_estrella (TOP 5) CREADA' as platillo_estrella;
+SELECT '✅ FUNCION confirmar_cobro_platillo_estrella CREADA' as cobro;
+SELECT '✅ TABLA ventas_detalle CREADA' as detalle;
 SELECT '✅ Usuario admin: contraseña admin123' as admin_info;
 SELECT '✅ Usuarios cajero: cajero1/123456, cajero2/123456' as cajero_info;
