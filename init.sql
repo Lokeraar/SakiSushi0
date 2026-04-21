@@ -47,15 +47,6 @@ DROP TABLE IF EXISTS usuarios CASCADE;
 DROP TABLE IF EXISTS config CASCADE;
 DROP TABLE IF EXISTS recipe_ingredients CASCADE;
 
--- Agregar columna foto a la tabla usuarios
-ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS foto TEXT;
-
--- Agregar columna foto a la tabla mesoneros
-ALTER TABLE mesoneros ADD COLUMN IF NOT EXISTS foto TEXT;
-
--- Agregar columna foto a la tabla deliverys
-ALTER TABLE deliverys ADD COLUMN IF NOT EXISTS foto TEXT;
-
 -- ============================================
 -- TABLA: config
 -- ============================================
@@ -116,6 +107,7 @@ CREATE TABLE usuarios (
     password_hash TEXT NOT NULL,
     rol TEXT DEFAULT 'cajero',
     activo BOOLEAN DEFAULT TRUE,
+    foto TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -198,6 +190,7 @@ CREATE TABLE mesoneros (
     id TEXT PRIMARY KEY,
     nombre TEXT NOT NULL,
     activo BOOLEAN DEFAULT TRUE,
+    foto TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -222,6 +215,7 @@ CREATE TABLE deliverys (
     id TEXT PRIMARY KEY,
     nombre TEXT NOT NULL,
     activo BOOLEAN DEFAULT TRUE,
+    foto TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
