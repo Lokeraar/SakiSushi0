@@ -130,7 +130,7 @@
                     <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:.5rem; margin-bottom:.5rem">
                         <div style="display:flex; align-items:center; gap:.6rem; flex-wrap:wrap">
                             <span style="font-size:1.1rem">${tipoIcon}</span>
-                            <span style="font-weight:700; color:${tipoColor}">${p.tipo || 'mesa'} ${p.mesa ? `· Mesa ${p.mesa}` : ''}</span>
+                            <span style="font-weight:700; color:${tipoColor}">${p.tipo || 'mesa'} ${p.mesa ? `· ${p.mesa}` : ''}</span>
                             <span style="font-size:.7rem; background:${estadoColor}20; color:${estadoColor}; padding:.2rem .6rem; border-radius:20px; font-weight:600">${estadoText || 'pendiente'}</span>
                         </div>
                         <div style="display:flex; align-items:center; gap:.5rem">
