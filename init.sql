@@ -458,7 +458,8 @@ CREATE TRIGGER sync_recipe_ingredients_trigger
 -- Permisos para recipe_ingredients y su secuencia serial.
 -- Sin estos GRANTs el trigger falla con permission denied for sequence recipe_ingredients_id_seq
 ALTER TABLE recipe_ingredients ENABLE ROW LEVEL SECURITY;
-CREATE POLICY IF NOT EXISTS "Permitir todo recipe_ingredients" ON recipe_ingredients FOR ALL USING (true) WITH CHECK (true);
+DROP POLICY IF EXISTS "Permitir todo recipe_ingredients" ON recipe_ingredients;
+CREATE POLICY "Permitir todo recipe_ingredients" ON recipe_ingredients FOR ALL USING (true) WITH CHECK (true);
 GRANT ALL ON recipe_ingredients TO anon, authenticated;
 GRANT ALL ON recipe_ingredients TO PUBLIC;
 GRANT USAGE, SELECT ON SEQUENCE recipe_ingredients_id_seq TO anon, authenticated;
