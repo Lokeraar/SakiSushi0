@@ -613,12 +613,12 @@ html.dark-theme .tcb-estrella-img-wrap { background: rgba(255,255,255,.05); }
     .tcb-estrella-btn { font-size: .6rem; padding: .35rem .45rem; }
 }
 
-/* Platillo Estrella en tablet y desktop - ocupa todo el ancho de la fila */
+/* Platillo Estrella en tablet y desktop - ocupa espacio restante en la fila */
 @media (min-width: 768px) and (max-width: 1023px) {
-    .dashboard-grid .tcb-card-estrella { grid-column: 1 / -1; }
+    .dashboard-grid .tcb-card-estrella { grid-column: span 2; }
 }
 @media (min-width: 1024px) {
-    .dashboard-grid .tcb-card-estrella { grid-column: 1 / -1; }
+    .dashboard-grid .tcb-card-estrella { grid-column: span 2; }
 }
 
 .tcb-controls {
@@ -2889,16 +2889,22 @@ a { color: var(--primary); }
         font-weight: 800 !important;
     }
 }
-/* Reordenar tarjetas con order: Ventas Hoy (1), Productos+Alertas (2), Diferencia Tasa (3), Deliverys+Propinas (4), Platillo Estrella (5 - última fila completa) */
-.dashboard-card:nth-child(1) { order: 1; } /* Ventas Hoy */
-.dashboard-col-mini:nth-of-type(1) { order: 2; } /* Productos Activos + Alertas Stock */
-.dashboard-card:nth-of-type(3) { order: 3; } /* Acumulado Dif. Tasa */
-.dashboard-col-mini:nth-of-type(2) { order: 4; } /* Deliverys Hoy + Propinas Hoy */
-.tcb-card-estrella { order: 5; } /* Platillo Estrella - ocupa fila completa */
+/* Reordenar tarjetas con order: Acumulado (1), Platillo Estrella (2), Ventas Hoy (3), Productos+Alertas (4), Deliverys+Propinas (5) */
+.dashboard-card:nth-child(1) { order: 1; } /* Acumulado Dif. Tasa */
+.tcb-card-estrella { order: 2; grid-column: span 2; } /* Platillo Estrella - ocupa espacio restante (2 columnas en desktop) */
+.dashboard-card:nth-of-type(2) { order: 3; } /* Ventas Hoy */
+.dashboard-col-mini:nth-of-type(1) { order: 4; } /* Productos Activos + Alertas Stock */
+.dashboard-col-mini:nth-of-type(2) { order: 5; } /* Deliverys Hoy + Propinas Hoy */
 
-/* Platillo Estrella ocupa todo el ancho en mobile también */
+/* Platillo Estrella: en mobile ocupa todo el ancho, en tablet ocupa 2 columnas, en desktop ocupa espacio restante */
 @media (max-width: 767px) {
     .tcb-card-estrella { grid-column: 1 / -1; }
+}
+@media (min-width: 768px) and (max-width: 1023px) {
+    .tcb-card-estrella { grid-column: span 2; }
+}
+@media (min-width: 1024px) {
+    .tcb-card-estrella { grid-column: span 2; }
 }
 
 /* Animación palpitante para stock crítico al hacer clic desde alertas */
