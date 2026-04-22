@@ -488,7 +488,16 @@
             const urlInput = document.getElementById('platilloImagenUrl');
             if (previewImg) previewImg.src = platillo.imagen;
             if (previewDiv) previewDiv.style.display = 'flex';
-            if (urlInput) urlInput.value = platillo.imagen;
+            // Solo establecer el valor del input URL si es una URL externa (no del storage)
+            if (urlInput) {
+                if (platillo.imagen.includes('imagenes-platillos')) {
+                    // Es imagen del storage, no poner en el input para evitar re-subidas accidentales
+                    urlInput.value = '';
+                } else {
+                    // Es URL externa, permitir edición
+                    urlInput.value = platillo.imagen;
+                }
+            }
             // Actualizar botón de eliminar
             setupPlatilloModalEvents();
         }
@@ -771,6 +780,8 @@
                 imagenUrl = null;
             }
         }
+        // Si no hay archivo pero sí una URL válida (externa o del storage), mantenerla
+        // Nota: currentImagenUrl ya contiene la URL correcta desde el preview
         
         // Preparar datos con fix de decimales para evitar errores como 14.60000000001
         const platilloData = {
