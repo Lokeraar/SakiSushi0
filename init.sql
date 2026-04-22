@@ -594,6 +594,13 @@ DO $$ BEGIN
     END IF;
 END $$;
 
+-- Migración: Actualizar registros existentes en ventas_detalle con la imagen del menú
+UPDATE ventas_detalle vd
+SET imagen = m.imagen
+FROM menu m
+WHERE vd.platillo_id = m.id
+  AND vd.imagen IS NULL;
+
 ALTER TABLE ventas_detalle ENABLE ROW LEVEL SECURITY;
 DO $$ BEGIN
     CREATE POLICY "Permitir todo ventas_detalle" ON ventas_detalle FOR ALL USING (true) WITH CHECK (true);
@@ -654,7 +661,7 @@ platillos_vendidos AS (
     SELECT 
         vd.platillo_id,
         vd.platillo_nombre,
-        m.imagen,
+        COALESCE(vd.imagen, m.imagen) AS imagen,
         SUM(vd.cantidad) AS total_cantidad,
         SUM(vd.subtotal_usd) AS total_usd,
         SUM(vd.subtotal_bs) AS total_bs,
@@ -664,7 +671,7 @@ platillos_vendidos AS (
     CROSS JOIN semana_actual sa
     LEFT JOIN menu m ON vd.platillo_id = m.id
     WHERE vd.fecha >= sa.inicio_semana AND vd.fecha <= sa.fin_semana
-    GROUP BY vd.platillo_id, vd.platillo_nombre, m.imagen, sa.inicio_semana, sa.fin_semana
+    GROUP BY vd.platillo_id, vd.platillo_nombre, vd.imagen, m.imagen, sa.inicio_semana, sa.fin_semana
 )
 SELECT 
     platillo_id,
