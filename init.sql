@@ -855,6 +855,17 @@ CREATE INDEX idx_propinas_mesa ON propinas(mesa);
 CREATE INDEX idx_propinas_entregado ON propinas(entregado);
 CREATE INDEX IF NOT EXISTS idx_propinas_mesonero_entregado ON propinas(mesonero_id, entregado);
 
+-- Migración segura: agregar columna propina_original_id si no existe (para pagos parciales)
+DO $$ BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name='propinas' AND column_name='propina_original_id'
+    ) THEN
+        ALTER TABLE propinas ADD COLUMN propina_original_id INTEGER REFERENCES propinas(id);
+        CREATE INDEX IF NOT EXISTS idx_propinas_propina_original ON propinas(propina_original_id);
+    END IF;
+END $$;
+
 -- ============================================
 -- TABLA: notificaciones
 -- ============================================

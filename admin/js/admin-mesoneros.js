@@ -12,25 +12,59 @@
     // ════════════════════════════════════════
     window.actualizarAcumuladosPendientes = async function() {
         try {
-            // Consulta todas las propinas pendientes (sin filtrar fecha)
-            const { data, error } = await window.supabaseClient
+            // Consulta todas las propinas pendientes (ingresos no entregados)
+            const { data: ingresos, error } = await window.supabaseClient
                 .from('propinas')
-                .select('mesonero_id, monto_bs, moneda_original, monto_original')
+                .select('id, mesonero_id, monto_bs, moneda_original, monto_original')
                 .eq('entregado', false);
 
             if (error) throw error;
 
-            // Sumar monto_bs por mesonero_id, separando USD y Bs
+            // Consulta todos los pagos parciales (egresos) para restarlos del acumulado
+            const { data: pagosParciales, error: errorPagos } = await window.supabaseClient
+                .from('propinas')
+                .select('propina_original_id, monto_bs, moneda_original, monto_original')
+                .eq('referencia', 'EGRESO')
+                .eq('entregado', true)
+                .not('propina_original_id', 'is', null);
+
+            if (errorPagos) {
+                console.error('Error consultando pagos parciales:', errorPagos);
+            }
+
+            // Crear un mapa de pagos por propina_original_id
+            const pagosPorPropina = {};
+            (pagosParciales || []).forEach(function(pago) {
+                const originalId = pago.propina_original_id;
+                if (!pagosPorPropina[originalId]) {
+                    pagosPorPropina[originalId] = { bs: 0, usd: 0 };
+                }
+                if (pago.moneda_original === 'USD' && pago.monto_original) {
+                    pagosPorPropina[originalId].usd += pago.monto_original;
+                } else {
+                    pagosPorPropina[originalId].bs += (pago.monto_bs || 0);
+                }
+            });
+
+            // Sumar monto_bs por mesonero_id, separando USD y Bs, restando pagos parciales
             const acumuladoBs = {};
             const acumuladoUSDCrudo = {}; // monto original en USD
             const tasaBase = Number(window.configGlobal?.tasa_cambio || 400);
             
-            (data || []).forEach(function(p) {
+            (ingresos || []).forEach(function(p) {
                 const mid = p.mesonero_id;
+                const pagosDeEstaPropina = pagosPorPropina[p.id] || { bs: 0, usd: 0 };
+                
                 if (p.moneda_original === 'USD' && p.monto_original) {
-                    acumuladoUSDCrudo[mid] = (acumuladoUSDCrudo[mid] || 0) + p.monto_original;
+                    const usdRestante = p.monto_original - pagosDeEstaPropina.usd;
+                    if (usdRestante > 0) {
+                        acumuladoUSDCrudo[mid] = (acumuladoUSDCrudo[mid] || 0) + usdRestante;
+                    }
                 } else {
-                    acumuladoBs[mid] = (acumuladoBs[mid] || 0) + (p.monto_bs || 0);
+                    const bsRestante = p.monto_bs - pagosDeEstaPropina.bs;
+                    if (bsRestante > 0) {
+                        acumuladoBs[mid] = (acumuladoBs[mid] || 0) + bsRestante;
+                    }
                 }
             });
 
@@ -262,9 +296,9 @@
     // CALCULAR ACUMULADO PENDIENTE POR MESONERO
     // ════════════════════════════════════════
     async function calcularAcumuladoPendiente(mesoneroId) {
-        const { data, error } = await window.supabaseClient
+        const { data: ingresos, error } = await window.supabaseClient
             .from('propinas')
-            .select('monto_bs, monto_original, moneda_original')
+            .select('id, monto_bs, monto_original, moneda_original')
             .eq('mesonero_id', mesoneroId)
             .eq('entregado', false);
         
@@ -273,15 +307,45 @@
             return 0;
         }
         
+        // Consultar pagos parciales para este mesonero
+        const { data: pagosParciales, error: errorPagos } = await window.supabaseClient
+            .from('propinas')
+            .select('propina_original_id, monto_bs, monto_original, moneda_original')
+            .eq('referencia', 'EGRESO')
+            .eq('entregado', true)
+            .not('propina_original_id', 'is', null);
+        
+        // Crear mapa de pagos por propina_original_id
+        const pagosPorPropina = {};
+        (pagosParciales || []).forEach(function(pago) {
+            const originalId = pago.propina_original_id;
+            if (!pagosPorPropina[originalId]) {
+                pagosPorPropina[originalId] = { bs: 0, usd: 0 };
+            }
+            if (pago.moneda_original === 'USD' && pago.monto_original) {
+                pagosPorPropina[originalId].usd += pago.monto_original;
+            } else {
+                pagosPorPropina[originalId].bs += (pago.monto_bs || 0);
+            }
+        });
+        
         let totalBs = 0;
         let totalUSDCrudo = 0;
         const tasaBase = Number(window.configGlobal?.tasa_cambio || 400);
         
-        (data || []).forEach(function(p) {
+        (ingresos || []).forEach(function(p) {
+            const pagosDeEstaPropina = pagosPorPropina[p.id] || { bs: 0, usd: 0 };
+            
             if (p.moneda_original === 'USD' && p.monto_original) {
-                totalUSDCrudo += p.monto_original;
+                const usdRestante = p.monto_original - pagosDeEstaPropina.usd;
+                if (usdRestante > 0) {
+                    totalUSDCrudo += usdRestante;
+                }
             } else {
-                totalBs += (p.monto_bs || 0);
+                const bsRestante = p.monto_bs - pagosDeEstaPropina.bs;
+                if (bsRestante > 0) {
+                    totalBs += bsRestante;
+                }
             }
         });
         
@@ -423,22 +487,53 @@
         }
         
         try {
-            const { data: pendientes, error } = await window.supabaseClient
+            // Consultar ingresos pendientes
+            const { data: ingresos, error } = await window.supabaseClient
                 .from('propinas')
-                .select('monto_bs, monto_original, moneda_original')
+                .select('id, monto_bs, monto_original, moneda_original')
                 .eq('mesonero_id', mesoneroParaPagoId)
                 .eq('entregado', false);
             
             if (error) throw error;
             
+            // Consultar pagos parciales existentes
+            const { data: pagosParciales, error: errorPagos } = await window.supabaseClient
+                .from('propinas')
+                .select('propina_original_id, monto_bs, monto_original, moneda_original')
+                .eq('referencia', 'EGRESO')
+                .eq('entregado', true)
+                .not('propina_original_id', 'is', null);
+            
+            // Crear mapa de pagos por propina_original_id
+            const pagosPorPropina = {};
+            (pagosParciales || []).forEach(function(pago) {
+                const originalId = pago.propina_original_id;
+                if (!pagosPorPropina[originalId]) {
+                    pagosPorPropina[originalId] = { bs: 0, usd: 0 };
+                }
+                if (pago.moneda_original === 'USD' && pago.monto_original) {
+                    pagosPorPropina[originalId].usd += pago.monto_original;
+                } else {
+                    pagosPorPropina[originalId].bs += (pago.monto_bs || 0);
+                }
+            });
+            
             let acumuladoUSDCrudo = 0;
             let acumuladoBsCrudo = 0;
             
-            (pendientes || []).forEach(function(p) {
+            (ingresos || []).forEach(function(p) {
+                const pagosDeEstaPropina = pagosPorPropina[p.id] || { bs: 0, usd: 0 };
+                
                 if (p.moneda_original === 'USD' && p.monto_original) {
-                    acumuladoUSDCrudo += p.monto_original;
+                    const usdRestante = p.monto_original - pagosDeEstaPropina.usd;
+                    if (usdRestante > 0) {
+                        acumuladoUSDCrudo += usdRestante;
+                    }
                 } else {
-                    acumuladoBsCrudo += (p.monto_bs || 0);
+                    const bsRestante = p.monto_bs - pagosDeEstaPropina.bs;
+                    if (bsRestante > 0) {
+                        acumuladoBsCrudo += bsRestante;
+                    }
                 }
             });
             
@@ -704,26 +799,58 @@
         // Calcular el acumulado pendiente solo del bucket correspondiente
         let acumuladoDelBucket = 0;
         try {
-            let queryAcumulado = window.supabaseClient
+            // Consultar ingresos pendientes del bucket
+            let queryIngresos = window.supabaseClient
                 .from('propinas')
-                .select('monto_bs, monto_original, moneda_original')
+                .select('id, monto_bs, monto_original, moneda_original')
                 .eq('mesonero_id', mesoneroParaPagoId)
                 .eq('entregado', false);
             
             if (pagarEnUSD) {
-                queryAcumulado = queryAcumulado.eq('moneda_original', 'USD');
+                queryIngresos = queryIngresos.eq('moneda_original', 'USD');
             } else {
-                queryAcumulado = queryAcumulado.neq('moneda_original', 'USD');
+                queryIngresos = queryIngresos.neq('moneda_original', 'USD');
             }
             
-            const { data: datosAcumulado } = await queryAcumulado;
+            const { data: ingresosData } = await queryIngresos;
             
+            // Consultar pagos parciales existentes
+            const { data: pagosParciales, error: errorPagos } = await window.supabaseClient
+                .from('propinas')
+                .select('propina_original_id, monto_bs, monto_original, moneda_original')
+                .eq('referencia', 'EGRESO')
+                .eq('entregado', true)
+                .not('propina_original_id', 'is', null);
+            
+            // Crear mapa de pagos por propina_original_id
+            const pagosPorPropina = {};
+            (pagosParciales || []).forEach(function(pago) {
+                const originalId = pago.propina_original_id;
+                if (!pagosPorPropina[originalId]) {
+                    pagosPorPropina[originalId] = { bs: 0, usd: 0 };
+                }
+                if (pago.moneda_original === 'USD' && pago.monto_original) {
+                    pagosPorPropina[originalId].usd += pago.monto_original;
+                } else {
+                    pagosPorPropina[originalId].bs += (pago.monto_bs || 0);
+                }
+            });
+            
+            // Calcular acumulado real restando pagos parciales
             if (pagarEnUSD) {
-                // Sumar monto_original de las propinas USD
-                acumuladoDelBucket = (datosAcumulado || []).reduce((sum, p) => sum + (p.monto_original || 0), 0);
+                // Sumar monto_original restante de las propinas USD
+                acumuladoDelBucket = (ingresosData || []).reduce((sum, p) => {
+                    const pagadoDeEsta = pagosPorPropina[p.id]?.usd || 0;
+                    const restante = (p.monto_original || 0) - pagadoDeEsta;
+                    return sum + (restante > 0 ? restante : 0);
+                }, 0);
             } else {
-                // Sumar monto_bs de las propinas en Bs
-                acumuladoDelBucket = (datosAcumulado || []).reduce((sum, p) => sum + (p.monto_bs || 0), 0);
+                // Sumar monto_bs restante de las propinas en Bs
+                acumuladoDelBucket = (ingresosData || []).reduce((sum, p) => {
+                    const pagadoDeEsta = pagosPorPropina[p.id]?.bs || 0;
+                    const restante = (p.monto_bs || 0) - pagadoDeEsta;
+                    return sum + (restante > 0 ? restante : 0);
+                }, 0);
             }
         } catch(e) {
             console.error('Error calculando acumulado del bucket:', e);
@@ -821,10 +948,9 @@
                 } else {
                     // Caso 2: Pago parcial sobre esta propina
                     const montoPagadoEnMoneda = restoPorPagar;
-                    const montoRestanteEnMoneda = montoPropinaEnMoneda - montoPagadoEnMoneda;
                     
-                    // 2a. NO marcar la propina original como entregada - debe permanecer pendiente
-                    //     para reflejar el saldo restante en la tarjeta del mesonero
+                    // 2a. NO modificar la propina original - debe permanecer con su monto original
+                    //     para preservar el historial correcto en "últimas 5 propinas"
                     
                     // 2b. Crear un NUEVO REGISTRO con el monto pagado (EGRESO)
                     const cajeroNombre = (window.usuarioActual && window.usuarioActual.nombre) || 'Administrador';
@@ -855,25 +981,14 @@
                         referencia: 'EGRESO',
                         cajero: cajeroNombre,
                         fecha: ahora,
-                        entregado: true
+                        entregado: true,
+                        propina_original_id: prop.id
                     };
                     
                     const { error: errInsertPago } = await window.supabaseClient
                         .from('propinas')
                         .insert([nuevaPropinaPago]);
                     if (errInsertPago) throw errInsertPago;
-                    
-                    // 2c. Actualizar la propina original con el monto restante pendiente
-                    //     Esto asegura que solo el saldo restante aparezca como pendiente
-                    let updateDataRestante = {};
-                    if (pagarEnUSD) {
-                        updateDataRestante.monto_original = montoRestanteEnMoneda;
-                        updateDataRestante.monto_bs = montoRestanteEnMoneda * tasaBase;
-                    } else {
-                        updateDataRestante.monto_bs = montoRestanteEnMoneda;
-                        updateDataRestante.monto_original = montoRestanteEnMoneda;
-                    }
-                    await window.supabaseClient.from('propinas').update(updateDataRestante).eq('id', prop.id);
                     
                     restoPorPagar = 0;
                     pagoCompletado = true;
