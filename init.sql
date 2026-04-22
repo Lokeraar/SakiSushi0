@@ -695,6 +695,31 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 GRANT EXECUTE ON FUNCTION sincronizar_imagenes_ventas_detalle TO anon, authenticated;
 
 -- ============================================
+-- FUNCIÓN RPC: forzar_sincronizacion_imagenes
+-- Fuerza la actualización de TODAS las imágenes incluso si ya tienen valor
+-- Útil para corregir datos inconsistentes
+-- ============================================
+CREATE OR REPLACE FUNCTION forzar_sincronizacion_imagenes()
+RETURNS INTEGER AS $$
+DECLARE
+    v_count INTEGER;
+BEGIN
+    -- Actualizar TODOS los registros que tengan platillo_id, sin importar si ya tienen imagen
+    UPDATE ventas_detalle vd
+    SET imagen = m.imagen
+    FROM menu m
+    WHERE vd.platillo_id = m.id
+      AND m.imagen IS NOT NULL
+      AND (vd.imagen IS NULL OR vd.imagen != m.imagen);
+    
+    GET DIAGNOSTICS v_count = ROW_COUNT;
+    RETURN v_count;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+GRANT EXECUTE ON FUNCTION forzar_sincronizacion_imagenes TO anon, authenticated;
+
+-- ============================================
 -- VISTA: vista_platillo_estrella (Top 5 semanal - desde lunes)
 -- ============================================
 CREATE OR REPLACE VIEW vista_platillo_estrella AS
