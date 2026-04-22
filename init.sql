@@ -646,12 +646,14 @@ platillos_vendidos AS (
         m.imagen,
         SUM(vd.cantidad) AS total_cantidad,
         SUM(vd.subtotal_usd) AS total_usd,
-        SUM(vd.subtotal_bs) AS total_bs
+        SUM(vd.subtotal_bs) AS total_bs,
+        sa.inicio_semana AS fecha_inicio,
+        sa.fin_semana AS fecha_fin
     FROM ventas_detalle vd
     CROSS JOIN semana_actual sa
     LEFT JOIN menu m ON vd.platillo_id = m.id
     WHERE vd.fecha >= sa.inicio_semana AND vd.fecha <= sa.fin_semana
-    GROUP BY vd.platillo_id, vd.platillo_nombre, m.imagen
+    GROUP BY vd.platillo_id, vd.platillo_nombre, m.imagen, sa.inicio_semana, sa.fin_semana
 )
 SELECT 
     platillo_id,
@@ -660,6 +662,8 @@ SELECT
     total_cantidad,
     total_usd,
     total_bs,
+    fecha_inicio,
+    fecha_fin,
     ROW_NUMBER() OVER (ORDER BY total_cantidad DESC, total_usd DESC) AS posicion
 FROM platillos_vendidos
 ORDER BY total_cantidad DESC, total_usd DESC
