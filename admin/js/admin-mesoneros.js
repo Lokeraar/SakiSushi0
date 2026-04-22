@@ -1052,7 +1052,11 @@
 
     window.renderizarPropinas = function() {
         const propinas = window.propinas || [];
-        const total    = propinas.reduce(function(s,p){ return s+(p.monto_bs||0); }, 0);
+        // Calcular total restando los egresos (pagos parciales)
+        const total    = propinas.reduce(function(s,p){ 
+            const esEgreso = p.referencia === 'EGRESO';
+            return esEgreso ? s - (p.monto_bs||0) : s + (p.monto_bs||0); 
+        }, 0);
         const cantidad = propinas.length;
         const promedio = cantidad > 0 ? total/cantidad : 0;
         const tasa     = Number(window.configGlobal?.tasa_efectiva || window.configGlobal?.tasa_cambio || 400) || 400;
