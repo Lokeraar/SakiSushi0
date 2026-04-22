@@ -111,13 +111,18 @@
             ordenesEl.textContent = `${platillo.total_cantidad || 0} unidades`;
         }
         if (totalUsdEl) {
-            totalUsdEl.textContent = (parseFloat(platillo.total_usd) || 0).toFixed(2);
+            // Normalizar el valor USD: reemplazar coma por punto si viene en formato venezolano
+            const totalUsdStr = String(platillo.total_usd || '0').replace(',', '.');
+            const totalUsd = parseFloat(totalUsdStr) || 0;
+            totalUsdEl.textContent = totalUsd.toFixed(2);
         }
         if (totalBsEl) {
             // Calcular Bs usando SIEMPRE la tasa efectiva actual multiplicada por el total en USD
-            // Esto asegura consistencia: $6.50 * 500 = Bs 3.250,00 (no usar total_bs de BD que puede ser histórico)
+            // Esto asegura consistencia: $6.50 * 516.50 = Bs 3.357,25 (no usar total_bs de BD que puede ser histórico)
             const tasaEfectiva = window.obtenerTasaEfectivaActual ? window.obtenerTasaEfectivaActual() : (window.configGlobal?.tasa_efectiva || 400);
-            const totalUsd = parseFloat(platillo.total_usd) || 0;
+            // Normalizar el valor USD: reemplazar coma por punto si viene en formato venezolano
+            const totalUsdStr = String(platillo.total_usd || '0').replace(',', '.');
+            const totalUsd = parseFloat(totalUsdStr) || 0;
             const totalBsCalculado = totalUsd * tasaEfectiva;
             
             totalBsEl.textContent = window.formatBs(totalBsCalculado);
