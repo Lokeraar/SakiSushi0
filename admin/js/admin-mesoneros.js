@@ -859,7 +859,7 @@
         // Validar que el monto no exceda el acumulado del bucket correspondiente
         if (montoEnMonedaSeleccionada > acumuladoDelBucket + 0.01) {
             const limiteMostrar = pagarEnUSD ? '$' + acumuladoDelBucket.toFixed(2) : window.formatBs(acumuladoDelBucket);
-            window.mostrarToast('El monto no puede superar el pendiente de este bucket (' + limiteMostrar + ')', 'error');
+            window.mostrarToast('El monto restante en esta moneda es de (' + limiteMostrar + ')', 'error');
             return;
         }
 
