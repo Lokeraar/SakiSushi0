@@ -96,6 +96,44 @@
         }, 3000);
     };
     
+    // ==================== VALIDACIÓN DE INPUTS ====================
+    window.mostrarErrorInput = function(inputId, mensaje) {
+        const input = document.getElementById(inputId);
+        if (!input) return;
+        
+        // Remover error previo si existe
+        const prevError = input.parentElement.querySelector('.input-error-message');
+        if (prevError) prevError.remove();
+        
+        // Agregar clase de error al input
+        input.classList.add('input-error');
+        
+        // Crear mensaje de error
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'input-error-message';
+        errorDiv.textContent = mensaje;
+        errorDiv.style.color = 'var(--danger)';
+        errorDiv.style.fontSize = '0.75rem';
+        errorDiv.style.marginTop = '0.25rem';
+        
+        input.parentElement.appendChild(errorDiv);
+        
+        // Scroll hacia el input con error
+        input.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        input.focus();
+    };
+    
+    window.limpiarErroresInput = function() {
+        // Remover todas las clases de error
+        document.querySelectorAll('.input-error').forEach(el => {
+            el.classList.remove('input-error');
+        });
+        // Remover todos los mensajes de error
+        document.querySelectorAll('.input-error-message').forEach(el => {
+            el.remove();
+        });
+    };
+    
     // ==================== CONTROL DE PANTALLAS ====================
     window.mostrarLogin = function() {
         const pwdInput = document.getElementById('adminPassword');

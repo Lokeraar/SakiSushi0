@@ -287,6 +287,7 @@
         document.getElementById('platilloForm').reset();
         document.getElementById('ingredientesContainer').innerHTML = '';
         window.limpiarImagenPreview();
+        window.limpiarErroresInput();
         window.cargarCategoriasSelect();
         window.platilloEditandoId = null;
         
@@ -454,6 +455,7 @@
         window.platilloEditandoId = id;
         document.getElementById('platilloModalTitle').textContent = 'Editar Platillo';
         window.limpiarImagenPreview();
+        window.limpiarErroresInput();
         // Cargar categorías antes de llenar el formulario
         window.cargarCategoriasSelect();
         document.getElementById('platilloNombre').value = platillo.nombre || '';
@@ -653,6 +655,7 @@
                 console.log('Botón Cancelar Platillo presionado');
                 window.cerrarModal('platilloModal');
                 window.limpiarImagenPreview();
+                window.limpiarErroresInput();
                 window.platilloEditandoId = null;
             };
         }
