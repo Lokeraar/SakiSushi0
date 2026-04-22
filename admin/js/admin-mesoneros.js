@@ -1089,7 +1089,9 @@
                             displayMonto = '$' + p.monto_original.toFixed(2) + ' (Bs. ' + p.monto_bs.toFixed(2) + ')';
                         }
                     } else {
-                        displayMonto = window.formatBs(p.monto_bs);
+                        // Para Bs: mostrar primero Bs, luego USD
+                        var mUsd = tasa > 0 ? (p.monto_bs||0)/tasa : 0;
+                        displayMonto = window.formatBs(p.monto_bs) + ' | ' + window.formatUSD(mUsd);
                     }
                     
                     // Etiqueta de tipo (Ingreso/Pago) para la columna Mesa
@@ -1141,7 +1143,8 @@
                         displayMonto = '$' + p.monto_original.toFixed(2) + ' (Bs. ' + p.monto_bs.toFixed(2) + ')';
                     }
                 } else {
-                    displayMonto = window.formatUSD(mUsd) + ' | ' + window.formatBs(p.monto_bs||0);
+                    // Para Bs: mostrar primero Bs, luego USD
+                    displayMonto = window.formatBs(p.monto_bs||0) + ' | ' + window.formatUSD(mUsd);
                 }
                 
                 var badgeTipo = isPago 
