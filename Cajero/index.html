@@ -853,11 +853,14 @@ window.confirmarCobro = async function() {
             const precioBS = esInvitacion ? 0 : window.usdToBs(precioUSD);
             const subtotalUSD = esInvitacion ? 0 : precioUSD * cantidad;
             const subtotalBS = esInvitacion ? 0 : precioBS * cantidad;
+            // Obtener imagen del menú si el item no tiene imagen
+            const platilloMenu = (window.menuItems || []).find(m => m.id === item.id);
+            const imagenUrl = item.imagen || (platilloMenu ? platilloMenu.imagen : null);
             return {
                 pedido_id: p.id,
                 platillo_id: item.id || null,
                 platillo_nombre: item.nombre || 'Sin nombre',
-                imagen: item.imagen || null,
+                imagen: imagenUrl,
                 cantidad: cantidad,
                 precio_unitario_usd: parseFloat(precioUSD.toFixed(2)),
                 precio_unitario_bs: parseFloat(precioBS.toFixed(2)),
