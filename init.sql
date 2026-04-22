@@ -647,6 +647,29 @@ DO $$ BEGIN
 END $$;
 
 -- ============================================
+-- TRIGGER: replicar_imagen_menu
+-- Propaga automáticamente la imagen del menú a ventas_detalle
+-- ============================================
+CREATE OR REPLACE FUNCTION replicar_imagen_menu()
+RETURNS TRIGGER AS $$
+BEGIN
+    -- Si la imagen es NULL o vacía, obtenerla del menú
+    IF NEW.imagen IS NULL OR NEW.imagen = '' THEN
+        SELECT m.imagen INTO NEW.imagen
+        FROM menu m
+        WHERE m.id = NEW.platillo_id;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trigger_replicar_imagen_menu ON ventas_detalle;
+CREATE TRIGGER trigger_replicar_imagen_menu
+    BEFORE INSERT OR UPDATE ON ventas_detalle
+    FOR EACH ROW
+    EXECUTE FUNCTION replicar_imagen_menu();
+
+-- ============================================
 -- VISTA: vista_platillo_estrella (Top 5 semanal - desde lunes)
 -- ============================================
 CREATE OR REPLACE VIEW vista_platillo_estrella AS
