@@ -1092,7 +1092,15 @@
                         displayMonto = window.formatBs(p.monto_bs);
                     }
                     
-                    return '<tr><td>' + hora + '</td><td>' + (p.mesoneros ? p.mesoneros.nombre : 'N/A') + '</td><td>' + (p.mesa||'N/A') + '</td><td>' + (p.metodo||'N/A') + '</td><td style="color:' + colorMonto + '">' + signo + ' ' + displayMonto + '</td><td>' + (p.cajero||'N/A') + '</td></tr>';
+                    // Etiqueta de tipo (Ingreso/Pago) para la columna Mesa
+                    var badgeTipo = isPago 
+                        ? '<span style="display:inline-block;padding:2px 6px;border-radius:4px;font-size:.65rem;background:rgba(244,67,54,.15);color:var(--text-dark);font-weight:700;margin-left:.35rem">PAGO</span>'
+                        : '<span style="display:inline-block;padding:2px 6px;border-radius:4px;font-size:.65rem;background:rgba(76,175,80,.15);color:var(--success);font-weight:700;margin-left:.35rem">INGRESO</span>';
+                    
+                    // En caso de pago, no mostrar nombre de mesa, solo la etiqueta
+                    var mesaDisplay = isPago ? badgeTipo : (p.mesa||'N/A') + badgeTipo;
+                    
+                    return '<tr><td>' + hora + '</td><td>' + (p.mesoneros ? p.mesoneros.nombre : 'N/A') + '</td><td>' + mesaDisplay + '</td><td>' + (p.metodo||'N/A') + '</td><td style="color:' + colorMonto + '">' + signo + ' ' + displayMonto + '</td><td>' + (p.cajero||'N/A') + '</td></tr>';
                 }).join('');
             } else {
                 tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:1rem;color:var(--text-muted)">Sin propinas hoy</td></tr>';
@@ -1139,12 +1147,16 @@
                 var badgeTipo = isPago 
                     ? '<span style="display:inline-block;padding:2px 6px;border-radius:4px;font-size:.65rem;background:rgba(244,67,54,.15);color:var(--text-dark);font-weight:700;margin-left:.35rem">PAGO</span>'
                     : '<span style="display:inline-block;padding:2px 6px;border-radius:4px;font-size:.65rem;background:rgba(76,175,80,.15);color:var(--success);font-weight:700;margin-left:.35rem">INGRESO</span>';
+                
+                // En caso de pago, no mostrar nombre de mesa, solo la etiqueta
+                var mesaDisplay = isPago ? badgeTipo : (p.mesa||'N/A') + badgeTipo;
+                
                 return '<tr>'
                     + '<td style="padding:.55rem .85rem;border-bottom:1px solid var(--border);font-size:.78rem;color:var(--text-muted)">' + hora + '</td>'
                     + '<td style="padding:.55rem .85rem;border-bottom:1px solid var(--border);font-size:.82rem;font-weight:600">' + (p.mesoneros ? p.mesoneros.nombre : 'N/A') + '</td>'
-                    + '<td style="padding:.55rem .85rem;border-bottom:1px solid var(--border);font-size:.78rem;color:var(--text-muted)">' + (p.mesa||'N/A') + '</td>'
+                    + '<td style="padding:.55rem .85rem;border-bottom:1px solid var(--border);font-size:.78rem;color:var(--text-muted)">' + mesaDisplay + '</td>'
                     + '<td style="padding:.55rem .85rem;border-bottom:1px solid var(--border);font-size:.78rem">' + (p.metodo||'N/A') + '</td>'
-                    + '<td style="padding:.55rem .85rem;border-bottom:1px solid var(--border);font-size:.82rem;font-weight:700;color:' + colorMonto + '">' + signo + ' ' + displayMonto + badgeTipo + '</td>'
+                    + '<td style="padding:.55rem .85rem;border-bottom:1px solid var(--border);font-size:.82rem;font-weight:700;color:' + colorMonto + '">' + signo + ' ' + displayMonto + '</td>'
                     + '</tr>';
             }).join('');
             var pl = lista.length;
