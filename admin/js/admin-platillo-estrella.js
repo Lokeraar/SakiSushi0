@@ -285,8 +285,9 @@
         const card = document.getElementById('platilloEstrellaCard');
         if (!card) return;
         
-        // Pausa en hover (desktop)
-        card.addEventListener('mouseenter', () => {
+        // Pausa en hover (desktop) - no pausar si se hace hover sobre el botón de analítica
+        card.addEventListener('mouseenter', (e) => {
+            if (e.target.closest('.tcb-estrella-btn')) return;
             window.isHoveringPlatillo = true;
         });
         
@@ -294,12 +295,14 @@
             window.isHoveringPlatillo = false;
         });
         
-        // Pausa en touch (móvil/tablet)
-        card.addEventListener('touchstart', () => {
+        // Pausa en touch (móvil/tablet) - no pausar si se toca el botón de analítica
+        card.addEventListener('touchstart', (e) => {
+            if (e.target.closest('.tcb-estrella-btn')) return;
             window.isTouchingPlatillo = true;
         }, { passive: true });
         
-        card.addEventListener('touchend', () => {
+        card.addEventListener('touchend', (e) => {
+            if (e.target.closest('.tcb-estrella-btn')) return;
             window.isTouchingPlatillo = false;
         }, { passive: true });
         
@@ -316,15 +319,19 @@
             });
         }
         
-        // Swipe touch para navegación
+        // Swipe touch para navegación (solo si no es en el botón de analítica)
         let touchStartX = 0;
         let touchEndX = 0;
         
         card.addEventListener('touchstart', (e) => {
+            // No iniciar swipe si se toca el botón de analítica
+            if (e.target.closest('.tcb-estrella-btn')) return;
             touchStartX = e.changedTouches[0].screenX;
         }, { passive: true });
         
         card.addEventListener('touchend', (e) => {
+            // No finalizar swipe si se tocó el botón de analítica
+            if (e.target.closest('.tcb-estrella-btn')) return;
             touchEndX = e.changedTouches[0].screenX;
             handleSwipe();
         }, { passive: true });

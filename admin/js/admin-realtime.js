@@ -72,7 +72,20 @@
                         window.configGlobal = { ...window.configGlobal, ...p.new };
                         const bi = document.getElementById('tasaBaseInput');
                         if (bi && p.new.tasa_cambio) bi.value = parseFloat(p.new.tasa_cambio).toFixed(2);
-                        window.recalcularTasaEfectiva && window.recalcularTasaEfectiva();
+                        // Actualizar tasa efectiva desde la BD si viene en el payload
+                        if (p.new.tasa_efectiva !== undefined) {
+                            window.configGlobal.tasa_efectiva = parseFloat(p.new.tasa_efectiva);
+                            const ted = document.getElementById('tasaEfectivaDisplay');
+                            if (ted) ted.textContent = window.configGlobal.tasa_efectiva.toFixed(2);
+                            const tec = document.getElementById('tasaEfectivaCard');
+                            if (tec) tec.textContent = 'Bs. ' + window.configGlobal.tasa_efectiva.toFixed(2);
+                            // Recalcular platillo estrella con nueva tasa
+                            if (window.platillosTop5 && window.platillosTop5.length > 0) {
+                                window.cargarTopVentasCliente();
+                            }
+                        } else {
+                            window.recalcularTasaEfectiva && window.recalcularTasaEfectiva();
+                        }
                         window.mostrarToast('💱 Tasa actualizada desde cajero: Bs ' + parseFloat(p.new.tasa_cambio||0).toFixed(2), 'info');
                     })
                 .subscribe();
@@ -87,7 +100,7 @@
             // Esto asegura que si cambia la imagen de un platillo en menu, se refleje inmediatamente
             window.supabaseClient
                 .channel('admin-menu-platillo-estrella')
-                .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'menu', filter: 'imagen=*' },
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'menu' },
                     () => { 
                         // Pequeño delay para asegurar que la vista se haya actualizado
                         setTimeout(() => { window.cargarTopVentasCliente(); }, 500);
