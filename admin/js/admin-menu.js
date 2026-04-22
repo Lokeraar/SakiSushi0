@@ -464,7 +464,7 @@
         if (!platillo) return;
         window.platilloEditandoId = id;
         document.getElementById('platilloModalTitle').textContent = 'Editar Platillo';
-        window.limpiarImagenPreview();
+        // NO limpiar imagen preview aquí, lo haremos después de cargar la imagen existente
         window.limpiarErroresInput();
         // Cargar categorías antes de llenar el formulario
         window.cargarCategoriasSelect();
@@ -479,15 +479,21 @@
         if (_chkD) { _chkD.checked = !!platillo.disponible; }
         if (_lblD) { _lblD.textContent = platillo.disponible ? 'Sí' : 'No'; _lblD.style.color = platillo.disponible ? 'var(--success)' : 'var(--text-muted)'; }
         
-        // Cargar imagen existente si hay
+        // Cargar imagen existente si hay - SIN limpiar primero para mantener consistencia
+        const previewImg = document.getElementById('previewImg');
+        const previewDiv = document.getElementById('imagenPreview');
+        const urlInput = document.getElementById('platilloImagenUrl');
+        const fileInput = document.getElementById('platilloImagen');
+        
         if (platillo.imagen) {
+            // Establecer variables globales ANTES de mostrar el preview
             currentImagenUrl = platillo.imagen;
             currentImagenFile = null; // No hay archivo, es URL existente
-            const previewImg = document.getElementById('previewImg');
-            const previewDiv = document.getElementById('imagenPreview');
-            const urlInput = document.getElementById('platilloImagenUrl');
+            
+            // Mostrar preview
             if (previewImg) previewImg.src = platillo.imagen;
             if (previewDiv) previewDiv.style.display = 'flex';
+            
             // Solo establecer el valor del input URL si es una URL externa (no del storage)
             if (urlInput) {
                 if (platillo.imagen.includes('imagenes-platillos')) {
@@ -498,8 +504,14 @@
                     urlInput.value = platillo.imagen;
                 }
             }
-            // Actualizar botón de eliminar
+            // Limpiar input de archivo para evitar confusiones
+            if (fileInput) fileInput.value = '';
+            
+            // Configurar botón de eliminar después de mostrar el preview
             setupPlatilloModalEvents();
+        } else {
+            // No hay imagen, limpiar todo
+            window.limpiarImagenPreview();
         }
         
         window.cargarSubcategoriasSelect(platillo.categoria);
@@ -765,9 +777,9 @@
         });
         
         // Procesar imagen: subir archivo si existe o usar URL
-        let imagenUrl = currentImagenUrl || null;
+        let imagenUrl = null;
         
-        // Si hay un archivo seleccionado, subirlo al storage
+        // Si hay un archivo seleccionado, subirlo al storage (prioridad)
         if (currentImagenFile) {
             window.mostrarToast('📤 Subiendo imagen...', 'info');
             const resultado = await window.subirImagenPlatillo(currentImagenFile, 'imagenes-platillos');
@@ -779,9 +791,11 @@
                 // Continuar sin imagen en caso de error
                 imagenUrl = null;
             }
+        } else if (currentImagenUrl && currentImagenUrl.trim() !== '') {
+            // Si no hay archivo pero sí una URL válida (externa o del storage), usarla directamente
+            imagenUrl = currentImagenUrl;
         }
-        // Si no hay archivo pero sí una URL válida (externa o del storage), mantenerla
-        // Nota: currentImagenUrl ya contiene la URL correcta desde el preview
+        // Si no hay ni archivo ni URL, imagenUrl queda como null
         
         // Preparar datos con fix de decimales para evitar errores como 14.60000000001
         const platilloData = {

@@ -87,7 +87,10 @@
 
         if (imgEl) {
             // Usar imagen del menú (mismo campo que usa admin-menu.js)
-            imgEl.src = platillo.imagen || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="70" viewBox="0 0 200 70"%3E%3Crect width="200" height="70" fill="%232a2a3e"/%3E%3Ctext x="100" y="40" font-size="14" text-anchor="middle" fill="%23888" font-family="Arial"%3ESin imagen%3C/text%3E%3C/svg%3E';
+            // Esta imagen puede ser una URL externa o una URL del storage de Supabase
+            const imagenUrl = platillo.imagen || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="70" viewBox="0 0 200 70"%3E%3Crect width="200" height="70" fill="%232a2a3e"/%3E%3Ctext x="100" y="40" font-size="14" text-anchor="middle" fill="%23888" font-family="Arial"%3ESin imagen%3C/text%3E%3C/svg%3E';
+            imgEl.src = imagenUrl;
+            imgEl.alt = platillo.platillo_nombre || 'Platillo Estrella';
             imgEl.onerror = function() {
                 this.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="70" viewBox="0 0 200 70"%3E%3Crect width="200" height="70" fill="%232a2a3e"/%3E%3Ctext x="100" y="40" font-size="14" text-anchor="middle" fill="%23888" font-family="Arial"%3ESin imagen%3C/text%3E%3C/svg%3E';
             };
