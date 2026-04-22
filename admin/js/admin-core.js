@@ -214,46 +214,74 @@
     // Se ejecuta al iniciar sesión para asegurar que todos los registros tengan imagen
     window.sincronizarImagenesVentasDetalle = async function() {
         try {
-            // Actualizar registros en ventas_detalle donde imagen es NULL
+            // Primero intentar con la función básica de sincronización
             const { data, error } = await window.supabaseClient.rpc('sincronizar_imagenes_ventas_detalle');
             
             if (error) {
-                // Si el RPC no existe, hacer un update directo
-                console.log('RPC no disponible, usando método alternativo');
+                console.log('RPC sincronizar_imagenes_ventas_detalle no disponible:', error.message);
+            } else {
+                console.log('Sincronización básica completada:', data, 'registros actualizados');
+            }
+            
+            // SIEMPRE ejecutar la sincronización forzada para corregir cualquier inconsistencia
+            // Esto asegura que TODAS las imágenes se actualicen aunque ya tengan un valor
+            const { data: dataForzada, error: errorForzado } = await window.supabaseClient.rpc('forzar_sincronizacion_imagenes');
+            
+            if (errorForzado) {
+                console.log('RPC forzar_sincronizacion_imagenes no disponible:', errorForzado.message);
+                // Método alternativo si el RPC no existe
+                await window.sincronizarImagenesVentasDetalleManual();
+            } else {
+                console.log('Sincronización forzada completada:', dataForzada, 'registros actualizados');
+            }
+        } catch (e) {
+            console.error('Error sincronizando imágenes:', e);
+            // Fallback al método manual en caso de error
+            await window.sincronizarImagenesVentasDetalleManual();
+        }
+    };
+    
+    // Método manual de sincronización forzada (fallback)
+    window.sincronizarImagenesVentasDetalleManual = async function() {
+        try {
+            console.log('Ejecutando sincronización manual de imágenes...');
+            
+            // Obtener todos los registros de ventas_detalle con platillo_id
+            const { data: todasVentas, error: errorFetch } = await window.supabaseClient
+                .from('ventas_detalle')
+                .select('id, platillo_id, imagen')
+                .not('platillo_id', 'is', null);
+            
+            if (errorFetch) throw errorFetch;
+            
+            if (todasVentas && todasVentas.length > 0) {
+                let actualizados = 0;
                 
-                // Obtener todos los registros de ventas_detalle sin imagen
-                const { data: ventasSinImagen, error: errorFetch } = await window.supabaseClient
-                    .from('ventas_detalle')
-                    .select('id, platillo_id')
-                    .is('imagen', null);
-                
-                if (errorFetch) throw errorFetch;
-                
-                if (ventasSinImagen && ventasSinImagen.length > 0) {
-                    // Para cada registro, obtener la imagen del menú y actualizar
-                    for (const venta of ventasSinImagen) {
-                        if (venta.platillo_id) {
-                            const { data: menuData } = await window.supabaseClient
-                                .from('menu')
-                                .select('imagen')
-                                .eq('id', venta.platillo_id)
-                                .single();
-                            
-                            if (menuData && menuData.imagen) {
+                // Para cada registro, obtener la imagen del menú y actualizar si es diferente o null
+                for (const venta of todasVentas) {
+                    if (venta.platillo_id) {
+                        const { data: menuData } = await window.supabaseClient
+                            .from('menu')
+                            .select('imagen')
+                            .eq('id', venta.platillo_id)
+                            .single();
+                        
+                        if (menuData && menuData.imagen) {
+                            // Actualizar si la imagen es null o diferente a la del menú
+                            if (!venta.imagen || venta.imagen !== menuData.imagen) {
                                 await window.supabaseClient
                                     .from('ventas_detalle')
                                     .update({ imagen: menuData.imagen })
                                     .eq('id', venta.id);
+                                actualizados++;
                             }
                         }
                     }
-                    console.log(`Imágenes sincronizadas: ${ventasSinImagen.length} registros actualizados`);
                 }
-            } else {
-                console.log('Sincronización de imágenes completada:', data);
+                console.log(`Sincronización manual completada: ${actualizados} registros actualizados`);
             }
         } catch (e) {
-            console.error('Error sincronizando imágenes:', e);
+            console.error('Error en sincronización manual:', e);
         }
     };
     
