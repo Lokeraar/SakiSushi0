@@ -676,6 +676,16 @@
     
     // Función principal para guardar platillo
     window.guardarPlatillo = async function() {
+        // Asegurar que las funciones de core estén disponibles
+        if (!window.mostrarErrorInput) {
+            console.error('Funciones de core no cargadas aún. Reintentando...');
+            await new Promise(resolve => setTimeout(resolve, 100));
+            if (!window.mostrarErrorInput) {
+                window.mostrarToast('❌ Error interno: Funciones de validación no disponibles', 'error');
+                return;
+            }
+        }
+        
         const nombre = document.getElementById('platilloNombre')?.value.trim();
         const categoria = document.getElementById('platilloCategoria')?.value.trim();
         const subcategoria = document.getElementById('platilloSubcategoria')?.value.trim() || '';
