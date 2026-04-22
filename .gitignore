@@ -7,6 +7,12 @@ __pycache__/
 dist/
 build/
 target/
+*.class
+*.exe
+*.dll
+*.so
+*.a
+*.out
 
 # Dependencies
 .venv/
@@ -17,17 +23,27 @@ node_modules/
 .coverage
 coverage/
 htmlcov/
+.julia/
+.zig-cache/
+.mypy_cache/
+.pytest_cache/
+.gradle/
+julia-*/
+zig*/
 
 # Logs and temp files
 *.log
 *.tmp
 *.swp
 *.swo
+*.bak
+*.cache
 
 # Environment
 .env
 .env.local
 *.env.*
+.env.*
 
 # Editors
 .vscode/
@@ -35,6 +51,7 @@ htmlcov/
 *.swp
 *.swo
 
+# OS
 # System files
 .DS_Store
 Thumbs.db
