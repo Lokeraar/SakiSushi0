@@ -256,14 +256,24 @@
                         <div class="card-value" id="diferenciaTasaValor">Bs 0,00</div>
                     </div>
                     <div class="tcb-card tcb-card-estrella dashboard-card" id="platilloEstrellaCard" style="cursor:pointer" onclick="window.verAnaliticaPlatilloEstrella()">
-                        <div class="card-title" style="color: var(--gold);">Platillo Estrella</div>
+                        <div class="card-title" style="color: var(--gold); display:flex; justify-content:space-between; align-items:center">
+                            <span>Platillo Estrella</span>
+                            <span class="platillo-badge-posicion" id="platilloBadgePosicion">#1</span>
+                        </div>
                         <div class="tcb-estrella-img-wrap"><img id="platilloEstrellaImg" src="" alt="Platillo Estrella" class="tcb-estrella-img"></div>
                         <div class="tcb-estrella-titulo" id="platilloEstrellaTitulo">Cargando...</div>
                         <div class="tcb-estrella-desc" id="platilloEstrellaDesc">-</div>
                         <div class="tcb-estrella-stats">
-                            <span class="tcb-estrella-stat"><i class="fas fa-utensils"></i> <span id="platilloEstrellaOrdenes">0</span> ventas esta semana</span>
-                            <span class="tcb-estrella-stat"><i class="fas fa-dollar-sign"></i> $<span id="platilloEstrellaPrecioUsd">0.00</span></span>
-                            <span class="tcb-estrella-stat"><i class="fas fa-coins"></i> <span id="platilloEstrellaPrecioBs">0,00</span></span>
+                            <span class="tcb-estrella-stat"><i class="fas fa-utensils"></i> <span id="platilloEstrellaOrdenes">0</span> unidades</span>
+                            <span class="tcb-estrella-stat"><i class="fas fa-dollar-sign"></i> $<span id="platilloEstrellaTotalUsd">0.00</span></span>
+                            <span class="tcb-estrella-stat"><i class="fas fa-coins"></i> <span id="platilloEstrellaTotalBs">0,00</span></span>
+                        </div>
+                        <div class="platillo-carousel-indicators" id="platilloCarouselIndicators">
+                            <span class="platillo-indicator active"></span>
+                            <span class="platillo-indicator"></span>
+                            <span class="platillo-indicator"></span>
+                            <span class="platillo-indicator"></span>
+                            <span class="platillo-indicator"></span>
                         </div>
                         <button class="tcb-estrella-btn" onclick="event.stopPropagation(); window.verAnaliticaPlatilloEstrella()"><i class="fas fa-chart-line"></i> Ver analítica completa</button>
                     </div>

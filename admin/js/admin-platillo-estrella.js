@@ -5,9 +5,15 @@
     window.platilloCarouselIndex = 0;
     window.platilloCarouselInterval = null;
     window.CAROUSEL_INTERVAL_MS = 4000; // 4 segundos por platillo
-
-    // Función principal para cargar datos del Platillo Estrella
+    window.isHoveringPlatillo = false;
+    window.isTouchingPlatillo = false;
+    
+    // Función principal para cargar datos del Platillo Estrella (alias: cargarTopVentasCliente)
     window.cargarPlatilloEstrella = async function() {
+        return window.cargarTopVentasCliente();
+    };
+    
+    window.cargarTopVentasCliente = async function() {
         try {
             const { data, error } = await window.supabaseClient
                 .from('vista_platillo_estrella')
@@ -26,6 +32,7 @@
             // Iniciar el carrusel con el primer platillo
             window.platilloCarouselIndex = 0;
             actualizarCardPlatilloEstrella();
+            actualizarIndicadores();
             iniciarCarruselAutomatico();
 
         } catch (e) {
@@ -33,23 +40,26 @@
             mostrarSinVentas();
         }
     };
-
+    
     // Mostrar mensaje cuando no hay ventas
     function mostrarSinVentas() {
         const imgEl = document.getElementById('platilloEstrellaImg');
         const tituloEl = document.getElementById('platilloEstrellaTitulo');
         const descEl = document.getElementById('platilloEstrellaDesc');
+        const badgeEl = document.getElementById('platilloBadgePosicion');
         const ordenesEl = document.getElementById('platilloEstrellaOrdenes');
-        const precioUsdEl = document.getElementById('platilloEstrellaPrecioUsd');
-        const precioBsEl = document.getElementById('platilloEstrellaPrecioBs');
+        const totalUsdEl = document.getElementById('platilloEstrellaTotalUsd');
+        const totalBsEl = document.getElementById('platilloEstrellaTotalBs');
 
         if (imgEl) imgEl.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="70" viewBox="0 0 200 70"%3E%3Crect width="200" height="70" fill="%232a2a3e"/%3E%3Ctext x="100" y="40" font-size="14" text-anchor="middle" fill="%23888" font-family="Arial"%3ESin ventas esta semana%3C/text%3E%3C/svg%3E';
         if (tituloEl) tituloEl.textContent = 'Sin actividad';
         if (descEl) descEl.textContent = 'No hay ventas registradas esta semana';
+        if (badgeEl) badgeEl.textContent = '-';
         if (ordenesEl) ordenesEl.textContent = '0';
-        if (precioUsdEl) precioUsdEl.textContent = '0.00';
-        if (precioBsEl) precioBsEl.textContent = '0,00';
+        if (totalUsdEl) totalUsdEl.textContent = '0.00';
+        if (totalBsEl) totalBsEl.textContent = '0,00';
 
+        actualizarIndicadores();
         detenerCarruselAutomatico();
     }
 
@@ -65,9 +75,10 @@
         const imgEl = document.getElementById('platilloEstrellaImg');
         const tituloEl = document.getElementById('platilloEstrellaTitulo');
         const descEl = document.getElementById('platilloEstrellaDesc');
+        const badgeEl = document.getElementById('platilloBadgePosicion');
         const ordenesEl = document.getElementById('platilloEstrellaOrdenes');
-        const precioUsdEl = document.getElementById('platilloEstrellaPrecioUsd');
-        const precioBsEl = document.getElementById('platilloEstrellaPrecioBs');
+        const totalUsdEl = document.getElementById('platilloEstrellaTotalUsd');
+        const totalBsEl = document.getElementById('platilloEstrellaTotalBs');
 
         if (imgEl) {
             imgEl.src = platillo.imagen || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="70" viewBox="0 0 200 70"%3E%3Crect width="200" height="70" fill="%232a2a3e"/%3E%3Ctext x="100" y="40" font-size="14" text-anchor="middle" fill="%23888" font-family="Arial"%3ESin imagen%3C/text%3E%3C/svg%3E';
@@ -76,36 +87,75 @@
             tituloEl.textContent = platillo.platillo_nombre || 'Sin nombre';
         }
         if (descEl) {
-            descEl.textContent = `#${platillo.posicion} - Top Ventas Semanales`;
+            descEl.textContent = `Top Ventas - ${window.formatFechaGMT4(platillo.fecha_inicio)} - ${window.formatFechaGMT4(platillo.fecha_fin)}`;
+        }
+        if (badgeEl) {
+            badgeEl.textContent = `#${platillo.posicion}`;
         }
         if (ordenesEl) {
-            ordenesEl.textContent = platillo.total_cantidad || 0;
+            ordenesEl.textContent = `${platillo.total_cantidad || 0} unidades`;
         }
-        if (precioUsdEl) {
-            precioUsdEl.textContent = (parseFloat(platillo.total_usd) || 0).toFixed(2);
+        if (totalUsdEl) {
+            totalUsdEl.textContent = (parseFloat(platillo.total_usd) || 0).toFixed(2);
         }
-        if (precioBsEl) {
-            precioBsEl.textContent = window.formatBs(parseFloat(platillo.total_bs) || 0);
+        if (totalBsEl) {
+            // Calcular Bs usando tasa efectiva actual si está disponible
+            const tasaEfectiva = window.obtenerTasaEfectivaActual ? window.obtenerTasaEfectivaActual() : null;
+            let totalBs = parseFloat(platillo.total_bs) || 0;
+            
+            // Si tenemos tasa efectiva y los datos lo permiten, recalcular
+            if (tasaEfectiva && platillo.total_usd) {
+                totalBs = (parseFloat(platillo.total_usd) || 0) * tasaEfectiva;
+            }
+            
+            totalBsEl.textContent = window.formatBs(totalBs);
         }
 
+        // Actualizar indicadores
+        actualizarIndicadores();
+        
         // Animación de deslizamiento suave
         aplicarAnimacionDeslizamiento();
     }
+    
+    // Actualizar indicadores de progreso (5 puntos)
+    function actualizarIndicadores() {
+        const indicatorsContainer = document.getElementById('platilloCarouselIndicators');
+        if (!indicatorsContainer) return;
+        
+        const indicators = indicatorsContainer.querySelectorAll('.platillo-indicator');
+        const totalSlides = Math.min(window.platillosTop5.length, 5);
+        
+        indicators.forEach((indicator, index) => {
+            if (index < totalSlides) {
+                indicator.style.display = 'block';
+                if (index === window.platilloCarouselIndex) {
+                    indicator.classList.add('active');
+                } else {
+                    indicator.classList.remove('active');
+                }
+            } else {
+                indicator.style.display = 'none';
+            }
+        });
+    }
 
-    // Aplicar animación CSS de deslizamiento
+    // Aplicar animación CSS de deslizamiento con cubic-bezier
     function aplicarAnimacionDeslizamiento() {
         const card = document.getElementById('platilloEstrellaCard');
+        const imgEl = document.getElementById('platilloEstrellaImg');
         if (!card) return;
 
-        // Remover y re-agregar clase para reiniciar animación
-        card.style.opacity = '0.7';
-        card.style.transform = 'scale(0.98)';
+        // Remover clase de animación previa
+        card.classList.remove('platillo-slide-animation');
+        if (imgEl) imgEl.classList.remove('platillo-slide-animation');
         
-        setTimeout(() => {
-            card.style.transition = 'opacity 0.3s ease, transform 0.3s ease';
-            card.style.opacity = '1';
-            card.style.transform = 'scale(1)';
-        }, 50);
+        // Forzar reflow
+        void card.offsetWidth;
+        
+        // Agregar clase de animación
+        card.classList.add('platillo-slide-animation');
+        if (imgEl) imgEl.classList.add('platillo-slide-animation');
     }
 
     // Iniciar carrusel automático
@@ -115,8 +165,11 @@
         if (window.platillosTop5.length <= 1) return; // No necesita carrusel si solo hay 1
 
         window.platilloCarouselInterval = setInterval(() => {
-            window.platilloCarouselIndex = (window.platilloCarouselIndex + 1) % window.platillosTop5.length;
-            actualizarCardPlatilloEstrella();
+            // Verificar si está en hover o touch para pausar
+            if (!window.isHoveringPlatillo && !window.isTouchingPlatillo) {
+                window.platilloCarouselIndex = (window.platilloCarouselIndex + 1) % window.platillosTop5.length;
+                actualizarCardPlatilloEstrella();
+            }
         }, window.CAROUSEL_INTERVAL_MS);
     }
 
@@ -128,7 +181,7 @@
         }
     }
 
-    // Navegación manual (opcional - se puede activar con clicks laterales)
+    // Navegación manual - siguiente platillo
     window.siguientePlatillo = function() {
         if (!window.platillosTop5 || window.platillosTop5.length === 0) return;
         window.platilloCarouselIndex = (window.platilloCarouselIndex + 1) % window.platillosTop5.length;
@@ -136,9 +189,18 @@
         reiniciarCarruselTrasInteraccion();
     };
 
+    // Navegación manual - platillo anterior
     window.anteriorPlatillo = function() {
         if (!window.platillosTop5 || window.platillosTop5.length === 0) return;
         window.platilloCarouselIndex = (window.platilloCarouselIndex - 1 + window.platillosTop5.length) % window.platillosTop5.length;
+        actualizarCardPlatilloEstrella();
+        reiniciarCarruselTrasInteraccion();
+    };
+    
+    // Ir a un índice específico (para clicks en indicadores)
+    window.irAPlatilloIndex = function(index) {
+        if (!window.platillosTop5 || index < 0 || index >= window.platillosTop5.length) return;
+        window.platilloCarouselIndex = index;
         actualizarCardPlatilloEstrella();
         reiniciarCarruselTrasInteraccion();
     };
@@ -152,7 +214,8 @@
     }
 
     // Función para redirigir a Reportes
-    window.verAnaliticaPlatilloEstrella = function() {
+    window.verAnaliticaPlatilloEstrella = function(event) {
+        if (event) event.stopPropagation();
         // Cambiar a la pestaña de Reportes
         const tabReportes = document.querySelector('.tab[data-tab="reportes"]');
         if (tabReportes) {
@@ -163,13 +226,94 @@
         // Mostrar toast informativo
         window.mostrarToast('Viendo analítica completa en Reportes', 'info');
     };
+    
+    // Helper para formatear fecha en GMT-4
+    window.formatFechaGMT4 = function(fechaStr) {
+        if (!fechaStr) return '';
+        const date = new Date(fechaStr);
+        // Ajustar a GMT-4 (Venezuela)
+        const offset = -4 * 60 * 60 * 1000;
+        const gmt4Date = new Date(date.getTime() + offset);
+        return gmt4Date.toLocaleDateString('es-VE', { day: '2-digit', month: '2-digit', year: '2-digit' });
+    };
+    
+    // Helper para obtener tasa efectiva actual
+    window.obtenerTasaEfectivaActual = function() {
+        const tasaDisplay = document.getElementById('tasaEfectivaDisplay');
+        if (tasaDisplay) {
+            return parseFloat(tasaDisplay.textContent.replace(/\./g, '').replace(',', '.')) || null;
+        }
+        return null;
+    };
 
-    // Event listeners para navegación manual (si se agregan botones en el futuro)
+    // Setup de event listeners
     document.addEventListener('DOMContentLoaded', function() {
+        const card = document.getElementById('platilloEstrellaCard');
+        if (!card) return;
+        
+        // Pausa en hover (desktop)
+        card.addEventListener('mouseenter', () => {
+            window.isHoveringPlatillo = true;
+        });
+        
+        card.addEventListener('mouseleave', () => {
+            window.isHoveringPlatillo = false;
+        });
+        
+        // Pausa en touch (móvil/tablet)
+        card.addEventListener('touchstart', () => {
+            window.isTouchingPlatillo = true;
+        }, { passive: true });
+        
+        card.addEventListener('touchend', () => {
+            window.isTouchingPlatillo = false;
+        }, { passive: true });
+        
+        // Click en indicadores
+        const indicatorsContainer = document.getElementById('platilloCarouselIndicators');
+        if (indicatorsContainer) {
+            indicatorsContainer.addEventListener('click', (e) => {
+                if (e.target.classList.contains('platillo-indicator')) {
+                    const index = Array.from(indicatorsContainer.querySelectorAll('.platillo-indicator')).indexOf(e.target);
+                    if (index >= 0) {
+                        window.irAPlatilloIndex(index);
+                    }
+                }
+            });
+        }
+        
+        // Swipe touch para navegación
+        let touchStartX = 0;
+        let touchEndX = 0;
+        
+        card.addEventListener('touchstart', (e) => {
+            touchStartX = e.changedTouches[0].screenX;
+        }, { passive: true });
+        
+        card.addEventListener('touchend', (e) => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        }, { passive: true });
+        
+        function handleSwipe() {
+            const swipeThreshold = 50;
+            const diff = touchStartX - touchEndX;
+            
+            if (Math.abs(diff) > swipeThreshold) {
+                if (diff > 0) {
+                    // Swipe izquierda - siguiente
+                    window.siguientePlatillo();
+                } else {
+                    // Swipe derecha - anterior
+                    window.anteriorPlatillo();
+                }
+            }
+        }
+        
         // Cargar datos al iniciar
         setTimeout(() => {
             if (window.supabaseClient) {
-                window.cargarPlatilloEstrella();
+                window.cargarTopVentasCliente();
             }
         }, 1000);
     });
@@ -178,7 +322,7 @@
     document.addEventListener('click', function(e) {
         if (e.target.classList.contains('tab') && e.target.dataset.tab === 'dashboard') {
             setTimeout(() => {
-                window.cargarPlatilloEstrella();
+                window.cargarTopVentasCliente();
             }, 300);
         }
     });
