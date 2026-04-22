@@ -51,13 +51,18 @@
         const totalUsdEl = document.getElementById('platilloEstrellaTotalUsd');
         const totalBsEl = document.getElementById('platilloEstrellaTotalBs');
 
-        if (imgEl) imgEl.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="70" viewBox="0 0 200 70"%3E%3Crect width="200" height="70" fill="%232a2a3e"/%3E%3Ctext x="100" y="40" font-size="14" text-anchor="middle" fill="%23888" font-family="Arial"%3ESin ventas esta semana%3C/text%3E%3C/svg%3E';
+        if (imgEl) {
+            imgEl.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="70" viewBox="0 0 200 70"%3E%3Crect width="200" height="70" fill="%232a2a3e"/%3E%3Ctext x="100" y="40" font-size="14" text-anchor="middle" fill="%23888" font-family="Arial"%3ESin ventas esta semana%3C/text%3E%3C/svg%3E';
+            imgEl.onerror = function() {
+                this.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="70" viewBox="0 0 200 70"%3E%3Crect width="200" height="70" fill="%232a2a3e"/%3E%3Ctext x="100" y="40" font-size="14" text-anchor="middle" fill="%23888" font-family="Arial"%3ESin imagen%3C/text%3E%3C/svg%3E';
+            };
+        }
         if (tituloEl) tituloEl.textContent = 'Sin actividad';
         if (descEl) descEl.textContent = 'No hay ventas registradas esta semana';
         if (badgeEl) badgeEl.textContent = '-';
-        if (ordenesEl) ordenesEl.textContent = '0';
+        if (ordenesEl) ordenesEl.textContent = '0 unidades';
         if (totalUsdEl) totalUsdEl.textContent = '0.00';
-        if (totalBsEl) totalBsEl.textContent = '0,00';
+        if (totalBsEl) totalBsEl.textContent = window.formatBs(0);
 
         actualizarIndicadores();
         detenerCarruselAutomatico();
@@ -81,13 +86,20 @@
         const totalBsEl = document.getElementById('platilloEstrellaTotalBs');
 
         if (imgEl) {
+            // Usar imagen del menú (mismo campo que usa admin-menu.js)
             imgEl.src = platillo.imagen || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="70" viewBox="0 0 200 70"%3E%3Crect width="200" height="70" fill="%232a2a3e"/%3E%3Ctext x="100" y="40" font-size="14" text-anchor="middle" fill="%23888" font-family="Arial"%3ESin imagen%3C/text%3E%3C/svg%3E';
+            imgEl.onerror = function() {
+                this.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="70" viewBox="0 0 200 70"%3E%3Crect width="200" height="70" fill="%232a2a3e"/%3E%3Ctext x="100" y="40" font-size="14" text-anchor="middle" fill="%23888" font-family="Arial"%3ESin imagen%3C/text%3E%3C/svg%3E';
+            };
         }
         if (tituloEl) {
             tituloEl.textContent = platillo.platillo_nombre || 'Sin nombre';
         }
         if (descEl) {
-            descEl.textContent = `Top Ventas - ${window.formatFechaGMT4(platillo.fecha_inicio)} - ${window.formatFechaGMT4(platillo.fecha_fin)}`;
+            // Mostrar fechas de la semana actual usando las fechas de la vista
+            const fechaInicio = platillo.fecha_inicio || new Date().toISOString();
+            const fechaFin = platillo.fecha_fin || new Date().toISOString();
+            descEl.textContent = `Top Ventas - ${window.formatFechaGMT4(fechaInicio)} - ${window.formatFechaGMT4(fechaFin)}`;
         }
         if (badgeEl) {
             badgeEl.textContent = `#${platillo.posicion}`;
@@ -99,16 +111,13 @@
             totalUsdEl.textContent = (parseFloat(platillo.total_usd) || 0).toFixed(2);
         }
         if (totalBsEl) {
-            // Calcular Bs usando tasa efectiva actual si está disponible
-            const tasaEfectiva = window.obtenerTasaEfectivaActual ? window.obtenerTasaEfectivaActual() : null;
-            let totalBs = parseFloat(platillo.total_bs) || 0;
+            // Calcular Bs usando SIEMPRE la tasa efectiva actual multiplicada por el total en USD
+            // Esto asegura consistencia: $6.50 * 500 = Bs 3.250,00 (no usar total_bs de BD que puede ser histórico)
+            const tasaEfectiva = window.obtenerTasaEfectivaActual ? window.obtenerTasaEfectivaActual() : (window.configGlobal?.tasa_efectiva || 400);
+            const totalUsd = parseFloat(platillo.total_usd) || 0;
+            const totalBsCalculado = totalUsd * tasaEfectiva;
             
-            // Si tenemos tasa efectiva y los datos lo permiten, recalcular
-            if (tasaEfectiva && platillo.total_usd) {
-                totalBs = (parseFloat(platillo.total_usd) || 0) * tasaEfectiva;
-            }
-            
-            totalBsEl.textContent = window.formatBs(totalBs);
+            totalBsEl.textContent = window.formatBs(totalBsCalculado);
         }
 
         // Actualizar indicadores
@@ -241,9 +250,14 @@
     window.obtenerTasaEfectivaActual = function() {
         const tasaDisplay = document.getElementById('tasaEfectivaDisplay');
         if (tasaDisplay) {
-            return parseFloat(tasaDisplay.textContent.replace(/\./g, '').replace(',', '.')) || null;
+            // El formato es "400.00" o "500,00" - normalizar a número float
+            const texto = tasaDisplay.textContent.trim();
+            // Reemplazar punto de miles (si existe) y convertir coma decimal a punto
+            const normalized = texto.replace(/\./g, '').replace(',', '.');
+            return parseFloat(normalized) || null;
         }
-        return null;
+        // Fallback a configGlobal si no hay display
+        return window.configGlobal?.tasa_efectiva || 400;
     };
 
     // Setup de event listeners
