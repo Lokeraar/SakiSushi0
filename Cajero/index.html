@@ -857,6 +857,7 @@ window.confirmarCobro = async function() {
                 pedido_id: p.id,
                 platillo_id: item.id || null,
                 platillo_nombre: item.nombre || 'Sin nombre',
+                imagen: item.imagen || null,
                 cantidad: cantidad,
                 precio_unitario_usd: parseFloat(precioUSD.toFixed(2)),
                 precio_unitario_bs: parseFloat(precioBS.toFixed(2)),

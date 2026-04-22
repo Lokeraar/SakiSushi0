@@ -564,6 +564,7 @@ CREATE TABLE IF NOT EXISTS ventas_detalle (
     venta_id INTEGER REFERENCES ventas(id) ON DELETE CASCADE,
     platillo_id TEXT REFERENCES menu(id) ON DELETE SET NULL,
     platillo_nombre TEXT NOT NULL,
+    imagen TEXT,
     cantidad INTEGER DEFAULT 1,
     precio_unitario_usd NUMERIC(10,2) DEFAULT 0,
     precio_unitario_bs NUMERIC(10,2) DEFAULT 0,
@@ -580,6 +581,16 @@ DO $$ BEGIN
         WHERE table_name='ventas_detalle' AND column_name='pedido_id'
     ) THEN
         ALTER TABLE ventas_detalle ADD COLUMN pedido_id TEXT REFERENCES pedidos(id) ON DELETE CASCADE;
+    END IF;
+END $$;
+
+-- Migración segura: agregar columna imagen si no existe (para bases de datos ya creadas)
+DO $$ BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name='ventas_detalle' AND column_name='imagen'
+    ) THEN
+        ALTER TABLE ventas_detalle ADD COLUMN imagen TEXT;
     END IF;
 END $$;
 
