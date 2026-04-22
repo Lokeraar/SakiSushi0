@@ -594,12 +594,14 @@ DO $$ BEGIN
     END IF;
 END $$;
 
--- Migración: Actualizar registros existentes en ventas_detalle con la imagen del menú
+-- Migración: Sincronización forzada de imágenes - actualizar TODOS los registros de ventas_detalle con la imagen del menú
+-- Esto corrige cualquier registro que tenga imagen NULL o incorrecta
 UPDATE ventas_detalle vd
 SET imagen = m.imagen
 FROM menu m
 WHERE vd.platillo_id = m.id
-  AND vd.imagen IS NULL;
+  AND m.imagen IS NOT NULL
+  AND (vd.imagen IS NULL OR vd.imagen != m.imagen);
 
 ALTER TABLE ventas_detalle ENABLE ROW LEVEL SECURITY;
 DO $$ BEGIN
@@ -812,10 +814,34 @@ CREATE TABLE propinas (
     monto_bs NUMERIC(10,2) DEFAULT 0,
     referencia TEXT,
     cajero TEXT,
+    cajero_id UUID REFERENCES auth.users(id),
     fecha TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     entregado BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
+
+-- Migración segura: agregar columna cajero_id si no existe (para bases de datos ya creadas)
+DO $$ BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name='propinas' AND column_name='cajero_id'
+    ) THEN
+        ALTER TABLE propinas ADD COLUMN cajero_id UUID REFERENCES auth.users(id);
+    END IF;
+END $$;
+
+-- Migración segura: agregar columna entregado si no existe (para bases de datos ya creadas)
+DO $$ BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name='propinas' AND column_name='entregado'
+    ) THEN
+        ALTER TABLE propinas ADD COLUMN entregado BOOLEAN DEFAULT false;
+    END IF;
+END $$;
+
+-- Actualizar registros antiguos que tengan entregado=NULL a false
+UPDATE propinas SET entregado = false WHERE entregado IS NULL;
 
 ALTER TABLE propinas ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Permitir todo propinas" ON propinas FOR ALL USING (true) WITH CHECK (true);
@@ -827,6 +853,7 @@ CREATE INDEX idx_propinas_fecha ON propinas(fecha);
 CREATE INDEX idx_propinas_mesonero ON propinas(mesonero_id);
 CREATE INDEX idx_propinas_mesa ON propinas(mesa);
 CREATE INDEX idx_propinas_entregado ON propinas(entregado);
+CREATE INDEX IF NOT EXISTS idx_propinas_mesonero_entregado ON propinas(mesonero_id, entregado);
 
 -- ============================================
 -- TABLA: notificaciones
