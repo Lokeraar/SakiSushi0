@@ -112,8 +112,14 @@
         }
         if (totalUsdEl) {
             // El valor total_usd viene de la BD como NUMERIC (ej: 6.50)
-            // Lo convertimos directamente a número sin manipulaciones de string
-            const totalUsd = Number(platillo.total_usd) || 0;
+            // Supabase puede devolverlo como string o número, lo convertimos correctamente
+            let totalUsd = 0;
+            if (typeof platillo.total_usd === 'string') {
+                // Si viene como string, convertir directamente a float (el punto decimal es válido)
+                totalUsd = parseFloat(platillo.total_usd) || 0;
+            } else {
+                totalUsd = Number(platillo.total_usd) || 0;
+            }
             // Formatear con coma como separador decimal (formato venezolano)
             totalUsdEl.textContent = totalUsd.toFixed(2).replace('.', ',');
         }
@@ -121,8 +127,14 @@
             // Calcular Bs usando SIEMPRE la tasa efectiva actual multiplicada por el total en USD
             // Esto asegura consistencia: $6,50 * 516.50 = Bs 3.357,25 (no usar total_bs de BD que puede ser histórico)
             const tasaEfectiva = window.obtenerTasaEfectivaActual ? window.obtenerTasaEfectivaActual() : (window.configGlobal?.tasa_efectiva || 400);
-            // El valor total_usd viene de la BD como NUMERIC (ej: 6.50), lo convertimos directamente
-            const totalUsd = Number(platillo.total_usd) || 0;
+            // El valor total_usd viene de la BD como NUMERIC (ej: 6.50), lo convertimos correctamente
+            let totalUsd = 0;
+            if (typeof platillo.total_usd === 'string') {
+                // Si viene como string, convertir directamente a float (el punto decimal es válido)
+                totalUsd = parseFloat(platillo.total_usd) || 0;
+            } else {
+                totalUsd = Number(platillo.total_usd) || 0;
+            }
             const totalBsCalculado = totalUsd * tasaEfectiva;
             
             totalBsEl.textContent = window.formatBs(totalBsCalculado);
