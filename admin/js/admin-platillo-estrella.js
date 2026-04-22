@@ -126,7 +126,7 @@
         if (totalBsEl) {
             // Calcular Bs usando SIEMPRE la tasa efectiva actual multiplicada por el total en USD
             // Esto asegura consistencia: $6,50 * 516.50 = Bs 3.357,25 (no usar total_bs de BD que puede ser histórico)
-            const tasaEfectiva = window.obtenerTasaEfectivaActual ? window.obtenerTasaEfectivaActual() : (window.configGlobal?.tasa_efectiva || 400);
+            const tasaEfectiva = Number(window.configGlobal?.tasa_efectiva || 400);
             // El valor total_usd viene de la BD como NUMERIC (ej: 6.50), lo convertimos correctamente
             let totalUsd = 0;
             if (typeof platillo.total_usd === 'string') {

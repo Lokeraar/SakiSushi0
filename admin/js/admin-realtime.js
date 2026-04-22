@@ -77,6 +77,23 @@
                     })
                 .subscribe();
 
+            window.supabaseClient
+                .channel('admin-platillo-estrella')
+                .on('postgres_changes', { event: '*', schema: 'public', table: 'vista_platillo_estrella' },
+                    () => { window.cargarTopVentasCliente(); })
+                .subscribe();
+
+            // Escuchar cambios en la tabla menu para actualizar platillo estrella en tiempo real
+            // Esto asegura que si cambia la imagen de un platillo en menu, se refleje inmediatamente
+            window.supabaseClient
+                .channel('admin-menu-platillo-estrella')
+                .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'menu', filter: 'imagen=*' },
+                    () => { 
+                        // Pequeño delay para asegurar que la vista se haya actualizado
+                        setTimeout(() => { window.cargarTopVentasCliente(); }, 500);
+                    })
+                .subscribe();
+
         } catch (e) { console.error('Error configurando suscripciones realtime:', e); }
     };
 
