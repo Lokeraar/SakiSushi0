@@ -188,7 +188,7 @@
         const previewDiv = document.getElementById('imagenPreview');
         const previewImg = document.getElementById('previewImg');
         
-        // Eliminar cualquier botón "Quitar" existente
+        // Eliminar cualquier botón "Quitar" existente y listeners previos para evitar duplicados
         const existingQuitar = document.querySelector('#imagenPreview .btn-small, #imagenPreview button:not(.preview-remove-btn)');
         if (existingQuitar) existingQuitar.remove();
         
@@ -197,6 +197,7 @@
             if (removePreviewBtn) removePreviewBtn.remove();
             if (previewDiv && previewDiv.style.display === 'flex') {
                 removePreviewBtn = document.createElement('button');
+                removePreviewBtn.className = 'preview-remove-btn';
                 removePreviewBtn.innerHTML = '<i class="fas fa-times-circle"></i>';
                 removePreviewBtn.style.cssText = 'position:absolute;top:-8px;right:-8px;background:rgba(0,0,0,.6);color:#fff;border:none;border-radius:50%;width:24px;height:24px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.8rem;z-index:10;backdrop-filter:blur(2px)';
                 removePreviewBtn.title = 'Eliminar imagen';
@@ -210,9 +211,14 @@
         }
         
         if (fileInput) {
-            fileInput.addEventListener('change', function() {
-                if (fileInput.files && fileInput.files[0]) {
-                    const file = fileInput.files[0];
+            // Eliminar listener previo si existe
+            const newFileInput = fileInput.cloneNode(true);
+            fileInput.parentNode.replaceChild(newFileInput, fileInput);
+            newFileInput._cloned = true;
+            
+            newFileInput.addEventListener('change', function() {
+                if (newFileInput.files && newFileInput.files[0]) {
+                    const file = newFileInput.files[0];
                     currentImagenFile = file;
                     currentImagenUrl = '';
                     if (urlInput) {
@@ -243,9 +249,13 @@
         }
         
         if (urlInput) {
-            urlInput.addEventListener('input', function() {
+            // Eliminar listener previo si existe
+            const newUrlInput = urlInput.cloneNode(true);
+            urlInput.parentNode.replaceChild(newUrlInput, urlInput);
+            
+            newUrlInput.addEventListener('input', function() {
                 if (fileInput && fileInput.files && fileInput.files[0]) return;
-                const url = urlInput.value.trim();
+                const url = newUrlInput.value.trim();
                 if (url) {
                     if (previewImg) previewImg.src = url;
                     if (previewDiv) previewDiv.style.display = 'flex';
@@ -468,12 +478,21 @@
         const _lblD = document.getElementById('platilloDisponibleLabel');
         if (_chkD) { _chkD.checked = !!platillo.disponible; }
         if (_lblD) { _lblD.textContent = platillo.disponible ? 'Sí' : 'No'; _lblD.style.color = platillo.disponible ? 'var(--success)' : 'var(--text-muted)'; }
+        
+        // Cargar imagen existente si hay
         if (platillo.imagen) {
-            document.getElementById('previewImg').src = platillo.imagen;
-            document.getElementById('imagenPreview').style.display = 'flex';
-            document.getElementById('platilloImagenUrl').value = platillo.imagen;
             currentImagenUrl = platillo.imagen;
+            currentImagenFile = null; // No hay archivo, es URL existente
+            const previewImg = document.getElementById('previewImg');
+            const previewDiv = document.getElementById('imagenPreview');
+            const urlInput = document.getElementById('platilloImagenUrl');
+            if (previewImg) previewImg.src = platillo.imagen;
+            if (previewDiv) previewDiv.style.display = 'flex';
+            if (urlInput) urlInput.value = platillo.imagen;
+            // Actualizar botón de eliminar
+            setupPlatilloModalEvents();
         }
+        
         window.cargarSubcategoriasSelect(platillo.categoria);
         document.getElementById('ingredientesContainer').innerHTML = '';
         if (platillo.ingredientes) {
@@ -736,6 +755,23 @@
             }
         });
         
+        // Procesar imagen: subir archivo si existe o usar URL
+        let imagenUrl = currentImagenUrl || null;
+        
+        // Si hay un archivo seleccionado, subirlo al storage
+        if (currentImagenFile) {
+            window.mostrarToast('📤 Subiendo imagen...', 'info');
+            const resultado = await window.subirImagenPlatillo(currentImagenFile, 'imagenes-platillos');
+            if (resultado.success) {
+                imagenUrl = resultado.url;
+                currentImagenUrl = resultado.url; // Actualizar para futuras referencias
+            } else {
+                window.mostrarToast('⚠️ Error al subir imagen: ' + (resultado.error || 'Error desconocido'), 'warning');
+                // Continuar sin imagen en caso de error
+                imagenUrl = null;
+            }
+        }
+        
         // Preparar datos con fix de decimales para evitar errores como 14.60000000001
         const platilloData = {
             nombre: nombre,
@@ -745,7 +781,7 @@
             descripcion: descripcion,
             disponible: disponible,
             ingredientes: Object.keys(ingredientes).length > 0 ? ingredientes : null,
-            imagen: currentImagenUrl || null,
+            imagen: imagenUrl,
             stock: null // Se calculará automáticamente
         };
         
