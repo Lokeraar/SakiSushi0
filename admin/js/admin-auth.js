@@ -160,6 +160,14 @@
             
             setTimeout(async () => {
                 try {
+                    // Sincronizar imágenes faltantes en ventas_detalle desde menu
+                    await window.sincronizarImagenesVentasDetalle();
+                    
+                    // Cargar platillo estrella después de sincronizar imágenes
+                    if (typeof window.cargarPlatilloEstrella === 'function') {
+                        await window.cargarPlatilloEstrella();
+                    }
+                    
                     await window.cargarConfiguracionInicial();
                     await window.cargarMenu();
                     await window.cargarInventario();

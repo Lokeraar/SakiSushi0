@@ -208,6 +208,55 @@
         const initial = text.charAt(0).toUpperCase();
         return `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='48' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' fill='%23D32F2F'/%3E%3Ctext x='24' y='32' font-size='20' text-anchor='middle' fill='white' font-family='Arial'%3E${initial}%3C/text%3E%3C/svg%3E`;
     };
+    
+    // ==================== SINCRONIZACIÓN DE IMÁGENES EN VENTAS_DETALLE ====================
+    // Esta función sincroniza las imágenes faltantes en ventas_detalle desde la tabla menu
+    // Se ejecuta al iniciar sesión para asegurar que todos los registros tengan imagen
+    window.sincronizarImagenesVentasDetalle = async function() {
+        try {
+            // Actualizar registros en ventas_detalle donde imagen es NULL
+            const { data, error } = await window.supabaseClient.rpc('sincronizar_imagenes_ventas_detalle');
+            
+            if (error) {
+                // Si el RPC no existe, hacer un update directo
+                console.log('RPC no disponible, usando método alternativo');
+                
+                // Obtener todos los registros de ventas_detalle sin imagen
+                const { data: ventasSinImagen, error: errorFetch } = await window.supabaseClient
+                    .from('ventas_detalle')
+                    .select('id, platillo_id')
+                    .is('imagen', null);
+                
+                if (errorFetch) throw errorFetch;
+                
+                if (ventasSinImagen && ventasSinImagen.length > 0) {
+                    // Para cada registro, obtener la imagen del menú y actualizar
+                    for (const venta of ventasSinImagen) {
+                        if (venta.platillo_id) {
+                            const { data: menuData } = await window.supabaseClient
+                                .from('menu')
+                                .select('imagen')
+                                .eq('id', venta.platillo_id)
+                                .single();
+                            
+                            if (menuData && menuData.imagen) {
+                                await window.supabaseClient
+                                    .from('ventas_detalle')
+                                    .update({ imagen: menuData.imagen })
+                                    .eq('id', venta.id);
+                            }
+                        }
+                    }
+                    console.log(`Imágenes sincronizadas: ${ventasSinImagen.length} registros actualizados`);
+                }
+            } else {
+                console.log('Sincronización de imágenes completada:', data);
+            }
+        } catch (e) {
+            console.error('Error sincronizando imágenes:', e);
+        }
+    };
+    
     // Alerta moderna y premium para confirmar eliminaciones
     window.mostrarConfirmacionPremium = function(titulo, mensaje, onConfirm) {
         // Crear overlay

@@ -670,6 +670,31 @@ CREATE TRIGGER trigger_replicar_imagen_menu
     EXECUTE FUNCTION replicar_imagen_menu();
 
 -- ============================================
+-- FUNCIÓN RPC: sincronizar_imagenes_ventas_detalle
+-- Sincroniza todas las imágenes faltantes en ventas_detalle desde menu
+-- Se usa al iniciar sesión para actualizar registros históricos
+-- ============================================
+CREATE OR REPLACE FUNCTION sincronizar_imagenes_ventas_detalle()
+RETURNS INTEGER AS $$
+DECLARE
+    v_count INTEGER;
+BEGIN
+    -- Actualizar todos los registros donde imagen es NULL y platillo_id existe
+    UPDATE ventas_detalle vd
+    SET imagen = m.imagen
+    FROM menu m
+    WHERE vd.platillo_id = m.id
+      AND (vd.imagen IS NULL OR vd.imagen = '')
+      AND m.imagen IS NOT NULL;
+    
+    GET DIAGNOSTICS v_count = ROW_COUNT;
+    RETURN v_count;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+GRANT EXECUTE ON FUNCTION sincronizar_imagenes_ventas_detalle TO anon, authenticated;
+
+-- ============================================
 -- VISTA: vista_platillo_estrella (Top 5 semanal - desde lunes)
 -- ============================================
 CREATE OR REPLACE VIEW vista_platillo_estrella AS
