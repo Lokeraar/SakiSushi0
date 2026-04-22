@@ -823,8 +823,8 @@
                     const montoPagadoEnMoneda = restoPorPagar;
                     const montoRestanteEnMoneda = montoPropinaEnMoneda - montoPagadoEnMoneda;
                     
-                    // 2a. Marcar la propina original como entregada (NO modificar montos para preservar historial)
-                    await window.supabaseClient.from('propinas').update({ entregado: true }).eq('id', prop.id);
+                    // 2a. NO marcar la propina original como entregada - debe permanecer pendiente
+                    //     para reflejar el saldo restante en la tarjeta del mesonero
                     
                     // 2b. Crear un NUEVO REGISTRO con el monto pagado (EGRESO)
                     const cajeroNombre = (window.usuarioActual && window.usuarioActual.nombre) || 'Administrador';
@@ -863,39 +863,17 @@
                         .insert([nuevaPropinaPago]);
                     if (errInsertPago) throw errInsertPago;
                     
-                    // 2c. Crear otro NUEVO REGISTRO con el monto restante (pendiente, entregado: false)
-                    let nuevoMontoOriginalRestante = 0;
-                    let nuevaMonedaOriginalRestante = 'Bs';
-                    let nuevoMontoBsRestante = 0;
-                    
+                    // 2c. Actualizar la propina original con el monto restante pendiente
+                    //     Esto asegura que solo el saldo restante aparezca como pendiente
+                    let updateDataRestante = {};
                     if (pagarEnUSD) {
-                        nuevoMontoOriginalRestante = montoRestanteEnMoneda;
-                        nuevaMonedaOriginalRestante = 'USD';
-                        nuevoMontoBsRestante = montoRestanteEnMoneda * tasaBase;
+                        updateDataRestante.monto_original = montoRestanteEnMoneda;
+                        updateDataRestante.monto_bs = montoRestanteEnMoneda * tasaBase;
                     } else {
-                        nuevoMontoBsRestante = montoRestanteEnMoneda;
-                        nuevoMontoOriginalRestante = montoRestanteEnMoneda;
-                        nuevaMonedaOriginalRestante = 'Bs';
+                        updateDataRestante.monto_bs = montoRestanteEnMoneda;
+                        updateDataRestante.monto_original = montoRestanteEnMoneda;
                     }
-                    
-                    const nuevaPropinaRestante = {
-                        mesonero_id: mesoneroParaPagoId,
-                        mesa: prop.mesa || 'General',
-                        metodo: prop.metodo,
-                        monto_original: parseFloat(nuevoMontoOriginalRestante.toFixed(2)),
-                        moneda_original: nuevaMonedaOriginalRestante,
-                        tasa_aplicada: prop.tasa_aplicada,
-                        monto_bs: parseFloat(nuevoMontoBsRestante.toFixed(2)),
-                        referencia: prop.referencia,
-                        cajero: prop.cajero,
-                        fecha: prop.fecha,
-                        entregado: false
-                    };
-                    
-                    const { error: errInsertRestante } = await window.supabaseClient
-                        .from('propinas')
-                        .insert([nuevaPropinaRestante]);
-                    if (errInsertRestante) throw errInsertRestante;
+                    await window.supabaseClient.from('propinas').update(updateDataRestante).eq('id', prop.id);
                     
                     restoPorPagar = 0;
                     pagoCompletado = true;
