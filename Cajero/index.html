@@ -842,7 +842,14 @@ window.confirmarCobro = async function() {
         // Guardar cada platillo del pedido en ventas_detalle
         const itemsDetalle = (p.items || []).map(function(item) {
             const cantidad = item.cantidad || 1;
-            const precioUSD = parseFloat(item.precioUnitarioUSD) || 0;
+            // Normalizar precio: manejar tanto formato "6.50" (americano) como "6,50" (venezolano)
+            let precioUSD = 0;
+            if (typeof item.precioUnitarioUSD === 'string') {
+                // Reemplazar coma por punto si es formato venezolano, luego convertir
+                precioUSD = parseFloat(item.precioUnitarioUSD.replace(',', '.')) || 0;
+            } else {
+                precioUSD = parseFloat(item.precioUnitarioUSD) || 0;
+            }
             const precioBS = esInvitacion ? 0 : window.usdToBs(precioUSD);
             const subtotalUSD = esInvitacion ? 0 : precioUSD * cantidad;
             const subtotalBS = esInvitacion ? 0 : precioBS * cantidad;
@@ -851,10 +858,10 @@ window.confirmarCobro = async function() {
                 platillo_id: item.id || null,
                 platillo_nombre: item.nombre || 'Sin nombre',
                 cantidad: cantidad,
-                precio_unitario_usd: precioUSD,
-                precio_unitario_bs: precioBS,
-                subtotal_usd: subtotalUSD,
-                subtotal_bs: subtotalBS,
+                precio_unitario_usd: parseFloat(precioUSD.toFixed(2)),
+                precio_unitario_bs: parseFloat(precioBS.toFixed(2)),
+                subtotal_usd: parseFloat(subtotalUSD.toFixed(2)),
+                subtotal_bs: parseFloat(subtotalBS.toFixed(2)),
                 fecha: new Date().toISOString()
             };
         });
