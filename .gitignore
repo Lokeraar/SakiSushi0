@@ -18,6 +18,8 @@ target/
 .venv/
 venv/
 node_modules/
+.julia/
+.zig-cache/
 .mypy_cache/
 .pytest_cache/
 .gradle/
@@ -35,6 +37,7 @@ zig*/
 # Environment
 .env
 .env.local
+*.env.*
 .env.*
 
 # Editors
@@ -43,6 +46,7 @@ zig*/
 *.swp
 *.swo
 
+# OS
 # System files
 .DS_Store
 Thumbs.db
@@ -51,6 +55,14 @@ Thumbs.db
 coverage/
 htmlcov/
 .coverage
+
+# Python specific
+*.pyc
+__pycache__/
+*.pyo
+*.pyd
+.Python
+*.so
 
 # Compressed files
 *.zip
