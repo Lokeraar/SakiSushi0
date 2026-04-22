@@ -111,18 +111,22 @@
             ordenesEl.textContent = `${platillo.total_cantidad || 0} unidades`;
         }
         if (totalUsdEl) {
-            // El valor total_usd viene de la BD como NUMERIC, ya es un número válido
-            // Solo formateamos para mostrar con coma decimal (formato venezolano)
-            const totalUsd = parseFloat(platillo.total_usd) || 0;
-            // Formatear con coma como separador decimal
+            // El valor total_usd viene de la BD como NUMERIC, puede venir como string "6.50" o número
+            // Convertimos asegurando que el punto sea separador decimal
+            let totalUsdStr = String(platillo.total_usd || '0');
+            // Aseguramos que use punto como separador decimal para parseFloat
+            const totalUsd = parseFloat(totalUsdStr.replace(',', '.')) || 0;
+            // Formatear con coma como separador decimal (formato venezolano)
             totalUsdEl.textContent = totalUsd.toFixed(2).replace('.', ',');
         }
         if (totalBsEl) {
             // Calcular Bs usando SIEMPRE la tasa efectiva actual multiplicada por el total en USD
             // Esto asegura consistencia: $6,50 * 516.50 = Bs 3.357,25 (no usar total_bs de BD que puede ser histórico)
             const tasaEfectiva = window.obtenerTasaEfectivaActual ? window.obtenerTasaEfectivaActual() : (window.configGlobal?.tasa_efectiva || 400);
-            // El valor total_usd viene de la BD como NUMERIC, ya es un número válido
-            const totalUsd = parseFloat(platillo.total_usd) || 0;
+            // El valor total_usd viene de la BD como NUMERIC, puede venir como string "6.50" o número
+            let totalUsdStr = String(platillo.total_usd || '0');
+            // Aseguramos que use punto como separador decimal para parseFloat
+            const totalUsd = parseFloat(totalUsdStr.replace(',', '.')) || 0;
             const totalBsCalculado = totalUsd * tasaEfectiva;
             
             totalBsEl.textContent = window.formatBs(totalBsCalculado);
