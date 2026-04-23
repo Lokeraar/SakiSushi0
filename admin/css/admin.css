@@ -523,7 +523,7 @@ html.dark-theme .theme-toggle-input:focus {
 }
 .tcb-cards {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: .6rem;
     margin-bottom: .6rem;
 }
@@ -831,8 +831,9 @@ html.dark-theme .toggle-slider { background-color: rgba(255,255,255,.2); }
     padding: .45rem .85rem;
     border: 1px solid var(--border);
     display: flex;
-    flex-direction: column;
-    gap: .3rem;
+    flex-direction: row;
+    align-items: center;
+    gap: .6rem;
 }
 .tcb-fecha-row {
     display: flex;
@@ -850,6 +851,16 @@ html.dark-theme .toggle-slider { background-color: rgba(255,255,255,.2); }
     color: var(--text-dark);
     font-size: .72rem;
     font-family: 'Montserrat', sans-serif;
+}
+/* Mobile responsive for fechas card - stack vertically on small screens */
+@media (max-width: 768px) {
+    .tcb-fechas-card {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .tcb-fecha-row {
+        justify-content: space-between;
+    }
 }
 .tcb-save-wrap { margin-left: auto; flex-shrink: 0; }
 .tcb-save-btn {
