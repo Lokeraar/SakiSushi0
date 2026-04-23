@@ -3932,15 +3932,15 @@ Promise.all(Object.entries(platillo.ingredientes || {}).map(async ([ingId, ingIn
     const disponible = stockDisp >= (ingInfo.cantidad || 1);
     const precio = ingrediente?.precio_unitario || 0;
     const esPrincipal = ingInfo.principal === true;
-    // Si es principal, el checkbox debe estar marcado y deshabilitado
-    const checkedAttr = esPrincipal ? 'checked disabled' : '';
+    // Si es principal, el checkbox debe estar desmarcado y deshabilitado (no se puede quitar)
+    const checkedAttr = '';
     const disabledAttr = esPrincipal ? 'disabled' : (disponible ? '' : 'disabled');
     return `<div style="margin-bottom:.8rem; padding:.7rem; background:var(--customize-row-bg); border-radius:var(--radius-sm); ${!disponible ? 'opacity:0.5;' : ''}">
         <label style="display:flex; align-items:center; gap:.8rem; cursor:${disponible && !esPrincipal ? 'pointer' : 'not-allowed'}; color:var(--customize-text)">
             <input type="checkbox" class="ingrediente-check" data-ingrediente="${ingId}" data-precio="${precio}" ${checkedAttr} ${disabledAttr}>
             <div style="flex:1">
                 <div style="font-weight:500">${ingInfo.nombre || ingId} ${esPrincipal ? '<span style="color:var(--accent); font-size:.7rem;">(Principal - fijo)</span>' : ''}</div>
-                <div style="font-size:.85rem; color:var(--customize-subtext)">Valor: ${formatBs(usdToBs(precio))}${!disponible ? '<span style="color:var(--danger); margin-left:.5rem">(Sin stock)</span>' : ''}</div>
+                <div style="font-size:.85rem; color:var(--customize-subtext)">${!disponible ? '<span style="color:var(--danger); margin-left:.5rem">(Sin stock)</span>' : ''}</div>
             </div>
         </label>
     </div>`;
