@@ -10,15 +10,15 @@ __pycache__/
 *.so
 *.a
 *.out
-*.exe
 
 # Dependencies
-node_modules/
-venv/
 .venv/
-.env
-.env.local
-.env.*
+venv/
+node_modules/
+.mypy_cache/
+.pytest_cache/
+target/
+.gradle/
 
 # Build directories
 dist/
@@ -48,6 +48,11 @@ htmlcov/
 .env
 .env.local
 .env.*
+
+# Environment
+.env
+.env.local
+*.env.*
 
 # Environment
 .env
@@ -103,6 +108,7 @@ htmlcov/
 *.tar.bz2
 *.tar.xz
 *.tar.zst
+```
 ```
 *.tar.zst
 ```
