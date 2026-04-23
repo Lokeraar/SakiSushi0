@@ -868,12 +868,23 @@ html.dark-theme .toggle-slider { background-color: rgba(255,255,255,.2); }
     padding: .55rem 1.1rem;
     white-space: nowrap;
 }
+/* Tablet responsive for save button - fit in same row */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .tcb-save-btn {
+        font-size: .75rem;
+        padding: .5rem .8rem;
+    }
+}
 @media (max-width: 768px) {
     .tcb-controls { flex-direction: column; align-items: stretch; }
     .tcb-save-wrap { margin-left: 0; }
     .tcb-save-btn { width: 100%; }
 }
+/* Mobile - align dates, toggle and tooltip to the left */
 @media (max-width: 480px) {
+    .tcb-fecha-row {
+        justify-content: flex-start;
+    }
     .tcb-value-big { font-size: .95rem; }
 }
 
@@ -3867,6 +3878,40 @@ html.dark-theme .status-inactivo {
     position: relative;
 }
 
+.tooltip-icon:hover::after,
+.tooltip-text {
+    font-size: 1rem !important;
+    font-size: 16px !important;
+    font-size: 12pt !important;
+}
+
+/* Tooltip text class for inline tooltips (like Indefinido) */
+.tooltip-text {
+    display: none !important;
+    position: absolute !important;
+    bottom: calc(100% + 6px) !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    background: var(--toast-bg) !important;
+    color: var(--toast-text) !important;
+    padding: .5rem .75rem !important;
+    border-radius: 8px !important;
+    font-size: 1rem !important;
+    font-size: 16px !important;
+    font-size: 12pt !important;
+    white-space: normal !important;
+    width: 210px !important;
+    text-align: center !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,.35) !important;
+    z-index: 100 !important;
+    line-height: 1.4 !important;
+    pointer-events: none !important;
+}
+
+.tooltip-wrap:hover .tooltip-text {
+    display: block !important;
+}
+
 .tooltip-icon:hover::after {
     content: attr(data-tooltip);
     position: absolute;
@@ -3877,7 +3922,9 @@ html.dark-theme .status-inactivo {
     color: #fff;
     padding: 6px 10px;
     border-radius: 8px;
-    font-size: 11px;
+    font-size: 1rem;
+    font-size: 16px;
+    font-size: 12pt;
     font-weight: 400;
     white-space: normal;
     max-width: 220px;

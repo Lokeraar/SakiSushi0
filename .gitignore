@@ -1,4 +1,8 @@
-```
+# Examples 1:
+# Project contains only source/config files with no build artifacts,
+# dependencies, or temp files - no ignores needed
+
+# Example 2 (Project with artifacts):
 # Compiled and build artifacts
 *.pyc
 __pycache__/
@@ -12,8 +16,6 @@ target/
 .venv/
 venv/
 node_modules/
-.julia/
-zig*/
 .mypy_cache/
 .pytest_cache/
 .gradle/
@@ -22,18 +24,15 @@ zig*/
 *.log
 *.tmp
 *.swp
-*.swo
 
 # Environment
 .env
 .env.local
-.env.*
+*.env.*
 
 # Editors
 .vscode/
 .idea/
-*.swp
-*.swo
 
 # System files
 .DS_Store
@@ -67,4 +66,3 @@ htmlcov/
 *.tar.bz2
 *.tar.xz
 *.tar.zst
-```
