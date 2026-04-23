@@ -1964,12 +1964,14 @@ html.dark-theme .ingrediente-row {
     .content { padding: .85rem; }
     .pane-header { flex-direction: column; align-items: flex-start; }
     .usuarios-grid { grid-template-columns: 1fr; }
-    .mesoneros-grid { grid-template-columns: 1fr 1fr; }
+    .mesoneros-grid,
+    .delivery-grid { grid-template-columns: 1fr 1fr; }
     .config-section { max-width: 100%; }
     .reportes-filters { flex-direction: column; }
 }
 @media (max-width: 480px) {
-    .mesoneros-grid { grid-template-columns: 1fr; }
+    .mesoneros-grid,
+    .delivery-grid { grid-template-columns: 1fr; }
     .card-value { font-size: 1.6rem; font-weight: 800; color: var(--card-value-color, var(--text-dark)); }
 }
 
@@ -2372,7 +2374,8 @@ html.dark-theme .tabs-chevron-left, html.dark-theme .tabs-chevron-right { border
 /* Responsive breakpoints */
 @media (min-width: 769px) {
     .usuarios-grid     { grid-template-columns: repeat(2, 1fr); }
-    .mesoneros-grid    { grid-template-columns: repeat(2, 1fr); }
+    .mesoneros-grid,
+    .delivery-grid     { grid-template-columns: repeat(2, 1fr); }
     .config-grid       { grid-template-columns: repeat(2, 1fr); }
     .qr-grid           { grid-template-columns: repeat(3, 1fr); }
     .dashboard-grid    { grid-template-columns: repeat(3, 1fr); }
@@ -2381,7 +2384,8 @@ html.dark-theme .tabs-chevron-left, html.dark-theme .tabs-chevron-right { border
 }
 @media (min-width: 1201px) {
     .usuarios-grid     { grid-template-columns: repeat(3, 1fr); }
-    .mesoneros-grid    { grid-template-columns: repeat(3, 1fr); }
+    .mesoneros-grid,
+    .delivery-grid     { grid-template-columns: repeat(3, 1fr); }
     .config-grid       { grid-template-columns: repeat(2, 1fr); }
     .qr-grid           { grid-template-columns: repeat(5, 1fr); }
     .dashboard-grid    { grid-template-columns: repeat(4, 1fr); }
@@ -2389,7 +2393,8 @@ html.dark-theme .tabs-chevron-left, html.dark-theme .tabs-chevron-right { border
     .inv-list-col      { flex: 0 0 300px; }
 }
 @media (max-width: 768px) {
-    .mesoneros-grid    { grid-template-columns: 1fr; }
+    .mesoneros-grid,
+    .delivery-grid     { grid-template-columns: 1fr; }
     .usuarios-grid     { grid-template-columns: 1fr; }
     .qr-grid           { grid-template-columns: repeat(2, 1fr); }
 }
@@ -3557,16 +3562,17 @@ html.dark-theme #platilloModal .ingrediente-row input:focus {
 .delivery-card .ucard-avatar {
     grid-row: 1 / span 3;
     grid-column: 1;
-    width: 60px;
-    height: 60px;
-    min-width: 60px;
-    border-radius: 50%;
+    width: 75px;
+    height: 100%;
+    min-width: 75px;
+    border-radius: 8px;
     overflow: hidden;
     display: flex;
     align-items: center;
     justify-content: center;
     background: transparent;
     margin-right: 1rem;
+    align-self: stretch;
 }
 
 .usuario-card-v2 .ucard-avatar img,
@@ -3703,11 +3709,13 @@ html.dark-theme .status-inactivo {
     .delivery-card .ucard-avatar {
         grid-row: 1 / span 3;
         grid-column: 1;
-        width: 50px;
-        height: 50px;
-        min-width: 50px;
+        width: 55px;
+        height: 100%;
+        min-width: 55px;
+        border-radius: 8px;
         background: transparent;
         margin-right: 0.6rem;
+        align-self: stretch;
     }
     
     .usuario-card-v2 .ucard-body,
