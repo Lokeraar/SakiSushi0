@@ -1270,14 +1270,14 @@ html.dark-theme .btn-secondary:hover {
     gap: 1rem;
 }
 /* Responsive para mesoneros-grid: se adapta como delivery-grid */
-@media (max-width: 1200px) {
-    .mesoneros-grid { grid-template-columns: 1fr; }
-}
 @media (max-width: 768px) {
     .mesoneros-grid { grid-template-columns: 1fr; }
 }
-@media (max-width: 480px) {
-    .mesoneros-grid { grid-template-columns: 1fr; }
+@media (min-width: 769px) and (max-width: 1200px) {
+    .mesoneros-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (min-width: 1201px) {
+    .mesoneros-grid { grid-template-columns: repeat(3, 1fr); }
 }
 /* Mesonero card - Unificada con delivery-card en dimensiones y formato */
 .mesonero-card,
@@ -2619,7 +2619,7 @@ html.dark-theme .tabs-chevron-left, html.dark-theme .tabs-chevron-right { border
 @media (min-width: 769px) {
     .usuarios-grid     { grid-template-columns: repeat(2, 1fr); }
     .mesoneros-grid,
-    .delivery-grid     { grid-template-columns: 1fr; }
+    .delivery-grid     { grid-template-columns: repeat(2, 1fr); }
     .config-grid       { grid-template-columns: repeat(2, 1fr); }
     .qr-grid           { grid-template-columns: repeat(3, 1fr); }
     .dashboard-grid    { grid-template-columns: repeat(3, 1fr); }
@@ -2629,7 +2629,7 @@ html.dark-theme .tabs-chevron-left, html.dark-theme .tabs-chevron-right { border
 @media (min-width: 1201px) {
     .usuarios-grid     { grid-template-columns: repeat(3, 1fr); }
     .mesoneros-grid,
-    .delivery-grid     { grid-template-columns: 1fr; }
+    .delivery-grid     { grid-template-columns: repeat(3, 1fr); }
     .config-grid       { grid-template-columns: repeat(2, 1fr); }
     .qr-grid           { grid-template-columns: repeat(5, 1fr); }
     .dashboard-grid    { grid-template-columns: repeat(4, 1fr); }
