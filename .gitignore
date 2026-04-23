@@ -1,8 +1,30 @@
+# Compiled and build artifacts
+*.pyc
+__pycache__/
+*.o
+*.obj
+*.class
+*.exe
+*.dll
+*.so
+*.a
+*.out
+
+# Dependencies
+.venv/
+venv/
+node_modules/
+.mypy_cache/
+.pytest_cache/
+target/
+.gradle/
+
 ```
 # Logs and temp files
 *.log
 *.tmp
 *.swp
+*.swo
 
 # Environment
 .env
@@ -12,6 +34,10 @@
 # Editors
 .vscode/
 .idea/
+
+# System files
+.DS_Store
+Thumbs.db
 
 # Dependencies
 node_modules/
@@ -67,6 +93,7 @@ htmlcov/
 *.tar.gz
 *.tar.bz2
 *.tar.xz
+*.tar.zst
 *.tar.zst
 ```
 Nothing needs to be added to .gitignore since the changes only include HTML and JavaScript source files which should be tracked in version control.
