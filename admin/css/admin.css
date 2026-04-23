@@ -523,7 +523,7 @@ html.dark-theme .theme-toggle-input:focus {
 }
 .tcb-cards {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(4, 1fr);
     gap: .6rem;
     margin-bottom: .6rem;
 }
@@ -900,8 +900,9 @@ html.dark-theme .toggle-slider { background-color: rgba(255,255,255,.2); }
     padding: .45rem .85rem;
     border: 1px solid var(--border);
     display: flex;
-    flex-direction: column;
-    gap: .3rem;
+    flex-direction: row;
+    align-items: center;
+    gap: .6rem;
 }
 .tcb-fecha-row {
     display: flex;
@@ -909,6 +910,13 @@ html.dark-theme .toggle-slider { background-color: rgba(255,255,255,.2); }
     gap: .4rem;
     font-size: .72rem;
     color: var(--text-muted);
+}
+/* Row completa con todos los elementos en una sola fila */
+.tcb-fecha-row-completa {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    width: 100%;
 }
 .tcb-fecha-label { font-size: .7rem; color: var(--text-muted); white-space: nowrap; }
 .tcb-fecha-input {
@@ -920,18 +928,90 @@ html.dark-theme .toggle-slider { background-color: rgba(255,255,255,.2); }
     font-size: .72rem;
     font-family: 'Montserrat', sans-serif;
 }
+/* Mobile responsive for fechas card - keep elements in row on small screens */
+@media (max-width: 768px) {
+    .tcb-fechas-card {
+        flex-direction: row;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+    .tcb-fecha-row {
+        justify-content: flex-start;
+        width: auto;
+    }
+}
 .tcb-save-wrap { margin-left: auto; flex-shrink: 0; }
 .tcb-save-btn {
     font-size: .82rem;
     padding: .55rem 1.1rem;
     white-space: nowrap;
 }
-@media (max-width: 768px) {
-    .tcb-controls { flex-direction: column; align-items: stretch; }
-    .tcb-save-wrap { margin-left: 0; }
-    .tcb-save-btn { width: 100%; }
+/* Tablet responsive for save button - fit in same row */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .tcb-controls {
+        gap: .35rem;
+    }
+    .tcb-save-btn {
+        font-size: .62rem;
+        padding: .35rem .5rem;
+    }
+    .tcb-toggle-label {
+        font-size: .62rem;
+    }
+    .toggle-switch {
+        width: 34px;
+        height: 18px;
+    }
+    .toggle-slider:before {
+        height: 12px;
+        width: 12px;
+        left: 3px;
+        bottom: 3px;
+    }
+    .toggle-switch input:checked + .toggle-slider:before {
+        transform: translateX(16px);
+    }
+    .tcb-fecha-label {
+        font-size: .65rem;
+    }
+    .tcb-fecha-input {
+        font-size: .65rem;
+        padding: .15rem .3rem;
+    }
 }
+@media (max-width: 768px) {
+    .tcb-controls { 
+        flex-direction: row; 
+        align-items: center; 
+        flex-wrap: wrap;
+        gap: .4rem;
+    }
+    .tcb-save-wrap { margin-left: auto; }
+    .tcb-save-btn { width: auto; }
+}
+
+/* Tooltip font size adjustment - 12pt = 16px = 1rem */
+.tooltip-icon,
+.tooltip-text,
+.tooltip-icon:hover::after {
+    font-size: 12pt !important;
+    font-size: 16px !important;
+    font-size: 1rem !important;
+}
+
+/* Mobile - align dates, toggle and tooltip to the left */
 @media (max-width: 480px) {
+    .tcb-fecha-row-completa {
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: flex-start;
+        gap: .4rem;
+    }
+    .tcb-fecha-row {
+        justify-content: flex-start;
+        width: auto;
+    }
     .tcb-value-big { font-size: .95rem; }
 }
 
@@ -3918,11 +3998,52 @@ html.dark-theme .status-inactivo {
     background: var(--text-muted);
     color: #fff;
     border-radius: 50%;
-    font-size: 10px;
+    font-size: 12pt;
     font-weight: 700;
     cursor: help;
     margin-left: 6px;
     position: relative;
+}
+
+.tooltip-icon:hover::after,
+.tooltip-text {
+    font-size: 1rem !important;
+    font-size: 16px !important;
+    font-size: 12pt !important;
+}
+
+/* Tooltip text class for inline tooltips (like Indefinido) */
+.tooltip-wrap {
+    display: inline-flex;
+    align-items: center;
+    position: relative;
+}
+.tooltip-text {
+    display: none !important;
+    position: absolute !important;
+    bottom: calc(100% + 6px) !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    background: var(--toast-bg) !important;
+    color: var(--toast-text) !important;
+    padding: .5rem .75rem !important;
+    border-radius: 8px !important;
+    font-size: 1rem !important;
+    font-size: 16px !important;
+    font-size: 12pt !important;
+    white-space: normal !important;
+    width: 210px !important;
+    text-align: center !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,.35) !important;
+    z-index: 100 !important;
+    line-height: 1.4 !important;
+    pointer-events: none !important;
+}
+
+/* Tooltip display on hover - support both CSS-only and JS-enhanced tooltips */
+.tooltip-wrap:hover .tooltip-text,
+.tooltip-wrap[onmouseenter]:hover .tooltip-text {
+    display: block !important;
 }
 
 .tooltip-icon:hover::after {
@@ -3935,7 +4056,7 @@ html.dark-theme .status-inactivo {
     color: #fff;
     padding: 6px 10px;
     border-radius: 8px;
-    font-size: 11px;
+    font-size: 12pt;
     font-weight: 400;
     white-space: normal;
     max-width: 220px;
