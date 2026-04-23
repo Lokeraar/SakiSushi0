@@ -218,7 +218,8 @@
                         await window.cargarPlatilloEstrella();
                     }
                     
-                    await window.cargarConfiguracionInicial();
+                    // La configuración y tasas ya se cargaron en restaurarSesionAdmin
+                    
                     await window.cargarMenu();
                     await window.cargarInventario();
                     await window.cargarUsuarios();
@@ -237,13 +238,8 @@
                     // Agregar tarjeta de diferencia de tasa al dashboard
                     window.agregarTarjetaDiferenciaTasa();
                     
-                    window._verificarTasaDeHoy((tasa) => {
-                        const tasaInput = document.getElementById('tasaBaseInput');
-                        if (tasaInput) tasaInput.value = tasa;
-                        window.configGlobal.tasa_cambio = tasa;
-                        window.recalcularTasaEfectiva();
-                        window._verificarAvisoLunes();
-                    });
+                    window._verificarAvisoLunes();
+                    
                     await window._actualizarVentasHoyNeto();
                     await window._actualizarDeliverysHoy();
                     window.actualizarTarjetaDiferenciaTasa();
