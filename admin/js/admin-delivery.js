@@ -21,50 +21,64 @@
     window.renderizarDeliverys = async function() {
         if (window._renderizandoDeliverys) return;
         window._renderizandoDeliverys = true;
-        var grid = document.getElementById('deliverysGrid');
-        if (!grid) { window._renderizandoDeliverys = false; return; }
-        grid.innerHTML = '';
-        try {
+        var container = document.getElementById('deliverysGrid');
+        if (!container) { window._renderizandoDeliverys = false; return; }
+        
+        var deliverys = window.deliverys || [];
+        if (!deliverys.length) {
+            container.innerHTML = '<p style="color:var(--text-muted);font-size:.88rem;text-align:center;padding:2rem">No hay motorizados registrados.</p>';
+            window._renderizandoDeliverys = false;
+            return;
+        }
+
+        var sorted = deliverys.slice().sort(function(a, b) { return a.nombre.localeCompare(b.nombre); });
+        
+        var html = '';
+        for (var i = 0; i < sorted.length; i++) {
+            var d = sorted[i];
+            var acumulado = await window.obtenerAcumuladoDelivery(d.id);
             var tasa = window.configGlobal?.tasa_efectiva || window.configGlobal?.tasa_cambio || 400;
-            var deliverys = window.deliverys || [];
-            for (var i = 0; i < deliverys.length; i++) {
-                var d = deliverys[i];
-                var acumulado = await window.obtenerAcumuladoDelivery(d.id);
-                var acumUsd   = tasa > 0 ? acumulado / tasa : 0;
-                var avatar    = d.foto
-                    ? '<div class="ucard-avatar"><img src="' + d.foto + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;cursor:pointer" onclick="window.expandirImagen(this.src)"></div>'
-                    : '<div class="ucard-avatar" style="background:linear-gradient(135deg,var(--delivery),#00838F);border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:1.4rem"><i class="fas fa-motorcycle"></i></div>';
-                var dbadge = d.activo
-                    ? '<span class="ucard-status-inline" style="color:var(--success)"><i class="fas fa-check-circle"></i> Activo</span>'
-                    : '<span class="ucard-status-inline" style="color:var(--text-muted)"><i class="fas fa-circle"></i> Inactivo</span>';
-                var toggleClass = d.activo ? 'btn-toggle-on' : 'btn-toggle-off';
-                var toggleTxt   = d.activo ? 'Inhabilitar' : 'Activar';
-                var toggleVal   = String(!d.activo);
-                var card = document.createElement('div');
-                card.className = 'card-standard delivery-card';
-                card.style.borderLeftColor = 'var(--delivery)';
-                card.innerHTML = avatar
-                    + '<div class="ucard-body">'
-                    +   '<div class="ucard-top">'
-                    +     '<div class="ucard-names">'
-                    +       '<div class="ucard-line1"><span class="delivery-nombre">' + d.nombre + '</span>' + dbadge + '</div>'
-                    +       '<div class="ucard-line2"><span style="font-size:.78rem;color:var(--delivery);font-weight:600">Total Acumulado ' + window.formatUSD(acumUsd) + ' / ' + window.formatBs(acumulado) + '</span></div>'
-                    +       '<div class="ucard-line3">'
-                    +         '<button class="btn-sm" style="background:linear-gradient(135deg,var(--success),#2E7D32);color:#fff;white-space:nowrap;font-size:.75rem;padding:.35rem .6rem" onclick="window.mostrarPagoDelivery(\'' + d.id + '\')">'
-                    +           '<i class="fas fa-hand-holding-usd"></i> Pagado'
-                    +         '</button>'
-                    +         '<button class="btn-toggle ' + toggleClass + '" style="font-size:.75rem;padding:.35rem .6rem" onclick="window.toggleDeliveryActivo(\'' + d.id + '\',' + toggleVal + ')">' + toggleTxt + '</button>'
-                    +         '<div class="ucard-actions-right">'
-                    +           '<button class="btn-icon edit" onclick="window.editarDelivery(\'' + d.id + '\')" title="Editar"><i class="fas fa-edit"></i></button>'
-                    +           '<button class="btn-icon delete" onclick="window.eliminarDelivery(\'' + d.id + '\')" title="Eliminar"><i class="fas fa-trash"></i></button>'
-                    +         '</div>'
-                    +       '</div>'
-                    +     '</div>'
-                    +   '</div>'
-                    + '</div>';
-                grid.appendChild(card);
-            }
-        } finally { window._renderizandoDeliverys = false; }
+            var acumUsd = tasa > 0 ? acumulado / tasa : 0;
+            
+            var inicial = d.nombre.charAt(0).toUpperCase();
+            var avatar = d.foto
+                ? '<div class="ucard-avatar"><img src="' + d.foto + '" style="width:100%;height:100%;object-fit:cover;border-radius:8px;cursor:pointer" onclick="window.expandirImagen(this.src)"></div>'
+                : '<div class="ucard-avatar"><div style="width:100%;height:100%;font-size:1.4rem;border-radius:8px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--delivery),#00838F);color:#fff">' + inicial + '</div></div>';
+            
+            var dbadge = d.activo
+                ? '<span class="ucard-status-inline" style="color:var(--success);margin-left:auto"><i class="fas fa-check-circle"></i> ACTIVO</span>'
+                : '<span class="ucard-status-inline" style="color:var(--text-muted);margin-left:auto"><i class="fas fa-circle"></i> INACTIVO</span>';
+            
+            var toggleClass = d.activo ? 'btn-toggle-on' : 'btn-toggle-off';
+            var toggleTxt   = d.activo ? 'Inhabilitar' : 'Activar';
+            var toggleVal   = String(!d.activo);
+
+            html += '<div class="card-standard delivery-card" data-delivery-id="' + d.id + '" id="delivery-card-' + d.id + '" style="border-left-color:var(--delivery)">'
+                + avatar
+                + '<div class="ucard-body">'
+                +   '<div class="ucard-top">'
+                +     '<div class="ucard-names">'
+                +       '<div class="ucard-line1"><span class="delivery-nombre">' + d.nombre + '</span>' + dbadge + '</div>'
+                +       '<div class="ucard-line2" style="margin-top:.35rem;display:flex;align-items:center;gap:.5rem;flex-wrap:wrap">'
+                +         '<span class="delivery-pendiente" style="font-size:.9rem;font-weight:600;color:var(--delivery)">Total Acumulado ' + window.formatUSD(acumUsd) + ' / ' + window.formatBs(acumulado) + '</span>'
+                +       '</div>'
+                +       '<div class="ucard-line3" style="margin-top:.5rem;display:flex;align-items:center;gap:.4rem">'
+                +         '<button class="btn-primary btn-pagado-delivery" style="font-size:.7rem;padding:.3rem .5rem" onclick="window.mostrarPagoDelivery(\'' + d.id + '\')" title="Registrar pago">'
+                +           '<i class="fas fa-hand-holding-usd"></i> Pagar'
+                +         '</button>'
+                +         '<button class="btn-toggle ' + toggleClass + '" style="font-size:.7rem;padding:.3rem .5rem" onclick="window.toggleDeliveryActivo(\'' + d.id + '\',' + toggleVal + ')">' + toggleTxt + '</button>'
+                +         '<div class="ucard-actions-right">'
+                +           '<button class="btn-icon edit" onclick="window.editarDelivery(\'' + d.id + '\')" title="Editar"><i class="fas fa-edit"></i></button>'
+                +           '<button class="btn-icon delete" onclick="window.eliminarDelivery(\'' + d.id + '\')" title="Eliminar"><i class="fas fa-trash"></i></button>'
+                +         '</div>'
+                +       '</div>'
+                +     '</div>'
+                +   '</div>'
+                + '</div>'
+                + '</div>';
+        }
+        container.innerHTML = html;
+        window._renderizandoDeliverys = false;
     };
 
     window.obtenerAcumuladoDelivery = async function(deliveryId) {
