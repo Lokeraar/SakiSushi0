@@ -193,6 +193,7 @@
         
         if (previewDiv && previewDiv.style.display === 'flex') {
             const removePreviewBtn = document.createElement('button');
+            removePreviewBtn.type = 'button'; // Evitar que actúe como submit
             removePreviewBtn.className = 'preview-remove-btn';
             removePreviewBtn.innerHTML = '<i class="fas fa-times"></i>';
             removePreviewBtn.style.cssText = 'position:absolute;top:4px;right:4px;background:transparent;color:#fff;border:none;border-radius:50%;width:24px;height:24px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.85rem;z-index:10;opacity:0.9;transition:opacity 0.2s;text-shadow:0 1px 3px rgba(0,0,0,0.5)';
@@ -200,6 +201,7 @@
             removePreviewBtn.onmouseleave = () => removePreviewBtn.style.opacity = '0.9';
             removePreviewBtn.title = 'Eliminar imagen';
             removePreviewBtn.onclick = (e) => {
+                e.preventDefault();
                 e.stopPropagation();
                 // Al eliminar la imagen, habilitar el campo URL y limpiar variables
                 currentImagenFile = null;
@@ -211,7 +213,7 @@
                 }
                 if (previewDiv) previewDiv.style.display = 'none';
                 if (previewImg) previewImg.src = '';
-                if (removeBtn) removeBtn.remove();
+                if (removePreviewBtn) removePreviewBtn.remove();
             };
             previewDiv.style.position = 'relative';
             previewDiv.appendChild(removePreviewBtn);
