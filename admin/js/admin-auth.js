@@ -189,6 +189,12 @@
                         if (tasaInput) tasaInput.value = tasa;
                         window.configGlobal.tasa_cambio = tasa;
                         window.recalcularTasaEfectiva();
+                        // Actualizar tarjeta de diferencia de tasa después de cargar tasas
+                        setTimeout(() => {
+                            if (typeof window.actualizarTarjetaDiferenciaTasa === 'function') {
+                                window.actualizarTarjetaDiferenciaTasa();
+                            }
+                        }, 500);
                         window._verificarAvisoLunes();
                     });
                     await window._actualizarVentasHoyNeto();
@@ -231,6 +237,25 @@
             if (user.nombre) {
                 if (headerUsuarioNombreDesktop) headerUsuarioNombreDesktop.textContent = user.nombre;
                 if (headerUsuarioNombreMobile) headerUsuarioNombreMobile.textContent = user.nombre;
+            }
+            
+            // Cargar configuración inicial para obtener tasa de cambio y actualizar tarjeta de diferencia
+            try {
+                await window.cargarConfiguracionInicial();
+                window._verificarTasaDeHoy((tasa) => {
+                    const tasaInput = document.getElementById('tasaBaseInput');
+                    if (tasaInput) tasaInput.value = tasa;
+                    window.configGlobal.tasa_cambio = tasa;
+                    window.recalcularTasaEfectiva();
+                    // Actualizar tarjeta de diferencia de tasa después de cargar tasas
+                    setTimeout(() => {
+                        if (typeof window.actualizarTarjetaDiferenciaTasa === 'function') {
+                            window.actualizarTarjetaDiferenciaTasa();
+                        }
+                    }, 500);
+                });
+            } catch (e) {
+                console.error('Error cargando configuración al restaurar sesión:', e);
             }
             
             return true;
