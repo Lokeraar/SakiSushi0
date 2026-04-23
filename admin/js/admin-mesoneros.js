@@ -386,7 +386,6 @@
             +       '<option value="efectivo_bs">Efectivo Bs</option>'
             +       '<option value="efectivo_usd">Efectivo USD</option>'
             +       '<option value="pago_movil">Pago Móvil</option>'
-            +       '<option value="punto_venta">Punto de Venta</option>'
             +     '</select>'
             +   '</div>'
             +   '<div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.5rem">'
