@@ -230,7 +230,7 @@
                                 <input type="date" id="aumentoHasta" class="tcb-fecha-input">
                                 <span class="tcb-toggle-label">Indefinido</span>
                                 <label class="toggle-switch"><input type="checkbox" id="aumentoIndefinido"><span class="toggle-slider"></span></label>
-                                <span class="tooltip-wrap" style="display:inline-flex;align-items:center;cursor:help;margin-left:.3rem">
+                                <span class="tooltip-wrap" style="display:inline-flex;align-items:center;cursor:help;margin-left:.3rem" onmouseenter="this.querySelector('.tooltip-text').style.display='block'" onmouseleave="this.querySelector('.tooltip-text').style.display='none'">
                                     <span style="display:inline-flex;align-items:center;justify-content:center;width:14px;height:14px;background:var(--text-muted);color:#fff;border-radius:50%;font-size:.6rem;font-weight:700">?</span>
                                     <span class="tooltip-text">Activa esto si quieres que el aumento siga sin limite de tiempo. Si lo dejas sin marcar, el aumento se detiene en la fecha "Hasta".</span>
                                 </span>
