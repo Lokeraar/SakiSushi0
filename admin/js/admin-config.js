@@ -56,6 +56,9 @@
             document.getElementById('aumentoHasta').value = window.configGlobal.aumento_hasta.split('T')[0];
         if (window.configGlobal.aumento_indefinido && document.getElementById('aumentoIndefinido'))
             document.getElementById('aumentoIndefinido').checked = true;
+        // Mostrar fechas card si hay aumento activo (diario o semanal)
+        const algunAumentoActivo = (window.configGlobal.aumento_activo || window.configGlobal.aumento_semanal);
+        document.getElementById('tasaFechasDiv').style.display = algunAumentoActivo ? 'flex' : 'none';
         if (typeof _actualizarLabelAumento === 'function') _actualizarLabelAumento();
     };
 
