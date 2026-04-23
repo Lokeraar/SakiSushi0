@@ -1266,15 +1266,15 @@ html.dark-theme .btn-secondary:hover {
 .delivery-grid,
 .mesoneros-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: 1fr;
     gap: 1rem;
 }
 /* Responsive para mesoneros-grid: se adapta como delivery-grid */
 @media (max-width: 1200px) {
-    .mesoneros-grid { grid-template-columns: repeat(2, 1fr); }
+    .mesoneros-grid { grid-template-columns: 1fr; }
 }
 @media (max-width: 768px) {
-    .mesoneros-grid { grid-template-columns: 1fr 1fr; }
+    .mesoneros-grid { grid-template-columns: 1fr; }
 }
 @media (max-width: 480px) {
     .mesoneros-grid { grid-template-columns: 1fr; }
@@ -2206,9 +2206,9 @@ html.dark-theme .ingrediente-row {
     .content { padding: .85rem; }
     .pane-header { flex-direction: column; align-items: flex-start; }
     .usuarios-grid { grid-template-columns: 1fr; }
-    /* Mesoneros y deliverys: 2 columnas en tablet/móvil grande */
+    /* Mesoneros y deliverys: 1 columna en tablet/móvil */
     .mesoneros-grid,
-    .delivery-grid { grid-template-columns: 1fr 1fr; }
+    .delivery-grid { grid-template-columns: 1fr; }
     .config-section { max-width: 100%; }
     .reportes-filters { flex-direction: column; }
 }
@@ -2619,7 +2619,7 @@ html.dark-theme .tabs-chevron-left, html.dark-theme .tabs-chevron-right { border
 @media (min-width: 769px) {
     .usuarios-grid     { grid-template-columns: repeat(2, 1fr); }
     .mesoneros-grid,
-    .delivery-grid     { grid-template-columns: repeat(2, 1fr); }
+    .delivery-grid     { grid-template-columns: 1fr; }
     .config-grid       { grid-template-columns: repeat(2, 1fr); }
     .qr-grid           { grid-template-columns: repeat(3, 1fr); }
     .dashboard-grid    { grid-template-columns: repeat(3, 1fr); }
@@ -2629,7 +2629,7 @@ html.dark-theme .tabs-chevron-left, html.dark-theme .tabs-chevron-right { border
 @media (min-width: 1201px) {
     .usuarios-grid     { grid-template-columns: repeat(3, 1fr); }
     .mesoneros-grid,
-    .delivery-grid     { grid-template-columns: repeat(3, 1fr); }
+    .delivery-grid     { grid-template-columns: 1fr; }
     .config-grid       { grid-template-columns: repeat(2, 1fr); }
     .qr-grid           { grid-template-columns: repeat(5, 1fr); }
     .dashboard-grid    { grid-template-columns: repeat(4, 1fr); }
@@ -2637,9 +2637,9 @@ html.dark-theme .tabs-chevron-left, html.dark-theme .tabs-chevron-right { border
     .inv-list-col      { flex: 0 0 300px; }
 }
 @media (max-width: 768px) {
-    /* En tablet/móvil grande: 2 columnas para mesoneros y deliverys */
+    /* En tablet/móvil grande: 1 columna para mesoneros y deliverys */
     .mesoneros-grid,
-    .delivery-grid     { grid-template-columns: 1fr 1fr; }
+    .delivery-grid     { grid-template-columns: 1fr; }
     .usuarios-grid     { grid-template-columns: 1fr; }
     .qr-grid           { grid-template-columns: repeat(2, 1fr); }
 }
