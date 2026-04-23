@@ -307,7 +307,6 @@
             var tasa = window.configGlobal?.tasa_efectiva || window.configGlobal?.tasa_cambio || 400;
             var r = await window.supabaseClient.from('entregas_delivery')
                 .select('*, deliverys(nombre), pedidos(id, mesa, cliente_nombre, items, parroquia)')
-                .eq('pagado', false)
                 .order('fecha_entrega', { ascending: false }).limit(5);
             if (r.error) throw r.error;
             var lista = r.data || [];
@@ -351,7 +350,6 @@
             var r = await window.supabaseClient.from('entregas_delivery')
                 .select('*, deliverys(nombre), pedidos(id, mesa, cliente_nombre, items, parroquia)')
                 .gte('fecha_entrega', hoy.toISOString()).lt('fecha_entrega', man.toISOString())
-                .eq('pagado', false)
                 .order('fecha_entrega', { ascending: false });
             var lista  = r.data || [];
             var totBs  = lista.reduce(function(s,e){ return s+(e.monto_bs||0); },0);
