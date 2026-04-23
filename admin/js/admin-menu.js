@@ -332,19 +332,29 @@
             opt.textContent = cat;
             select.appendChild(opt);
         });
-        select.addEventListener('change', (e) => { window.cargarSubcategoriasSelect(e.target.value); });
+        select.addEventListener('change', (e) => { window.cargarSubcategoriasSelect(e.target.value, null); });
     };
 
-    window.cargarSubcategoriasSelect = function(categoria) {
+    window.cargarSubcategoriasSelect = function(categoria, valorSubcategoria = null) {
         const select = document.getElementById('platilloSubcategoria');
+        const wrap = document.getElementById('subcategoriaContainer');
         select.innerHTML = '<option value="">Ninguna</option>';
         if (categoria && window.categoriasMenu && window.categoriasMenu[categoria]) {
+            // Hay subcategorías, mantener visible el contenedor
+            if (wrap) wrap.style.display = 'block';
             window.categoriasMenu[categoria].forEach(sub => {
                 const opt = document.createElement('option');
                 opt.value = sub;
                 opt.textContent = sub;
                 select.appendChild(opt);
             });
+            // Restaurar el valor de la subcategoría si se proporcionó
+            if (valorSubcategoria !== null) {
+                select.value = valorSubcategoria;
+            }
+        } else {
+            // No hay subcategorías, ocultar contenedor
+            if (wrap) wrap.style.display = 'none';
         }
     };
 
@@ -489,7 +499,7 @@
         window.cargarCategoriasSelect();
         document.getElementById('platilloNombre').value = platillo.nombre || '';
         document.getElementById('platilloCategoria').value = platillo.categoria || '';
-        document.getElementById('platilloSubcategoria').value = platillo.subcategoria || '';
+        // No establecer directamente el valor de subcategoría aquí, se hará en cargarSubcategoriasSelect
         document.getElementById('platilloPrecio').value = platillo.precio || '';
         document.getElementById('platilloDescripcion').value = platillo.descripcion || '';
         document.getElementById('platilloDisponible').value = platillo.disponible ? 'true' : 'false';
@@ -540,7 +550,7 @@
             setupPlatilloModalEvents();
         }
         
-        window.cargarSubcategoriasSelect(platillo.categoria);
+        window.cargarSubcategoriasSelect(platillo.categoria, platillo.subcategoria || null);
         document.getElementById('ingredientesContainer').innerHTML = '';
         if (platillo.ingredientes) {
             Object.entries(platillo.ingredientes).forEach(([ingId, ingInfo]) => {
@@ -613,7 +623,7 @@
         }
     };
 
-    window._onCategoriaChange = function() {
+    window._onCategoriaChange = function(forceExpand = false) {
         const cat = document.getElementById('platilloCategoria')?.value;
         const wrap = document.getElementById('subcategoriaContainer');
         const sel  = document.getElementById('platilloSubcategoria');
