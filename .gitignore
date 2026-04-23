@@ -19,6 +19,7 @@ node_modules/
 target/
 .gradle/
 
+```
 # Logs and temp files
 *.log
 *.tmp
@@ -28,7 +29,7 @@ target/
 # Environment
 .env
 .env.local
-.env.*
+*.env.*
 
 # Editors
 .vscode/
@@ -37,6 +38,33 @@ target/
 # System files
 .DS_Store
 Thumbs.db
+
+# Dependencies
+node_modules/
+venv/
+.venv/
+__pycache__/
+.mypy_cache/
+.pytest_cache/
+dist/
+build/
+target/
+.gradle/
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Compiled files
+*.pyc
+*.class
+*.o
+*.exe
+*.dll
+*.so
+*.a
+*.obj
+*.out
 
 # Coverage
 coverage/
@@ -66,3 +94,6 @@ htmlcov/
 *.tar.bz2
 *.tar.xz
 *.tar.zst
+*.tar.zst
+```
+Nothing needs to be added to .gitignore since the changes only include HTML and JavaScript source files which should be tracked in version control.
