@@ -134,20 +134,17 @@
             totalUsdEl.textContent = totalUsd.toFixed(2).replace('.', ',');
         }
         if (totalBsEl) {
-            // Calcular Bs usando SIEMPRE la tasa efectiva actual multiplicada por el total en USD
-            // Esto asegura consistencia: $6,50 * 516.50 = Bs 3.357,25 (no usar total_bs de BD que puede ser histórico)
-            const tasaEfectiva = Number(window.configGlobal?.tasa_efectiva || 400);
-            // El valor total_usd viene de la BD como NUMERIC (ej: 6.50), lo convertimos correctamente
-            let totalUsd = 0;
-            if (typeof platillo.total_usd === 'string') {
-                // Si viene como string, convertir directamente a float (el punto decimal es válido)
-                totalUsd = parseFloat(platillo.total_usd) || 0;
+            // Usar el total_bs histórico acumulado de la BD
+            // Cada venta ya fue guardada con su subtotal_bs usando la tasa efectiva del día correspondiente
+            // Esto asegura que el acumulado semanal refleje las tasas reales de cada día
+            let totalBs = 0;
+            if (typeof platillo.total_bs === 'string') {
+                totalBs = parseFloat(platillo.total_bs) || 0;
             } else {
-                totalUsd = Number(platillo.total_usd) || 0;
+                totalBs = Number(platillo.total_bs) || 0;
             }
-            const totalBsCalculado = totalUsd * tasaEfectiva;
             
-            totalBsEl.textContent = window.formatBs(totalBsCalculado);
+            totalBsEl.textContent = window.formatBs(totalBs);
         }
 
         // Actualizar indicadores
