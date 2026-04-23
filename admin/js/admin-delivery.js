@@ -239,13 +239,14 @@
         try {
             var tasa = window.configGlobal?.tasa_efectiva || window.configGlobal?.tasa_cambio || 400;
             var r = await window.supabaseClient.from('entregas_delivery')
-                .select('*, deliverys(nombre), pedidos(id, mesa, cliente_nombre, items)')
+                .select('*, deliverys(nombre), pedidos(id, mesa, cliente_nombre, items, parroquia)')
                 .order('fecha_entrega', { ascending: false }).limit(5);
             if (r.error) throw r.error;
             var lista = r.data || [];
-            if (!lista.length) { tbody.innerHTML='<tr><td colspan="4" style="text-align:center;padding:1.5rem;color:var(--text-muted)">Sin viajes registrados</td></tr>'; return; }
+            if (!lista.length) { tbody.innerHTML='<tr><td colspan="5" style="text-align:center;padding:1.5rem;color:var(--text-muted)">Sin viajes registrados</td></tr>'; return; }
             tbody.innerHTML = lista.map(function(e) {
                 var motor = e.deliverys ? e.deliverys.nombre : '—';
+                var parroquia = e.pedidos && e.pedidos.parroquia ? e.pedidos.parroquia : '—';
                 var resumen = '—';
                 if (e.pedidos && e.pedidos.mesa) resumen = 'Mesa '+e.pedidos.mesa;
                 else if (e.pedidos && e.pedidos.cliente_nombre) resumen = e.pedidos.cliente_nombre;
@@ -259,13 +260,14 @@
                 return '<tr>'
                     + '<td style="padding:.6rem 1rem;border-bottom:1px solid var(--border);font-size:.82rem;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+resumen+'</td>'
                     + '<td style="padding:.6rem 1rem;border-bottom:1px solid var(--border);font-size:.82rem;font-weight:600">'+motor+'</td>'
+                    + '<td style="padding:.6rem 1rem;border-bottom:1px solid var(--border);font-size:.82rem">'+parroquia+'</td>'
                     + '<td style="padding:.6rem 1rem;border-bottom:1px solid var(--border);font-size:.82rem;font-weight:700;color:var(--delivery)">'+window.formatUSD(mUsd)+'<br><span style="font-size:.72rem;color:var(--text-muted)">'+window.formatBs(mBs)+'</span></td>'
                     + '<td style="padding:.6rem 1rem;border-bottom:1px solid var(--border);font-size:.78rem;color:var(--text-muted)">'+hora+'</td>'
                     + '</tr>';
             }).join('');
         } catch(err) {
             var tb2=document.getElementById('ultimosViajesTbody');
-            if(tb2) tb2.innerHTML='<tr><td colspan="4" style="text-align:center;color:var(--danger)">Error al cargar</td></tr>';
+            if(tb2) tb2.innerHTML='<tr><td colspan="5" style="text-align:center;color:var(--danger)">Error al cargar</td></tr>';
         }
     };
 
@@ -278,7 +280,7 @@
             var hoy  = new Date(); hoy.setHours(0,0,0,0);
             var man  = new Date(hoy); man.setDate(man.getDate()+1);
             var r = await window.supabaseClient.from('entregas_delivery')
-                .select('*, deliverys(nombre), pedidos(id, mesa, cliente_nombre, items)')
+                .select('*, deliverys(nombre), pedidos(id, mesa, cliente_nombre, items, parroquia)')
                 .gte('fecha_entrega', hoy.toISOString()).lt('fecha_entrega', man.toISOString())
                 .order('fecha_entrega', { ascending: false });
             var lista  = r.data || [];
@@ -286,6 +288,7 @@
             var totUsd = tasa>0 ? totBs/tasa : 0;
             var rows = lista.map(function(e) {
                 var motor = e.deliverys ? e.deliverys.nombre : '—';
+                var parroquia = e.pedidos && e.pedidos.parroquia ? e.pedidos.parroquia : '—';
                 var resumen = '—';
                 if (e.pedidos && e.pedidos.mesa) resumen='Mesa '+e.pedidos.mesa;
                 else if (e.pedidos && e.pedidos.cliente_nombre) resumen=e.pedidos.cliente_nombre;
@@ -297,13 +300,14 @@
                 return '<tr>'
                     +'<td style="padding:.55rem .85rem;border-bottom:1px solid var(--border);font-size:.8rem">'+resumen+'</td>'
                     +'<td style="padding:.55rem .85rem;border-bottom:1px solid var(--border);font-size:.82rem;font-weight:600">'+motor+'</td>'
+                    +'<td style="padding:.55rem .85rem;border-bottom:1px solid var(--border);font-size:.82rem">'+parroquia+'</td>'
                     +'<td style="padding:.55rem .85rem;border-bottom:1px solid var(--border);font-size:.82rem;font-weight:700;color:var(--delivery)">'+window.formatUSD(mUsd)+' / '+window.formatBs(mBs)+'</td>'
                     +'<td style="padding:.55rem .85rem;border-bottom:1px solid var(--border);font-size:.78rem;color:var(--text-muted)">'+hora+'</td>'
                     +'</tr>';
             }).join('');
             var pl=lista.length;
             var totLine=pl+' envío'+(pl!==1?'s':'')+' · Total: '+window.formatUSD(totUsd)+' / '+window.formatBs(totBs);
-            var emptyRow='<tr><td colspan="4" style="text-align:center;padding:1.5rem;color:var(--text-muted)">Sin envíos hoy</td></tr>';
+            var emptyRow='<tr><td colspan="5" style="text-align:center;padding:1.5rem;color:var(--text-muted)">Sin envíos hoy</td></tr>';
             var ov=document.createElement('div');
             ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:10001;display:flex;align-items:center;justify-content:center;padding:1rem;backdrop-filter:blur(3px)';
             ov.innerHTML='<div style="background:var(--card-bg);border-radius:16px;max-width:700px;width:100%;max-height:85vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 20px 40px rgba(0,0,0,.4)">'
@@ -315,6 +319,7 @@
                 +'<thead><tr style="background:var(--secondary)">'
                 +'<th style="padding:.6rem .85rem;text-align:left;font-size:.72rem;text-transform:uppercase;color:var(--text-muted);font-weight:700">Resumen</th>'
                 +'<th style="padding:.6rem .85rem;text-align:left;font-size:.72rem;text-transform:uppercase;color:var(--text-muted);font-weight:700">Motorizado</th>'
+                +'<th style="padding:.6rem .85rem;text-align:left;font-size:.72rem;text-transform:uppercase;color:var(--text-muted);font-weight:700">Delivery hacia</th>'
                 +'<th style="padding:.6rem .85rem;text-align:left;font-size:.72rem;text-transform:uppercase;color:var(--text-muted);font-weight:700">Monto</th>'
                 +'<th style="padding:.6rem .85rem;text-align:left;font-size:.72rem;text-transform:uppercase;color:var(--text-muted);font-weight:700">Hora</th>'
                 +'</tr></thead>'
