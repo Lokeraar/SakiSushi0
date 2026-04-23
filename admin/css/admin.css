@@ -842,6 +842,11 @@ html.dark-theme .toggle-slider { background-color: rgba(255,255,255,.2); }
     font-size: .72rem;
     color: var(--text-muted);
 }
+/* Row completa con todos los elementos en una sola fila */
+.tcb-fecha-row-completa {
+    flex-wrap: wrap;
+    width: 100%;
+}
 .tcb-fecha-label { font-size: .7rem; color: var(--text-muted); white-space: nowrap; }
 .tcb-fecha-input {
     padding: .2rem .4rem;
@@ -870,9 +875,28 @@ html.dark-theme .toggle-slider { background-color: rgba(255,255,255,.2); }
 }
 /* Tablet responsive for save button - fit in same row */
 @media (min-width: 769px) and (max-width: 1024px) {
+    .tcb-controls {
+        gap: .4rem;
+    }
     .tcb-save-btn {
-        font-size: .7rem;
-        padding: .45rem .65rem;
+        font-size: .68rem;
+        padding: .4rem .55rem;
+    }
+    .tcb-toggle-label {
+        font-size: .65rem;
+    }
+    .toggle-switch {
+        width: 36px;
+        height: 20px;
+    }
+    .toggle-slider:before {
+        height: 14px;
+        width: 14px;
+        left: 3px;
+        bottom: 3px;
+    }
+    .toggle-switch input:checked + .toggle-slider:before {
+        transform: translateX(16px);
     }
 }
 @media (max-width: 768px) {
@@ -880,10 +904,53 @@ html.dark-theme .toggle-slider { background-color: rgba(255,255,255,.2); }
     .tcb-save-wrap { margin-left: 0; }
     .tcb-save-btn { width: 100%; }
 }
-/* Mobile - align dates, toggle and tooltip to the left */
+
+/* Tooltip font size adjustment - 12pt = 16px = 1rem */
+.tooltip-icon,
+.tooltip-text,
+.tooltip-icon:hover::after {
+    font-size: 12pt !important;
+    font-size: 16px !important;
+    font-size: 1rem !important;
+}
+
+/* Tablet - make save button smaller to fit in same row */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .tcb-controls {
+        gap: .4rem;
+    }
+    .tcb-save-btn {
+        font-size: .68rem;
+        padding: .4rem .55rem;
+    }
+    .tcb-toggle-label {
+        font-size: .65rem;
+    }
+    .toggle-switch {
+        width: 36px;
+        height: 20px;
+    }
+    .toggle-slider:before {
+        height: 14px;
+        width: 14px;
+        left: 3px;
+        bottom: 3px;
+    }
+    .toggle-switch input:checked + .toggle-slider:before {
+        transform: translateX(16px);
+    }
+}
+
+/* Mobile - align dates, toggle and tooltip to the left and stack vertically */
 @media (max-width: 480px) {
+    .tcb-fecha-row-completa {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: .5rem;
+    }
     .tcb-fecha-row {
         justify-content: flex-start;
+        width: 100%;
     }
     .tcb-value-big { font-size: .95rem; }
 }
