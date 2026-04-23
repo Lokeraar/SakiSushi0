@@ -294,9 +294,27 @@
         const card = document.getElementById('platilloEstrellaCard');
         if (!card) return;
         
-        // Pausa en hover (desktop) - no pausar si se hace hover sobre el botón de analítica
+        // Botones de navegación
+        const btnPrev = document.getElementById('platilloNavPrev');
+        const btnNext = document.getElementById('platilloNavNext');
+        
+        if (btnPrev) {
+            btnPrev.addEventListener('click', function(e) {
+                e.stopPropagation();
+                window.anteriorPlatillo();
+            });
+        }
+        
+        if (btnNext) {
+            btnNext.addEventListener('click', function(e) {
+                e.stopPropagation();
+                window.siguientePlatillo();
+            });
+        }
+        
+        // Pausa en hover (desktop) - no pausar si se hace hover sobre el botón de analítica o navegación
         card.addEventListener('mouseenter', (e) => {
-            if (e.target.closest('.tcb-estrella-btn')) return;
+            if (e.target.closest('.tcb-estrella-btn') || e.target.closest('.carousel-nav-btn')) return;
             window.isHoveringPlatillo = true;
         });
         
@@ -304,14 +322,14 @@
             window.isHoveringPlatillo = false;
         });
         
-        // Pausa en touch (móvil/tablet) - no pausar si se toca el botón de analítica
+        // Pausa en touch (móvil/tablet) - no pausar si se toca el botón de analítica o navegación
         card.addEventListener('touchstart', (e) => {
-            if (e.target.closest('.tcb-estrella-btn')) return;
+            if (e.target.closest('.tcb-estrella-btn') || e.target.closest('.carousel-nav-btn')) return;
             window.isTouchingPlatillo = true;
         }, { passive: true });
         
         card.addEventListener('touchend', (e) => {
-            if (e.target.closest('.tcb-estrella-btn')) return;
+            if (e.target.closest('.tcb-estrella-btn') || e.target.closest('.carousel-nav-btn')) return;
             window.isTouchingPlatillo = false;
         }, { passive: true });
         
@@ -328,19 +346,19 @@
             });
         }
         
-        // Swipe touch para navegación (solo si no es en el botón de analítica)
+        // Swipe touch para navegación (solo si no es en el botón de analítica o navegación)
         let touchStartX = 0;
         let touchEndX = 0;
         
         card.addEventListener('touchstart', (e) => {
-            // No iniciar swipe si se toca el botón de analítica
-            if (e.target.closest('.tcb-estrella-btn')) return;
+            // No iniciar swipe si se toca el botón de analítica o navegación
+            if (e.target.closest('.tcb-estrella-btn') || e.target.closest('.carousel-nav-btn')) return;
             touchStartX = e.changedTouches[0].screenX;
         }, { passive: true });
         
         card.addEventListener('touchend', (e) => {
-            // No finalizar swipe si se tocó el botón de analítica
-            if (e.target.closest('.tcb-estrella-btn')) return;
+            // No finalizar swipe si se tocó el botón de analítica o navegación
+            if (e.target.closest('.tcb-estrella-btn') || e.target.closest('.carousel-nav-btn')) return;
             touchEndX = e.changedTouches[0].screenX;
             handleSwipe();
         }, { passive: true });
