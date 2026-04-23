@@ -1064,7 +1064,7 @@ html.dark-theme .btn-secondary:hover {
     align-items: center;
     justify-content: center;
     background: transparent;
-    height: auto;
+    height: 90px;
     align-self: stretch;
 }
 .mesonero-card .ucard-body,
@@ -1156,7 +1156,7 @@ html.dark-theme .btn-secondary:hover {
     .delivery-card .ucard-avatar {
         width: 56px;
         min-width: 56px;
-        height: auto;
+        height: 70px;
         align-self: stretch;
     }
     .mesonero-card .ucard-line2,
@@ -1802,35 +1802,6 @@ html.dark-theme .ingrediente-row {
 .usuario-rol.cajero { background: #ffffff; color: var(--info); }
 
 /* Deliverys */
-.delivery-list {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: .85rem;
-}
-.delivery-item {
-    background: var(--card-bg);
-    border-radius: 14px;
-    padding: 1rem 1.3rem;
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-    box-shadow: var(--shadow-sm);
-    border: 1px solid var(--border);
-    border-left: 4px solid var(--delivery);
-    transition: var(--transition);
-}
-.delivery-item:hover { box-shadow: var(--shadow-md); }
-.delivery-icon {
-    width: 40px; height: 40px;
-    border-radius: 10px;
-    background: linear-gradient(135deg, var(--delivery), #00838F);
-    color: #fff;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 1.1rem;
-    flex-shrink: 0;
-}
-.delivery-nombre { font-weight: 700; font-size: .9rem; color: var(--text-dark); flex: 1; }
-.delivery-actions { display: flex; gap: .35rem; flex-wrap: wrap; align-items: center; }
 
 /* Propinas stats */
 .propina-card {
@@ -2401,7 +2372,6 @@ html.dark-theme .tabs-chevron-left, html.dark-theme .tabs-chevron-right { border
 /* Responsive breakpoints */
 @media (min-width: 769px) {
     .usuarios-grid     { grid-template-columns: repeat(2, 1fr); }
-    .delivery-list     { grid-template-columns: repeat(2, 1fr); }
     .mesoneros-grid    { grid-template-columns: repeat(2, 1fr); }
     .config-grid       { grid-template-columns: repeat(2, 1fr); }
     .qr-grid           { grid-template-columns: repeat(3, 1fr); }
@@ -2411,7 +2381,6 @@ html.dark-theme .tabs-chevron-left, html.dark-theme .tabs-chevron-right { border
 }
 @media (min-width: 1201px) {
     .usuarios-grid     { grid-template-columns: repeat(3, 1fr); }
-    .delivery-list     { grid-template-columns: repeat(3, 1fr); }
     .mesoneros-grid    { grid-template-columns: repeat(3, 1fr); }
     .config-grid       { grid-template-columns: repeat(2, 1fr); }
     .qr-grid           { grid-template-columns: repeat(5, 1fr); }
@@ -2422,7 +2391,6 @@ html.dark-theme .tabs-chevron-left, html.dark-theme .tabs-chevron-right { border
 @media (max-width: 768px) {
     .mesoneros-grid    { grid-template-columns: 1fr; }
     .usuarios-grid     { grid-template-columns: 1fr; }
-    .delivery-list     { grid-template-columns: 1fr; }
     .qr-grid           { grid-template-columns: repeat(2, 1fr); }
 }
 
@@ -3602,10 +3570,12 @@ html.dark-theme #platilloModal .ingrediente-row input:focus {
 }
 
 .usuario-card-v2 .ucard-avatar img,
+.mesonero-card .ucard-avatar img,
 .delivery-card .ucard-avatar img {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    border-radius: 8px;
 }
 
 /* Contenido principal - columna 2, distribuido en 3 líneas (solo usuario y delivery) */
