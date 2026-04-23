@@ -829,6 +829,20 @@
             // Similar a como lo hace confirmarPagoParcial
             let restoPorPagar = totalPagar;
             
+            // Validación crítica: nunca permitir que restoPorPagar sea mayor que el total disponible
+            if (metodoPago === 'efectivo_usd') {
+                if (restoPorPagar > totalUSDCrudo + 0.01) {
+                    window.mostrarToast('Error: El monto a pagar ($' + restoPorPagar.toFixed(2) + ') excede el disponible ($' + totalUSDCrudo.toFixed(2) + ')', 'error');
+                    return;
+                }
+            } else {
+                const maximoBs = totalBsCrudo + (totalUSDCrudo * tasaBase);
+                if (restoPorPagar > maximoBs + 0.01) {
+                    window.mostrarToast('Error: El monto a pagar (' + window.formatBs(restoPorPagar) + ') excede el disponible (' + window.formatBs(maximoBs) + ')', 'error');
+                    return;
+                }
+            }
+            
             // Obtener propinas pendientes en orden FIFO
             let queryFIFO = window.supabaseClient
                 .from('propinas')
@@ -864,15 +878,20 @@
                 
                 if (montoRestanteDePropina <= 0.01) continue; // Esta propina ya fue cubierta por pagos parciales
                 
+                // Calcular cuánto se va a pagar de esta propina en esta iteración
+                let montoAPagarDeEstaPropina = 0;
+                
                 // Usar epsilon check para comparar montos
                 if (restoPorPagar >= montoRestanteDePropina - 0.01) {
                     // Caso 1: Pagar la propina completa (lo que queda de ella)
+                    montoAPagarDeEstaPropina = montoRestanteDePropina;
+                    
                     // Marcar la propina original como entregada
                     let updateDataOriginal = { entregado: true };
                     await window.supabaseClient.from('propinas').update(updateDataOriginal).eq('id', prop.id);
                     
                     // Crear nueva propina que representa el pago del RESTANTE de esta propina
-                    let nuevoMontoOriginal = montoRestanteDePropina;
+                    let nuevoMontoOriginal = montoAPagarDeEstaPropina;
                     let nuevaMonedaOriginal = metodoPago === 'efectivo_usd' ? 'USD' : 'Bs';
                     let nuevoMontoBs = metodoPago === 'efectivo_usd' 
                         ? nuevoMontoOriginal * tasaBase 
@@ -897,11 +916,14 @@
                     const { error: errInsert } = await window.supabaseClient.from('propinas').insert([nuevaPropina]);
                     if (errInsert) throw errInsert;
                     
-                    restoPorPagar -= montoRestanteDePropina;
+                    // Restar exactamente lo que se pagó
+                    restoPorPagar -= montoAPagarDeEstaPropina;
                 } else {
                     // Caso 2: Pagar parcialmente esta propina (no alcanza para cubrirla completa)
                     // NO marcar la original como entregada, solo crear registro del pago parcial
-                    let nuevoMontoOriginal = restoPorPagar;
+                    montoAPagarDeEstaPropina = restoPorPagar;
+                    
+                    let nuevoMontoOriginal = montoAPagarDeEstaPropina;
                     let nuevaMonedaOriginal = metodoPago === 'efectivo_usd' ? 'USD' : 'Bs';
                     let nuevoMontoBs = metodoPago === 'efectivo_usd' 
                         ? nuevoMontoOriginal * tasaBase 
@@ -926,8 +948,14 @@
                     const { error: errInsert } = await window.supabaseClient.from('propinas').insert([nuevaPropina]);
                     if (errInsert) throw errInsert;
                     
-                    // No restamos más porque este es el último pago y cubre exactamente el resto
-                    restoPorPagar = 0;
+                    // Restar exactamente lo que se pagó y salir del loop
+                    restoPorPagar -= montoAPagarDeEstaPropina;
+                }
+                
+                // Verificación de seguridad en cada iteración: asegurar que restoPorPagar no sea negativo
+                if (restoPorPagar < -0.01) {
+                    console.error('ERROR CRÍTICO EN ITERACIÓN: restoPorPagar negativo (' + restoPorPagar.toFixed(2) + ') después de pagar ' + montoAPagarDeEstaPropina.toFixed(2));
+                    break;
                 }
             }
             
@@ -935,6 +963,12 @@
             if (restoPorPagar < -0.01) {
                 console.error('ERROR CRÍTICO: Se pagó de más por ' + Math.abs(restoPorPagar).toFixed(2));
                 // En producción, aquí se debería hacer un rollback o alerta
+            }
+            
+            // Verificación adicional: si después del loop todavía queda restoPorPagar positivo significativo
+            // significa que no había suficientes propinas para cubrir el monto (no debería ocurrir si los cálculos son correctos)
+            if (restoPorPagar > 0.01) {
+                console.warn('ADVERTENCIA: Quedó un saldo sin cubrir de ' + restoPorPagar.toFixed(2));
             }
             
             window.cerrarModalPago();
@@ -1114,13 +1148,13 @@
                     
                     if (pagarEnUSD) {
                         // Pagando en USD: el monto_original es el monto pagado en USD
-                        nuevoMontoOriginal = restoPorPagar >= montoPropinaEnMoneda ? montoPropinaEnMoneda : restoPorPagar;
+                        nuevoMontoOriginal = montoPropinaEnMoneda;
                         nuevaMonedaOriginal = 'USD';
                         nuevoMontoBs = nuevoMontoOriginal * tasaBase;
                         restoPorPagar -= montoPropinaEnMoneda;
                     } else {
                         // Pagando en Bs
-                        nuevoMontoBs = restoPorPagar >= montoPropinaEnMoneda ? montoPropinaEnMoneda : restoPorPagar;
+                        nuevoMontoBs = montoPropinaEnMoneda;
                         nuevoMontoOriginal = nuevoMontoBs;
                         nuevaMonedaOriginal = 'Bs';
                         restoPorPagar -= montoPropinaEnMoneda;
@@ -1194,6 +1228,11 @@
                     pagoCompletado = true;
                     break;
                 }
+            }
+
+            // Verificación crítica: asegurar que no se haya pagado de más (saldo negativo)
+            if (restoPorPagar < -0.01) {
+                throw new Error('ERROR CRÍTICO: Se intentó pagar de más por ' + Math.abs(restoPorPagar).toFixed(2) + '. El saldo no puede quedar negativo.');
             }
 
             // Si después del bucle aún queda resto por pagar (por error lógico), abortar
