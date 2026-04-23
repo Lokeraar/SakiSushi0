@@ -608,6 +608,9 @@ html.dark-theme .theme-toggle-input:focus {
     border-left: 4px solid var(--gold); 
 }
 
+/* Overlay sutil para mejorar legibilidad del texto sobre la imagen - CAPA OSCURA REMOVIDA SEGÚN SOLICITUD */
+/* El texto ahora usa text-shadow directamente para contraste sin capa oscura adicional */
+
 /* Contenido de la tarjeta (texto y stats) - por encima del fondo */
 .tcb-estrella-content {
     position: relative;
@@ -725,13 +728,79 @@ html.dark-theme .theme-toggle-input:focus {
     transform: scale(1.2);
 }
 
-/* Animación de slide para el carrusel - ahora aplica al contenido */
-@keyframes platilloSlideIn {
-    from { opacity: 0; transform: translateX(20px); }
-    to { opacity: 1; transform: translateX(0); }
+/* Botones de navegación del carrusel */
+.carousel-nav-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background: rgba(0, 0, 0, 0.5);
+    border: none;
+    color: #fff;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    transition: all 0.3s ease;
+    z-index: 10;
+    opacity: 0;
+    backdrop-filter: blur(4px);
 }
-.platillo-slide-animation .tcb-estrella-content {
-    animation: platilloSlideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+.carousel-nav-btn:hover {
+    background: rgba(255, 179, 0, 0.8);
+    transform: translateY(-50%) scale(1.1);
+}
+.carousel-nav-prev {
+    left: 10px;
+}
+.carousel-nav-next {
+    right: 10px;
+}
+#platilloEstrellaCard:hover .carousel-nav-btn {
+    opacity: 1;
+}
+
+@media (max-width: 767px) {
+    .carousel-nav-btn {
+        width: 28px;
+        height: 28px;
+        font-size: 0.8rem;
+    }
+    .carousel-nav-prev {
+        left: 5px;
+    }
+    .carousel-nav-next {
+        right: 5px;
+    }
+}
+
+/* Animación de slide para el carrusel - transición simple de deslizamiento */
+/* La transición se aplica directamente al contenido sin delays */
+.tcb-estrella-content {
+    transition: transform 0.5s cubic-bezier(0.4, 0.0, 0.2, 1), opacity 0.5s cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+.platillo-slide-in .tcb-estrella-content {
+    transform: translateX(0);
+    opacity: 1;
+}
+
+.platillo-slide-out-left .tcb-estrella-content {
+    transform: translateX(-30px);
+    opacity: 0;
+}
+
+.platillo-slide-out-right .tcb-estrella-content {
+    transform: translateX(30px);
+    opacity: 0;
+}
+
+/* Transición suave para el background-image de la tarjeta */
+#platilloEstrellaCard {
+    transition: background-image 0.5s cubic-bezier(0.4, 0.0, 0.2, 1);
 }
 
 /* Pausa en hover/touch - animación sutil del contenido */
