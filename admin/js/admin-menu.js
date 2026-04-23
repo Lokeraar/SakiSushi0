@@ -181,36 +181,49 @@
         if (removeBtn) removeBtn.remove();
     };
 
+    window.actualizarBotonEliminarImagen = function() {
+        const previewDiv = document.getElementById('imagenPreview');
+        const previewImg = document.getElementById('previewImg');
+        const urlInput = document.getElementById('platilloImagenUrl');
+        const fileInput = document.getElementById('platilloImagen');
+        
+        // Eliminar cualquier botón existente para evitar duplicados
+        const existingQuitar = document.querySelector('#imagenPreview .preview-remove-btn');
+        if (existingQuitar) existingQuitar.remove();
+        
+        if (previewDiv && previewDiv.style.display === 'flex') {
+            const removePreviewBtn = document.createElement('button');
+            removePreviewBtn.className = 'preview-remove-btn';
+            removePreviewBtn.innerHTML = '<i class="fas fa-times"></i>';
+            removePreviewBtn.style.cssText = 'position:absolute;top:4px;right:4px;background:transparent;color:#fff;border:none;border-radius:50%;width:24px;height:24px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.85rem;z-index:10;opacity:0.9;transition:opacity 0.2s;text-shadow:0 1px 3px rgba(0,0,0,0.5)';
+            removePreviewBtn.onmouseenter = () => removePreviewBtn.style.opacity = '1';
+            removePreviewBtn.onmouseleave = () => removePreviewBtn.style.opacity = '0.9';
+            removePreviewBtn.title = 'Eliminar imagen';
+            removePreviewBtn.onclick = (e) => {
+                e.stopPropagation();
+                // Al eliminar la imagen, habilitar el campo URL y limpiar variables
+                currentImagenFile = null;
+                currentImagenUrl = '';
+                if (fileInput) fileInput.value = '';
+                if (urlInput) {
+                    urlInput.value = '';
+                    urlInput.disabled = false;
+                }
+                if (previewDiv) previewDiv.style.display = 'none';
+                if (previewImg) previewImg.src = '';
+                if (removeBtn) removeBtn.remove();
+            };
+            previewDiv.style.position = 'relative';
+            previewDiv.appendChild(removePreviewBtn);
+        }
+    };
+
     // Configurar eventos del modal de platillo
     function setupPlatilloModalEvents() {
         const fileInput = document.getElementById('platilloImagen');
         const urlInput = document.getElementById('platilloImagenUrl');
         const previewDiv = document.getElementById('imagenPreview');
         const previewImg = document.getElementById('previewImg');
-        
-        // Eliminar cualquier botón existente para evitar duplicados
-        const existingQuitar = document.querySelector('#imagenPreview .preview-remove-btn');
-        if (existingQuitar) existingQuitar.remove();
-        
-        let removePreviewBtn = null;
-        function updateRemoveButton() {
-            if (removePreviewBtn) removePreviewBtn.remove();
-            if (previewDiv && previewDiv.style.display === 'flex') {
-                removePreviewBtn = document.createElement('button');
-                removePreviewBtn.className = 'preview-remove-btn';
-                removePreviewBtn.innerHTML = '<i class="fas fa-times"></i>';
-                removePreviewBtn.style.cssText = 'position:absolute;top:4px;right:4px;background:transparent;color:#fff;border:none;border-radius:50%;width:24px;height:24px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.85rem;z-index:10;opacity:0.9;transition:opacity 0.2s;text-shadow:0 1px 3px rgba(0,0,0,0.5)';
-                removePreviewBtn.onmouseenter = () => removePreviewBtn.style.opacity = '1';
-                removePreviewBtn.onmouseleave = () => removePreviewBtn.style.opacity = '0.9';
-                removePreviewBtn.title = 'Eliminar imagen';
-                removePreviewBtn.onclick = (e) => {
-                    e.stopPropagation();
-                    window.limpiarImagenPreview();
-                };
-                previewDiv.style.position = 'relative';
-                previewDiv.appendChild(removePreviewBtn);
-            }
-        }
         
         if (fileInput) {
             // Eliminar listener previo si existe
@@ -230,7 +243,7 @@
                     reader.onload = function(e) {
                         if (previewImg) previewImg.src = e.target.result;
                         if (previewDiv) previewDiv.style.display = 'flex';
-                        updateRemoveButton();
+                        window.actualizarBotonEliminarImagen();
                     };
                     reader.readAsDataURL(file);
                 } else {
@@ -238,7 +251,7 @@
                     if (urlInput && urlInput.value.trim()) {
                         if (previewImg) previewImg.src = urlInput.value;
                         if (previewDiv) previewDiv.style.display = 'flex';
-                        updateRemoveButton();
+                        window.actualizarBotonEliminarImagen();
                         currentImagenUrl = urlInput.value;
                         currentImagenFile = null;
                     } else {
@@ -260,7 +273,7 @@
                 if (url) {
                     if (previewImg) previewImg.src = url;
                     if (previewDiv) previewDiv.style.display = 'flex';
-                    updateRemoveButton();
+                    window.actualizarBotonEliminarImagen();
                     currentImagenUrl = url;
                     currentImagenFile = null;
                 } else {
@@ -301,6 +314,9 @@
         window.limpiarErroresInput();
         window.cargarCategoriasSelect();
         window.platilloEditandoId = null;
+        
+        // Configurar eventos del modal para el nuevo platillo
+        setupPlatilloModalEvents();
         
         document.getElementById('platilloModal').classList.add('active');
     };
@@ -500,19 +516,26 @@
                 if (platillo.imagen.includes('imagenes-platillos')) {
                     // Es imagen del storage, no poner en el input para evitar re-subidas accidentales
                     urlInput.value = '';
+                    // Bloquear el campo URL cuando hay imagen del storage
+                    urlInput.disabled = true;
                 } else {
                     // Es URL externa, permitir edición
                     urlInput.value = platillo.imagen;
+                    // No bloquear porque es URL externa editable
+                    urlInput.disabled = false;
                 }
             }
             // Limpiar input de archivo para evitar confusiones
             if (fileInput) fileInput.value = '';
             
-            // Configurar botón de eliminar después de mostrar el preview
+            // Configurar eventos del modal y mostrar botón de eliminar después de mostrar el preview
             setupPlatilloModalEvents();
+            window.actualizarBotonEliminarImagen();
         } else {
             // No hay imagen, limpiar todo
             window.limpiarImagenPreview();
+            // Configurar eventos del modal incluso sin imagen
+            setupPlatilloModalEvents();
         }
         
         window.cargarSubcategoriasSelect(platillo.categoria);
