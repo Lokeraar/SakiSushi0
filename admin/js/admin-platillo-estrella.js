@@ -4,7 +4,7 @@
     window.platillosTop5 = [];
     window.platilloCarouselIndex = 0;
     window.platilloCarouselInterval = null;
-    window.CAROUSEL_INTERVAL_MS = 4000; // 4 segundos por platillo
+    window.CAROUSEL_INTERVAL_MS = 6000; // 6 segundos por platillo
     window.isHoveringPlatillo = false;
     window.isTouchingPlatillo = false;
     
@@ -29,9 +29,9 @@
                 return;
             }
 
-            // Iniciar el carrusel con el primer platillo
+            // Iniciar el carrusel con el primer platillo (sin animación en carga inicial)
             window.platilloCarouselIndex = 0;
-            actualizarCardPlatilloEstrella();
+            actualizarCardPlatilloEstrella(null);
             actualizarIndicadores();
             iniciarCarruselAutomatico();
 
@@ -68,7 +68,7 @@
     }
 
     // Actualizar la tarjeta con los datos del platillo actual
-    function actualizarCardPlatilloEstrella() {
+    function actualizarCardPlatilloEstrella(direccion) {
         if (!window.platillosTop5 || window.platillosTop5.length === 0) {
             mostrarSinVentas();
             return;
@@ -84,7 +84,7 @@
         const totalUsdEl = document.getElementById('platilloEstrellaTotalUsd');
         const totalBsEl = document.getElementById('platilloEstrellaTotalBs');
 
-        // Usar la imagen como fondo de la tarjeta
+        // Usar la imagen como fondo de la tarjeta - actualizar primero para transición simultánea
         if (cardEl) {
             const imagenUrl = platillo.imagen || '';
             if (imagenUrl) {
@@ -104,6 +104,7 @@
             }
         }
         
+        // Actualizar contenido de texto inmediatamente (la animación lo ocultará temporalmente)
         if (tituloEl) {
             tituloEl.textContent = platillo.platillo_nombre || 'Sin nombre';
         }
@@ -152,8 +153,8 @@
         // Actualizar indicadores
         actualizarIndicadores();
         
-        // Animación de deslizamiento suave
-        aplicarAnimacionDeslizamiento();
+        // Animación de deslizamiento suave con dirección
+        aplicarAnimacionDeslizamiento(direccion);
     }
     
     // Actualizar indicadores de progreso (5 puntos)
@@ -178,22 +179,48 @@
         });
     }
 
-    // Aplicar animación CSS de deslizamiento con cubic-bezier
-    function aplicarAnimacionDeslizamiento() {
+    // Aplicar animación de deslizamiento simple - transición simultánea de contenido e imagen
+    function aplicarAnimacionDeslizamiento(direccion) {
         const card = document.getElementById('platilloEstrellaCard');
+        const contentEl = card.querySelector('.tcb-estrella-content');
         
-        if (!card) return;
+        if (!card || !contentEl) return;
+        
+        // Si no hay dirección (carga inicial), no aplicar animación
+        if (!direccion) return;
 
-        // Remover clase de animación previa
-        card.classList.remove('platillo-slide-animation');
+        // Determinar dirección de salida (por defecto izquierda para siguiente)
+        const direccionSalida = direccion === 'prev' ? 'right' : 'left';
         
+        // Remover clases previas
+        contentEl.classList.remove('platillo-slide-in', 'platillo-slide-out-left', 'platillo-slide-out-right');
         
-        // Forzar reflow
-        void card.offsetWidth;
+        // Aplicar clase de salida según dirección
+        if (direccionSalida === 'left') {
+            contentEl.classList.add('platillo-slide-out-left');
+        } else {
+            contentEl.classList.add('platillo-slide-out-right');
+        }
         
-        // Agregar clase de animación
-        card.classList.add('platillo-slide-animation');
-        
+        // Esperar a que termine la transición de salida (350ms)
+        setTimeout(() => {
+            // Actualizar el contenido mientras está invisible
+            // La imagen de fondo ya fue actualizada antes de llamar a esta función
+            
+            // Remover clase de salida
+            contentEl.classList.remove('platillo-slide-out-left', 'platillo-slide-out-right');
+            
+            // Forzar reflow
+            void contentEl.offsetWidth;
+            
+            // Aplicar clase de entrada
+            contentEl.classList.add('platillo-slide-in');
+            
+            // Limpiar clase de entrada después de la transición
+            setTimeout(() => {
+                contentEl.classList.remove('platillo-slide-in');
+            }, 350);
+        }, 350);
     }
 
     // Iniciar carrusel automático
@@ -206,7 +233,7 @@
             // Verificar si está en hover o touch para pausar
             if (!window.isHoveringPlatillo && !window.isTouchingPlatillo) {
                 window.platilloCarouselIndex = (window.platilloCarouselIndex + 1) % window.platillosTop5.length;
-                actualizarCardPlatilloEstrella();
+                actualizarCardPlatilloEstrella('next');
             }
         }, window.CAROUSEL_INTERVAL_MS);
     }
@@ -219,27 +246,28 @@
         }
     }
 
-    // Navegación manual - siguiente platillo
+    // Navegación manual - siguiente platillo (dirección por defecto: izquierda)
     window.siguientePlatillo = function() {
         if (!window.platillosTop5 || window.platillosTop5.length === 0) return;
         window.platilloCarouselIndex = (window.platilloCarouselIndex + 1) % window.platillosTop5.length;
-        actualizarCardPlatilloEstrella();
+        actualizarCardPlatilloEstrella('next');
         reiniciarCarruselTrasInteraccion();
     };
 
-    // Navegación manual - platillo anterior
+    // Navegación manual - platillo anterior (dirección: derecha)
     window.anteriorPlatillo = function() {
         if (!window.platillosTop5 || window.platillosTop5.length === 0) return;
         window.platilloCarouselIndex = (window.platilloCarouselIndex - 1 + window.platillosTop5.length) % window.platillosTop5.length;
-        actualizarCardPlatilloEstrella();
+        actualizarCardPlatilloEstrella('prev');
         reiniciarCarruselTrasInteraccion();
     };
     
-    // Ir a un índice específico (para clicks en indicadores)
+    // Ir a un índice específico (para clicks en indicadores) - determina dirección automáticamente
     window.irAPlatilloIndex = function(index) {
         if (!window.platillosTop5 || index < 0 || index >= window.platillosTop5.length) return;
+        const direccion = index > window.platilloCarouselIndex ? 'next' : 'prev';
         window.platilloCarouselIndex = index;
-        actualizarCardPlatilloEstrella();
+        actualizarCardPlatilloEstrella(direccion);
         reiniciarCarruselTrasInteraccion();
     };
 
@@ -294,9 +322,27 @@
         const card = document.getElementById('platilloEstrellaCard');
         if (!card) return;
         
-        // Pausa en hover (desktop) - no pausar si se hace hover sobre el botón de analítica
+        // Botones de navegación
+        const btnPrev = document.getElementById('platilloNavPrev');
+        const btnNext = document.getElementById('platilloNavNext');
+        
+        if (btnPrev) {
+            btnPrev.addEventListener('click', function(e) {
+                e.stopPropagation();
+                window.anteriorPlatillo();
+            });
+        }
+        
+        if (btnNext) {
+            btnNext.addEventListener('click', function(e) {
+                e.stopPropagation();
+                window.siguientePlatillo();
+            });
+        }
+        
+        // Pausa en hover (desktop) - no pausar si se hace hover sobre el botón de analítica o navegación
         card.addEventListener('mouseenter', (e) => {
-            if (e.target.closest('.tcb-estrella-btn')) return;
+            if (e.target.closest('.tcb-estrella-btn') || e.target.closest('.carousel-nav-btn')) return;
             window.isHoveringPlatillo = true;
         });
         
@@ -304,14 +350,14 @@
             window.isHoveringPlatillo = false;
         });
         
-        // Pausa en touch (móvil/tablet) - no pausar si se toca el botón de analítica
+        // Pausa en touch (móvil/tablet) - no pausar si se toca el botón de analítica o navegación
         card.addEventListener('touchstart', (e) => {
-            if (e.target.closest('.tcb-estrella-btn')) return;
+            if (e.target.closest('.tcb-estrella-btn') || e.target.closest('.carousel-nav-btn')) return;
             window.isTouchingPlatillo = true;
         }, { passive: true });
         
         card.addEventListener('touchend', (e) => {
-            if (e.target.closest('.tcb-estrella-btn')) return;
+            if (e.target.closest('.tcb-estrella-btn') || e.target.closest('.carousel-nav-btn')) return;
             window.isTouchingPlatillo = false;
         }, { passive: true });
         
@@ -328,19 +374,19 @@
             });
         }
         
-        // Swipe touch para navegación (solo si no es en el botón de analítica)
+        // Swipe touch para navegación (solo si no es en el botón de analítica o navegación)
         let touchStartX = 0;
         let touchEndX = 0;
         
         card.addEventListener('touchstart', (e) => {
-            // No iniciar swipe si se toca el botón de analítica
-            if (e.target.closest('.tcb-estrella-btn')) return;
+            // No iniciar swipe si se toca el botón de analítica o navegación
+            if (e.target.closest('.tcb-estrella-btn') || e.target.closest('.carousel-nav-btn')) return;
             touchStartX = e.changedTouches[0].screenX;
         }, { passive: true });
         
         card.addEventListener('touchend', (e) => {
-            // No finalizar swipe si se tocó el botón de analítica
-            if (e.target.closest('.tcb-estrella-btn')) return;
+            // No finalizar swipe si se tocó el botón de analítica o navegación
+            if (e.target.closest('.tcb-estrella-btn') || e.target.closest('.carousel-nav-btn')) return;
             touchEndX = e.changedTouches[0].screenX;
             handleSwipe();
         }, { passive: true });

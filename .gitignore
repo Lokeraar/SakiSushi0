@@ -20,11 +20,39 @@ node_modules/
 target/
 .gradle/
 
+# Build directories
+dist/
+build/
+target/
+
+# Dependencies
+.venv/
+venv/
+node_modules/
+.mypy_cache/
+.pytest_cache/
+dist/
+build/
+target/
+.gradle/
+
+.coverage
+coverage/
+htmlcov/
 # Logs and temp files
 *.log
 *.tmp
 *.swp
-*.swo
+
+# Environment
+.env
+.env.local
+.env.*
+
+# Environment
+.env
+.env.local
+*.env.*
 
 # Environment
 .env
@@ -35,6 +63,19 @@ target/
 .vscode/
 .idea/
 
+# Dependencies
+node_modules/
+venv/
+.venv/
+__pycache__/
+.mypy_cache/
+.pytest_cache/
+dist/
+build/
+target/
+.gradle/
+
+# OS
 # System files
 .DS_Store
 Thumbs.db
@@ -68,3 +109,19 @@ htmlcov/
 *.tar.xz
 *.tar.zst
 ```
+```
+*.tar.zst
+```
+
+# Coverage
+coverage/
+htmlcov/
+.coverage
+
+# Build directories
+dist/
+build/
+target/
+.gradle/
+.mypy_cache/
+.pytest_cache/
