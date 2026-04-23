@@ -1034,8 +1034,18 @@ html.dark-theme .btn-secondary:hover {
 .delivery-grid,
 .mesoneros-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    grid-template-columns: repeat(3, 1fr);
     gap: 1rem;
+}
+/* Responsive para mesoneros-grid: se adapta como delivery-grid */
+@media (max-width: 1200px) {
+    .mesoneros-grid { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 768px) {
+    .mesoneros-grid { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 480px) {
+    .mesoneros-grid { grid-template-columns: 1fr; }
 }
 /* Mesonero card - Unificada con delivery-card en dimensiones y formato */
 .mesonero-card,
@@ -1964,12 +1974,14 @@ html.dark-theme .ingrediente-row {
     .content { padding: .85rem; }
     .pane-header { flex-direction: column; align-items: flex-start; }
     .usuarios-grid { grid-template-columns: 1fr; }
+    /* Mesoneros y deliverys: 2 columnas en tablet/móvil grande */
     .mesoneros-grid,
     .delivery-grid { grid-template-columns: 1fr 1fr; }
     .config-section { max-width: 100%; }
     .reportes-filters { flex-direction: column; }
 }
 @media (max-width: 480px) {
+    /* En móvil pequeño: las grids de mesoneros/deliverys pasan a 1 columna */
     .mesoneros-grid,
     .delivery-grid { grid-template-columns: 1fr; }
     .card-value { font-size: 1.6rem; font-weight: 800; color: var(--card-value-color, var(--text-dark)); }
@@ -2393,8 +2405,9 @@ html.dark-theme .tabs-chevron-left, html.dark-theme .tabs-chevron-right { border
     .inv-list-col      { flex: 0 0 300px; }
 }
 @media (max-width: 768px) {
+    /* En tablet/móvil grande: 2 columnas para mesoneros y deliverys */
     .mesoneros-grid,
-    .delivery-grid     { grid-template-columns: 1fr; }
+    .delivery-grid     { grid-template-columns: 1fr 1fr; }
     .usuarios-grid     { grid-template-columns: 1fr; }
     .qr-grid           { grid-template-columns: repeat(2, 1fr); }
 }
@@ -3110,7 +3123,7 @@ html.dark-theme .mesa-admin-btn {
     letter-spacing: .5px; color: var(--text-muted); margin-bottom: .35rem;
 }
 .delivery-stat-value { font-size: 1rem; font-weight: 800; color: var(--text-dark); line-height: 1.3; }
-@media (max-width: 600px) { #deliveryStatsGrid { grid-template-columns: 1fr !important; } }
+/* Las tarjetas de estadísticas mantienen 3 columnas en todos los tamaños, igual que mesoneros */
 
 /* ── Modal platillo: legibilidad en tema oscuro ───────────────────────────── */
 #platilloModal .modal-body label { color: var(--text-dark); }
