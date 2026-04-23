@@ -777,13 +777,30 @@ html.dark-theme .theme-toggle-input:focus {
     }
 }
 
-/* Animación de slide para el carrusel - ahora aplica al contenido */
-@keyframes platilloSlideIn {
-    from { opacity: 0; transform: translateX(20px); }
-    to { opacity: 1; transform: translateX(0); }
+/* Animación de slide para el carrusel - transición simple de deslizamiento */
+/* La transición se aplica directamente al contenido sin delays */
+.tcb-estrella-content {
+    transition: transform 0.35s ease, opacity 0.35s ease;
 }
-.platillo-slide-animation .tcb-estrella-content {
-    animation: platilloSlideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+
+.platillo-slide-in .tcb-estrella-content {
+    transform: translateX(0);
+    opacity: 1;
+}
+
+.platillo-slide-out-left .tcb-estrella-content {
+    transform: translateX(-30px);
+    opacity: 0;
+}
+
+.platillo-slide-out-right .tcb-estrella-content {
+    transform: translateX(30px);
+    opacity: 0;
+}
+
+/* Transición suave para el background-image de la tarjeta */
+#platilloEstrellaCard {
+    transition: background-image 0.35s ease;
 }
 
 /* Pausa en hover/touch - animación sutil del contenido */
