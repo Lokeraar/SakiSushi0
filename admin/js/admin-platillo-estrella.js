@@ -43,7 +43,7 @@
     
     // Mostrar mensaje cuando no hay ventas
     function mostrarSinVentas() {
-        const imgEl = document.getElementById('platilloEstrellaImg');
+        const cardEl = document.getElementById('platilloEstrellaCard');
         const tituloEl = document.getElementById('platilloEstrellaTitulo');
         const descEl = document.getElementById('platilloEstrellaDesc');
         const badgeEl = document.getElementById('platilloBadgePosicion');
@@ -51,12 +51,11 @@
         const totalUsdEl = document.getElementById('platilloEstrellaTotalUsd');
         const totalBsEl = document.getElementById('platilloEstrellaTotalBs');
 
-        if (imgEl) {
-            imgEl.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="70" viewBox="0 0 200 70"%3E%3Crect width="200" height="70" fill="%232a2a3e"/%3E%3Ctext x="100" y="40" font-size="14" text-anchor="middle" fill="%23888" font-family="Arial"%3ESin ventas esta semana%3C/text%3E%3C/svg%3E';
-            imgEl.onerror = function() {
-                this.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="70" viewBox="0 0 200 70"%3E%3Crect width="200" height="70" fill="%232a2a3e"/%3E%3Ctext x="100" y="40" font-size="14" text-anchor="middle" fill="%23888" font-family="Arial"%3ESin imagen%3C/text%3E%3C/svg%3E';
-            };
+        // Remover imagen de fondo si existe
+        if (cardEl) {
+            cardEl.style.backgroundImage = 'none';
         }
+        
         if (tituloEl) tituloEl.textContent = 'Sin actividad';
         if (descEl) descEl.textContent = 'No hay ventas registradas esta semana';
         if (badgeEl) badgeEl.textContent = '-';
@@ -77,7 +76,7 @@
 
         const platillo = window.platillosTop5[window.platilloCarouselIndex];
         
-        const imgEl = document.getElementById('platilloEstrellaImg');
+        const cardEl = document.getElementById('platilloEstrellaCard');
         const tituloEl = document.getElementById('platilloEstrellaTitulo');
         const descEl = document.getElementById('platilloEstrellaDesc');
         const badgeEl = document.getElementById('platilloBadgePosicion');
@@ -85,16 +84,26 @@
         const totalUsdEl = document.getElementById('platilloEstrellaTotalUsd');
         const totalBsEl = document.getElementById('platilloEstrellaTotalBs');
 
-        if (imgEl) {
-            // Usar imagen del menú (mismo campo que usa admin-menu.js)
-            // Esta imagen puede ser una URL externa o una URL del storage de Supabase
-            const imagenUrl = platillo.imagen || 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="70" viewBox="0 0 200 70"%3E%3Crect width="200" height="70" fill="%232a2a3e"/%3E%3Ctext x="100" y="40" font-size="14" text-anchor="middle" fill="%23888" font-family="Arial"%3ESin imagen%3C/text%3E%3C/svg%3E';
-            imgEl.src = imagenUrl;
-            imgEl.alt = platillo.platillo_nombre || 'Platillo Estrella';
-            imgEl.onerror = function() {
-                this.src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="200" height="70" viewBox="0 0 200 70"%3E%3Crect width="200" height="70" fill="%232a2a3e"/%3E%3Ctext x="100" y="40" font-size="14" text-anchor="middle" fill="%23888" font-family="Arial"%3ESin imagen%3C/text%3E%3C/svg%3E';
-            };
+        // Usar la imagen como fondo de la tarjeta
+        if (cardEl) {
+            const imagenUrl = platillo.imagen || '';
+            if (imagenUrl) {
+                // Precargar imagen para evitar parpadeos
+                const tempImg = new Image();
+                tempImg.onload = function() {
+                    cardEl.style.backgroundImage = "url('" + imagenUrl + "')";
+                };
+                tempImg.onerror = function() {
+                    // Si falla la imagen, usar un gradiente por defecto
+                    cardEl.style.backgroundImage = 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)';
+                };
+                tempImg.src = imagenUrl;
+            } else {
+                // Sin imagen, usar gradiente por defecto
+                cardEl.style.backgroundImage = 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)';
+            }
         }
+        
         if (tituloEl) {
             tituloEl.textContent = platillo.platillo_nombre || 'Sin nombre';
         }
@@ -172,19 +181,19 @@
     // Aplicar animación CSS de deslizamiento con cubic-bezier
     function aplicarAnimacionDeslizamiento() {
         const card = document.getElementById('platilloEstrellaCard');
-        const imgEl = document.getElementById('platilloEstrellaImg');
+        
         if (!card) return;
 
         // Remover clase de animación previa
         card.classList.remove('platillo-slide-animation');
-        if (imgEl) imgEl.classList.remove('platillo-slide-animation');
+        
         
         // Forzar reflow
         void card.offsetWidth;
         
         // Agregar clase de animación
         card.classList.add('platillo-slide-animation');
-        if (imgEl) imgEl.classList.add('platillo-slide-animation');
+        
     }
 
     // Iniciar carrusel automático
