@@ -863,7 +863,8 @@ html.dark-theme .dashboard-card { border-color: transparent; border-left-color: 
     pointer-events: auto;
     white-space: nowrap;
 }
-.mesonero-card .btn-pagado-mesonero {
+.mesonero-card .btn-pagado-mesonero,
+.delivery-card .btn-pagado-delivery {
     padding: 0.3rem 0.5rem !important;
     font-size: 0.7rem !important;
 }
@@ -1030,86 +1031,15 @@ html.dark-theme .btn-secondary:hover {
 .usuario-actions { display: flex; gap: .5rem; align-items: center; }
 
 /* Deliverys, Mesoneros, Propinas */
-.delivery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; }
-.delivery-card {
-    background: var(--card-bg); border-radius: var(--radius);
-    padding: 0.9rem 1.1rem; box-shadow: var(--shadow-sm);
-    border-left: 4px solid var(--delivery); border: 1px solid var(--border);
-    display: grid;
-    grid-template-columns: auto 1fr auto;
-    gap: .5rem .85rem;
-    align-items: center;
-    transition: var(--transition);
-    min-height: 85px;
-}
-.delivery-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
-.delivery-card .ucard-avatar {
-    grid-row: 1 / span 3;
-    width: 64px;
-    height: 64px;
-    min-width: 64px;
-    border-radius: 50%;
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: transparent;
-    margin-right: 0.75rem;
-}
-.delivery-card .ucard-body {
-    grid-column: 2;
-    grid-row: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 0.25rem;
-    margin-left: 0.25rem;
-}
-.delivery-card .ucard-top {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: .5rem;
-}
-.delivery-card .ucard-names {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: .15rem;
-}
-.delivery-card .ucard-line1 {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
-.delivery-card .ucard-line2 {
-    display: flex;
-    align-items: center;
-}
-.delivery-card .ucard-line3 {
-    display: flex;
-    align-items: center;
-    gap: .5rem;
-    justify-content: space-between;
-}
-.delivery-card .ucard-actions-right {
-    display: flex;
-    gap: .35rem;
-    align-items: center;
-}
-.delivery-card .ucard-status-inline {
-    font-size: .75rem;
-    font-weight: 600;
-}
-.delivery-nombre { font-weight: 700; font-size: .95rem; color: var(--text-dark); }
-.delivery-acumulado { font-weight: 700; color: var(--delivery); font-size: 1.1rem; }
-.delivery-actions { display: flex; gap: .5rem; margin-top: .75rem; flex-wrap: wrap; }
+.delivery-grid,
 .mesoneros-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     gap: 1rem;
 }
 /* Mesonero card - Unificada con delivery-card en dimensiones y formato */
-.mesonero-card {
+.mesonero-card,
+.delivery-card {
     background: var(--card-bg); border-radius: var(--radius);
     padding: 0.9rem 1.1rem; box-shadow: var(--shadow-sm);
     border-left: 4px solid var(--propina); border: 1px solid var(--border);
@@ -1119,8 +1049,13 @@ html.dark-theme .btn-secondary:hover {
     transition: var(--transition);
     min-height: 90px;
 }
-.mesonero-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
-.mesonero-card .ucard-avatar {
+.delivery-card {
+    border-left-color: var(--delivery);
+}
+.mesonero-card:hover,
+.delivery-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+.mesonero-card .ucard-avatar,
+.delivery-card .ucard-avatar {
     width: 75px;
     min-width: 75px;
     border-radius: 8px;
@@ -1132,38 +1067,44 @@ html.dark-theme .btn-secondary:hover {
     height: auto;
     align-self: stretch;
 }
-.mesonero-card .ucard-body {
+.mesonero-card .ucard-body,
+.delivery-card .ucard-body {
     flex: 1;
     display: flex;
     flex-direction: column;
     gap: 0.35rem;
     min-width: 0;
 }
-.mesonero-card .ucard-top {
+.mesonero-card .ucard-top,
+.delivery-card .ucard-top {
     display: flex;
     flex-direction: column;
     gap: .35rem;
     flex: 1;
 }
-.mesonero-card .ucard-names {
+.mesonero-card .ucard-names,
+.delivery-card .ucard-names {
     display: flex;
     flex-direction: column;
     gap: .15rem;
 }
-.mesonero-card .ucard-line1 {
+.mesonero-card .ucard-line1,
+.delivery-card .ucard-line1 {
     display: flex;
     align-items: center;
     justify-content: space-between;
     line-height: 1;
 }
-.mesonero-card .ucard-line2 {
+.mesonero-card .ucard-line2,
+.delivery-card .ucard-line2 {
     display: flex;
     align-items: center;
     gap: 0.35rem;
     flex-wrap: wrap;
     line-height: 1;
 }
-.mesonero-card .ucard-line3 {
+.mesonero-card .ucard-line3,
+.delivery-card .ucard-line3 {
     display: flex;
     align-items: center;
     gap: 0.4rem;
@@ -1173,13 +1114,15 @@ html.dark-theme .btn-secondary:hover {
     overflow-x: auto;
     line-height: 1;
 }
-.mesonero-card .ucard-actions-right {
+.mesonero-card .ucard-actions-right,
+.delivery-card .ucard-actions-right {
     display: flex;
     gap: .35rem;
     align-items: center;
     margin-left: auto;
 }
-.mesonero-card .ucard-actions-right .btn-icon {
+.mesonero-card .ucard-actions-right .btn-icon,
+.delivery-card .ucard-actions-right .btn-icon {
     width: auto;
     min-width: auto;
     height: auto;
@@ -1187,52 +1130,65 @@ html.dark-theme .btn-secondary:hover {
     font-size: 0.7rem !important;
     flex-shrink: 0;
 }
-.mesonero-card .ucard-status-inline {
+.mesonero-card .ucard-status-inline,
+.delivery-card .ucard-status-inline {
     font-size: .75rem;
     font-weight: 600;
     line-height: 1;
 }
-.mesonero-nombre { font-weight: 700; font-size: .95rem; color: var(--text-dark); line-height: 1; }
+.mesonero-nombre,
+.delivery-nombre { font-weight: 700; font-size: .95rem; color: var(--text-dark); line-height: 1; }
 .mesonero-acumulado { font-weight: 700; color: var(--propina); font-size: 1.1rem; line-height: 1; }
-.mesonero-actions { display: flex; gap: .5rem; margin-top: .75rem; flex-wrap: wrap; }
+.delivery-acumulado { font-weight: 700; color: var(--delivery); font-size: 1.1rem; line-height: 1; }
+.mesonero-actions,
+.delivery-actions { display: flex; gap: .5rem; margin-top: .75rem; flex-wrap: wrap; }
 
-/* Mesonero card responsivo para móviles */
+/* Mesonero/Delivery card responsivo para móviles */
 @media (max-width: 640px) {
-    .mesonero-card {
+    .mesonero-card,
+    .delivery-card {
         flex-direction: row;
         gap: 0.75rem;
         padding: 0.75rem;
         min-height: auto;
     }
-    .mesonero-card .ucard-avatar {
+    .mesonero-card .ucard-avatar,
+    .delivery-card .ucard-avatar {
         width: 56px;
         min-width: 56px;
         height: auto;
         align-self: stretch;
     }
-    .mesonero-card .ucard-line2 {
+    .mesonero-card .ucard-line2,
+    .delivery-card .ucard-line2 {
         flex-wrap: wrap;
         gap: 0.35rem;
     }
-    .mesonero-card .ucard-line3 {
+    .mesonero-card .ucard-line3,
+    .delivery-card .ucard-line3 {
         flex-wrap: wrap;
         gap: 0.3rem;
     }
     .mesonero-card .btn-pagado-mesonero,
-    .mesonero-card .btn-toggle {
+    .delivery-card .btn-pagado-delivery,
+    .mesonero-card .btn-toggle,
+    .delivery-card .btn-toggle {
         font-size: 0.65rem !important;
         padding: 0.25rem 0.4rem !important;
     }
-    .mesonero-card .ucard-actions-right {
+    .mesonero-card .ucard-actions-right,
+    .delivery-card .ucard-actions-right {
         margin-left: auto;
         display: flex;
         gap: 0.15rem;
     }
-    .mesonero-card .ucard-actions-right .btn-icon {
+    .mesonero-card .ucard-actions-right .btn-icon,
+    .delivery-card .ucard-actions-right .btn-icon {
         padding: 0.25rem 0.35rem !important;
         font-size: 0.65rem !important;
     }
-    .mesonero-card .ucard-status-inline {
+    .mesonero-card .ucard-status-inline,
+    .delivery-card .ucard-status-inline {
         font-size: 0.65rem;
     }
 }
@@ -1961,7 +1917,8 @@ html.dark-theme .ingrediente-row {
     transition: var(--transition);
     flex-shrink: 0;
 }
-.mesonero-card .ucard-actions-right .btn-icon {
+.mesonero-card .ucard-actions-right .btn-icon,
+.delivery-card .ucard-actions-right .btn-icon {
     width: auto;
     height: auto;
     min-width: auto;
@@ -2328,7 +2285,8 @@ html.dark-theme .tabs-chevron-left, html.dark-theme .tabs-chevron-right { border
     transition: var(--transition);
     min-width: 72px;
 }
-.mesonero-card .btn-toggle {
+.mesonero-card .btn-toggle,
+.delivery-card .btn-toggle {
     padding: 0.3rem 0.5rem !important;
     font-size: 0.7rem !important;
     min-width: auto;
