@@ -844,7 +844,9 @@ html.dark-theme .toggle-slider { background-color: rgba(255,255,255,.2); }
 }
 /* Row completa con todos los elementos en una sola fila */
 .tcb-fecha-row-completa {
+    display: flex;
     flex-wrap: wrap;
+    align-items: center;
     width: 100%;
 }
 .tcb-fecha-label { font-size: .7rem; color: var(--text-muted); white-space: nowrap; }
@@ -857,14 +859,16 @@ html.dark-theme .toggle-slider { background-color: rgba(255,255,255,.2); }
     font-size: .72rem;
     font-family: 'Montserrat', sans-serif;
 }
-/* Mobile responsive for fechas card - stack vertically on small screens */
+/* Mobile responsive for fechas card - keep elements in row on small screens */
 @media (max-width: 768px) {
     .tcb-fechas-card {
-        flex-direction: column;
-        align-items: stretch;
+        flex-direction: row;
+        align-items: center;
+        flex-wrap: wrap;
     }
     .tcb-fecha-row {
-        justify-content: space-between;
+        justify-content: flex-start;
+        width: auto;
     }
 }
 .tcb-save-wrap { margin-left: auto; flex-shrink: 0; }
@@ -876,33 +880,45 @@ html.dark-theme .toggle-slider { background-color: rgba(255,255,255,.2); }
 /* Tablet responsive for save button - fit in same row */
 @media (min-width: 769px) and (max-width: 1024px) {
     .tcb-controls {
-        gap: .4rem;
+        gap: .35rem;
     }
     .tcb-save-btn {
-        font-size: .68rem;
-        padding: .4rem .55rem;
+        font-size: .62rem;
+        padding: .35rem .5rem;
     }
     .tcb-toggle-label {
-        font-size: .65rem;
+        font-size: .62rem;
     }
     .toggle-switch {
-        width: 36px;
-        height: 20px;
+        width: 34px;
+        height: 18px;
     }
     .toggle-slider:before {
-        height: 14px;
-        width: 14px;
+        height: 12px;
+        width: 12px;
         left: 3px;
         bottom: 3px;
     }
     .toggle-switch input:checked + .toggle-slider:before {
         transform: translateX(16px);
     }
+    .tcb-fecha-label {
+        font-size: .65rem;
+    }
+    .tcb-fecha-input {
+        font-size: .65rem;
+        padding: .15rem .3rem;
+    }
 }
 @media (max-width: 768px) {
-    .tcb-controls { flex-direction: column; align-items: stretch; }
-    .tcb-save-wrap { margin-left: 0; }
-    .tcb-save-btn { width: 100%; }
+    .tcb-controls { 
+        flex-direction: row; 
+        align-items: center; 
+        flex-wrap: wrap;
+        gap: .4rem;
+    }
+    .tcb-save-wrap { margin-left: auto; }
+    .tcb-save-btn { width: auto; }
 }
 
 /* Tooltip font size adjustment - 12pt = 16px = 1rem */
@@ -914,43 +930,18 @@ html.dark-theme .toggle-slider { background-color: rgba(255,255,255,.2); }
     font-size: 1rem !important;
 }
 
-/* Tablet - make save button smaller to fit in same row */
-@media (min-width: 769px) and (max-width: 1024px) {
-    .tcb-controls {
-        gap: .4rem;
-    }
-    .tcb-save-btn {
-        font-size: .68rem;
-        padding: .4rem .55rem;
-    }
-    .tcb-toggle-label {
-        font-size: .65rem;
-    }
-    .toggle-switch {
-        width: 36px;
-        height: 20px;
-    }
-    .toggle-slider:before {
-        height: 14px;
-        width: 14px;
-        left: 3px;
-        bottom: 3px;
-    }
-    .toggle-switch input:checked + .toggle-slider:before {
-        transform: translateX(16px);
-    }
-}
-
-/* Mobile - align dates, toggle and tooltip to the left and stack vertically */
+/* Mobile - align dates, toggle and tooltip to the left */
 @media (max-width: 480px) {
     .tcb-fecha-row-completa {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: .5rem;
+        flex-direction: row;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: flex-start;
+        gap: .4rem;
     }
     .tcb-fecha-row {
         justify-content: flex-start;
-        width: 100%;
+        width: auto;
     }
     .tcb-value-big { font-size: .95rem; }
 }
@@ -3947,9 +3938,7 @@ html.dark-theme .status-inactivo {
 
 .tooltip-icon:hover::after,
 .tooltip-text {
-    font-size: 1rem !important;
-    font-size: 16px !important;
-    font-size: 12pt !important;
+    font-size: 0.75rem !important;
 }
 
 /* Tooltip text class for inline tooltips (like Indefinido) */
@@ -3968,9 +3957,7 @@ html.dark-theme .status-inactivo {
     color: var(--toast-text) !important;
     padding: .5rem .75rem !important;
     border-radius: 8px !important;
-    font-size: 1rem !important;
-    font-size: 16px !important;
-    font-size: 12pt !important;
+    font-size: 0.75rem !important;
     white-space: normal !important;
     width: 210px !important;
     text-align: center !important;
@@ -3980,7 +3967,9 @@ html.dark-theme .status-inactivo {
     pointer-events: none !important;
 }
 
-.tooltip-wrap:hover .tooltip-text {
+/* Tooltip display on hover - support both CSS-only and JS-enhanced tooltips */
+.tooltip-wrap:hover .tooltip-text,
+.tooltip-wrap[onmouseenter]:hover .tooltip-text {
     display: block !important;
 }
 
@@ -3994,7 +3983,7 @@ html.dark-theme .status-inactivo {
     color: #fff;
     padding: 6px 10px;
     border-radius: 8px;
-    font-size: 12pt;
+    font-size: 0.75rem;
     font-weight: 400;
     white-space: normal;
     max-width: 220px;
