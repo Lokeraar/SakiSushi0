@@ -182,9 +182,20 @@
 
     window._actualizarVentasHoyNeto = async function() {
         try {
+            // Obtener fecha desde del selector de tcb-cards para filtrar pedidos
+            const aumentoDesdeInput = document.getElementById('aumentoDesde');
+            const fechaDesde = aumentoDesdeInput && aumentoDesdeInput.value ? new Date(aumentoDesdeInput.value) : null;
+            
             const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
             const manana = new Date(hoy); manana.setDate(manana.getDate() + 1);
-            const { data: ventasHoy } = await window.supabaseClient.from('ventas').select('pedido_id').gte('fecha', hoy.toISOString()).lt('fecha', manana.toISOString());
+            
+            // Si hay fecha desde, usarla como límite inferior, sino usar hoy
+            let fechaInicio = hoy;
+            if (fechaDesde && !isNaN(fechaDesde.getTime())) {
+                fechaInicio = new Date(fechaDesde.getFullYear(), fechaDesde.getMonth(), fechaDesde.getDate());
+            }
+            
+            const { data: ventasHoy } = await window.supabaseClient.from('ventas').select('pedido_id').gte('fecha', fechaInicio.toISOString()).lt('fecha', manana.toISOString());
             if (!ventasHoy || ventasHoy.length === 0) { document.getElementById('ventasHoy').textContent = '$0.00 / Bs 0.00'; return; }
             const pedidoIds = ventasHoy.map(v => v.pedido_id);
             const { data: pedidosData } = await window.supabaseClient.from('pedidos').select('*').in('id', pedidoIds);
