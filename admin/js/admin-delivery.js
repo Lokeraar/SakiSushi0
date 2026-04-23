@@ -257,12 +257,13 @@
                 var mBs  = e.monto_bs||0;
                 var mUsd = tasa>0 ? mBs/tasa : 0;
                 var hora = new Date(e.fecha_entrega).toLocaleString('es-VE',{timeZone:'America/Caracas',hour:'2-digit',minute:'2-digit'});
+                var pagoBadge = mBs < 0 ? '<span style="display:inline-block;background:#d32f2f;color:#fff;padding:2px 6px;border-radius:4px;font-size:.7rem;font-weight:700;margin-right:6px">PAGO</span>' : '';
                 return '<tr>'
-                    + '<td style="padding:.6rem 1rem;border-bottom:1px solid var(--border);font-size:.82rem;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+resumen+'</td>'
-                    + '<td style="padding:.6rem 1rem;border-bottom:1px solid var(--border);font-size:.82rem;font-weight:600">'+motor+'</td>'
-                    + '<td style="padding:.6rem 1rem;border-bottom:1px solid var(--border);font-size:.82rem">'+parroquia+'</td>'
-                    + '<td style="padding:.6rem 1rem;border-bottom:1px solid var(--border);font-size:.82rem;font-weight:700;color:var(--delivery)">'+window.formatUSD(mUsd)+'<br><span style="font-size:.72rem;color:var(--text-muted)">'+window.formatBs(mBs)+'</span></td>'
-                    + '<td style="padding:.6rem 1rem;border-bottom:1px solid var(--border);font-size:.78rem;color:var(--text-muted)">'+hora+'</td>'
+                    + '<td style="padding:.6rem 1rem;border-bottom:1px solid var(--border);font-size:.82rem;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.2">'+pagoBadge+resumen+'</td>'
+                    + '<td style="padding:.6rem 1rem;border-bottom:1px solid var(--border);font-size:.82rem;font-weight:600;line-height:1.2">'+motor+'</td>'
+                    + '<td style="padding:.6rem 1rem;border-bottom:1px solid var(--border);font-size:.82rem;line-height:1.2">'+parroquia+'</td>'
+                    + '<td style="padding:.6rem 1rem;border-bottom:1px solid var(--border);font-size:.82rem;font-weight:700;color:var(--delivery);line-height:1.2">'+window.formatUSD(mUsd)+'<br><span style="font-size:.72rem;color:var(--text-muted)"> '+window.formatBs(mBs)+'</span></td>'
+                    + '<td style="padding:.6rem 1rem;border-bottom:1px solid var(--border);font-size:.78rem;color:var(--text-muted);line-height:1.2">'+hora+'</td>'
                     + '</tr>';
             }).join('');
         } catch(err) {
@@ -297,12 +298,13 @@
                 }
                 var mBs=e.monto_bs||0; var mUsd=tasa>0?mBs/tasa:0;
                 var hora=new Date(e.fecha_entrega).toLocaleString('es-VE',{timeZone:'America/Caracas',day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+                var pagoBadge = mBs < 0 ? '<span style="display:inline-block;background:#d32f2f;color:#fff;padding:2px 6px;border-radius:4px;font-size:.7rem;font-weight:700;margin-right:6px">PAGO</span>' : '';
                 return '<tr>'
-                    +'<td style="padding:.55rem .85rem;border-bottom:1px solid var(--border);font-size:.8rem">'+resumen+'</td>'
-                    +'<td style="padding:.55rem .85rem;border-bottom:1px solid var(--border);font-size:.82rem;font-weight:600">'+motor+'</td>'
-                    +'<td style="padding:.55rem .85rem;border-bottom:1px solid var(--border);font-size:.82rem">'+parroquia+'</td>'
-                    +'<td style="padding:.55rem .85rem;border-bottom:1px solid var(--border);font-size:.82rem;font-weight:700;color:var(--delivery)">'+window.formatUSD(mUsd)+' / '+window.formatBs(mBs)+'</td>'
-                    +'<td style="padding:.55rem .85rem;border-bottom:1px solid var(--border);font-size:.78rem;color:var(--text-muted)">'+hora+'</td>'
+                    +'<td style="padding:.55rem .85rem;border-bottom:1px solid var(--border);font-size:.8rem;line-height:1.2">'+pagoBadge+resumen+'</td>'
+                    +'<td style="padding:.55rem .85rem;border-bottom:1px solid var(--border);font-size:.82rem;font-weight:600;line-height:1.2">'+motor+'</td>'
+                    +'<td style="padding:.55rem .85rem;border-bottom:1px solid var(--border);font-size:.82rem;line-height:1.2">'+parroquia+'</td>'
+                    +'<td style="padding:.55rem .85rem;border-bottom:1px solid var(--border);font-size:.82rem;font-weight:700;color:var(--delivery);line-height:1.2">'+window.formatUSD(mUsd)+' / '+window.formatBs(mBs)+'</td>'
+                    +'<td style="padding:.55rem .85rem;border-bottom:1px solid var(--border);font-size:.78rem;color:var(--text-muted);line-height:1.2">'+hora+'</td>'
                     +'</tr>';
             }).join('');
             var pl=lista.length;
