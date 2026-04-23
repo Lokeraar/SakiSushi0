@@ -4,7 +4,7 @@
     window.platillosTop5 = [];
     window.platilloCarouselIndex = 0;
     window.platilloCarouselInterval = null;
-    window.CAROUSEL_INTERVAL_MS = 4000; // 4 segundos por platillo
+    window.CAROUSEL_INTERVAL_MS = 6000; // 6 segundos por platillo
     window.isHoveringPlatillo = false;
     window.isTouchingPlatillo = false;
     
