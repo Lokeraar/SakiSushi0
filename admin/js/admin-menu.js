@@ -835,7 +835,6 @@
         
         // Preparar datos con fix de decimales para evitar errores como 14.60000000001
         const platilloData = {
-            id: 'plat_' + crypto.randomUUID(), // Generar ID único para nuevos platillos
             nombre: nombre,
             categoria: categoria,
             subcategoria: subcategoria,
@@ -846,6 +845,11 @@
             imagen: imagenUrl,
             stock: null // Se calculará automáticamente
         };
+        
+        // Solo agregar ID si es un nuevo platillo
+        if (!window.platilloEditandoId) {
+            platilloData.id = 'plat_' + crypto.randomUUID();
+        }
         
         try {
             let error;
