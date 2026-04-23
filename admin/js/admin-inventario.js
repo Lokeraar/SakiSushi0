@@ -211,7 +211,6 @@
         const urlInput = document.getElementById('ingredienteImagenUrl');
         const previewDiv = document.getElementById('ingredienteImagenPreview');
         const previewImg = document.getElementById('ingredientePreviewImg');
-        const removeBtn = document.getElementById('ingredienteImgRemoveBtn');
         
         if (fileInput.files && fileInput.files[0]) {
             const file = fileInput.files[0];
@@ -223,7 +222,7 @@
             reader.onload = function(e) {
                 previewImg.src = e.target.result;
                 previewDiv.style.display = 'flex';
-                if (removeBtn) removeBtn.style.display = 'flex';
+                updateIngredienteRemoveButton();
             };
             reader.readAsDataURL(file);
         } else {
@@ -231,12 +230,11 @@
             if (urlInput.value.trim()) {
                 previewImg.src = urlInput.value;
                 previewDiv.style.display = 'flex';
-                if (removeBtn) removeBtn.style.display = 'flex';
+                updateIngredienteRemoveButton();
                 currentIngredienteImagenUrl = urlInput.value;
                 currentIngredienteImagenFile = null;
             } else {
                 previewDiv.style.display = 'none';
-                if (removeBtn) removeBtn.style.display = 'none';
                 previewImg.src = '';
             }
         }
@@ -247,7 +245,6 @@
         const fileInput = document.getElementById('ingredienteImagen');
         const previewDiv = document.getElementById('ingredienteImagenPreview');
         const previewImg = document.getElementById('ingredientePreviewImg');
-        const removeBtn = document.getElementById('ingredienteImgRemoveBtn');
         
         if (fileInput.files && fileInput.files[0]) return;
         
@@ -257,12 +254,32 @@
             currentIngredienteImagenFile = null;
             previewImg.src = url;
             previewDiv.style.display = 'flex';
-            if (removeBtn) removeBtn.style.display = 'flex';
+            updateIngredienteRemoveButton();
         } else {
             previewDiv.style.display = 'none';
-            if (removeBtn) removeBtn.style.display = 'none';
             previewImg.src = '';
             currentIngredienteImagenUrl = '';
+        }
+    }
+    
+    let ingredienteRemoveBtn = null;
+    function updateIngredienteRemoveButton() {
+        if (ingredienteRemoveBtn) ingredienteRemoveBtn.remove();
+        const previewDiv = document.getElementById('ingredienteImagenPreview');
+        if (previewDiv && previewDiv.style.display === 'flex') {
+            ingredienteRemoveBtn = document.createElement('button');
+            ingredienteRemoveBtn.className = 'preview-remove-btn';
+            ingredienteRemoveBtn.innerHTML = '<i class="fas fa-times"></i>';
+            ingredienteRemoveBtn.style.cssText = 'position:absolute;top:4px;right:4px;background:transparent;color:#fff;border:none;border-radius:50%;width:20px;height:20px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.75rem;z-index:10;opacity:0.9;transition:opacity 0.2s;text-shadow:0 1px 3px rgba(0,0,0,0.5)';
+            ingredienteRemoveBtn.onmouseenter = () => ingredienteRemoveBtn.style.opacity = '1';
+            ingredienteRemoveBtn.onmouseleave = () => ingredienteRemoveBtn.style.opacity = '0.9';
+            ingredienteRemoveBtn.title = 'Eliminar imagen';
+            ingredienteRemoveBtn.onclick = (e) => {
+                e.stopPropagation();
+                removeIngredienteImage();
+            };
+            previewDiv.style.position = 'relative';
+            previewDiv.appendChild(ingredienteRemoveBtn);
         }
     }
 
@@ -352,15 +369,16 @@
 		const urlInput = document.getElementById('ingredienteImagenUrl');
 		const previewDiv = document.getElementById('ingredienteImagenPreview');
 		const previewImg = document.getElementById('ingredientePreviewImg');
-		const removeBtn = document.getElementById('ingredienteImgRemoveBtn');
 		if (fileInput) fileInput.value = '';
 		if (urlInput) {
 			urlInput.value = '';
 			urlInput.disabled = false;
 		}
 		if (previewDiv) previewDiv.style.display = 'none';
-		if (removeBtn) removeBtn.style.display = 'none';
 		if (previewImg) previewImg.src = '';
+        // Eliminar el botón de quitar imagen
+        const removeBtn = previewDiv?.querySelector('.preview-remove-btn');
+        if (removeBtn) removeBtn.remove();
 		currentIngredienteImagenFile = null;
 		currentIngredienteImagenUrl = '';
 	}
@@ -505,8 +523,8 @@ validarPrecios();
 			const urlInput = document.getElementById('ingredienteImagenUrl');
 			if (urlInput) urlInput.value = ingrediente.imagen;
 			currentIngredienteImagenUrl = ingrediente.imagen;
-			const removeBtn = document.getElementById('ingredienteImgRemoveBtn');
-			if (removeBtn) removeBtn.style.display = 'flex';
+            // Actualizar botón de eliminar imagen
+            updateIngredienteRemoveButton();
 		} else {
 			removeIngredienteImage();
 		}
@@ -745,11 +763,9 @@ validarPrecios();
         const urlInput = document.getElementById('ingredienteImagenUrl');
         const agregarInput = document.getElementById('ingredienteAgregar');
         const cantidadComprada = document.getElementById('cantidadComprada');
-        const removeBtn = document.getElementById('ingredienteImgRemoveBtn');
         
         if (fileInput) fileInput.addEventListener('change', handleIngredienteImagenFile);
         if (urlInput) urlInput.addEventListener('input', handleIngredienteImagenUrl);
-        if (removeBtn) removeBtn.addEventListener('click', removeIngredienteImage);
         if (agregarInput) agregarInput.addEventListener('input', syncAgregarToCantidadComprada);
         if (cantidadComprada) cantidadComprada.readOnly = true;
         

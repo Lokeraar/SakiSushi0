@@ -176,9 +176,9 @@
         }
         if (previewDiv) previewDiv.style.display = 'none';
         if (previewImg) previewImg.src = '';
-        // Eliminar cualquier botón "Quitar" que pudiera quedar
-        const oldQuitar = document.querySelector('#imagenPreview .btn-small, #imagenPreview button:not(.preview-remove-btn)');
-        if (oldQuitar) oldQuitar.remove();
+        // Eliminar el botón de quitar imagen
+        const removeBtn = document.querySelector('#imagenPreview .preview-remove-btn');
+        if (removeBtn) removeBtn.remove();
     };
 
     // Configurar eventos del modal de platillo
@@ -188,8 +188,8 @@
         const previewDiv = document.getElementById('imagenPreview');
         const previewImg = document.getElementById('previewImg');
         
-        // Eliminar cualquier botón "Quitar" existente y listeners previos para evitar duplicados
-        const existingQuitar = document.querySelector('#imagenPreview .btn-small, #imagenPreview button:not(.preview-remove-btn)');
+        // Eliminar cualquier botón existente para evitar duplicados
+        const existingQuitar = document.querySelector('#imagenPreview .preview-remove-btn');
         if (existingQuitar) existingQuitar.remove();
         
         let removePreviewBtn = null;
@@ -198,8 +198,10 @@
             if (previewDiv && previewDiv.style.display === 'flex') {
                 removePreviewBtn = document.createElement('button');
                 removePreviewBtn.className = 'preview-remove-btn';
-                removePreviewBtn.innerHTML = '<i class="fas fa-times-circle"></i>';
-                removePreviewBtn.style.cssText = 'position:absolute;top:-8px;right:-8px;background:rgba(0,0,0,.6);color:#fff;border:none;border-radius:50%;width:24px;height:24px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.8rem;z-index:10;backdrop-filter:blur(2px)';
+                removePreviewBtn.innerHTML = '<i class="fas fa-times"></i>';
+                removePreviewBtn.style.cssText = 'position:absolute;top:4px;right:4px;background:transparent;color:#fff;border:none;border-radius:50%;width:24px;height:24px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.85rem;z-index:10;opacity:0.9;transition:opacity 0.2s;text-shadow:0 1px 3px rgba(0,0,0,0.5)';
+                removePreviewBtn.onmouseenter = () => removePreviewBtn.style.opacity = '1';
+                removePreviewBtn.onmouseleave = () => removePreviewBtn.style.opacity = '0.9';
                 removePreviewBtn.title = 'Eliminar imagen';
                 removePreviewBtn.onclick = (e) => {
                     e.stopPropagation();
@@ -214,7 +216,6 @@
             // Eliminar listener previo si existe
             const newFileInput = fileInput.cloneNode(true);
             fileInput.parentNode.replaceChild(newFileInput, fileInput);
-            newFileInput._cloned = true;
             
             newFileInput.addEventListener('change', function() {
                 if (newFileInput.files && newFileInput.files[0]) {
