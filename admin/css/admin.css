@@ -780,7 +780,7 @@ html.dark-theme .theme-toggle-input:focus {
 /* Animación de slide para el carrusel - transición simple de deslizamiento */
 /* La transición se aplica directamente al contenido sin delays */
 .tcb-estrella-content {
-    transition: transform 0.35s ease, opacity 0.35s ease;
+    transition: transform 0.5s cubic-bezier(0.4, 0.0, 0.2, 1), opacity 0.5s cubic-bezier(0.4, 0.0, 0.2, 1);
 }
 
 .platillo-slide-in .tcb-estrella-content {
@@ -800,7 +800,7 @@ html.dark-theme .theme-toggle-input:focus {
 
 /* Transición suave para el background-image de la tarjeta */
 #platilloEstrellaCard {
-    transition: background-image 0.35s ease;
+    transition: background-image 0.5s cubic-bezier(0.4, 0.0, 0.2, 1);
 }
 
 /* Pausa en hover/touch - animación sutil del contenido */
