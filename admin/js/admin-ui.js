@@ -150,6 +150,13 @@
             document.getElementById('aumentoHasta').disabled = this.checked;
             if (this.checked) document.getElementById('aumentoHasta').value = '';
         });
+        // Actualizar tarjeta de diferencia de tasa cuando cambie la fecha "Desde"
+        const aumentoDesdeInput = document.getElementById('aumentoDesde');
+        if (aumentoDesdeInput) {
+            aumentoDesdeInput.addEventListener('change', function() {
+                window.actualizarTarjetaDiferenciaTasa();
+            });
+        }
 
         // Modales QR
         const _closeQrBtn  = document.getElementById('closeQrAmpliado');
@@ -239,6 +246,7 @@
                     });
                     await window._actualizarVentasHoyNeto();
                     await window._actualizarDeliverysHoy();
+                    window.actualizarTarjetaDiferenciaTasa();
                     setInterval(async () => { 
                         await window._actualizarVentasHoyNeto();
                         await window._actualizarDeliverysHoy();

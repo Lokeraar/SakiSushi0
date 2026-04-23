@@ -165,10 +165,31 @@
         const tasaEfectiva = window.configGlobal?.tasa_efectiva || 400;
         const diff = tasaEfectiva - tasaBase;
         if (diff <= 0) return 0;
+        
+        // Obtener fecha desde del selector de tcb-cards
+        const aumentoDesdeInput = document.getElementById('aumentoDesde');
+        const fechaDesde = aumentoDesdeInput && aumentoDesdeInput.value ? new Date(aumentoDesdeInput.value) : null;
+        
         const fuente   = (window._ventasHoyNeto && window._ventasHoyNeto.pedidosData) || window.pedidos || [];
         const cobrados = fuente.filter(function(p) {
-            return p.estado==='cobrado' || p.estado==='entregado' ||
-                   p.estado==='enviado' || p.estado==='reserva_completada';
+            if (!(p.estado==='cobrado' || p.estado==='entregado' ||
+                   p.estado==='enviado' || p.estado==='reserva_completada')) {
+                return false;
+            }
+            // Filtrar por fecha desde si está definida
+            if (fechaDesde && !isNaN(fechaDesde.getTime())) {
+                const fechaPedido = p.fecha ? new Date(p.fecha) : null;
+                if (!fechaPedido || isNaN(fechaPedido.getTime())) {
+                    return false;
+                }
+                // Comparar solo la parte de la fecha (día, mes, año)
+                const fechaDesdeNormalizada = new Date(fechaDesde.getFullYear(), fechaDesde.getMonth(), fechaDesde.getDate());
+                const fechaPedidoNormalizada = new Date(fechaPedido.getFullYear(), fechaPedido.getMonth(), fechaPedido.getDate());
+                if (fechaPedidoNormalizada < fechaDesdeNormalizada) {
+                    return false;
+                }
+            }
+            return true;
         });
         const totalUSD = cobrados.reduce(function(s,p){ return s+(p.total||0); }, 0);
         return totalUSD * diff;
