@@ -9,6 +9,9 @@
     // ════════════════════════════════════════
     window.cargarDeliverys = async function() {
         try {
+            // Limpiar registros pagados de días anteriores (mantener solo los de hoy)
+            await window.limpiarPagadosAnteriores();
+            
             var r = await window.supabaseClient.from('deliverys').select('*').order('nombre');
             if (r.error) throw r.error;
             window.deliverys = r.data || [];
@@ -16,6 +19,19 @@
             if (typeof window.cargarUltimosViajes === 'function') window.cargarUltimosViajes();
             if (typeof window._actualizarDeliverysHoyStats === 'function') window._actualizarDeliverysHoyStats();
         } catch(e) { console.error('Error cargando deliverys:', e); }
+    };
+    
+    // Limpiar registros pagados de días anteriores (solo mantener los de hoy)
+    window.limpiarPagadosAnteriores = async function() {
+        try {
+            var hoy = new Date(); hoy.setHours(0,0,0,0);
+            // Eliminar registros pagados de días anteriores a hoy
+            var r = await window.supabaseClient.from('entregas_delivery')
+                .delete()
+                .eq('pagado', true)
+                .lt('fecha_entrega', hoy.toISOString());
+            if (r.error) console.warn('Error limpiando pagados anteriores:', r.error);
+        } catch(e) { console.warn('Error en limpiarPagadosAnteriores:', e); }
     };
 
     window.renderizarDeliverys = async function() {
@@ -83,7 +99,7 @@
 
     window.obtenerAcumuladoDelivery = async function(deliveryId) {
         try {
-            var r = await window.supabaseClient.from('entregas_delivery').select('monto_bs').eq('delivery_id', deliveryId);
+            var r = await window.supabaseClient.from('entregas_delivery').select('monto_bs').eq('delivery_id', deliveryId).eq('pagado', false);
             if (r.error) throw r.error;
             return (r.data || []).reduce(function(sum,e){ return sum+(e.monto_bs||0); }, 0);
         } catch(e) { return 0; }
@@ -182,25 +198,76 @@
         if (!window.deliveryParaPago) return;
         var btn = document.getElementById('confirmPagoDeliveryBtn');
         if (btn && btn.disabled) return;
-        if (btn) { btn.disabled=true; btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Procesando...'; }
-        try {
-            var tipo = (document.querySelector('[name="tipoPago"]:checked')||{}).value || 'total';
-            if (tipo === 'parcial') {
-                var inp = document.getElementById('montoPagoParcial');
-                var monto = parseFloat(inp ? inp.value : 0);
-                if (!monto||monto<=0) { window.mostrarToast('Ingresa un monto válido','error'); return; }
-                var r1 = await window.supabaseClient.from('entregas_delivery').insert([{ delivery_id: window.deliveryParaPago, monto_bs: -monto, pedido_id: null, fecha_entrega: new Date().toISOString() }]);
-                if (r1.error) throw r1.error;
-                window.mostrarToast('Pago parcial registrado','success');
-            } else {
-                var r2 = await window.supabaseClient.from('entregas_delivery').delete().eq('delivery_id', window.deliveryParaPago);
-                if (r2.error) throw r2.error;
-                window.mostrarToast('Pago total registrado. Acumulado reiniciado.','success');
+        
+        var tipo = (document.querySelector('[name="tipoPago"]:checked')||{}).value || 'total';
+        var acumulado = await window.obtenerAcumuladoDelivery(window.deliveryParaPago);
+        
+        // Validaciones según el tipo de pago
+        if (tipo === 'parcial') {
+            var inp = document.getElementById('montoPagoParcial');
+            var monto = parseFloat(inp ? inp.value : 0);
+            
+            if (!monto || monto <= 0) {
+                window.mostrarToast('Ingresa un monto válido', 'error');
+                if(btn){ btn.disabled=false; btn.innerHTML='Confirmar'; }
+                return;
             }
-            window.cerrarModal('confirmPagoDeliveryModal');
-            await window.cargarDeliverys();
-        } catch(e) { window.mostrarToast('Error: '+(e.message||e),'error'); }
-        finally { if(btn){btn.disabled=false;btn.innerHTML='Confirmar';} }
+            
+            if (monto > acumulado) {
+                var restante = acumulado;
+                window.mostrarToast('El monto no puede ser mayor al acumulado. Máximo disponible: ' + window.formatBs(restante), 'error');
+                if(btn){ btn.disabled=false; btn.innerHTML='Confirmar'; }
+                return;
+            }
+            
+            if (acumulado - monto < 0) {
+                window.mostrarToast('El pago dejaría un saldo negativo. Monto máximo disponible: ' + window.formatBs(acumulado), 'error');
+                if(btn){ btn.disabled=false; btn.innerHTML='Confirmar'; }
+                return;
+            }
+            
+            if (btn) { btn.disabled=true; btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Procesando...'; }
+            try {
+                var r1 = await window.supabaseClient.from('entregas_delivery').insert([{ 
+                    delivery_id: window.deliveryParaPago, 
+                    monto_bs: -monto, 
+                    pedido_id: null, 
+                    fecha_entrega: new Date().toISOString(),
+                    pagado: false
+                }]);
+                if (r1.error) throw r1.error;
+                window.mostrarToast('Pago parcial registrado', 'success');
+            } catch(e) { 
+                window.mostrarToast('Error: '+(e.message||e), 'error'); 
+            } finally { 
+                if(btn){ btn.disabled=false; btn.innerHTML='Confirmar'; } 
+            }
+        } else {
+            // Pago total
+            if (acumulado <= 0) {
+                window.mostrarToast('No hay acumulado para pagar. El saldo actual es ' + window.formatBs(acumulado), 'error');
+                if(btn){ btn.disabled=false; btn.innerHTML='Confirmar'; }
+                return;
+            }
+            
+            if (btn) { btn.disabled=true; btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Procesando...'; }
+            try {
+                // Marcar todos los registros como pagados en lugar de eliminarlos
+                var r2 = await window.supabaseClient.from('entregas_delivery')
+                    .update({ pagado: true })
+                    .eq('delivery_id', window.deliveryParaPago)
+                    .eq('pagado', false);
+                if (r2.error) throw r2.error;
+                window.mostrarToast('Pago total registrado. Acumulado reiniciado.', 'success');
+            } catch(e) { 
+                window.mostrarToast('Error: '+(e.message||e), 'error'); 
+            } finally { 
+                if(btn){ btn.disabled=false; btn.innerHTML='Confirmar'; } 
+            }
+        }
+        
+        window.cerrarModal('confirmPagoDeliveryModal');
+        await window.cargarDeliverys();
     };
 
     // ════════════════════════════════════════
@@ -240,6 +307,7 @@
             var tasa = window.configGlobal?.tasa_efectiva || window.configGlobal?.tasa_cambio || 400;
             var r = await window.supabaseClient.from('entregas_delivery')
                 .select('*, deliverys(nombre), pedidos(id, mesa, cliente_nombre, items, parroquia)')
+                .eq('pagado', false)
                 .order('fecha_entrega', { ascending: false }).limit(5);
             if (r.error) throw r.error;
             var lista = r.data || [];
@@ -283,6 +351,7 @@
             var r = await window.supabaseClient.from('entregas_delivery')
                 .select('*, deliverys(nombre), pedidos(id, mesa, cliente_nombre, items, parroquia)')
                 .gte('fecha_entrega', hoy.toISOString()).lt('fecha_entrega', man.toISOString())
+                .eq('pagado', false)
                 .order('fecha_entrega', { ascending: false });
             var lista  = r.data || [];
             var totBs  = lista.reduce(function(s,e){ return s+(e.monto_bs||0); },0);

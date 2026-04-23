@@ -770,7 +770,8 @@ CREATE TABLE entregas_delivery (
     delivery_id TEXT REFERENCES deliverys(id) ON DELETE SET NULL,
     monto_bs NUMERIC(10,2) DEFAULT 0,
     fecha_entrega TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    pagado BOOLEAN DEFAULT FALSE
 );
 
 -- Migración segura: agregar columna pedido_id si no existe (para bases de datos ya creadas)
@@ -780,6 +781,16 @@ DO $$ BEGIN
         WHERE table_name='entregas_delivery' AND column_name='pedido_id'
     ) THEN
         ALTER TABLE entregas_delivery ADD COLUMN pedido_id TEXT REFERENCES pedidos(id) ON DELETE CASCADE;
+    END IF;
+END $$;
+
+-- Migración segura: agregar columna pagado si no existe (para bases de datos ya creadas)
+DO $$ BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name='entregas_delivery' AND column_name='pagado'
+    ) THEN
+        ALTER TABLE entregas_delivery ADD COLUMN pagado BOOLEAN DEFAULT FALSE;
     END IF;
 END $$;
 
