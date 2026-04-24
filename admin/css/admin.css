@@ -3788,6 +3788,7 @@ html.dark-theme #platilloModal .ingrediente-row input:focus {
 
 /* Resetear estilos anteriores para unificar diseño */
 .usuario-card-v2,
+.mesonero-card,
 .delivery-card {
     display: grid;
     grid-template-columns: 70px 1fr auto;
@@ -3802,8 +3803,9 @@ html.dark-theme #platilloModal .ingrediente-row input:focus {
     min-height: 85px;
 }
 
-/* Foto de perfil - ocupa las 3 líneas a la izquierda (solo usuario y delivery) */
+/* Foto de perfil - ocupa las 3 líneas a la izquierda (usuario, mesonero y delivery) */
 .usuario-card-v2 .ucard-avatar,
+.mesonero-card .ucard-avatar,
 .delivery-card .ucard-avatar {
     grid-row: 1 / span 3;
     grid-column: 1;
@@ -3829,8 +3831,9 @@ html.dark-theme #platilloModal .ingrediente-row input:focus {
     border-radius: 8px;
 }
 
-/* Contenido principal - columna 2, distribuido en 3 líneas (solo usuario y delivery) */
+/* Contenido principal - columna 2, distribuido en 3 líneas (usuario, mesonero y delivery) */
 .usuario-card-v2 .ucard-body,
+.mesonero-card .ucard-body,
 .delivery-card .ucard-body {
     grid-column: 2;
     display: flex;
@@ -3943,6 +3946,7 @@ html.dark-theme .status-inactivo {
 /* Responsive móvil para tarjetas */
 @media (max-width: 768px) {
     .usuario-card-v2,
+    .mesonero-card,
     .delivery-card {
         grid-template-columns: 55px 1fr;
         grid-template-rows: repeat(3, auto);
@@ -3951,6 +3955,7 @@ html.dark-theme .status-inactivo {
     }
     
     .usuario-card-v2 .ucard-avatar,
+    .mesonero-card .ucard-avatar,
     .delivery-card .ucard-avatar {
         grid-row: 1 / span 3;
         grid-column: 1;
