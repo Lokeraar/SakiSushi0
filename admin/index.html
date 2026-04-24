@@ -609,14 +609,21 @@
 
     <!-- MODAL USUARIO -->
     <div class="modal" id="usuarioModal">
-        <div class="modal-content" style="max-width:550px">
+        <div class="modal-content" style="max-width:650px">
             <div class="modal-header"><h3 id="usuarioModalTitle">Nuevo Cajero/Admin</h3><button class="modal-close" id="closeUsuarioModal">&times;</button></div>
             <div class="modal-body">
                 <form id="usuarioForm">
-                    <div class="form-group"><label>Foto de perfil (opcional)</label>
-                        <div style="display:flex;gap:.75rem;align-items:flex-start">
-                            <div style="flex:1"><input type="file" id="usuarioFoto" accept="image/*" style="margin-bottom:.3rem"><input type="url" id="usuarioFotoUrl" placeholder="O pega la URL de la imagen" style="width:100%"></div>
-                            <div id="usuarioFotoPreview" class="image-preview" style="display:none;width:70px;height:70px;flex-shrink:0;position:relative"><img id="usuarioPreviewImg" style="width:100%;height:100%;object-fit:cover;border-radius:8px"><button type="button" id="usuarioFotoRemoveBtn" style="position:absolute;top:-8px;right:-8px;background:var(--danger);color:#fff;border:none;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.7rem">✕</button></div>
+                    <div class="form-group">
+                        <label>Foto de perfil (opcional)</label>
+                        <div class="usuario-foto-container" style="display:grid;grid-template-columns:1fr 180px;gap:1rem;align-items:start">
+                            <div class="usuario-foto-inputs" style="display:flex;flex-direction:column;gap:.5rem">
+                                <input type="file" id="usuarioFoto" accept="image/*" style="width:100%">
+                                <input type="url" id="usuarioFotoUrl" placeholder="O pega la URL de la imagen" style="width:100%">
+                            </div>
+                            <div class="usuario-preview-wrapper" style="position:relative;width:180px;height:180px;display:none;border-radius:12px;overflow:hidden;box-shadow:0 4px 12px rgba(0,0,0,.15)">
+                                <img id="usuarioPreviewImg" style="width:100%;height:100%;object-fit:cover;cursor:pointer" onclick="window.toggleExpandirImagenUsuario()">
+                                <button type="button" id="usuarioFotoRemoveBtn" class="preview-remove-btn" style="position:absolute;top:8px;right:8px;background:rgba(211,47,47,.9);color:#fff;border:none;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:.85rem;z-index:10;opacity:0.9;transition:all 0.2s;text-shadow:0 1px 3px rgba(0,0,0,0.5)" title="Eliminar imagen">✕</button>
+                            </div>
                         </div>
                     </div>
                     <div class="form-group"><label>Nombre completo *</label><input type="text" id="usuarioNombre" required placeholder="Ej: María González"></div>

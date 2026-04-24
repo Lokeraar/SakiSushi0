@@ -2,6 +2,7 @@
 (function() {
     let currentUserFotoFile = null;
     let currentUserFotoUrl = '';
+    let usuarioImagenExpandida = false;
 
     window.cargarUsuarios = async function() {
         try {
@@ -25,8 +26,8 @@
                 ? '<span class="ucard-status-inline" style="color:var(--success)"><i class="fas fa-check-circle"></i> Activo</span>'
                 : '<span class="ucard-status-inline" style="color:var(--text-muted)"><i class="fas fa-circle"></i> Inactivo</span>';
             const avatarInner = user.foto
-                ? `<img src="${user.foto}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;cursor:pointer" onclick="window.expandirImagen&&window.expandirImagen(this.src)">`
-                : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:1.5rem;font-weight:700;color:#fff;background:linear-gradient(135deg,var(--primary),var(--primary-dark));border-radius:50%">${inicial}</div>`;
+                ? `<img src="${user.foto}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;display:block;cursor:pointer" onclick="window.expandirImagen&&window.expandirImagen(this.src)">`
+                : `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:1.5rem;font-weight:700;color:#fff;background:linear-gradient(135deg,var(--primary),var(--primary-dark));border-radius:8px">${inicial}</div>`;
             return `<div class="usuario-card-v2 usuario-card">
                 <div class="ucard-avatar">${avatarInner}</div>
                 <div class="ucard-body">
