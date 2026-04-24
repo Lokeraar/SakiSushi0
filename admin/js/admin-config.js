@@ -16,11 +16,6 @@
             window.configGlobal.aumento_activo = window.configGlobal.aumento_activo || false;
             window.configGlobal.aumento_semanal = window.configGlobal.aumento_semanal || false;
             
-            window.configGlobal.admin_password = window.configGlobal.admin_password || 'admin123';
-            window.configGlobal.recovery_email = window.configGlobal.recovery_email || 'admin@sakisushi.com';
-            
-            console.log('⚙️ Configuración cargada. admin_password:', window.configGlobal.admin_password ? '***' : 'NO CARGADA');
-            
         } catch (e) {
             console.error('Error cargando configuración:', e);
             window.configGlobal = {
@@ -28,9 +23,7 @@
                 tasa_efectiva: 400,
                 aumento_diario: 0,
                 aumento_activo: false,
-                aumento_semanal: false,
-                admin_password: 'admin123',
-                recovery_email: 'admin@sakisushi.com'
+                aumento_semanal: false
             };
         }
     };

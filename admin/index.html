@@ -171,7 +171,6 @@
                 <div class="tab" data-tab="usuarios">Usuarios</div>
                 <div class="tab" data-tab="deliverys">Deliverys</div>
                 <div class="tab" data-tab="mesoneros">Mesoneros</div>
-                <div class="tab" data-tab="configuracion">Configuración</div>
                 <div class="tab" data-tab="qr">Códigos QR</div>
                 <div class="tab" data-tab="reportes">Reportes</div>
             </div>
@@ -430,28 +429,6 @@
                             <thead><tr><th>Hora</th><th>Mesonero</th><th>Mesa</th><th>Método</th><th>Monto</th><th>Registrado por</th></tr></thead>
                             <tbody id="propinasTableBody"></tbody>
                         </table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- CONFIGURACIÓN -->
-            <div class="tab-pane" id="configuracionPane">
-                <div class="pane-header">
-                    <h2 class="section-title"><i class="fas fa-cog"></i> Configuración</h2>
-                </div>
-                <div class="config-grid">
-                    <div class="config-section">
-                        <h3><i class="fas fa-lock" style="color:var(--primary);margin-right:.4rem"></i>Cambiar Contraseña</h3>
-                        <div class="form-group"><label>Contraseña Actual</label><input type="password" id="currentPassword" placeholder="Ingresa tu contraseña actual"></div>
-                        <div class="form-group"><label>Nueva Contraseña</label><input type="password" id="newPassword" placeholder="Mínimo 4 caracteres"></div>
-                        <div class="form-group"><label>Confirmar Nueva Contraseña</label><input type="password" id="confirmPassword" placeholder="Repite la nueva contraseña"></div>
-                        <div id="passwordChangeError" style="display:none; color:var(--danger); font-size:.8rem; margin-top:.5rem; text-align:center"><i class="fas fa-exclamation-circle"></i> Error al cambiar la contraseña</div>
-                        <button class="btn-primary" onclick="window.cambiarPassword()" style="margin-top:.5rem"><i class="fas fa-save"></i> Guardar contraseña</button>
-                    </div>
-                    <div class="config-section">
-                        <h3><i class="fas fa-envelope" style="color:var(--info);margin-right:.4rem"></i>Correo de Recuperación</h3>
-                        <div class="form-group"><label>Correo Electrónico</label><input type="email" id="recoveryEmail" value="admin@sakisushi.com"></div>
-                        <button class="btn-primary" onclick="window.guardarRecoveryEmail()"><i class="fas fa-save"></i> Guardar correo</button>
                     </div>
                 </div>
             </div>
