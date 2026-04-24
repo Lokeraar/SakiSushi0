@@ -2,6 +2,8 @@
 (function() {
     let currentIngredienteImagenFile = null;
     let currentIngredienteImagenUrl = '';
+    let isUploadingImage = false;
+    let uploadedImageUrl = null;
     
     // Variables para gestión de stock con contraseña
     let stockOriginalValue = 0;
@@ -216,13 +218,23 @@
             const file = fileInput.files[0];
             currentIngredienteImagenFile = file;
             currentIngredienteImagenUrl = '';
+            uploadedImageUrl = null;
             urlInput.value = '';
             urlInput.disabled = true;
+            
+            // Mostrar animación de carga en la previsualización
+            showLoadingOverlay(previewDiv);
+            
             const reader = new FileReader();
             reader.onload = function(e) {
                 previewImg.src = e.target.result;
                 previewDiv.style.display = 'flex';
+                hideLoadingOverlay(previewDiv);
                 updateIngredienteRemoveButton();
+            };
+            reader.onerror = function() {
+                hideLoadingOverlay(previewDiv);
+                window.mostrarToast('Error al leer la imagen', 'error');
             };
             reader.readAsDataURL(file);
         } else {
@@ -237,6 +249,92 @@
                 previewDiv.style.display = 'none';
                 previewImg.src = '';
             }
+        }
+    }
+    
+    // Función para mostrar overlay de carga
+    function showLoadingOverlay(container) {
+        if (!container) return;
+        let overlay = container.querySelector('.image-loading-overlay');
+        if (!overlay) {
+            overlay = document.createElement('div');
+            overlay.className = 'image-loading-overlay';
+            overlay.innerHTML = '<div class="loading-spinner"></div>';
+            overlay.style.cssText = 'position:absolute;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;border-radius:8px;z-index:20';
+            container.style.position = 'relative';
+            container.appendChild(overlay);
+        }
+        overlay.style.display = 'flex';
+    }
+    
+    // Función para ocultar overlay de carga
+    function hideLoadingOverlay(container) {
+        const overlay = container?.querySelector('.image-loading-overlay');
+        if (overlay) overlay.style.display = 'none';
+    }
+    
+    // Función para subir imagen a Supabase
+    async function uploadIngredienteImage(file) {
+        if (!file) return null;
+        
+        isUploadingImage = true;
+        updateSaveButtonState();
+        
+        try {
+            const tipoValido = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp', 'image/gif'];
+            if (!tipoValido.includes(file.type)) {
+                throw new Error('Tipo de archivo no válido. Solo imágenes JPG, PNG, WEBP o GIF');
+            }
+            const maxSize = 5 * 1024 * 1024;
+            if (file.size > maxSize) {
+                throw new Error('El archivo es demasiado grande. Máximo 5MB');
+            }
+            
+            const timestamp = Date.now();
+            const random = Math.random().toString(36).substring(2, 8);
+            const extension = file.name.split('.').pop();
+            const nombreArchivo = `ingredientes/${timestamp}_${random}.${extension}`;
+            
+            const { data, error } = await window.supabaseClient.storage
+                .from('imagenes-platillos')
+                .upload(nombreArchivo, file, { cacheControl: '3600', upsert: false, contentType: file.type });
+            
+            if (error) throw error;
+            
+            const { data: urlData } = window.supabaseClient.storage.from('imagenes-platillos').getPublicUrl(nombreArchivo);
+            
+            uploadedImageUrl = urlData.publicUrl;
+            return uploadedImageUrl;
+        } catch (error) {
+            console.error('Error subiendo imagen:', error);
+            window.mostrarToast('Error al subir imagen: ' + (error.message || error), 'error');
+            return null;
+        } finally {
+            isUploadingImage = false;
+            updateSaveButtonState();
+        }
+    }
+    
+    // Función para actualizar el estado del botón de guardar
+    function updateSaveButtonState() {
+        const saveBtn = document.getElementById('saveIngredienteBtn');
+        if (!saveBtn) return;
+        
+        if (isUploadingImage) {
+            saveBtn.disabled = true;
+            saveBtn.style.opacity = '0.6';
+            saveBtn.style.cursor = 'not-allowed';
+            saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin" style="margin-right:0.5rem"></i>Subiendo imagen...';
+        } else if (isSavingIngrediente) {
+            saveBtn.disabled = true;
+            saveBtn.style.opacity = '0.6';
+            saveBtn.style.cursor = 'not-allowed';
+            saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin" style="margin-right:0.5rem"></i>Guardando...';
+        } else {
+            saveBtn.disabled = false;
+            saveBtn.style.opacity = '1';
+            saveBtn.style.cursor = 'pointer';
+            saveBtn.innerHTML = '<i class="fas fa-save" style="margin-right:0.5rem"></i>Guardar';
         }
     }
 
@@ -379,8 +477,12 @@
         // Eliminar el botón de quitar imagen
         const removeBtn = previewDiv?.querySelector('.preview-remove-btn');
         if (removeBtn) removeBtn.remove();
+        // Eliminar overlay de carga si existe
+        const loadingOverlay = previewDiv?.querySelector('.image-loading-overlay');
+        if (loadingOverlay) loadingOverlay.remove();
 		currentIngredienteImagenFile = null;
 		currentIngredienteImagenUrl = '';
+        uploadedImageUrl = null;
 	}
 
 // Validación dinámica de precio de venta vs costo
@@ -845,8 +947,14 @@ validarPrecios();
         );
     };
     
+    // Variable para controlar el estado de guardado
+    let isSavingIngrediente = false;
+    
     // Función principal para guardar ingrediente
     window.guardarIngrediente = async function() {
+        // Prevenir múltiples clics
+        if (isSavingIngrediente || isUploadingImage) return;
+        
         const nombre = document.getElementById('ingredienteNombre')?.value.trim();
         const unidad = document.getElementById('ingredienteUnidad')?.value || 'unidades';
         const minimo = parseFloat(document.getElementById('ingredienteMinimo')?.value) || 0;
@@ -873,6 +981,26 @@ validarPrecios();
         // PHASE 8: Compare original vs new stock - only update if changed
         const shouldUpdateStock = newStockValue !== stockOriginalValue;
         
+        // Subir imagen si hay un archivo pendiente
+        let finalImageUrl = null;
+        if (currentIngredienteImagenFile) {
+            isSavingIngrediente = true;
+            updateSaveButtonState();
+            
+            finalImageUrl = await uploadIngredienteImage(currentIngredienteImagenFile);
+            
+            if (!finalImageUrl && currentIngredienteImagenFile) {
+                // Error al subir la imagen, permitir reintento
+                isSavingIngrediente = false;
+                updateSaveButtonState();
+                return;
+            }
+        } else if (currentIngredienteImagenUrl) {
+            finalImageUrl = currentIngredienteImagenUrl;
+        } else if (uploadedImageUrl) {
+            finalImageUrl = uploadedImageUrl;
+        }
+        
         // Aplicar fix de decimales con toFixed(2) para evitar errores como 14.60000000001
         const ingredienteData = {
             nombre: nombre,
@@ -881,7 +1009,7 @@ validarPrecios();
             minimo: parseFloat(parseFloat(minimo).toFixed(2)),
             precio_costo: parseFloat(parseFloat(costo).toFixed(2)),
             precio_unitario: parseFloat(parseFloat(venta).toFixed(2)),
-            imagen: currentIngredienteImagenUrl || currentIngredienteImagenFile ? (currentIngredienteImagenUrl || null) : null,
+            imagen: finalImageUrl,
             reservado: 0
         };
         
@@ -912,6 +1040,7 @@ validarPrecios();
             window.cerrarModal('ingredienteModal');
             window.ingredienteEditandoId = null;
             removeIngredienteImage();
+            uploadedImageUrl = null;
             await window.cargarInventario();
             const mensajeExito = window.ingredienteEditandoId ? 'Ingrediente editado con éxito' : 'Ingrediente creado con éxito';
             window.mostrarToast('✅ ' + mensajeExito, 'success');
@@ -919,6 +1048,9 @@ validarPrecios();
         } catch (e) {
             console.error('Error guardando ingrediente:', e);
             window.mostrarToast('❌ Error al guardar: ' + (e.message || e), 'error');
+        } finally {
+            isSavingIngrediente = false;
+            updateSaveButtonState();
         }
     };
     

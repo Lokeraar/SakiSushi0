@@ -1769,6 +1769,10 @@ html.dark-theme .ingrediente-row {
 .image-preview { display: flex; align-items: center; gap: 1rem; margin-top: .5rem; }
 .image-preview img { width: 80px; height: 80px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border); }
 
+/* Loading spinner styles for image upload */
+.loading-spinner { width: 36px; height: 36px; border: 3px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin .8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
 /* Password overlay */
 .password-overlay { position: relative; }
 .password-protected input:disabled { background: #ffffff; cursor: not-allowed; }
@@ -1797,8 +1801,6 @@ html.dark-theme .ingrediente-row {
 
 /* Loading */
 .loading { display: flex; align-items: center; justify-content: center; padding: 3rem; }
-.loading-spinner { width: 36px; height: 36px; border: 3px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin .8s linear infinite; }
-@keyframes spin { to { transform: rotate(360deg); } }
 
 /* Configuración */
 .config-section { background: var(--card-bg); border-radius: var(--radius); padding: 1.5rem; box-shadow: var(--shadow-sm); margin-bottom: 1.5rem; border: 1px solid var(--border); }
