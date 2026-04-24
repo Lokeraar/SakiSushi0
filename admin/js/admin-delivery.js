@@ -252,12 +252,25 @@
             
             if (btn) { btn.disabled=true; btn.innerHTML='<i class="fas fa-spinner fa-spin"></i> Procesando...'; }
             try {
-                // Marcar todos los registros como pagados en lugar de eliminarlos
-                var r2 = await window.supabaseClient.from('entregas_delivery')
+                // Crear un registro de egreso por el monto acumulado restante (pago total)
+                var r2 = await window.supabaseClient.from('entregas_delivery').insert([{ 
+                    delivery_id: window.deliveryParaPago, 
+                    monto_bs: -acumulado, 
+                    pedido_id: null, 
+                    fecha_entrega: new Date().toISOString(),
+                    pagado: false,
+                    es_pago_total: true
+                }]);
+                if (r2.error) throw r2.error;
+                
+                // Marcar todos los registros pendientes como pagados
+                var r3 = await window.supabaseClient.from('entregas_delivery')
                     .update({ pagado: true })
                     .eq('delivery_id', window.deliveryParaPago)
-                    .eq('pagado', false);
-                if (r2.error) throw r2.error;
+                    .eq('pagado', false)
+                    .neq('es_pago_total', true);
+                if (r3.error) throw r3.error;
+                
                 window.mostrarToast('Pago total registrado. Acumulado reiniciado.', 'success');
             } catch(e) { 
                 window.mostrarToast('Error: '+(e.message||e), 'error'); 
