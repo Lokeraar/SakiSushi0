@@ -771,7 +771,8 @@ CREATE TABLE entregas_delivery (
     monto_bs NUMERIC(10,2) DEFAULT 0,
     fecha_entrega TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    pagado BOOLEAN DEFAULT FALSE
+    pagado BOOLEAN DEFAULT FALSE,
+    es_pago_total BOOLEAN DEFAULT FALSE
 );
 
 -- Migración segura: agregar columna pedido_id si no existe (para bases de datos ya creadas)
@@ -791,6 +792,16 @@ DO $$ BEGIN
         WHERE table_name='entregas_delivery' AND column_name='pagado'
     ) THEN
         ALTER TABLE entregas_delivery ADD COLUMN pagado BOOLEAN DEFAULT FALSE;
+    END IF;
+END $$;
+
+-- Migración segura: agregar columna es_pago_total si no existe (para bases de datos ya creadas)
+DO $$ BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name='entregas_delivery' AND column_name='es_pago_total'
+    ) THEN
+        ALTER TABLE entregas_delivery ADD COLUMN es_pago_total BOOLEAN DEFAULT FALSE;
     END IF;
 END $$;
 
