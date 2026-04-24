@@ -13,8 +13,24 @@ CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 -- ============================================
 DROP FUNCTION IF EXISTS crear_pedido_con_reserva CASCADE;
 DROP FUNCTION IF EXISTS liberar_ingredientes CASCADE;
+DROP FUNCTION IF EXISTS verificar_stock_critico CASCADE;
 DROP FUNCTION IF EXISTS update_updated_at_column CASCADE;
+DROP FUNCTION IF EXISTS insertar_notificacion_segura CASCADE;
+DROP FUNCTION IF EXISTS utc_to_gmt4 CASCADE;
+DROP FUNCTION IF EXISTS now_gmt4 CASCADE;
+DROP FUNCTION IF EXISTS enviar_notificacion_push CASCADE;
+DROP FUNCTION IF EXISTS trigger_enviar_push CASCADE;
+DROP FUNCTION IF EXISTS limpiar_suscripciones_expiradas CASCADE;
+DROP FUNCTION IF EXISTS get_notificaciones_no_leidas CASCADE;
+DROP FUNCTION IF EXISTS get_pedidos_pendientes CASCADE;
+DROP FUNCTION IF EXISTS get_acumulado_propinas_mesonero CASCADE;
+DROP FUNCTION IF EXISTS get_propinas_dia CASCADE;
+DROP FUNCTION IF EXISTS get_ventas_dia CASCADE;
+DROP FUNCTION IF EXISTS get_pedidos_activos CASCADE;
 DROP FUNCTION IF EXISTS verify_user_credentials CASCADE;
+DROP FUNCTION IF EXISTS validate_and_commit_order CASCADE;
+DROP FUNCTION IF EXISTS update_stock_atomic CASCADE;
+DROP FUNCTION IF EXISTS sync_recipe_ingredients CASCADE;
 
 DROP TABLE IF EXISTS push_subscriptions CASCADE;
 DROP TABLE IF EXISTS notificaciones CASCADE;
@@ -29,6 +45,7 @@ DROP TABLE IF EXISTS deliverys CASCADE;
 DROP TABLE IF EXISTS mesoneros CASCADE;
 DROP TABLE IF EXISTS usuarios CASCADE;
 DROP TABLE IF EXISTS config CASCADE;
+DROP TABLE IF EXISTS recipe_ingredients CASCADE;
 
 -- ============================================
 -- TABLA: config
@@ -377,6 +394,79 @@ BEGIN
 END $$;
 
 -- ============================================
+-- TABLA: recipe_ingredients (NUEVA - normalización para atomicidad)
+-- ============================================
+CREATE TABLE IF NOT EXISTS recipe_ingredients (
+    id SERIAL PRIMARY KEY,
+    dish_id TEXT NOT NULL REFERENCES menu(id) ON DELETE CASCADE,
+    ingredient_id TEXT NOT NULL REFERENCES inventario(id) ON DELETE CASCADE,
+    quantity_required NUMERIC(10,3) NOT NULL DEFAULT 1,
+    unit TEXT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    UNIQUE(dish_id, ingredient_id)
+);
+
+-- Migrar datos existentes desde menu.ingredientes (JSONB) a recipe_ingredients
+INSERT INTO recipe_ingredients (dish_id, ingredient_id, quantity_required, unit)
+SELECT
+    m.id AS dish_id,
+    key AS ingredient_id,
+    (value->>'cantidad')::NUMERIC AS quantity_required,
+    COALESCE(value->>'unidad', 'unidades') AS unit
+FROM menu m,
+     LATERAL jsonb_each(m.ingredientes) AS ingredients(key, value)
+WHERE m.ingredientes IS NOT NULL
+  AND jsonb_typeof(m.ingredientes) = 'object'
+ON CONFLICT (dish_id, ingredient_id) DO NOTHING;
+
+CREATE INDEX IF NOT EXISTS idx_recipe_ingredients_dish_id ON recipe_ingredients(dish_id);
+CREATE INDEX IF NOT EXISTS idx_recipe_ingredients_ingredient_id ON recipe_ingredients(ingredient_id);
+
+-- Trigger para sincronizar recipe_ingredients cuando se modifica menu.ingredientes
+CREATE OR REPLACE FUNCTION sync_recipe_ingredients()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    IF TG_OP = 'INSERT' OR TG_OP = 'UPDATE' THEN
+        DELETE FROM recipe_ingredients WHERE dish_id = NEW.id;
+        IF NEW.ingredientes IS NOT NULL THEN
+            INSERT INTO recipe_ingredients (dish_id, ingredient_id, quantity_required, unit)
+            SELECT
+                NEW.id,
+                key,
+                (value->>'cantidad')::NUMERIC,
+                COALESCE(value->>'unidad', 'unidades')
+            FROM jsonb_each(NEW.ingredientes) AS ingredients(key, value)
+            WHERE jsonb_typeof(NEW.ingredientes) = 'object';
+        END IF;
+    ELSIF TG_OP = 'DELETE' THEN
+        DELETE FROM recipe_ingredients WHERE dish_id = OLD.id;
+    END IF;
+    RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS sync_recipe_ingredients_trigger ON menu;
+CREATE TRIGGER sync_recipe_ingredients_trigger
+    AFTER INSERT OR UPDATE OR DELETE ON menu
+    FOR EACH ROW
+    EXECUTE FUNCTION sync_recipe_ingredients();
+
+-- Permisos para recipe_ingredients y su secuencia serial.
+-- Sin estos GRANTs el trigger falla con permission denied for sequence recipe_ingredients_id_seq
+ALTER TABLE recipe_ingredients ENABLE ROW LEVEL SECURITY;
+DO $$ BEGIN
+    CREATE POLICY "Permitir todo recipe_ingredients" ON recipe_ingredients FOR ALL USING (true) WITH CHECK (true);
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+GRANT ALL ON recipe_ingredients TO anon, authenticated;
+GRANT ALL ON recipe_ingredients TO PUBLIC;
+GRANT USAGE, SELECT ON SEQUENCE recipe_ingredients_id_seq TO anon, authenticated;
+GRANT USAGE, SELECT ON SEQUENCE recipe_ingredients_id_seq TO PUBLIC;
+
+-- ============================================
 -- TABLA: pedidos
 -- ============================================
 CREATE TABLE pedidos (
@@ -557,6 +647,29 @@ DO $$ BEGIN
         CREATE INDEX idx_ventas_detalle_pedido_id ON ventas_detalle(pedido_id);
     END IF;
 END $$;
+
+-- ============================================
+-- TRIGGER: replicar_imagen_menu
+-- Propaga automáticamente la imagen del menú a ventas_detalle
+-- ============================================
+CREATE OR REPLACE FUNCTION replicar_imagen_menu()
+RETURNS TRIGGER AS $$
+BEGIN
+    -- Si la imagen es NULL o vacía, obtenerla del menú
+    IF NEW.imagen IS NULL OR NEW.imagen = '' THEN
+        SELECT m.imagen INTO NEW.imagen
+        FROM menu m
+        WHERE m.id = NEW.platillo_id;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trigger_replicar_imagen_menu ON ventas_detalle;
+CREATE TRIGGER trigger_replicar_imagen_menu
+    BEFORE INSERT OR UPDATE ON ventas_detalle
+    FOR EACH ROW
+    EXECUTE FUNCTION replicar_imagen_menu();
 
 -- ============================================
 -- FUNCIÓN RPC: sincronizar_imagenes_ventas_detalle
@@ -1051,6 +1164,402 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- ============================================
+-- FUNCIÓN: verificar_stock_critico
+-- ============================================
+CREATE OR REPLACE FUNCTION verificar_stock_critico()
+RETURNS TABLE (
+    ingrediente_id TEXT,
+    nombre TEXT,
+    stock_actual NUMERIC,
+    stock_minimo NUMERIC,
+    unidades_faltantes NUMERIC
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT
+        i.id,
+        i.nombre,
+        i.stock - i.reservado AS stock_actual,
+        i.minimo,
+        GREATEST(0, i.minimo - (i.stock - i.reservado)) AS unidades_faltantes
+    FROM inventario i
+    WHERE (i.stock - i.reservado) <= i.minimo
+    ORDER BY (i.stock - i.reservado) ASC;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- ============================================
+-- FUNCIÓN SEGURA PARA INSERTAR NOTIFICACIONES
+-- ============================================
+CREATE OR REPLACE FUNCTION insertar_notificacion_segura(
+    p_pedido_id TEXT,
+    p_tipo TEXT,
+    p_titulo TEXT,
+    p_mensaje TEXT,
+    p_session_id TEXT
+) RETURNS JSONB AS $$
+DECLARE
+    v_result JSONB;
+BEGIN
+    INSERT INTO notificaciones (
+        pedido_id, tipo, titulo, mensaje, fecha, session_id, leida
+    ) VALUES (
+        p_pedido_id, p_tipo, p_titulo, p_mensaje, NOW(), p_session_id, false
+    );
+    
+    v_result := jsonb_build_object('success', true);
+    RETURN v_result;
+    
+EXCEPTION WHEN OTHERS THEN
+    RETURN jsonb_build_object('success', false, 'error', SQLERRM);
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- ============================================
+-- FUNCIONES DE ZONA HORARIA GMT-4
+-- ============================================
+CREATE OR REPLACE FUNCTION utc_to_gmt4(utc_fecha TIMESTAMP WITH TIME ZONE)
+RETURNS TIMESTAMP WITHOUT TIME ZONE AS $$
+BEGIN
+    RETURN utc_fecha AT TIME ZONE 'UTC' AT TIME ZONE 'America/Caracas';
+END;
+$$ LANGUAGE plpgsql IMMUTABLE;
+
+CREATE OR REPLACE FUNCTION now_gmt4()
+RETURNS TIMESTAMP WITHOUT TIME ZONE AS $$
+BEGIN
+    RETURN NOW() AT TIME ZONE 'UTC' AT TIME ZONE 'America/Caracas';
+END;
+$$ LANGUAGE plpgsql STABLE;
+
+-- ============================================
+-- FUNCIONES PARA ESTADÍSTICAS
+-- ============================================
+CREATE OR REPLACE FUNCTION get_acumulado_propinas_mesonero(p_mesonero_id TEXT, p_fecha DATE DEFAULT CURRENT_DATE)
+RETURNS NUMERIC AS $$
+DECLARE
+    v_total NUMERIC;
+BEGIN
+    SELECT COALESCE(SUM(monto_bs), 0) INTO v_total
+    FROM propinas
+    WHERE mesonero_id = p_mesonero_id
+      AND DATE(fecha AT TIME ZONE 'UTC' AT TIME ZONE 'America/Caracas') = p_fecha;
+    
+    RETURN v_total;
+END;
+$$ LANGUAGE plpgsql STABLE;
+
+CREATE OR REPLACE FUNCTION get_propinas_dia(p_fecha DATE DEFAULT CURRENT_DATE)
+RETURNS TABLE (
+    id INTEGER,
+    mesonero_id TEXT,
+    mesonero_nombre TEXT,
+    mesa TEXT,
+    metodo TEXT,
+    monto_bs NUMERIC,
+    cajero TEXT,
+    fecha TIMESTAMP WITH TIME ZONE
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        p.id,
+        p.mesonero_id,
+        m.nombre AS mesonero_nombre,
+        p.mesa,
+        p.metodo,
+        p.monto_bs,
+        p.cajero,
+        p.fecha
+    FROM propinas p
+    LEFT JOIN mesoneros m ON p.mesonero_id = m.id
+    WHERE DATE(p.fecha AT TIME ZONE 'UTC' AT TIME ZONE 'America/Caracas') = p_fecha
+    ORDER BY p.fecha DESC;
+END;
+$$ LANGUAGE plpgsql STABLE;
+
+CREATE OR REPLACE FUNCTION get_ventas_dia(p_fecha DATE DEFAULT CURRENT_DATE)
+RETURNS TABLE (
+    total_ventas NUMERIC,
+    total_propinas NUMERIC,
+    cantidad_ventas BIGINT,
+    cantidad_propinas BIGINT
+) AS $$
+DECLARE
+    v_fecha_inicio TIMESTAMP WITH TIME ZONE;
+    v_fecha_fin TIMESTAMP WITH TIME ZONE;
+BEGIN
+    v_fecha_inicio := (p_fecha::TEXT || ' 00:00:00-04')::TIMESTAMP WITH TIME ZONE;
+    v_fecha_fin := (p_fecha::TEXT || ' 23:59:59-04')::TIMESTAMP WITH TIME ZONE;
+    
+    RETURN QUERY
+    SELECT
+        COALESCE((SELECT SUM(total) FROM pedidos WHERE fecha_cobro BETWEEN v_fecha_inicio AND v_fecha_fin), 0) AS total_ventas,
+        COALESCE((SELECT SUM(monto_bs) FROM propinas WHERE fecha BETWEEN v_fecha_inicio AND v_fecha_fin), 0) AS total_propinas,
+        COALESCE((SELECT COUNT(*) FROM pedidos WHERE fecha_cobro BETWEEN v_fecha_inicio AND v_fecha_fin), 0) AS cantidad_ventas,
+        COALESCE((SELECT COUNT(*) FROM propinas WHERE fecha BETWEEN v_fecha_inicio AND v_fecha_fin), 0) AS cantidad_propinas;
+END;
+$$ LANGUAGE plpgsql STABLE;
+
+CREATE OR REPLACE FUNCTION get_pedidos_activos()
+RETURNS TABLE (
+    pedido_id TEXT,
+    tipo TEXT,
+    estado TEXT,
+    fecha_registro TIMESTAMP WITH TIME ZONE,
+    total NUMERIC,
+    items JSONB,
+    cliente_nombre TEXT,
+    mesa TEXT
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        p.id AS pedido_id,
+        p.tipo,
+        p.estado,
+        p.fecha AS fecha_registro,
+        p.total,
+        p.items,
+        p.cliente_nombre,
+        p.mesa
+    FROM pedidos p
+    WHERE p.estado IN ('pendiente', 'en_cocina', 'en_camino', 'reserva_pendiente', 'reserva_atendida')
+    ORDER BY 
+        CASE p.estado
+            WHEN 'pendiente' THEN 1
+            WHEN 'en_cocina' THEN 2
+            WHEN 'en_camino' THEN 3
+            WHEN 'reserva_pendiente' THEN 4
+            WHEN 'reserva_atendida' THEN 5
+        END,
+        p.fecha ASC;
+END;
+$$ LANGUAGE plpgsql STABLE;
+
+CREATE OR REPLACE FUNCTION get_notificaciones_no_leidas(p_session_id TEXT)
+RETURNS TABLE (
+    id INTEGER,
+    tipo TEXT,
+    titulo TEXT,
+    mensaje TEXT,
+    fecha_notificacion TIMESTAMP WITH TIME ZONE,
+    leida BOOLEAN
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT n.id, n.tipo, n.titulo, n.mensaje, n.fecha, n.leida
+    FROM notificaciones n
+    WHERE n.session_id = p_session_id
+      AND n.leida = false
+    ORDER BY n.fecha DESC;
+END;
+$$ LANGUAGE plpgsql STABLE;
+
+CREATE OR REPLACE FUNCTION get_pedidos_pendientes()
+RETURNS TABLE (
+    id TEXT,
+    tipo TEXT,
+    total NUMERIC,
+    fecha_pedido TIMESTAMP WITH TIME ZONE,
+    session_id TEXT,
+    items JSONB
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT p.id, p.tipo, p.total, p.fecha, p.session_id, p.items
+    FROM pedidos p
+    WHERE p.estado = 'pendiente'
+    ORDER BY p.fecha ASC;
+END;
+$$ LANGUAGE plpgsql STABLE;
+
+-- ============================================
+-- FUNCIÓN PARA ENVIAR NOTIFICACIÓN PUSH (REGISTRO)
+-- ============================================
+CREATE OR REPLACE FUNCTION enviar_notificacion_push(
+    p_session_id TEXT,
+    p_titulo TEXT,
+    p_mensaje TEXT,
+    p_pedido_id TEXT DEFAULT NULL,
+    p_url TEXT DEFAULT '/SakiSushi0/Cliente/'
+) RETURNS JSONB AS $$
+DECLARE
+    v_result JSONB;
+    v_subscription RECORD;
+    v_count INTEGER := 0;
+BEGIN
+    FOR v_subscription IN 
+        SELECT endpoint, p256dh, auth 
+        FROM push_subscriptions 
+        WHERE session_id = p_session_id
+    LOOP
+        UPDATE push_subscriptions 
+        SET last_used = NOW() 
+        WHERE endpoint = v_subscription.endpoint;
+        
+        v_count := v_count + 1;
+        
+        RAISE NOTICE '📨 Enviando push a %', v_subscription.endpoint;
+    END LOOP;
+    
+    v_result := jsonb_build_object(
+        'success', true,
+        'enviadas', v_count,
+        'session_id', p_session_id,
+        'pedido_id', p_pedido_id
+    );
+    
+    RETURN v_result;
+    
+EXCEPTION WHEN OTHERS THEN
+    RETURN jsonb_build_object('success', false, 'error', SQLERRM);
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- ============================================
+-- TRIGGER PARA ENVIAR PUSH AL INSERTAR NOTIFICACIÓN
+-- ============================================
+CREATE OR REPLACE FUNCTION trigger_enviar_push()
+RETURNS TRIGGER AS $$
+BEGIN
+    PERFORM pg_notify('enviar_push', json_build_object(
+        'session_id', NEW.session_id,
+        'titulo', NEW.titulo,
+        'mensaje', NEW.mensaje,
+        'pedido_id', NEW.pedido_id
+    )::text);
+    
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS notificaciones_push_trigger ON notificaciones;
+CREATE TRIGGER notificaciones_push_trigger
+    AFTER INSERT ON notificaciones
+    FOR EACH ROW
+    EXECUTE FUNCTION trigger_enviar_push();
+
+-- ============================================
+-- FUNCIÓN PARA LIMPIAR SUSCRIPCIONES EXPIRADAS
+-- ============================================
+CREATE OR REPLACE FUNCTION limpiar_suscripciones_expiradas()
+RETURNS INTEGER AS $$
+DECLARE
+    v_eliminadas INTEGER;
+BEGIN
+    DELETE FROM push_subscriptions 
+    WHERE last_used < NOW() - INTERVAL '30 days';
+    
+    GET DIAGNOSTICS v_eliminadas = ROW_COUNT;
+    RETURN v_eliminadas;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- ============================================
+-- FUNCIONES RPC ATOMICAS (NUEVAS)
+-- ============================================
+
+-- Función: validar y confirmar pedido con atomicidad (usa recipe_ingredients)
+CREATE OR REPLACE FUNCTION validate_and_commit_order(pedido JSONB)
+RETURNS JSONB
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    item JSONB;
+    ingrediente RECORD;
+    stock_actual NUMERIC;
+    dish_id TEXT;
+    cantidad_porcion INTEGER;
+BEGIN
+    -- Validación (con bloqueo pesimista)
+    FOR item IN SELECT * FROM jsonb_array_elements(pedido->'items')
+    LOOP
+        dish_id := item->>'dish_id';
+        cantidad_porcion := (item->>'cantidad')::INTEGER;
+
+        FOR ingrediente IN
+            SELECT ri.ingredient_id,
+                   ri.quantity_required * cantidad_porcion AS total_needed
+            FROM recipe_ingredients ri
+            WHERE ri.dish_id = dish_id
+        LOOP
+            SELECT stock INTO stock_actual
+            FROM inventario
+            WHERE id = ingrediente.ingredient_id
+            FOR UPDATE;
+
+            IF stock_actual < ingrediente.total_needed THEN
+                RETURN jsonb_build_object(
+                    'success', false,
+                    'error', 'Stock insuficiente',
+                    'ingredient_id', ingrediente.ingredient_id,
+                    'dish_id', dish_id
+                );
+            END IF;
+        END LOOP;
+    END LOOP;
+
+    -- Descuento real
+    FOR item IN SELECT * FROM jsonb_array_elements(pedido->'items')
+    LOOP
+        dish_id := item->>'dish_id';
+        cantidad_porcion := (item->>'cantidad')::INTEGER;
+
+        FOR ingrediente IN
+            SELECT ri.ingredient_id,
+                   ri.quantity_required * cantidad_porcion AS total_needed
+            FROM recipe_ingredients ri
+            WHERE ri.dish_id = dish_id
+        LOOP
+            UPDATE inventario
+            SET stock = stock - ingrediente.total_needed
+            WHERE id = ingrediente.ingredient_id;
+        END LOOP;
+    END LOOP;
+
+    RETURN jsonb_build_object('success', true);
+END;
+$$;
+
+-- Función: actualizar stock de un ingrediente con bloqueo pesimista
+CREATE OR REPLACE FUNCTION update_stock_atomic(
+    p_ingredient_id TEXT,
+    p_delta NUMERIC
+)
+RETURNS JSONB
+LANGUAGE plpgsql
+AS $$
+DECLARE
+    current_stock NUMERIC;
+BEGIN
+    SELECT stock INTO current_stock
+    FROM inventario
+    WHERE id = p_ingredient_id
+    FOR UPDATE;
+
+    IF current_stock + p_delta < 0 THEN
+        RETURN jsonb_build_object(
+            'success', false,
+            'error', 'Stock no puede ser negativo',
+            'current_stock', current_stock,
+            'delta', p_delta
+        );
+    END IF;
+
+    UPDATE inventario
+    SET stock = stock + p_delta
+    WHERE id = p_ingredient_id;
+
+    RETURN jsonb_build_object('success', true);
+END;
+$$;
+
+-- Permisos para las nuevas funciones
+GRANT EXECUTE ON FUNCTION validate_and_commit_order TO anon, authenticated;
+GRANT EXECUTE ON FUNCTION update_stock_atomic TO anon, authenticated;
+
+-- ============================================
 -- CONFIGURACIÓN DE STORAGE
 -- ============================================
 INSERT INTO storage.buckets (id, name, public) VALUES
@@ -1123,5 +1632,6 @@ ALTER TABLE config ADD COLUMN IF NOT EXISTS aumento_indefinido BOOLEAN DEFAULT F
 SELECT '✅ SCRIPT COMPLETADO EXITOSAMENTE' as mensaje;
 SELECT '✅ NOTIFICACIONES AUTOMÁTICAS ACTIVADAS' as notificaciones;
 SELECT '✅ FUNCIÓN verify_user_credentials CREADA' as auth;
+SELECT '✅ FUNCIONES ATOMICAS validate_and_commit_order y update_stock_atomic CREADAS' as atomic;
 SELECT '✅ Usuario admin: contraseña admin123' as admin_info;
 SELECT '✅ Usuarios cajero: cajero1/123456, cajero2/123456' as cajero_info;
