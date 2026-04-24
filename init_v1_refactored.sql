@@ -15,10 +15,15 @@ DROP FUNCTION IF EXISTS crear_pedido_con_reserva CASCADE;
 DROP FUNCTION IF EXISTS liberar_ingredientes CASCADE;
 DROP FUNCTION IF EXISTS update_updated_at_column CASCADE;
 DROP FUNCTION IF EXISTS verify_user_credentials CASCADE;
+DROP FUNCTION IF EXISTS sincronizar_imagenes_ventas_detalle CASCADE;
+DROP FUNCTION IF EXISTS forzar_sincronizacion_imagenes CASCADE;
+
+DROP VIEW IF EXISTS vista_platillo_estrella CASCADE;
 
 DROP TABLE IF EXISTS push_subscriptions CASCADE;
 DROP TABLE IF EXISTS notificaciones CASCADE;
 DROP TABLE IF EXISTS entregas_delivery CASCADE;
+DROP TABLE IF EXISTS ventas_detalle CASCADE;
 DROP TABLE IF EXISTS ventas CASCADE;
 DROP TABLE IF EXISTS propinas CASCADE;
 DROP TABLE IF EXISTS pedidos CASCADE;

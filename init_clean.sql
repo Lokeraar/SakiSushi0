@@ -15,10 +15,15 @@ DROP FUNCTION IF EXISTS crear_pedido_con_reserva CASCADE;
 DROP FUNCTION IF EXISTS liberar_ingredientes CASCADE;
 DROP FUNCTION IF EXISTS update_updated_at_column CASCADE;
 DROP FUNCTION IF EXISTS verify_user_credentials CASCADE;
+DROP FUNCTION IF EXISTS sincronizar_imagenes_ventas_detalle CASCADE;
+DROP FUNCTION IF EXISTS forzar_sincronizacion_imagenes CASCADE;
+
+DROP VIEW IF EXISTS vista_platillo_estrella CASCADE;
 
 DROP TABLE IF EXISTS push_subscriptions CASCADE;
 DROP TABLE IF EXISTS notificaciones CASCADE;
 DROP TABLE IF EXISTS entregas_delivery CASCADE;
+DROP TABLE IF EXISTS ventas_detalle CASCADE;
 DROP TABLE IF EXISTS ventas CASCADE;
 DROP TABLE IF EXISTS propinas CASCADE;
 DROP TABLE IF EXISTS pedidos CASCADE;
@@ -55,9 +60,6 @@ CREATE TABLE config (
     CONSTRAINT config_id_check CHECK (id = 1)
 );
 
--- ============================================
--- POBLAR TABLA config (VALORES LIMPIOS)
--- ============================================
 INSERT INTO config (
     id, tasa_cambio, tasa_efectiva,
     aumento_diario, aumento_acumulado,
@@ -118,7 +120,7 @@ END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
 -- ============================================
--- POBLAR TABLA usuarios (SOLO ADMIN)
+-- POBLAR TABLA usuarios
 -- ============================================
 INSERT INTO usuarios (id, nombre, username, password_hash, rol, activo) VALUES
     ('user_admin_001', 'Administrador', 'admin', hash_password('admin123'), 'admin', true)
@@ -184,8 +186,6 @@ CREATE POLICY "Permitir todo mesoneros" ON mesoneros FOR ALL USING (true) WITH C
 GRANT ALL ON mesoneros TO anon, authenticated;
 GRANT ALL ON mesoneros TO PUBLIC;
 
--- TABLA mesoneros: SIN DATOS INICIALES (se crean desde la UI)
-
 -- ============================================
 -- TABLA: deliverys
 -- ============================================
@@ -202,8 +202,6 @@ ALTER TABLE deliverys ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Permitir todo deliverys" ON deliverys FOR ALL USING (true) WITH CHECK (true);
 GRANT ALL ON deliverys TO anon, authenticated;
 GRANT ALL ON deliverys TO PUBLIC;
-
--- TABLA deliverys: SIN DATOS INICIALES (se crean desde la UI)
 
 -- ============================================
 -- TABLA: inventario
@@ -240,8 +238,6 @@ CREATE INDEX idx_inventario_nombre ON inventario(nombre);
 CREATE INDEX idx_inventario_stock ON inventario(stock);
 CREATE INDEX idx_inventario_minimo ON inventario(minimo);
 
--- TABLA inventario: SIN DATOS INICIALES (se crean desde la UI)
-
 -- ============================================
 -- TABLA: menu
 -- ============================================
@@ -272,7 +268,6 @@ CREATE INDEX idx_menu_nombre ON menu(nombre);
 CREATE INDEX idx_menu_precio ON menu(precio);
 CREATE INDEX idx_menu_disponible ON menu(disponible);
 
--- TABLA menu: SIN DATOS INICIALES (se crean desde la UI)
 
 -- ============================================
 -- TABLA: pedidos
@@ -766,7 +761,6 @@ GRANT ALL ON codigos_qr TO PUBLIC;
 CREATE INDEX idx_codigos_qr_tipo ON codigos_qr(tipo);
 CREATE INDEX idx_codigos_qr_nombre ON codigos_qr(nombre);
 
--- TABLA codigos_qr: SIN DATOS INICIALES (se crean desde la UI)
 
 -- ============================================
 -- FUNCIÓN: update_updated_at_column
@@ -1015,3 +1009,4 @@ SELECT '✅ SCRIPT COMPLETADO EXITOSAMENTE' as mensaje;
 SELECT '✅ NOTIFICACIONES AUTOMÁTICAS ACTIVADAS' as notificaciones;
 SELECT '✅ FUNCIÓN verify_user_credentials CREADA' as auth;
 SELECT '✅ Usuario admin: contraseña admin123' as admin_info;
+SELECT '✅ Usuarios cajero: cajero1/123456, cajero2/123456' as cajero_info;
