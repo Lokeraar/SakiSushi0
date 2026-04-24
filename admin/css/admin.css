@@ -1084,6 +1084,17 @@ html.dark-theme .dashboard-card { border-color: transparent; border-left-color: 
 .card-value { font-size: 1.6rem; font-weight: 700; color: var(--text-dark); }
 .card-value.accent { color: var(--primary); }
 
+/* Tooltip styles for tasa card - allow overflow and constrain within aspect ratios */
+.tooltip-wrap-tasa { position: relative; }
+.tooltip-text-tasa {
+    font-size: 0.75rem !important;
+    width: 250px !important;
+    /* Constrain horizontal dimensions to prevent exceeding 16:9 and 9:16 aspect ratios */
+    max-width: min(90vw, calc(90vh * 16 / 9)) !important;
+    /* Allow tooltip bubble to overflow the card */
+    overflow: visible !important;
+}
+
 /* Buttons */
 .btn-primary {
     display: inline-flex; align-items: center; gap: .4rem;
@@ -1872,6 +1883,8 @@ html.dark-theme .ingrediente-row {
     position: relative;
     overflow: hidden;
 }
+/* Allow tooltip to overflow for diferenciaTasaCard */
+#diferenciaTasaCard { overflow: visible; }
 .dashboard-card::after {
     content: '';
     position: absolute;
