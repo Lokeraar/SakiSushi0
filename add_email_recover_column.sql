@@ -1,20 +1,41 @@
--- SCRIPT PARA ACTUALIZAR TABLA DE USUARIOS - RECUPERACIÓN CENTRALIZADA
--- Ejecutar en Supabase Dashboard -> SQL Editor
+-- ==========================================
+-- SCRIPT DE ACTUALIZACIÓN: EMAIL RECUPERACIÓN
+-- ==========================================
+-- Propósito: Preparar la tabla 'usuarios' para el sistema de recuperación centralizada.
+-- Permite que múltiples usuarios compartan el mismo correo (ej. el del Admin).
+--
+-- INSTRUCCIONES:
+-- 1. Copia y pega este script en el SQL Editor de Supabase.
+-- 2. Ejecútalo UNA SOLA VEZ.
+-- 3. Este script es inteligente: detecta si la columna ya existe y la adapta.
+--    Si ya ejecutaste el script anterior (add_email_column.sql), este lo corregirá automáticamente.
+-- ==========================================
 
--- 1. Agregar columna para el correo de contacto/recuperación.
--- A DIFERENCIA del email de auth, esta columna SÍ permite valores duplicados.
--- Esto permite que varios usuarios tengan el mismo correo del "Admin Maestro".
-ALTER TABLE usuarios 
-ADD COLUMN IF NOT EXISTS email_recuperacion TEXT;
+-- PASO 1: Limpieza previa (Si existe la columna 'email' antigua del plan inicial)
+-- Si venimos de ejecutar el script anterior, eliminamos el índice único que bloquea correos repetidos.
+DROP INDEX IF EXISTS idx_usuarios_email;
 
--- 2. Limpiar datos si es necesario (opcional, solo si ya tenías una columna email con restricción única)
--- Si ya tienes una columna 'email' con UNIQUE y quieres migrarla a esta nueva sin restricción:
--- UPDATE usuarios SET email_recuperacion = email WHERE email IS NOT NULL;
+-- Si la columna se llamaba 'email', la renombramos a 'email_recuperacion' para estandarizar.
+-- Si la columna ya se llama 'email_recuperacion', esto no hará nada.
+DO $$ 
+BEGIN 
+    IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'usuarios' AND column_name = 'email') 
+    AND NOT EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'usuarios' AND column_name = 'email_recuperacion') THEN
+        ALTER TABLE usuarios RENAME COLUMN email TO email_recuperacion;
+    END IF;
+END $$;
 
--- 3. Comentario explicativo
-COMMENT ON COLUMN usuarios.email_recuperacion IS 'Correo de contacto para recuperación asistida. Puede ser compartido entre múltiples usuarios (ej: admin@sakisushi.com).';
+-- PASO 2: Crear o adaptar la columna 'email_recuperacion'
+-- Asegura que la columna exista. Si ya fue creada por el paso anterior, esto solo valida.
+ALTER TABLE usuarios ADD COLUMN IF NOT EXISTS email_recuperacion TEXT;
 
--- NOTA DE SEGURIDAD:
--- La columna 'email' interna de supabase.auth.users SE MANTENDRÁ ÚNICA.
--- El sistema generará automáticamente emails técnicos únicos (ej: user_id@local) para cumplir con Supabase.
--- El usuario final solo verá y gestionará el campo 'email_recuperacion' en la UI.
+-- PASO 3: Indexación optimizada
+-- Creamos un índice NORMAL (no único) para acelerar las búsquedas por correo.
+-- Esto permite buscar rápido sin impedir que varios usuarios tengan el mismo correo.
+CREATE INDEX IF NOT EXISTS idx_usuarios_email_recuperacion ON usuarios(email_recuperacion);
+
+-- ==========================================
+-- VERIFICACIÓN FINAL
+-- ==========================================
+-- Este mensaje confirma que el script terminó correctamente.
+SELECT 'Tabla actualizada exitosamente. Ahora puedes asignar el mismo correo a múltiples usuarios.' AS estado;
