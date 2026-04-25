@@ -351,14 +351,14 @@ GRANT EXECUTE ON FUNCTION actualizar_contrasena_con_token TO PUBLIC;
 CREATE OR REPLACE FUNCTION eliminar_tokens_expirados()
 RETURNS INTEGER AS $$
 DECLARE
-    v eliminados INTEGER;
+    v_eliminados INTEGER;
 BEGIN
     DELETE FROM recuperacion_tokens
     WHERE expira_en < NOW() - INTERVAL '24 hours'
        OR (usado = true AND usado_en < NOW() - INTERVAL '1 hour');
 
-    GET DIAGNOSTICS v = ROW_COUNT;
-    RETURN v;
+    GET DIAGNOSTICS v_eliminados = ROW_COUNT;
+    RETURN v_eliminados;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
