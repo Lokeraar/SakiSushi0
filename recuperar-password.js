@@ -248,13 +248,20 @@ async function actualizarContrasena(token, nuevaPassword) {
  */
 async function obtenerUsuariosActivos() {
     try {
+        console.log('[DEBUG] Consultando usuarios activos en Supabase...');
+        
         const { data, error } = await supabase
             .from('usuarios')
             .select('id, nombre, username, rol, activo')
             .eq('activo', true)
             .order('nombre');
+
+        if (error) {
+            console.error('[ERROR] Error en consulta:', error);
+            throw error;
+        }
         
-        if (error) throw error;
+        console.log('[DEBUG] Usuarios encontrados:', data ? data.length : 0);
         
         return { success: true, usuarios: data || [] };
     } catch (error) {
@@ -385,18 +392,30 @@ async function enviarEmailRecuperacion(destinatario, token, username) {
  * Inicializar página cuando viene del login (selección de usuario)
  */
 async function iniciarFlujoRecuperacion() {
+    console.log('[DEBUG] Iniciando flujo de recuperación...');
+    
     try {
         const btnContinuar = document.getElementById('btnContinueToEmail');
         const userList = document.getElementById('userList');
         
+        if (!userList) {
+            console.error('[ERROR] Elemento userList no encontrado');
+            return;
+        }
+
         // Mostrar loading
         userList.innerHTML = '<div style="text-align:center;padding:20px;"><div class="loading-spinner"></div><p style="margin-top:10px;color:var(--text-secondary);">Cargando usuarios...</p></div>';
+        
+        console.log('[DEBUG] Obteniendo usuarios activos...');
         
         // Obtener usuarios
         const resultado = await obtenerUsuariosActivos();
         
+        console.log('[DEBUG] Resultado:', resultado);
+        
         if (!resultado.success || !resultado.usuarios.length) {
-            userList.innerHTML = '<p style="text-align:center;color:var(--danger);">No hay usuarios disponibles</p>';
+            console.warn('[WARNING] No hay usuarios disponibles:', resultado);
+            userList.innerHTML = '<p style="text-align:center;color:var(--danger);">No hay usuarios disponibles.<br><small>Verifica que existan usuarios en la tabla "usuarios"</small></p>';
             return;
         }
         
@@ -658,12 +677,16 @@ async function manejarNuevaContrasena(e) {
 // INICIALIZACIÓN
 // ============================================
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('[DEBUG] DOMContentLoaded - Iniciando aplicación...');
     // Inicializar Supabase
     supabase = inicializarSupabase();
+    console.log('[DEBUG] Supabase inicializado:', !!supabase);
     
     // Configurar formularios
     const emailForm = document.getElementById('emailForm');
     const passwordForm = document.getElementById('passwordForm');
+    console.log('[DEBUG] emailForm:', !!emailForm);
+    console.log('[DEBUG] passwordForm:', !!passwordForm);
     
     if (emailForm) {
         emailForm.addEventListener('submit', manejarEnvioEmail);
@@ -671,6 +694,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     if (passwordForm) {
         passwordForm.addEventListener('submit', manejarNuevaContrasena);
+    console.log('[DEBUG] Llamando a iniciarFlujoConToken...');
     }
     
     // Determinar qué flujo iniciar
