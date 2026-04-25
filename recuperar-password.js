@@ -694,8 +694,9 @@ document.addEventListener('DOMContentLoaded', () => {
     
     if (passwordForm) {
         passwordForm.addEventListener('submit', manejarNuevaContrasena);
-    console.log('[DEBUG] Llamando a iniciarFlujoConToken...');
     }
+    
+    console.log('[DEBUG] Llamando a iniciarFlujoConToken...');
     
     // Determinar qué flujo iniciar
     iniciarFlujoConToken();
@@ -705,3 +706,4 @@ document.addEventListener('DOMContentLoaded', () => {
 // EXPORTAR FUNCIONES GLOBALES (para HTML)
 // ============================================
 window.volverAtras = volverAtras;
+window.mostrarSeccion = mostrarSeccion;
