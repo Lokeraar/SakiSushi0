@@ -9,7 +9,8 @@ window.inicializarSupabaseCliente = (jwtToken = null) => {
         auth: {
             persistSession: false,
             autoRefreshToken: false,
-            detectSessionInUrl: false
+            // HABILITADO TEMPORALMENTE para permitir que Supabase procese el hash de recuperación
+            detectSessionInUrl: true
         },
         realtime: {
             heartbeatIntervalMs: 60000,

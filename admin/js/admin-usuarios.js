@@ -126,6 +126,8 @@
         if(fotoInput)fotoInput.value='';
         var urlInput=document.getElementById('usuarioFotoUrl');
         if(urlInput){urlInput.value='';urlInput.disabled=false;}
+        var emailInput=document.getElementById('usuarioEmail');
+        if(emailInput)emailInput.value='';
         var previewDiv=document.getElementById('usuarioFotoPreview');
         if(previewDiv)previewDiv.style.display='none';
         var modalTitle=document.getElementById('usuarioModalTitle');
@@ -145,6 +147,8 @@
         if(nombreInput)nombreInput.value=user.nombre||'';
         var usernameInput=document.getElementById('usuarioUsername');
         if(usernameInput)usernameInput.value=user.username||'';
+        var emailInput=document.getElementById('usuarioEmail');
+        if(emailInput)emailInput.value=user.email||'';
         var rolSelect=document.getElementById('usuarioRol');
         if(rolSelect)rolSelect.value=user.rol||'cajero';
         var activoSelect=document.getElementById('usuarioActivo');
@@ -205,15 +209,25 @@
         if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...'; }
         const nombre   = document.getElementById('usuarioNombre').value.trim();
         const username = document.getElementById('usuarioUsername').value.trim().toLowerCase();
+        const email    = document.getElementById('usuarioEmail').value.trim().toLowerCase();
         const password = document.getElementById('usuarioPassword').value.trim();
         const rol = document.getElementById('usuarioRol').value;
         const activo = document.getElementById('usuarioActivo').value === 'true';
         
-        if (!nombre || !username) {
-            window.mostrarToast('Completa nombre y usuario', 'error');
+        if (!nombre || !username || !email) {
+            window.mostrarToast('Completa nombre, usuario y correo electrónico', 'error');
             if (btn) { btn.disabled = false; btn.innerHTML = 'Guardar'; }
             return;
         }
+        
+        // Validar formato de email
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            window.mostrarToast('Ingresa un correo electrónico válido', 'error');
+            if (btn) { btn.disabled = false; btn.innerHTML = 'Guardar'; }
+            return;
+        }
+        
         if (!window.usuarioEditandoId && !password) {
             window.mostrarToast('Ingresa una contraseña para el nuevo usuario', 'error');
             if (btn) { btn.disabled = false; btn.innerHTML = 'Guardar'; }
@@ -241,6 +255,7 @@
                 id: window.usuarioEditandoId || window.generarId('user_'),
                 nombre,
                 username,
+                email,  // Campo email para recuperación de contraseña
                 rol,
                 activo,
                 foto: fotoUrl || null
@@ -261,6 +276,7 @@
                     id: userData.id,
                     nombre: userData.nombre,
                     username: userData.username,
+                    email: userData.email,
                     foto: userData.foto,
                     rol: 'admin'
                 };
