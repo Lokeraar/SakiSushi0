@@ -34,13 +34,13 @@ const CONFIG = {
 // ============================================
 // INICIALIZACIÓN DE SUPABASE
 // ============================================
-let supabase;
+let supabaseClient;
 
 function inicializarSupabase() {
-    if (!supabase) {
-        supabase = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
+    if (!supabaseClient) {
+        supabaseClient = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
     }
-    return supabase;
+    return supabaseClient;
 }
 
 // ============================================
@@ -126,7 +126,7 @@ function validarPassword(password) {
  */
 async function verificarEmailRecuperacion(email) {
     try {
-        const { data, error } = await supabase.rpc('verificar_email_recuperacion', {
+        const { data, error } = await supabaseClient.rpc('verificar_email_recuperacion', {
             p_email: email
         });
         
@@ -154,7 +154,7 @@ async function verificarEmailRecuperacion(email) {
  */
 async function generarTokenRecuperacion(usuarioId, email) {
     try {
-        const { data, error } = await supabase.rpc('generar_token_recuperacion', {
+        const { data, error } = await supabaseClient.rpc('generar_token_recuperacion', {
             p_usuario_id: usuarioId,
             p_email: email,
             p_ip_origen: null,
@@ -187,7 +187,7 @@ async function generarTokenRecuperacion(usuarioId, email) {
  */
 async function validarToken(token) {
     try {
-        const { data, error } = await supabase.rpc('validar_token_recuperacion', {
+        const { data, error } = await supabaseClient.rpc('validar_token_recuperacion', {
             p_token: token
         });
         
@@ -220,7 +220,7 @@ async function validarToken(token) {
  */
 async function actualizarContrasena(token, nuevaPassword) {
     try {
-        const { data, error } = await supabase.rpc('actualizar_contrasena_con_token', {
+        const { data, error } = await supabaseClient.rpc('actualizar_contrasena_con_token', {
             p_token: token,
             p_nueva_password: nuevaPassword
         });
@@ -250,7 +250,7 @@ async function obtenerUsuariosActivos() {
     try {
         console.log('[DEBUG] Consultando usuarios activos en Supabase...');
         
-        const { data, error } = await supabase
+        const { data, error } = await supabaseClient
             .from('usuarios')
             .select('id, nombre, username, rol, activo')
             .eq('activo', true)
@@ -488,7 +488,7 @@ async function manejarEnvioEmail(e) {
     
     try {
         // Verificar que el email coincide con el del usuario
-        const { data: userData, error: userError } = await supabase
+        const { data: userData, error: userError } = await supabaseClient
             .from('usuarios')
             .select('email_recuperacion')
             .eq('id', estado.usuarioSeleccionado.id)
