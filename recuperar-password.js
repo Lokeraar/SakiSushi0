@@ -676,34 +676,69 @@ async function manejarNuevaContrasena(e) {
 // ============================================
 // INICIALIZACIÓN
 // ============================================
-document.addEventListener('DOMContentLoaded', () => {
-    console.log('[DEBUG] DOMContentLoaded - Iniciando aplicación...');
-    // Inicializar Supabase
-    supabase = inicializarSupabase();
-    console.log('[DEBUG] Supabase inicializado:', !!supabase);
-    
-    // Configurar formularios
-    const emailForm = document.getElementById('emailForm');
-    const passwordForm = document.getElementById('passwordForm');
-    console.log('[DEBUG] emailForm:', !!emailForm);
-    console.log('[DEBUG] passwordForm:', !!passwordForm);
-    
-    if (emailForm) {
-        emailForm.addEventListener('submit', manejarEnvioEmail);
-    }
-    
-    if (passwordForm) {
-        passwordForm.addEventListener('submit', manejarNuevaContrasena);
-    }
-    
-    console.log('[DEBUG] Llamando a iniciarFlujoConToken...');
-    
-    // Determinar qué flujo iniciar
-    iniciarFlujoConToken();
-});
+// document.addEventListener('DOMContentLoaded', () => {
+//     console.log('[DEBUG] DOMContentLoaded - Iniciando aplicación...');
+//     // Inicializar Supabase
+//     supabase = inicializarSupabase();
+//     console.log('[DEBUG] Supabase inicializado:', !!supabase);
+//     
+//     // Configurar formularios
+//     const emailForm = document.getElementById('emailForm');
+//     const passwordForm = document.getElementById('passwordForm');
+//     console.log('[DEBUG] emailForm:', !!emailForm);
+//     console.log('[DEBUG] passwordForm:', !!passwordForm);
+//     
+//     if (emailForm) {
+//         emailForm.addEventListener('submit', manejarEnvioEmail);
+//     }
+//     
+//     if (passwordForm) {
+//         passwordForm.addEventListener('submit', manejarNuevaContrasena);
+//     }
+//     
+//     console.log('[DEBUG] Llamando a iniciarFlujoConToken...');
+//     
+//     // Determinar qué flujo iniciar
+//     iniciarFlujoConToken();
+// });
 
 // ============================================
 // EXPORTAR FUNCIONES GLOBALES (para HTML)
 // ============================================
 window.volverAtras = volverAtras;
 window.mostrarSeccion = mostrarSeccion;
+
+// ============================================
+// INICIALIZACIÓN CON MANEJO DE ERRORES
+// ============================================
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('[DEBUG] DOMContentLoaded - Iniciando aplicación...');
+    
+    try {
+        // Inicializar Supabase
+        supabase = inicializarSupabase();
+        console.log('[DEBUG] Supabase inicializado:', !!supabase);
+        
+        // Configurar formularios
+        const emailForm = document.getElementById('emailForm');
+        const passwordForm = document.getElementById('passwordForm');
+        console.log('[DEBUG] emailForm:', !!emailForm);
+        console.log('[DEBUG] passwordForm:', !!passwordForm);
+        
+        if (emailForm) {
+            emailForm.addEventListener('submit', manejarEnvioEmail);
+        }
+        
+        if (passwordForm) {
+            passwordForm.addEventListener('submit', manejarNuevaContrasena);
+        }
+        
+        console.log('[DEBUG] Llamando a iniciarFlujoConToken...');
+        
+        // Determinar qué flujo iniciar
+        iniciarFlujoConToken();
+    } catch (error) {
+        console.error('[ERROR CRÍTICO] Error en inicialización:', error);
+        document.body.innerHTML = '<div style="color: #ef4444; padding: 20px; text-align: center;"><h2>Error al cargar la página</h2><p>' + error.message + '</p><p>Por favor, recarga la página o contacta al administrador.</p></div>';
+    }
+});
