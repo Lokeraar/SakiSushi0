@@ -306,6 +306,19 @@
         });
     }
 
+    // Botón recuperar contraseña - ahora redirige con el usuario seleccionado
+    const recoveryBtn = document.getElementById('recoveryLinkBtn');
+    if (recoveryBtn) {
+        recoveryBtn.addEventListener('click', () => {
+            if (!selectedAdmin || !selectedAdmin.username) {
+                window.mostrarToast('Primero selecciona un administrador', 'warning');
+                return;
+            }
+            // Redirigir a la página de recuperación con el parámetro usuario
+            window.location.href = `../recuperar-password.html?usuario=${encodeURIComponent(selectedAdmin.username)}`;
+        });
+    }
+
     // Botón limpiar historial
     const clearBtn = document.getElementById('clearRecentAdminsBtn');
     if (clearBtn) {
