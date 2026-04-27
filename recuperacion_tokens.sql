@@ -134,7 +134,7 @@ RETURNS TABLE (
     success BOOLEAN,
     error TEXT,
     token TEXT,
-    expira_en TIMESTAMP WITH TIME ZONE
+    expira_en_result TIMESTAMP WITH TIME ZONE
 ) AS $$
 DECLARE
     v_token TEXT;
@@ -162,12 +162,12 @@ BEGIN
     v_expira_en := NOW() + INTERVAL '1 hour';
 
     -- Invalidar tokens anteriores no usados del mismo usuario
-    UPDATE recuperacion_tokens
+    UPDATE recuperacion_tokens AS rt
     SET usado = true,
         usado_en = NOW()
-    WHERE usuario_id = p_usuario_id
-      AND usado = false
-      AND recuperacion_tokens.expira_en > NOW();
+    WHERE rt.usuario_id = p_usuario_id
+      AND rt.usado = false
+      AND rt.expira_en > NOW();
 
     -- Insertar nuevo token
     INSERT INTO recuperacion_tokens (
@@ -190,7 +190,7 @@ BEGIN
         true AS success, 
         NULL::TEXT AS error, 
         v_token AS token, 
-        v_expira_en AS expira_en;
+        v_expira_en AS "expira_en_result";
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
