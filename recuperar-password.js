@@ -1,9 +1,30 @@
-import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm'
+// recuperar-password.js - VERSIÓN CORREGIDA
+// Usa supabase-config.js y llama a la Edge Function para enviar emails
 
-// --- CONFIGURACIÓN SUPABASE ---
-const SUPABASE_URL = 'TU_SUPABASE_URL'; // Reemplaza con tu URL
-const SUPABASE_ANON_KEY = 'TU_SUPABASE_ANON_KEY'; // Reemplaza con tu Key
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// Esperar a que supabase-config.js se cargue
+async function esperarSupabase() {
+    let intentos = 0;
+    while (!window.supabaseClient && intentos < 50) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+        intentos++;
+    }
+    if (!window.supabaseClient) {
+        throw new Error('No se pudo cargar la configuración de Supabase');
+    }
+}
+
+let supabase;
+
+async function initSupabase() {
+    try {
+        await esperarSupabase();
+        supabase = window.supabaseClient;
+        console.log('✅ Supabase inicializado en recuperar-password.js');
+    } catch (error) {
+        console.error('❌ Error inicializando Supabase:', error);
+        showError('Error de conexión. Recarga la página.');
+    }
+}
 
 // --- ELEMENTOS DOM ---
 const steps = {
@@ -41,9 +62,12 @@ let targetUsername = null;
 let recoveryToken = null;
 
 async function init() {
+    // Inicializar Supabase primero
+    await initSupabase();
+    
     const params = new URLSearchParams(window.location.search);
     recoveryToken = params.get('token');
-    targetUsername = params.get('usuario'); // Obtenemos el usuario desde la URL
+    targetUsername = params.get('usuario');
 
     // 1. Si NO hay token, mostramos formulario de email
     if (!recoveryToken) {
@@ -57,7 +81,7 @@ async function init() {
     } 
     // 2. Si HAY token, validamos y mostramos formulario de nueva contraseña
     else {
-        showStep('loading'); // Estado intermedio opcional si quisieras
+        showStep('loading');
         await validateToken(recoveryToken);
     }
 }
@@ -128,16 +152,45 @@ forms.email.addEventListener('submit', async (e) => {
             throw new Error("El correo no coincide con el usuario seleccionado.");
         }
 
-        // C. Llamar a la función RPC para generar token y enviar email
-        // Asumimos que creaste la función 'solicitar_recuperacion' en SQL
-        const { error: rpcError } = await supabase.rpc('solicitar_recuperacion', {
-            p_username: targetUsername,
-            p_email: emailInput
+        // C. Generar token usando la función RPC
+        const { data: tokenData, error: tokenError } = await supabase.rpc('generar_token_recuperacion', {
+            p_usuario_id: user.id,
+            p_email: emailInput,
+            p_ip_origen: null,
+            p_user_agent: navigator.userAgent
         });
 
-        if (rpcError) throw rpcError;
+        if (tokenError) throw tokenError;
+        
+        if (!tokenData || !tokenData[0] || !tokenData[0].success || !tokenData[0].token) {
+            throw new Error(tokenData?.[0]?.error || "Error al generar token");
+        }
 
-        // D. Éxito
+        const token = tokenData[0].token;
+        
+        // D. Construir enlace de recuperación
+        const baseUrl = window.location.origin + window.location.pathname.replace(/\/[^/]*$/, '/recuperar-password.html');
+        const enlace = `${baseUrl}?token=${token}&usuario=${targetUsername}`;
+
+        // E. Llamar a la Edge Function para enviar el email
+        const { data: edgeData, error: edgeError } = await supabase.functions.invoke('enviar-email-recuperacion', {
+            body: {
+                destinatario: emailInput,
+                token: token,
+                username: targetUsername,
+                enlace: enlace
+            }
+        });
+
+        if (edgeError) {
+            console.error('Error en Edge Function:', edgeError);
+            // No lanzamos error aquí porque el token ya fue generado
+            // El usuario puede intentar de nuevo o contactar soporte
+        } else if (!edgeData?.success) {
+            console.warn('Edge Function retornó éxito=false:', edgeData);
+        }
+
+        // F. Éxito - mostrar pantalla de enviado
         showStep('sent');
 
     } catch (err) {
@@ -183,18 +236,23 @@ forms.reset.addEventListener('submit', async (e) => {
     displays.errorReset.textContent = '';
 
     try {
-        // Llamada RPC para actualizar contraseña y marcar token como usado (opcional)
-        const { error } = await supabase.rpc('actualizar_password_con_token', {
+        // Llamada RPC para actualizar contraseña usando la función correcta del SQL
+        const { data, error } = await supabase.rpc('actualizar_contrasena_con_token', {
             p_token: recoveryToken,
             p_nueva_password: pass1
         });
 
         if (error) throw error;
+        
+        // Verificar si la función retornó éxito
+        if (!data || !data[0] || !data[0].success) {
+            throw new Error(data?.[0]?.error || "Error al actualizar contraseña");
+        }
 
         displays.successReset.textContent = "¡Contraseña actualizada! Redirigiendo...";
         
         setTimeout(() => {
-            window.location.href = 'index.html'; // O donde tengas el login
+            window.location.href = '../index.html'; // Redirigir al login
         }, 2000);
 
     } catch (err) {
@@ -205,5 +263,9 @@ forms.reset.addEventListener('submit', async (e) => {
     }
 });
 
-// Iniciar app
-init();
+// Iniciar app cuando el DOM esté listo
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+} else {
+    init();
+}
