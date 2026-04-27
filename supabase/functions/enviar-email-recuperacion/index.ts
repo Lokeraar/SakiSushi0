@@ -32,10 +32,17 @@ serve(async (req) => {
     const smtpPass = Deno.env.get('SMTP_PASS')
     const smtpFrom = Deno.env.get('SMTP_FROM') || 'Saki Sushi <noreply@sakisushi.com>'
 
-    // Opción 1: Usar Resend (recomendado)
+    console.log('Configuración SMTP detectada:')
+    console.log('- SMTP_HOST:', smtpHost ? '***' + smtpHost.slice(-5) : 'NO CONFIGURADO')
+    console.log('- SMTP_PORT:', smtpPort || 'NO CONFIGURADO')
+    console.log('- SMTP_USER:', smtpUser || 'NO CONFIGURADO')
+    console.log('- SMTP_FROM:', smtpFrom)
+
+    // Opción 1: Usar Resend (recomendado) - SOLO si está configurado
     const resendApiKey = Deno.env.get('RESEND_API_KEY')
     
     if (resendApiKey) {
+      console.log('Usando servicio Resend')
       // Importar Resend dinámicamente
       const { Resend } = await import('npm:resend@2.0.0')
       const resend = new Resend(resendApiKey)
@@ -262,36 +269,53 @@ serve(async (req) => {
       )
     }
 
-    // Opción 2: Usar SMTP directamente (si no hay Resend)
+    // Opción 2: Usar SMTP directamente (CONFIGURACIÓN PRINCIPAL)
     if (smtpHost && smtpPort && smtpUser && smtpPass) {
+      console.log('Usando servicio SMTP directo')
+      console.log(`Conectando a ${smtpHost}:${smtpPort}`)
+      
       // Importar cliente SMTP dinámicamente
       const { SmtpClient } = await import('https://deno.land/x/smtp@v0.7.0/mod.ts')
 
       const client = new SmtpClient()
 
-      // Configurar conexión SMTP para Gmail
+      // Configurar conexión SMTP
       const port = parseInt(smtpPort)
       
-      // Para Gmail usar TLS
-      if (smtpHost.includes('gmail.com') || port === 587) {
-        await client.connectTLS({
-          hostname: smtpHost,
-          port: port,
-          username: smtpUser,
-          password: smtpPass,
-        })
-      } else {
-        // Para otros proveedores que soporten STARTTLS o SSL directo
-        await client.connect({
-          hostname: smtpHost,
-          port: port,
-          secure: port === 465,
-          username: smtpUser,
-          password: smtpPass,
-        })
-      }
+      try {
+        // Para Gmail o puerto 587 usar TLS
+        if (smtpHost.includes('gmail.com') || smtpHost.includes('googlemail.com') || port === 587) {
+          console.log('Usando conexión TLS')
+          await client.connectTLS({
+            hostname: smtpHost,
+            port: port,
+            username: smtpUser,
+            password: smtpPass,
+          })
+        } else if (port === 465) {
+          // Puerto 465 usa SSL directo
+          console.log('Usando conexión SSL')
+          await client.connectTLS({
+            hostname: smtpHost,
+            port: port,
+            username: smtpUser,
+            password: smtpPass,
+          })
+        } else {
+          // Otros puertos usan STARTTLS o conexión simple
+          console.log('Usando conexión estándar')
+          await client.connect({
+            hostname: smtpHost,
+            port: port,
+            secure: false,
+            username: smtpUser,
+            password: smtpPass,
+          })
+        }
 
-      const emailContent = `
+        console.log('✅ Conexión SMTP establecida')
+
+        const emailContent = `
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -333,40 +357,46 @@ serve(async (req) => {
     </div>
 </body>
 </html>
-      `
+        `
 
-      await client.send({
-        from: smtpFrom,
-        to: [destinatario],
-        subject: '🍣 Recuperación de Contraseña - Saki Sushi',
-        content: emailContent,
-        html: true,
-      })
+        await client.send({
+          from: smtpFrom,
+          to: [destinatario],
+          subject: '🍣 Recuperación de Contraseña - Saki Sushi',
+          content: emailContent,
+          html: true,
+        })
 
-      await client.close()
+        await client.close()
+        console.log('✅ Email enviado exitosamente vía SMTP')
 
-      return new Response(
-        JSON.stringify({ 
-          success: true, 
-          message: 'Email enviado exitosamente',
-          metodo: 'SMTP'
-        }), 
-        {
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-          status: 200,
-        }
-      )
+        return new Response(
+          JSON.stringify({ 
+            success: true, 
+            message: 'Email enviado exitosamente',
+            metodo: 'SMTP'
+          }), 
+          {
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+            status: 200,
+          }
+        )
+      } catch (smtpError) {
+        console.error('❌ Error en conexión SMTP:', smtpError)
+        throw new Error(`Error SMTP: ${smtpError.message}`)
+      }
     }
 
-    // Si no hay ningún servicio configurado, retornar error
-    throw new Error('No hay ningún servicio de email configurado. Configura RESEND_API_KEY o las variables SMTP_*')
+    // Si no hay ningún servicio configurado, retornar error detallado
+    throw new Error('No hay ningún servicio de email configurado. Debes configurar las variables SMTP_HOST, SMTP_PORT, SMTP_USER y SMTP_PASS en Supabase')
 
   } catch (error) {
-    console.error('Error en Edge Function:', error)
+    console.error('❌ Error en Edge Function:', error)
     return new Response(
       JSON.stringify({ 
         success: false, 
-        error: error.message 
+        error: error.message,
+        details: error.stack
       }), 
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
