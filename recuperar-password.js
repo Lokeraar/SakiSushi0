@@ -170,11 +170,14 @@ forms.email.addEventListener('submit', async (e) => {
 
         if (tokenError) throw tokenError;
         
-        if (!tokenData || !tokenData[0] || !tokenData[0].success || !tokenData[0].token) {
-            throw new Error(tokenData?.[0]?.error || "Error al generar token");
+        // Las funciones RPC que retornan TABLE devuelven un array
+        const tokenResult = Array.isArray(tokenData) ? tokenData[0] : tokenData;
+        
+        if (!tokenResult || !tokenResult.success || !tokenResult.token) {
+            throw new Error(tokenResult?.error || "Error al generar token");
         }
 
-        const token = tokenData[0].token;
+        const token = tokenResult.token;
         
         // D. Construir enlace de recuperación
         const baseUrl = window.location.origin + window.location.pathname.replace(/\/[^/]*$/, '/recuperar-password.html');
@@ -218,8 +221,13 @@ async function validateToken(token) {
             p_token: token
         });
 
-        if (error || !data) {
-            throw new Error("Token inválido o expirado");
+        if (error) throw error;
+        
+        // Las funciones RPC que retornan TABLE devuelven un array
+        const result = Array.isArray(data) ? data[0] : data;
+        
+        if (!result || !result.success) {
+            throw new Error(result?.error || "Token inválido o expirado");
         }
 
         // Token válido, mostrar formulario de reset
@@ -252,9 +260,11 @@ forms.reset.addEventListener('submit', async (e) => {
 
         if (error) throw error;
         
-        // Verificar si la función retornó éxito
-        if (!data || !data[0] || !data[0].success) {
-            throw new Error(data?.[0]?.error || "Error al actualizar contraseña");
+        // Verificar si la función retornó éxito (las funciones RPC que retornan TABLE devuelven un array)
+        const result = Array.isArray(data) ? data[0] : data;
+        
+        if (!result || !result.success) {
+            throw new Error(result?.error || "Error al actualizar contraseña");
         }
 
         displays.successReset.textContent = "¡Contraseña actualizada! Redirigiendo...";
