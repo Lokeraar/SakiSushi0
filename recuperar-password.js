@@ -184,10 +184,15 @@ forms.email.addEventListener('submit', async (e) => {
         const enlace = `${baseUrl}?token=${token}&usuario=${targetUsername}`;
 
         // E. Llamar a la Edge Function para enviar el email
-        const anonKey = window.SUPABASE_ANON_KEY || 'sb_publishable_m4WcF4gmkj1olAj95HMLlA_4yKqPFXm';
+        const anonKey = window.SUPABASE_ANON_KEY;
         
-        console.log('Enviando email a:', destinatario);
-        console.log('Usando clave:', anonKey ? '***' + anonKey.slice(-10) : 'NO DISPONIBLE');
+        if (!anonKey) {
+            console.error('❌ ERROR: SUPABASE_ANON_KEY no está definida');
+            throw new Error('Configuración de Supabase incompleta');
+        }
+        
+        console.log('Enviando email a:', emailInput);
+        console.log('Usando clave:', '***' + anonKey.slice(-10));
         
         const { data: edgeData, error: edgeError } = await supabase.functions.invoke('enviar-email-recuperacion', {
             body: {
