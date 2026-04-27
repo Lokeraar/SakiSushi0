@@ -184,6 +184,11 @@ forms.email.addEventListener('submit', async (e) => {
         const enlace = `${baseUrl}?token=${token}&usuario=${targetUsername}`;
 
         // E. Llamar a la Edge Function para enviar el email
+        const anonKey = window.SUPABASE_ANON_KEY || 'sb_publishable_m4WcF4gmkj1olAj95HMLlA_4yKqPFXm';
+        
+        console.log('Enviando email a:', destinatario);
+        console.log('Usando clave:', anonKey ? '***' + anonKey.slice(-10) : 'NO DISPONIBLE');
+        
         const { data: edgeData, error: edgeError } = await supabase.functions.invoke('enviar-email-recuperacion', {
             body: {
                 destinatario: emailInput,
@@ -192,7 +197,8 @@ forms.email.addEventListener('submit', async (e) => {
                 enlace: enlace
             },
             headers: {
-                Authorization: `Bearer ${window.SUPABASE_ANON_KEY}`
+                Authorization: `Bearer ${anonKey}`,
+                'Content-Type': 'application/json'
             }
         });
 
