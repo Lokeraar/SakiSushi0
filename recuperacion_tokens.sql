@@ -167,7 +167,7 @@ BEGIN
         usado_en = NOW()
     WHERE usuario_id = p_usuario_id
       AND usado = false
-      AND expira_en > NOW();
+      AND recuperacion_tokens.expira_en > NOW();
 
     -- Insertar nuevo token
     INSERT INTO recuperacion_tokens (
