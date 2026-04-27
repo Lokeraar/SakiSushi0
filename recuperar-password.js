@@ -67,15 +67,23 @@ async function init() {
     
     const params = new URLSearchParams(window.location.search);
     recoveryToken = params.get('token');
-    targetUsername = params.get('usuario');
+    let usernameParam = params.get('usuario');
+
+    // Validación estricta del usuario
+    if (!usernameParam || usernameParam.trim() === '' || usernameParam === 'null' || usernameParam === 'undefined') {
+        console.error('❌ ERROR CRÍTICO: No se especificó ningún usuario en la URL.');
+        console.log('URL actual:', window.location.href);
+        console.log('Parámetro encontrado:', usernameParam);
+        
+        showError("Error: No se especificó ningún usuario válido.\n\nPor favor, inicia el proceso desde el login o asegúrate de que la URL termine en:\n.../recuperar-password.html?usuario=TU_USUARIO");
+        return;
+    }
+
+    targetUsername = decodeURIComponent(usernameParam.trim());
+    console.log('✅ Usuario detectado para recuperación:', targetUsername);
 
     // 1. Si NO hay token, mostramos formulario de email
     if (!recoveryToken) {
-        if (!targetUsername) {
-            showError("Error: No se especificó ningún usuario. Por favor inicia el proceso desde el login.");
-            return;
-        }
-        
         displays.username.textContent = targetUsername;
         showStep('email');
     } 
