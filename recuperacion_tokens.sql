@@ -72,6 +72,8 @@ GRANT SELECT, INSERT, UPDATE ON recuperacion_tokens TO PUBLIC;
 -- Verifica si un email existe y retorna usuarios asociados
 -- ============================================
 
+DROP FUNCTION IF EXISTS verificar_email_recuperacion(TEXT);
+
 CREATE OR REPLACE FUNCTION verificar_email_recuperacion(p_email TEXT)
 RETURNS TABLE (
     success BOOLEAN,
@@ -119,6 +121,8 @@ GRANT EXECUTE ON FUNCTION verificar_email_recuperacion TO PUBLIC;
 -- 4. FUNCIÓN: generar_token_recuperacion
 -- Genera un token único temporal para recuperación
 -- ============================================
+
+DROP FUNCTION IF EXISTS generar_token_recuperacion(TEXT, TEXT, TEXT, TEXT);
 
 CREATE OR REPLACE FUNCTION generar_token_recuperacion(
     p_usuario_id TEXT,
@@ -198,6 +202,8 @@ GRANT EXECUTE ON FUNCTION generar_token_recuperacion TO PUBLIC;
 -- Valida un token y retorna información del usuario
 -- ============================================
 
+DROP FUNCTION IF EXISTS validar_token_recuperacion(TEXT);
+
 CREATE OR REPLACE FUNCTION validar_token_recuperacion(p_token TEXT)
 RETURNS TABLE (
     success BOOLEAN,
@@ -271,6 +277,8 @@ GRANT EXECUTE ON FUNCTION validar_token_recuperacion TO PUBLIC;
 -- 6. FUNCIÓN: actualizar_contrasena_con_token
 -- Actualiza la contraseña usando un token válido
 -- ============================================
+
+DROP FUNCTION IF EXISTS actualizar_contrasena_con_token(TEXT, TEXT);
 
 CREATE OR REPLACE FUNCTION actualizar_contrasena_con_token(
     p_token TEXT,
@@ -355,6 +363,8 @@ GRANT EXECUTE ON FUNCTION actualizar_contrasena_con_token TO PUBLIC;
 -- Función para limpieza periódica de tokens
 -- ============================================
 
+DROP FUNCTION IF EXISTS eliminar_tokens_expirados();
+
 CREATE OR REPLACE FUNCTION eliminar_tokens_expirados()
 RETURNS INTEGER AS $$
 DECLARE
@@ -376,6 +386,8 @@ GRANT EXECUTE ON FUNCTION eliminar_tokens_expirados TO PUBLIC;
 -- 8. FUNCIÓN: obtener_info_usuario_por_id
 -- Obtiene información básica de un usuario por ID
 -- ============================================
+
+DROP FUNCTION IF EXISTS obtener_info_usuario_por_id(TEXT);
 
 CREATE OR REPLACE FUNCTION obtener_info_usuario_por_id(p_usuario_id TEXT)
 RETURNS TABLE (
