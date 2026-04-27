@@ -47,18 +47,18 @@ CREATE INDEX IF NOT EXISTS idx_recuperacion_tokens_email ON recuperacion_tokens(
 -- Habilitar RLS
 ALTER TABLE recuperacion_tokens ENABLE ROW LEVEL SECURITY;
 
--- Políticas de seguridad
--- Solo lectura pública para validación de tokens (necesario para el flujo)
+-- Políticas de seguridad (usar DROP IF EXISTS para permitir re-ejecución)
+DROP POLICY IF EXISTS "Tokens pueden ser leídos para validación" ON recuperacion_tokens;
 CREATE POLICY "Tokens pueden ser leídos para validación" 
 ON recuperacion_tokens FOR SELECT 
 USING (true);
 
--- Inserción solo desde funciones seguras
+DROP POLICY IF EXISTS "Inserción de tokens" ON recuperacion_tokens;
 CREATE POLICY "Inserción de tokens" 
 ON recuperacion_tokens FOR INSERT 
 WITH CHECK (true);
 
--- Actualización solo desde funciones seguras
+DROP POLICY IF EXISTS "Actualización de tokens" ON recuperacion_tokens;
 CREATE POLICY "Actualización de tokens" 
 ON recuperacion_tokens FOR UPDATE 
 USING (true);
