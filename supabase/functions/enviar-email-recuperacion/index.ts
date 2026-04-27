@@ -269,12 +269,27 @@ serve(async (req) => {
 
       const client = new SmtpClient()
 
-      await client.connectTLS({
-        hostname: smtpHost,
-        port: parseInt(smtpPort),
-        username: smtpUser,
-        password: smtpPass,
-      })
+      // Configurar conexión SMTP para Gmail
+      const port = parseInt(smtpPort)
+      
+      // Para Gmail usar TLS
+      if (smtpHost.includes('gmail.com') || port === 587) {
+        await client.connectTLS({
+          hostname: smtpHost,
+          port: port,
+          username: smtpUser,
+          password: smtpPass,
+        })
+      } else {
+        // Para otros proveedores que soporten STARTTLS o SSL directo
+        await client.connect({
+          hostname: smtpHost,
+          port: port,
+          secure: port === 465,
+          username: smtpUser,
+          password: smtpPass,
+        })
+      }
 
       const emailContent = `
 <!DOCTYPE html>
