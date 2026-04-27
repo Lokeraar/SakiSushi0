@@ -182,7 +182,11 @@ BEGIN
         v_expira_en
     );
 
-    RETURN QUERY SELECT true, NULL::TEXT, v_token, v_expira_en;
+    RETURN QUERY SELECT 
+        true AS success, 
+        NULL::TEXT AS error, 
+        v_token AS token, 
+        v_expira_en AS expira_en;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
@@ -250,13 +254,13 @@ BEGIN
 
     -- Token válido
     RETURN QUERY SELECT 
-        true,
-        NULL::TEXT,
-        v_token_data.usuario_id,
-        v_token_data.username,
-        v_token_data.nombre,
-        v_token_data.email,
-        true; -- puede_usarse
+        true AS success,
+        NULL::TEXT AS error,
+        v_token_data.usuario_id AS usuario_id,
+        v_token_data.username AS username,
+        v_token_data.nombre AS nombre,
+        v_token_data.email AS email,
+        true AS puede_usarse;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER STABLE;
 
@@ -336,7 +340,10 @@ BEGIN
       AND token != p_token
       AND usado = false;
 
-    RETURN QUERY SELECT true, NULL::TEXT, v_usuario_id;
+    RETURN QUERY SELECT 
+        true AS success, 
+        NULL::TEXT AS error, 
+        v_usuario_id AS usuario_id;
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
 
