@@ -190,6 +190,9 @@ forms.email.addEventListener('submit', async (e) => {
                 token: token,
                 username: targetUsername,
                 enlace: enlace
+            },
+            headers: {
+                Authorization: `Bearer ${window.SUPABASE_ANON_KEY}`
             }
         });
 
