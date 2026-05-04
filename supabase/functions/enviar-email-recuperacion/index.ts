@@ -1,4 +1,5 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
+import { SmtpClient } from 'https://deno.land/x/smtp@v0.7.0/mod.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -278,9 +279,6 @@ serve(async (req) => {
       console.log('Usando servicio SMTP directo')
       console.log(`Conectando a ${smtpHost}:${smtpPort}`)
       
-      // Importar cliente SMTP dinámicamente
-      const { SmtpClient } = await import('https://deno.land/x/smtp@v0.7.0/mod.ts')
-
       const client = new SmtpClient()
 
       // Configurar conexión SMTP
