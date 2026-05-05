@@ -2,11 +2,7 @@
 # Dependencies
 node_modules/
 
-# Environment variables
-.env
-.env.local
-.env.*
-
+# Build artifacts
 # Build outputs
 dist/
 build/
@@ -22,30 +18,30 @@ env/
 venv/
 .venv/
 .ENV
-.python-version
+.env
+# Environment variables
+.env
+.env.local
+*.env.*
 
 # Logs
 *.log
 
-# OS generated files
-.DS_Store
-Thumbs.db
-
-# Editor files
+# Editor/IDE
 .vscode/
 .idea/
 *.swp
 *.swo
+*.tmp
+
+# OS
+.DS_Store
+Thumbs.db
 
 # Coverage
 coverage/
 htmlcov/
 .coverage
-
-# Temporary files
-*.tmp
-*.temp
-*.bak
 
 # Compressed files
 *.zip
@@ -56,272 +52,36 @@ htmlcov/
 *.xz
 *.7z
 *.rar
+*.zst
+*.lz4
+*.lzh
+*.cab
+*.arj
+*.rpm
+*.deb
 *.Z
 *.lz
 *.lzo
-*.tar.gz
-*.tar.bz2
-*.tar.xz
-
-# MyPy
-.mypy_cache/
-
-# Pytest
-.pytest_cache/
-
-# Gradle
-.gradle/
-
-# Rust/Cargo
-Cargo.lock
-target/
-
-# Go
-*.o
-*.a
-*.so
-*.out
-
-# Java
-*.class
-*.jar
-*.war
-*.ear
-
-# C/C++
-*.obj
-*.exe
-*.dll
-*.so
-*.a
-
-# Zig
-zig-cache/
-zig-out/
-
-# Julia
-julia-*/
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+venv/
+.venv/
+.env/
 
 # Node.js
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# Bower
-bower_components/
+# Supabase specific
+supabase/.temp/
+supabase/cache/
 
-# Rails
-*.rbc
-capybara-*.html
-.rspec
-public/system/
-vendor/bundle/
-.bundle/
-.rbx/
-_saved_session
-log/
-tmp/
-.rakeTasks
-~/.fetch
-~/.reset
-~/.undertaker
-
-# Webpack
-webpack-stats.json
-
-# Ember
-tmp/
-logs/
-*.log
-.env
-.venv
-
-# Django
-*.log
-local_settings.py
-db.sqlite3
-db.sqlite3-journal
-
-# Flask
-instance/
-.webassets-cache
-
-# Sphinx documentation
-docs/_build/
-
-# Jekyll
-_site/
-
-# Code coverage
-coverage.xml
-*.gcov
-*.lcov
-*.cover
-
-# Vim
-*.un~
-Session.vim
-.netrwhist
-*~
-
-# Emacs
-*~
-\#*\#
-/.emacs.desktop
-/.emacs.desktop.lock
-*.elc
-auto-save-list
-tramp
-.\#*
-
-# Sublime Text
-*.tmlanguage.cache
-*.tmPreferences.cache
-*.sublime-workspace
-
-# Intellij IDEA
-*.iml
-*.ipr
-*.iws
-.idea/
-
-# NetBeans
-/nbproject/private/
-/nbbuild/
-/dist/
-/nbdist/
-/.nb-gradle/
-
-# Visual Studio
-*.user
-*.userosscache
-*.suo
-*.pdb
-*.idb
-*.VC.db
-*.VC.VC.opendb
-*_AppCmd.exe
-*_AppCmd.ilk
-*_AppCmd.pdb
-*TASKING*
-vs/assembly/
-AutoRefresh/
-[Bb]in/
-[Oo]bj/
-[Ll]ogs/
-[Tt]emp/
-[Tt]emporary[Tt]est[Ff]iles/
-*.VisualState.xml
-TestResults/
-ServiceHub/
-*.CodeAnalysisLog.xml
-*.VC.VC.opendb
-[Bb]uild[Ll]og.*
-[Oo]bj[Dd]ebug/
-[Oo]bj[Rr]elease/
-ipch/
-*.aps
-*.ncb
-*.opensdf
-*.sdf
-*.cachefile
-*.VC.db
-*.VC.VC.opendb
-[Ll]ast[Bb]uild.[Ll]og
-*.VC.VC.opendb-shm
-*.VC.VC.opendb-wal
-[Bb]uild/
-[Bb]in/
-[Oo]bj/
-[Dd]ebug/
-[Dd]ebugPublic/
-[Rr]elease/
-[Rr]eleases/
-x64/
-x86/
-build/
-bld/
-[Bb]uilt/
-[Ww]eb[Tt]emp/
-[Cc]ounters/
-[Tt]races/
-*.rsp
-*.tlog
-*.tlg
-*.map
-*.exp
-*.lib
-*.iobj
-*.ipdb
-*.metadata
-*.metagen
-*.vcxproj.filters
-*.vcxproj.user
-*.vcxproj.User
-*.vcxproj.local
-*.sln.docstates
-*.userprefs
-*.sdf
-*.opendb
-*.VC.VC.opendb
-*.VC.db
-*.VC.VC.opendb-shm
-*.VC.VC.opendb-wal
-*.VC.VC.opendb-wal
-*.VC.VC.opendb-shm
-*.VC.VC.opendb-wal
-*.VC.VC.opendb-shm
-*.VC.VC.opendb-wal
-*.VC.VC.opendb-shm
-*.VC.VC.opendb-wal
-*.VC.VC.opendb-shm
-*.VC.VC.opendb-wal
-*.VC.VC.opendb-shm
-*.VC.VC.opendb-wal
-*.VC.VC.opendb-shm
-*.VC.VC.opendb-wal
-*.VC.VC.opendb-shm
-*.VC.VC.opendb-wal
-*.VC.VC.opendb-shm
-*.VC.VC.opendb-wal
-*.VC.VC.opendb-shm
-*.VC.VC.opendb-wal
-*.VC.VC.opendb-shm
-*.VC.VC.opendb-wal
-*.VC.VC.opendb-shm
-*.VC.VC.opendb-wal
-*.VC.VC.opendb-shm
-*.VC.VC.opendb-wal
-*.VC.VC.opendb-shm
-*.VC.VC.opendb-wal
-*.VC.VC.opendb-shm
-*.VC.VC.opendb-wal
-*.VC.VC.opendb-shm
-*.VC.VC.opendb-wal
-*.VC.VC.opendb-shm
-*.VC.VC.opendb-wal
-*.VC.VC.opendb-shm
-*.VC.VC.opendb-wal
-*.VC.VC.opendb-shm
-*.VC.VC.opendb-wal
-*.VC.VC.opendb-shm
-*.VC.VC.opendb-wal
-*.VC.VC.opendb-shm
-*.VC.VC.opendb-wal
-*.VC.VC.opendb-shm
-*.VC.VC.opendb-wal
-*.VC.VC.opendb-shm
-*.VC.VC.opendb-wal
-*.VC.VC.opendb-shm
-*.VC.VC.opendb-wal
-*.VC.VC.opendb-shm
-*.VC.VC.opendb-wal
-*.VC.VC.opendb-shm
-*.VC.VC.opendb-wal
-*.VC.VC.opendb-shm
-*.VC.VC.opendb-wal
-*.VC.VC.opendb-shm
-*.VC.VC.opendb-wal
-*.VC.VC.opendb-shm
-*.VC.VC......
+# OS generated files
+.DS_Store
+Thumbs.db
 ```
