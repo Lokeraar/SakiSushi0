@@ -14,8 +14,21 @@ serve(async (req) => {
   }
 
   try {
-    // NO requerimos autenticación para esta función pública
-    // Solo envía emails, no accede a datos sensibles
+    // Obtener el header de autorización
+    const authHeader = req.headers.get('Authorization')
+    
+    console.log('Authorization header recibido:', authHeader ? 'Presente' : 'AUSENTE')
+    
+    // Para esta función pública, NO requerimos autenticación estricta
+    // Solo validamos que el header exista si se envía, pero permitimos continuar sin él
+    let supabaseKey = null
+    
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      supabaseKey = authHeader.substring(7)
+      console.log('✅ Clave de autorización recibida:', '***' + supabaseKey.slice(-10))
+    } else {
+      console.log('⚠️ No se recibió header de autorización, continuando...')
+    }
     
     const { destinatario, token, username, enlace } = await req.json()
 
