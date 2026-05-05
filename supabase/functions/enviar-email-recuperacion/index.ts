@@ -1,4 +1,5 @@
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts'
+import { SmtpClient } from 'https://deno.land/x/smtp@v0.7.0/mod.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -13,8 +14,21 @@ serve(async (req) => {
   }
 
   try {
-    // NO requerimos autenticación para esta función pública
-    // Solo envía emails, no accede a datos sensibles
+    // Obtener el header de autorización
+    const authHeader = req.headers.get('Authorization')
+    
+    console.log('Authorization header recibido:', authHeader ? 'Presente' : 'AUSENTE')
+    
+    // Para esta función pública, NO requerimos autenticación estricta
+    // Solo validamos que el header exista si se envía, pero permitimos continuar sin él
+    let supabaseKey = null
+    
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      supabaseKey = authHeader.substring(7)
+      console.log('✅ Clave de autorización recibida:', '***' + supabaseKey.slice(-10))
+    } else {
+      console.log('⚠️ No se recibió header de autorización, continuando...')
+    }
     
     const { destinatario, token, username, enlace } = await req.json()
 
@@ -278,9 +292,6 @@ serve(async (req) => {
       console.log('Usando servicio SMTP directo')
       console.log(`Conectando a ${smtpHost}:${smtpPort}`)
       
-      // Importar cliente SMTP dinámicamente
-      const { SmtpClient } = await import('https://deno.land/x/smtp@v0.7.0/mod.ts')
-
       const client = new SmtpClient()
 
       // Configurar conexión SMTP
