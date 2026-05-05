@@ -14,6 +14,23 @@ serve(async (req) => {
   }
 
   try {
+    // Leer el cuerpo como texto primero para evitar errores de JSON vacío
+    const bodyText = await req.text()
+    
+    // Verificar que el cuerpo no esté vacío
+    if (!bodyText || bodyText.trim() === '') {
+      throw new Error('El cuerpo de la solicitud está vacío')
+    }
+
+    // Parsear el JSON de manera segura
+    let data
+    try {
+      data = JSON.parse(bodyText)
+    } catch (parseError) {
+      console.error('Error al parsear JSON:', parseError)
+      throw new Error('Cuerpo de solicitud no es un JSON válido')
+    }
+
     // Obtener el header de autorización
     const authHeader = req.headers.get('Authorization')
     
@@ -30,11 +47,11 @@ serve(async (req) => {
       console.log('⚠️ No se recibió header de autorización, continuando...')
     }
     
-    const { destinatario, token, username, enlace } = await req.json()
+    const { destinatario, token, username, enlace } = data
 
     // Validar datos requeridos
     if (!destinatario || !token || !username || !enlace) {
-      throw new Error('Faltan parámetros requeridos')
+      throw new Error('Faltan parámetros requeridos: destinatario, token, username, enlace')
     }
 
     // Validar formato de email
