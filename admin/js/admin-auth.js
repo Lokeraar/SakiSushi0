@@ -84,7 +84,7 @@
         if (loginBtn) { loginBtn.disabled = true; loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Conectando...'; }
         
         try {
-            const response = await fetch('https://supabase.com/dashboard/project/iqwwoihiiyrtypyqzhgy/functions/login', {
+            const response = await fetch('https://iqwwoihiiyrtypyqzhgy.supabase.co/functions/v1/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username: selectedAdmin.username, password: password })
