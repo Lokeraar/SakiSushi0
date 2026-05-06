@@ -221,17 +221,21 @@
         try {
             const user = JSON.parse(userData);
             if (user.rol !== 'admin') return false;
-            // Verificar token con Supabase
-            const { error } = await window.supabaseClient.from('config').select('id').limit(1).maybeSingle();
-            if (error && error.message.includes('JWT')) {
-                window.cerrarSesion();
-                return false;
-            }
+            
+            // PRIMERO: Inicializar el cliente de Supabase con el token JWT antes de cualquier consulta
             window.jwtToken = token;
             window.isAdminAuthenticated = true;
             window.supabaseClient = window.inicializarSupabaseCliente(window.jwtToken);
             
-            // ACTUALIZAR EL NOMBRE DEL USUARIO EN EL HEADER DESPUÉS DE RESTAURAR SESIÓN (desktop y móvil)
+            // SEGUNDO: Verificar token con Supabase usando el cliente ya inicializado con JWT
+            const { error } = await window.supabaseClient.from('config').select('id').limit(1).maybeSingle();
+            if (error && (error.message.includes('JWT') || error.code === 'PGRST301' || error.status === 401)) {
+                console.warn('Token expirado o inválido, cerrando sesión');
+                window.cerrarSesion();
+                return false;
+            }
+            
+            // TERCERO: Actualizar el nombre del usuario en el header
             const headerUsuarioNombreDesktop = document.getElementById('headerUsuarioNombreDesktop');
             const headerUsuarioNombreMobile = document.getElementById('headerUsuarioNombreMobile');
             if (user.nombre) {
@@ -239,7 +243,7 @@
                 if (headerUsuarioNombreMobile) headerUsuarioNombreMobile.textContent = user.nombre;
             }
             
-            // Cargar configuración inicial para obtener tasa de cambio y actualizar tarjeta de diferencia
+            // CUARTO: Cargar configuración inicial para obtener tasa de cambio y actualizar tarjeta de diferencia
             try {
                 await window.cargarConfiguracionInicial();
                 window._verificarTasaDeHoy((tasa) => {

@@ -15,12 +15,27 @@
     
     window.cargarTopVentasCliente = async function() {
         try {
+            // Verificar que haya token JWT antes de hacer la consulta
+            if (!window.jwtToken) {
+                console.warn('⚠️ No hay token JWT, omitiendo carga de Platillo Estrella');
+                mostrarSinVentas();
+                return;
+            }
+            
             const { data, error } = await window.supabaseClient
                 .from('vista_platillo_estrella')
                 .select('*')
                 .order('posicion', { ascending: true });
 
-            if (error) throw error;
+            // Si hay error 401, no lanzar excepción, mostrar sin ventas
+            if (error) {
+                if (error.status === 401 || error.code === 'PGRST301') {
+                    console.warn('⚠️ Token expirado o sin permisos para cargar Platillo Estrella');
+                    mostrarSinVentas();
+                    return;
+                }
+                throw error;
+            }
 
             window.platillosTop5 = data || [];
             
@@ -36,7 +51,10 @@
             iniciarCarruselAutomatico();
 
         } catch (e) {
-            console.error('Error cargando Platillo Estrella:', e);
+            // No mostrar error en consola si es un error 401 o de JWT (ya se manejó arriba)
+            if (!(e.status === 401 || e.code === 'PGRST301' || (e.message && e.message.includes('JWT')))) {
+                console.error('Error cargando Platillo Estrella:', e);
+            }
             mostrarSinVentas();
         }
     };

@@ -2,12 +2,27 @@
 (function() {
     window.cargarConfiguracion = async function() {
         try {
+            // Verificar que haya token JWT antes de hacer la consulta
+            if (!window.jwtToken) {
+                console.warn('⚠️ No hay token JWT, usando configuración por defecto');
+                return;
+            }
+            
             const { data, error } = await window.supabaseClient
                 .from('config')
                 .select('*')
                 .eq('id', 1)
                 .single();
-            if (error) throw error;
+            
+            // Si hay error 401, no lanzar excepción, usar valores por defecto
+            if (error) {
+                if (error.status === 401 || error.code === 'PGRST301') {
+                    console.warn('⚠️ Token expirado o sin permisos para cargar configuración');
+                    return;
+                }
+                throw error;
+            }
+            
             window.configGlobal = data || {};
             
             window.configGlobal.tasa_cambio = window.configGlobal.tasa_cambio || 400;
@@ -17,7 +32,10 @@
             window.configGlobal.aumento_semanal = window.configGlobal.aumento_semanal || false;
             
         } catch (e) {
-            console.error('Error cargando configuración:', e);
+            // No mostrar error en consola si es un error 401 o de JWT (ya se manejó arriba)
+            if (!(e.status === 401 || e.code === 'PGRST301' || (e.message && e.message.includes('JWT')))) {
+                console.error('Error cargando configuración:', e);
+            }
             window.configGlobal = {
                 tasa_cambio: 400,
                 tasa_efectiva: 400,

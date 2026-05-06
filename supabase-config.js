@@ -18,6 +18,8 @@ window.inicializarSupabaseCliente = (jwtToken = null) => {
         }
     };
     if (jwtToken) {
+        // Asegurar que el token se incluya correctamente en los headers
+        options.auth = { ...options.auth, detectSessionInUrl: false };
         options.global = { headers: { Authorization: `Bearer ${jwtToken}` } };
     }
     window.supabaseClient = window.supabase.createClient(
@@ -25,7 +27,7 @@ window.inicializarSupabaseCliente = (jwtToken = null) => {
         window.SUPABASE_ANON_KEY,
         options
     );
-    console.log(jwtToken ? 'Cliente Supabase con JWT' : 'Cliente Supabase anonimo');
+    console.log(jwtToken ? '✅ Cliente Supabase con JWT' : '🔓 Cliente Supabase anónimo');
     return window.supabaseClient;
 };
 
