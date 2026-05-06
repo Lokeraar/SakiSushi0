@@ -12,19 +12,23 @@ __pycache__/
 *.pyc
 *.pyo
 *.pyd
+*.py.class
 .Python
 env/
 venv/
 .venv/
 .ENV
-.ENV.*
-.python-version
+.venv.bak/
+pip-log.txt
+pip-delete-this-directory.txt
 
 # Logs
 *.log
 
-# Environment variables
-.env*
+# Environment specific
+.env
+.env.local
+.env.*
 !.env.example
 
 # IDE
@@ -32,15 +36,20 @@ venv/
 .idea/
 *.swp
 *.swo
-
-# OS
+*~
 .DS_Store
 Thumbs.db
 
-# Coverage
+# Coverage reports
 coverage/
 htmlcov/
 .coverage
+
+# Temporary files
+*.tmp
+*.temp
+*.bak
+*.backup
 
 # Compressed files
 *.zip
@@ -61,4 +70,22 @@ htmlcov/
 *.Z
 *.lz
 *.lzo
+
+# MyPy
+.mypy_cache/
+
+# Pytest
+.pytest_cache/
+
+# Gradle
+.gradle/
+
+# Compiled files
+*.class
+*.o
+*.so
+*.a
+*.dll
+*.exe
+*.out
 ```
