@@ -15,12 +15,18 @@ window.inicializarSupabaseCliente = (jwtToken = null) => {
         realtime: {
             heartbeatIntervalMs: 60000,
             reconnectAfterMs: (tries) => Math.min(tries * 2000, 30000)
+        },
+        global: { 
+            headers: { 
+                apikey: window.SUPABASE_ANON_KEY,
+                Authorization: `Bearer ${window.SUPABASE_ANON_KEY}`
+            } 
         }
     };
     if (jwtToken) {
-        // Asegurar que el token se incluya correctamente en los headers
+        // Actualizar headers con el token JWT del usuario
         options.auth = { ...options.auth, detectSessionInUrl: false };
-        options.global = { headers: { Authorization: `Bearer ${jwtToken}` } };
+        options.global.headers.Authorization = `Bearer ${jwtToken}`;
     }
     window.supabaseClient = window.supabase.createClient(
         window.SUPABASE_URL,
