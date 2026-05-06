@@ -235,10 +235,21 @@
     // Se ejecuta al iniciar sesión para asegurar que todos los registros tengan imagen
     window.sincronizarImagenesVentasDetalle = async function() {
         try {
+            // Verificar que el cliente de Supabase tenga token JWT antes de ejecutar RPCs
+            if (!window.jwtToken) {
+                console.warn('⚠️ No hay token JWT, omitiendo sincronización de imágenes');
+                return;
+            }
+            
             // Primero intentar con la función básica de sincronización
             const { data, error } = await window.supabaseClient.rpc('sincronizar_imagenes_ventas_detalle');
             
             if (error) {
+                // Si es error 401 o de permisos, no intentar más RPCs
+                if (error.status === 401 || error.code === 'PGRST301') {
+                    console.warn('⚠️ Token expirado o sin permisos para RPC de sincronización');
+                    return;
+                }
                 console.log('RPC sincronizar_imagenes_ventas_detalle no disponible:', error.message);
             } else {
                 console.log('Sincronización básica completada:', data, 'registros actualizados');
@@ -249,6 +260,12 @@
             const { data: dataForzada, error: errorForzado } = await window.supabaseClient.rpc('forzar_sincronizacion_imagenes');
             
             if (errorForzado) {
+                // Si es error 401 o de permisos, usar método manual
+                if (errorForzado.status === 401 || errorForzado.code === 'PGRST301') {
+                    console.warn('⚠️ Token expirado o sin permisos para RPC forzado, usando método manual');
+                    await window.sincronizarImagenesVentasDetalleManual();
+                    return;
+                }
                 console.log('RPC forzar_sincronizacion_imagenes no disponible:', errorForzado.message);
                 // Método alternativo si el RPC no existe
                 await window.sincronizarImagenesVentasDetalleManual();
@@ -256,7 +273,10 @@
                 console.log('Sincronización forzada completada:', dataForzada, 'registros actualizados');
             }
         } catch (e) {
-            console.error('Error sincronizando imágenes:', e);
+            // No mostrar error en consola si es un error 401 o de JWT (ya se manejó arriba)
+            if (!(e.status === 401 || e.code === 'PGRST301' || (e.message && e.message.includes('JWT')))) {
+                console.error('Error sincronizando imágenes:', e);
+            }
             // Fallback al método manual en caso de error
             await window.sincronizarImagenesVentasDetalleManual();
         }

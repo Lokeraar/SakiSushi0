@@ -182,6 +182,14 @@
 
     window._actualizarVentasHoyNeto = async function() {
         try {
+            // Verificar que haya token JWT antes de hacer la consulta
+            if (!window.jwtToken) {
+                console.warn('⚠️ No hay token JWT, omitiendo cálculo de ventas hoy');
+                const el = document.getElementById('ventasHoy');
+                if (el) el.textContent = '$0.00 / Bs 0,00';
+                return;
+            }
+            
             // Obtener fecha desde del selector de tcb-cards para filtrar pedidos
             const aumentoDesdeInput = document.getElementById('aumentoDesde');
             const fechaDesde = aumentoDesdeInput && aumentoDesdeInput.value ? new Date(aumentoDesdeInput.value) : null;
@@ -195,7 +203,19 @@
                 fechaInicio = new Date(fechaDesde.getFullYear(), fechaDesde.getMonth(), fechaDesde.getDate());
             }
             
-            const { data: ventasHoy } = await window.supabaseClient.from('ventas').select('pedido_id').gte('fecha', fechaInicio.toISOString()).lt('fecha', manana.toISOString());
+            const { data: ventasHoy, error: errorVentas } = await window.supabaseClient.from('ventas').select('pedido_id').gte('fecha', fechaInicio.toISOString()).lt('fecha', manana.toISOString());
+            
+            // Si hay error 401, no continuar
+            if (errorVentas) {
+                if (errorVentas.status === 401 || errorVentas.code === 'PGRST301') {
+                    console.warn('⚠️ Token expirado o sin permisos para cargar ventas');
+                    const el = document.getElementById('ventasHoy');
+                    if (el) el.textContent = '$0.00 / Bs 0,00';
+                    return;
+                }
+                throw errorVentas;
+            }
+            
             if (!ventasHoy || ventasHoy.length === 0) { document.getElementById('ventasHoy').textContent = '$0.00 / Bs 0.00'; return; }
             const pedidoIds = ventasHoy.map(v => v.pedido_id);
             const { data: pedidosData } = await window.supabaseClient.from('pedidos').select('*').in('id', pedidoIds);
@@ -219,14 +239,39 @@
             const el = document.getElementById('ventasHoy');
             if (el) el.textContent = `${window.formatUSD(netoUSD)} / ${window.formatBs(netoBs)}`;
             window._ventasHoyNeto = { netoBs, netoUSD, ventasHoy, pedidosData };
-        } catch (e) { console.error('Error calculando neto cobrado:', e); const el = document.getElementById('ventasHoy'); if (el) el.textContent = '$0.00 / Bs 0,00'; }
+        } catch (e) {
+            // No mostrar error en consola si es un error 401 o de JWT
+            if (!(e.status === 401 || e.code === 'PGRST301' || (e.message && e.message.includes('JWT')))) {
+                console.error('Error calculando neto cobrado:', e);
+            }
+            const el = document.getElementById('ventasHoy');
+            if (el) el.textContent = '$0.00 / Bs 0,00';
+        }
     };
 
     window._actualizarDeliverysHoy = async function() {
         try {
+            // Verificar que haya token JWT antes de hacer la consulta
+            if (!window.jwtToken) {
+                const el = document.getElementById('deliverysHoyDashboard');
+                if (el) el.textContent = '$0.00 / Bs 0,00';
+                return;
+            }
+            
             const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
             const manana = new Date(hoy); manana.setDate(manana.getDate() + 1);
-            const { data: pedidosDelivery } = await window.supabaseClient.from('pedidos').select('*').eq('tipo', 'delivery').eq('estado', 'enviado').gte('fecha', hoy.toISOString()).lt('fecha', manana.toISOString());
+            const { data: pedidosDelivery, error: errorPedidos } = await window.supabaseClient.from('pedidos').select('*').eq('tipo', 'delivery').eq('estado', 'enviado').gte('fecha', hoy.toISOString()).lt('fecha', manana.toISOString());
+            
+            // Si hay error 401, no continuar
+            if (errorPedidos) {
+                if (errorPedidos.status === 401 || errorPedidos.code === 'PGRST301') {
+                    const el = document.getElementById('deliverysHoyDashboard');
+                    if (el) el.textContent = '$0.00 / Bs 0,00';
+                    return;
+                }
+                throw errorPedidos;
+            }
+            
             let totalDeliverysBs = 0;
             (pedidosDelivery || []).forEach(p => { totalDeliverysBs += p.costo_delivery_bs || p.costoDelivery || 0; });
             const tasa = window.configGlobal?.tasa_efectiva || window.configGlobal?.tasa_cambio || 400;
@@ -234,7 +279,14 @@
             const el = document.getElementById('deliverysHoyDashboard');
             if (el) el.textContent = window.formatUSD(totalDeliverysUsd) + ' / ' + window.formatBs(totalDeliverysBs);
             window._deliverysHoyData = { totalDeliverysBs, totalDeliverysUsd, pedidosDelivery };
-        } catch (e) { console.error('Error calculando deliverys hoy:', e); const el = document.getElementById('deliverysHoyDashboard'); if (el) el.textContent = '$0.00 / Bs 0,00'; }
+        } catch (e) {
+            // No mostrar error en consola si es un error 401 o de JWT
+            if (!(e.status === 401 || e.code === 'PGRST301' || (e.message && e.message.includes('JWT')))) {
+                console.error('Error calculando deliverys hoy:', e);
+            }
+            const el = document.getElementById('deliverysHoyDashboard');
+            if (el) el.textContent = '$0.00 / Bs 0,00';
+        }
     };
 
     window._abrirDetalleDeliverysAdmin = async function() {
@@ -319,12 +371,41 @@
 
     window._abrirDetalleVentasAdmin = async function() {
         try {
+            // Verificar que haya token JWT antes de hacer la consulta
+            if (!window.jwtToken) {
+                console.warn('⚠️ No hay token JWT, omitiendo detalle de ventas');
+                window.mostrarToast('❌ Sesión expirada, recarga la página', 'error');
+                return;
+            }
+            
             const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
             const manana = new Date(hoy); manana.setDate(manana.getDate() + 1);
-            const { data: ventasHoy } = await window.supabaseClient.from('ventas').select('*').gte('fecha', hoy.toISOString()).lt('fecha', manana.toISOString());
+            const { data: ventasHoy, error: errorVentas } = await window.supabaseClient.from('ventas').select('*').gte('fecha', hoy.toISOString()).lt('fecha', manana.toISOString());
+            
+            // Si hay error 401, no continuar
+            if (errorVentas) {
+                if (errorVentas.status === 401 || errorVentas.code === 'PGRST301') {
+                    console.warn('⚠️ Token expirado o sin permisos para cargar ventas');
+                    window.mostrarToast('❌ Sesión expirada, recarga la página', 'error');
+                    return;
+                }
+                throw errorVentas;
+            }
+            
             if (!ventasHoy || ventasHoy.length === 0) { window.mostrarToast('No hay ventas registradas hoy', 'info'); return; }
             const pedidoIds = ventasHoy.map(v => v.pedido_id);
-            const { data: pedidosHoy } = await window.supabaseClient.from('pedidos').select('*').in('id', pedidoIds);
+            
+            const { data: pedidosHoy, error: errorPedidos } = await window.supabaseClient.from('pedidos').select('*').in('id', pedidoIds);
+            
+            // Si hay error 401 en pedidos, no continuar
+            if (errorPedidos) {
+                if (errorPedidos.status === 401 || errorPedidos.code === 'PGRST301') {
+                    console.warn('⚠️ Token expirado o sin permisos para cargar pedidos');
+                    window.mostrarToast('❌ Sesión expirada, recarga la página', 'error');
+                    return;
+                }
+                throw errorPedidos;
+            }
             const tasa = window.configGlobal?.tasa_cambio || window.configGlobal?.tasa_efectiva || 400;
             const fmtBs = window.formatBs;
             const _netoCobradoPedido = (pedido) => {
