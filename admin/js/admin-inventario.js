@@ -851,7 +851,11 @@ validarPrecios();
         try {
             const response = await fetch('https://iqwwoihiiyrtypyqzhgy.supabase.co/functions/v1/send-push', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${window.jwtToken}` },
+                headers: { 
+                    'Content-Type': 'application/json', 
+                    'apikey': window.SUPABASE_ANON_KEY,
+                    'Authorization': `Bearer ${window.SUPABASE_ANON_KEY}`
+                },
                 body: JSON.stringify({ titulo, mensaje, session_id: sessionId })
             });
             const result = await response.json();
@@ -1142,7 +1146,11 @@ validarPrecios();
             // Usar el mismo endpoint de login que ya funciona
             const response = await fetch('https://iqwwoihiiyrtypyqzhgy.supabase.co/functions/v1/login', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json',
+                    'apikey': window.SUPABASE_ANON_KEY,
+                    'Authorization': `Bearer ${window.SUPABASE_ANON_KEY}`
+                },
                 body: JSON.stringify({ 
                     username: adminUser.username, 
                     password: password 
