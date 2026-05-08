@@ -853,8 +853,8 @@ validarPrecios();
                 method: 'POST',
                 headers: { 
                     'Content-Type': 'application/json', 
-                    'Authorization': `Bearer ${window.jwtToken}`,
-                    'apikey': window.SUPABASE_ANON_KEY
+                    'apikey': window.SUPABASE_ANON_KEY,
+                    'Authorization': `Bearer ${window.SUPABASE_ANON_KEY}`
                 },
                 body: JSON.stringify({ titulo, mensaje, session_id: sessionId })
             });
