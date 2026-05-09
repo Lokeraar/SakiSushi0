@@ -26,6 +26,19 @@ serve(async (req) => {
       )
     }
 
+    // ✅ SOLUCIÓN: Leer y validar explícitamente los headers de API Key
+    const apiKey = req.headers.get('apikey') || req.headers.get('Authorization')?.replace('Bearer ', '')
+    
+    if (!apiKey) {
+      console.error('❌ No API key found in request headers')
+      return new Response(
+        JSON.stringify({ error: 'No API key found in request' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    console.log(`✅ API Key recibida correctamente (longitud: ${apiKey.length})`)
+
     const { username, password } = await req.json()
     
     if (!username || !password) {
@@ -35,6 +48,7 @@ serve(async (req) => {
       )
     }
 
+    // Usar SERVICE ROLE KEY para operaciones internas (seguro en el servidor)
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL')!,
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
