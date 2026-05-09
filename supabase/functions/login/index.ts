@@ -26,13 +26,13 @@ serve(async (req) => {
       )
     }
 
-    // ✅ SOLUCIÓN: Leer y validar explícitamente los headers de API Key
+    // ✅ LECTURA EXPLÍCITA DE HEADERS - Solución al error "No API key found"
     const apiKey = req.headers.get('apikey') || req.headers.get('Authorization')?.replace('Bearer ', '')
     
     if (!apiKey) {
-      console.error('❌ No API key found in request headers')
+      console.error('❌ No API key found in request headers. Headers recibidos:', Object.fromEntries(req.headers))
       return new Response(
-        JSON.stringify({ error: 'No API key found in request' }),
+        JSON.stringify({ error: 'No API key found in request. Verifica que los headers apikey y Authorization estén presentes.' }),
         { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       )
     }
