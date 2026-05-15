@@ -23,7 +23,7 @@
             const params = new URLSearchParams({ mesa: qr.nombre });
             if (_ssid) params.set('wifi_ssid', _ssid);
             if (_pwd)  params.set('wifi_pwd', _pwd);
-            const qrText = window.location.origin + '/SakiSushi0/Cliente/index.html?' + params.toString();
+            const qrText = window.location.origin + '/Cliente/index.html?' + params.toString();
             const qrId   = 'qr-' + qr.id;
             const card = document.createElement('div');
             card.className = 'qr-card-v2';
@@ -152,7 +152,7 @@
     
     window.seleccionarMesaAdmin = function(mesaNombre) {
         // Redirigir a la página del cliente con la mesa específica
-        const url = `${window.location.origin}/SakiSushi0/Cliente/index.html?mesa=${encodeURIComponent(mesaNombre)}`;
+        const url = `${window.location.origin}/Cliente/index.html?mesa=${encodeURIComponent(mesaNombre)}`;
         window.open(url, '_blank');
         window.cerrarModal('adminMesaModal');
     };

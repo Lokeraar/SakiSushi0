@@ -143,7 +143,7 @@
 
         const _registrar = async () => {
             try {
-                const reg  = await navigator.serviceWorker.register('/SakiSushi0/sw.js', { scope: '/SakiSushi0/' });
+                const reg  = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
                 await navigator.serviceWorker.ready;
                 let sub = await reg.pushManager.getSubscription();
                 if (!sub) {

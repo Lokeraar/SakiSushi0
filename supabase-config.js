@@ -192,7 +192,7 @@ window.solicitarPermisoPush = async function(sessionId) {
         const permiso = await Notification.requestPermission();
         if (permiso !== 'granted') return { success: false, error: 'denied' };
         
-        const swUrl = '/SakiSushi0/sw.js';
+        const swUrl = '/sw.js';
         const registration = await navigator.serviceWorker.register(swUrl);
         await navigator.serviceWorker.ready;
         
