@@ -84,14 +84,15 @@
         if (loginBtn) { loginBtn.disabled = true; loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Conectando...'; }
         
         try {
-            // NOTA: La apikey se envía como parámetro URL para mayor compatibilidad con Supabase Edge Functions
+            // NOTA: La apikey se envía como parámetro URL Y header para mayor compatibilidad con Supabase Edge Functions
             const loginUrl = `https://iqwwoihiiyrtypyqzhgy.supabase.co/functions/v1/login?apikey=${encodeURIComponent(window.SUPABASE_ANON_KEY)}`;
             
             const response = await fetch(loginUrl, {
                 method: 'POST',
                 headers: { 
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${window.SUPABASE_ANON_KEY}`
+                    'Authorization': `Bearer ${window.SUPABASE_ANON_KEY}`,
+                    'apikey': window.SUPABASE_ANON_KEY
                 },
                 body: JSON.stringify({ username: selectedAdmin.username, password: password })
             });
