@@ -26,6 +26,19 @@ serve(async (req) => {
       )
     }
 
+    // Validar API key desde header o parámetro URL
+    const apiKey = req.headers.get('apikey') || 
+                   req.headers.get('Authorization')?.replace('Bearer ', '') ||
+                   new URL(req.url).searchParams.get('apikey');
+    
+    if (!apiKey) {
+      console.error('❌ No API key found in request');
+      return new Response(
+        JSON.stringify({ error: 'No API key found in request' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
     const { username, password } = await req.json()
     
     if (!username || !password) {
