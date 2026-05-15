@@ -33,7 +33,7 @@ self.addEventListener('push', (event) => {
 
     const titulo  = data.titulo  || '🍣 Saki Sushi';
     const mensaje = data.mensaje || 'Tienes una nueva notificación';
-    const url     = data.url     || '/SakiSushi0/Cliente/';
+    const url     = data.url     || '/Cliente/';
     const icon    = data.icon    || 'https://lh3.googleusercontent.com/pw/AP1GczPrZAoWxmsOGRD9xl1hO5Q65JXuwUZzoR6gUk-cw5lVmarxQe_-lwqpA60tTKLlXfpvIjAJlKC6jFls-xETJOPkebLIIPhbGlUkknmhrRbdhMUll2UViGSUj3WmHKg2YEsZlAfxBPPTjIHhScjD0jfe=w1439-h1439-s-no-gm';
     const badge   = data.badge   || 'https://lh3.googleusercontent.com/pw/AP1GczPrZAoWxmsOGRD9xl1hO5Q65JXuwUZzoR6gUk-cw5lVmarxQe_-lwqpA60tTKLlXfpvIjAJlKC6jFls-xETJOPkebLIIPhbGlUkknmhrRbdhMUll2UViGSUj3WmHKg2YEsZlAfxBPPTjIHhScjD0jfe=w1439-h1439-s-no-gm';
 
@@ -67,7 +67,7 @@ self.addEventListener('message', (event) => {
     if (event.data.type === 'SHOW_LOCAL_NOTIFICATION') {
         const titulo  = event.data.titulo  || '🍣 Saki Sushi';
         const mensaje = event.data.mensaje || 'Tienes una nueva notificación';
-        const url     = event.data.url     || '/SakiSushi0/Cliente/';
+        const url     = event.data.url     || '/Cliente/';
         const tipo    = event.data.tipo    || 'info';
 
         const options = {
@@ -100,7 +100,7 @@ self.addEventListener('notificationclick', (event) => {
 
     if (event.action === 'cerrar') return;
 
-    const urlDestino = event.notification.data?.url || '/SakiSushi0/Cliente/';
+    const urlDestino = event.notification.data?.url || '/Cliente/';
 
     event.waitUntil(
         clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {

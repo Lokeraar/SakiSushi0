@@ -2995,7 +2995,7 @@ window.addEventListener('beforeunload',function(e){if(!window._sakiReady){e.prev
                 return;
             }
             // Si onLine=true, verificar con fetch real (puede ser red sin internet)
-            fetch(window.location.origin + '/SakiSushi0/favicon.ico?_=' + Date.now(), {
+            fetch(window.location.origin + '/favicon.ico?_=' + Date.now(), {
                 method: 'HEAD', mode: 'no-cors', cache: 'no-store',
                 signal: AbortSignal.timeout ? AbortSignal.timeout(3000) : undefined
             }).catch(function() {
@@ -3379,7 +3379,7 @@ window.addEventListener('beforeunload',function(e){if(!window._sakiReady){e.prev
             const esBrave = navigator.brave && await navigator.brave.isBrave().catch(() => false);
             const registrarSuscripcion = async () => {
                 try {
-                    const registration = await navigator.serviceWorker.register('/SakiSushi0/sw.js', { scope: '/SakiSushi0/' });
+                    const registration = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
                     await navigator.serviceWorker.ready;
                     let subscription = await registration.pushManager.getSubscription();
                     if (!subscription) {
